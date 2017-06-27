@@ -33,7 +33,8 @@ import java.util.Map;
  *
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  */
-public abstract class BioSequenceDaoBase extends VoEnabledDao<BioSequence, BioSequenceValueObject> implements BioSequenceDao {
+public abstract class BioSequenceDaoBase extends VoEnabledDao<BioSequence, BioSequenceValueObject>
+        implements BioSequenceDao {
 
     public BioSequenceDaoBase( SessionFactory sessionFactory ) {
         super( BioSequence.class, sessionFactory );
@@ -75,13 +76,13 @@ public abstract class BioSequenceDaoBase extends VoEnabledDao<BioSequence, BioSe
      * @see BioSequenceDao#thaw(Collection)
      */
     @Override
-    public void thaw( final Collection<BioSequence> bioSequences ) {
-        this.handleThaw( bioSequences );
+    public Collection<BioSequence> thaw( final Collection<BioSequence> bioSequences ) {
+        return this.handleThaw( bioSequences );
     }
 
     @Override
-    public void thaw( final BioSequence bioSequence ) {
-        this.handleThaw( bioSequence );
+    public BioSequence thaw( final BioSequence bioSequence ) {
+        return this.handleThaw( bioSequence );
     }
 
     /**
@@ -107,11 +108,11 @@ public abstract class BioSequenceDaoBase extends VoEnabledDao<BioSequence, BioSe
     /**
      * Performs the core logic for {@link #thaw(Collection)}
      */
-    protected abstract void handleThaw( Collection<BioSequence> bioSequences );
+    protected abstract Collection<BioSequence> handleThaw( Collection<BioSequence> bioSequences );
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    protected abstract BioSequence handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
 }

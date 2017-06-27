@@ -36,12 +36,15 @@ import java.util.Map;
 public interface CompositeSequenceService
         extends BaseVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
 
+    @Override
     @Secured({ "GROUP_USER" })
     Collection<CompositeSequence> create( Collection<CompositeSequence> compositeSequences );
 
+    @Override
     @Secured({ "GROUP_USER" })
     CompositeSequence create( CompositeSequence compositeSequence );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     CompositeSequence find( CompositeSequence compositeSequence );
 
@@ -67,6 +70,7 @@ public interface CompositeSequenceService
     Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns );
 
+    @Override
     @Secured({ "GROUP_USER" })
     CompositeSequence findOrCreate( CompositeSequence compositeSequence );
 
@@ -93,15 +97,23 @@ public interface CompositeSequenceService
     @Deprecated
     Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> load( Collection<Long> ids );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( Collection<CompositeSequence> sequencesToDelete );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( CompositeSequence compositeSequence );
 
+    void thaw( Collection<CompositeSequence> compositeSequences );
+
+    CompositeSequence thaw( CompositeSequence compositeSequence );
+
+    @Override
     @Secured({ "GROUP_USER" })
     void update( CompositeSequence compositeSequence );
 

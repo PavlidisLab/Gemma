@@ -90,13 +90,13 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
         }
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         int numQts = ee.getQuantitationTypes().size();
         for ( ProcessedExpressionDataVector d : preferredVectors ) {
             assertTrue( d.getQuantitationType().getIsMaskedPreferred() );
@@ -113,7 +113,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         // repeat, make sure deleted old QTs.
         ee = eeService.load( ee.getId() );
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         assertEquals( numQts, ee.getQuantitationTypes().size() );
     }
 
@@ -134,13 +134,13 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
         }
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         processedExpressionDataVectorService.thaw( preferredVectors );
 
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
@@ -246,7 +246,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();

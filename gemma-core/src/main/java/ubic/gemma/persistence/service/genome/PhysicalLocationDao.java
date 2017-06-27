@@ -26,6 +26,6 @@ import ubic.gemma.persistence.service.BaseDao;
  */
 public interface PhysicalLocationDao extends BaseDao<PhysicalLocation> {
 
-    public void thaw( PhysicalLocation physicalLocation );
+    void thaw( PhysicalLocation physicalLocation );
 
 }

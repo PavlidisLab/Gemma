@@ -133,7 +133,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
         }
 
-        experimentService.thawLite( ee );
+        ee = experimentService.thawLite( ee );
 
         List<BioAssay> bioAssays = new ArrayList<BioAssay>( ee.getBioAssays() );
         assertEquals( 31, bioAssays.size() );
@@ -179,7 +179,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
         }
 
-        experimentService.thaw( ee );
+        ee = experimentService.thaw( ee );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
@@ -206,7 +206,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
         ee = dataUpdater.addData( ee, targetArrayDesign, moreData );
 
-        experimentService.thaw( ee );
+        ee = experimentService.thaw( ee );
         try {
             // add preferred data twice.
             dataUpdater.addData( ee, targetArrayDesign, data );
@@ -236,7 +236,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
         }
 
-        experimentService.thaw( ee );
+        ee = experimentService.thaw( ee );
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -258,7 +258,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             // we have to find the right generic platform to use.
             targetArrayDesign = this
                     .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-            arrayDesignService.thaw( targetArrayDesign );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
             assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
 
@@ -266,7 +266,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
         }
 
-        experimentService.thaw( ee );
+        ee = experimentService.thaw( ee );
 
         // should have: counts, rpkm, and counts-masked ('preferred')
         assertEquals( 3, ee.getQuantitationTypes().size() );
@@ -339,7 +339,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
-        experimentService.thaw( ee );
+        ee = experimentService.thaw( ee );
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -357,7 +357,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             // we have to find the right generic platform to use.
             targetArrayDesign = this
                     .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-            arrayDesignService.thaw( targetArrayDesign );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
             try {
                 dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
                 fail( "Should have gotten an exception" );
@@ -370,7 +370,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         /*
          * Check
          */
-        experimentService.thaw( ee );
+        ee = experimentService.thaw( ee );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );

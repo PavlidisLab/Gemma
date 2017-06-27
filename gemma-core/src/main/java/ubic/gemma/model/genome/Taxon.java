@@ -38,9 +38,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
     private ExternalDatabase externalDatabase;
     private Taxon parentTaxon;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -50,9 +48,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
     public Taxon() {
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     /**
      * Returns <code>true</code> if the argument is a Taxon instance and all identifiers for this entity equal the
@@ -120,9 +116,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
         return buf.toString();
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public String getAbbreviation() {
         return this.abbreviation;
@@ -221,9 +215,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
         return hashCode;
     }
 
-    /* ********************************
-     * Public classes
-     * ********************************/
+
 
     /**
      * Constructs new instances of {@link Taxon}.

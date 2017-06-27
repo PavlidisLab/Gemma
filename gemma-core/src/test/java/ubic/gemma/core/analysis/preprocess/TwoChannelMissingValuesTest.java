@@ -80,7 +80,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         assertEquals( 500, calls.size() );
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
@@ -165,7 +165,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 30, calls.size() );
@@ -196,7 +196,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
 
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         // print( calls );
@@ -219,9 +219,9 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         missingValues.getQuantitationTypes().iterator().next().getDescription().contains( "signal threshold" );
         Boolean[][] mm = missingValues.getRawMatrix();
         boolean hasPresent = false;
-        for ( int i = 0; i < mm.length; i++ ) {
-            for ( int j = 0; j < mm[i].length; j++ ) {
-                if ( mm[i][j] ) {
+        for ( Boolean[] aMm : mm ) {
+            for ( Boolean anAMm : aMm ) {
+                if ( anAMm ) {
                     hasPresent = true;
                     break;
                 }
@@ -255,7 +255,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );
@@ -289,7 +289,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );

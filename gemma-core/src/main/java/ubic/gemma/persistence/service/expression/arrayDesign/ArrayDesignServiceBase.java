@@ -45,9 +45,7 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
     final ArrayDesignDao arrayDesignDao;
     final AuditEventDao auditEventDao;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public ArrayDesignServiceBase( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
@@ -56,9 +54,7 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
         this.auditEventDao = auditEventDao;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     /**
      * @see ArrayDesignService#compositeSequenceWithoutBioSequences(ArrayDesign)
@@ -425,9 +421,6 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
     @Transactional
     public abstract Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
 
     /**
      * Performs the core logic for

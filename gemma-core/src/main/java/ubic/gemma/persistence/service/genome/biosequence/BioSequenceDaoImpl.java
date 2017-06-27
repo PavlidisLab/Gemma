@@ -21,16 +21,15 @@ package ubic.gemma.persistence.service.genome.biosequence;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -52,7 +51,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), bioSequence );
+        Criteria queryObject = BusinessKey.createQueryObject( getSessionFactory().getCurrentSession(), bioSequence );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         /*
@@ -91,16 +90,20 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
     public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
         BusinessKey.checkValidKey( databaseEntry );
 
-        String queryString = "";
-        List<BioSequence> results = null;
+        String queryString;
+        List<BioSequence> results;
         if ( databaseEntry.getId() != null ) {
             queryString = "select b from BioSequenceImpl b inner join fetch b.sequenceDatabaseEntry d inner join fetch d.externalDatabase e  where d=:dbe";
-            results = this.getHibernateTemplate().findByNamedParam( queryString, "dbe", databaseEntry );
+            //noinspection unchecked
+            results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                    .setParameter( "dbe", databaseEntry ).list();
         } else {
             queryString = "select b from BioSequenceImpl b inner join fetch b.sequenceDatabaseEntry d "
-                    + "inner join fetch d.externalDatabase e where d.accession = :acc and e.name = :dbname";
-            results = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "acc", "dbname" },
-                    new Object[] { databaseEntry.getAccession(), databaseEntry.getExternalDatabase().getName() } );
+                    + "inner join fetch d.externalDatabase e where d.accession = :acc and e.name = :dbName";
+            //noinspection unchecked
+            results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                    .setParameter( "acc", databaseEntry.getAccession() )
+                    .setParameter( "dbName", databaseEntry.getExternalDatabase().getName() ).list();
         }
 
         if ( results.size() > 1 ) {
@@ -144,9 +147,9 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
         Map<Gene, Collection<BioSequence>> results = new HashMap<Gene, Collection<BioSequence>>();
 
-        int batchsize = 500;
+        int batchSize = 500;
 
-        if ( genes.size() <= batchsize ) {
+        if ( genes.size() <= batchSize ) {
             findByGenesBatch( genes, results );
             return results;
         }
@@ -155,7 +158,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
         for ( Gene gene : genes ) {
             batch.add( gene );
-            if ( batch.size() == batchsize ) {
+            if ( batch.size() == batchSize ) {
                 findByGenesBatch( genes, results );
                 batch.clear();
             }
@@ -170,107 +173,116 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
     @Override
     protected Collection<BioSequence> handleFindByName( String name ) {
-        if ( name == null )
-            return null;
-        final String query = "from BioSequenceImpl b where b.name = :name";
-        return getHibernateTemplate().findByNamedParam( query, "name", name );
+        return this.findByProperty( "name", name );
     }
 
     @Override
     protected Collection<Gene> handleGetGenesByAccession( String search ) {
-        final String queryString =
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp"
                         + " inner join bs2gp.bioSequence bs "
                         + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct "
-                        + " and de.accession = :search ";
-        return getHibernateTemplate().findByNamedParam( queryString, "search", search );
+                        + " and de.accession = :search " ).setParameter( "search", search ).list();
     }
 
     @Override
     protected Collection<Gene> handleGetGenesByName( String search ) {
-        Collection<Gene> genes = null;
-        final String queryString =
-                "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
-                        + " and bs2gp.bioSequence.name like :search ";
         try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setString( "search", search );
-            genes = queryObject.list();
+            //noinspection unchecked
+            return this.getSessionFactory().getCurrentSession().createQuery(
+                    "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
+                            + " and bs2gp.bioSequence.name like :search " ).setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return genes;
     }
 
     @Override
-    protected void handleThaw( final BioSequence bioSequence ) {
-        this.getSessionFactory().getCurrentSession().refresh( bioSequence );
-        Hibernate.initialize( bioSequence.getTaxon() );
-        if ( bioSequence.getTaxon() != null ) {
-            Hibernate.initialize( bioSequence.getTaxon().getExternalDatabase() );
-            Hibernate.initialize( bioSequence.getTaxon().getParentTaxon() );
-            if ( bioSequence.getTaxon().getParentTaxon() != null )
-                Hibernate.initialize( bioSequence.getTaxon().getParentTaxon().getExternalDatabase() );
-        }
-        Hibernate.initialize( bioSequence.getSequenceDatabaseEntry() );
-        if ( bioSequence.getSequenceDatabaseEntry() != null )
-            Hibernate.initialize( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() );
-        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
-        for ( BioSequence2GeneProduct gp : bioSequence.getBioSequence2GeneProduct() ) {
-            Hibernate.initialize( gp.getGeneProduct() );
-            Hibernate.initialize( gp.getGeneProduct().getGene() );
-            Hibernate.initialize( gp.getGeneProduct().getGene().getAliases() );
-            Hibernate.initialize( gp.getGeneProduct().getGene().getAccessions() );
-        }
+    protected BioSequence handleThaw( final BioSequence bioSequence ) {
+        if ( bioSequence == null )
+            return null;
+        if ( bioSequence.getId() == null )
+            return bioSequence;
+
+        List<?> res = this.getHibernateTemplate().findByNamedParam( "select b from BioSequenceImpl b "
+                        + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
+                        + " left join fetch pt.externalDatabase "
+                        + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
+                        + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
+                        + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
+                bioSequence.getId() );
+
+        return ( BioSequence ) res.iterator().next();
     }
 
     @Override
-    protected void handleThaw( final Collection<BioSequence> bioSequences ) {
-        for ( BioSequence e : bioSequences ) {
-            handleThaw( e );
+    protected Collection<BioSequence> handleThaw( final Collection<BioSequence> bioSequences ) {
+        if ( bioSequences.isEmpty() )
+            return new HashSet<BioSequence>();
+
+        Collection<BioSequence> result = new HashSet<BioSequence>();
+        Collection<BioSequence> batch = new HashSet<BioSequence>();
+
+        for ( BioSequence g : bioSequences ) {
+            batch.add( g );
+            if ( batch.size() == 100 ) {
+                result.addAll( doThawBatch( batch ) );
+                batch.clear();
+            }
         }
+
+        if ( !batch.isEmpty() ) {
+            result.addAll( doThawBatch( batch ) );
+        }
+
+        return result;
     }
 
-    /**
-     * @param results
-     */
+    private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
+        //noinspection unchecked
+        return this.getHibernateTemplate().findByNamedParam( "select b from BioSequenceImpl b "
+                        + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
+                        + " left join fetch s.externalDatabase" + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
+                        + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)", "bids",
+                EntityUtils.getIds( batch ) );
+    }
+
     private void debug( BioSequence query, List<?> results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nMultiple BioSequences found matching query:\n" );
 
         if ( query != null ) {
-            sb.append( "\tQuery: ID=" + query.getId() + " Name=" + query.getName() );
+            sb.append( "\tQuery: ID=" ).append( query.getId() ).append( " Name=" ).append( query.getName() );
             if ( StringUtils.isNotBlank( query.getSequence() ) )
-                sb.append( " Sequence=" + StringUtils.abbreviate( query.getSequence(), 10 ) );
+                sb.append( " Sequence=" ).append( StringUtils.abbreviate( query.getSequence(), 10 ) );
             if ( query.getSequenceDatabaseEntry() != null )
-                sb.append( " acc=" + query.getSequenceDatabaseEntry().getAccession() );
+                sb.append( " acc=" ).append( query.getSequenceDatabaseEntry().getAccession() );
             sb.append( "\n" );
         }
 
         for ( Object object : results ) {
             BioSequence entity = ( BioSequence ) object;
-            sb.append( "\tMatch: ID=" + entity.getId() + " Name=" + entity.getName() );
+            sb.append( "\tMatch: ID=" ).append( entity.getId() ).append( " Name=" ).append( entity.getName() );
             if ( StringUtils.isNotBlank( entity.getSequence() ) )
-                sb.append( " Sequence=" + StringUtils.abbreviate( entity.getSequence(), 10 ) );
+                sb.append( " Sequence=" ).append( StringUtils.abbreviate( entity.getSequence(), 10 ) );
             if ( entity.getSequenceDatabaseEntry() != null )
-                sb.append( " acc=" + entity.getSequenceDatabaseEntry().getAccession() );
+                sb.append( " acc=" ).append( entity.getSequenceDatabaseEntry().getAccession() );
             sb.append( "\n" );
         }
         if ( log.isDebugEnabled() )
             log.debug( sb.toString() );
     }
 
-    /**
-     * @param genes
-     * @param results
-     */
     private void findByGenesBatch( Collection<Gene> genes, Map<Gene, Collection<BioSequence>> results ) {
-        final String queryString = "select distinct gene,bs from Gene gene inner join fetch gene.products ggp,"
-                + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
-                + " where ggp=bsgp and gene in (:genes)";
-
-        List<Object[]> qr = getHibernateTemplate().findByNamedParam( queryString, "genes", genes );
+        //noinspection unchecked
+        List<Object[]> qr = this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct gene,bs from Gene gene inner join fetch gene.products ggp,"
+                        + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
+                        + " where ggp=bsgp and gene in (:genes)" ).setParameterList( "genes", genes ).list();
         for ( Object[] oa : qr ) {
             Gene g = ( Gene ) oa[0];
             BioSequence b = ( BioSequence ) oa[1];
@@ -288,6 +300,10 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
     @Override
     public Collection<BioSequenceValueObject> loadValueObjects( Collection<BioSequence> entities ) {
-        return null;
+        Collection<BioSequenceValueObject> vos = new LinkedHashSet<BioSequenceValueObject>();
+        for ( BioSequence e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
     }
 }

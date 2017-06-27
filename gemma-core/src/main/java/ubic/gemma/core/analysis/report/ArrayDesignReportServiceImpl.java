@@ -81,7 +81,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> ids = new ArrayList<>();
+        Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : adVos ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             Long id = adVo.getId();
@@ -149,7 +149,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     @Override
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
-        Collection<Long> ids = new ArrayList<>();
+        Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : valueObjects ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             ids.add( adVo.getId() );
@@ -306,10 +306,14 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     }
 
     @Override
-    public ArrayDesignValueObject generateArrayDesignReport( ArrayDesign arrayDesign ) {
-        ArrayDesignValueObject ad = arrayDesignService.loadValueObject( arrayDesign );
-        generateArrayDesignReport( ad );
-        return getSummaryObject( ad.getId() );
+    public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
+        Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjectsByIds( Collections.singleton( id ) );
+        if ( adVo != null && adVo.size() > 0 ) {
+            generateArrayDesignReport( adVo.iterator().next() );
+            return getSummaryObject( id );
+        }
+        log.warn( "No value objects return for requested platforms" );
+        return null;
     }
 
     @Override
@@ -360,7 +364,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      */
     @Override
     public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids ) {
-        Collection<ArrayDesignValueObject> adVos = new ArrayList<>();
+        Collection<ArrayDesignValueObject> adVos = new ArrayList<ArrayDesignValueObject>();
         for ( Long id : ids ) {
             ArrayDesignValueObject adVo = getSummaryObject( id );
             if ( adVo != null ) {
@@ -405,7 +409,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         List<AuditEvent> events2 = auditEventService.getEvents( ad );
 
         String analysisEventString;
-        List<AuditEvent> events = new ArrayList<>();
+        List<AuditEvent> events = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : events2 ) {
             if ( event == null )

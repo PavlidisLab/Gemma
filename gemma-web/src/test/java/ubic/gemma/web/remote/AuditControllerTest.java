@@ -57,7 +57,7 @@ public class AuditControllerTest extends BaseSpringWebTest {
 
         e = expressionExperimentService.load( e.getId() );
         assertNotNull( e );
-        expressionExperimentService.thawLite( e );
+        e = expressionExperimentService.thawLite( e );
         assertNotNull( e );
         AuditTrail auditTrail = e.getAuditTrail();
         assertNotNull( auditTrail );

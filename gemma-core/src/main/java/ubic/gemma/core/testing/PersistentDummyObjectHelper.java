@@ -240,24 +240,24 @@ public class PersistentDummyObjectHelper {
         }
 
         ee.setRawDataFile( file );
-        Collection<FactorValue> allFactorValues = new HashSet<>();
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
 
         ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
         Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
 
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
-        List<ArrayDesign> arrayDesignsUsed = new ArrayList<>( eeService.getArrayDesignsUsed( prototype ) );
-        Collection<BioAssay> bioAssays = new HashSet<>();
+        List<ArrayDesign> arrayDesignsUsed = new ArrayList<ArrayDesign>( eeService.getArrayDesignsUsed( prototype ) );
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
         Collection<QuantitationType> quantitationTypes = addQuantitationTypes( new HashSet<QuantitationType>() );
 
-        eeService.thaw( prototype );
-        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        prototype = eeService.thaw( prototype );
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = getBioAssays( bioMaterials, ad );
             bioAssays.addAll( bas );
-            this.adService.thaw( ad );
+            ad = this.adService.thaw( ad );
             vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bas, ad ) );
 
         }
@@ -270,7 +270,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
+        ee = persisterHelper.persist( ee, c );
 
         return ee;
     }
@@ -301,13 +302,13 @@ public class PersistentDummyObjectHelper {
 
         ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
         ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
-        Collection<FactorValue> allFactorValues = new HashSet<>();
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
 
         ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
 
-        Collection<BioAssay> bioAssays = new HashSet<>();
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
         Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
         List<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
         List<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
@@ -316,7 +317,7 @@ public class PersistentDummyObjectHelper {
         ee.setBioAssays( bioAssays );
 
         log.debug( "expression experiment => design element data vectors" );
-        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
 
         Collection<QuantitationType> quantitationTypes = addQuantitationTypes( new HashSet<QuantitationType>() );
 
@@ -329,7 +330,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
+        ee = persisterHelper.persist( ee, c );
 
         return ee;
     }
@@ -426,12 +428,12 @@ public class PersistentDummyObjectHelper {
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
-        Collection<FactorValue> allFactorValues = new HashSet<>();
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
         ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
 
-        Collection<BioAssay> bioAssays = new HashSet<>();
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
         Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
 
         if ( arrayDesign != null ) {
@@ -521,7 +523,7 @@ public class PersistentDummyObjectHelper {
     @SuppressWarnings("unchecked")
     public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
-        Collection<BioSequence2GeneProduct> b2gCol = new HashSet<>();
+        Collection<BioSequence2GeneProduct> b2gCol = new HashSet<BioSequence2GeneProduct>();
 
         BlatAssociation b2g = BlatAssociation.Factory.newInstance();
         b2g.setScore( new Random().nextDouble() );
@@ -655,7 +657,7 @@ public class PersistentDummyObjectHelper {
         bm = this.getTestPersistentBioMaterial( taxon );
         ad = this.getTestPersistentArrayDesign( 4, true, true );
         ba = this.getTestPersistentBioAssay( ad, bm );
-        Set<BioAssay> bas1 = new HashSet<>();
+        Set<BioAssay> bas1 = new HashSet<BioAssay>();
         bas1.add( ba );
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -715,7 +717,7 @@ public class PersistentDummyObjectHelper {
 
     protected Collection<ExperimentalFactor> getExperimentalFactors( ExperimentalDesign ed,
             Collection<FactorValue> allFactorValues ) {
-        Collection<ExperimentalFactor> efCol = new HashSet<>();
+        Collection<ExperimentalFactor> efCol = new HashSet<ExperimentalFactor>();
         for ( int i = 0; i < NUM_EXPERIMENTAL_FACTORS; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
             ef.setExperimentalDesign( ed );
@@ -736,7 +738,7 @@ public class PersistentDummyObjectHelper {
     protected Collection<FactorValue> getFactorValues( ExperimentalFactor ef,
             Collection<FactorValue> allFactorValues ) {
 
-        Collection<FactorValue> fvCol = new HashSet<>();
+        Collection<FactorValue> fvCol = new HashSet<FactorValue>();
         for ( int i = 0; i < NUM_FACTOR_VALUES; i++ ) {
             FactorValue fv = FactorValue.Factory.newInstance();
             fv.setValue( "Factor value " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
@@ -750,7 +752,7 @@ public class PersistentDummyObjectHelper {
     }
 
     private List<BioAssay> getBioAssays( Collection<BioMaterial> bioMaterials, ArrayDesign ad ) {
-        List<BioAssay> baCol = new ArrayList<>();
+        List<BioAssay> baCol = new ArrayList<BioAssay>();
         for ( BioMaterial bm : bioMaterials ) {
             BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
             bm.getBioAssaysUsedIn().add( ba );
@@ -767,11 +769,11 @@ public class PersistentDummyObjectHelper {
 
         Iterator<FactorValue> iter = allFactorValues.iterator();
 
-        Collection<BioMaterial> baCol = new HashSet<>();
+        Collection<BioMaterial> baCol = new HashSet<BioMaterial>();
         // one biomaterial for each set of bioassays
         for ( int j = 0; j < NUM_BIOMATERIALS; j++ ) {
             BioMaterial bm = this.getTestNonPersistentBioMaterial();
-            Collection<FactorValue> fvCol = new HashSet<>();
+            Collection<FactorValue> fvCol = new HashSet<FactorValue>();
             if ( iter.hasNext() ) {
                 fvCol.add( iter.next() );
             } else {
@@ -800,7 +802,7 @@ public class PersistentDummyObjectHelper {
         BioAssayDimension baDim = BioAssayDimension.Factory
                 .newInstance( ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
 
-        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
         for ( QuantitationType quantType : quantitationTypes ) {
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();

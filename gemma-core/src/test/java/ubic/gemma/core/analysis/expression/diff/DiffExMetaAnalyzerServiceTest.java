@@ -161,9 +161,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( ds2 );
         assertNotNull( ds3 );
 
-        experimentService.thawLite( ds1 );
-        experimentService.thawLite( ds2 );
-        experimentService.thawLite( ds3 );
+        ds1 = experimentService.thawLite( ds1 );
+        ds2 = experimentService.thawLite( ds2 );
+        ds3 = experimentService.thawLite( ds3 );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds1 );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds2 );
@@ -194,11 +194,11 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         experimentService.update( ds3 );
 
         ds1 = experimentService.load( ds1.getId() );
-        experimentService.thawLite( ds1 );
+        ds1 = experimentService.thawLite( ds1 );
         ds2 = experimentService.load( ds2.getId() );
-        experimentService.thawLite( ds2 );
+        ds2 = experimentService.thawLite( ds2 );
         ds3 = experimentService.load( ds3.getId() );
-        experimentService.thawLite( ds3 );
+        ds3 = experimentService.thawLite( ds3 );
 
         designImporter.importDesign( ds1,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) );
@@ -209,9 +209,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         designImporter.importDesign( ds3,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2111.design.txt" ) );
 
-        experimentService.thawLite( ds1 );
-        experimentService.thawLite( ds2 );
-        experimentService.thawLite( ds3 );
+        ds1 = experimentService.thawLite( ds1 );
+        ds2 = experimentService.thawLite( ds2 );
+        ds3 = experimentService.thawLite( ds3 );
 
         /*
          * Run differential analyses.
@@ -387,8 +387,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         for ( GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject gdemairsivo : mdvo
                 .getIncludedResultSetsInfo() ) {
             DifferentialExpressionAnalysis thawedAnalysis = this.differentialExpressionAnalysisService
-                    .load( gdemairsivo.getAnalysisId() );
-            this.differentialExpressionAnalysisService.thawFully( thawedAnalysis );
+                    .thawFully( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) );
         }
 
         for ( GeneDifferentialExpressionMetaAnalysisResultValueObject vo : mdvo.getResults() ) {

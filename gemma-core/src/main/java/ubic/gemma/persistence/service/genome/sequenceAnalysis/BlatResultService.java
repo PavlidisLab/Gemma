@@ -33,13 +33,16 @@ public interface BlatResultService extends BaseVoEnabledService<BlatResult, Blat
 
     Collection<BlatResult> findByBioSequence( BioSequence bioSequence );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( BlatResult blatResult );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( BlatResult blatResult );
 
-    @Secured({ "GROUP_USER" })
-    BlatResult create( BlatResult blatResult );
+    BlatResult thaw( BlatResult blatResult );
+
+    Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
 
 }

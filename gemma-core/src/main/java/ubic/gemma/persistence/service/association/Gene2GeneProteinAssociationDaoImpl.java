@@ -18,7 +18,10 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import org.hibernate.*;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
@@ -58,13 +61,14 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
     @Override
     public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         try {
-            Criteria queryObject = this.getSession()
+            Criteria queryObject = this.getSessionFactory().getCurrentSession()
                     .createCriteria( Gene2GeneProteinAssociation.class );
             // have to have gene 1 and gene 2 there
             BusinessKey.checkKey( gene2GeneProteinAssociation );
 
             BusinessKey.createQueryObject( queryObject, gene2GeneProteinAssociation );
 
+            //noinspection unchecked
             java.util.List<Gene2GeneProteinAssociation> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -91,10 +95,10 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
 
     @Override
     public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
-        String queryStr = "from Gene2GeneProteinAssociationImpl where :gene = firstGene.id or :gene = secondGene.id";
-        Query queryObject = this.getSession().createQuery( queryStr )
-                .setLong( "gene", gene.getId() );
-        return queryObject.list();
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "from Gene2GeneProteinAssociationImpl where :gene = firstGene.id or :gene = secondGene.id" )
+                .setLong( "gene", gene.getId() ).list();
     }
 
     @Override
@@ -104,7 +108,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         if ( gene2GeneProteinAssociation.getId() == null )
             return;
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         EntityUtils.attach( session, gene2GeneProteinAssociation, Gene2GeneProteinAssociationImpl.class,
                 gene2GeneProteinAssociation.getId() );

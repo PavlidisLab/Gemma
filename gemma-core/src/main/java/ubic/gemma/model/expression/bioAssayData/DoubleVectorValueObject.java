@@ -56,9 +56,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      */
     private Long sourceVectorId = null;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required when using the class as a spring bean.
@@ -155,9 +153,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @Override
     public boolean equals( Object obj ) {
@@ -190,9 +186,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return prime * ( ( sourceVectorId == null ) ? 0 : sourceVectorId.hashCode() );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public double[] getData() {
         return data;
@@ -293,9 +287,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return result;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private void addGaps( BioAssayDimension dimToMatch ) {
 

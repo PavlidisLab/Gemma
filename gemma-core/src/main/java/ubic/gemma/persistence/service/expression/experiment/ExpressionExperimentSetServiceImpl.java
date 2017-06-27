@@ -165,7 +165,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> findIds( BioAssaySet bioAssaySet ) {
-        Collection<Long> ids = new ArrayList<>();
+        Collection<Long> ids = new ArrayList<Long>();
         Collection<ExpressionExperimentSet> eesets = this.expressionExperimentSetDao.find( bioAssaySet );
         for ( ExpressionExperimentSet eeset : eesets ) {
             ids.add( eeset.getId() );
@@ -429,7 +429,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         }
 
         assert newExperiments.size() == eeIds.size();
-        Collection<BioAssaySet> basColl = new HashSet<>();
+        Collection<BioAssaySet> basColl = new HashSet<BioAssaySet>();
         for ( ExpressionExperiment experiment : newExperiments ) {
             Taxon eeTaxon = getTaxonForSet( experiment );
 
@@ -503,5 +503,11 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         }
 
         return eeTaxon;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
+        this.expressionExperimentSetDao.thaw( expressionExperimentSet );
     }
 }

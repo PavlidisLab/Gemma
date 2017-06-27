@@ -221,12 +221,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> r = new HashMap<>();
 
         Map<Long, Collection<Long>> arrayDesignsUsed = CommonQueries
-                .getArrayDesignsUsedEEMap( expressionExperimentIds, this.getSession() );
+                .getArrayDesignsUsedEEMap( expressionExperimentIds, this.getSessionFactory().getCurrentSession() );
 
         /*
          * Fetch analyses of experiments or subsets.
          */
-        Collection<DifferentialExpressionAnalysis> hits = this.getSession().createQuery(
+        Collection<DifferentialExpressionAnalysis> hits = this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct a from DifferentialExpressionAnalysis a join fetch a.experimentAnalyzed e join"
                         + " fetch a.resultSets rs join fetch rs.hitListSizes where e.id in (:eeids)" )
                 .setParameterList( "eeids", expressionExperimentIds ).list();
@@ -236,9 +236,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
         if ( !hits.isEmpty() ) {
             // factor values for the experiments.
-            fvs = this.getSession().createQuery(
-                    "select distinct ee.id, fv from " + "ExpressionExperiment"
-                            + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+            fvs = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, fv from " + "ExpressionExperiment"
+                    + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", expressionExperimentIds ).list();
             for ( Object[] oa : fvs ) {
                 if ( !ee2fv.containsKey( oa[0] ) ) {
@@ -254,9 +253,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             }
             Collection<Long> probableSubSetIds = ListUtils.removeAll( used, ee2fv.keySet() );
             if ( !probableSubSetIds.isEmpty() ) {
-                fvs = this.getSession().createQuery(
-                        "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                                + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                fvs = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
+                        + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                         .setParameterList( "ees", probableSubSetIds ).list();
 
                 for ( Object[] oa : fvs ) {
@@ -272,9 +270,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         /*
          * Subsets of those same experiments (there might not be any)
          */
-        List<DifferentialExpressionAnalysis> analysesofSubsets = this.getSession()
-                .createQuery( "select distinct a from " + "ExpressionExperimentSubSet"
-                        + " ee, DifferentialExpressionAnalysis a" + " join ee.sourceExperiment see "
+        List<DifferentialExpressionAnalysis> analysesofSubsets = this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct a from " + "ExpressionExperimentSubSet" + " ee, DifferentialExpressionAnalysis a"
+                        + " join ee.sourceExperiment see "
                         + " join fetch a.experimentAnalyzed eeanalyzed where see.id in (:eeids) and ee=eeanalyzed" )
                 .setParameterList( "eeids", expressionExperimentIds ).list();
 
@@ -289,9 +287,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
             // factor value information for the subset. The key output is the ID of the subset, not of the source
             // experiment.
-            fvs = this.getSession().createQuery(
-                    "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                            + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+            fvs = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
+                    + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", experimentSubsetIds ).list();
             for ( Object[] oa : fvs ) {
                 if ( !ee2fv.containsKey( oa[0] ) ) {
@@ -348,7 +345,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             throw new IllegalArgumentException( "analysis cannot be null" );
         }
 
-        Session session = this.getSession(); // hopefully okay.
+        Session session = this.getSessionFactory().getCurrentSession(); // hopefully okay.
         session.flush();
         session.clear();
 
@@ -486,8 +483,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<CompositeSequence> probes = CommonQueries
-                .getCompositeSequences( gene, this.getSession() );
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSessionFactory().getCurrentSession() );
         Collection<BioAssaySet> result = new HashSet<BioAssaySet>();
         if ( probes.size() == 0 ) {
             return result;
@@ -551,13 +547,14 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Session session = this.getSession();
-        session.refresh( differentialExpressionAnalysis );
+        Session session = this.getSessionFactory().getCurrentSession();
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis.getExperimentAnalyzed() );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
+
+        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
 
         if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
             Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
@@ -569,14 +566,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             session.buildLockRequest( LockOptions.NONE ).lock( ear );
             Hibernate.initialize( ear );
             Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
-            for ( DifferentialExpressionAnalysisResult dear : ear.getResults() ) {
-                Hibernate.initialize( dear.getProbe() );
-                Hibernate.initialize( dear.getContrasts() );
-            }
-            Hibernate.initialize( ear.getAnalysis().getExperimentAnalyzed() );
-        }
 
-        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
+        }
         if ( timer.getTime() > 1000 ) {
             log.info( "Thaw: " + timer.getTime() + "ms" );
         }
@@ -665,7 +656,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         if ( probes.isEmpty() )
             return;
 
-        SQLQuery nativeQ = this.getSession().createSQLQuery( nativeQuery );
+        SQLQuery nativeQ = this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQuery );
         nativeQ.setParameterList( "probes", EntityUtils.getIds( probes ) );
         nativeQ.setParameter( "taxon", taxon );
         List<?> list = nativeQ.list();

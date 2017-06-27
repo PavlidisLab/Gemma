@@ -80,7 +80,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         super.buildOptions();
 
         Option blatResultOption = OptionBuilder.hasArg().withArgName( "PSL file" ).withDescription(
-                "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indidate multiple platforms to run); -t option overrides" )
+                "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate multiple platforms to run); -t option overrides" )
                 .withLongOpt( "blatfile" ).create( 'b' );
 
         Option blatScoreThresholdOption = OptionBuilder.hasArg().withArgName( "Blat score threshold" ).withDescription(
@@ -170,17 +170,17 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 @Override
                 void consume( ArrayDesign x ) {
 
-                    arrayDesignService.thaw( x );
+                    x = arrayDesignService.thaw( x );
 
                     processArrayDesign( skipIfLastRunLaterThan, x );
 
                 }
             }
 
-            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
+            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
             arrayDesigns.addAll( allArrayDesigns );
 
-            Collection<Thread> threads = new ArrayList<>();
+            Collection<Thread> threads = new ArrayList<Thread>();
             for ( int i = 0; i < this.numThreads; i++ ) {
                 Consumer c1 = new BlatCliConsumer( arrayDesigns );
                 Thread k = new Thread( c1 );
@@ -237,7 +237,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

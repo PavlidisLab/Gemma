@@ -147,7 +147,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
             log.info( "Creating new 'generic' platform" );
             arrayDesign = arrayDesignService.create( arrayDesign );
         }
-        arrayDesignService.thaw( arrayDesign );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         // temporary: making sure we set it, as it is new.
         arrayDesign.setTechnologyType( TechnologyType.NONE );
@@ -175,7 +175,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         int numNewElements = 0;
         int numUpdatedElements = 0;
         for ( Gene gene : knownGenes ) {
-            geneService.thaw( gene );
+            gene = geneService.thaw( gene );
 
             Collection<GeneProduct> products = gene.getProducts();
 
@@ -351,7 +351,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(),
                 count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
                         + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
@@ -398,7 +398,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     private String generateShortName() {
         String ncbiIdSuffix = useNCBIIds ? "_ncbiIds" : "";
         String ensemblIdSuffix = useEnsemblIds ? "_ensemblIds" : "";
-        String shortName = "";
+        String shortName;
         if ( StringUtils.isBlank( taxon.getCommonName() ) ) {
             shortName =
                     "Generic_" + StringUtils.strip( taxon.getScientificName() ).replaceAll( " ", "_" ) + ncbiIdSuffix;
@@ -414,7 +414,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
      */
     private Map<Gene, CompositeSequence> getExistingGeneMap( ArrayDesign arrayDesign ) {
 
-        Map<Gene, CompositeSequence> existingElements = new HashMap<>();
+        Map<Gene, CompositeSequence> existingElements = new HashMap<Gene, CompositeSequence>();
 
         if ( arrayDesign.getCompositeSequences().isEmpty() )
             return existingElements;
@@ -451,7 +451,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     private Map<String, CompositeSequence> getExistingProbeNameMap( ArrayDesign arrayDesign ) {
 
-        Map<String, CompositeSequence> existingElements = new HashMap<>();
+        Map<String, CompositeSequence> existingElements = new HashMap<String, CompositeSequence>();
 
         if ( arrayDesign.getCompositeSequences().isEmpty() )
             return existingElements;

@@ -32,11 +32,11 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByInvestigator( Contact investigator );
 
-    void thaw( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
-    void thawBioAssays( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    void thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
 
     Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc,
             DatabaseEntry accession );

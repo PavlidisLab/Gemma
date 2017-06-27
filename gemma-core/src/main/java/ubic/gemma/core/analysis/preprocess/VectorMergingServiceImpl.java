@@ -122,7 +122,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             throw new IllegalArgumentException( "Cannot cope with more than one platform" );
         }
 
-        expressionExperimentService.thaw( expExp );
+        expExp = expressionExperimentService.thaw( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
         log.info( qts.size() + " quantitation types for potential merge" );
         /*

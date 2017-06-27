@@ -51,10 +51,6 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
 
     private Collection<LocalFile> derivedDataFiles = new HashSet<>();
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
-
     @Override
     public boolean equals( Object object ) {
 
@@ -62,13 +58,15 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
             return false;
         }
         final BioAssay that = ( BioAssay ) object;
-        if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
 
         if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
             return false;
 
-        if ( this.getDescription() != null && that.getDescription() != null
-                && !this.getDescription().equals( that.getDescription() ) ) return false;
+        if ( this.getDescription() != null && that.getDescription() != null && !this.getDescription()
+                .equals( that.getDescription() ) )
+            return false;
 
         return true;
     }
@@ -87,10 +85,6 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
 
         return hashCode;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     public DatabaseEntry getAccession() {
         return this.accession;
@@ -203,10 +197,6 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     public void setSequenceReadLength( Integer sequenceReadLength ) {
         this.sequenceReadLength = sequenceReadLength;
     }
-
-    /* ********************************
-     * Public classes
-     * ********************************/
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.

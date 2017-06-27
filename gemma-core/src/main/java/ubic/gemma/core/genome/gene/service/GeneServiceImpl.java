@@ -61,10 +61,10 @@ import java.util.Map.Entry;
 @Service
 public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> implements GeneService {
 
+    private final GeneDao geneDao;
     private AnnotationAssociationService annotationAssociationService;
     private CoexpressionService coexpressionService;
     private Gene2GOAssociationService gene2GOAssociationService;
-    private GeneDao geneDao;
     private GeneOntologyService geneOntologyService;
     private GeneSetSearch geneSetSearch;
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
@@ -166,7 +166,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Override
     @Transactional(readOnly = true)
     public Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds ) {
-        Map<Integer, GeneValueObject> result = new HashMap<>();
+        Map<Integer, GeneValueObject> result = new HashMap<Integer, GeneValueObject>();
         Map<Integer, Gene> genes = this.geneDao.findByNcbiIds( ncbiIds );
         for ( Entry<Integer, Gene> entry : genes.entrySet() ) {
             result.put( entry.getKey(), new GeneValueObject( entry.getValue() ) );
@@ -219,7 +219,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Override
     @Transactional(readOnly = true)
     public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
-        Map<String, GeneValueObject> result = new HashMap<>();
+        Map<String, GeneValueObject> result = new HashMap<String, GeneValueObject>();
         Map<String, Gene> genes = this.geneDao.findByOfficialSymbols( query, taxonId );
         for ( String q : genes.keySet() ) {
             result.put( q, new GeneValueObject( genes.get( q ) ) );
@@ -232,7 +232,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         if ( geneId == null )
             throw new IllegalArgumentException( "Null id for gene" );
-        Collection<AnnotationValueObject> ontologies = new HashSet<>();
+        Collection<AnnotationValueObject> ontologies = new HashSet<AnnotationValueObject>();
         Gene g = load( geneId );
 
         if ( g == null ) {
@@ -389,7 +389,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         if ( gene == null )
             throw new IllegalArgumentException( "No gene with id " + geneId );
 
-        Collection<GeneProductValueObject> result = new ArrayList<>();
+        Collection<GeneProductValueObject> result = new ArrayList<GeneProductValueObject>();
         for ( GeneProduct gp : gene.getProducts() ) {
             result.add( new GeneProductValueObject( gp ) );
         }
@@ -413,12 +413,12 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         if ( gene == null ) {
             return null;
         }
-        this.geneDao.thaw( gene );
+        gene = this.geneDao.thaw( gene );
 
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        Collection<String> aliasStrings = new ArrayList<String>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -435,22 +435,19 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         gvo.setPlatformCount( platformCount );
 
         Collection<GeneSet> geneSets = this.geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsVos = new ArrayList<>();
+        Collection<GeneSetValueObject> gsVos = new ArrayList<GeneSetValueObject>();
         gsVos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( geneSets, false ) );
 
         gvo.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
-        Collection<GeneValueObject> homologues = new LinkedHashSet<>();
-        this.thawLite( geneHomologues );
-        for ( Gene g : geneHomologues ) {
-            homologues.add( loadValueObject( g ) );
-        }
+        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
+        geneHomologues = this.thawLite( geneHomologues );
+        Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
 
         gvo.setHomologues( homologues );
 
         Collection<PhenotypeAssociation> pas = gene.getPhenotypeAssociations();
-        Collection<CharacteristicValueObject> cVos = new HashSet<>();
+        Collection<CharacteristicValueObject> cVos = new HashSet<CharacteristicValueObject>();
         for ( PhenotypeAssociation pa : pas ) {
             cVos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
         }
@@ -488,12 +485,12 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Transactional(readOnly = true)
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
         Gene gene = load( geneId );
-        thaw( gene );
+        gene = thaw( gene );
         GeneValueObject initialResult = GeneValueObject.convert2ValueObject( gene );
         GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<>();
+        Collection<String> aliasStrings = new ArrayList<String>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -503,17 +500,14 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         Collection<GeneSet> geneSets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsVos = new ArrayList<>();
+        Collection<GeneSetValueObject> gsVos = new ArrayList<GeneSetValueObject>();
 
         gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
         details.setGeneSets( gsVos );
 
         Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
-        Collection<GeneValueObject> homologues = new LinkedHashSet<>();
-        this.thawLite( geneHomologues );
-        for ( Gene g : geneHomologues ) {
-            homologues.add( loadValueObject( g ) );
-        }
+        geneHomologues = this.thawLite( geneHomologues );
+        Collection<GeneValueObject> homologues = this.loadValueObjects( geneHomologues );
         details.setHomologues( homologues );
 
         return details;
@@ -546,7 +540,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         Gene g = this.geneDao.load( id );
         if ( g == null )
             return null;
-        this.geneDao.thaw( g );
+        g = this.geneDao.thaw( g );
         return GeneValueObject.convert2ValueObject( g );
     }
 
@@ -564,21 +558,18 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         return this.loadValueObjects( g );
     }
 
+    @Override
+    public Gene thaw( Gene gene ) {
+        return this.geneDao.thaw( gene );
+    }
+
     /**
      * Only thaw the Aliases, very light version
      */
     @Override
     @Transactional(readOnly = true)
-    public void thawAliases( Gene gene ) {
-        this.geneDao.thawAliases( gene );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( Collection<Gene> genes ) {
-        for ( Gene g : genes ) {
-            thaw( g );
-        }
+    public Gene thawAliases( Gene gene ) {
+        return this.geneDao.thawAliases( gene );
     }
 
     /**
@@ -586,28 +577,20 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
      */
     @Override
     @Transactional(readOnly = true)
-    public void thawLite( final Collection<Gene> genes ) {
-        this.geneDao.thawLite( genes );
+    public Collection<Gene> thawLite( final Collection<Gene> genes ) {
+        return this.geneDao.thawLite( genes );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void thawLiter( Collection<Gene> genes ) {
-        for ( Gene g : genes ) {
-            thawLiter( g );
-        }
+    public Gene thawLite( Gene gene ) {
+        return this.geneDao.thawLite( gene );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void thawLite( Gene gene ) {
-        this.geneDao.thawLite( gene );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thawLiter( Gene gene ) {
-        this.geneDao.thawLiter( gene );
+    public Gene thawLiter( Gene gene ) {
+        return this.geneDao.thawLiter( gene );
     }
 
 }

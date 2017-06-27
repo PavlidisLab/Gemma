@@ -37,9 +37,9 @@ import java.util.Map;
 public abstract class DifferentialExpressionResultServiceBase
         extends AbstractService<DifferentialExpressionAnalysisResult> implements DifferentialExpressionResultService {
 
-    protected final DifferentialExpressionResultDao DERDao;
+    final DifferentialExpressionResultDao DERDao;
 
-    protected final ExpressionAnalysisResultSetDao EARDao;
+    final ExpressionAnalysisResultSetDao EARDao;
 
     @Autowired
     public DifferentialExpressionResultServiceBase( DifferentialExpressionResultDao DERDao,
@@ -61,8 +61,8 @@ public abstract class DifferentialExpressionResultServiceBase
 
     @Override
     @Transactional(readOnly = true)
-    public void thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
-        this.EARDao.thawWithoutContrasts( resultSet );
+    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
+        return this.EARDao.thawWithoutContrasts( resultSet );
     }
 
     protected abstract Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(

@@ -61,7 +61,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign );
+        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceRemoveEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

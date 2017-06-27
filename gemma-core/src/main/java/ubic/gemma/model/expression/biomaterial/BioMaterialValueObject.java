@@ -61,9 +61,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private Map<String, String> factorValues;
     private String name;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required when using the class as a spring bean.
@@ -113,9 +111,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayDescription = ba.getDescription();
     }
 
-    /* ********************************
-     * Object override
-     * ********************************/
+
 
     @Override
     public boolean equals( Object obj ) {
@@ -152,9 +148,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         return result;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public String getAssayDescription() {
         return assayDescription;
@@ -236,9 +230,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.name = name;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private String getCharacteristicString( Collection<Characteristic> characters ) {
         return StringUtils.join( characters, CHARACTERISTIC_DELIMITER );

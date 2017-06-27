@@ -69,8 +69,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.load( auditable.getId() );
-        arrayDesignService.thawLite( auditable );
+        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
@@ -87,8 +86,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.load( auditable.getId() );
-        arrayDesignService.thawLite( auditable );
+        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
@@ -129,8 +127,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.load( auditable.getId() );
-        arrayDesignService.thawLite( auditable );
+        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
 
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
@@ -154,8 +151,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.load( auditable.getId() );
-        arrayDesignService.thawLite( auditable );
+        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
 
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );

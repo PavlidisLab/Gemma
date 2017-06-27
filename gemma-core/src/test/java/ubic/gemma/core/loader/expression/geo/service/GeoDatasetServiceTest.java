@@ -114,7 +114,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         for ( Object o : results ) {
             ExpressionExperiment e = ( ExpressionExperiment ) o;
-            eeService.thawLite( e );
+            e = eeService.thawLite( e );
 
             aclTestUtils.checkEEAcls( e );
 
@@ -168,7 +168,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.warn( "Test skipped because GSE2122 was not removed from the system prior to test" );
             return;
         }
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         assertEquals( 4, ee.getBioAssays().size() );
         aclTestUtils.checkEEAcls( ee );
     }
@@ -189,7 +189,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE13657 was already loaded - clean the DB before running the test" );
             return;
         }
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 13, qts.size() );
@@ -241,7 +241,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.load( ee.getId() );
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 16, qts.size() );
@@ -249,7 +249,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         twoChannelMissingValues.computeMissingValues( ee );
 
         ee = eeService.load( ee.getId() );
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
@@ -260,7 +260,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         assertEquals( 10, dataVectors.size() );
 
         ee = eeService.load( ee.getId() );
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
         File f = dataFileService.writeOrLocateDataFile( ee, true, true );
@@ -316,7 +316,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
             return;
         }
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 1, qts.size() );
 
@@ -341,7 +341,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             return;
         }
         assertNotNull( newee );
-        eeService.thaw( newee );
+        newee = eeService.thaw( newee );
 
         /*
          * Test for bug 468 (merging of subsets across GDS's)
@@ -434,7 +434,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE30521 was already loaded - clean the DB before running the test" );
             return;
         }
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         /*
          * Should load okay, but should not load the data.
@@ -458,7 +458,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE28383 was already loaded - clean the DB before running the test" );
             return;
         }
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         /*
          * Should load okay, even though it has no data. See bug 3981.

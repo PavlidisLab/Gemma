@@ -24,6 +24,7 @@ import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -37,25 +38,17 @@ import java.util.List;
  *
  * @author Anton, Nicolas
  */
+@Transactional
 public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
     private Class<T> elementClass;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
-        super();
         super.setSessionFactory( sessionFactory );
         this.elementClass = elementClass;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     @Override
     public Collection<T> create( Collection<T> entities ) {
@@ -79,7 +72,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     public Collection<T> load( Collection<Long> ids ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
                 .setParameterList( "ids", ids ).list();
     }
 
@@ -92,12 +86,14 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public Collection<T> loadAll() {
-        return this.getHibernateTemplate().loadAll( elementClass );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass ).list();
     }
 
     @Override
     public Integer countAll() {
-        return this.loadAll().size();
+        return ( Integer ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from " + elementClass.getSimpleName() ).uniqueResult();
     }
 
     @Override
@@ -114,7 +110,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public void remove( T entity ) {
-        this.getSession().delete( entity );
+        this.getSessionFactory().getCurrentSession().delete( entity );
     }
 
     @Override
@@ -135,16 +131,10 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         return found == null ? create( entity ) : found;
     }
 
+    @Override
     public T find( T entity ) {
         return this.load( entity.getId() );
     }
-
-    public void thaw( T entity ) {
-    }
-
-    /* ********************************
-     * Protected methods
-     * ********************************/
 
     /**
      * Does a like-match case insensitive search on given property and its value.

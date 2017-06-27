@@ -21,9 +21,7 @@ public abstract class WebService {
 
     static final String API_VERSION = "2.0";
 
-    /* ********************************
-     * API Methods
-     * ********************************/
+
 
     @GET
     @Path("/{default: .*}")

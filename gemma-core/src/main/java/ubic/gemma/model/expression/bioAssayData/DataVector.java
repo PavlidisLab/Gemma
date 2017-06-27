@@ -33,10 +33,6 @@ public abstract class DataVector implements Identifiable, Serializable {
     private Long id;
     private QuantitationType quantitationType;
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
-
     /**
      * Returns <code>true</code> if the argument is an DataVector instance and all identifiers for this entity equal the
      * identifiers of the argument entity. Returns <code>false</code> otherwise.
@@ -66,10 +62,6 @@ public abstract class DataVector implements Identifiable, Serializable {
 
         return hashCode;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     public byte[] getData() {
         return this.data;

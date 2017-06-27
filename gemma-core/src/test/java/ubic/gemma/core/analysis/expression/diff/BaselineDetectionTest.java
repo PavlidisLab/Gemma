@@ -72,17 +72,17 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
                 ee = ( ExpressionExperiment ) e.getData();
             }
         }
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             ee = eeService.load( ee.getId() );
-            eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             try (InputStream is = this.getClass().getResourceAsStream(
                     "/data/loader/expression/geo/gse18162Short/design.txt" );) {
                 experimentalDesignImporter.importDesign( ee, is, false );
             }
             ee = eeService.load( ee.getId() );
-            eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
         }
         // end setup
     }

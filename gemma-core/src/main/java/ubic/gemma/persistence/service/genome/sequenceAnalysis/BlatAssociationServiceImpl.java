@@ -53,4 +53,14 @@ public class BlatAssociationServiceImpl extends AbstractService<BlatAssociation>
     public Collection<BlatAssociation> find( Gene gene ) {
         return this.blatAssociationDao.find( gene );
     }
+
+    @Override
+    public void thaw( Collection<BlatAssociation> blatAssociations ) {
+        this.blatAssociationDao.thaw( blatAssociations );
+    }
+
+    @Override
+    public void thaw( BlatAssociation blatAssociation ) {
+        this.blatAssociationDao.thaw( blatAssociation );
+    }
 }

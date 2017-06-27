@@ -375,7 +375,7 @@ public class ExpressionExperimentController {
         if ( ee == null )
             return null;
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
 
@@ -433,7 +433,7 @@ public class ExpressionExperimentController {
         if ( ee == null )
             return null;
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true ); // ignore "batch"
     }
 
@@ -548,7 +548,7 @@ public class ExpressionExperimentController {
             return 0;
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
                 count++;
@@ -786,7 +786,7 @@ public class ExpressionExperimentController {
         if ( ads == null ) {
             throw new IllegalArgumentException( "No array designs for experiment " + ee.getId() + " could be loaded." );
         }
-        arrayDesignService.thawLite( ads );
+        ads = arrayDesignService.thawLite( ads );
 
         return ads;
     }
@@ -799,7 +799,7 @@ public class ExpressionExperimentController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
         }
-        expressionExperimentService.thawLiter( ee );
+        ee = expressionExperimentService.thawLiter( ee );
 
         return ee;
     }
@@ -949,7 +949,7 @@ public class ExpressionExperimentController {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
         // need to thaw?
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<QuantitationType> qts = ee.getQuantitationTypes();
 
         return quantitationTypeService.loadValueObjects( qts );
@@ -1112,7 +1112,7 @@ public class ExpressionExperimentController {
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
 
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -1137,7 +1137,7 @@ public class ExpressionExperimentController {
         Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -1214,7 +1214,7 @@ public class ExpressionExperimentController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with id=" + eeId );
         }
-        this.expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<BioMaterial> needToProcess = new HashSet<>();
 
@@ -1891,7 +1891,7 @@ public class ExpressionExperimentController {
         public TaskResult execute() {
             ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
 
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
 
             if ( ee.getPrimaryPublication() == null ) {
                 return new TaskResult( taskCommand, false );
@@ -1973,7 +1973,7 @@ public class ExpressionExperimentController {
             }
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject(expressionExperiment.getId());
             result.setPubmedId( Integer.parseInt( pubmedId ) );
-            bibliographicReferenceService.thaw( publication );
+            publication = bibliographicReferenceService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject
                     .convert2CitationValueObject( publication ) );
             return new TaskResult( taskCommand, result );

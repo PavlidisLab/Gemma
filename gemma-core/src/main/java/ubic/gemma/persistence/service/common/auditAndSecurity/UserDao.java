@@ -31,9 +31,6 @@ import java.util.Collection;
  */
 public interface UserDao extends BaseDao<User> {
 
-    /**
-     *
-     */
     void addAuthority( User user, String roleName );
 
     /**
@@ -41,8 +38,6 @@ public interface UserDao extends BaseDao<User> {
      */
     void changePassword( User user, String password );
 
-    User find( User contact );
-    
     User findByEmail( String email );
 
     User findByUserName( String userName );

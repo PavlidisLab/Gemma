@@ -62,7 +62,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
     private AuditTrailService auditTrailService = null;
-
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     @Autowired
@@ -217,9 +216,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         // get a clean copy of the analysis object from the DB.
         analysis = differentialExpressionAnalysisService.load( analysis.getId() );
-        // load all properties
-        differentialExpressionAnalysisService.thawFully( analysis );
-
         // we do this here because now we have IDs for everything.
         try {
             expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
@@ -312,7 +308,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         for ( DifferentialExpressionAnalysis existingAnalysis : diffAnalyses ) {
 
-            Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<>();
+            Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<ExperimentalFactor>();
 
             for ( ExpressionAnalysisResultSet resultSet : existingAnalysis.getResultSets() ) {
                 factorsInAnalysis.addAll( resultSet.getExperimentalFactors() );
@@ -372,7 +368,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
-        Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<>();
+        Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<ExperimentalFactor>();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
             factorsFromOldExp.addAll( oldfactors );
@@ -412,13 +408,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         /*
          * Copy the results over.
          */
-        Map<CompositeSequence, DifferentialExpressionAnalysisResult> p2der = new HashMap<>();
+        Map<CompositeSequence, DifferentialExpressionAnalysisResult> p2der = new HashMap<CompositeSequence, DifferentialExpressionAnalysisResult>();
 
         for ( DifferentialExpressionAnalysisResult der : oldrs.getResults() ) {
             p2der.put( der.getProbe(), der );
         }
 
-        Collection<DifferentialExpressionAnalysisResult> toAdd = new ArrayList<>();
+        Collection<DifferentialExpressionAnalysisResult> toAdd = new ArrayList<DifferentialExpressionAnalysisResult>();
         for ( DifferentialExpressionAnalysisResult newr : temprs.getResults() ) {
             if ( !p2der.containsKey( newr.getProbe() ) ) {
                 toAdd.add( newr );
@@ -474,7 +470,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses,
             DifferentialExpressionAnalysisConfig config ) {
 
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
             DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis,
                     config );
@@ -506,7 +502,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private Collection<DifferentialExpressionAnalysis> redoWithoutSave( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe, DifferentialExpressionAnalysisConfig config ) {
 
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
 
         BioAssaySet experimentAnalyzed = copyMe.getExperimentAnalyzed();
         assert experimentAnalyzed != null;

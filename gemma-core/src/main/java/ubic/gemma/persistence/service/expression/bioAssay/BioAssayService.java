@@ -25,79 +25,65 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 /**
  * @author kelsey
- * @version $Id$
  */
 @Service
-public interface BioAssayService {
+public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssayValueObject> {
 
     /**
      * Associates a bioMaterial with a specified bioAssay.
      */
     @PreAuthorize("hasPermission(#bioAssay, 'write') or hasPermission(#bioAssay, 'administration')")
-    public void addBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
+    void addBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
-    /**
-     * 
-     */
-    public Integer countAll();
-
+    @Override
     @Secured({ "GROUP_USER" })
-    public BioAssay create( BioAssay bioAssay );
+    BioAssay create( BioAssay bioAssay );
 
     /**
      * Locate all BioAssayDimensions in which the selected BioAssay occurs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
+    Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     /**
      * @param accession eg GSM12345.
      * @return BioAssays that match based on the plain accession (unconstrained by ExternalDatabase).
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioAssay> findByAccession( String accession );
+    Collection<BioAssay> findByAccession( String accession );
 
-    /**
-     * 
-     */
+
+    @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    public BioAssay findOrCreate( BioAssay bioAssay );
+    BioAssay findOrCreate( BioAssay bioAssay );
 
-    /**
-     * 
-     */
+
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public BioAssay load( java.lang.Long id );
+    BioAssay load( Long id );
 
-    /**
-     * @param ids
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Collection<BioAssay> loadValueObjects( Collection<Long> ids );
 
-    /**
-     * 
-     */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioAssay> loadAll();
+    Collection<BioAssay> loadAll();
 
-    /**
-     * 
-     */
+
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioAssay> load( Collection<Long> ids );
+    Collection<BioAssay> load( Collection<Long> ids );
 
-    /**
-     * 
-     */
+
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void remove( BioAssay bioAssay );
+    void remove( BioAssay bioAssay );
 
     /**
      * <p>
@@ -105,21 +91,17 @@ public interface BioAssayService {
      * </p>
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
+    void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
-    /**
-     * 
-     */
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw( BioAssay bioAssay );
+    void thaw( BioAssay bioAssay );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
+    Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
-    /**
-     * 
-     */
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( BioAssay bioAssay );
+    void update( BioAssay bioAssay );
 
 }

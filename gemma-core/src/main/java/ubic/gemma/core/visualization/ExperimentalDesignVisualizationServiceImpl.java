@@ -74,10 +74,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
-
     @Override
     public void clearCaches() {
         this.cachedLayouts.clear();
@@ -239,9 +235,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     }
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
     /**
      * Test method for now, shows how this can be used.
      */
@@ -288,10 +281,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             throw new RuntimeException( e1 );
         }
     }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
 
     private boolean allNaN( DoubleVectorValueObject vec ) {
         boolean allNaN = true;
@@ -371,7 +360,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         // BioAssayDimensionValueObject bd = new BioAssayDimensionValueObject( bds.iterator().next() );
 
         // needed?
-        this.expressionExperimentService.thawLite( e );
+        e = this.expressionExperimentService.thawLite( e );
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = this
                 .getExperimentalDesignLayout( e, bds );
@@ -497,10 +486,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
              */
             assert vec.getExpressionExperiment().getSourceExperiment() != null;
             actualEe = expressionExperimentService.load( vec.getExpressionExperiment().getSourceExperiment() );
-            expressionExperimentService.thawLiter( actualEe );
+            actualEe = expressionExperimentService.thawLiter( actualEe );
         } else {
             actualEe = expressionExperimentService.load( ee.getId() );
-            expressionExperimentService.thawLiter( actualEe );
+            actualEe = expressionExperimentService.thawLiter( actualEe );
             // plotExperimentalDesign( ee ); // debugging/testing
         }
         return actualEe;

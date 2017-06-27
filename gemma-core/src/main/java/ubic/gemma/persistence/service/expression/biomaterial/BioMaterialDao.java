@@ -42,6 +42,8 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
      */
     ExpressionExperiment getExpressionExperiment( Long bioMaterialId );
 
-    void thaw( Collection<BioMaterial> bioMaterials );
+    void thaw( BioMaterial bioMaterial );
+
+    Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
 }

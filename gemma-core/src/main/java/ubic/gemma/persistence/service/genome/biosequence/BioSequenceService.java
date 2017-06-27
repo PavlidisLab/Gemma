@@ -35,9 +35,11 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
 
     BioSequence findByAccession( DatabaseEntry accession );
 
+    @Override
     @Secured({ "GROUP_USER" })
     Collection<BioSequence> create( Collection<BioSequence> bioSequences );
 
+    @Override
     @Secured({ "GROUP_USER" })
     BioSequence create( BioSequence bioSequence );
 
@@ -60,6 +62,7 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
     @Secured({ "GROUP_USER" })
     Collection<BioSequence> findOrCreate( Collection<BioSequence> bioSequences );
 
+    @Override
     @Secured({ "GROUP_USER" })
     BioSequence findOrCreate( BioSequence bioSequence );
 
@@ -67,10 +70,15 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
 
     Collection<Gene> getGenesByName( String search );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( BioSequence bioSequence );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( BioSequence bioSequence );
 
+    Collection<BioSequence> thaw( Collection<BioSequence> bioSequences );
+
+    BioSequence thaw( BioSequence bs );
 }

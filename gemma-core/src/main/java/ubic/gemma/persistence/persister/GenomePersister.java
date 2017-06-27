@@ -229,7 +229,7 @@ abstract public class GenomePersister extends CommonPersister {
                      * is going to get 'reattached' to its original gene.
                      */
                     assert existingGeneProduct != null;
-                    geneProductDao.thaw( existingGeneProduct );
+                    existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
                     Gene oldGeneForExistingGeneProduct = existingGeneProduct.getGene();
                     if ( oldGeneForExistingGeneProduct != null ) {
                         Gene geneInfo = newGeneProductInfo.getGene(); // transient.
@@ -239,7 +239,7 @@ abstract public class GenomePersister extends CommonPersister {
                                     + " (often this means an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
 
                             // / Here we just remove its old association.
-                            geneDao.thaw( oldGeneForExistingGeneProduct );
+                            oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
                             geneDao.update( oldGeneForExistingGeneProduct );
 
@@ -660,7 +660,7 @@ abstract public class GenomePersister extends CommonPersister {
 
     private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
         Map<String, DatabaseEntry> updatedGpMap = new HashMap<>();
-        geneProductDao.thaw( existing );
+        existing = geneProductDao.thaw( existing );
         for ( DatabaseEntry de : existing.getAccessions() ) {
             updatedGpMap.put( de.getAccession(), de );
         }
@@ -773,7 +773,7 @@ abstract public class GenomePersister extends CommonPersister {
                 }
 
                 // handle less common cases, largely due to database cruft.
-                geneProductDao.thaw( otherGpUsingThisGi );
+                otherGpUsingThisGi = geneProductDao.thaw( otherGpUsingThisGi );
 
                 Gene oldGeneForExistingGeneProduct = otherGpUsingThisGi.getGene();
                 if ( oldGeneForExistingGeneProduct == null ) {
@@ -798,7 +798,7 @@ abstract public class GenomePersister extends CommonPersister {
                             + existingGene + " -- detected during GI update checks " );
 
                     // Here we just remove its old association.
-                    geneDao.thaw( oldGeneForExistingGeneProduct );
+                    oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
                     oldGeneForExistingGeneProduct.getProducts().remove( otherGpUsingThisGi );
                     geneDao.update( oldGeneForExistingGeneProduct );
 
@@ -943,7 +943,7 @@ abstract public class GenomePersister extends CommonPersister {
         Gene geneForExistingGeneProduct = existingGeneProduct.getGene();
         assert !isTransient( geneForExistingGeneProduct );
 
-        geneProductDao.thaw( existingGeneProduct );
+        existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
 
         // Update all the fields. Note that usually, some of these can't have changed or we wouldn't have even
         // found the 'existing' one (name GI in particular); however, sometimes we are updating this information

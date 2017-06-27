@@ -43,9 +43,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
     private GeneDifferentialExpressionMetaAnalysisSummaryValueObject geneDifferentialExpressionMetaAnalysisSummaryValueObject = null;
     private Long numEvidenceFromSameMetaAnalysis = 0L;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required when using the class as a spring bean.
@@ -98,9 +96,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
         this.geneDifferentialExpressionMetaAnalysisResultId = geneDifferentialExpressionMetaAnalysisResult.getId();
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @Override
     public boolean equals( Object obj ) {
@@ -130,9 +126,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
         return result;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public Long getGeneDifferentialExpressionMetaAnalysisId() {
         return this.geneDifferentialExpressionMetaAnalysisId;

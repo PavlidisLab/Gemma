@@ -206,7 +206,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
@@ -222,7 +222,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-        expressionExperimentService.thawLiter( ee );
+        ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true, true );
 
         ModelAndView mav = new ModelAndView( new TextView() );
@@ -272,7 +272,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-        expressionExperimentService.thawLiter( ee );
+        ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true, true );
 
         ModelAndView mav = new ModelAndView( new TextView() );
@@ -872,7 +872,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         assert ee.getId().equals( svdo.getId() );
 
-        expressionExperimentService.thawLite( ee ); // need the experimental design
+        ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
         Map<Long, ExperimentalFactor> efIdMap = EntityUtils
@@ -1273,7 +1273,7 @@ public class ExpressionExperimentQCController extends BaseController {
             writePlaceholderImage( os );
             return;
         }
-        expressionExperimentService.thawLite( ee ); // need the experimental design
+        ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 10;
 
         Map<Long, String> efs = getFactorNames( ee, maxWidth );

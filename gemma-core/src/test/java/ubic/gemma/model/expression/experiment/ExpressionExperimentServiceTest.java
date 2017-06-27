@@ -70,7 +70,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
             ee.setOwner( c );
 
             expressionExperimentService.update( ee );
-            expressionExperimentService.thaw( ee );
+            ee = expressionExperimentService.thaw( ee );
 
             persisted = true;
         } else {

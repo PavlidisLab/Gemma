@@ -150,7 +150,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>>();
         if ( gene == null )
             return results;
 
@@ -184,7 +184,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed ) {
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>>();
 
         if ( experimentsAnalyzed.size() == 0 ) {
             return results;
@@ -224,7 +224,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
             Collection<Long> experiments, double qvalueThreshold, Integer limit ) {
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>>();
 
         if ( experiments.size() == 0 ) {
             return results;
@@ -295,15 +295,15 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             query.setParameter( "threshold", threshold );
         }
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>>();
 
         //noinspection unchecked
         List<Object[]> qResult = query.list();
 
-        Set<Long> resultSets = new HashSet<>();
+        Set<Long> resultSets = new HashSet<Long>();
 
-        Map<Long, DifferentialExpressionValueObject> resultsInter = new HashMap<>();
-        Set<Long> probeIds = new HashSet<>();
+        Map<Long, DifferentialExpressionValueObject> resultsInter = new HashMap<Long, DifferentialExpressionValueObject>();
+        Set<Long> probeIds = new HashSet<Long>();
         GeneValueObject genevo = new GeneValueObject( gene );
 
         for ( Object[] rec : qResult ) {
@@ -334,7 +334,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         }
 
         // gather up probe information
-        Map<Long, String> probeNames = new HashMap<>();
+        Map<Long, String> probeNames = new HashMap<Long, String>();
         //noinspection unchecked
         for ( Object[] rec : ( List<Object[]> ) session
                 .createQuery( "select id,name from CompositeSequence where id in (:ids)" )
@@ -413,7 +413,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             qs += " order by r.correctedPvalue";
         }
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>>();
 
         if ( experimentsAnalyzed.size() == 0 ) {
             return results;
@@ -453,7 +453,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds ) {
 
-        Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<>();
+        Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
 
         Session session = this.getSessionFactory().getCurrentSession();
 
@@ -510,12 +510,12 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         int numResults = 0;
         long timeForFillingNonSig = 0;
 
-        Map<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb = new HashMap<>();
+        Map<Long, Map<Long, DiffExprGeneSearchResult>> resultsFromDb = new HashMap<Long, Map<Long, DiffExprGeneSearchResult>>();
 
         int numResultSetBatchesDone = 0;
 
         // Iterate over batches of resultSets
-        for ( Collection<Long> resultSetIdBatch : new BatchIterator<>( resultSetsNeeded, resultSetBatchSize ) ) {
+        for ( Collection<Long> resultSetIdBatch : new BatchIterator<Long>( resultSetsNeeded, resultSetBatchSize ) ) {
 
             if ( log.isDebugEnabled() )
                 log.debug( "Starting batch of resultsets: " + StringUtils
@@ -536,14 +536,14 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             StopWatch innerQt = new StopWatch();
 
             // iterate over batches of probes (genes)
-            for ( Collection<Long> probeBatch : new BatchIterator<>( cs2GeneIdMap.keySet(), geneBatchSize ) ) {
+            for ( Collection<Long> probeBatch : new BatchIterator<Long>( cs2GeneIdMap.keySet(), geneBatchSize ) ) {
 
                 if ( log.isDebugEnabled() )
                     log.debug( "Starting batch of probes: " + StringUtils
                             .abbreviate( StringUtils.join( probeBatch, "," ), 100 ) );
 
                 // would it help to sort the probeBatch/
-                List<Long> pbL = new Vector<>( probeBatch );
+                List<Long> pbL = new Vector<Long>( probeBatch );
                 Collections.sort( pbL );
 
                 queryObject.setParameterList( "probe_ids", pbL );
@@ -710,7 +710,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             throw new IllegalArgumentException( "Minimum number of results cannot be null" );
         }
 
-        List<DifferentialExpressionValueObject> results = new ArrayList<>();
+        List<DifferentialExpressionValueObject> results = new ArrayList<DifferentialExpressionValueObject>();
 
         if ( resultSet == null ) {
             return results;
@@ -722,11 +722,11 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             return results;
         }
 
-        results = new ArrayList<>();
+        results = new ArrayList<DifferentialExpressionValueObject>();
 
         // get it.
 
-        Collection<ExpressionAnalysisResultSet> resultsAnalyzed = new ArrayList<>();
+        Collection<ExpressionAnalysisResultSet> resultsAnalyzed = new ArrayList<ExpressionAnalysisResultSet>();
         resultsAnalyzed.add( resultSet );
 
         StopWatch timer = new StopWatch();
@@ -786,7 +786,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
 
-        Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> results = new HashMap<>();
+        Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>>();
 
         if ( resultsAnalyzed.size() == 0 ) {
             return results;
@@ -840,7 +840,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
         final String queryString = "from DifferentialExpressionAnalysisResultImpl dea where dea.id in (:ids)";
 
-        Collection<DifferentialExpressionAnalysisResult> probeResults = new HashSet<>();
+        Collection<DifferentialExpressionAnalysisResult> probeResults = new HashSet<DifferentialExpressionAnalysisResult>();
 
         if ( ids.isEmpty() ) {
             return probeResults;
@@ -848,7 +848,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         int BATCH_SIZE = 1000; // previously: 500.
 
-        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
             StopWatch timer = new StopWatch();
             timer.start();
             //noinspection unchecked
@@ -886,7 +886,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
                 + " c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, c.PVALUE FROM CONTRAST_RESULT c"
                 + " WHERE c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK IN (:ids)  ";
 
-        Map<Long, ContrastsValueObject> probeResults = new HashMap<>();
+        Map<Long, ContrastsValueObject> probeResults = new HashMap<Long, ContrastsValueObject>();
 
         if ( ids.isEmpty() ) {
             return probeResults;
@@ -896,7 +896,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         int BATCH_SIZE = 2000; // previously: 500, then 1000. New optimized query is plenty fast.
         StopWatch timer = new StopWatch();
-        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
             timer.reset();
             timer.start();
 
@@ -991,7 +991,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         for ( ContrastResult contrast : contrasts ) {
             FactorValue f = contrast.getFactorValue();
             Hibernate.initialize( f );
-            //noinspection ResultOfMethodCallIgnored // Touching property so it is initialized
+            //noinspection ResultOfMethodCallIgnored
             f.getIsBaseline();
         }
 
@@ -1002,7 +1002,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResult = new HashMap<>();
+        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResult = new HashMap<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>>();
         if ( differentialExpressionAnalysisResults.isEmpty() ) {
             return factorsByResult;
         }
@@ -1092,7 +1092,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     private Map<Long, Collection<Long>> fillFromCache( Map<Long, Map<Long, DiffExprGeneSearchResult>> results,
             Collection<Long> resultSetIds, Collection<Long> geneIds ) {
 
-        Map<Long, Collection<Long>> foundInCache = new HashMap<>();
+        Map<Long, Collection<Long>> foundInCache = new HashMap<Long, Collection<Long>>();
 
         boolean useCache = true;
         //noinspection ConstantConditions // for debugging ... disable cache.
@@ -1183,7 +1183,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
      */
     private Map<Long, Collection<Long>> getProbesForGenesInResultSetBatch( Session session, Collection<Long> geneIds,
             Map<Long, DiffExResultSetSummaryValueObject> resultSetIds, Collection<Long> resultSetIdBatch ) {
-        Collection<Long> adUsed = new HashSet<>();
+        Collection<Long> adUsed = new HashSet<Long>();
         for ( Long rsid : resultSetIdBatch ) {
             assert resultSetIds.containsKey( rsid );
             Collection<Long> arrayDesignsUsed = resultSetIds.get( rsid ).getArrayDesignsUsed();
@@ -1235,7 +1235,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             Collection<Long> resultSetIds, Collection<Long> geneIds ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<Long> needToQuery = new HashSet<>();
+        Collection<Long> needToQuery = new HashSet<Long>();
         for ( Long resultSetId : resultSetIds ) {
 
             if ( !foundInCache.containsKey( resultSetId ) || !foundInCache.get( resultSetId ).containsAll( geneIds ) ) {

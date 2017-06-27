@@ -95,7 +95,7 @@ public class AnnotationController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "No such experiment with id=" + id );
         }
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         ontologyService.addExpressionExperimentStatement( vc, ee );
         expressionExperimentService.update( ee );
     }
@@ -145,7 +145,7 @@ public class AnnotationController {
             return;
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<Characteristic> current = ee.getCharacteristics();
 

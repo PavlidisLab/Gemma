@@ -31,9 +31,7 @@ abstract class PrimitiveArg {
         this.errorMessage = errorMessage;
     }
 
-    /* ********************************
-     * Package-private methods
-     * ********************************/
+
 
     /**
      * Checks whether the instance of this object was created as a malformed argument, and if true, throws an

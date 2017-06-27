@@ -49,10 +49,6 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     private Collection<Long> genes;
     private BioAssayDimensionValueObject bioAssayDimension;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -83,10 +79,6 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         this.genes = genes;
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
-
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
@@ -115,10 +107,6 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     public String toString() {
         return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     /**
      * Represents the order of the bioassays for this. It might not be a real (persistent) BioAssayDimension: it might
@@ -176,7 +164,5 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     public void setQuantitationType( QuantitationTypeValueObject quantitationType ) {
         this.quantitationType = quantitationType;
     }
-
-
 
 }

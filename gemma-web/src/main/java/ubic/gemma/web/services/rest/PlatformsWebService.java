@@ -60,9 +60,7 @@ public class PlatformsWebService{
         this.arrayDesignService = arrayDesignService;
     }
 
-    /* ********************************
-     * API GET Methods
-     * ********************************/
+
 
     /**
      * Fetch the platform annotation file for the indicated id. GO annotations are the "no parents" ones.
@@ -106,9 +104,7 @@ public class PlatformsWebService{
         return new JsonReaderResponse<ArrayDesignValueObject>( new ArrayList<ArrayDesignValueObject>( vos ) );
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private String fetchAnnotations( ArrayDesign arrayDesign, HttpServletResponse servletResponse ) {
 

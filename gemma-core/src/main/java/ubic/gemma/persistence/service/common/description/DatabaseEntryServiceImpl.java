@@ -37,9 +37,7 @@ public class DatabaseEntryServiceImpl extends VoEnabledService<DatabaseEntry, Da
 
     private DatabaseEntryDao databaseEntryDao;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public DatabaseEntryServiceImpl( DatabaseEntryDao databaseEntryDao ) {
@@ -47,9 +45,7 @@ public class DatabaseEntryServiceImpl extends VoEnabledService<DatabaseEntry, Da
         this.databaseEntryDao = databaseEntryDao;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     @Transactional

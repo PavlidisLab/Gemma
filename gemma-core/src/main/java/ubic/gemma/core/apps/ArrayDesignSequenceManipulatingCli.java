@@ -177,8 +177,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     protected ArrayDesign unlazifyArrayDesign( ArrayDesign arrayDesign ) {
-        arrayDesignService.thaw( arrayDesign );
-        return arrayDesign;
+        return arrayDesignService.thaw( arrayDesign );
     }
 
     private void arraysFromCliList() {

@@ -18,20 +18,11 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -42,13 +33,18 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * Test for import that results in multiple factor values for the same factor on a single biomaterial.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest {
 
@@ -84,13 +80,13 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         metaData.getArrayDesigns().add( ad );
 
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/expdesign.import.testfull.data.txt" );) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.data.txt" )) {
 
             ee = s.create( metaData, data );
         }
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
     }
 
     /**
@@ -99,8 +95,8 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
     @Test
     public final void testParse() throws Exception {
 
-        try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/expdesign.import.testfull.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.txt" )) {
             experimentalDesignImporter.importDesign( ee, is, false );
         }
 
@@ -113,9 +109,6 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         checkResults( bms );
     }
 
-    /**
-     * @param bms
-     */
     private void checkResults( Collection<BioMaterial> bms ) {
 
         assertEquals( 17, ee.getExperimentalDesign().getExperimentalFactors().size() );

@@ -15,7 +15,6 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,8 +59,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
 
         BusinessKey.checkKey( bibliographicReference );
-        Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                .createCriteria( BibliographicReference.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BibliographicReference.class );
 
         /*
          * This syntax allows you to look at an association.
@@ -96,7 +94,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
         final String query = "select distinct e, b from ExpressionExperiment "
                 + "e join e.primaryPublication b left join fetch b.pubAccession where b in (:recs)";
 
-        Map<BibliographicReference, Collection<ExpressionExperiment>> result = new HashMap<>();
+        Map<BibliographicReference, Collection<ExpressionExperiment>> result = new HashMap<BibliographicReference, Collection<ExpressionExperiment>>();
 
         for ( Collection<BibliographicReference> batch : BatchIterator.batches( records, 200 ) ) {
             //noinspection unchecked
@@ -122,7 +120,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     @Override
     public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
         final String query = "select distinct e, b from ExpressionExperiment e join e.primaryPublication b left join fetch b.pubAccession left join fetch b.publicationTypes ";
-        Map<ExpressionExperiment, BibliographicReference> result = new HashMap<>();
+        Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();
         //noinspection unchecked
         List<Object[]> os = this.getSessionFactory().getCurrentSession().createQuery( query ).list();
         for ( Object[] o : os ) {
@@ -132,12 +130,13 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     }
 
     @Override
-    public void thaw( BibliographicReference bibliographicReference ) {
-        Hibernate.initialize( bibliographicReference.getPubAccession() );
-        Hibernate.initialize( bibliographicReference.getChemicals() );
-        Hibernate.initialize( bibliographicReference.getMeshTerms() );
-        Hibernate.initialize( bibliographicReference.getKeywords() );
-        Hibernate.initialize( bibliographicReference.getPublicationTypes() );
+    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
+        if ( bibliographicReference == null || bibliographicReference.getId() == null )
+            return bibliographicReference;
+        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
+                "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
+                        + "left join fetch b.meshTerms left join fetch b.keywords left join fetch b.publicationTypes where b.id = :id " )
+                .setParameter( "id", bibliographicReference.getId() ).uniqueResult();
     }
 
     @Override
@@ -169,7 +168,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     @Override
     public Collection<BibliographicReferenceValueObject> loadValueObjects(
             Collection<BibliographicReference> entities ) {
-        Collection<BibliographicReferenceValueObject> vos = new LinkedHashSet<>();
+        Collection<BibliographicReferenceValueObject> vos = new LinkedHashSet<BibliographicReferenceValueObject>();
         for ( BibliographicReference e : entities ) {
             vos.add( loadValueObject( e ) );
         }

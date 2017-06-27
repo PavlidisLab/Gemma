@@ -42,18 +42,14 @@ import java.util.*;
 @Repository
 public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public Gene2GOAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( sessionFactory );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
@@ -143,9 +139,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
         return result;
     }
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
+
 
     @SuppressWarnings("unchecked")
     @Override
@@ -210,9 +204,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
         log.info( "Deleted: " + total );
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private Map<? extends Gene, ? extends Collection<VocabCharacteristic>> fetchBatch( Set<Gene> batch ) {
         Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );

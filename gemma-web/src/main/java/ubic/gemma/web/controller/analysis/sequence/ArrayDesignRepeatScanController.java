@@ -47,7 +47,7 @@ public class ArrayDesignRepeatScanController {
     public String run( Long id ) throws Exception {
         ArrayDesign ad = arrayDesignService.load( id );
 
-        arrayDesignService.thawLite( ad );
+        ad = arrayDesignService.thawLite( ad );
         ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );
 
         return taskRunningService.submitRemoteTask( cmd );

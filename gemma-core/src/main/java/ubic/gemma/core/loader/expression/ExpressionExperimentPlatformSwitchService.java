@@ -113,7 +113,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             }
         }
 
-        expressionExperimentService.thaw( expExp );
+        expExp = expressionExperimentService.thaw( expExp );
 
         log.info( elsWithNoSeq.size() + " elements on the new platform have no associated sequence." );
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
@@ -123,7 +123,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
             if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
 
-            arrayDesignService.thaw( oldAd );
+            oldAd = arrayDesignService.thaw( oldAd );
 
             if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType().equals( TechnologyType.NONE ) ) {
                 /*
@@ -247,7 +247,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         // find the AD they have been merged into, make sure it is exists and they are all merged into the same AD.
         for ( ArrayDesign design : oldArrayDesigns ) {
             ArrayDesign mergedInto = design.getMergedInto();
-            arrayDesignService.thaw( mergedInto );
+            mergedInto = arrayDesignService.thaw( mergedInto );
 
             if ( mergedInto == null ) {
                 throw new IllegalArgumentException( design + " used by " + expExp
@@ -261,7 +261,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             if ( arrayDesign == null ) {
                 arrayDesign = mergedInto;
-                arrayDesignService.thaw( arrayDesign );
+                arrayDesign = arrayDesignService.thaw( arrayDesign );
             }
 
             if ( !mergedInto.equals( arrayDesign ) ) {

@@ -27,9 +27,10 @@ import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -37,26 +38,44 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
  * @author pavlidis
  */
 @Repository
-public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDao {
-
-    /* ********************************
-     * Constructors
-     * ********************************/
+public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
 
     @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
         super( BioAssay.class, sessionFactory );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+    @Override
+    public Collection<BioAssay> create( final Collection<BioAssay> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( BioAssay entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
+        return entities;
+    }
+
+    @Override
+    public void update( final Collection<BioAssay> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( BioAssay entity : entities ) {
+                    update( entity );
+                }
+            }
+        } );
+    }
 
     @Override
     public BioAssay find( BioAssay bioAssay ) {
@@ -93,7 +112,7 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
     @Override
     public Collection<BioAssay> findByAccession( String accession ) {
         if ( StringUtils.isBlank( accession ) )
-            return new HashSet<>();
+            return new HashSet<BioAssay>();
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
@@ -152,8 +171,16 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
     }
 
     @Override
-    public Collection<BioAssay> loadValueObjects( Collection<Long> ids ) {
-        return null;
+    public BioAssayValueObject loadValueObject( BioAssay entity ) {
+        return new BioAssayValueObject( entity );
     }
 
+    @Override
+    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities ) {
+        Collection<BioAssayValueObject> vos = new LinkedHashSet<BioAssayValueObject>();
+        for ( BioAssay e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
 }

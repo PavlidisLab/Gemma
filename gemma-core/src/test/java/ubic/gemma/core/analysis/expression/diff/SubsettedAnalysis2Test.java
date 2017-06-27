@@ -75,7 +75,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -89,7 +89,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         designImporter.importDesign(
                 ee,
@@ -106,7 +106,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
     @Test
     public void test() throws Exception {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 4, factors.size() ); // includes batch

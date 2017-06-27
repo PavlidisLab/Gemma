@@ -94,7 +94,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     @Override
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
-        expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
@@ -279,7 +279,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( e == null || e.getId() == null )
             return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             BioMaterial sample = assay.getSampleUsed();
@@ -324,7 +324,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
         // ugly fix for bug 3746
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.load( designId ) );
-        expressionExperimentService.thawLite(ee);
+        ee = expressionExperimentService.thawLite(ee);
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
 
@@ -431,7 +431,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         request.setAttribute( "id", designId );
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         // strip white spaces
         String desc = ee.getDescription();
@@ -464,7 +464,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( ee == null )
             throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 

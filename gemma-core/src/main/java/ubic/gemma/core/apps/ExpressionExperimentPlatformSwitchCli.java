@@ -105,7 +105,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     private void processExperiment( ExpressionExperiment ee ) {
 
         try {
-            this.eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             AuditTrailService ats = this.getBean( AuditTrailService.class );
             AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -115,7 +115,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                     log.error( "Unknown array design" );
                     bail( ErrorCode.INVALID_OPTION );
                 }
-                arrayDesignService.thaw( ad );
+                ad = arrayDesignService.thaw( ad );
                 ee = serv.switchExperimentToArrayDesign( ee, ad );
 
                 ats.addUpdateEvent( ee, type, "Switched to use " + ad );

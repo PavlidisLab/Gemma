@@ -136,14 +136,14 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         this.aclTestUtils.checkEEAcls( ee );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-        this.expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         int s = ee.getExperimentalDesign().getExperimentalFactors().size();
         ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
         experimentalFactorService.delete( toDelete );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-        this.expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         assertEquals( s - 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
 

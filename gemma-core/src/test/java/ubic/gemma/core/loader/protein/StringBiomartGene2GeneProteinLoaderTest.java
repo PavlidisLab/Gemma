@@ -276,7 +276,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         for ( Gene2GeneProteinAssociation association : associations ) {
             gene2GeneProteinAssociationService.thaw( association );
             Gene secondGene = association.getSecondGene();
-            this.geneService.thaw( secondGene );
+            secondGene = this.geneService.thaw( secondGene );
             String taxonScientificName = secondGene.getTaxon().getScientificName();
             if ( taxonScientificName.equals( zebraFish.getScientificName() ) ) {
                 counterAssociationsSavedZebra++;

@@ -27,7 +27,6 @@ import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
@@ -48,13 +47,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
 
     @Override
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.getSessionFactory().getCurrentSession().createQuery( "select a from GeneDifferentialExpressionMetaAnalysis a"
-                + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" ).list().isEmpty();
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select a from GeneDifferentialExpressionMetaAnalysis a"
+                        + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" ).list().isEmpty();
     }
 
     @Override
     public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
-
         Session session = this.getSessionFactory().getCurrentSession();
 
         session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
@@ -67,70 +66,70 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
     }
 
     /**
-     * @see ExpressionAnalysisResultSetDao#thawWithoutContrasts(ExpressionAnalysisResultSet)
+     * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
      */
     @Override
-    public void thawWithoutContrasts( final ExpressionAnalysisResultSet resultSet ) {
+    protected ExpressionAnalysisResultSet handleThaw( final ExpressionAnalysisResultSet resultSet ) {
         StopWatch timer = new StopWatch();
         timer.start();
         this.thawLite( resultSet );
 
-        Collection<DifferentialExpressionAnalysisResult> rss = resultSet.getResults();
-        Hibernate.initialize( rss );
-        for(DifferentialExpressionAnalysisResult rs : rss){
-            Hibernate.initialize( rs.getProbe() );
-        }
-        Collection<ExperimentalFactor> efs = resultSet.getExperimentalFactors();
-        Hibernate.initialize( efs );
-        for(ExperimentalFactor ef : efs){
-            Hibernate.initialize( ef.getFactorValues() );
-        }
+        //noinspection unchecked
+        List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
+                "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
+                        + " left outer join fetch res.probe left join fetch res.contrasts "
+                        + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
+                        + "where r = :rs " ).setParameter( "rs", resultSet ).list();
 
         if ( timer.getTime() > 1000 ) {
-            Log.info( "Thaw result set: " + timer.getTime() + "ms" );
+            Log.info( "Thaw resultSet: " + timer.getTime() + "ms" );
         }
+
+        assert !res.isEmpty();
+
+        return res.get( 0 );
+
+    }
+
+    /**
+     * @see ExpressionAnalysisResultSetDao#thawWithoutContrasts(ExpressionAnalysisResultSet)
+     */
+    @Override
+    public ExpressionAnalysisResultSet thawWithoutContrasts( final ExpressionAnalysisResultSet resultSet ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        this.thawLite( resultSet );
+
+        //noinspection unchecked
+        List<ExpressionAnalysisResultSet> res = this.getSessionFactory().getCurrentSession().createQuery(
+                "select r from ExpressionAnalysisResultSet r left join fetch r.results res "
+                        + " left outer join fetch res.probe "
+                        + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
+                        + "where r = :rs " ).setParameter( "rs", resultSet ).list();
+
+        if ( timer.getTime() > 1000 ) {
+            Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
+        }
+
+        assert !res.isEmpty();
+
+        return res.get( 0 );
 
     }
 
     @Override
-    public void thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
         differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession()
                 .load( DifferentialExpressionAnalysis.class, differentialExpressionAnalysis.getId() );
-        Collection<ExpressionAnalysisResultSet> thawed = new HashSet<>();
+        Collection<ExpressionAnalysisResultSet> thawed = new HashSet<ExpressionAnalysisResultSet>();
         for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
-            this.thaw( rs );
-            thawed.add( rs );
+            thawed.add( this.thaw( rs ) );
         }
         boolean changed = differentialExpressionAnalysis.getResultSets().addAll( thawed );
         assert !changed; // they are the same objects, just updated.
-    }
-
-    /**
-     * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
-     */
-    @Override
-    protected void handleThaw( final ExpressionAnalysisResultSet resultSet ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        this.getSessionFactory().getCurrentSession().refresh( resultSet );
-        this.thawLite( resultSet );
-
-        Hibernate.initialize( resultSet.getResults() );
-        for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
-            Hibernate.initialize( dear.getProbe() );
-            Hibernate.initialize( dear.getContrasts() );
-        }
-        Hibernate.initialize( resultSet.getExperimentalFactors() );
-        for ( ExperimentalFactor ef : resultSet.getExperimentalFactors() ) {
-            Hibernate.initialize( ef.getFactorValues() );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            Log.info( "Thaw result set: " + timer.getTime() + "ms" );
-        }
-
+        return differentialExpressionAnalysis;
     }
 }

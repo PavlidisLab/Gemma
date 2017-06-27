@@ -14,23 +14,14 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -38,14 +29,24 @@ import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Paul
  */
 public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
+
+    private ExpressionExperiment ee;
 
     @Autowired
     private AnalysisSelectionAndExecutionService analysisService = null;
@@ -55,8 +56,6 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ExperimentalDesignImporter designImporter;
-
-    private ExpressionExperiment ee;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
@@ -72,8 +71,8 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
     @Test
     public void test() throws Exception {
-        AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
-                null, true );
+        AnalysisType aa = analysisService
+                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.GENERICLM, aa );
 
@@ -84,7 +83,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
         assertEquals( 1, factors.size() );
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
- 
+
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
         assertEquals( 1, result.size() );
@@ -93,8 +92,8 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
         assertNotNull( analysis );
 
-        Map<ExperimentalFactor, FactorValue> baselineLevels = ExpressionDataMatrixColumnSort.getBaselineLevels( ee
-                .getExperimentalDesign().getExperimentalFactors() );
+        Map<ExperimentalFactor, FactorValue> baselineLevels = ExpressionDataMatrixColumnSort
+                .getBaselineLevels( ee.getExperimentalDesign().getExperimentalFactors() );
 
         assertEquals( 1, baselineLevels.size() );
         FactorValue fv = baselineLevels.values().iterator().next();
@@ -106,7 +105,9 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
     @After
     public void tearDown() throws Exception {
-        if ( ee != null ) expressionExperimentService.remove( ee );
+        if ( ee != null ) {
+            expressionExperimentService.remove( ee );
+        }
     }
 
     @Before
@@ -117,8 +118,8 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
          * exposes issues with our attempts to ignore the data from exon arrays until we get it from the raw CEL files.
          */
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( FileTools
-                .resourceToPath( "/data/analysis/expression/gse13949short" ) ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                FileTools.resourceToPath( "/data/analysis/expression/gse13949short" ) ) );
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE13949", false, true, false, false );
@@ -127,7 +128,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -141,12 +142,10 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thaw( ee );
 
-        designImporter.importDesign(
-                ee,
-                this.getClass().getResourceAsStream(
-                        "/data/analysis/expression/gse13949short/1151_GSE13949_expdesign.data.txt" ) );
+        designImporter.importDesign( ee, this.getClass()
+                .getResourceAsStream( "/data/analysis/expression/gse13949short/1151_GSE13949_expdesign.data.txt" ) );
 
     }
 

@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -48,14 +47,9 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
         }
     };
-
+    private final TaxonDao taxonDao;
     private ExpressionExperimentService expressionExperimentService;
     private ArrayDesignService arrayDesignService;
-    private TaxonDao taxonDao;
-
-    /* ********************************
-     * Constructors
-     * ********************************/
 
     @Autowired
     public TaxonServiceImpl( TaxonDao taxonDao ) {
@@ -72,10 +66,6 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     /**
      * @see TaxonService#findByAbbreviation(String)
@@ -119,7 +109,7 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Override
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaSpecies() {
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TAXON_VO_COMPARATOR );
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
             if ( taxon.getIsSpecies() ) {
                 taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
@@ -134,7 +124,7 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Override
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithArrays() {
-        Set<TaxonValueObject> taxaWithArrays = new TreeSet<>( TAXON_VO_COMPARATOR );
+        Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
         for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
             taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
@@ -149,7 +139,7 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Override
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
-        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<>( TAXON_VO_COMPARATOR );
+        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
 
         Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
 
@@ -168,7 +158,7 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithEvidence() {
 
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TAXON_VO_COMPARATOR );
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadTaxonWithEvidence() ) {
             if ( taxon.getIsSpecies() ) {
                 taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
@@ -183,7 +173,7 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Override
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithGenes() {
-        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<>( TAXON_VO_COMPARATOR );
+        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
             if ( taxon.getIsGenesUsable() ) {
                 taxaWithGenes.add( TaxonValueObject.fromEntity( taxon ) );
@@ -198,7 +188,7 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Override
     @Transactional(readOnly = true)
     public Collection<Taxon> loadAllTaxaWithGenes() {
-        SortedSet<Taxon> taxaWithGenes = new TreeSet<>( TAXON_COMPARATOR );
+        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : loadAll() ) {
             if ( taxon.getIsGenesUsable() ) {
                 taxaWithGenes.add( taxon );
@@ -216,4 +206,9 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
         return this.taxonDao.findTaxonUsedInEvidence();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public void thaw( final Taxon taxon ) {
+        this.taxonDao.thaw( taxon );
+    }
 }

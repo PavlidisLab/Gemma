@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -101,10 +102,15 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     }
 
     @Override
-    public void thaw( Collection<BioMaterial> bioMaterials ) {
-        for ( BioMaterial b : bioMaterials ) {
-            this.thaw( b );
-        }
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+        if ( bioMaterials.isEmpty() )
+            return bioMaterials;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
+                        + " left join fetch b.treatments left join fetch b.factorValues left join fetch b.auditTrail at "
+                        + "left join fetch at.events where b.id in (:ids)" )
+                .setParameterList( "ids", EntityUtils.getIds( bioMaterials ) ).list();
     }
 
     @Override
@@ -131,7 +137,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
 
     @Override
     public Collection<BioMaterialValueObject> loadValueObjects( Collection<BioMaterial> entities ) {
-        Collection<BioMaterialValueObject> vos = new LinkedHashSet<>();
+        Collection<BioMaterialValueObject> vos = new LinkedHashSet<BioMaterialValueObject>();
         for ( BioMaterial e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }

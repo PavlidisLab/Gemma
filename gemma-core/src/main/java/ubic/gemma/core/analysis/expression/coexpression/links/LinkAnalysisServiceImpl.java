@@ -231,7 +231,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 

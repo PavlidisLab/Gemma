@@ -46,7 +46,7 @@ public class GenericExperimentDaoImpl extends AbstractDao<GenericExperiment> imp
     @Override
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
 
-        Criteria genericExperiment = this.getSession()
+        Criteria genericExperiment = this.getSessionFactory().getCurrentSession()
                 .createCriteria( GenericExperiment.class );
         genericExperiment.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
                 .createCriteria( "primaryPublication" ).createCriteria( "pubAccession" )

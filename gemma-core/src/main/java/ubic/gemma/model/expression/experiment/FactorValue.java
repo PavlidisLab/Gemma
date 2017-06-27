@@ -46,9 +46,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private Measurement measurement;
     private Collection<Characteristic> characteristics = new java.util.HashSet<>();
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -58,9 +56,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     public FactorValue() {
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @Override
     public boolean equals( Object object ) {
@@ -129,9 +125,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         return buf.toString();
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public Long getId() {
@@ -214,9 +208,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         return "absent ";
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private boolean checkGuts( FactorValue that ) {
 
@@ -266,9 +258,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         return true;
     }
 
-    /* ********************************
-     * Static classes
-     * ********************************/
+
 
     /**
      * Constructs new instances of {@link FactorValue}.

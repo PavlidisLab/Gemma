@@ -62,9 +62,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
     private Set<PhenotypeAssPubValueObject> phenotypeAssPubVO = new HashSet<>();
     private ScoreValueObject scoreValueObject = new ScoreValueObject();
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required when using the class as a spring bean.
@@ -143,9 +141,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
         }
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @Override
     public int compareTo( EvidenceValueObject evidenceValueObject ) {
@@ -236,9 +232,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
                 + scoreValueObject + "]";
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public String getClassName() {
         return this.className;
@@ -431,9 +425,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
         return null;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
         if ( this == evidenceValueObject )

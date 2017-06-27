@@ -31,6 +31,7 @@ import java.util.Collection;
  */
 public interface BlatAssociationService extends BaseService<BlatAssociation> {
 
+    @Override
     @Secured({ "GROUP_USER" })
     BlatAssociation create( BlatAssociation blatAssociation );
 
@@ -42,9 +43,11 @@ public interface BlatAssociationService extends BaseService<BlatAssociation> {
 
     void thaw( BlatAssociation blatAssociation );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( BlatAssociation blatAssociation );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( BlatAssociation blatAssociation );
 

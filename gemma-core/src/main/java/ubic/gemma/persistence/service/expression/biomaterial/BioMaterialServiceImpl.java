@@ -98,10 +98,20 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     }
 
     @Override
+    public void thaw( BioMaterial bioMaterial ) {
+        this.bioMaterialDao.thaw( bioMaterial );
+    }
+
+    @Override
+    public void thaw( Collection<BioMaterial> bioMaterials ) {
+        this.bioMaterialDao.thaw( bioMaterials );
+    }
+
+    @Override
     @Transactional
     public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
 
-        Collection<BioMaterial> bms = new HashSet<>();
+        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioMaterialValueObject bioMaterialValueObject : valueObjects ) {
             BioMaterial updatedBm = this.update( bioMaterialValueObject );
             // the map FactorIdToFactorValueId contains values for all factors, including empty ones.
@@ -127,7 +137,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     private BioMaterial update( BioMaterialValueObject bmvo ) {
         BioMaterial bm = load( bmvo.getId() );
 
-        Collection<FactorValue> updatedFactorValues = new HashSet<>();
+        Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
         Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
         for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
             String factorValueString = factorIdToFactorValueId.get( factorIdString );
@@ -217,6 +227,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         return bm;
     }
 
+    @Override
     public String getBioMaterialIdList( Collection<BioMaterial> bioMaterials ) {
         StringBuilder buf = new StringBuilder();
         for ( BioMaterial bm : bioMaterials ) {

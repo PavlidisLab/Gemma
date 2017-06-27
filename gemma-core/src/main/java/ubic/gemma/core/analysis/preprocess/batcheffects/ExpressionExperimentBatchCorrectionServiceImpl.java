@@ -164,7 +164,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ExpressionExperiment ee = originalDataMatrix.getExpressionExperiment();
 
-        this.expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         /*
          * is there a batch to use?

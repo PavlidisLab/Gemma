@@ -99,7 +99,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
             log.info( "Recomputing mean-variance" );
 
-            expressionExperimentService.thawLiter( ee );
+            ee = expressionExperimentService.thawLiter( ee );
             mvr = ee.getMeanVarianceRelation();
             ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
             if ( intensities == null ) {
@@ -149,7 +149,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     @Override
     public MeanVarianceRelation find( ExpressionExperiment ee ) {
-        expressionExperimentService.thawLiter( ee );
+        ee = expressionExperimentService.thawLiter( ee );
         return ee.getMeanVarianceRelation();
     }
 }

@@ -34,6 +34,20 @@ public class AnnotationAssociationServiceImpl extends AbstractService<Annotation
         return this.annotationAssociationDao.find( gene );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public void thaw( AnnotationAssociation annotationAssociation ) {
+        this.annotationAssociationDao.thaw( annotationAssociation );
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void thaw( Collection<AnnotationAssociation> anCollection ) {
+        this.annotationAssociationDao.thaw( anCollection );
+
+    }
+
     /**
      * Remove root terms, like "molecular_function", "biological_process" and "cellular_component" Also removes any null
      * objects.

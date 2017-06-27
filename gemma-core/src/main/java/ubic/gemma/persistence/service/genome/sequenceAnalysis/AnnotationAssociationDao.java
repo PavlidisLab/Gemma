@@ -25,6 +25,8 @@ public interface AnnotationAssociationDao extends BaseDao<AnnotationAssociation>
 
     Collection<AnnotationAssociation> find( Gene gene );
 
+    void thaw( final AnnotationAssociation annotationAssociation );
+
     void thaw( Collection<AnnotationAssociation> anCollection );
 
     Collection<AnnotationAssociation> find( Collection<GeneProduct> gps );

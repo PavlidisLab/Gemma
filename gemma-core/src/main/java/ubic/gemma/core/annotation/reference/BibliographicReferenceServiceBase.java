@@ -190,9 +190,9 @@ public abstract class BibliographicReferenceServiceBase
     private Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
             Collection<BibliographicReference> bibRefs ) {
         if ( bibRefs.isEmpty() ) {
-            return new ArrayList<>();
+            return new ArrayList<BibliographicReferenceValueObject>();
         }
-        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<>();
+        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<Long, BibliographicReferenceValueObject>();
 
         for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );

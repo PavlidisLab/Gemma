@@ -49,13 +49,16 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
     }
 
     @Override
-    public java.util.Map<Characteristic, Object> findByParentClass( final java.lang.Class<?> parentClass ) {
+    public java.util.Map<Characteristic, Object> findByParentClass( final Class<?> parentClass ) {
         return this.handleFindByParentClass( parentClass );
     }
 
     @Override
-    public java.util.Collection<Characteristic> findByUri( final String searchString ) {
-        return this.handleFindByUri( searchString );
+    public java.util.Collection<Characteristic> findByUri( final String search ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from VocabCharacteristic as char where  char.valueUri = :search" )
+                .setParameter( "search", search ).list();
     }
 
     @Override
@@ -64,12 +67,15 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
     }
 
     @Override
-    public java.util.Collection<Characteristic> findByValue( final java.lang.String search ) {
-        return this.handleFindByValue( search );
+    public java.util.Collection<Characteristic> findByValue( final String search ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct char from Characteristic as char where char.value like :search" )
+                .setParameter( "search", search ).list();
     }
 
     @Override
-    public Map<Characteristic, Object> getParents( final java.lang.Class<?> parentClass,
+    public Map<Characteristic, Object> getParents( final Class<?> parentClass,
             final java.util.Collection<Characteristic> characteristics ) {
         return this.handleGetParents( parentClass, characteristics );
     }
@@ -85,7 +91,7 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
                 "select parent, char from " + parentClass.getSimpleName() + " as parent " + "inner join parent." + field
                         + " as char";
 
-        Map<Characteristic, Object> charToParent = new HashMap<>();
+        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
         for ( Object o : getHibernateTemplate().find( queryString ) ) {
             Object[] row = ( Object[] ) o;
             charToParent.put( ( Characteristic ) row[1], row[0] );
@@ -95,8 +101,8 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
 
     private Collection<Characteristic> handleFindByUri( Collection<String> uris ) {
         int batchSize = 1000; // to avoid HQL parser barfing
-        Collection<String> batch = new HashSet<>();
-        Collection<Characteristic> results = new HashSet<>();
+        Collection<String> batch = new HashSet<String>();
+        Collection<Characteristic> results = new HashSet<Characteristic>();
         final String queryString = "from VocabCharacteristic where valueUri in (:uris)";
 
         for ( String uri : uris ) {
@@ -112,20 +118,10 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
         return results;
     }
 
-    private Collection<Characteristic> handleFindByUri( String searchString ) {
-        final String queryString = "select char from VocabCharacteristic as char where  char.valueUri = :search";
-        return getHibernateTemplate().findByNamedParam( queryString, "search", searchString );
-    }
-
-    private Collection<Characteristic> handleFindByValue( String search ) {
-        final String queryString = "select distinct char from Characteristic as char where char.value like :search";
-        return getHibernateTemplate().findByNamedParam( queryString, "search", search );
-    }
-
     private Map<Characteristic, Object> handleGetParents( Class<?> parentClass,
             Collection<Characteristic> characteristics ) {
-        Collection<Characteristic> batch = new HashSet<>();
-        Map<Characteristic, Object> charToParent = new HashMap<>();
+        Collection<Characteristic> batch = new HashSet<Characteristic>();
+        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
         for ( Characteristic c : characteristics ) {
             batch.add( c );
             if ( batch.size() == BATCH_SIZE ) {
@@ -156,14 +152,5 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
             Object[] row = ( Object[] ) o;
             charToParent.put( ( Characteristic ) row[1], row[0] );
         }
-    }
-
-    @Override
-    public void thaw( VocabCharacteristic entity ) {
-    }
-
-    @Override
-    public VocabCharacteristic find( VocabCharacteristic entity ) {
-        return load( entity.getId() );
     }
 }

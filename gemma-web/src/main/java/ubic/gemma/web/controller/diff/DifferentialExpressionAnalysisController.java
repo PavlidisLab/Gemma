@@ -72,7 +72,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils.factorsWithoutBatch( ee
                 .getExperimentalDesign().getExperimentalFactors() );
@@ -180,7 +180,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
         this.experimentReportService.evictFromCache( ee.getId() );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
@@ -206,7 +206,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         /*
          * Get the factors matching the factorids

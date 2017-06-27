@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.GeneDaoImpl;
 
 import java.lang.reflect.Field;
@@ -46,15 +47,15 @@ import static org.junit.Assert.assertTrue;
 public class GeneServiceImplTest extends BaseSpringContextTest {
 
     private static final String STRAND = "+";
-    private final Collection<Gene> allThree = new HashSet<>();
-    private final Collection<Gene> justRab = new HashSet<>();
-    private final Collection<Gene> justRabble = new HashSet<>();
-
-    private GeneService svc;
+    private Collection<Gene> allThree = new HashSet<Gene>();
+    private Collection<Gene> justRab = new HashSet<Gene>();
+    private Collection<Gene> justRabble = new HashSet<Gene>();
+    private GeneServiceImpl svc;
     private Gene g = null;
     private Gene g2 = null;
     private Gene g3 = null;
-    private GeneDaoImpl geneDaoMock;
+    private GeneDao geneDaoMock;
+    private Taxon t = null;
 
     @Before
     public void setUp() throws Exception {
@@ -156,7 +157,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         gp5.setName( "wrong chromosome gp5" );
         gp5.setId( ( long ) 4567 );
 
-        Collection<GeneProduct> gps = new ArrayList<>();
+        Collection<GeneProduct> gps = new ArrayList<GeneProduct>();
         gps.add( gp1 );
         gps.add( gp2 );
         gps.add( gp4 );
@@ -240,7 +241,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
     public void testGetMaxPhysicalLength() {
         reset( geneDaoMock );
         geneDaoMock.thaw( g3 );
-        expectLastCall().asStub();
+        expectLastCall().andReturn( g3 );
         PhysicalLocation ploc = svc.getMaxPhysicalLength( g3 );
         assertTrue( ploc.getNucleotide() == 90 );
         assertTrue( ploc.getNucleotideLength() == 120 );

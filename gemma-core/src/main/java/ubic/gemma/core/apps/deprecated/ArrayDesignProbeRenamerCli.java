@@ -116,7 +116,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        super.arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        super.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignProbeRenamingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

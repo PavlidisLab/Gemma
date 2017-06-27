@@ -92,9 +92,7 @@ public class OntologyServiceImpl implements OntologyService {
     private SearchService searchService;
     private GeneOntologyService geneOntologyService;
 
-    /* ********************************
-     * Setters for autowiring
-     * ********************************/
+
 
     @Autowired
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
@@ -116,9 +114,7 @@ public class OntologyServiceImpl implements OntologyService {
         this.geneOntologyService = geneOntologyService;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public void afterPropertiesSet() {

@@ -27,10 +27,6 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
     private String accession;
     private ExternalDatabaseValueObject externalDatabase;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     public DatabaseEntryValueObject( DatabaseEntry de ) {
         super( de.getId() );
         this.accession = de.getAccession();
@@ -46,10 +42,6 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
      */
     public DatabaseEntryValueObject() {
     }
-
-    /* ********************************
-     * Object override methods
-     * ********************************/
 
     @Override
     public int hashCode() {
@@ -81,10 +73,6 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
             return false;
         return true;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     public String getAccession() {
         return this.accession;

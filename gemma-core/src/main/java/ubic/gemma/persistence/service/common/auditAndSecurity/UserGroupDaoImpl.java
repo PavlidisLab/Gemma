@@ -25,6 +25,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -136,10 +137,6 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     @Override
     public Integer countAll() {
         return this.loadAll().size();
-    }
-
-    @Override
-    public void thaw( UserGroup entity ) {
     }
 
 }

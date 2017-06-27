@@ -45,9 +45,7 @@ public class ExpressionDataMatrixColumnSort {
 
     private static final Log log = LogFactory.getLog( ExpressionDataMatrixColumnSort.class.getName() );
 
-    /* ********************************
-     * Public class methods
-     * ********************************/
+
 
     /**
      * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
@@ -237,9 +235,7 @@ public class ExpressionDataMatrixColumnSort {
         return orderBiomaterialsBySortedFactors( start, sortedFactors );
     }
 
-    /* ********************************
-     * Private class methods
-     * ********************************/
+
 
     private static void orderByName( List<BioMaterial> start ) {
         Collections.sort( start, new Comparator<BioMaterial>() {

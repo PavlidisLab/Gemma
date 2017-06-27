@@ -35,17 +35,13 @@ import java.util.Collection;
 public abstract class Gene2GOAssociationDaoBase extends AbstractDao<Gene2GOAssociation>
         implements Gene2GOAssociationDao {
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     protected Gene2GOAssociationDaoBase( SessionFactory sessionFactory ) {
         super( Gene2GOAssociation.class, sessionFactory );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     /**
      * @see Gene2GOAssociationDao#findAssociationByGene(ubic.gemma.model.genome.Gene)
@@ -108,9 +104,7 @@ public abstract class Gene2GOAssociationDaoBase extends AbstractDao<Gene2GOAssoc
         throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
+
 
     /**
      * Performs the core logic for {@link #findAssociationByGene(ubic.gemma.model.genome.Gene)}

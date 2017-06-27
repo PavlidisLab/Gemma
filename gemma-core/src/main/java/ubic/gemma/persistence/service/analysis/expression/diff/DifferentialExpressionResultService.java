@@ -117,12 +117,16 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
 
     Histogram loadPvalueDistribution( Long analysisResultSetId );
 
-    void thaw( ExpressionAnalysisResultSet resultSet );
+    void thaw( Collection<DifferentialExpressionAnalysisResult> results );
+
+    void thaw( DifferentialExpressionAnalysisResult result );
+
+    ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Thaws the ExpressionAnalysisResultSet without including contrasts.
      */
-    void thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
+    ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Does not thaw the collection of probes (just the factor information)

@@ -67,10 +67,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     private GeneOntologyService geneOntologyService;
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     public GeneSearchServiceImpl() {
     }
 
@@ -88,10 +84,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         this.geneOntologyService = geneOntologyService;
         this.geneSetValueObjectHelper = geneSetValueObjectHelper;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     // TODO REFACTOR method is much too long -Thea
     @Override
@@ -139,21 +131,23 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         List<SearchResult> geneSetSearchResults = new ArrayList<>();
         List<SearchResult> geneSearchResults = new ArrayList<>();
 
-        if ( results.get( GeneSet.class ) != null ) {
-            geneSetSearchResults.addAll( results.get( GeneSet.class ) );
-        }
-        if ( results.get( Gene.class ) != null ) {
-            geneSearchResults.addAll( results.get( Gene.class ) );
-        }
-
-        // Check to see if we have an exact match, if so, return earlier abstaining from doing other searches
         boolean exactGeneSymbolMatch = false;
-        for ( SearchResult geneResult : results.get( Gene.class ) ) {
-            Gene g = ( Gene ) geneResult.getResultObject();
-            // aliases too?
-            if ( g != null && g.getOfficialSymbol() != null && g.getOfficialSymbol().startsWith( query.trim() ) ) {
-                exactGeneSymbolMatch = true;
-                break;
+        if ( !results.isEmpty() ) {
+            if ( results.get( GeneSet.class ) != null ) {
+                geneSetSearchResults.addAll( results.get( GeneSet.class ) );
+            }
+            if ( results.get( Gene.class ) != null ) {
+                geneSearchResults.addAll( results.get( Gene.class ) );
+            }
+
+            // Check to see if we have an exact match, if so, return earlier abstaining from doing other searches
+            for ( SearchResult geneResult : results.get( Gene.class ) ) {
+                Gene g = ( Gene ) geneResult.getResultObject();
+                // aliases too?
+                if ( g != null && g.getOfficialSymbol() != null && g.getOfficialSymbol().startsWith( query.trim() ) ) {
+                    exactGeneSymbolMatch = true;
+                    break;
+                }
             }
         }
 
@@ -352,7 +346,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
             if ( results != null ) {
-                geneService.thawLite( results );
+                results = geneService.thawLite( results );
                 return geneService.loadValueObjects( results );
             }
         }
@@ -448,10 +442,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         return queryToGenes;
     }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
 
     private void setUserOwnedForGeneSets( Collection<SearchResultDisplayObject> geneSets,
             Map<Long, Boolean> isSetOwnedByUser ) {

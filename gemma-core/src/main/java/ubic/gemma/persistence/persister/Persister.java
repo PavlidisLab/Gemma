@@ -18,12 +18,11 @@
  */
 package ubic.gemma.persistence.persister;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
+
+import java.util.Collection;
 
 /**
  * Interface defining the ability to create domain objects in bulk or singly. Classes that implement this interface
@@ -32,7 +31,7 @@ import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
  * <li>To be passed an object graph that is valid - that is, all non-nullable properties and associations are filled in.
  * <li>The objects passed might include objects that are already persistent in the system.
  * </ul>
- * 
+ *
  * @author keshav
  * @author Paul Pavlidis
  */
@@ -42,8 +41,7 @@ public interface Persister {
      * Persist all the objects in a collection. Non-nullable dependencies are checked and persisted first, if the
      * reference is detached, or converted into a reference to a persistent object identified by the objects business
      * key. Matching instances are not changed.
-     * 
-     * @param col
+     *
      * @return The persistent versions of the objects.
      */
     @Secured({ "GROUP_USER" })
@@ -53,12 +51,17 @@ public interface Persister {
      * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,
      * or converted into a reference to a persistent object identified by the objects business key. If a matching object
      * already exists, it will not be changed.
-     * 
-     * @param obj
-     * @resutln the persistent version of the object.
+     *
+     * @return the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
     Object persist( Object obj );
+
+    /**
+     * Special case for experiments.
+     */
+    @Secured({ "GROUP_USER" })
+    ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
 
     /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
@@ -68,8 +71,7 @@ public interface Persister {
      * method has limited usefulness: when the provided object has new data but the associated objects are either new or
      * already existing. If you want to update associated objects you must update them explicitly (perhaps with a call
      * to persistOrUpdate on them).
-     * 
-     * @param obj
+     *
      * @return the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
@@ -77,16 +79,11 @@ public interface Persister {
 
     /**
      * Determine if a entity is transient (not persistent).
-     * 
-     * @param entity
+     *
      * @return true if the object is not (as far as we can tell) already persisted.
      */
     boolean isTransient( Object entity );
 
-    /**
-     * @param entity
-     * @return
-     */
     @Secured({ "GROUP_USER" })
     ArrayDesignsForExperimentCache prepare( ExpressionExperiment entity );
 

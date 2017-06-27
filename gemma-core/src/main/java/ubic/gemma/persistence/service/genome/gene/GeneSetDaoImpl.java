@@ -69,7 +69,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         StopWatch timer = new StopWatch();
         timer.start();
         if ( StringUtils.isBlank( name ) )
-            return new HashSet<>();
+            return new HashSet<GeneSet>();
         assert taxon != null;
         // slow? would it be faster to just findByName and then restrict taxon?
         List result = this.getSessionFactory().getCurrentSession().createQuery(
@@ -86,8 +86,8 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         if ( tax == null )
             return this.loadAll();
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct gs from GeneSet gs join gs.members m join m.gene g where g.taxon = :t" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct gs from GeneSet gs join gs.members m join m.gene g where g.taxon = :t" )
                 .setParameter( "t", tax ).list();
     }
 
@@ -123,8 +123,8 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         for ( GeneSetValueObject res : result ) {
             res.setGeneIds( new HashSet<Long>() );
             //noinspection unchecked
-            res.getGeneIds().addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                    "select genes.id from GeneSet g join g.members m join m.gene genes where g.id = :id" )
+            res.getGeneIds().addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select genes.id from GeneSet g join g.members m join m.gene genes where g.id = :id" )
                     .setParameter( "id", res.getId() ).list() );
         }
 
@@ -133,7 +133,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Override
     public Collection<DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
-        Collection<DatabaseBackedGeneSetValueObject> result = new HashSet<>();
+        Collection<DatabaseBackedGeneSetValueObject> result = new HashSet<DatabaseBackedGeneSetValueObject>();
 
         if ( ids.isEmpty() )
             return result;
@@ -189,7 +189,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                         + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" )
                 .setParameterList( "ids", ids );
 
-        Map<Long, Taxon> result = new HashMap<>();
+        Map<Long, Taxon> result = new HashMap<Long, Taxon>();
         for ( Object o : q.list() ) {
             Object[] oa = ( Object[] ) o;
 
@@ -202,10 +202,6 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         }
 
         return result;
-    }
-
-    @Override
-    public void thaw( GeneSet entity ) {
     }
 
     @Override

@@ -111,7 +111,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             return;
         }
         try {
-            eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             if ( this.batchCorrect ) {
                 this.preprocessorService.batchCorrect( ee );

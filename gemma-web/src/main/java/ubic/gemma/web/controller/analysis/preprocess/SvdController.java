@@ -52,7 +52,7 @@ public class SvdController {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         experimentReportService.evictFromCache( id );
         SvdTaskCommand cmd = new SvdTaskCommand( ee );
 

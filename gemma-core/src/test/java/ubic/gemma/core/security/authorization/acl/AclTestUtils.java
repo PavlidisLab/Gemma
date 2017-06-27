@@ -108,7 +108,7 @@ public class AclTestUtils {
      *
      */
     public void checkEEAcls( ExpressionExperiment ee ) {
-        this.expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         checkHasAcl( ee );
         checkHasAces( ee );
 
@@ -166,7 +166,7 @@ public class AclTestUtils {
             assertTrue( getParentAcl( arrayDesign ) == null );
 
             // make sure the localfiles are associated with the array design, not the ee.
-            arrayDesignService.thawLite( arrayDesign );
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
             for ( LocalFile lf : arrayDesign.getLocalFiles() ) {
                 checkHasAcl( lf );
                 checkLacksAces( lf );

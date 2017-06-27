@@ -18,9 +18,7 @@ public class WellComposedErrorBody {
     private final String message;
     private Map<String, String> errors = null;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Creates a new well composed error body that can be used as a payload for a GemmaApiException, or ResponseErrorObject.
@@ -33,9 +31,7 @@ public class WellComposedErrorBody {
         this.message = message;
     }
 
-    /* ********************************
-     * Class methods
-     * ********************************/
+
 
     /**
      * Adds descriptive values from the throwable object to the instance of WellComposedErrorBody.
@@ -49,9 +45,7 @@ public class WellComposedErrorBody {
         return body;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     /**
      * Adds a new field into the errors array property.

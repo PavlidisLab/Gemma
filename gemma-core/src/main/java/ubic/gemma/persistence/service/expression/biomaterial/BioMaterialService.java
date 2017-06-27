@@ -42,6 +42,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     BioMaterial copy( BioMaterial bioMaterial );
 
+    @Override
     @Secured({ "GROUP_USER" })
     BioMaterial create( BioMaterial bioMaterial );
 
@@ -51,21 +52,26 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioMaterial> findByFactorValue( FactorValue fv );
 
+    @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     BioMaterial findOrCreate( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( Long id );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     BioMaterial load( Long id );
 
+    @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioMaterial> loadAll();
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioMaterial> load( Collection<Long> ids );
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( BioMaterial bioMaterial );
 
@@ -78,6 +84,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     /**
      * Updates the given biomaterial to the database.
      */
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioMaterial bioMaterial );
 

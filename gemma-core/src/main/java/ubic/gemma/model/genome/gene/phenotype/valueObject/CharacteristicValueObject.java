@@ -67,9 +67,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private String value = "";
     private String valueUri = null;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required when using the class as a spring bean.
@@ -117,9 +115,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.categoryUri = categoryUri;
     }
 
-    /* ********************************
-     * Static methods
-     * ********************************/
+
 
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<? extends Characteristic> characteristics ) {
@@ -138,9 +134,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         return characteristicValueObjects;
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @Override
     public int hashCode() {
@@ -193,9 +187,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         return true;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public String getCategory() {
         return this.category;
@@ -316,9 +308,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.root = root;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private void parseUrlId() {
         if ( StringUtils.isBlank( valueUri ) )

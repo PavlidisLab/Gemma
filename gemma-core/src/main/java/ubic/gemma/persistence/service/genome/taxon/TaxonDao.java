@@ -53,4 +53,6 @@ public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
 
     Collection<Taxon> findTaxonUsedInEvidence();
 
+    void thaw( Taxon taxon );
+
 }

@@ -23,6 +23,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -45,10 +46,6 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
     @Autowired
     public FactorValueDaoImpl( SessionFactory sessionFactory ) {
         super( FactorValue.class, sessionFactory );
-    }
-
-    @Override
-    public void thaw( FactorValue entity ) {
     }
 
     @Override

@@ -108,7 +108,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
 
-        this.expressionExperimentService.thawLite( newee );
+        newee = this.expressionExperimentService.thawLite( newee );
 
         DesignElementDataVectorService dedvs = this.getBean( DesignElementDataVectorService.class );
 
@@ -140,12 +140,12 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         int i = 0;
         ArrayDesign ad = newee.getBioAssays().iterator().next().getArrayDesignUsed();
         Taxon taxon = taxonService.findByCommonName( "mouse" );
-        this.arrayDesignService.thawLite( ad );
+        ad = this.arrayDesignService.thawLite( ad );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             if ( i >= 10 ) break;
             Gene g = this.getTestPeristentGene();
-            geneService.thaw( g );
+            g = geneService.thaw( g );
             BlatAssociation blata = BlatAssociation.Factory.newInstance();
             blata.setGeneProduct( g.getProducts().iterator().next() );
             BlatResult br = BlatResult.Factory.newInstance();

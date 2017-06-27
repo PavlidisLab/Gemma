@@ -42,7 +42,9 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
         vo.setName( bs.getName() );
         vo.setDescription( bs.getDescription() );
         vo.setSequence( bs.getSequence() );
-        vo.setSequenceDatabaseEntry( new DatabaseEntryValueObject( bs.getSequenceDatabaseEntry() ) );
+        if ( bs.getSequenceDatabaseEntry() != null ) {
+            vo.setSequenceDatabaseEntry( new DatabaseEntryValueObject( bs.getSequenceDatabaseEntry() ) );
+        }
         vo.setLength( bs.getLength() );
         vo.setType( bs.getType() );
         vo.setFractionRepeats( bs.getFractionRepeats() );

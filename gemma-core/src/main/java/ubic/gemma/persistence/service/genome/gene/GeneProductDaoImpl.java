@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +66,7 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
 
             log.debug( queryObject );
 
+            //noinspection unchecked
             List<GeneProduct> results = queryObject.list();
             Object result = null;
             if ( results.size() > 1 ) {
@@ -145,34 +145,28 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
 
     @Override
     protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
-        Collection<Gene> genes;
-        final String queryString = "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search";
         try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setString( "search", search );
-            genes = queryObject.list();
+            //noinspection unchecked
+            return this.getSessionFactory().getCurrentSession().createQuery(
+                    "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search" )
+                    .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-
-        return genes;
     }
 
     @Override
     protected Collection<Gene> handleGetGenesByNcbiId( String search ) throws Exception {
-        Collection<Gene> genes;
-        final String queryString = "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search";
         try {
-            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setString( "search", search );
-            genes = queryObject.list();
+            //noinspection unchecked
+            return this.getSessionFactory().getCurrentSession().createQuery(
+                    "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search" )
+                    .setString( "search", search ).list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-
-        return genes;
     }
 
     private void debug( Collection<?> results ) {
@@ -187,17 +181,18 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
     }
 
     @Override
-    public void thaw( GeneProduct gp ) {
-        Hibernate.initialize( gp.getGene() );
-        Hibernate.initialize( gp.getGene().getTaxon() );
-        Hibernate.initialize( gp.getPhysicalLocation() );
-        if ( gp.getPhysicalLocation() != null ) {
-            Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
-            if ( gp.getPhysicalLocation().getChromosome() != null )
-                Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
-        }
-        Hibernate.initialize( gp.getAccessions() );
+    public GeneProduct thaw( GeneProduct existing ) {
+        List<?> re = this.getHibernateTemplate().findByNamedParam(
+                "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "
+                        + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon "
+                        + "left join fetch g.aliases  where gp = :gp", "gp", existing );
 
+        if ( re.isEmpty() )
+            return null;
+
+        assert re.size() == 1;
+
+        return ( GeneProduct ) re.iterator().next();
     }
 
     @Override
@@ -218,7 +213,7 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
 
     @Override
     public Collection<GeneProductValueObject> loadValueObjects( Collection<GeneProduct> entities ) {
-        Collection<GeneProductValueObject> vos = new LinkedHashSet<>();
+        Collection<GeneProductValueObject> vos = new LinkedHashSet<GeneProductValueObject>();
         for ( GeneProduct e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }

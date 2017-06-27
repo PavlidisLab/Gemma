@@ -299,7 +299,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
             newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
-        expressionExperimentService.thaw( newee );
+        newee = expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
@@ -335,7 +335,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         assertTrue( tba.getIsOutlier() );
 
-        expressionExperimentService.thaw( newee );
+        newee = expressionExperimentService.thaw( newee );
         Collection<ProcessedExpressionDataVector> vecs = newee.getProcessedExpressionDataVectors();
 
         this.designElementDataVectorService.thaw( vecs );
@@ -351,7 +351,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         sampleRemoveService.unmarkAsMissing( ol );
         newee = expressionExperimentService.load( newee.getId());
-        expressionExperimentService.thaw( newee );
+        newee = expressionExperimentService.thaw( newee );
         vecs = newee.getProcessedExpressionDataVectors();
 
         this.designElementDataVectorService.thaw( vecs );

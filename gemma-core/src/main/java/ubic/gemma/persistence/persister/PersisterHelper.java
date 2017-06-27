@@ -53,7 +53,7 @@ public class PersisterHelper extends RelationshipPersister {
     public Object persist( Object entity ) {
         try {
 
-            this.getSession().setFlushMode( FlushMode.COMMIT );
+            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
             if ( entity instanceof Auditable ) {
                 Auditable auditable = ( Auditable ) entity;
@@ -67,7 +67,7 @@ public class PersisterHelper extends RelationshipPersister {
 
             return super.persist( entity );
         } finally {
-            this.getSession().setFlushMode( FlushMode.AUTO );
+            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.AUTO );
         }
     }
 

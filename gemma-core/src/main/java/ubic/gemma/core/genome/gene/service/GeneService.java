@@ -39,9 +39,11 @@ import java.util.Map;
  */
 public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject> {
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     Collection<Gene> create( Collection<Gene> genes );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     Gene create( Gene gene );
 
@@ -155,28 +157,32 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( Collection<Gene> genes );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( Gene gene );
+
+    Gene thaw( Gene gene );
 
     /**
      * Only thaw the Aliases, very light version
      */
-    void thawAliases( Gene gene );
+    Gene thawAliases( Gene gene );
 
-    void thawLite( Collection<Gene> genes );
+    Collection<Gene> thawLite( Collection<Gene> genes );
 
-    void thawLiter( Collection<Gene> genes );
+    Gene thawLite( Gene gene );
 
-    void thawLite( Gene gene );
+    Gene thawLiter( Gene gene );
 
-    void thawLiter( Gene gene );
-
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void update( Collection<Gene> genes );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void update( Gene gene );
 

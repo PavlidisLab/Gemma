@@ -130,7 +130,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
 
-        return new JsonReaderResponse<>( new ArrayList<>( valueObjects ), count );
+        return new JsonReaderResponse<ArrayDesignValueObject>( new ArrayList<ArrayDesignValueObject>( valueObjects ), count );
     }
 
     @Override
@@ -253,7 +253,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         }
 
-        String list = "";
+        StringBuilder list = new StringBuilder();
 
         if ( searchResults.size() == 1 ) {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
@@ -264,7 +264,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
 
         for ( SearchResult ad : searchResults ) {
-            list += ad.getId() + ",";
+            list.append( ad.getId() ).append( "," );
         }
 
         overallWatch.stop();
@@ -306,7 +306,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
-        List<ArrayDesignValueObject> result = new ArrayList<>();
+        List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( arrayDesignIds == null || arrayDesignIds.length == 0 ) {
@@ -314,12 +314,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         } else {// if ids are specified, then display only those arrayDesigns
 
-            Collection<Long> adCol = new LinkedList<>( Arrays.asList( arrayDesignIds ) );
+            Collection<Long> adCol = new LinkedList<Long>( Arrays.asList( arrayDesignIds ) );
             result.addAll( arrayDesignService.loadValueObjectsByIds( adCol ) );
         }
 
         // Filter...
-        Collection<ArrayDesignValueObject> toHide = new HashSet<>();
+        Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
         for ( ArrayDesignValueObject a : result ) {
             if ( !showMergees && a.getIsMergee() && a.getExpressionExperimentCount() == 0 ) {
                 toHide.add( a );
@@ -346,7 +346,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
         if ( rawSummaries == null ) {
-            return new HashSet<>();
+            return new HashSet<CompositeSequenceMapValueObject>();
         }
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
@@ -387,7 +387,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
         }
 
-        arrayDesignService.thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
         return arrayDesign;
     }
 
@@ -395,7 +395,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
      * Setls alternate names on the given value object.
      */
     private ArrayDesignValueObjectExt setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
-        Collection<String> names = new HashSet<>();
+        Collection<String> names = new HashSet<String>();
         for ( AlternateName an : arrayDesign.getAlternateNames() ) {
             names.add( an.getName() );
         }
@@ -411,7 +411,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
-        Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
+        Collection<DatabaseEntryValueObject> externalReferences = new HashSet<DatabaseEntryValueObject>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {
             externalReferences.add( new DatabaseEntryValueObject( en ) );
         }
@@ -438,7 +438,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     public Map<String, String> getReportHtml( EntityDelegator ed ) {
         assert ed.getId() != null;
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
-        Map<String, String> result = new HashMap<>();
+        Map<String, String> result = new HashMap<String, String>();
 
         result.put( "id", ed.getId().toString() );
         if ( summary == null )
@@ -451,7 +451,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public String getSummaryForArrayDesign( Long id ) {
 
-        Collection<Long> ids = new ArrayList<>();
+        Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjectsByIds( ids );
         arrayDesignReportService.fillInValueObjects( advos );
@@ -623,7 +623,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     private String formatAlternateNames( ArrayDesign ad ) {
-        Collection<String> names = new HashSet<>();
+        Collection<String> names = new HashSet<String>();
         for ( AlternateName an : ad.getAlternateNames() ) {
             names.add( an.getName() );
         }
@@ -639,10 +639,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         assert result != null;
 
         Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();
-        arrayDesignService.thawLite( subsumees );
+        subsumees = arrayDesignService.thawLite( subsumees );
         ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
-        arrayDesignService.thawLite( mergees );
+        mergees = arrayDesignService.thawLite( mergees );
         ArrayDesign merger = arrayDesign.getMergedInto();
 
         if ( subsumees != null && !subsumees.isEmpty() ) {
@@ -688,7 +688,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                         new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
             }
             ArrayDesignValueObject report = arrayDesignReportService
-                    .generateArrayDesignReport( arrayDesignService.load( taskCommand.getEntityId() ) );
+                    .generateArrayDesignReport( taskCommand.getEntityId() );
             return new TaskResult( taskCommand, report );
 
         }

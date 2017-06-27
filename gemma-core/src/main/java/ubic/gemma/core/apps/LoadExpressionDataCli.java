@@ -202,7 +202,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             ArrayDesign ad = (ArrayDesign ) object  ;
-                            ads.thawLite( ad );
+                            ad = ads.thawLite( ad );
 
                             successObjects.add( ad.getName() + " ("
                                     + ad.getExternalReferences().iterator().next().getAccession() + ")" );

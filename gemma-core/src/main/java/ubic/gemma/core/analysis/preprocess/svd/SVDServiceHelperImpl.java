@@ -639,7 +639,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
                 svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
 
-        expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
+        ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
         auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
         return pca;
     }

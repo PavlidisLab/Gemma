@@ -124,7 +124,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
                 .fetchAndLoad( arrayAccession, true, true, false, false );
         ad = ads.iterator().next();
 
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
 
         loadData();
 

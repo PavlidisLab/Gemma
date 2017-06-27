@@ -162,7 +162,7 @@ public class BioMaterialController {
             throw new EntityNotFoundException( "Expression experiment with id=" + id + " not found" );
         }
 
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<>();
         for ( BioAssay assay : bioAssays ) {

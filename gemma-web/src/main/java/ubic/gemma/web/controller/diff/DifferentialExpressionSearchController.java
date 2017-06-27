@@ -89,7 +89,7 @@ public class DifferentialExpressionSearchController {
             Integer limit ) {
 
         Gene g = geneService.load( geneId );
-        geneService.thaw( g );
+        g = geneService.thaw( g );
 
         if ( g == null ) {
             return new ArrayList<>();

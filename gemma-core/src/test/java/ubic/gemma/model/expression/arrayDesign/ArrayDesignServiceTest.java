@@ -106,7 +106,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ad = arrayDesignService.find( ad );
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
         CompositeSequence cs = ad.getCompositeSequences().iterator().next();
 
         assertNotNull( cs.getId() );
@@ -372,7 +372,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         ad = arrayDesignService.load( ad.getId() );
 
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
 
         // make sure we can do this...
         ad.getPrimaryTaxon().equals( this.taxonService.load( 1L ) );
@@ -426,7 +426,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad.setPrimaryTaxon( tax );
 
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
 
         ArrayDesign subsumedArrayDesign = ArrayDesign.Factory.newInstance();
         subsumedArrayDesign.setName( "subsumed_arraydesign" );
@@ -440,7 +440,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         c2.setArrayDesign( subsumedArrayDesign );
 
         subsumedArrayDesign = ( ArrayDesign ) persisterHelper.persist( subsumedArrayDesign );
-        arrayDesignService.thaw( subsumedArrayDesign );
+        subsumedArrayDesign = arrayDesignService.thaw( subsumedArrayDesign );
         // flushAndClearSession();
 
         boolean actualValue = arrayDesignService.updateSubsumingStatus( ad, subsumedArrayDesign );

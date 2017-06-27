@@ -61,13 +61,13 @@ public abstract class AbstractGeoService implements BeanFactoryAware, GeoService
         return this.geoDomainObjectGenerator;
     }
 
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
     @Override
     public void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator ) {
         this.geoDomainObjectGenerator = generator;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     public void setPersisterHelper( Persister persisterHelper ) {

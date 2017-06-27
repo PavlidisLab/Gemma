@@ -52,7 +52,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Override
     public void changePassword( User user, String password ) {
         user.setPassword( password );
-        this.getSession().update( user );
+        this.getSessionFactory().getCurrentSession().update( user );
     }
 
     @Override
@@ -68,7 +68,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
     @Override
     public User findByUserName( final String userName ) {
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         //noinspection unchecked
         List<User> users = session.createCriteria( User.class ).setFlushMode( FlushMode.MANUAL )
@@ -87,8 +87,8 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
-                "select gr.authorities from UserGroup gr inner join gr.groupMembers m where m = :user " )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select gr.authorities from UserGroup gr inner join gr.groupMembers m where m = :user " )
                 .setParameter( "user", user ).list();
 
     }
@@ -96,13 +96,18 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Override
     public Collection<UserGroup> loadGroups( User user ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select gr from UserGroup gr inner join gr.groupMembers m where m = :user " )
                 .setParameter( "user", user ).list();
     }
 
     @Override
-    public void thaw( User entity ) {
+    public void remove( User user ) {
+        if ( user.getName() != null && user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
+            throw new IllegalArgumentException(
+                    "Cannot delete user " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+        }
+        super.remove( user );
     }
 
     @Override
@@ -124,26 +129,25 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
         }
 
         // FIXME for reasons that remain obscure, I cannot get this to work using a regular session.update.
-        // May 11th 2015 just spent 2 hours on this with no result or leads - Steven.
-        this.getSession().createSQLQuery( "UPDATE CONTACT SET PASSWORD=:a WHERE ID=:id" )
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET PASSWORD=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getPassword() ).executeUpdate();
 
-        this.getSession().createSQLQuery( "UPDATE CONTACT SET USER_NAME=:a WHERE ID=:id" )
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET USER_NAME=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getUserName() ).executeUpdate();
 
-        this.getSession().createSQLQuery( "UPDATE CONTACT SET EMAIL=:a WHERE ID=:id" )
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET EMAIL=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getEmail() ).executeUpdate();
 
-        this.getSession().createSQLQuery( "UPDATE CONTACT SET ENABLED=:a WHERE ID=:id" )
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET ENABLED=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getEnabled() ? 1 : 0 ).executeUpdate();
 
     }
 
     private User handleFindByEmail( final String email ) {
         //noinspection unchecked
-        List<User> list = this.getSession()
+        List<User> list = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from User c where c.email = :email" ).setParameter( "email", email ).list();
-        Set<User> results = new HashSet<>( list );
+        Set<User> results = new HashSet<User>( list );
         User result = null;
         if ( results.size() > 1 ) {
             throw new InvalidDataAccessResourceUsageException(

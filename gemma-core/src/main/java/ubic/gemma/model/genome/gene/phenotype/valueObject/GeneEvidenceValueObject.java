@@ -40,9 +40,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence = new HashSet<>();
     private Set<String> phenotypesValueUri = new HashSet<>();
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required when using the class as a spring bean.
@@ -68,9 +66,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
         this.evidence = evidence;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     /**
      * Given a geneVO finds all valueRI of phenotypes for that gene

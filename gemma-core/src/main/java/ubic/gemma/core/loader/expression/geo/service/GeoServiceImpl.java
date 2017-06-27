@@ -60,9 +60,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     private final ExpressionExperimentService expressionExperimentService;
     private final ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public GeoServiceImpl( ArrayDesignReportService arrayDesignReportService, BioAssayService bioAssayService,
@@ -76,9 +74,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         this.expressionExperimentPrePersistService = expressionExperimentPrePersistService;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public ArrayDesign addElements( ArrayDesign targetPlatform ) {
@@ -123,7 +119,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         arrayDesignService.update( targetPlatform );
 
-        this.arrayDesignReportService.generateArrayDesignReport( targetPlatform );
+        this.arrayDesignReportService.generateArrayDesignReport( targetPlatform.getId() );
 
         return targetPlatform;
 
@@ -230,7 +226,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         geoConverter.clear();
         geoConverter.setSplitByPlatform( splitByPlatform );
 
-        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter
+        //noinspection unchecked
+        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter
                 .convert( series );
 
         check( result );
@@ -240,9 +237,10 @@ public class GeoServiceImpl extends AbstractGeoService {
         log.debug( "Converted " + seriesAccession );
         assert persisterHelper != null;
 
-        Collection<ExpressionExperiment> persistedResult = new HashSet<>();
+        Collection<ExpressionExperiment> persistedResult = new HashSet<ExpressionExperiment>();
         for ( ExpressionExperiment ee : result ) {
-            ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+            c = expressionExperimentPrePersistService.prepare( ee, c );
+            ee = persisterHelper.persist( ee, c );
             persistedResult.add( ee );
             log.debug( "Persisted " + seriesAccession );
 
@@ -251,10 +249,6 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         return persistedResult;
     }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
 
     private void check( Collection<ExpressionExperiment> result ) {
         for ( ExpressionExperiment expressionExperiment : result ) {
@@ -296,7 +290,7 @@ public class GeoServiceImpl extends AbstractGeoService {
      * are not included in other data sets. In GEO this primarily occurs in 'superseries' that combine other series.
      */
     private void checkSamplesAreNew( GeoSeries series ) {
-        Collection<GeoSample> toSkip = new HashSet<>();
+        Collection<GeoSample> toSkip = new HashSet<GeoSample>();
 
         for ( GeoSample sample : series.getSamples() ) {
             if ( !sample.appearsInMultipleSeries() ) {
@@ -464,7 +458,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             return;
         }
 
-        Map<String, Integer> countMatches = new HashMap<>();
+        Map<String, Integer> countMatches = new HashMap<String, Integer>();
         for ( String geoColName : rawGEOPlatform.getColumnNames() ) {
             List<String> columnData = rawGEOPlatform.getColumnData( geoColName );
 
@@ -481,7 +475,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             }
 
             // figure out the best column;if not ID, then usually NAME or SPOT_ID etc
-            Set<String> colDataSet = new HashSet<>( columnData );
+            Set<String> colDataSet = new HashSet<String>( columnData );
 
             int numMatchesInColumn = 0;
             for ( CompositeSequence cs : m.keySet() ) {
@@ -561,7 +555,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
-        Set<GeoPlatform> platforms = new HashSet<>();
+        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
 
         if ( series.getDatasets().size() > 0 ) {
             for ( GeoDataset dataset : series.getDatasets() ) {
@@ -740,7 +734,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     private Collection<GeoDataset> potentiallyCombineDatasets( Collection<GeoDataset> datasets ) {
         if ( datasets.size() == 1 )
             return datasets;
-        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<>();
+        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<GeoPlatform, Collection<GeoDataset>>();
         for ( GeoDataset dataset : datasets ) {
             GeoPlatform platform = dataset.getPlatform();
             if ( !seenPlatforms.containsKey( platform ) ) {
@@ -749,7 +743,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             seenPlatforms.get( platform ).add( dataset );
         }
 
-        Collection<GeoDataset> finishedDatasets = new HashSet<>();
+        Collection<GeoDataset> finishedDatasets = new HashSet<GeoDataset>();
         for ( GeoPlatform platform : seenPlatforms.keySet() ) {
             Collection<GeoDataset> datasetsForPlatform = seenPlatforms.get( platform );
             if ( datasetsForPlatform.size() > 1 ) {
@@ -764,14 +758,14 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     private void updateReports( Collection<?> entities ) {
-        Collection<ArrayDesign> adsToUpdate = new HashSet<>();
+        Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
         for ( Object entity : entities ) {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
-                this.expressionExperimentService.thaw( expressionExperiment );
+                expressionExperiment = this.expressionExperimentService.thaw( expressionExperiment );
                 this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
-                this.expressionExperimentService.thaw( expressionExperiment );
+                expressionExperiment = this.expressionExperimentService.thaw( expressionExperiment );
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );
                 }
@@ -782,7 +776,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
         for ( ArrayDesign arrayDesign : adsToUpdate ) {
-            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         }
 
     }

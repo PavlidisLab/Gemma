@@ -99,7 +99,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             }
             BioAssaySet ee = this.expressionExperiments.iterator().next();
             ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
-            this.eeService.thawLite( thawedEe );
+            thawedEe = this.eeService.thawLite( thawedEe );
 
             Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
@@ -139,7 +139,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 }
 
                 ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
-                this.eeService.thawLite( thawedEe );
+                thawedEe = this.eeService.thawLite( thawedEe );
 
                 Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 

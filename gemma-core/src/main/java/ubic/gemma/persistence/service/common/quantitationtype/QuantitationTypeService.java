@@ -30,30 +30,37 @@ import java.util.List;
 /**
  * @author kelsey
  */
-@Service
 public interface QuantitationTypeService extends BaseVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
 
+    @Override
     @Secured({ "GROUP_USER" })
     QuantitationType create( QuantitationType quantitationType );
 
+    @Override
     @Secured({ "GROUP_USER" })
     QuantitationType findOrCreate( QuantitationType quantitationType );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( QuantitationType quantitationType );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( QuantitationType quantitationType );
 
+    @Override
     @Secured({ "GROUP_USER" })
     Collection<QuantitationType> create( Collection<QuantitationType> entities );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( Collection<QuantitationType> entities );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( Long id );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( Collection<QuantitationType> entities );
 

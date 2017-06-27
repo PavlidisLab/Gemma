@@ -70,7 +70,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
     @Override
     public Collection<CompositeSequenceMapSummary> summarizeMapResults( ArrayDesign arrayDesign ) {
-        arrayDesignService.thaw( arrayDesign );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
         return this.summarizeMapResults( arrayDesign.getCompositeSequences() );
 
     }

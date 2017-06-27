@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.jdbc.Work;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -12,6 +12,8 @@ import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -30,6 +32,19 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     @Override
+    public Collection<C> create( final Collection<C> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( C entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
+        return entities;
+    }
+
+    @Override
     public C create( final C entity ) {
         super.create( entity );
         if ( entity.getCurationDetails() == null ) {
@@ -39,22 +54,13 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         return entity;
     }
 
-    /* ********************************
-     * Abstract methods
-     * ********************************/
-
-    public abstract Map<Taxon, Long> getPerTaxonCount();
-
-    /* ********************************
-     * Public methods
-     * ********************************/
-
     /**
      * Finds an entity by given name.
      *
      * @param name name of the entity to be found.
      * @return entity with given name, or null if such entity does not exist.
      */
+    @Override
     public Collection<C> findByName( String name ) {
         return this.findByProperty( "name", name );
     }
@@ -65,13 +71,12 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * @param name short name of the entity to be found.
      * @return entity with given short name, or null if such entity does not exist.
      */
+    @Override
     public C findByShortName( String name ) {
         return this.findOneByProperty( "shortName", name );
     }
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
+    public abstract Map<Taxon, Long> getPerTaxonCount();
 
     protected void addEventsToMap( Map<Long, Collection<AuditEvent>> eventMap, Long id, AuditEvent event ) {
         if ( eventMap.containsKey( id ) ) {
@@ -79,7 +84,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
             Collection<AuditEvent> events = eventMap.get( id );
             events.add( event );
         } else {
-            Collection<AuditEvent> events = new ArrayList<>();
+            Collection<AuditEvent> events = new ArrayList<AuditEvent>();
             events.add( event );
             eventMap.put( id, events );
         }

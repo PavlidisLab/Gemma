@@ -36,19 +36,18 @@ import ubic.gemma.model.genome.Gene;
  * IDs to the NCBI IDs.
  * 
  * @author gavin
- * @version$Id$
  */
 
 public class GeneDetailsByGeneIDEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( GeneDetailsByGeneIDEndpoint.class );
+    private static final Log log = LogFactory.getLog( GeneDetailsByGeneIDEndpoint.class );
 
     private GeneService geneService;
 
     /**
      * The local name of the expected Request/Response.
      */
-    public static final String GENE_LOCAL_NAME = "geneDetailsByGeneID";
+    private static final String GENE_LOCAL_NAME = "geneDetailsByGeneID";
 
     /**
      * Sets the "business service" to delegate to.
@@ -78,8 +77,7 @@ public class GeneDetailsByGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         log.debug( "XML input read: " + geneInput.size() + " gene ids read" );
 
-        Collection<Gene> geneCol = geneService.load( geneLongInput );
-        geneService.thaw( geneCol );
+        Collection<Gene> geneCol = geneService.loadThawed( geneLongInput );
 
         if ( geneCol == null || geneCol.isEmpty() ) {
             String msg = "No genes can be found.";

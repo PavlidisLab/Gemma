@@ -288,17 +288,16 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    @Override
-    void thaw( ArrayDesign arrayDesign );
+    ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    void thawLite( ArrayDesign arrayDesign );
+    ArrayDesign thawLite( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    void thawLite( Collection<ArrayDesign> arrayDesigns );
+    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

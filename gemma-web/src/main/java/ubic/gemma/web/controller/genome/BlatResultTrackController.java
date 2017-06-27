@@ -35,7 +35,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.view.TextView;
 
 /**
- * See {@link http://genome.ucsc.edu/goldenPath/help/customTrack.html}. This simply generates text that can be used to
+ * See <a href="http://genome.ucsc.edu/goldenPath/help/customTrack.html"}>goldenPath help on custom track</a>. This simply generates text that can be used to
  * view our alignments in the UCSC browser. For example, urls like the following would work:
  * <p>
  * http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.example.ca/Gemma/blatTrack. html&id=2929
@@ -45,7 +45,6 @@ import ubic.gemma.web.view.TextView;
  * ConfigUtils.getBaseUrl() (configured with gemma.base.url)
  * 
  * @author pavlidis
- * @version $Id$
  */
 @Controller
 public class BlatResultTrackController extends AbstractController {
@@ -75,7 +74,7 @@ public class BlatResultTrackController extends AbstractController {
 
         BlatResult toView = res.iterator().next();
 
-        blatResultService.thaw( toView );
+        toView = blatResultService.thaw( toView );
 
         String val = BlatResult2Psl.blatResult2PslTrack( toView );
 

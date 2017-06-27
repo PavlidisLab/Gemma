@@ -44,18 +44,14 @@ import java.util.Map;
 public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAnalysis>
         implements CoexpressionAnalysisDao {
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public CoexpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
         super( CoexpressionAnalysis.class, sessionFactory );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     /**
      * @see CoexpressionAnalysisDao#findByName(String)
@@ -63,7 +59,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     @Override
     public Collection<CoexpressionAnalysis> findByName( final String name ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "select a from CoexpressionAnalysis as a where a.name = :name" )
+        return this.getSessionFactory().getCurrentSession().createQuery( "select a from CoexpressionAnalysis as a where a.name = :name" )
                 .setParameter( "name", name ).list();
     }
 
@@ -71,7 +67,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
         String q = "select ccd from CoexpressionAnalysis pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return ( CoexpCorrelationDistribution ) this.getSession().createQuery( q )
+        return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession().createQuery( q )
                 .setParameter( "ee", expressionExperiment ).uniqueResult();
 
     }
@@ -80,21 +76,19 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
         String q = "select ccd from CoexpressionAnalysis pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return this.getSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
+        return this.getSessionFactory().getCurrentSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
                 != null;
     }
 
     @Override
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", idsToFilter ).list();
     }
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
+
 
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {

@@ -108,7 +108,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private static final String RAT = "Rattus norvegicus";
     private static final Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
-    private static final Map<String, String> organismDatabases = new HashMap<>();
+    private static final Map<String, String> organismDatabases = new HashMap<String, String>();
 
     static {
         organismDatabases.put( "Saccharomyces cerevisiae", "SGD" );
@@ -116,8 +116,8 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     private final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<>();
-    private final Map<String, Taxon> taxonAbbreviationMap = new HashMap<>();
+    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<String, Taxon>();
+    private final Map<String, Taxon> taxonAbbreviationMap = new HashMap<String, Taxon>();
     /**
      * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
      */
@@ -128,18 +128,18 @@ public class GeoConverterImpl implements GeoConverter {
     @Autowired
     private TaxonService taxonService;
     private ExternalDatabase geoDatabase;
-    private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<>();
-    private Collection<Object> results = new HashSet<>();
-    private Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
+    private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
+    private Collection<Object> results = new HashSet<Object>();
+    private Map<String, ArrayDesign> seenPlatforms = new HashMap<String, ArrayDesign>();
     private ExternalDatabase genbank;
     private boolean splitByPlatform = false;
     private boolean forceConvertElements = false;
 
     @Override
     public void clear() {
-        results = new HashSet<>();
-        seenPlatforms = new HashMap<>();
-        platformDesignElementMap = new HashMap<>();
+        results = new HashSet<Object>();
+        seenPlatforms = new HashMap<String, ArrayDesign>();
+        platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
         taxonAbbreviationMap.clear();
         taxonScientificNameMap.clear();
     }
@@ -169,6 +169,7 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
         if ( geoObject instanceof Collection ) {
+            //noinspection unchecked
             return convert( ( Collection<GeoData> ) geoObject );
         } else if ( geoObject instanceof GeoDataset ) {
             return convertDataset( ( GeoDataset ) geoObject );
@@ -219,7 +220,7 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
 
-        List<Object> toConvert = new ArrayList<>();
+        List<Object> toConvert = new ArrayList<Object>();
         PrimitiveType pt = qt.getRepresentation();
         int numMissing = 0;
         for ( Object rawValue : vector ) {
@@ -412,7 +413,7 @@ public class GeoConverterImpl implements GeoConverter {
         else if ( platformTaxa.size() > 1 ) {
             log.debug( platformTaxa.size() + " taxa in GEO platform" );
             // check if they share a common parent taxon to use as primary taxa.
-            Collection<Taxon> parentTaxa = new HashSet<>();
+            Collection<Taxon> parentTaxa = new HashSet<Taxon>();
             for ( Taxon platformTaxon : platformTaxa ) {
                 // thaw to get parent taxon
                 this.taxonService.thaw( platformTaxon );
@@ -430,7 +431,7 @@ public class GeoConverterImpl implements GeoConverter {
 
             log.debug( "Looking at probe taxa to determine 'primary' taxon" );
             // create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
-            Map<String, Integer> taxonProbeNumberList = new HashMap<>();
+            Map<String, Integer> taxonProbeNumberList = new HashMap<String, Integer>();
 
             if ( probeTaxa != null ) {
                 for ( String probeTaxon : probeTaxa ) {
@@ -484,7 +485,7 @@ public class GeoConverterImpl implements GeoConverter {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        Map<String, Integer> tally = new HashMap<>();
+        Map<String, Integer> tally = new HashMap<String, Integer>();
         for ( Object element : results ) {
             String clazz = element.getClass().getName();
             if ( !tally.containsKey( clazz ) ) {
@@ -836,7 +837,7 @@ public class GeoConverterImpl implements GeoConverter {
         if ( arrayDesignRawFile != null ) {
             Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
             if ( arrayDesignLocalFiles == null ) {
-                arrayDesignLocalFiles = new HashSet<>();
+                arrayDesignLocalFiles = new HashSet<LocalFile>();
             }
             arrayDesignLocalFiles.add( arrayDesignRawFile );
             ad.setLocalFiles( arrayDesignLocalFiles );
@@ -856,7 +857,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @param expExp ExpressionExperiment to fill in.
      */
     private void convertDataSetDataVectors( GeoValues values, GeoDataset geoDataset, ExpressionExperiment expExp ) {
-        List<GeoSample> datasetSamples = new ArrayList<>( getDatasetSamples( geoDataset ) );
+        List<GeoSample> datasetSamples = new ArrayList<GeoSample>( getDatasetSamples( geoDataset ) );
         log.info( datasetSamples.size() + " samples in " + geoDataset );
         GeoPlatform geoPlatform = geoDataset.getPlatform();
 
@@ -1153,8 +1154,8 @@ public class GeoConverterImpl implements GeoConverter {
             strictSelection = true;
         }
 
-        List<String> skipped = new ArrayList<>();
-        Collection<CompositeSequence> compositeSequences = new ArrayList<>( 5000 );
+        List<String> skipped = new ArrayList<String>();
+        Collection<CompositeSequence> compositeSequences = new ArrayList<CompositeSequence>( 5000 );
         int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
             String externalAccession = null;
@@ -1300,7 +1301,7 @@ public class GeoConverterImpl implements GeoConverter {
 
             i++;
         }
-        arrayDesign.setCompositeSequences( new HashSet<>( compositeSequences ) );
+        arrayDesign.setCompositeSequences( new HashSet<CompositeSequence>( compositeSequences ) );
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
 
         if ( !skipped.isEmpty() ) {
@@ -1332,7 +1333,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private Collection<Taxon> convertPlatformOrganisms( GeoPlatform platform, String probeTaxonColumnName ) {
         Collection<String> organisms = platform.getOrganisms();
-        Collection<Taxon> platformTaxa = new HashSet<>();
+        Collection<Taxon> platformTaxa = new HashSet<Taxon>();
         StringBuilder taxaOnPlatform = new StringBuilder();
 
         if ( organisms.isEmpty() ) {
@@ -1606,7 +1607,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private Collection<ExpressionExperiment> convertSeries( GeoSeries series ) {
 
-        Collection<ExpressionExperiment> converted = new HashSet<>();
+        Collection<ExpressionExperiment> converted = new HashSet<ExpressionExperiment>();
 
         // figure out if there are multiple species involved here.
 
@@ -1652,8 +1653,8 @@ public class GeoConverterImpl implements GeoConverter {
         log.info( "Converting series: " + series.getGeoAccession() );
 
         Collection<GeoDataset> dataSets = series.getDatasets();
-        Collection<String> dataSetsToSkip = new HashSet<>();
-        Collection<GeoSample> samplesToSkip = new HashSet<>();
+        Collection<String> dataSetsToSkip = new HashSet<String>();
+        Collection<GeoSample> samplesToSkip = new HashSet<GeoSample>();
         checkForDataToSkip( series, dataSetsToSkip, samplesToSkip );
         if ( dataSets.size() > 0 && dataSetsToSkip.size() == dataSets.size() ) {
             return null;
@@ -1743,7 +1744,7 @@ public class GeoConverterImpl implements GeoConverter {
          * For each _set_ of "corresponding" samples (from the same RNA, or so we think) we make up a new BioMaterial.
          */
 
-        Collection<String> seen = new HashSet<>();
+        Collection<String> seen = new HashSet<String>();
         for ( Iterator<Set<String>> iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             Set<String> correspondingSamples = iter.next();
@@ -1752,7 +1753,8 @@ public class GeoConverterImpl implements GeoConverter {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             String bioMaterialName = getBiomaterialPrefix( series, ++numBioMaterials );
-            String bioMaterialDescription = BIOMATERIAL_DESCRIPTION_PREFIX + series.getGeoAccession();
+            StringBuilder bioMaterialDescription = new StringBuilder(
+                    BIOMATERIAL_DESCRIPTION_PREFIX + series.getGeoAccession() );
 
             // From the series samples, find the sample that corresponds and convert it.
             for ( String cSample : correspondingSamples ) {
@@ -1790,7 +1792,7 @@ public class GeoConverterImpl implements GeoConverter {
 
                         assert ba.getSampleUsed() != null;
                         bioMaterial.getBioAssaysUsedIn().add( ba );
-                        bioMaterialDescription = bioMaterialDescription + "," + sample;
+                        bioMaterialDescription.append( "," ).append( sample );
                         expExp.getBioAssays().add( ba );
                         found = true;
                         break;
@@ -1804,7 +1806,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
             }
             bioMaterial.setName( bioMaterialName );
-            bioMaterial.setDescription( bioMaterialDescription );
+            bioMaterial.setDescription( bioMaterialDescription.toString() );
         }
 
         log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays and "
@@ -2381,7 +2383,7 @@ public class GeoConverterImpl implements GeoConverter {
     private Collection<String> determinePlatformExternalReferenceIdentifier( GeoPlatform platform ) {
         Collection<String> columnNames = platform.getColumnNames();
         int index = 0;
-        Collection<String> matches = new HashSet<>();
+        Collection<String> matches = new HashSet<String>();
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyExternalReference( string ) ) {
                 log.debug( string + " appears to indicate a possible external reference identifier in column " + index
@@ -2476,7 +2478,7 @@ public class GeoConverterImpl implements GeoConverter {
         Collection<GeoSample> seriesSamples = getSeriesSamplesForDataset( geoDataset );
 
         // get just the samples used in this dataset
-        Collection<GeoSample> datasetSamples = new ArrayList<>();
+        Collection<GeoSample> datasetSamples = new ArrayList<GeoSample>();
 
         for ( GeoSample sample : seriesSamples ) {
             if ( geoDataset.getColumnNames().contains( sample.getGeoAccession() ) ) {
@@ -2521,7 +2523,7 @@ public class GeoConverterImpl implements GeoConverter {
      * @return map of organisms to a collection of either datasets or platforms.
      */
     private Map<String, Collection<GeoData>> getOrganismDatasetMap( GeoSeries series ) {
-        Map<String, Collection<GeoData>> organisms = new HashMap<>();
+        Map<String, Collection<GeoData>> organisms = new HashMap<String, Collection<GeoData>>();
 
         if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
@@ -2553,7 +2555,7 @@ public class GeoConverterImpl implements GeoConverter {
      * (e.g., chimp and human run on a human platform)
      */
     private Map<String, Collection<GeoSample>> getOrganismSampleMap( GeoSeries series ) {
-        Map<String, Collection<GeoSample>> result = new HashMap<>();
+        Map<String, Collection<GeoSample>> result = new HashMap<String, Collection<GeoSample>>();
         for ( GeoSample sample : series.getSamples() ) {
             String organism = sample.getOrganism();
             if ( !result.containsKey( organism ) ) {
@@ -2565,7 +2567,7 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     private Map<GeoPlatform, Collection<GeoData>> getPlatformDatasetMap( GeoSeries series ) {
-        Map<GeoPlatform, Collection<GeoData>> platforms = new HashMap<>();
+        Map<GeoPlatform, Collection<GeoData>> platforms = new HashMap<GeoPlatform, Collection<GeoData>>();
 
         if ( series.getDatasets() == null || series.getDatasets().size() == 0 ) {
             for ( GeoSample sample : series.getSamples() ) {
@@ -2710,7 +2712,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples,
             Integer quantitationTypeIndex ) {
-        Map<String, List<Object>> dataVectors = new HashMap<>( INITIAL_VECTOR_CAPACITY );
+        Map<String, List<Object>> dataVectors = new HashMap<String, List<Object>>( INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         GeoPlatform platform = getPlatformForSamples( datasetSamples );
 
@@ -2812,7 +2814,7 @@ public class GeoConverterImpl implements GeoConverter {
      * Sanity check.
      */
     private void sanityCheckQuantitationTypes( List<GeoSample> datasetSamples ) {
-        List<String> reference = new ArrayList<>();
+        List<String> reference = new ArrayList<String>();
 
         // Choose a reference that is populated ...
         boolean expectingData = true;

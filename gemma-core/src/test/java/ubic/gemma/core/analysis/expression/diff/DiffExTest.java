@@ -103,7 +103,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
 
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_design.txt" );) {
@@ -127,7 +127,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             // we have to find the right generic platform to use.
             targetArrayDesign = this
                     .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-            arrayDesignService.thaw( targetArrayDesign );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
             // the experiment has 8 samples but the data has 4 columns so allow missing samples
             // GSM718707 GSM718708 GSM718709 GSM718710
@@ -136,7 +136,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
         }
 
         // make sure to do a thaw() to get the addCountData() updates
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
 
         // verify rows and columns
         Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( ee );
@@ -205,13 +205,13 @@ public class DiffExTest extends AbstractGeoServiceTest {
             }
         }
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             ee = eeService.load( ee.getId() );
-            eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             try (InputStream is = this.getClass()
                     .getResourceAsStream( "/data/loader/expression/geo/GSE35930/design.txt" );) {
@@ -219,7 +219,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             }
 
             ee = eeService.load( ee.getId() );
-            eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
         }
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();

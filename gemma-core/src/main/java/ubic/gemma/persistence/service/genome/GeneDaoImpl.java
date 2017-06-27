@@ -22,12 +22,10 @@ import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -38,10 +36,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.VoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.CacheUtils;
-import ubic.gemma.persistence.util.SequenceBinUtils;
-import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.persistence.util.*;
 
 import java.util.*;
 
@@ -60,24 +55,16 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     private static final String G2CS_CACHE_NAME = "Gene2CsCache";
     private final CacheManager cacheManager;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     @Autowired
     public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
         super( Gene.class, sessionFactory );
         this.cacheManager = cacheManager;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
-
     @Override
     public Gene findByNcbiId( Integer ncbiId ) {
-        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ncbiGeneId = :n" )
-                .setParameter( "n", ncbiId ).uniqueResult();
+        return ( Gene ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "from Gene g where g.ncbiGeneId = :n" ).setParameter( "n", ncbiId ).uniqueResult();
     }
 
     @Override
@@ -96,7 +83,8 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<Gene> findByPhysicalLocation( final PhysicalLocation location ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from Gene as gene where gene.physicalLocation = :location" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from Gene as gene where gene.physicalLocation = :location" )
                 .setParameter( "location", location ).list();
     }
 
@@ -120,14 +108,14 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
         } else if ( results.size() > 1 ) {
 
             /*
-             * As a side-effect, we remove relics. This is a bit ugly, but takes care of the problem! It was put in
+             * As a side-effect, we delete relics. This is a bit ugly, but takes care of the problem! It was put in
              * place to help in the cleanup of duplicated genes. But this can happen fairly routinely when NCBI
              * information changes in messy ways.
              *
              * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call from a
              * read-write method.
              */
-            Collection<Gene> toDelete = new HashSet<>();
+            Collection<Gene> toDelete = new HashSet<Gene>();
             for ( Gene foundGene : results ) {
                 if ( StringUtils.isBlank( foundGene.getPreviousNcbiId() ) )
                     continue;
@@ -194,7 +182,8 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<? extends Gene> findByEnsemblId( String id ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ensemblId = :id" ).setParameter( "id", id ).list();
+        return this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ensemblId = :id" )
+                .setParameter( "id", id ).list();
     }
 
     @Override
@@ -215,10 +204,10 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
 
     @Override
     public Map<String, Gene> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
-        Map<String, Gene> result = new HashMap<>();
+        Map<String, Gene> result = new HashMap<String, Gene>();
         final String queryString = "select g from Gene as g join fetch g.taxon t where g.officialSymbol in (:symbols) and t.id = :taxonId";
 
-        for ( Collection<String> batch : new BatchIterator<>( query, BATCH_SIZE ) ) {
+        for ( Collection<String> batch : new BatchIterator<String>( query, BATCH_SIZE ) ) {
             //noinspection unchecked
             List<Gene> results = getHibernateTemplate()
                     .findByNamedParam( queryString, new String[] { "symbols", "taxonId" },
@@ -232,10 +221,10 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
 
     @Override
     public Map<Integer, Gene> findByNcbiIds( Collection<Integer> ncbiIds ) {
-        Map<Integer, Gene> result = new HashMap<>();
+        Map<Integer, Gene> result = new HashMap<Integer, Gene>();
         final String queryString = "from Gene g where g.ncbiGeneId in (:ncbi)";
 
-        for ( Collection<Integer> batch : new BatchIterator<>( ncbiIds, BATCH_SIZE ) ) {
+        for ( Collection<Integer> batch : new BatchIterator<Integer>( ncbiIds, BATCH_SIZE ) ) {
             //noinspection unchecked
             List<Gene> results = getHibernateTemplate().findByNamedParam( queryString, "ncbi", batch );
             for ( Gene g : results ) {
@@ -392,13 +381,13 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
 
     @Override
     public Collection<Gene> loadThawed( Collection<Long> ids ) {
-        Collection<Gene> result = new HashSet<>();
+        Collection<Gene> result = new HashSet<Gene>();
 
         if ( ids.isEmpty() )
             return result;
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
             result.addAll( doLoadThawedLite( batch ) );
         }
         if ( timer.getTime() > 1000 ) {
@@ -409,13 +398,13 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
 
     @Override
     public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {
-        Collection<Gene> result = new HashSet<>();
+        Collection<Gene> result = new HashSet<Gene>();
 
         if ( ids.isEmpty() )
             return result;
         StopWatch timer = new StopWatch();
         timer.start();
-        for ( Collection<Long> batch : new BatchIterator<>( ids, BATCH_SIZE ) ) {
+        for ( Collection<Long> batch : new BatchIterator<Long>( ids, BATCH_SIZE ) ) {
             result.addAll( doLoadThawedLiter( batch ) );
         }
         if ( timer.getTime() > 1000 ) {
@@ -443,25 +432,36 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
      * Only thaw the Aliases, very light version
      */
     @Override
-    public void thawAliases( final Gene gene ) {
-        this.getSessionFactory().getCurrentSession().refresh( gene );
-        Hibernate.initialize( gene.getAliases() );
-        Hibernate.initialize( gene.getAccessions() );
+    public Gene thawAliases( final Gene gene ) {
+        if ( gene.getId() == null )
+            return gene;
+
+        List<?> res = this.getHibernateTemplate().findByNamedParam( "select distinct g from Gene g "
+                + "left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid", "gid", gene.getId() );
+
+        return ( Gene ) res.iterator().next();
     }
 
     @Override
-    public void thawLite( final Gene gene ) {
-        this.thaw( gene );
+    public Gene thawLite( final Gene gene ) {
+        return this.thaw( gene );
     }
 
     @Override
-    public void thawLiter( final Gene gene ) {
-        Hibernate.initialize( gene.getTaxon() );
+    public Gene thawLiter( final Gene gene ) {
+        if ( gene.getId() == null )
+            return gene;
+
+        List<?> res = this.getHibernateTemplate().findByNamedParam(
+                "select distinct g from Gene g " + " left join fetch g.taxon" + " where g.id=:gid", "gid",
+                gene.getId() );
+
+        return ( Gene ) res.iterator().next();
     }
 
     @Override
     public Gene findByAccession( String accession, ExternalDatabase source ) {
-        Collection<Gene> genes = new HashSet<>();
+        Collection<Gene> genes = new HashSet<Gene>();
         final String accessionQuery = "select g from Gene g inner join g.accessions a where a.accession = :accession";
         final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
 
@@ -606,7 +606,7 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<Gene> load( Collection<Long> ids ) {
         if ( ids.size() == 0 ) {
-            return new HashSet<>();
+            return new HashSet<Gene>();
         }
         int batchSize = 2000;
         if ( ids.size() > batchSize ) {
@@ -614,7 +614,7 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
         }
 
         final String queryString = "from Gene where id in (:ids)";
-        Collection<Gene> genes = new HashSet<>();
+        Collection<Gene> genes = new HashSet<Gene>();
 
         BatchIterator<Long> it = BatchIterator.batches( ids, batchSize );
         for ( ; it.hasNext(); ) {
@@ -630,48 +630,43 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     }
 
     @Override
-    public void thaw( final Gene gene ) {
-        this.getSessionFactory().getCurrentSession().refresh( gene );
-        thawAliases( gene );
-        for ( DatabaseEntry de : gene.getAccessions() ) {
-            Hibernate.initialize( de.getExternalDatabase() );
-        }
-        Hibernate.initialize( gene.getProducts() );
-        for ( GeneProduct gp : gene.getProducts() ) {
-            Hibernate.initialize( gp.getAccessions() );
-            for ( DatabaseEntry de : gp.getAccessions() ) {
-                Hibernate.initialize( de.getExternalDatabase() );
-            }
-            Hibernate.initialize( gp.getPhysicalLocation() );
-            if ( gp.getPhysicalLocation() != null ) {
-                Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
-                if ( gp.getPhysicalLocation().getChromosome() != null )
-                    Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
-            }
-        }
-        Hibernate.initialize( gene.getTaxon() );
-        if ( gene.getTaxon() != null )
-            Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
-        Hibernate.initialize( gene.getMultifunctionality() );
-        Hibernate.initialize( gene.getPhenotypeAssociations() );
+    public Gene thaw( final Gene gene ) {
+        if ( gene.getId() == null )
+            return gene;
 
+        List<?> res = this.getHibernateTemplate().findByNamedParam(
+                "select distinct g from Gene g " + " left join fetch g.aliases left join fetch g.accessions acc"
+                        + " left join fetch acc.externalDatabase left join fetch g.products gp "
+                        + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
+                        + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
+                        + " left join fetch g.taxon t left join fetch t.externalDatabase "
+                        + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
+                        + " where g.id=:gid", "gid", gene.getId() );
+
+        return ( Gene ) res.iterator().next();
     }
 
     @Override
-    public void thawLite( final Collection<Gene> genes ) {
-        Collection<Gene> batch = new HashSet<>();
+    public Collection<Gene> thawLite( final Collection<Gene> genes ) {
+        if ( genes.isEmpty() )
+            return new HashSet<Gene>();
+
+        Collection<Gene> result = new HashSet<Gene>();
+        Collection<Gene> batch = new HashSet<Gene>();
 
         for ( Gene g : genes ) {
             batch.add( g );
             if ( batch.size() == BATCH_SIZE ) {
-                thaw( batch );
+                result.addAll( loadThawed( EntityUtils.getIds( batch ) ) );
                 batch.clear();
             }
         }
 
         if ( !batch.isEmpty() ) {
-            thaw( batch );
+            result.addAll( loadThawed( EntityUtils.getIds( batch ) ) );
         }
+
+        return result;
     }
 
     @Override
@@ -681,16 +676,12 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
 
     @Override
     public Collection<GeneValueObject> loadValueObjects( Collection<Gene> entities ) {
-        Collection<GeneValueObject> vos = new LinkedHashSet<>();
+        Collection<GeneValueObject> vos = new LinkedHashSet<GeneValueObject>();
         for ( Gene e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }
         return vos;
     }
-
-    /* ********************************
-     * Protected methods
-     * ********************************/
 
     @Override
     protected void initDao() throws Exception {
@@ -698,10 +689,6 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
         CacheUtils.createOrLoadCache( cacheManager, G2CS_CACHE_NAME, terracottaEnabled, 500000, false, false, 0, 0,
                 false );
     }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         //noinspection unchecked
@@ -747,12 +734,6 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
         }
         //noinspection unchecked
         return getHibernateTemplate().findByNamedParam( query, params, vals );
-    }
-
-    private void thaw( Collection<Gene> genes ) {
-        for ( Gene g : genes ) {
-            this.thaw( g );
-        }
     }
 
     private void debug( List<Gene> results ) {
