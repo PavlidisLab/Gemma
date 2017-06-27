@@ -23,6 +23,8 @@ import java.util.Map;
 @Repository
 public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject> {
 
+    Integer countNotTroubled();
+
     Map<Taxon, Long> getPerTaxonCount();
 
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );

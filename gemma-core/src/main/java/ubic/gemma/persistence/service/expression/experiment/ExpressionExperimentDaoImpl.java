@@ -33,6 +33,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -66,6 +67,15 @@ public class ExpressionExperimentDaoImpl
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperiment.class, sessionFactory );
+    }
+
+    @Override
+    public Integer countNotTroubled() {
+        return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
+                "select count( distinct ee ) from ExpressionExperiment as ee left join "
+                        + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
+                        + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
+                .uniqueResult() ).intValue();
     }
 
     @Override
@@ -318,6 +328,79 @@ public class ExpressionExperimentDaoImpl
         }
         //noinspection unchecked
         return this.loadValueObjects( criteria.list(), false );
+    }
+
+    /**
+     * Special method for front-end access
+     *
+     * @param orderBy    the field to order the results by.
+     * @param descending whether the ordering by the orderField should be descending.
+     * @param ids        only list specific ids.
+     * @param taxon      only list experiments within specific taxon.
+     * @param admin      whether the requesting user is administrator or not. Non-administrators will not
+     *                   get troubled experiments.
+     * @return a list of EE details VOs representing experiments matching the given arguments.
+     */
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
+            List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
+
+        String orderByClause = this.getOrderByClause( orderBy, descending );
+
+        String restrictionClause = "";
+        boolean whereUsed = false;
+        // Limit to given ids
+        if ( ids != null ) {
+            restrictionClause += " where ee.id in :ids";
+            whereUsed = true;
+        }
+        // Limit to given taxon
+        if ( taxon != null ) {
+            restrictionClause += ( whereUsed ? " and" : " where" ) + " ee.taxon = :taxon";
+            whereUsed = true;
+        }
+
+        // If user is not admin, exclude troubled experiments.
+        if ( !admin ) {
+            restrictionClause += ( whereUsed ? " and" : " where" )
+                    + " ee.curationDetails.troubled = false and AD.curationDetails.troubled = false";
+            whereUsed = true;
+        }
+
+        // Base select
+        String queryString = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        if ( ids != null ) {
+            Collections.sort( ids );
+            query.setParameterList( "ids", ids );
+        }
+        if ( taxon != null ) {
+            query.setParameter( "taxon", taxon );
+        }
+
+        query.setCacheable( true );
+
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+
+        List<ExpressionExperimentDetailsValueObject> vos = new LinkedList<ExpressionExperimentDetailsValueObject>();
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+        for ( Object[] row : list ) {
+            Long eeId = ( Long ) row[0];
+            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( eeId );
+            this.populateValueObject( vo, row, null );
+
+            // Add array designs
+            Collection<ArrayDesignValueObject> adVos = CommonQueries
+                    .getArrayDesignsUsedVOs( ( Long ) row[0], this.getSessionFactory().getCurrentSession() );
+            vo.setArrayDesigns( adVos );
+
+            vos.add( vo );
+        }
+
+        return vos;
     }
 
     @Override
@@ -1698,6 +1781,7 @@ public class ExpressionExperimentDaoImpl
             assert eeId != null;
 
             ExpressionExperimentValueObject vo;
+
             if ( voMap.containsKey( eeId ) ) {
                 vo = voMap.get( eeId );
             } else {
@@ -1705,51 +1789,7 @@ public class ExpressionExperimentDaoImpl
                 voMap.put( eeId, vo );
             }
 
-            //EE
-            vo.setName( ( String ) row[1] );
-            vo.setSource( ( String ) row[2] );
-            vo.setShortName( ( String ) row[3] );
-            if ( row[5] != null )
-                vo.setProcessedExpressionVectorCount( ( Integer ) row[5] );
-
-            //acc
-            vo.setAccession( ( String ) row[6] );
-
-            //ED
-            vo.setExternalDatabase( ( String ) row[7] );
-            vo.setExternalUri( ( String ) row[8] );
-
-            //AD
-            //AD.status was not being used before changes in this revision
-            Object technology = row[10];
-            if ( technology != null ) {
-                vo.setTechnologyType( technology.toString() );
-            }
-            if ( qtMap != null && !qtMap.isEmpty() && vo.getTechnologyType() != null ) {
-                fillQuantitationTypeInfo( qtMap, vo, eeId, vo.getTechnologyType() );
-            }
-
-            //taxon
-            vo.setTaxon( ( String ) row[11] );
-            vo.setTaxonId( ( Long ) row[12] );
-
-            //curationDetails
-            vo.setLastUpdated( ( Date ) row[13] );
-            vo.setTroubled( ( ( Boolean ) row[14] ) );
-            vo.setNeedsAttention( ( Boolean ) row[15] );
-            vo.setCurationNote( ( String ) row[16] );
-
-            //counts
-            vo.setBioAssayCount( ( ( Long ) row[17] ).intValue() );
-            vo.setArrayDesignCount( ( ( Long ) row[18] ).intValue() );
-            vo.setBioMaterialCount( ( ( Long ) row[19] ).intValue() );
-
-            //other
-            vo.setExperimentalDesign( ( Long ) row[20] );
-            vo.setParentTaxonId( ( Long ) row[21] );
-
-            //This was causing null results when being retrieved through the original query
-            this.addCurationEvents( vo );
+            this.populateValueObject( vo, row, qtMap );
 
             voMap.put( eeId, vo );
         }
@@ -1759,6 +1799,56 @@ public class ExpressionExperimentDaoImpl
 
         return voMap;
 
+    }
+
+    private void populateValueObject( ExpressionExperimentValueObject vo, Object[] row,
+            Map<Long, Collection<QuantitationType>> qtMap ) {
+
+        //EE
+        vo.setName( ( String ) row[1] );
+        vo.setSource( ( String ) row[2] );
+        vo.setShortName( ( String ) row[3] );
+        if ( row[5] != null )
+            vo.setProcessedExpressionVectorCount( ( Integer ) row[5] );
+
+        //acc
+        vo.setAccession( ( String ) row[6] );
+
+        //ED
+        vo.setExternalDatabase( ( String ) row[7] );
+        vo.setExternalUri( ( String ) row[8] );
+
+        //AD
+        //AD.status was not being used before changes in this revision
+        Object technology = row[10];
+        if ( technology != null ) {
+            vo.setTechnologyType( technology.toString() );
+        }
+        if ( qtMap != null && !qtMap.isEmpty() && vo.getTechnologyType() != null ) {
+            fillQuantitationTypeInfo( qtMap, vo, ( Long ) row[0], vo.getTechnologyType() );
+        }
+
+        //taxon
+        vo.setTaxon( ( String ) row[11] );
+        vo.setTaxonId( ( Long ) row[12] );
+
+        //curationDetails
+        vo.setLastUpdated( ( Date ) row[13] );
+        vo.setTroubled( ( ( Boolean ) row[14] ) );
+        vo.setNeedsAttention( ( Boolean ) row[15] );
+        vo.setCurationNote( ( String ) row[16] );
+
+        //counts
+        vo.setBioAssayCount( ( ( Long ) row[17] ).intValue() );
+        vo.setArrayDesignCount( ( ( Long ) row[18] ).intValue() );
+        vo.setBioMaterialCount( ( ( Long ) row[19] ).intValue() );
+
+        //other
+        vo.setExperimentalDesign( ( Long ) row[20] );
+        vo.setParentTaxonId( ( Long ) row[21] );
+
+        //This was causing null results when being retrieved through the original query
+        this.addCurationEvents( vo );
     }
 
     /**

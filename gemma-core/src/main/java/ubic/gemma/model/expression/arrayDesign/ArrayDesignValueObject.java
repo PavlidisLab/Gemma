@@ -97,10 +97,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
+        super(ad);
         this.name = ad.getName();
         this.shortName = ad.getShortName();
         this.description = ad.getDescription();
-        this.id = ad.getId();
     }
 
     public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
