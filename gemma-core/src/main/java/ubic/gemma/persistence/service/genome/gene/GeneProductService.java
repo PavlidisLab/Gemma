@@ -32,9 +32,11 @@ import java.util.Collection;
  */
 public interface GeneProductService extends BaseVoEnabledService<GeneProduct, GeneProductValueObject> {
 
+    @Override
     @Secured({ "GROUP_USER" })
     GeneProduct create( GeneProduct entity );
 
+    @Override
     @Secured({ "GROUP_USER" })
     GeneProduct findOrCreate( GeneProduct geneProduct );
 
@@ -48,23 +50,30 @@ public interface GeneProductService extends BaseVoEnabledService<GeneProduct, Ge
      */
     Collection<Gene> getGenesByNcbiId( String search );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( GeneProduct entity );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( Collection<GeneProduct> entities );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( Collection<GeneProduct> toRemove );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( Long id );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( GeneProduct entity );
 
     GeneProduct findByGi( String string );
 
     Collection<GeneProduct> findByName( String name, Taxon taxon );
+
+    GeneProduct thaw(GeneProduct geneProduct);
 
 }

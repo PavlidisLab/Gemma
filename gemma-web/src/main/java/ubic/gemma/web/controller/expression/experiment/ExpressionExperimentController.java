@@ -217,11 +217,9 @@ public class ExpressionExperimentController {
 
         List<ExpressionExperimentValueObject> recordsOrig = loadAllValueObjectsOrdered( batch, ids, taxon );
         List<ExpressionExperimentDetailsValueObject> records = new LinkedList<>();
-
         for ( ExpressionExperimentValueObject ro : recordsOrig ) {
             records.add( new ExpressionExperimentDetailsValueObject( ro ) );
         }
-
         if ( !SecurityUtil.isUserAdmin() ) {
             // If user is not admin, remove troubled experiments. This method loads the ADs automatically.
             records = removeTroubledExperimentVOs( records );

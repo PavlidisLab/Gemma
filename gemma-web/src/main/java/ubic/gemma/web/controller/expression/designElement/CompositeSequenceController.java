@@ -47,6 +47,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
@@ -78,6 +79,8 @@ public class CompositeSequenceController extends BaseController {
     private BioSequenceService bioSequenceService;
     @Autowired
     private GeneService geneService;
+    @Autowired
+    private GeneProductService geneProductService;
 
     @RequestMapping("/filter")
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
@@ -243,7 +246,7 @@ public class CompositeSequenceController extends BaseController {
         Collection<BioSequence2GeneProduct> bs2gps = biologicalCharacteristic.getBioSequence2GeneProduct();
 
         for ( BioSequence2GeneProduct bs2gp : bs2gps ) {
-            GeneProductValueObject geneProduct = new GeneProductValueObject( bs2gp.getGeneProduct() );
+            GeneProductValueObject geneProduct = new GeneProductValueObject( geneProductService.thaw( bs2gp.getGeneProduct() ) );
 
             GeneValueObject gene = new GeneValueObject( bs2gp.getGeneProduct().getGene() );
 

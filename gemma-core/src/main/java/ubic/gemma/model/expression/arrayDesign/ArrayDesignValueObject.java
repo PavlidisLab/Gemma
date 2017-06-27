@@ -18,10 +18,8 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import org.hibernate.ScrollableResults;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl;
 
 import java.util.Collection;
 import java.util.Date;
@@ -99,26 +97,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
-        this( ad, null );
-    }
-
-    public ArrayDesignValueObject( ArrayDesign ad, Map<Long, Integer> eeCounts ) {
-        super( ad );
         this.name = ad.getName();
         this.shortName = ad.getShortName();
-
-        if ( ad.getTechnologyType() != null ) {
-            this.technologyType = ad.getTechnologyType().toString();
-            this.color = ad.getTechnologyType().getValue();
-        }
-
         this.description = ad.getDescription();
-        this.isMergee = ad.getMergedInto() != null;
-        this.taxon = ad.getPrimaryTaxon().getCommonName();
-
-        this.expressionExperimentCount = ( eeCounts == null || !eeCounts.containsKey( this.getId() ) ) ?
-                0 :
-                eeCounts.get( this.getId() );
+        this.id = ad.getId();
     }
 
     public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
