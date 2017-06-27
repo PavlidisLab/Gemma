@@ -5,7 +5,7 @@
     <name>Gemma</name>
     <groupId>gemma</groupId>
     <artifactId>gemma</artifactId>
-    <version>1.13-SNAPSHOT</version>
+    <version>1.12.3</version>
     <inceptionYear>2005</inceptionYear>
     <description>
         The Gemma Project for meta-analysis of genomics data
@@ -314,7 +314,7 @@
         <dependency>
             <groupId>baseCode</groupId>
             <artifactId>baseCode</artifactId>
-            <version>1.0.21-SNAPSHOT</version>
+            <version>1.0.20</version>
         </dependency>
     </dependencies>
     <build>
