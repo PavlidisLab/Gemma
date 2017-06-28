@@ -19,26 +19,20 @@
 
 package ubic.gemma.core.search;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -46,39 +40,37 @@ import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author paul
- * @version $Id$
  */
 @Component
 public class GeneSetSearchImpl implements GeneSetSearch {
-
-    private static Log log = LogFactory.getLog( GeneSetSearchImpl.class );
 
     /**
      * Also defined in GeneSearchServiceImpl.
      */
     private static final int MAX_GO_GROUP_SIZE = 200;
+    private static final Log log = LogFactory.getLog( GeneSetSearchImpl.class );
 
     @Autowired
     private Gene2GOAssociationService gene2GoService;
-
     @Autowired
     private GeneOntologyService geneOntologyService;
-
     @Autowired
     private GeneSetService geneSetService;
-
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
-
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
     @Autowired
     private TaxonService taxonService;
 
@@ -106,19 +98,17 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed,
             Integer maxGeneSetSize ) {
-        Collection<? extends OntologyResource> matches = this.geneOntologyService.findTerm( StringUtils
-                .strip( goTermName ) );
+        Collection<? extends OntologyResource> matches = this.geneOntologyService
+                .findTerm( StringUtils.strip( goTermName ) );
 
-        Collection<GeneSet> results = new HashSet<>();
+        Collection<GeneSet> results = new HashSet<GeneSet>();
 
         for ( OntologyResource t : matches ) {
             assert t instanceof OntologyTerm;
 
             if ( taxon == null ) {
                 Collection<GeneSet> sets = goTermToGeneSets( ( OntologyTerm ) t, maxGeneSetSize );
-                for ( GeneSet geneSet : sets ) {
-                    results.add( geneSet );
-                }
+                results.addAll( sets );
 
                 // should we count each species as one go
                 if ( maxGoTermsProcessed != null && results.size() > maxGoTermsProcessed ) {
@@ -161,7 +151,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Collection<CharacteristicValueObject> phenotypes = phenotypeAssociationManagerService
                 .searchOntologyForPhenotypes( StringUtils.strip( phenotypeQuery ), null );
 
-        Collection<GeneSetValueObject> results = new HashSet<>();
+        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
 
         if ( phenotypes.isEmpty() ) {
             return results;
@@ -173,7 +163,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
         log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
                 + ") into GeneSets for  phenotype query " + phenotypeQuery );
-        Map<String, CharacteristicValueObject> uris = new HashMap<>();
+        Map<String, CharacteristicValueObject> uris = new HashMap<String, CharacteristicValueObject>();
         for ( CharacteristicValueObject cvo : phenotypes ) {
             uris.put( cvo.getValueUri(), cvo );
         }
@@ -189,7 +179,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
             Collection<? extends GeneValueObject> gvos = genes.get( uri );
 
-            if ( gvos.isEmpty() ) continue;
+            if ( gvos.isEmpty() )
+                continue;
 
             Collection<Long> geneIds = EntityUtils.getIds( gvos );
 
@@ -207,8 +198,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         }
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Loaded " + phenotypes.size() + " phenotype gene sets for query " + phenotypeQuery + " in "
-                    + timer.getTime() + "ms" );
+            log.info(
+                    "Loaded " + phenotypes.size() + " phenotype gene sets for query " + phenotypeQuery + " in " + timer
+                            .getTime() + "ms" );
         }
         return results;
 
@@ -220,8 +212,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<GeneSet>();
         }
-        Collection<GeneSet> foundGeneSets = null;
-        Taxon tax = null;
+        Collection<GeneSet> foundGeneSets;
+        Taxon tax;
         tax = taxonService.load( taxonId );
 
         if ( tax == null ) {
@@ -243,7 +235,8 @@ public class GeneSetSearchImpl implements GeneSetSearch {
                 foundGeneSets.addAll( goSets );
             } else {
                 GeneSet goSet = findByGoId( query, tax );
-                if ( goSet != null ) foundGeneSets.add( goSet );
+                if ( goSet != null )
+                    foundGeneSets.add( goSet );
             }
         } else {
             foundGeneSets.addAll( findByGoTermName( query, tax ) );
@@ -256,7 +249,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     public GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId ) {
 
         // shouldn't need to set the taxon here, should be taken care of when creating the value object
-        Taxon taxon = null;
+        Taxon taxon;
 
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
@@ -283,7 +276,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         OntologyTerm goTerm = GeneOntologyServiceImpl.getTermForId( StringUtils.strip( query ) );
 
         if ( goTerm == null ) {
-            return new HashSet<>();
+            return new HashSet<GeneSet>();
         }
         // if taxon is null, this returns genesets for all taxa
         return goTermToGeneSets( goTerm, MAX_GO_GROUP_SIZE );
@@ -298,10 +291,12 @@ public class GeneSetSearchImpl implements GeneSetSearch {
      */
     private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon, Integer maxGeneSetSize ) {
         assert taxon != null;
-        if ( term == null ) return null;
-        if ( term.getUri() == null ) return null;
+        if ( term == null )
+            return null;
+        if ( term.getUri() == null )
+            return null;
 
-        Collection<OntologyResource> allMatches = new HashSet<>();
+        Collection<OntologyResource> allMatches = new HashSet<OntologyResource>();
         allMatches.add( term );
         assert term instanceof OntologyTerm;
         allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
@@ -309,7 +304,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         /*
          * Gather up uris
          */
-        Collection<String> termsToFetch = new HashSet<>();
+        Collection<String> termsToFetch = new HashSet<String>();
         for ( OntologyResource t : allMatches ) {
             String goId = uri2goid( t );
             termsToFetch.add( goId );
@@ -339,17 +334,19 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     private Collection<GeneSet> goTermToGeneSets( OntologyTerm term, Integer maxGeneSetSize ) {
-        if ( term == null ) return null;
-        if ( term.getUri() == null ) return null;
+        if ( term == null )
+            return null;
+        if ( term.getUri() == null )
+            return null;
 
-        Collection<OntologyResource> allMatches = new HashSet<>();
+        Collection<OntologyResource> allMatches = new HashSet<OntologyResource>();
         allMatches.add( term );
         allMatches.addAll( this.geneOntologyService.getAllChildren( term ) );
         log.info( term );
         /*
          * Gather up uris
          */
-        Collection<String> termsToFetch = new HashSet<>();
+        Collection<String> termsToFetch = new HashSet<String>();
         for ( OntologyResource t : allMatches ) {
             String goId = uri2goid( t );
             termsToFetch.add( goId );
@@ -357,7 +354,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
         Map<Taxon, Collection<Gene>> genesByTaxon = this.gene2GoService.findByGOTermsPerTaxon( termsToFetch );
 
-        Collection<GeneSet> results = new HashSet<>();
+        Collection<GeneSet> results = new HashSet<GeneSet>();
         for ( Taxon t : genesByTaxon.keySet() ) {
             Collection<Gene> genes = genesByTaxon.get( t );
 
