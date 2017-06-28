@@ -218,7 +218,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
 
          // if the GO id failed to match a set, use the hard coded back up
          // list of genes
-         // (this might happen if ontology isn't loaded e.g. source is down, see bug 2534)
+         // (this might happen if ontology isn't loaded e.g. source is down)
          if ( geneSet === null ) {
             geneSet = myscope.makeSessionBoundGeneSet( backupGeneIds, taxonId, 'Gene list for ' + goName,
                'GO database unavailable, using a static list' );

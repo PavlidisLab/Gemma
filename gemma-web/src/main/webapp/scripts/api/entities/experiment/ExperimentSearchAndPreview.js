@@ -133,7 +133,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
     */
    loadExperimentOrGroup : function( record, query ) {
 
-      var vo = record.get( 'resultValueObject' );
+      var vo = record.resultValueObject;
       var taxonId = vo.taxonId;
       Gemma.EVENTBUS.fireEvent( 'taxonchanged', taxonId );
       this.queryUsedToGetSessionGroup = (id === null || id === -1) ? query : null;
@@ -169,15 +169,16 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
    /**
     * handler for select combo.
     * 
-    * @param record
     * @param combo
+    * @param storeItem
     * @param index
     */
    showPreview : function( combo, storeItem, index ) {
       var record = storeItem.data;
+      console.log(record);
       // if the EE has changed taxon, reset the experiment combo
-      this.searchForm.taxonChanged( record.get( 'taxonId' ), record.get( 'taxonName' ) );
-      Gemma.EVENTBUS.fireEvent( 'taxonchanged', record.get( 'taxonId' ) );
+      this.searchForm.taxonChanged( record.taxonId , record.taxonName );
+      Gemma.EVENTBUS.fireEvent( 'taxonchanged', record.taxonId );
 
       // store the eeid(s) selected and load some EE into the
       // previewer

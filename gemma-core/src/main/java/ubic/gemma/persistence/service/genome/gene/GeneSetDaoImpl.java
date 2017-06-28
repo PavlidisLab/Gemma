@@ -179,7 +179,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                 .setParameter( "id", id ).setMaxResults( 1 );
 
         Gene g = ( Gene ) q.uniqueResult();
-        return g.getTaxon();
+        return g != null ? g.getTaxon() : null;
     }
 
     private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {

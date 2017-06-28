@@ -54,10 +54,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
 
-
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
         super( ArrayDesign.class, sessionFactory );
+    }
+
+    @Override
+    public Integer countNotTroubled() {
+        return ( ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(ad) from ArrayDesign as ad where ad.curationDetails.troubled = false" )
+                .uniqueResult() ).intValue();
     }
 
     @Override
@@ -556,6 +562,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     /**
      * Loads value objects for all array designs, and populates the EE counts.
+     *
      * @return
      */
     @Override

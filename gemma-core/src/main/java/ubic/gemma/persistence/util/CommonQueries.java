@@ -27,6 +27,7 @@ import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.type.LongType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -143,16 +144,7 @@ public class CommonQueries {
      */
     @SuppressWarnings("unchecked")
     public static Collection<ArrayDesign> getArrayDesignsUsed( Long eeId, Session session ) {
-        final String eeAdQuery = "select distinct ad from ExpressionExperiment as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id = :eeId";
-
-        org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
-        queryObject.setCacheable( true );
-        queryObject.setParameter( "eeId", eeId );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-
-        List<?> list = queryObject.list();
+        List<?> list = createGetADsUsedQueryObject( eeId, session ).list();
         /*
          * Thaw the TT.
          */
@@ -162,8 +154,16 @@ public class CommonQueries {
         return ( Collection<ArrayDesign> ) list;
     }
 
+    public static Collection<ArrayDesignValueObject> getArrayDesignsUsedVOs( Long eeId, Session session ) {
+        List<?> list = createGetADsUsedQueryObject( eeId, session ).list();
+        Collection<ArrayDesignValueObject> vos = new LinkedList<ArrayDesignValueObject>(  );
+        for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
+            vos.add( new ArrayDesignValueObject( ad ) );
+        }
+        return vos;
+    }
+
     /**
-     *
      * @return list of array designs IDs used in given expression experiment
      */
     @SuppressWarnings("unchecked")
@@ -217,6 +217,18 @@ public class CommonQueries {
 
         return cs2genes;
 
+    }
+
+    private static Query createGetADsUsedQueryObject( Long eeId, Session session ) {
+        final String eeAdQuery = "select distinct ad from ExpressionExperiment as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id = :eeId";
+
+        Query queryObject = session.createQuery( eeAdQuery );
+        queryObject.setCacheable( true );
+        queryObject.setParameter( "eeId", eeId );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+        return queryObject;
     }
 
     private static void addGeneIds( Map<Long, Collection<Long>> cs2genes, ScrollableResults results ) {
@@ -397,7 +409,6 @@ public class CommonQueries {
 
         return cs2genes;
     }
-
 
     public static Collection<Long> filterProbesByPlatform( Collection<Long> probes, Collection<Long> arrayDesignIds,
             Session session ) {

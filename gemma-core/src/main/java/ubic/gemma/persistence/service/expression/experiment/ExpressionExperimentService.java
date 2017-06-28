@@ -60,6 +60,9 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    Integer countNotTroubled();
+
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
      */
@@ -420,6 +423,21 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids );
+
+    /**
+     * Special method for front-end access
+     *
+     * @param orderField the field to order the results by.
+     * @param descending whether the ordering by the orderField should be descending.
+     * @param ids        only list specific ids.
+     * @param taxon      only list experiments within specific taxon.
+     * @param admin      whether the requesting user is administrator or not. Non-administrators will not
+     *                   get troubled experiments.
+     * @return a list of  EE details VOs representing experiments matching the given arguments.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+            List<Long> ids, Taxon taxon, boolean admin, int limit, int start );
 
     /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.

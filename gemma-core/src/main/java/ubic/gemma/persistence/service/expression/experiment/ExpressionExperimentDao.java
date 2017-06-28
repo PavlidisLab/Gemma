@@ -30,6 +30,8 @@ import java.util.Map;
 public interface ExpressionExperimentDao
         extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject> {
 
+    Integer countNotTroubled();
+
     Collection<ExpressionExperiment> findByInvestigator( Contact investigator );
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
@@ -40,6 +42,9 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc,
             DatabaseEntry accession );
+
+    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+            List<Long> ids, Taxon taxon, boolean admin, int limit, int start );
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 

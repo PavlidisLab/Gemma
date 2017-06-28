@@ -79,7 +79,7 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     void thaw( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    void thaw( Collection<BioMaterial> bioMaterials );
+    Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
     /**
      * Updates the given biomaterial to the database.

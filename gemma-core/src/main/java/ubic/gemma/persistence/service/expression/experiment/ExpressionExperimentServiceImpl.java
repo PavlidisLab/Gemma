@@ -195,6 +195,11 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public Integer countNotTroubled(){
+        return this.expressionExperimentDao.countNotTroubled();
+    }
+
+    @Override
     @Transactional
     public ExpressionExperiment addVectors( ExpressionExperiment ee, ArrayDesign ad,
             Collection<RawExpressionDataVector> newVectors ) {
@@ -888,6 +893,13 @@ public class ExpressionExperimentServiceImpl
             Collection<Long> ids ) {
         return new ArrayList<ExpressionExperimentValueObject>(
                 this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
+    }
+
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+            List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
+        return this.expressionExperimentDao
+                .loadDetailsValueObjects( orderField, descending, ids, taxon, admin, limit, start );
     }
 
     @Override

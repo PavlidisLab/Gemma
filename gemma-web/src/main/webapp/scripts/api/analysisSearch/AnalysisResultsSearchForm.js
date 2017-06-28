@@ -746,6 +746,7 @@ Gemma.AnalysisResultsSearchForm = Ext
 
             // insert record into combo's store
             eeCombo.getStore().insert( 0, record );
+            eeCombo.selectedIndex = 0;
 
             // tell gene combo the group was selected
             eeCombo.fireEvent( 'select', eeCombo, record, 0 );

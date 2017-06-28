@@ -76,6 +76,8 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         return this.findOneByProperty( "shortName", name );
     }
 
+    public abstract Integer countNotTroubled();
+
     public abstract Map<Taxon, Long> getPerTaxonCount();
 
     protected void addEventsToMap( Map<Long, Collection<AuditEvent>> eventMap, Long id, AuditEvent event ) {
