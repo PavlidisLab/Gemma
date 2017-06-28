@@ -698,8 +698,8 @@ public class ExpressionExperimentController {
         finalResult = this.setMutipleTechTypes( finalResult, ee );
         finalResult = this.setParentTaxon( finalResult, initialResult.getTaxonId() );
         // this should be taken care of by the security interceptor. See bug 4373
-        // finalResult.setUserCanWrite( securityService.isEditable( ee ) );
-        // finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
+        finalResult.setUserCanWrite( securityService.isEditable( ee ) );
+        finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
         finalResult = this.setPublicationAndAuthor( finalResult, ee );
         finalResult = this.setBatchInfo( finalResult, ee );
 
@@ -1137,9 +1137,8 @@ public class ExpressionExperimentController {
         }
 
         Integer numBioMaterials = bioMaterials.size();
-        bioMaterialService.thaw( bioMaterials );
         mav.addObject( "numBioMaterials", numBioMaterials );
-        mav.addObject( "bioMaterials", bioMaterials );
+        mav.addObject( "bioMaterials", bioMaterialService.thaw( bioMaterials ) );
 
         addQCInfo( expressionExperiment, mav );
 

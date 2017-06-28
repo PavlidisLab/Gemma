@@ -198,7 +198,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             batch.add( at );
 
             if ( batch.size() == batchSize ) {
-                org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+                org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession()
+                        .createQuery( queryString );
                 queryObject.setParameterList( "trails", batch );
                 queryObject.setParameterList( "classes", classes );
                 queryObject.setReadOnly( true );
@@ -426,11 +427,11 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      */
     private List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
         List<String> classes = new ArrayList<String>();
-        classes.add( getImplClass( type ) );
+        classes.add( type.getName() );
 
         // how to determine subclasses? There is no way to do this but the hibernate way.
         SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
-                .getClassMetadata( getImplClass( type ) );
+                .getClassMetadata( type.getName() );
         if ( classMetadata == null )
             return classes;
 
@@ -447,11 +448,6 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             classes.addAll( getClassHierarchy( t ) );
         }
         return classes;
-    }
-
-    private String getImplClass( Class<? extends AuditEventType> type ) {
-        String canonicalName = type.getName();
-        return canonicalName.endsWith( "Impl" ) ? type.getName() : type.getName() + "Impl";
     }
 
 }

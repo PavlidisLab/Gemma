@@ -1794,8 +1794,9 @@ public class ExpressionExperimentDaoImpl
             voMap.put( eeId, vo );
         }
 
-        if ( !voMap.isEmpty() )
+        if ( !voMap.isEmpty() ) {
             populateAnalysisInformation( voMap );
+        }
 
         return voMap;
 

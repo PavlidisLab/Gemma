@@ -98,13 +98,15 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( BioMaterial bioMaterial ) {
         this.bioMaterialDao.thaw( bioMaterial );
     }
 
     @Override
-    public void thaw( Collection<BioMaterial> bioMaterials ) {
-        this.bioMaterialDao.thaw( bioMaterials );
+    @Transactional(readOnly = true)
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+        return this.bioMaterialDao.thaw( bioMaterials );
     }
 
     @Override
