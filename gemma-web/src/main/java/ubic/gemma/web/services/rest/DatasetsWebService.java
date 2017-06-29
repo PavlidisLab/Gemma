@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
@@ -57,9 +58,7 @@ public class DatasetsWebService extends WebService {
 
     private ExpressionExperimentService expressionExperimentService;
     private ArrayDesignService arrayDesignService;
-    private BioAssayDao bioAssayDao;
-
-
+    private BioAssayService bioAssayService;
 
     /**
      * Required by spring
@@ -72,13 +71,11 @@ public class DatasetsWebService extends WebService {
      */
     @Autowired
     public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
-            ArrayDesignService arrayDesignService, BioAssayDao bioAssayDao ) {
+            ArrayDesignService arrayDesignService, BioAssayService bioAssayService ) {
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
-        this.bioAssayDao = bioAssayDao;
+        this.bioAssayService = bioAssayService;
     }
-
-
 
     /**
      * Lists all datasets available in gemma.
@@ -123,7 +120,7 @@ public class DatasetsWebService extends WebService {
      * Retrieves single dataset based on the given identifier.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient.
+     *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}")
@@ -142,7 +139,7 @@ public class DatasetsWebService extends WebService {
      * Retrieves the platforms for given experiment
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient.
+     *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/platforms")
@@ -161,17 +158,17 @@ public class DatasetsWebService extends WebService {
      * Retrieves the samples for given experiment
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient.
+     *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/platforms")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSamples( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getSamples( expressionExperimentService);
+        Object response = datasetArg.getSamples( expressionExperimentService, bioAssayService );
         return this.autoCodeResponse( datasetArg, response, sr );
     }
 
@@ -200,7 +197,7 @@ public class DatasetsWebService extends WebService {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Map<String, String>> getAnnotationsByGSM( @PathParam("gsmId") String gsmId ) {
 
-        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
+        Collection<BioAssay> foundBioAssays = this.bioAssayService.findByAccession( gsmId );
 
         if ( foundBioAssays.isEmpty() )
             throw new NotFoundException( "Sample not found." );
@@ -216,7 +213,7 @@ public class DatasetsWebService extends WebService {
     public Map<String, Map<String, Map<String, String>>> getAnnotationsByGSMIncludeTagsStructured(
             @PathParam("gsmId") String gsmId ) {
 
-        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
+        Collection<BioAssay> foundBioAssays = this.bioAssayService.findByAccession( gsmId );
 
         if ( foundBioAssays.isEmpty() )
             throw new NotFoundException( "Sample not found." );
@@ -239,7 +236,7 @@ public class DatasetsWebService extends WebService {
     public Map<String, Map<String, String>> getAnnotationsByGSMIncludeTagsUnstructured(
             @PathParam("gsmId") String gsmId ) {
 
-        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
+        Collection<BioAssay> foundBioAssays = this.bioAssayService.findByAccession( gsmId );
 
         if ( foundBioAssays.isEmpty() )
             throw new NotFoundException( "Sample not found." );
@@ -285,8 +282,6 @@ public class DatasetsWebService extends WebService {
 
         return prepareEEAnnotationsUnstructured( bioAssays, chars );
     }
-
-
 
     private ResponseDataObject autoCodeResponse( DatasetArg datasetArg, Object response, HttpServletResponse sr ) {
         if ( response == null ) {

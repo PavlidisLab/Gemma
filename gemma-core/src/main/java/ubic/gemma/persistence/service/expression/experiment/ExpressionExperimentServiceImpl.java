@@ -962,12 +962,18 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
     }
 
     @Override
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
+        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
     }
 
     @Override

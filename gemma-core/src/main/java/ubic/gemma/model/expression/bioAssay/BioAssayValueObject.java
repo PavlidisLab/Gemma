@@ -57,9 +57,6 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         super( id );
     }
 
-    /**
-     * FIXME This method is a bit dangerous because we can get lazy-load errors.
-     */
     public BioAssayValueObject( BioAssay bioAssay ) {
         super( bioAssay.getId() );
         this.name = bioAssay.getName();
@@ -82,7 +79,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
         if ( bioAssay.getSampleUsed() != null ) {
             this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed() );
-            sample.getBioAssays().add( this );
+            sample.getBioAssays().add( this.getId() );
         }
 
         if ( bioAssay.getIsOutlier() != null ) {
@@ -93,7 +90,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     }
 
     public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
-        Collection<BioAssayValueObject> result = new HashSet<>();
+        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
         for ( BioAssay bioAssay : bioAssays ) {
             result.add( new BioAssayValueObject( bioAssay ) );
         }

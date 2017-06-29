@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -38,12 +39,13 @@ import java.util.Map;
  */
 public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial> implements Serializable {
 
-    public static final String CHARACTERISTIC_DELIMITER = "::::";
+    private static final String CHARACTERISTIC_DELIMITER = "::::";
     private static final long serialVersionUID = -145137827948521045L;
+
     private String assayDescription;
     private String assayName;
-    private Collection<BioAssayValueObject> bioAssays = new HashSet<>();
-    private String characteristics;
+    private Collection<Long> bioAssays = new HashSet<Long>();
+    private Collection<CharacteristicValueObject> characteristics = new HashSet<CharacteristicValueObject>();
     private String description;
     /**
      * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
@@ -54,14 +56,12 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
     private Map<String, String> factors;
-    private Collection<FactorValueValueObject> factorValueObjects = new HashSet<>();
+    private Collection<FactorValueValueObject> factorValueObjects = new HashSet<FactorValueValueObject>();
     /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
     private Map<String, String> factorValues;
     private String name;
-
-
 
     /**
      * Required when using the class as a spring bean.
@@ -77,17 +77,20 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         super( bm.getId() );
         this.name = bm.getName();
         this.description = bm.getDescription();
-        this.characteristics = getCharacteristicString( bm.getCharacteristics() );
 
-        this.factors = new HashMap<>();
-        this.factorValues = new HashMap<>();
-        this.factorIdToFactorValueId = new HashMap<>();
+        for ( Characteristic ch : bm.getCharacteristics() ) {
+            this.characteristics.add( new CharacteristicValueObject( ch ) );
+        }
+
+        this.factors = new HashMap<String, String>();
+        this.factorValues = new HashMap<String, String>();
+        this.factorIdToFactorValueId = new HashMap<String, String>();
         for ( FactorValue fv : bm.getFactorValues() ) {
             this.factorValueObjects.add( new FactorValueValueObject( fv ) );
             ExperimentalFactor factor = fv.getExperimentalFactor();
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
-            this.factors.put( factorId, getExperimentalFactorString( factor ) );
+            this.factors.put( factorId, factor.getName() );
             this.factorValues.put( factorValueId, getFactorValueString( fv ) );
 
             if ( fv.getMeasurement() == null ) {
@@ -104,14 +107,12 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
         this( bm );
         BioAssayValueObject baVo = new BioAssayValueObject( ba );
-        this.bioAssays.add( baVo );
+        this.bioAssays.add( baVo.getId() );
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
     }
-
-
 
     @Override
     public boolean equals( Object obj ) {
@@ -148,8 +149,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         return result;
     }
 
-
-
     public String getAssayDescription() {
         return assayDescription;
     }
@@ -166,20 +165,12 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.assayName = assayName;
     }
 
-    public Collection<BioAssayValueObject> getBioAssays() {
+    public Collection<Long> getBioAssays() {
         return bioAssays;
     }
 
-    public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {
+    public void setBioAssays( Collection<Long> bioAssays ) {
         this.bioAssays = bioAssays;
-    }
-
-    public String getCharacteristics() {
-        return characteristics;
-    }
-
-    public void setCharacteristics( String characteristics ) {
-        this.characteristics = characteristics;
     }
 
     public String getDescription() {
@@ -230,14 +221,12 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.name = name;
     }
 
-
-
-    private String getCharacteristicString( Collection<Characteristic> characters ) {
-        return StringUtils.join( characters, CHARACTERISTIC_DELIMITER );
+    public Collection<CharacteristicValueObject> getCharacteristics() {
+        return characteristics;
     }
 
-    private String getExperimentalFactorString( ExperimentalFactor factor ) {
-        return factor.getName();
+    public void setCharacteristics( Collection<CharacteristicValueObject> characteristicsDetails ) {
+        this.characteristics = characteristicsDetails;
     }
 
     /**
@@ -245,7 +234,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     private String getFactorValueString( FactorValue value ) {
         if ( !value.getCharacteristics().isEmpty() ) {
-            return getCharacteristicString( value.getCharacteristics() );
+            return StringUtils.join( value.getCharacteristics(), CHARACTERISTIC_DELIMITER );
         } else if ( value.getMeasurement() != null ) {
             return value.getMeasurement().getValue();
         } else {
