@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -427,7 +428,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      */
     private List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
         List<String> classes = new ArrayList<String>();
-        classes.add( type.getName() );
+        classes.add( type.getSimpleName() );
 
         // how to determine subclasses? There is no way to do this but the hibernate way.
         SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()

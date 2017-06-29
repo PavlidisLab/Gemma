@@ -319,6 +319,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         GeneSet transientGeneSet = GeneSet.Factory.newInstance();
         transientGeneSet.setName( uri2goid( term ) );
 
+        if ( term.getLabel() == null ) {
+            log.warn( " Label for term " + term.getUri() + " was null" );
+        }
         if ( term.getLabel() != null && term.getLabel().toUpperCase().startsWith( "GO_" ) ) {
             // hm, this is an individual or a 'resource', not a 'class', but it's a real GO term. How to get the text.
         }

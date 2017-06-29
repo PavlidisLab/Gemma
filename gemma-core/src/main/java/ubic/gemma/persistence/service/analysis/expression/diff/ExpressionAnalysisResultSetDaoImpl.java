@@ -49,7 +49,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select a from GeneDifferentialExpressionMetaAnalysis a"
-                        + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" ).list().isEmpty();
+                        + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
+                .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
     }
 
     @Override
