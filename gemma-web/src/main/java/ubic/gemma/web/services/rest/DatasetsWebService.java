@@ -122,7 +122,7 @@ public class DatasetsWebService extends WebService {
     /**
      * Retrieves single dataset based on the given identifier.
      *
-     * @param datasetArg can either be the ExpressionExperiment ID or, its short name (e.g. GSE1234). Retrieval by ID
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient.
      */
     @GET
@@ -141,7 +141,7 @@ public class DatasetsWebService extends WebService {
     /**
      * Retrieves the platforms for given experiment
      *
-     * @param datasetArg can either be the ExpressionExperiment ID or, its short name (e.g. GSE1234). Retrieval by ID
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient.
      */
     @GET
@@ -154,6 +154,24 @@ public class DatasetsWebService extends WebService {
     ) {
         //FIXME currently not filtering out troubled
         Object response = datasetArg.getPlatforms( expressionExperimentService, arrayDesignService );
+        return this.autoCodeResponse( datasetArg, response, sr );
+    }
+
+    /**
+     * Retrieves the samples for given experiment
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/platforms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetSamples( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Optional, default null
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Object response = datasetArg.getSamples( expressionExperimentService);
         return this.autoCodeResponse( datasetArg, response, sr );
     }
 

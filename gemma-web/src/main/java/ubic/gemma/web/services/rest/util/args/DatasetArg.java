@@ -1,11 +1,15 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.beans.Expression;
 import java.util.Collection;
 
 /**
@@ -41,4 +45,14 @@ public abstract class DatasetArg<T>
         return ee == null ? null : adService.loadValueObjectsForEE( ee.getId() );
     }
 
+    /**
+     *
+     * @param service
+     * @param baService
+     * @return
+     */
+    public Collection<BioAssayValueObject> getSamples( ExpressionExperimentService service, BioAssayService baService ){
+        Collection<BioAssay> samples =  this.getPersistentObject( service ).getBioAssays();
+        return baService.loadValueObjects( samples );
+    }
 }
