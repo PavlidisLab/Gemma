@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 @Service
 @Path("/experimentData")
+@Deprecated
 public class ExperimentDataWebService {
 
     protected Log log = LogFactory.getLog( this.getClass().getName() );

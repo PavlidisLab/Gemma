@@ -359,7 +359,7 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadAll();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
+    Collection<ExpressionExperimentValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy, boolean asc,
             String accession );
 
     @Override
@@ -468,6 +468,9 @@ public interface ExpressionExperimentService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

@@ -36,9 +36,11 @@ public interface ExpressionExperimentDao
 
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thawWithoutVectors( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thawForFrontEnd( ExpressionExperiment expressionExperiment );
+
+    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc,
             DatabaseEntry accession );

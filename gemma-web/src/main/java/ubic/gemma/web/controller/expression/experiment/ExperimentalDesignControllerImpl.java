@@ -284,20 +284,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         for ( BioAssay assay : ee.getBioAssays() ) {
             BioMaterial sample = assay.getSampleUsed();
             BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
-            // hack to allow prettier display of the data.
-            String[] chars = bmvo.getCharacteristics().split( BioMaterialValueObject.CHARACTERISTIC_DELIMITER );
-            Arrays.sort( chars );
-            for ( int i = 0; i < chars.length; i++ ) {
-                String c = chars[i];
-
-                c = c.replaceAll( "(category|value)Uri=(null|http://.+?)(\\s|$)", "" ).replaceAll( "Category = ", "" )
-                        .replaceAll( "Value ", "" );
-                chars[i] = c;
-
-            }
-
-            bmvo.setCharacteristics( StringUtils.join( chars, "<br/>" ) );
-
             result.add( bmvo );
         }
 

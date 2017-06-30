@@ -278,13 +278,28 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment thawWithoutVectors( final ExpressionExperiment expressionExperiment ) {
         return this.thaw( expressionExperiment, false );
     }
 
     @Override
-    public ExpressionExperiment thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment thawForFrontEnd( final ExpressionExperiment expressionExperiment ) {
         return this.thawLiter( expressionExperiment, false );
+    }
+
+    @Override
+    public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment ) {
+        String thawQuery = "select distinct e from ExpressionExperiment e "
+                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeid";
+
+        List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
+                .setParameter( "eeid", expressionExperiment.getId() ).list();
+
+        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
+
+        Hibernate.initialize( result.getBioAssays() );
+
+        return result;
     }
 
     /**

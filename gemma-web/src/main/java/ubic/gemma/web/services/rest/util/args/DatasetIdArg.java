@@ -6,7 +6,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * Created by tesarst on 24/05/17.
- * Long argument type for taxon API, referencing the Taxon ID.
+ * Long argument type for dataset API, referencing the Dataset ID.
  */
 public class DatasetIdArg extends DatasetArg<Long> {
 
