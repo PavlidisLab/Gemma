@@ -40,11 +40,13 @@ public abstract class AbstractAuditable extends Describable implements Auditable
     public AbstractAuditable() {
     }
 
-    public ubic.gemma.model.common.auditAndSecurity.AuditTrail getAuditTrail() {
+    @Override
+    public AuditTrail getAuditTrail() {
         return this.auditTrail;
     }
 
-    public void setAuditTrail( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+    @Override
+    public void setAuditTrail( AuditTrail auditTrail ) {
         this.auditTrail = auditTrail;
     }
 

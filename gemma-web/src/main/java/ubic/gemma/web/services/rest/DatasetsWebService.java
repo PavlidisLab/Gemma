@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
@@ -51,15 +51,12 @@ import java.util.*;
 @Path("/datasets")
 public class DatasetsWebService extends WebService {
 
-    private static final String ERROR_MSG_DATASET_NOT_FOUND = "Dataset with the given identifier does not exist";
     private static final String ERROR_MSG_PROP_NOT_FOUND = "Datasets do not contain the given sort property.";
     private static final String ERROR_MSG_PROP_NOT_FOUND_DETAIL = "Property of name '%s' not recognized.";
 
     private ExpressionExperimentService expressionExperimentService;
     private ArrayDesignService arrayDesignService;
-    private BioAssayDao bioAssayDao;
-
-
+    private BioAssayService bioAssayService;
 
     /**
      * Required by spring
@@ -72,25 +69,23 @@ public class DatasetsWebService extends WebService {
      */
     @Autowired
     public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
-            ArrayDesignService arrayDesignService, BioAssayDao bioAssayDao ) {
+            ArrayDesignService arrayDesignService, BioAssayService bioAssayService ) {
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
-        this.bioAssayDao = bioAssayDao;
+        this.bioAssayService = bioAssayService;
     }
-
-
 
     /**
      * Lists all datasets available in gemma.
      *
      * @param accession optional parameter, filtering the results by accession - provide the accession gsm id.
-     * @param offset    optional parameter (defaults to 0) skips the specified amount of the datasets when retrieving them from the database.
+     * @param offset    optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
      * @param limit     optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
      * @param sort      optional parameter (defaults to +id) sets the ordering property and direction. Format is [+,-][property name].
      *                  E.g. -accession will convert to descending ordering by the Accession property. Note that this will not necessarily
      *                  sort the objects in the response, but rather tells the SQL query how to order the table before cropping it as
      *                  specified in the offset and limit.
-     * @return all datasets in the database, skipping the first [{@code offset}] of dataset, and limiting the amount in the result to
+     * @return all datasets in the database, skipping the first [{@code offset}] of datasets, and limiting the amount in the result to
      * the value of the {@code limit} parameter. If the {@code accessionGsmId} parameter is non-null, will limit the result to datasets
      * with specified accession. Note that if the accession GSM id is not valid or no datasets with it are found, a 404 response will be
      * supplied instead.
@@ -108,7 +103,7 @@ public class DatasetsWebService extends WebService {
         try {
             //FIXME currently not filtering out troubled
             return Responder.autoCode( expressionExperimentService
-                            .loadAllFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ),
+                            .loadValueObjectsFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ),
                     sr );
         } catch ( QueryException e ) {
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
@@ -122,15 +117,15 @@ public class DatasetsWebService extends WebService {
     /**
      * Retrieves single dataset based on the given identifier.
      *
-     * @param datasetArg can either be the ExpressionExperiment ID or, its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient.
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject dataset( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Optional, default null
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         //FIXME currently not filtering out troubled
@@ -139,21 +134,39 @@ public class DatasetsWebService extends WebService {
     }
 
     /**
-     * Retrieves the platforms for given experiment
+     * Retrieves platforms for the given experiment
      *
-     * @param datasetArg can either be the ExpressionExperiment ID or, its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient.
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetPlatforms( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Optional, default null
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         //FIXME currently not filtering out troubled
         Object response = datasetArg.getPlatforms( expressionExperimentService, arrayDesignService );
+        return this.autoCodeResponse( datasetArg, response, sr );
+    }
+
+    /**
+     * Retrieves the samples for given experiment
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/samples")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetSamples( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Object response = datasetArg.getSamples( expressionExperimentService, bioAssayService );
         return this.autoCodeResponse( datasetArg, response, sr );
     }
 
@@ -163,42 +176,14 @@ public class DatasetsWebService extends WebService {
      * TODO REMOVE
      * ********************************/
 
-    @GET
-    @Path("/findByShortName/{shortName}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, String>> getAnnotations( @PathParam("shortName") String shortName ) {
-
-        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
-        if ( experiment == null )
-            throw new NotFoundException( "Dataset not found." );
-        Collection<BioAssay> bioAssays = experiment.getBioAssays();
-        Collection<Characteristic> chars = new ArrayList<>();
-
-        return prepareEEAnnotationsUnstructured( bioAssays, chars );
-    }
-
-    @GET
-    @Path("/findByAccession/{gsmId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, String>> getAnnotationsByGSM( @PathParam("gsmId") String gsmId ) {
-
-        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
-
-        if ( foundBioAssays.isEmpty() )
-            throw new NotFoundException( "Sample not found." );
-
-        Collection<Characteristic> characteristics = new HashSet<>();
-
-        return prepareEEAnnotationsUnstructured( foundBioAssays, characteristics );
-    }
-
+    @Deprecated
     @GET
     @Path("/findByAccession/includeConstantFactorsStructured/{gsmId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Map<String, Map<String, String>>> getAnnotationsByGSMIncludeTagsStructured(
             @PathParam("gsmId") String gsmId ) {
 
-        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
+        Collection<BioAssay> foundBioAssays = this.bioAssayService.findByAccession( gsmId );
 
         if ( foundBioAssays.isEmpty() )
             throw new NotFoundException( "Sample not found." );
@@ -215,13 +200,14 @@ public class DatasetsWebService extends WebService {
         return prepareEEAnnotationsStructured( foundBioAssays, characteristics );
     }
 
+    @Deprecated
     @GET
     @Path("/findByAccession/includeConstantFactors/{gsmId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Map<String, String>> getAnnotationsByGSMIncludeTagsUnstructured(
             @PathParam("gsmId") String gsmId ) {
 
-        Collection<BioAssay> foundBioAssays = this.bioAssayDao.findByAccession( gsmId );
+        Collection<BioAssay> foundBioAssays = this.bioAssayService.findByAccession( gsmId );
 
         if ( foundBioAssays.isEmpty() )
             throw new NotFoundException( "Sample not found." );
@@ -238,6 +224,7 @@ public class DatasetsWebService extends WebService {
         return prepareEEAnnotationsUnstructured( foundBioAssays, characteristics );
     }
 
+    @Deprecated
     @GET
     @Path("/findByShortName/includeConstantFactorsStructured/{shortName}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -253,6 +240,7 @@ public class DatasetsWebService extends WebService {
         return prepareEEAnnotationsStructured( bioAssays, chars );
     }
 
+    @Deprecated
     @GET
     @Path("/findByShortName/includeConstantFactors/{shortName}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -268,19 +256,7 @@ public class DatasetsWebService extends WebService {
         return prepareEEAnnotationsUnstructured( bioAssays, chars );
     }
 
-
-
-    private ResponseDataObject autoCodeResponse( DatasetArg datasetArg, Object response, HttpServletResponse sr ) {
-        if ( response == null ) {
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    ERROR_MSG_DATASET_NOT_FOUND );
-            WellComposedErrorBody
-                    .addExceptionFields( error, new IllegalArgumentException( datasetArg.getNullCause() ) );
-            response = error;
-        }
-        return Responder.autoCode( response, sr );
-    }
-
+    @Deprecated
     private String[] getTagString( Characteristic characteristic ) {
 
         String[] arr = { "", "" };
@@ -302,6 +278,7 @@ public class DatasetsWebService extends WebService {
         return arr;
     }
 
+    @Deprecated
     private Map<String, Map<String, Map<String, String>>> prepareEEAnnotationsStructured(
             Collection<BioAssay> bioAssays, Collection<Characteristic> characteristics ) {
         Map<String, Map<String, Map<String, String>>> result = new HashMap<>();
@@ -346,6 +323,7 @@ public class DatasetsWebService extends WebService {
      * Don't introduce structure to separate experimental factors from experiment tags, instead add a prefix to tag
      * categories
      */
+    @Deprecated
     private Map<String, Map<String, String>> prepareEEAnnotationsUnstructured( Collection<BioAssay> bioAssays,
             Collection<Characteristic> characteristics ) {
         Map<String, Map<String, String>> result = new HashMap<>();

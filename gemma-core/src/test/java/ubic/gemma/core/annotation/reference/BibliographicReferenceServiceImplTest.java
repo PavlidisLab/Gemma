@@ -37,9 +37,6 @@ import static org.easymock.EasyMock.*;
 public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest {
 
     @Autowired
-    private SearchService searchService;
-
-    @Autowired
     private PhenotypeAssociationService pas;
 
     private BibliographicReferenceServiceImpl svc = null;
@@ -52,7 +49,7 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
 
         brdao = createMock( BibliographicReferenceDao.class );
 
-        svc = new BibliographicReferenceServiceImpl( brdao, pas, searchService );
+        svc = new BibliographicReferenceServiceImpl( brdao, pas );
 
         extDB = ExternalDatabase.Factory.newInstance();
         extDB.setName( "PUBMED" );

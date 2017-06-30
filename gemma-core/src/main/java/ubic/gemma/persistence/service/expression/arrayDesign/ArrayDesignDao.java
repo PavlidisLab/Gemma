@@ -3,11 +3,13 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -44,6 +46,8 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
     ArrayDesign thawLite( ArrayDesign arrayDesign );
 
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
+
+    Collection<ArrayDesignValueObject> listFilter( int offset, int limit, String orderBy, boolean asc);
 
     Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 

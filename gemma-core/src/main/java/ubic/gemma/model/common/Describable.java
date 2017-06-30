@@ -86,6 +86,7 @@ public abstract class Describable implements Identifiable, Serializable {
         this.description = description;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }

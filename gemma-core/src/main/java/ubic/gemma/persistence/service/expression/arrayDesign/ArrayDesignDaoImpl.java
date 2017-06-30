@@ -23,16 +23,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
@@ -261,6 +266,44 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + " left join fetch a.mergedInto left join fetch a.localFiles where a.id in (:adids)" )
                 .setParameterList( "adids", EntityUtils.getIds( arrayDesigns ) ).list();
 
+    }
+
+
+    /**
+     * Queries the database to retrieve all array designs, based on the given parameters, and then
+     * converts them to value objects.
+     *
+     * @param offset    amount of ADs to skip.
+     * @param limit     maximum amount of ADs to retrieve.
+     * @param orderBy   the field to order the ADs by. Has to be a valid identifier, or exception is thrown.
+     * @param asc       true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @return list of value objects representing the ADs that matched the criteria.
+     */
+    @Override
+    public Collection<ArrayDesignValueObject> listFilter( int offset, int limit, String orderBy, boolean asc) {
+
+        // Base criterion for EE class
+        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
+
+        // Order by and direction
+        if ( asc ) {
+            criteria.addOrder( Order.asc( orderBy ) );
+        } else {
+            criteria.addOrder( Order.desc( orderBy ) );
+        }
+
+        // Offset
+        criteria.setFirstResult( offset );
+
+        // Limit
+        if ( limit > 0 ) {
+            criteria.setMaxResults( limit );
+        }
+
+        criteria.setProjection( Projections.id() );
+
+        //noinspection unchecked
+        return this.loadValueObjectsByIds( criteria.list() );
     }
 
     @Override

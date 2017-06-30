@@ -6,7 +6,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * Created by tesarst on 24/05/17.
- * String argument type for taxon API, referencing the Taxon scientific name, common name or abbreviation. Can also be null.
+ * String argument type for dataset API, referencing the Dataset short name. Can also be null.
  */
 public class DatasetStringArg extends DatasetArg<String> {
 

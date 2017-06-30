@@ -37,13 +37,12 @@ import java.util.HashSet;
  */
 public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
 
-
     private static final long serialVersionUID = 4374359557498220256L;
     private ubic.gemma.model.genome.Taxon sourceTaxon;
-    private Collection<FactorValue> factorValues = new HashSet<>();
-    private Collection<BioAssay> bioAssaysUsedIn = new HashSet<>();
-    private Collection<Treatment> treatments = new HashSet<>();
-    private Collection<Characteristic> characteristics = new HashSet<>();
+    private Collection<FactorValue> factorValues = new HashSet<FactorValue>();
+    private Collection<BioAssay> bioAssaysUsedIn = new HashSet<BioAssay>();
+    private Collection<Treatment> treatments = new HashSet<Treatment>();
+    private Collection<Characteristic> characteristics = new HashSet<Characteristic>();
     private DatabaseEntry externalAccession;
 
     public Collection<BioAssay> getBioAssaysUsedIn() {
@@ -63,7 +62,7 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * An optional external refernce for this BioMaterial. In many cases this is the same as the accession for the
+     * An optional external reference for this BioMaterial. In many cases this is the same as the accession for the
      * related BioAssay. We store the information here to help make the data easier to trace. Note that more than one
      * BioMaterial may reference a given external accession.
      * </p>
