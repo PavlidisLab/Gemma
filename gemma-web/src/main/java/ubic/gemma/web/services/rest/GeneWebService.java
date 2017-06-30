@@ -54,6 +54,7 @@ import com.sun.jersey.api.NotFoundException;
 
 @Component
 @Path("/gene")
+@Deprecated
 public class GeneWebService {
 
     @Autowired

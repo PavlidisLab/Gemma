@@ -825,7 +825,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy,
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy,
             boolean asc, String accession ) {
         return this.expressionExperimentDao
                 .listFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );

@@ -47,8 +47,6 @@ public class AnnotationsWebService extends WebService {
     private OntologyService ontologyService;
     private TaxonService taxonService;
 
-
-
     /**
      * Required by spring
      */
@@ -63,8 +61,6 @@ public class AnnotationsWebService extends WebService {
         this.ontologyService = ontologyService;
         this.taxonService = taxonService;
     }
-
-
 
     /**
      * Placeholder for root call

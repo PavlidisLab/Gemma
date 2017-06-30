@@ -51,6 +51,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 
 @Component
 @Path("/phenotype")
+@Deprecated
 public class PhenotypeWebService {
 
     @Autowired

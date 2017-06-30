@@ -47,14 +47,15 @@ import java.util.Map;
 public class BibliographicReferenceServiceImpl extends BibliographicReferenceServiceBase {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
-    private final SearchService searchService;
     private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
     @Autowired
+    private SearchService searchService;
+
+    @Autowired
     public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao,
-            PhenotypeAssociationService phenotypeAssociationService, SearchService searchService ) {
+            PhenotypeAssociationService phenotypeAssociationService ) {
         super( bibliographicReferenceDao, phenotypeAssociationService );
-        this.searchService = searchService;
     }
 
     @Override

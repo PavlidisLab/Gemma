@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -200,6 +201,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
     Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
+
+    Collection<ArrayDesignValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy, boolean asc);
 
     /**
      * Function to return a count of all compositeSequences with bioSequence associations

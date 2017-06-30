@@ -2,26 +2,29 @@ package ubic.gemma.web.services.rest.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.web.services.rest.util.args.MutableArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
  * Created by tesarst on 18/05/17.
  * A class containing common functionality for all other API services. E.g. a fallback mapping that presents a 404
  * response code with appropriate payload.
+ *
+ * @author tesarst
  */
 public abstract class WebService {
 
+    static final String API_VERSION = "2.0";
     protected static final String ERR_MSG_UNMAPPED_PATH = "This URL is not mapped to any API call.";
     protected static final Log log = LogFactory.getLog( WebService.class.getName() );
 
-    static final String API_VERSION = "2.0";
-
-
+    protected static String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist";
 
     @GET
     @Path("/{default: .*}")
@@ -65,6 +68,18 @@ public abstract class WebService {
     ) {
         log.warn( "Someone attempted a PUT on " + uriInfo.getAbsolutePath() );
         return Responder.code404( ERR_MSG_UNMAPPED_PATH, sr );
+    }
+
+    protected <T extends MutableArg> ResponseDataObject autoCodeResponse( T mutableArg, Object response,
+            HttpServletResponse sr ) {
+        if ( response == null ) {
+            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    ERROR_MSG_ENTITY_NOT_FOUND );
+            WellComposedErrorBody
+                    .addExceptionFields( error, new IllegalArgumentException( mutableArg.getNullCause() ) );
+            response = error;
+        }
+        return Responder.autoCode( response, sr );
     }
 
 }

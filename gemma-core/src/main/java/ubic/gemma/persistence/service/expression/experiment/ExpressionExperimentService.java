@@ -359,7 +359,7 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> loadAll();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
+    Collection<ExpressionExperimentValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy, boolean asc,
             String accession );
 
     @Override

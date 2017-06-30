@@ -45,16 +45,12 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
     final ArrayDesignDao arrayDesignDao;
     final AuditEventDao auditEventDao;
 
-
-
     @Autowired
     public ArrayDesignServiceBase( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
         super( arrayDesignDao );
         this.arrayDesignDao = arrayDesignDao;
         this.auditEventDao = auditEventDao;
     }
-
-
 
     /**
      * @see ArrayDesignService#compositeSequenceWithoutBioSequences(ArrayDesign)
@@ -263,6 +259,12 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
         return this.handleLoadCompositeSequences( arrayDesign );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesignValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy, boolean asc ) {
+        return this.arrayDesignDao.listFilter( offset, limit, orderBy, asc );
+    }
+
     /**
      * @see ArrayDesignService#loadValueObjectsForEE(Long)
      */
@@ -420,7 +422,6 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
     @Override
     @Transactional
     public abstract Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
-
 
     /**
      * Performs the core logic for

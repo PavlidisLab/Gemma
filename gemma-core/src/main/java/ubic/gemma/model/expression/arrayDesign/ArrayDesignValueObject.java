@@ -63,8 +63,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private String taxon;
     private String technologyType;
 
-    private boolean hasAnnotationFile;
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -214,14 +212,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     public void setExpressionExperimentCount( Integer expressionExperimentCount ) {
         this.expressionExperimentCount = expressionExperimentCount;
-    }
-
-    public boolean getHasAnnotationFile() {
-        return hasAnnotationFile;
-    }
-
-    public void setHasAnnotationFile( boolean b ) {
-        this.hasAnnotationFile = b;
     }
 
     public Boolean getHasBlatAssociations() {
