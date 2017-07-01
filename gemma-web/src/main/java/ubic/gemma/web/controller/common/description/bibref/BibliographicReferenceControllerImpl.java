@@ -181,8 +181,9 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids ) {
 
-        Collection<BibliographicReferenceValueObject> bibRefs = bibliographicReferenceService
-                .loadValueObjects( bibliographicReferenceService.load( ids ) );
+        Collection<BibliographicReference> bss = bibliographicReferenceService.load( ids );
+        bss = bibliographicReferenceService.thaw( bss );
+        Collection<BibliographicReferenceValueObject> bibRefs = bibliographicReferenceService.loadValueObjects( bss );
 
         JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
                 new ArrayList<BibliographicReferenceValueObject>( bibRefs ), bibRefs.size() );
@@ -271,7 +272,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return new ModelAndView( "bibRefAllExperiments" ).addObject( "citationToEEs", citationToEEs );
     }
 
-
     @Override
     public BibliographicReferenceValueObject update( String pubMedId ) {
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
@@ -281,7 +281,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return new BibliographicReferenceValueObject( this.bibliographicReferenceService.refresh( pubMedId ) );
     }
 
-
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
         bibliographicReferenceService.remove( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
@@ -289,7 +288,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
         return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
     }
-
 
     private List<BibliographicReference> getBatch( ListBatchCommand batch ) {
         List<BibliographicReference> records;
