@@ -74,7 +74,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
         super.buildOptions();
         super.addOption( "file", true,
                 "Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)" );
-
+        super.addForceOption();
     }
 
     @Override
