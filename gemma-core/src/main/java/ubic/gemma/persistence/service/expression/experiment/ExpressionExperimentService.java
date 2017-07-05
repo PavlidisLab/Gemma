@@ -109,7 +109,7 @@ public interface ExpressionExperimentService
 
     /**
      * @return Experiments which have this accession. There can be more than one, because one GEO accession can result
-     * in multiple experiments in Gemma.
+     *         in multiple experiments in Gemma.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
@@ -212,8 +212,8 @@ public interface ExpressionExperimentService
      * TODO allow this for BioAssaySets.
      *
      * @return details for the principal component most associated with batches (even if it isn't "significant"), or
-     * null if there was no batch information available. Note that we don't look at every component, just the
-     * first few.
+     *         null if there was no batch information available. Note that we don't look at every component, just the
+     *         first few.
      */
     BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
 
@@ -429,11 +429,11 @@ public interface ExpressionExperimentService
      *
      * @param orderField the field to order the results by.
      * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
-     * @param admin      whether the requesting user is administrator or not. Non-administrators will not
-     *                   get troubled experiments.
-     * @return a list of  EE details VOs representing experiments matching the given arguments.
+     * @param ids only list specific ids.
+     * @param taxon only list experiments within specific taxon.
+     * @param admin whether the requesting user is administrator or not. Non-administrators will not
+     *        get troubled experiments.
+     * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
@@ -448,8 +448,9 @@ public interface ExpressionExperimentService
     int removeData( ExpressionExperiment ee, QuantitationType qt );
 
     /**
-     * Used when we are converting an experiment from one platform to another. Examples would be exon array or MPSS data
-     * sets. Does not take care of computing the processed data vectors, but it does clear them out.
+     * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples
+     * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
+     * computing the processed data vectors, but it does clear them out.
      *
      * @return the updated Experiment
      */
@@ -490,7 +491,7 @@ public interface ExpressionExperimentService
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
+     *        be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );

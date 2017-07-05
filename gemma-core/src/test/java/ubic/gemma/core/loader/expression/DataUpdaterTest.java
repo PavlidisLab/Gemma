@@ -135,10 +135,10 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         ee = experimentService.thawLite( ee );
 
-        List<BioAssay> bioAssays = new ArrayList<BioAssay>( ee.getBioAssays() );
+        List<BioAssay> bioAssays = new ArrayList<>( ee.getBioAssays() );
         assertEquals( 31, bioAssays.size() );
 
-        List<BioMaterial> bms = new ArrayList<BioMaterial>();
+        List<BioMaterial> bms = new ArrayList<>();
         for ( BioAssay ba : bioAssays ) {
 
             bms.add( ba.getSampleUsed() );
@@ -146,7 +146,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         targetArrayDesign = getTestPersistentArrayDesign( 100, true );
 
-        DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+        DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = new DenseDoubleMatrix<>(
                 targetArrayDesign.getCompositeSequences().size(), bms.size() );
         /*
          * make up some fake data on another platform, and match it to those samples
@@ -157,7 +157,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             }
         }
 
-        List<CompositeSequence> probes = new ArrayList<CompositeSequence>( targetArrayDesign.getCompositeSequences() );
+        List<CompositeSequence> probes = new ArrayList<>( targetArrayDesign.getCompositeSequences() );
 
         rawMatrix.setRowNames( probes );
         rawMatrix.setColumnNames( bms );
