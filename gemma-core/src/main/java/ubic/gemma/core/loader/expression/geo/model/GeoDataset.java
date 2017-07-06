@@ -57,13 +57,13 @@ public class GeoDataset extends GeoData {
      * gene expression array-based, gene expression SAGE-based, gene expression MPSS-based, gene expression
      * RT-PCR-based, protein expression array-based, protein expression MS-based, array CGH, ChIP-chip, SNP
      * 
+     * @see GeoSeries.convertStringToSeriesType
+     * 
      * @param string
      * @return
      */
     public static ExperimentType convertStringToExperimentType( String string ) {
-        if ( string.equals( "Expression profiling by array" ) ) {
-            return ExperimentType.geneExpressionArraybased;
-        } else if ( string.equals( "gene expression array-based" ) ) {
+        if ( string.equals( "Expression profiling by array" ) || string.equals( "gene expression array-based" ) ) {
             return ExperimentType.geneExpressionArraybased;
         } else if ( string.equals( "gene expression SAGE-based" ) ) {
             return ExperimentType.geneExpressionSAGEbased;
