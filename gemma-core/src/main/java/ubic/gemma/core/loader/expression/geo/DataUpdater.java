@@ -373,6 +373,7 @@ public class DataUpdater {
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data ) {
         targetPlatform = this.arrayDesignService.thaw( targetPlatform );
+        ee = this.experimentService.thawLite( ee );
 
         DoubleMatrix<CompositeSequence, BioMaterial> rdata = matchElementsToRowNames( targetPlatform,
                 data );
