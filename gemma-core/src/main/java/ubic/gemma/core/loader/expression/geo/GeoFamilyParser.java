@@ -1656,15 +1656,10 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!Series_type" ) ) {
             // currently there is no spec for what values Series_type can take
             /*
-             * Annoyingly, series can have two types e.g. GSE77076 has type
-             * "Expression profiling by high throughput sequencing" AND "other"! So we only modify the series type if it
-             * hasn't already been set, or if it's already been set to "other". This means we avoid using "other" if there is an
-             * alternative.
+             * Series can have multiple types if it has mixtures of samples.
              */
-            GeoSeries series = results.getSeriesMap().get( currentSeriesAccession );
-            if ( series.getSeriesType() == null || series.getSeriesType().equals( SeriesType.other ) ) {
-                seriesSet( currentSeriesAccession, "seriesType", GeoSeries.convertStringToSeriesType( value ) );
-            }
+            seriesAddTo( currentSeriesAccession, "seriesTypes", GeoSeries.convertStringToSeriesType( value ) );
+
         } else if ( startsWithIgnoreCase( line, "!Series_contributor" ) ) {
             GeoContact contributer = new GeoContact();
             String[] nameFields = StringUtils.split( value, "," );

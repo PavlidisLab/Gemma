@@ -1653,15 +1653,15 @@ public class GeoConverterImpl implements GeoConverter {
         log.info( "Converting series: " + series.getGeoAccession() );
 
         Collection<GeoDataset> dataSets = series.getDatasets();
-        Collection<String> dataSetsToSkip = new HashSet<String>();
-        Collection<GeoSample> samplesToSkip = new HashSet<GeoSample>();
+        Collection<String> dataSetsToSkip = new HashSet<>();
+        Collection<GeoSample> samplesToSkip = new HashSet<>();
         checkForDataToSkip( series, dataSetsToSkip, samplesToSkip );
         if ( dataSets.size() > 0 && dataSetsToSkip.size() == dataSets.size() ) {
             return null;
         }
 
         if ( !isUsable( series ) ) {
-            log.warn( "Series was not usable: type=" + series.getSeriesType() );
+            log.warn( "Series was not usable: types=" + StringUtils.join( series.getSeriesTypes(), " " ) );
             return null;
         }
 
@@ -1836,23 +1836,18 @@ public class GeoConverterImpl implements GeoConverter {
         return expExp;
     }
 
+    /**
+     * Note that series can have more than one type, if it has mixed samples; if at least on type matches one we can
+     * use, we keep it.F
+     * 
+     * @param series
+     * @return
+     */
     private boolean isUsable( GeoSeries series ) {
-        if ( series.getSeriesType() == SeriesType.genomeBindingByArray ) {
-            return false;
-        }
-        if ( series.getSeriesType() == SeriesType.other ) {
-            return false;
-        }
-        if ( series.getSeriesType() == SeriesType.genomeBindingBySequencing ) {
-            return false;
-        }
-        if ( series.getSeriesType() == SeriesType.methylationArraybased ) {
-            return false;
-        }
-        if ( series.getSeriesType() == SeriesType.methylationByGenomeTiling ) {
-            return false;
-        }
-        return series.getSeriesType() != SeriesType.thirdPartyReanalysis;
+
+        return series.getSeriesTypes().contains( SeriesType.geneExpressionByArray )
+                || series.getSeriesTypes().contains( SeriesType.geneExpressionBySequencing );
+
     }
 
     /**

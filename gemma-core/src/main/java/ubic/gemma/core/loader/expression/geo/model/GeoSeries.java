@@ -112,7 +112,7 @@ public class GeoSeries extends GeoData {
     private Map<Integer, GeoReplication> replicates;
     private GeoSampleCorrespondence sampleCorrespondence;
     private Collection<GeoSample> samples;
-    private SeriesType seriesType = null;
+    private Collection<SeriesType> seriesTypes = new HashSet<>();
     private Collection<String> subSeries;
     private String summary = "";
     private String supplementaryFile = "";
@@ -194,6 +194,10 @@ public class GeoSeries extends GeoData {
         this.summary = this.summary + " " + text;
     }
 
+    public void addToSeriesTypes( SeriesType type ) {
+        this.seriesTypes.add( type );
+    }
+
     public void addToVariables( Integer number, GeoVariable variable ) {
         this.variables.put( number, variable );
     }
@@ -260,8 +264,8 @@ public class GeoSeries extends GeoData {
         return this.samples;
     }
 
-    public SeriesType getSeriesType() {
-        return seriesType;
+    public Collection<SeriesType> getSeriesTypes() {
+        return seriesTypes;
     }
 
     /**
@@ -401,10 +405,6 @@ public class GeoSeries extends GeoData {
      */
     public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
         this.sampleCorrespondence = sampleCorrespondence;
-    }
-
-    public void setSeriesType( SeriesType seriesType ) {
-        this.seriesType = seriesType;
     }
 
     /**
