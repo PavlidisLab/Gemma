@@ -25,6 +25,7 @@ import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
@@ -48,10 +49,12 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         }
         System.exit( 0 );
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
+
     private boolean dryRun = false;
 
     private ExpressionExperiment expressionExperiment;
@@ -110,8 +113,8 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         Exception e = processCommandLine( args );
         if ( e != null ) return e;
 
-        // FIXME need to load other ontologies.
-        ExperimentalFactorOntologyService mos = this.getBean( ExperimentalFactorOntologyService.class );
+        // FIXME may need to load other ontologies?
+        ExperimentalFactorOntologyService mos = this.getBean( OntologyService.class ).getExperimentalFactorOntologyService();
         mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             try {
@@ -119,13 +122,12 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
             } catch ( InterruptedException e1 ) {
                 //
             }
-            log.info( "Waiting for mgedontology to load" );
+            log.info( "Waiting for EFO to load" );
         }
 
         ExperimentalDesignImporter edimp = this.getBean( ExperimentalDesignImporter.class );
 
         try {
-
             edimp.importDesign( expressionExperiment, inputStream, dryRun );
         } catch ( IOException e1 ) {
             return e1;
