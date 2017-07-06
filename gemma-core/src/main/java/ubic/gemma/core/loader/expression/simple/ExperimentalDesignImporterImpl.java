@@ -95,7 +95,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.experiment
+     * ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.
+     * experiment
      * .ExpressionExperiment, java.io.InputStream)
      */
     @Override
@@ -108,7 +109,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.experiment
+     * ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.
+     * experiment
      * .ExpressionExperiment, java.io.InputStream, boolean)
      */
     @Override
@@ -125,6 +127,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             throw new IllegalStateException( "Please set the ExperimentalFactor OntologyService, thanks." );
         }
 
+        experiment = expressionExperimentService.thawBioAssays( experiment );
         ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
 
         if ( !experimentalDesign.getExperimentalFactors().isEmpty() ) {
