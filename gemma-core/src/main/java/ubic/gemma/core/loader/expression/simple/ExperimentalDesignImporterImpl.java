@@ -347,7 +347,14 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 for ( FactorValue factorValue : factorValuesInCurrentExperimentalFactor ) {
                     String fvv = factorValue.getValue();
                     if ( StringUtils.isBlank( fvv ) ) {
-                        continue; // we can't match to factor values that lack a value string.
+                        // try characteristics; this would be a mess if there are more than one.
+                        if ( factorValue.getCharacteristics().size() == 1 ) {
+                            fvv = factorValue.getCharacteristics().iterator().next().getValue();
+                            if ( StringUtils.isBlank( fvv ) ) {
+                                continue; // we can't match to factor values that lack a value string.
+                            }
+                        }
+
                     }
 
                     if ( fvv.trim().equalsIgnoreCase( currentFVtext ) ) {
@@ -360,7 +367,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                  * don't create a factorvalue. Possibly this could be done.
                  */
                 if ( currentFactorValue == null ) {
-                    log.error( "Current factor value not found " + currentExperimentalFactor + ": " + currentFVtext );
+                    log.error( "No factor value for " + currentExperimentalFactor + " matches the text value=" + currentFVtext );
                 } else {
                     if ( !checkForDuplicateFactorOnBioMaterial( currentBioMaterial, currentFactorValue ) ) {
                         currentBioMaterial.getFactorValues().add( currentFactorValue );
@@ -480,7 +487,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     }
 
     /**
-     * This method checks that the biomaterial does not already have a factor.
+     * This method checks that the biomaterial does not already have a value for the factor.
      *
      * @param bioMaterial
      * @param factorValue
