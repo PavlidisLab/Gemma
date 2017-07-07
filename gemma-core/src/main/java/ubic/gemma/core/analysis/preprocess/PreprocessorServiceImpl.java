@@ -121,6 +121,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
          */
         if ( !allowOutliers ) {
             this.checkOutliers( ee );
+        } else {
+            log.warn( "Batch correction is proceeding without checking for outliers" );
         }
 
         try {
