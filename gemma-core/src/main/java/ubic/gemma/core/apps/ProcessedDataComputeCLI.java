@@ -114,11 +114,11 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             ee = this.eeService.thawLite( ee );
 
             if ( this.batchCorrect ) {
-                this.preprocessorService.batchCorrect( ee );
+                this.preprocessorService.batchCorrect( ee, this.force );
             } else {
                 this.preprocessorService.process( ee );
             }
-            // Note tha auditing is done by the service.
+            // Note the auditing is done by the service.
             successObjects.add( ee );
             log.info( "Successfully processed: " + ee );
         } catch ( PreprocessingException | Exception e ) {

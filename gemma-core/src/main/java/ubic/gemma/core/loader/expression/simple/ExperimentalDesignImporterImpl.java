@@ -363,8 +363,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 }
 
                 /*
-                 * If we can't find the factorvalue that matches this, we don't get a value for this biomaterial. We
-                 * don't create a factorvalue. Possibly this could be done.
+                 * If we can't find the factorvalue that matches this, we don't get a value for this biomaterial.
                  */
                 if ( currentFactorValue == null ) {
                     log.error( "No factor value for " + currentExperimentalFactor + " matches the text value=" + currentFVtext );
