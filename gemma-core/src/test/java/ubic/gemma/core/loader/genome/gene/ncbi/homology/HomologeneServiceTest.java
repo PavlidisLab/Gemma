@@ -36,8 +36,6 @@ import static org.junit.Assert.assertNotNull;
  */
 public class HomologeneServiceTest extends BaseSpringContextTest {
 
-    private static boolean setUpDone = false;
-
     @Autowired
     private HomologeneService hgs;
 
@@ -58,15 +56,11 @@ public class HomologeneServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        if ( setUpDone ) {
-            return;
-        }
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" )) {
             assert is != null;
             hgs.parseHomologeneFile( is );
         }
-        setUpDone = true;
     }
 
 }
