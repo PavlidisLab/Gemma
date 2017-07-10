@@ -622,6 +622,7 @@ public class GeoConverterImpl implements GeoConverter {
         platformSpecific.setTitle( series.getTitle() + " - " + platform.getGeoAccession() );
         platformSpecific.setWebLinks( series.getWebLinks() );
         platformSpecific.setValues( series.getValues() );
+        platformSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );
 
         converted.add( convertSeriesSingle( platformSpecific ) );
 
