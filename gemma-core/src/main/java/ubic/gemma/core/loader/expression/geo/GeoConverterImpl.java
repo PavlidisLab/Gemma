@@ -1947,6 +1947,7 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setTitle( series.getTitle() + " - " + organism );
         speciesSpecific.setWebLinks( series.getWebLinks() );
         speciesSpecific.setValues( series.getValues( speciesSpecific.getSamples() ) );
+        speciesSpecific.getSeriesTypes().addAll( series.getSeriesTypes() );
 
         converted.add( convertSeriesSingle( speciesSpecific ) );
 
@@ -2703,7 +2704,7 @@ public class GeoConverterImpl implements GeoConverter {
 
     /**
      * Note that series can have more than one type, if it has mixed samples; if at least on type matches one we can
-     * use, we keep it.F
+     * use, we keep it.
      *
      * @param series
      * @return
