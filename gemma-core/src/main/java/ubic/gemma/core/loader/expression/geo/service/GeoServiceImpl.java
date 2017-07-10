@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,9 +18,17 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -28,7 +36,12 @@ import ubic.gemma.core.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.core.loader.expression.geo.GeoConverter;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
-import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.expression.geo.model.GeoData;
+import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
+import ubic.gemma.core.loader.expression.geo.model.GeoSample;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -41,8 +54,6 @@ import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
-
-import java.util.*;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
@@ -60,8 +71,6 @@ public class GeoServiceImpl extends AbstractGeoService {
     private final ExpressionExperimentService expressionExperimentService;
     private final ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
-
-
     @Autowired
     public GeoServiceImpl( ArrayDesignReportService arrayDesignReportService, BioAssayService bioAssayService,
             ExpressionExperimentReportService expressionExperimentReportService,
@@ -73,8 +82,6 @@ public class GeoServiceImpl extends AbstractGeoService {
         this.expressionExperimentService = expressionExperimentService;
         this.expressionExperimentPrePersistService = expressionExperimentPrePersistService;
     }
-
-
 
     @Override
     public ArrayDesign addElements( ArrayDesign targetPlatform ) {
@@ -237,7 +244,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         log.debug( "Converted " + seriesAccession );
         assert persisterHelper != null;
 
-        Collection<ExpressionExperiment> persistedResult = new HashSet<ExpressionExperiment>();
+        Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
             ee = persisterHelper.persist( ee, c );
@@ -257,7 +264,6 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     private void check( ExpressionExperiment ee ) {
-
         if ( ee.getBioAssays().isEmpty() ) {
             throw new IllegalStateException( "Experiment has no bioassays " + ee );
         }
@@ -266,7 +272,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             /*
              * This is okay if the platform is MPSS or Exon arrays for which we load data later.
              */
-            log.warn( "Experiment has no data vectors: " + ee );
+            log.warn( "Experiment has no data vectors (this might be expected): " + ee );
         }
 
     }
@@ -290,7 +296,7 @@ public class GeoServiceImpl extends AbstractGeoService {
      * are not included in other data sets. In GEO this primarily occurs in 'superseries' that combine other series.
      */
     private void checkSamplesAreNew( GeoSeries series ) {
-        Collection<GeoSample> toSkip = new HashSet<GeoSample>();
+        Collection<GeoSample> toSkip = new HashSet<>();
 
         for ( GeoSample sample : series.getSamples() ) {
             if ( !sample.appearsInMultipleSeries() ) {
@@ -338,7 +344,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
                     + "were not imported from the GEO source. The following samples were removed: " + StringUtils
-                    .join( toSkip, "," ) );
+                            .join( toSkip, "," ) );
         }
 
         if ( series.getSamples().size() == 0 ) {
@@ -458,7 +464,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             return;
         }
 
-        Map<String, Integer> countMatches = new HashMap<String, Integer>();
+        Map<String, Integer> countMatches = new HashMap<>();
         for ( String geoColName : rawGEOPlatform.getColumnNames() ) {
             List<String> columnData = rawGEOPlatform.getColumnData( geoColName );
 
@@ -475,7 +481,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             }
 
             // figure out the best column;if not ID, then usually NAME or SPOT_ID etc
-            Set<String> colDataSet = new HashSet<String>( columnData );
+            Set<String> colDataSet = new HashSet<>( columnData );
 
             int numMatchesInColumn = 0;
             for ( CompositeSequence cs : m.keySet() ) {
@@ -555,7 +561,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
-        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
+        Set<GeoPlatform> platforms = new HashSet<>();
 
         if ( series.getDatasets().size() > 0 ) {
             for ( GeoDataset dataset : series.getDatasets() ) {
@@ -734,7 +740,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     private Collection<GeoDataset> potentiallyCombineDatasets( Collection<GeoDataset> datasets ) {
         if ( datasets.size() == 1 )
             return datasets;
-        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<GeoPlatform, Collection<GeoDataset>>();
+        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<>();
         for ( GeoDataset dataset : datasets ) {
             GeoPlatform platform = dataset.getPlatform();
             if ( !seenPlatforms.containsKey( platform ) ) {
@@ -743,7 +749,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             seenPlatforms.get( platform ).add( dataset );
         }
 
-        Collection<GeoDataset> finishedDatasets = new HashSet<GeoDataset>();
+        Collection<GeoDataset> finishedDatasets = new HashSet<>();
         for ( GeoPlatform platform : seenPlatforms.keySet() ) {
             Collection<GeoDataset> datasetsForPlatform = seenPlatforms.get( platform );
             if ( datasetsForPlatform.size() > 1 ) {
@@ -758,7 +764,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     private void updateReports( Collection<?> entities ) {
-        Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> adsToUpdate = new HashSet<>();
         for ( Object entity : entities ) {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;

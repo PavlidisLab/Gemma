@@ -118,6 +118,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         QuantitationType preferredMaskedDataQuantitationType = getPreferredMaskedDataQuantitationType(
                 preferredDataVectorExemplar.getQuantitationType() );
 
+        /*
+         * FIXME it's not clear that we shouldn't normalize count data. Reasoning: We use library size during diff ex. and
+         * normalization will distort that. Also tail effects might be more dramatic in RNA-seq data. Out of an
+         * abundance of caution, we don't normalize.
+         */
         if ( !preferredMaskedDataQuantitationType.getType().equals( StandardQuantitationType.COUNT )
                 && !preferredMaskedDataQuantitationType.getIsRatio()
                 && maskedVectorObjects.size() > MIN_SIZE_FOR_RENORMALIZATION ) {
