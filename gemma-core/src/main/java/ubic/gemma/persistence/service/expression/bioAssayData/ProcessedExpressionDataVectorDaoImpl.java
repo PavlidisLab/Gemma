@@ -58,7 +58,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * Don't attempt to renormalize data that is smaller than this. This avoids unnecessary normalization in tests, and
      * in data sets where normalization is more likely to harm than good.
      */
-    private static final int MIN_SIZE_FOR_RENORMALIZATION = 1000;
+    private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
 
     private final ProcessedDataVectorCache processedDataVectorCache;
 
