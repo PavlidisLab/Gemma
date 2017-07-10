@@ -18,29 +18,27 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.ExternalDatabase;
+
+import java.util.Collection;
 
 /**
  * <p>
  * Spring Service base class for <code>ExternalDatabaseService</code>, provides
  * access to all services and entities referenced by this service.
  * </p>
- * 
+ *
  * @see ExternalDatabaseService
  */
 public abstract class ExternalDatabaseServiceBase implements ExternalDatabaseService {
 
-    @Autowired
-    private ExternalDatabaseDao externalDatabaseDao;
-
     /**
-     * @see ExternalDatabaseService#find(java.lang.String)
+     * @see ExternalDatabaseService#find(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String name ) {
+    public ubic.gemma.model.common.description.ExternalDatabase find( final String name ) {
         return this.handleFind( name );
 
     }
@@ -60,7 +58,7 @@ public abstract class ExternalDatabaseServiceBase implements ExternalDatabaseSer
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<ExternalDatabase> loadAll() {
+    public Collection<ExternalDatabase> loadAll() {
         return this.handleLoadAll();
 
     }
@@ -76,23 +74,9 @@ public abstract class ExternalDatabaseServiceBase implements ExternalDatabaseSer
     }
 
     /**
-     * Sets the reference to <code>externalDatabase</code>'s DAO.
+     * Performs the core logic for {@link #find(String)}
      */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
-    }
-
-    /**
-     * Gets the reference to <code>externalDatabase</code>'s DAO.
-     */
-    protected ExternalDatabaseDao getExternalDatabaseDao() {
-        return this.externalDatabaseDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #find(java.lang.String)}
-     */
-    protected abstract ExternalDatabase handleFind( java.lang.String name );
+    protected abstract ExternalDatabase handleFind( String name );
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)}
