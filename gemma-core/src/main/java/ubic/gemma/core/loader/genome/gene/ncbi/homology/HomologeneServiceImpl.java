@@ -279,13 +279,18 @@ public class HomologeneServiceImpl implements HomologeneService {
             if ( !group2Gene.containsKey( groupId ) ) {
                 group2Gene.put( groupId, new ArrayList<Long>() );
             }
-            group2Gene.get( groupId ).add( geneId );
+            if ( !group2Gene.get( groupId ).contains( geneId ) ) {
+                group2Gene.get( groupId ).add( geneId );
+            } else {
+                log.warn( "Duplicate gene ID encountered (group2Gene).  Skipping: geneID=" + geneId + " , taxonID = "
+                        + taxonId + " , geneSymbol = " + geneSymbol + " for group " + groupId );
+            }
 
             if ( !gene2Group.containsKey( geneId ) ) {
                 gene2Group.put( geneId, groupId );
             } else {
-                log.warn( "Duplicate gene ID encountered.  Skipping: geneID=" + geneId + " ,taxonID = " + taxonId
-                        + " ,geneSymbol = " + geneSymbol );
+                log.warn( "Duplicate gene ID encountered (gene2Group).  Skipping: geneID=" + geneId + " , taxonID = "
+                        + taxonId + " , geneSymbol = " + geneSymbol + " for group " + groupId );
             }
         }
         ready.set( true );
