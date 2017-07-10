@@ -49,7 +49,9 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 
     showAddEventDialog: function () {
         if (!this.addEventDialog) {
-            this.addEventDialog = new Gemma.AddAuditEventDialog();
+            this.addEventDialog = new Gemma.AddAuditEventDialog({
+                comment: true
+            });
             this.addEventDialog.on("commit", function (resultObj) {
                 this.createEvent(resultObj);
             }.createDelegate(this));
@@ -122,7 +124,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
             tbar: [{
                 xtype: 'button',
                 icon: "/Gemma/images/icons/add.png",
-                tooltip: 'Add an audit event',
+                tooltip: 'Add a comment event',
                 handler: this.showAddEventDialog,
                 scope: this
             }, {
@@ -176,6 +178,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 
 Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
 
+    comment: false,
     height: 350,
     width: 550,
     shadow: true,
@@ -202,10 +205,10 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
 
         this.auditEventTypeStore = new Ext.data.SimpleStore({
             fields: ['type', 'description', 'icon'],
-            data: [
-                ['CommentedEvent', 'Comment', 'pencil-square-o'],
-                ['TroubledStatusFlagEvent', 'Mark as troubled', 'exclamation-triangle'],
-                ['NotTroubledStatusFlagEvent', 'Mark as NOT troubled', 'check-circle']]
+            data: this.comment
+                ? [['CommentedEvent', 'Comment', 'pencil-square-o']]
+                : [['TroubledStatusFlagEvent', 'Mark as troubled', 'exclamation-triangle'],
+                  ['NotTroubledStatusFlagEvent', 'Mark as NOT troubled', 'check-circle']]
         });
 
         this.auditEventTypeCombo = new Ext.form.ComboBox({
@@ -223,7 +226,15 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
             tpl:
             '<tpl for=".">' +
             '<tpl if="0==0"><div class="x-combo-list-item" ><i class="fa fa-{icon} fa-fw"></i>{description}</div></tpl>' +
-            '</tpl>'
+            '</tpl>',
+            selectOnFocus: true,
+            listeners: {
+                afterrender: function(combo) {
+                    var recordSelected = combo.getStore().getAt(0);
+                    console.log(recordSelected.data);
+                    combo.setValue(recordSelected.data.type);
+                }
+            }
         });
         this.auditEventCommentField = new Ext.form.TextField({
             fieldLabel: 'Comment',
@@ -267,7 +278,7 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
         Gemma.AddAuditEventDialog.superclass.initComponent.call(this);
 
         this.addEvents('commit');
-
     }
+
 
 });
