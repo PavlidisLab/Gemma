@@ -126,7 +126,8 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         }
 
         ExperimentalDesignImporter edimp = this.getBean( ExperimentalDesignImporter.class );
-
+        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
+        expressionExperiment = ees.thawBioAssays( expressionExperiment );
         try {
             edimp.importDesign( expressionExperiment, inputStream, dryRun );
         } catch ( IOException e1 ) {

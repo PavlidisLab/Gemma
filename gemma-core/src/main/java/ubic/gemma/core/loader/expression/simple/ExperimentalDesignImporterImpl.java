@@ -123,7 +123,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
         String line = null;
 
-        experiment = expressionExperimentService.thawBioAssays( experiment );
+        //    experiment = expressionExperimentService.thawBioAssays( experiment );
         ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
 
         if ( !experimentalDesign.getExperimentalFactors().isEmpty() ) {
@@ -166,8 +166,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         experimentalDesignService.update( experimentalDesign );
 
-        // a bit tricky as there is an assumption that the first biomaterial in the bioassay set is the relevent one;
-        // safer to use biomaterial collection returned; cannot guarantee order of objects in collection.
         Collection<BioMaterial> bioMaterialsWithFactorValues = addFactorValuesToBioMaterialsInExpressionExperiment(
                 experiment, experimentBioMaterials, experimentalDesign, factorValueLines, headerFields );
 
@@ -175,10 +173,10 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             this.bioMaterialService.update( bioMaterial );
 
             // just a debugging sanity check.
-            BioMaterial bbm = this.bioMaterialService.load( bioMaterial.getId() );
-            if ( log.isDebugEnabled() )
-                log.debug( bbm + ": " + bbm.getFactorValues().size() + " factor values: "
-                        + StringUtils.join( bbm.getFactorValues(), " ; " ) );
+            //            BioMaterial bbm = this.bioMaterialService.load( bioMaterial.getId() );
+            //            if ( log.isDebugEnabled() )
+            //                log.debug( bbm + ": " + bbm.getFactorValues().size() + " factor values: "
+            //                        + StringUtils.join( bbm.getFactorValues(), " ; " ) );
         }
 
     }
@@ -265,7 +263,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     }
 
     /**
-     * Add the factor values to the biomaterial
+     * Add the factor values to the biomaterials
      *
      * @param experiment
      * @param experimentBioMaterials Current expression experiment's biomaterials.
