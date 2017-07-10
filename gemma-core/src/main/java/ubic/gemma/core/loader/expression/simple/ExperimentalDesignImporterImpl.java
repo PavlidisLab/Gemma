@@ -122,9 +122,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
         String line = null;
-        if ( efoService == null ) {
-            throw new IllegalStateException( "Please set the ExperimentalFactor OntologyService, thanks." );
-        }
 
         experiment = expressionExperimentService.thawBioAssays( experiment );
         ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
@@ -189,6 +186,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     /**
      * This method reads the file line e.g. $Run time : Category=environmental_history Type=categorical and creates
      * experimental factors from it and adds them to the experimental design.
+     * 
+     * NOTE that this doesn't have the ability to add values to existing factors, which might be desirable.
      *
      * @param experimentalDesign Experimental design for this expression experiment
      * @param experimentalFactorFileLines List of strings representing lines from input file containing experimental
@@ -215,8 +214,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 }
             }
         }
-
-        log.info( "Adding experimental factors to experimental design: " + experimentalDesign.getId() );
 
         Collection<OntologyTerm> terms = ontologyService.getCategoryTerms();
         if ( experimentalDesign.getExperimentalFactors() == null ) {
@@ -260,12 +257,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             if ( !checkForDuplicateExperimentalFactorOnExperimentalDesign( experimentalDesign,
                     experimentalFactorFromFile ) ) {
-                // assert experimentalFactorFromFile.getId() != null;
                 experimentalDesign.getExperimentalFactors().add( experimentalFactorFromFile );
-                // here is was the update
-                log.debug( "Added experimental factor value " + experimentalFactorFromFile + " to experimental design "
-                        + experimentalDesign );
-                assert !experimentalDesign.getExperimentalFactors().isEmpty();
+                log.info( "Added " + experimentalFactorFromFile );
             }
         }
 
