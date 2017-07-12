@@ -21,9 +21,7 @@ package ubic.gemma.persistence.util;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.hibernate.LockOptions;
-import org.hibernate.Query;
-import org.hibernate.Session;
+import org.hibernate.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.lang.reflect.InvocationTargetException;
@@ -300,6 +298,33 @@ public class EntityUtils {
         }
 
         return sqlQuery;
+    }
+
+    /**
+     * Populates parameters in query created using {@link this#addGroupAndUserNameRestriction(boolean, boolean)}.
+     * @param queryObject the query object created using the sql query with group and username restrictions.
+     * @param sessionFactory session factory from the DAO that is using this method.
+     */
+    public static void addUserAndGroupParameters( SQLQuery queryObject, SessionFactory sessionFactory ) {
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return;
+        }
+        String sqlQuery = queryObject.getQueryString();
+        String userName = SecurityUtil.getCurrentUsername();
+
+        // if user is member of any groups.
+        if ( sqlQuery.contains( ":groups" ) ) {
+            //noinspection unchecked
+            Collection<String> groups = sessionFactory.getCurrentSession().createQuery(
+                    "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
+                    .setParameter( "user", userName ).list();
+            queryObject.setParameterList( "groups", groups );
+        }
+
+        if ( sqlQuery.contains( ":userName" ) ) {
+            queryObject.setParameter( "userName", userName );
+        }
+
     }
 
 }

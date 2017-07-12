@@ -18,7 +18,13 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import gemma.gsec.acl.domain.AclEntry;
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclPrincipalSid;
+import gemma.gsec.acl.domain.AclSid;
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Order;
@@ -366,20 +372,19 @@ public class ExpressionExperimentDaoImpl
         boolean whereUsed = false;
         // Limit to given ids
         if ( ids != null ) {
-            restrictionClause += " where ee.id in :ids";
+            restrictionClause += "ee.id in :ids";
             whereUsed = true;
         }
         // Limit to given taxon
         if ( taxon != null ) {
-            restrictionClause += ( whereUsed ? " and" : " where" ) + " ee.taxon = :taxon";
+            restrictionClause += ( whereUsed ? " and" : "" ) + " ee.taxon = :taxon";
             whereUsed = true;
         }
 
         // If user is not admin, exclude troubled experiments.
         if ( !admin ) {
-            restrictionClause += ( whereUsed ? " and" : " where" )
+            restrictionClause += ( whereUsed ? " and" : "" )
                     + " ee.curationDetails.troubled = false and AD.curationDetails.troubled = false";
-            whereUsed = true;
         }
 
         // Base select
@@ -640,7 +645,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
-        String idRestrictionClause = "where taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
+        String idRestrictionClause = "taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameter( "tid", taxon.getId() );
@@ -658,7 +663,7 @@ public class ExpressionExperimentDaoImpl
             return new ArrayList<ExpressionExperimentValueObject>();
 
         String orderByClause = this.getOrderByClause( orderField, descending );
-        String idRestrictionClause = "where ee.id in (:ids) ";
+        String idRestrictionClause = "ee.id in (:ids) ";
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "ids", ids );
@@ -673,7 +678,7 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon ) {
         String orderByClause = this.getOrderByClause( orderField, descending );
-        String idRestrictionClause = "where (taxon  = :t or taxon.parentTaxon = :t) ";
+        String idRestrictionClause = "(taxon  = :t or taxon.parentTaxon = :t) ";
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameter( "t", taxon );
@@ -717,7 +722,7 @@ public class ExpressionExperimentDaoImpl
             return new HashSet<ExpressionExperimentValueObject>();
         }
 
-        String idRestrictionClause = " where ee.id in (:ids) ";
+        String idRestrictionClause = "ee.id in (:ids) ";
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -1540,7 +1545,7 @@ public class ExpressionExperimentDaoImpl
                 orderByClause = "order by s.needsAttention " + ( descending ? "desc" : "" );
                 break;
             default:
-                orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
+                orderByClause = "order by ee." + orderField + " " + ( descending ? "desc" : "" );
                 break;
         }
         return orderByClause;
@@ -1733,6 +1738,11 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
+    /**
+     * @param idRestrictionClause the restriction clause
+     * @param orderByClause       order by clause
+     * @return an SQL query string
+     */
     private String getLoadValueObjectsQueryString( String idRestrictionClause, String orderByClause ) {
         String queryString = "select " + "ee.id as id, " // 0
                 + "ee.name, " // 1
@@ -1755,15 +1765,29 @@ public class ExpressionExperimentDaoImpl
                 + "count(distinct AD), " // 18
                 + "count(distinct SU), " // 19
                 + "EDES.id,  " // 20
-                + "ptax.id " // 21
+                + "ptax.id, " // 21
+                + "aoi, " // 22
+                + "sid " // 23 username of owner
                 + "from ExpressionExperiment as ee inner join ee.bioAssays as BA  "
                 + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc "
                 + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax "
-                + "inner join ee.experimentalDesign as EDES join ee.curationDetails as s ";
+                + "inner join ee.experimentalDesign as EDES join ee.curationDetails as s "
+                + ", AclObjectIdentity as aoi join aoi.entries ace join aoi.ownerSid sid "
+                + "where aoi.identifier = ee.id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
 
-        if ( idRestrictionClause != null ) {
-            queryString = queryString + idRestrictionClause;
+        this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        if ( StringUtils.stripToNull( idRestrictionClause ) != null ) {
+            queryString += " and " + idRestrictionClause;
+        }
+
+        // add ACL restrictions
+        if ( !SecurityUtil.isUserAnonymous() ) {
+            //TODO add restrictions per user and group
+            //queryString += "and " + EntityUtils.addGroupAndUserNameRestriction( false, true );
+        } else {
+            queryString += " and " + "ace.mask = 1 and ace.sid.id = 4 ";
         }
 
         queryString = queryString + " group by ee.id ";
@@ -1862,6 +1886,33 @@ public class ExpressionExperimentDaoImpl
         //other
         vo.setExperimentalDesign( ( Long ) row[20] );
         vo.setParentTaxonId( ( Long ) row[21] );
+
+        //ACL
+        AclObjectIdentity aoi = ( AclObjectIdentity ) row[22];
+        boolean isPublic = false;
+        boolean canWrite = false;
+        for ( AclEntry ace : aoi.getEntries() ) {
+            if ( ( ( AclSid ) ace.getSid() ).getId() == 4 ) {
+                // public in this case means that its access is allowed for IS_AUTHENTICATED_ANONYMOUSLY
+                isPublic = true;
+            }
+            System.out.println( "sid: " + ace.getSid() );
+            System.out.println( "mask: " + ace.getMask() );
+            if ( ace.getMask() == 2 || ace.getMask() == 16 ) {
+                // 1 = READ, 2 = READ_WRITE, 16 = ADMINISTRATIVE (other mask values not present in database Jul 12th 2017)
+                canWrite = true;
+            }
+        }
+        vo.setIsPublic( isPublic );
+        vo.setUserCanWrite( canWrite );
+        if ( row[23] instanceof AclPrincipalSid ) {
+            System.out.println( "owner: " + ( ( AclPrincipalSid ) row[23] ).getPrincipal() );
+            System.out.println( "cuser: " + SecurityUtil.getCurrentUsername() );
+            vo.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[23] ).getPrincipal(),
+                    SecurityUtil.getCurrentUsername() ) );
+        } else {
+            vo.setUserOwned( false );
+        }
 
         //This was causing null results when being retrieved through the original query
         this.addCurationEvents( vo );

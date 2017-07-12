@@ -14,7 +14,6 @@
  */
 package ubic.gemma.web.services.rest;
 
-import com.google.common.io.Files;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,7 +159,8 @@ public class PlatformsWebService extends WebService {
     ) {
         //FIXME currently not filtering out troubled
         ArrayDesign arrayDesign = platformArg.getPersistentObject( arrayDesignService );
-        if (arrayDesign == null) return this.autoCodeResponse( platformArg, null, sr );
+        if ( arrayDesign == null )
+            return this.autoCodeResponse( platformArg, null, sr );
         return outputAnnotationFile( arrayDesign, sr );
     }
 
@@ -176,10 +176,10 @@ public class PlatformsWebService extends WebService {
         }
 
         try (FileInputStream inputStream = new FileInputStream( file )) {
-            InputStream fileStream = new FileInputStream(file);
-            InputStream gzipStream = new GZIPInputStream(fileStream);
-            Reader decoder = new InputStreamReader(gzipStream, "UTF-8");
-            BufferedReader buffered = new BufferedReader(decoder);
+            InputStream fileStream = new FileInputStream( file );
+            InputStream gzipStream = new GZIPInputStream( fileStream );
+            Reader decoder = new InputStreamReader( gzipStream, "UTF-8" );
+            BufferedReader buffered = new BufferedReader( decoder );
             String content = IOUtils.toString( buffered );
             return Responder.autoCode( content, sr );
         } catch ( IOException e ) {
