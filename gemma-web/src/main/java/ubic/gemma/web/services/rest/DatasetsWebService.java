@@ -34,6 +34,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.DatasetArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.SortArg;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -81,10 +82,12 @@ public class DatasetsWebService extends WebService {
      * @param accession optional parameter, filtering the results by accession - provide the accession gsm id.
      * @param offset    optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
      * @param limit     optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
-     * @param sort      optional parameter (defaults to +id) sets the ordering property and direction. Format is [+,-][property name].
-     *                  E.g. -accession will convert to descending ordering by the Accession property. Note that this will not necessarily
-     *                  sort the objects in the response, but rather tells the SQL query how to order the table before cropping it as
-     *                  specified in the offset and limit.
+     * @param sort      optional parameter (defaults to +id) sets the ordering property and direction.
+     *                  Format is [+,-][property name]. E.g. "-accession" will translate to descending ordering by the
+     *                  Accession property.
+     *                  Note that this does not guarantee the order of the returned entities.
+     *                  Nested properties are also supported (recursively). E.g. "+curationDetails.lastTroubledEvent.date".
+     *                  //FIXME possible security leak - user can order by properties that may not available to him (e.g. troubled)
      * @return all datasets in the database, skipping the first [{@code offset}] of datasets, and limiting the amount in the result to
      * the value of the {@code limit} parameter. If the {@code accessionGsmId} parameter is non-null, will limit the result to datasets
      * with specified accession. Note that if the accession GSM id is not valid or no datasets with it are found, a 404 response will be
@@ -103,13 +106,13 @@ public class DatasetsWebService extends WebService {
         try {
             //FIXME currently not filtering out troubled
             return Responder.autoCode( expressionExperimentService
-                            .loadValueObjectsFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ),
+                            .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ),
                     sr );
         } catch ( QueryException e ) {
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                     ERROR_MSG_PROP_NOT_FOUND );
             WellComposedErrorBody.addExceptionFields( error,
-                    new IllegalArgumentException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
+                    new EntityNotFoundException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
             return Responder.code( error.getStatus(), error, sr );
         }
     }

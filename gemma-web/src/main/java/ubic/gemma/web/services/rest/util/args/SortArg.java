@@ -62,9 +62,6 @@ public class SortArg extends PrimitiveArg {
         return null;
     }
 
-
-
-
     /**
      * @return the field to sort by. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.
      */

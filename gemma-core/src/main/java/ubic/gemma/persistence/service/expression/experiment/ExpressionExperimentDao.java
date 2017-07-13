@@ -42,7 +42,11 @@ public interface ExpressionExperimentDao
 
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc,
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, DatabaseEntry) for
+     * description (no but seriously do look it might not work as you would expect).
+     */
+    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             DatabaseEntry accession );
 
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,

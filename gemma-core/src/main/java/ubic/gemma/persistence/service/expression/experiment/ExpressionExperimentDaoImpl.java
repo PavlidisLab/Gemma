@@ -18,20 +18,21 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import gemma.gsec.AuthorityConstants;
 import gemma.gsec.acl.domain.AclEntry;
+import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
-import gemma.gsec.acl.domain.AclSid;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -101,7 +102,7 @@ public class ExpressionExperimentDaoImpl
     @Deprecated
     public void remove( Long id ) {
         throw new NotImplementedException(
-                "Use the EEService.remove(ExpressioNExperiment) instead, this method does not do what you want it to." );
+                "Use the EEService.remove(ExpressionExperiment) instead, this method would not do what you want it to." );
     }
 
     @Override
@@ -124,8 +125,8 @@ public class ExpressionExperimentDaoImpl
 
             Hibernate.initialize( toDelete.getAuditTrail() );
 
-            Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-            Set<QuantitationType> qts = new HashSet<QuantitationType>();
+            Set<BioAssayDimension> dims = new HashSet<>();
+            Set<QuantitationType> qts = new HashSet<>();
             Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
             Hibernate.initialize( designElementDataVectors );
             toDelete.setRawExpressionDataVectors( null );
@@ -206,14 +207,14 @@ public class ExpressionExperimentDaoImpl
             log.info( "Removing Bioassays and biomaterials ..." );
 
             // keep to put back in the object.
-            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<BioAssay, BioMaterial>();
+            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
 
-            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
+            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
             Collection<BioAssay> bioAssays = toDelete.getBioAssays();
 
             for ( BioAssay ba : bioAssays ) {
                 // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-                // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
+                // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
 
                 BioMaterial biomaterial = ba.getSampleUsed();
 
@@ -296,10 +297,10 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment ) {
         String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeid";
+                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeId";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeid", expressionExperiment.getId() ).list();
+                .setParameter( "eeId", expressionExperiment.getId() ).list();
 
         ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
 
@@ -309,46 +310,53 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * Queries the database to retrieve all expression experiments, based on the given parameters, and then
-     * converts them to value objects.
+     * Loads value objects of experiments matching the given criteria using a query that pre-filters for EEs
+     * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
+     * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
      *
      * @param offset    amount of EEs to skip.
      * @param limit     maximum amount of EEs to retrieve.
-     * @param orderBy   the field to order the EEs by. Has to be a valid identifier, or exception is thrown.
+     * @param orderBy   the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
+     *                  be a property of EE itself, or any nested property that hibernate can reach.
+     *                  E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
      * @param asc       true, to order by the {@code orderBy} in ascending, or false for descending order.
      * @param accession specify to limit the list to EEs of specific accession. Ignored if null.
+     *                  TODO generalize the accession argument into an Object array so any property can be used for filtering
      * @return list of value objects representing the EEs that matched the criteria.
+     *
      */
     @Override
-    public Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc,
-            DatabaseEntry accession ) {
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, DatabaseEntry accession ) {
 
-        // Base criterion for EE class
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
+        String orderByClause = this.getApiOrderByClause( orderBy, asc );
+        String restrictionClause = accession != null ? "ee.accession = :accession " : null;
 
-        // Order by and direction
-        if ( asc ) {
-            criteria.addOrder( Order.asc( orderBy ) );
-        } else {
-            criteria.addOrder( Order.desc( orderBy ) );
-        }
+        // Base select
+        String queryString = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        // Offset
-        criteria.setFirstResult( offset );
-
-        // Limit
-        if ( limit > 0 ) {
-            criteria.setMaxResults( limit );
-        }
-
-        criteria.setProjection( Projections.id() );
-
-        // Limit to specific accession
         if ( accession != null ) {
-            criteria.add( Restrictions.eq( "accession", accession ) );
+            query.setParameter( "accession", accession );
         }
+
+        query.setCacheable( true );
+        query.setMaxResults( limit );
+        query.setFirstResult( offset );
+
         //noinspection unchecked
-        return this.loadValueObjects( criteria.list(), false );
+        List<Object[]> list = query.list();
+        List<ExpressionExperimentValueObject> vos = new ArrayList<>(list.size());
+
+        for ( Object[] row : list ) {
+            Long eeId = ( Long ) row[0];
+            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( eeId );
+            this.populateValueObject( vo, row, null );
+            vos.add( vo );
+        }
+
+        return vos;
+
     }
 
     /**
@@ -366,24 +374,24 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
             List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
 
-        String orderByClause = this.getOrderByClause( orderBy, descending );
+        String orderByClause = this.getFrontEndOrderByClause( orderBy, descending );
 
         String restrictionClause = "";
-        boolean whereUsed = false;
+        boolean appendAnd = false;
         // Limit to given ids
         if ( ids != null ) {
             restrictionClause += "ee.id in :ids";
-            whereUsed = true;
+            appendAnd = true;
         }
         // Limit to given taxon
         if ( taxon != null ) {
-            restrictionClause += ( whereUsed ? " and" : "" ) + " ee.taxon = :taxon";
-            whereUsed = true;
+            restrictionClause += ( appendAnd ? " and" : "" ) + " ee.taxon = :taxon";
+            appendAnd = true;
         }
 
-        // If user is not admin, exclude troubled experiments.
+        // If user is not admin, exclude troubled experiments ( should be filtered out by the ACL join anyway )
         if ( !admin ) {
-            restrictionClause += ( whereUsed ? " and" : "" )
+            restrictionClause += ( appendAnd ? " and" : "" )
                     + " ee.curationDetails.troubled = false and AD.curationDetails.troubled = false";
         }
 
@@ -404,9 +412,9 @@ public class ExpressionExperimentDaoImpl
         query.setMaxResults( limit );
         query.setFirstResult( start );
 
-        List<ExpressionExperimentDetailsValueObject> vos = new LinkedList<ExpressionExperimentDetailsValueObject>();
         //noinspection unchecked
         List<Object[]> list = query.list();
+        List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>(list.size());
         for ( Object[] row : list ) {
             Long eeId = ( Long ) row[0];
             ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( eeId );
@@ -529,7 +537,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
         if ( ids.isEmpty() || limit <= 0 )
-            return new ArrayList<ExpressionExperiment>();
+            return new ArrayList<>();
 
         Session s = this.getSessionFactory().getCurrentSession();
 
@@ -547,7 +555,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
         if ( limit == 0 )
-            return new ArrayList<ExpressionExperiment>();
+            return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
         String queryString = "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + (
                 limit < 0 ?
@@ -627,20 +635,20 @@ public class ExpressionExperimentDaoImpl
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
 
     }
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
-        String orderByClause = getOrderByClause( orderField, descending );
+        String orderByClause = getFrontEndOrderByClause( orderField, descending );
         final String queryString = getLoadValueObjectsQueryString( null, orderByClause );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
     }
 
     @Override
@@ -653,16 +661,16 @@ public class ExpressionExperimentDaoImpl
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
     }
 
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
         if ( ids.isEmpty() )
-            return new ArrayList<ExpressionExperimentValueObject>();
+            return new ArrayList<>();
 
-        String orderByClause = this.getOrderByClause( orderField, descending );
+        String orderByClause = this.getFrontEndOrderByClause( orderField, descending );
         String idRestrictionClause = "ee.id in (:ids) ";
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -671,13 +679,13 @@ public class ExpressionExperimentDaoImpl
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
     }
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon ) {
-        String orderByClause = this.getOrderByClause( orderField, descending );
+        String orderByClause = this.getFrontEndOrderByClause( orderField, descending );
         String idRestrictionClause = "(taxon  = :t or taxon.parentTaxon = :t) ";
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -686,7 +694,7 @@ public class ExpressionExperimentDaoImpl
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
     }
 
     @Override
@@ -717,9 +725,9 @@ public class ExpressionExperimentDaoImpl
         boolean isList = ( ids != null && ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
-                return new ArrayList<ExpressionExperimentValueObject>();
+                return new ArrayList<>();
             }
-            return new HashSet<ExpressionExperimentValueObject>();
+            return new HashSet<>();
         }
 
         String idRestrictionClause = "ee.id in (:ids) ";
@@ -727,7 +735,7 @@ public class ExpressionExperimentDaoImpl
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        List<Long> idl = new ArrayList<Long>( ids );
+        List<Long> idl = new ArrayList<>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
 
         queryObject.setParameterList( "ids", idl );
@@ -739,11 +747,11 @@ public class ExpressionExperimentDaoImpl
          * Remove items we didn't get back out. This is defensiveness!
          */
 
-        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> finalValues = new LinkedHashSet<>();
 
         Set<Long> voIds = vo.keySet();
         if ( maintainOrder ) {
-            Set<Long> orderedVoIds = new LinkedHashSet<Long>( voIds.size() );
+            Set<Long> orderedVoIds = new LinkedHashSet<>( voIds.size() );
             for ( Long eeId : ids ) {
                 if ( voIds.contains( eeId ) ) {
                     orderedVoIds.add( eeId );
@@ -765,7 +773,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         if ( isList ) {
-            return new ArrayList<ExpressionExperimentValueObject>( finalValues );
+            return new ArrayList<>( finalValues );
         }
 
         return finalValues;
@@ -831,13 +839,13 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByBioMaterials( Collection<BioMaterial> bms ) {
         if ( bms == null || bms.size() == 0 ) {
-            return new HashSet<ExpressionExperiment>();
+            return new HashSet<>();
         }
         final String queryString = "select distinct ee from ExpressionExperiment as ee "
                 + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample in (:bms)";
 
-        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
-        Collection<BioMaterial> batch = new HashSet<BioMaterial>();
+        Collection<ExpressionExperiment> results = new HashSet<>();
+        Collection<BioMaterial> batch = new HashSet<>();
 
         for ( BioMaterial o : bms ) {
             batch.add( o );
@@ -878,7 +886,7 @@ public class ExpressionExperimentDaoImpl
             queryObject.addScalar( "eeID", new LongType() );
             ScrollableResults results = queryObject.scroll();
 
-            eeIds = new HashSet<Long>();
+            eeIds = new HashSet<>();
 
             // Post Processing
             while ( results.next() )
@@ -935,7 +943,7 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> fvs ) {
 
         if ( fvs.isEmpty() )
-            return new HashSet<ExpressionExperiment>();
+            return new HashSet<>();
 
         // Thaw the factor values.
         //noinspection unchecked
@@ -945,12 +953,12 @@ public class ExpressionExperimentDaoImpl
                 .setParameterList( "ids", EntityUtils.getIds( fvs ) ).list();
 
         if ( eds.isEmpty() ) {
-            return new HashSet<ExpressionExperiment>();
+            return new HashSet<>();
         }
 
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign in (:eds) ";
-        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
-        Collection<ExperimentalDesign> batch = new HashSet<ExperimentalDesign>();
+        Collection<ExpressionExperiment> results = new HashSet<>();
+        Collection<ExperimentalDesign> batch = new HashSet<>();
         for ( ExperimentalDesign o : eds ) {
             batch.add( o );
             if ( batch.size() == BATCH_SIZE ) {
@@ -992,7 +1000,7 @@ public class ExpressionExperimentDaoImpl
         queryObject.addScalar( "eeID", new LongType() );
         ScrollableResults results = queryObject.scroll();
 
-        eeIds = new HashSet<Long>();
+        eeIds = new HashSet<>();
 
         while ( results.next() ) {
             eeIds.add( results.getLong( 0 ) );
@@ -1043,7 +1051,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<Long, Integer>();
+        Map<Long, Integer> results = new HashMap<>();
         for ( Long id : ids ) {
             results.put( id, 0 );
         }
@@ -1069,7 +1077,7 @@ public class ExpressionExperimentDaoImpl
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        Map<Long, Map<Long, Collection<AuditEvent>>> eventMap = new HashMap<Long, Map<Long, Collection<AuditEvent>>>();
+        Map<Long, Map<Long, Collection<AuditEvent>>> eventMap = new HashMap<>();
         // process list of expression experiment ids that have events
         for ( Object o : result ) {
             Object[] row = ( Object[] ) o;
@@ -1079,13 +1087,13 @@ public class ExpressionExperimentDaoImpl
 
             Map<Long, Collection<AuditEvent>> adEventMap = eventMap.get( eeId );
             if ( adEventMap == null ) {
-                adEventMap = new HashMap<Long, Collection<AuditEvent>>();
+                adEventMap = new HashMap<>();
                 eventMap.put( eeId, adEventMap );
             }
 
             Collection<AuditEvent> events = adEventMap.get( adId );
             if ( events == null ) {
-                events = new ArrayList<AuditEvent>();
+                events = new ArrayList<>();
                 adEventMap.put( adId, events );
             }
 
@@ -1104,7 +1112,7 @@ public class ExpressionExperimentDaoImpl
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
+        Map<Long, Collection<AuditEvent>> eventMap = new HashMap<>();
 
         for ( Object o : result ) {
             Object[] row = ( Object[] ) o;
@@ -1178,7 +1186,7 @@ public class ExpressionExperimentDaoImpl
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
         if ( designElements == null || designElements.size() == 0 )
-            return new HashSet<DesignElementDataVector>();
+            return new HashSet<>();
 
         assert quantitationType.getId() != null;
 
@@ -1232,7 +1240,7 @@ public class ExpressionExperimentDaoImpl
 
         assert ( !res.isEmpty() );
 
-        Map<Long, Date> result = new HashMap<Long, Date>();
+        Map<Long, Date> result = new HashMap<>();
         for ( Object o : res ) {
             Object[] oa = ( Object[] ) o;
             Long id = ( Long ) oa[0];
@@ -1266,7 +1274,7 @@ public class ExpressionExperimentDaoImpl
             return ( QuantitationType ) k.iterator().next();
         } else if ( k.size() > 1 ) {
             throw new IllegalStateException(
-                    "There should only be one masked preferred quantitationtype per expressionexperiment (" + ee
+                    "There should only be one masked preferred quantitationType per expressionExperiment (" + ee
                             + ")" );
         }
         return null;
@@ -1275,7 +1283,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<Taxon, Long> getPerTaxonCount() {
 
-        Map<Taxon, Taxon> taxonParents = new HashMap<Taxon, Taxon>();
+        Map<Taxon, Taxon> taxonParents = new HashMap<>();
 
         //noinspection unchecked
         List<Object[]> tp = this.getSessionFactory().getCurrentSession()
@@ -1284,7 +1292,7 @@ public class ExpressionExperimentDaoImpl
             taxonParents.put( ( Taxon ) o[0], ( Taxon ) o[1] );
         }
 
-        Map<Taxon, Long> taxonCount = new LinkedHashMap<Taxon, Long>();
+        Map<Taxon, Long> taxonCount = new LinkedHashMap<>();
         String queryString = "select t, count(distinct ee) from ExpressionExperiment "
                 + "ee inner join ee.bioAssays as ba inner join ba.sampleUsed su "
                 + "inner join su.sourceTaxon t group by t order by t.scientificName ";
@@ -1315,7 +1323,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<Long, Integer>();
+        Map<Long, Integer> results = new HashMap<>();
         if ( ids.size() == 0 ) {
             return results;
         }
@@ -1336,7 +1344,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) {
-        Map<Long, Integer> results = new HashMap<Long, Integer>();
+        Map<Long, Integer> results = new HashMap<>();
         if ( ids.size() == 0 ) {
             return results;
         }
@@ -1370,7 +1378,7 @@ public class ExpressionExperimentDaoImpl
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
                 .list();
 
-        Map<QuantitationType, Integer> qtCounts = new HashMap<QuantitationType, Integer>();
+        Map<QuantitationType, Integer> qtCounts = new HashMap<>();
 
         //noinspection unchecked
         for ( Object[] tuple : ( List<Object[]> ) list ) {
@@ -1417,7 +1425,7 @@ public class ExpressionExperimentDaoImpl
                 + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
 
-        Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<ExpressionExperiment, Collection<AuditEvent>>();
+        Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<>();
         List r = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ees", expressionExperiments ).list();
 
@@ -1437,13 +1445,13 @@ public class ExpressionExperimentDaoImpl
     public Collection<DesignElementDataVector> getSamplingOfVectors( QuantitationType quantitationType,
             Integer limit ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev "
-                + "inner join dev.quantitationType as qt where qt.id = :qtid";
+                + "inner join dev.quantitationType as qt where qt.id = :qtId";
 
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "qtid", quantitationType.getId() ) // Set parameter
+                .setParameter( "qtId", quantitationType.getId() ) // Set parameter
                 .setMaxResults( limit * 20 ) // Set the maximum result
                 .list();
-        Collection<DesignElementDataVector> result = new ArrayList<DesignElementDataVector>();
+        Collection<DesignElementDataVector> result = new ArrayList<>();
         Collections.shuffle( list );
 
         for ( Object aList : list ) {
@@ -1490,7 +1498,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
-        Map<T, Taxon> result = new HashMap<T, Taxon>();
+        Map<T, Taxon> result = new HashMap<>();
 
         if ( bioAssaySets.isEmpty() )
             return result;
@@ -1526,7 +1534,27 @@ public class ExpressionExperimentDaoImpl
         return result;
     }
 
-    private String getOrderByClause( String orderField, boolean descending ) {
+    /**
+     * Creates an order by clause from the given arguments that can be used as the orderByClause argument for
+     * {@link this#getLoadValueObjectsQueryString(String, String)}.
+     *
+     * @param orderBy property or nested property that the query should be ordered by. Does not check for validity.
+     *                E.g: "curationDetails.lastUpdated".
+     * @param asc     true for ascending ordering, false for descending.
+     * @return a hql query clause to order the final query created by {@link this#getLoadValueObjectsQueryString(String, String)}.
+     */
+    private String getApiOrderByClause( String orderBy, boolean asc ) {
+        return "order by ee." + orderBy + ( asc ? " " : " desc " );
+    }
+
+    /**
+     * Creates an order by clause for orderField string. Expecting a format from the ExtJS front end.
+     *
+     * @param orderField the order field generated by front end.
+     * @param descending whether the ordering should be descending.
+     * @return a hql query clause that will order the final query by required field.
+     */
+    private String getFrontEndOrderByClause( String orderField, boolean descending ) {
         String orderByClause;
         switch ( orderField ) {
             case "taxon":
@@ -1573,10 +1601,10 @@ public class ExpressionExperimentDaoImpl
          * as opposed to thawing the one passed in, solves problems.
          */
         String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeid";
+                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeId";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeid", ee.getId() ).list();
+                .setParameter( "eeId", ee.getId() ).list();
 
         if ( res.size() == 0 ) {
             throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
@@ -1659,10 +1687,10 @@ public class ExpressionExperimentDaoImpl
          * as opposed to thawing the one passed in, solves problems.
          */
         String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase " + "where e.id=:eeid";
+                + " left join fetch e.accession acc left join fetch acc.externalDatabase " + "where e.id=:eeId";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeid", ee.getId() ).list();
+                .setParameter( "eeId", ee.getId() ).list();
 
         if ( res.size() == 0 ) {
             throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
@@ -1739,11 +1767,12 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param idRestrictionClause the restriction clause
+     * @param restrictionClause the restriction clause
      * @param orderByClause       order by clause
      * @return an SQL query string
      */
-    private String getLoadValueObjectsQueryString( String idRestrictionClause, String orderByClause ) {
+    private String getLoadValueObjectsQueryString( String restrictionClause, String orderByClause ) {
+
         String queryString = "select " + "ee.id as id, " // 0
                 + "ee.name, " // 1
                 + "ee.source, " // 2
@@ -1776,10 +1805,12 @@ public class ExpressionExperimentDaoImpl
                 + ", AclObjectIdentity as aoi join aoi.entries ace join aoi.ownerSid sid "
                 + "where aoi.identifier = ee.id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
 
+        // Uncommenting enables the IDEA highlight and validation of the above queryString.
         this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        // TODO remove before committing
 
-        if ( StringUtils.stripToNull( idRestrictionClause ) != null ) {
-            queryString += " and " + idRestrictionClause;
+        if ( StringUtils.stripToNull( restrictionClause ) != null ) {
+            queryString += " and " + restrictionClause;
         }
 
         // add ACL restrictions
@@ -1808,9 +1839,9 @@ public class ExpressionExperimentDaoImpl
         Map<Long, ExpressionExperimentValueObject> voMap;
 
         if ( initialSize == null ) {
-            voMap = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
+            voMap = new LinkedHashMap<>();
         } else {
-            voMap = new LinkedHashMap<Long, ExpressionExperimentValueObject>( initialSize );
+            voMap = new LinkedHashMap<>( initialSize );
         }
 
         for ( Object object : list ) {
@@ -1891,23 +1922,39 @@ public class ExpressionExperimentDaoImpl
         AclObjectIdentity aoi = ( AclObjectIdentity ) row[22];
         boolean isPublic = false;
         boolean canWrite = false;
+        boolean isShared = false;
         for ( AclEntry ace : aoi.getEntries() ) {
-            if ( ( ( AclSid ) ace.getSid() ).getId() == 4 ) {
-                // public in this case means that its access is allowed for IS_AUTHENTICATED_ANONYMOUSLY
-                isPublic = true;
-            }
-            System.out.println( "sid: " + ace.getSid() );
-            System.out.println( "mask: " + ace.getMask() );
-            if ( ace.getMask() == 2 || ace.getMask() == 16 ) {
-                // 1 = READ, 2 = READ_WRITE, 16 = ADMINISTRATIVE (other mask values not present in database Jul 12th 2017)
+            if ( ace.getMask() == BasePermission.WRITE.getMask() || ace.getMask() == BasePermission.ADMINISTRATION
+                    .getMask() ) {
                 canWrite = true;
             }
+
+            if ( ace.getPermission().equals( BasePermission.READ ) ) {
+                Sid sid = ace.getSid();
+                if ( sid instanceof AclGrantedAuthoritySid ) {
+                    String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
+
+                    if ( grantedAuthority.equals( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) && ace
+                            .isGranting() ) {
+                        isPublic = true;
+                    }
+
+                    if ( grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
+                        if ( !grantedAuthority.equals( AuthorityConstants.AGENT_GROUP_AUTHORITY ) && !grantedAuthority
+                                .equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                            isShared = true;
+                        }
+                    }
+
+                }
+            }
         }
+
         vo.setIsPublic( isPublic );
         vo.setUserCanWrite( canWrite );
+        vo.setIsShared( isShared );
+
         if ( row[23] instanceof AclPrincipalSid ) {
-            System.out.println( "owner: " + ( ( AclPrincipalSid ) row[23] ).getPrincipal() );
-            System.out.println( "cuser: " + SecurityUtil.getCurrentUsername() );
             vo.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[23] ).getPrincipal(),
                     SecurityUtil.getCurrentUsername() ) );
         } else {
@@ -1927,11 +1974,11 @@ public class ExpressionExperimentDaoImpl
         timer.start();
 
         //noinspection unchecked
-        List<Long> withCoex = this.getSessionFactory().getCurrentSession().createQuery(
+        List<Long> withCoexpression = this.getSessionFactory().getCurrentSession().createQuery(
                 "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", vo.keySet() ).list();
 
-        for ( Long id : withCoex ) {
+        for ( Long id : withCoexpression ) {
             vo.get( id ).setHasCoexpressionAnalysis( true );
         }
 
@@ -1961,14 +2008,14 @@ public class ExpressionExperimentDaoImpl
         org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         // make sure we use the cache.
         if ( eeids != null ) {
-            List<Long> idList = new ArrayList<Long>( eeids );
+            List<Long> idList = new ArrayList<>( eeids );
             Collections.sort( idList );
             queryObject.setParameterList( "eeids", idList );
         }
         queryObject.setReadOnly( true );
         queryObject.setCacheable( true );
 
-        Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
+        Map<Long, Collection<QuantitationType>> results = new HashMap<>();
 
         StopWatch timer = new StopWatch();
         timer.start();

@@ -358,8 +358,12 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadAll();
 
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, DatabaseEntry) for
+     * description (no but seriously do look it might not work as you would expect).
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy, boolean asc,
+    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             String accession );
 
     @Override

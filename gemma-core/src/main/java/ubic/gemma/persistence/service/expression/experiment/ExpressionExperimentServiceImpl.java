@@ -823,12 +823,16 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.getTaxa( bioAssaySets );
     }
 
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, DatabaseEntry) for
+     * description (no but seriously do look it might not work as you would expect).
+     */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy,
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, String accession ) {
         return this.expressionExperimentDao
-                .listFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );
+                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );
     }
 
     @Override
