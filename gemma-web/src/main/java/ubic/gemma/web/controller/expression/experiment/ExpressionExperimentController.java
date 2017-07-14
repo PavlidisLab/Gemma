@@ -219,11 +219,6 @@ public class ExpressionExperimentController {
                 expressionExperimentService.countAll() :
                 expressionExperimentService.countNotTroubled();
 
-        // this populates securityInfo TODO populate security info in filter
-        // List<ExpressionExperimentDetailsValueObject> valueObjects = new
-        // ArrayList<ExpressionExperimentDetailsValueObject>(
-        // getExpressionExperimentDetailsValueObjects( records.subList( origStart, pSize ) ) );
-
         return new JsonReaderResponse<ExpressionExperimentDetailsValueObject>( records, count );
     }
 

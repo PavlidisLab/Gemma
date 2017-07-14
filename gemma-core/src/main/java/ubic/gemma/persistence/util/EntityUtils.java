@@ -18,11 +18,18 @@
  */
 package ubic.gemma.persistence.util;
 
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.acl.domain.AclEntry;
+import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
+import gemma.gsec.acl.domain.AclObjectIdentity;
+import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.*;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Sid;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -97,7 +104,7 @@ public class EntityUtils {
 
         for ( T object : entities ) {
             try {
-                result.put( getId( FieldUtils.readField(object, nestedProperty, true), methodName ), object );
+                result.put( getId( FieldUtils.readField( object, nestedProperty, true ), methodName ), object );
             } catch ( IllegalAccessException e ) {
                 throw new RuntimeException( e );
             }
@@ -302,7 +309,8 @@ public class EntityUtils {
 
     /**
      * Populates parameters in query created using {@link this#addGroupAndUserNameRestriction(boolean, boolean)}.
-     * @param queryObject the query object created using the sql query with group and username restrictions.
+     *
+     * @param queryObject    the query object created using the sql query with group and username restrictions.
      * @param sessionFactory session factory from the DAO that is using this method.
      */
     public static void addUserAndGroupParameters( SQLQuery queryObject, SessionFactory sessionFactory ) {
@@ -325,6 +333,66 @@ public class EntityUtils {
             queryObject.setParameter( "userName", userName );
         }
 
+    }
+
+    /**
+     * Checks ACL related properties from the AclObjectIdentity.
+     * Some of the code is adapted from {@link gemma.gsec.util.SecurityUtil}, but allows usage without an Acl object.
+     * @param aoi the acl object identity of an object whose permissions are to be checked.
+     * @return an array of booleans that represent permissions of currently logged in user as follows:
+     *  <ol>
+     *      <li>is object public</li>
+     *      <li>can user write to object</li>
+     *      <li>is object shared</li>
+     *  </ol>
+     *  (note that actual indexing in the array starts at 0).
+     */
+    public static boolean[] getPermissions( AclObjectIdentity aoi ) {
+        boolean isPublic = false;
+        boolean canWrite = false;
+        boolean isShared = false;
+
+        for ( AclEntry ace : aoi.getEntries() ) {
+            if ( SecurityUtil.isUserAdmin() ) {
+                canWrite = true;
+            } else if ( SecurityUtil.isUserAnonymous() ) {
+                canWrite = false;
+            } else {
+                if ( ace.getMask() == BasePermission.WRITE.getMask() || ace.getMask() == BasePermission.ADMINISTRATION
+                        .getMask() ) {
+                    Sid sid = ace.getSid();
+                    if ( sid instanceof AclGrantedAuthoritySid ) {
+                        String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
+                        //FIXME if user is in granted group then he can write probably
+                    } else if ( sid instanceof AclPrincipalSid ) {
+                        if ( ( ( AclPrincipalSid ) sid ).getPrincipal().equals( SecurityUtil.getCurrentUsername() ) ) {
+                            canWrite = true;
+                        }
+                    }
+                }
+            }
+
+            // Check public and shared - code adapted from SecurityUtils, only we do not hold an ACL object.
+            if ( ace.getPermission().equals( BasePermission.READ ) ) {
+                Sid sid = ace.getSid();
+                if ( sid instanceof AclGrantedAuthoritySid ) {
+                    String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
+
+                    if ( grantedAuthority.equals( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) && ace
+                            .isGranting() ) {
+                        isPublic = true;
+                    }
+                    if ( grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
+                        if ( !grantedAuthority.equals( AuthorityConstants.AGENT_GROUP_AUTHORITY ) && !grantedAuthority
+                                .equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                            isShared = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return new boolean[] { canWrite, isPublic, isShared };
     }
 
 }

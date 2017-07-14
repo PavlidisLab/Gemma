@@ -18,9 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.acl.domain.AclEntry;
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
@@ -31,8 +28,6 @@ import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.acls.domain.BasePermission;
-import org.springframework.security.acls.model.Sid;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -323,18 +318,16 @@ public class ExpressionExperimentDaoImpl
      * @param accession specify to limit the list to EEs of specific accession. Ignored if null.
      *                  TODO generalize the accession argument into an Object array so any property can be used for filtering
      * @return list of value objects representing the EEs that matched the criteria.
-     *
      */
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, DatabaseEntry accession ) {
 
-        String orderByClause = this.getApiOrderByClause( orderBy, asc );
+        String orderByClause = this.getOrderByProperty( orderBy );
         String restrictionClause = accession != null ? "ee.accession = :accession " : null;
 
-        // Base select
-        String queryString = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause );
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        // Compose query
+        Query query = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause, !asc );
 
         if ( accession != null ) {
             query.setParameter( "accession", accession );
@@ -346,7 +339,7 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection unchecked
         List<Object[]> list = query.list();
-        List<ExpressionExperimentValueObject> vos = new ArrayList<>(list.size());
+        List<ExpressionExperimentValueObject> vos = new ArrayList<>( list.size() );
 
         for ( Object[] row : list ) {
             Long eeId = ( Long ) row[0];
@@ -356,7 +349,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         return vos;
-
     }
 
     /**
@@ -374,7 +366,7 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
             List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
 
-        String orderByClause = this.getFrontEndOrderByClause( orderBy, descending );
+        String orderByClause = this.getOrderByProperty( orderBy );
 
         String restrictionClause = "";
         boolean appendAnd = false;
@@ -395,10 +387,9 @@ public class ExpressionExperimentDaoImpl
                     + " ee.curationDetails.troubled = false and AD.curationDetails.troubled = false";
         }
 
-        // Base select
-        String queryString = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause );
+        // Compose query
+        Query query = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause, descending );
 
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         if ( ids != null ) {
             Collections.sort( ids );
             query.setParameterList( "ids", ids );
@@ -408,13 +399,13 @@ public class ExpressionExperimentDaoImpl
         }
 
         query.setCacheable( true );
-
+        System.out.println( start + "/" + limit );
         query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
         List<Object[]> list = query.list();
-        List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>(list.size());
+        List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
         for ( Object[] row : list ) {
             Long eeId = ( Long ) row[0];
             ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( eeId );
@@ -627,10 +618,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjects() {
-
-        final String queryString = getLoadValueObjectsQueryString( null, null );
-
-        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query queryObject = getLoadValueObjectsQueryString( null, null, false );
         List list = queryObject.list();
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
@@ -641,9 +629,8 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
-        String orderByClause = getFrontEndOrderByClause( orderField, descending );
-        final String queryString = getLoadValueObjectsQueryString( null, orderByClause );
-        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        String orderByClause = getOrderByProperty( orderField );
+        Query queryObject = getLoadValueObjectsQueryString( null, orderByClause, descending );
 
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
@@ -654,8 +641,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
         String idRestrictionClause = "taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
-        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, null, false );
         queryObject.setParameter( "tid", taxon.getId() );
 
         List list = queryObject.list();
@@ -670,10 +656,9 @@ public class ExpressionExperimentDaoImpl
         if ( ids.isEmpty() )
             return new ArrayList<>();
 
-        String orderByClause = this.getFrontEndOrderByClause( orderField, descending );
+        String orderByClause = this.getOrderByProperty( orderField );
         String idRestrictionClause = "ee.id in (:ids) ";
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
-        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause, descending );
         queryObject.setParameterList( "ids", ids );
 
         List list = queryObject.list();
@@ -685,10 +670,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon ) {
-        String orderByClause = this.getFrontEndOrderByClause( orderField, descending );
+        String orderByClause = this.getOrderByProperty( orderField );
         String idRestrictionClause = "(taxon  = :t or taxon.parentTaxon = :t) ";
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause );
-        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause, descending );
         queryObject.setParameter( "t", taxon );
 
         List list = queryObject.list();
@@ -732,8 +716,7 @@ public class ExpressionExperimentDaoImpl
 
         String idRestrictionClause = "ee.id in (:ids) ";
 
-        final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
-        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, null, false );
 
         List<Long> idl = new ArrayList<>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
@@ -1535,48 +1518,36 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * Creates an order by clause from the given arguments that can be used as the orderByClause argument for
-     * {@link this#getLoadValueObjectsQueryString(String, String)}.
+     * Creates an order by parameter. Expecting either one of the options from the ExtJS frontend (taxon, bioAssayCount,
+     * lastUpdated,troubled or needsAttention), or a property of an {@link ExpressionExperiment}. Nested properties (even
+     * multiple levels) are allowed. E.g: "accession", "curationDetails.lastUpdated", "curationDetails.lastTroubledEvent.date"
      *
-     * @param orderBy property or nested property that the query should be ordered by. Does not check for validity.
-     *                E.g: "curationDetails.lastUpdated".
-     * @param asc     true for ascending ordering, false for descending.
-     * @return a hql query clause to order the final query created by {@link this#getLoadValueObjectsQueryString(String, String)}.
+     * @param orderBy the order field requested by front end or API.
+     * @return a string that can be used as the orderByProperty param in {@link this#getLoadValueObjectsQueryString(String, String, boolean)}.
      */
-    private String getApiOrderByClause( String orderBy, boolean asc ) {
-        return "order by ee." + orderBy + ( asc ? " " : " desc " );
-    }
-
-    /**
-     * Creates an order by clause for orderField string. Expecting a format from the ExtJS front end.
-     *
-     * @param orderField the order field generated by front end.
-     * @param descending whether the ordering should be descending.
-     * @return a hql query clause that will order the final query by required field.
-     */
-    private String getFrontEndOrderByClause( String orderField, boolean descending ) {
-        String orderByClause;
-        switch ( orderField ) {
+    private String getOrderByProperty( String orderBy ) {
+        String orderByField;
+        switch ( orderBy ) {
             case "taxon":
-                orderByClause = "order by taxon.id " + ( descending ? "desc" : "" );
+                orderByField = "taxon.id";
                 break;
             case "bioAssayCount":
-                orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
+                orderByField = "count(BA)";
                 break;
             case "lastUpdated":
-                orderByClause = "order by s.lastUpdated " + ( descending ? "desc" : "" );
+                orderByField = "s.lastUpdated";
                 break;
             case "troubled":
-                orderByClause = "order by s.troubled " + ( descending ? "desc" : "" );
+                orderByField = "s.troubled";
                 break;
             case "needsAttention":
-                orderByClause = "order by s.needsAttention " + ( descending ? "desc" : "" );
+                orderByField = "s.needsAttention";
                 break;
             default:
-                orderByClause = "order by ee." + orderField + " " + ( descending ? "desc" : "" );
+                orderByField = "ee." + orderBy;
                 break;
         }
-        return orderByClause;
+        return orderByField;
     }
 
     private void addIdsToResults( Map<Long, Integer> results, List res ) {
@@ -1768,10 +1739,12 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * @param restrictionClause the restriction clause
-     * @param orderByClause       order by clause
+     * @param orderByProperty   the property to order by
+     * @param orderDesc         whether the ordering is ascending or descending
      * @return an SQL query string
      */
-    private String getLoadValueObjectsQueryString( String restrictionClause, String orderByClause ) {
+    private Query getLoadValueObjectsQueryString( String restrictionClause, String orderByProperty,
+            boolean orderDesc ) {
 
         String queryString = "select " + "ee.id as id, " // 0
                 + "ee.name, " // 1
@@ -1785,7 +1758,7 @@ public class ExpressionExperimentDaoImpl
                 + "AD.curationDetails, " // 9 // FIXME not used in EEVO
                 + "AD.technologyType, "// 10
                 + "taxon.commonName, " // 11
-                + "taxon.id," // 12
+                + "taxon.id, " // 12
                 + "s.lastUpdated, " // 13
                 + "s.troubled, "  // 14
                 + "s.needsAttention, " // 15
@@ -1796,37 +1769,56 @@ public class ExpressionExperimentDaoImpl
                 + "EDES.id,  " // 20
                 + "ptax.id, " // 21
                 + "aoi, " // 22
-                + "sid " // 23 username of owner
+                + "sid " // 23
                 + "from ExpressionExperiment as ee inner join ee.bioAssays as BA  "
                 + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc "
                 + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax "
                 + "inner join ee.experimentalDesign as EDES join ee.curationDetails as s "
-                + ", AclObjectIdentity as aoi join aoi.entries ace join aoi.ownerSid sid "
+                + ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
                 + "where aoi.identifier = ee.id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
 
-        // Uncommenting enables the IDEA highlight and validation of the above queryString.
-        this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        // TODO remove before committing
-
         if ( StringUtils.stripToNull( restrictionClause ) != null ) {
-            queryString += " and " + restrictionClause;
+            queryString += " and " + restrictionClause + " ";
         }
+
+        boolean hasUserNameParam = false;
 
         // add ACL restrictions
         if ( !SecurityUtil.isUserAnonymous() ) {
-            //TODO add restrictions per user and group
-            //queryString += "and " + EntityUtils.addGroupAndUserNameRestriction( false, true );
+            // For administrators no filtering is necessary
+            if ( !SecurityUtil.isUserAdmin() ) {
+                // For non-admins, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
+                queryString += "and s.troubled = false and ( (sid.principal = :userName or (ace.sid.id in "
+                        // Subselect
+                        + "( select sid.id from UserGroup as ug join ug.authorities as ga "
+                        + ", AclGrantedAuthoritySid sid where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
+                        + "and ug.name in ( "
+                        // Sub-subselect
+                        + "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :userName ) "
+                        // Sub-subselect end
+                        + ") and (ace.mask = 1 or ace.mask = 2) )) "
+                        // Subselect end
+                        + " or (ace.sid.id = 4 and ace.mask = 1)) ";
+                hasUserNameParam = true;
+            }
         } else {
-            queryString += " and " + "ace.mask = 1 and ace.sid.id = 4 ";
+            // For anonymous users, only pick publicly readable data
+            queryString += "and ace.mask = 1 and ace.sid.id = 4  and s.troubled = false ";
         }
 
-        queryString = queryString + " group by ee.id ";
+        queryString += "group by ee.id ";
 
-        if ( orderByClause != null ) {
-            queryString = queryString + orderByClause;
+        if ( orderByProperty != null ) {
+            queryString = queryString + "order by " + orderByProperty  + ( orderDesc ? " desc " : " " );
         }
-        return queryString;
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        if ( hasUserNameParam ) {
+            query.setParameter( "userName", SecurityUtil.getCurrentUsername() );
+        }
+        return query;
     }
 
     private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List list ) {
@@ -1906,8 +1898,11 @@ public class ExpressionExperimentDaoImpl
         //curationDetails
         vo.setLastUpdated( ( Date ) row[13] );
         vo.setTroubled( ( ( Boolean ) row[14] ) );
-        vo.setNeedsAttention( ( Boolean ) row[15] );
-        vo.setCurationNote( ( String ) row[16] );
+
+        if ( SecurityUtil.isUserAdmin() ) {
+            vo.setNeedsAttention( ( Boolean ) row[15] );
+            vo.setCurationNote( ( String ) row[16] );
+        }
 
         //counts
         vo.setBioAssayCount( ( ( Long ) row[17] ).intValue() );
@@ -1920,39 +1915,11 @@ public class ExpressionExperimentDaoImpl
 
         //ACL
         AclObjectIdentity aoi = ( AclObjectIdentity ) row[22];
-        boolean isPublic = false;
-        boolean canWrite = false;
-        boolean isShared = false;
-        for ( AclEntry ace : aoi.getEntries() ) {
-            if ( ace.getMask() == BasePermission.WRITE.getMask() || ace.getMask() == BasePermission.ADMINISTRATION
-                    .getMask() ) {
-                canWrite = true;
-            }
 
-            if ( ace.getPermission().equals( BasePermission.READ ) ) {
-                Sid sid = ace.getSid();
-                if ( sid instanceof AclGrantedAuthoritySid ) {
-                    String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
-
-                    if ( grantedAuthority.equals( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) && ace
-                            .isGranting() ) {
-                        isPublic = true;
-                    }
-
-                    if ( grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
-                        if ( !grantedAuthority.equals( AuthorityConstants.AGENT_GROUP_AUTHORITY ) && !grantedAuthority
-                                .equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
-                            isShared = true;
-                        }
-                    }
-
-                }
-            }
-        }
-
-        vo.setIsPublic( isPublic );
-        vo.setUserCanWrite( canWrite );
-        vo.setIsShared( isShared );
+        boolean[] permissions = EntityUtils.getPermissions( aoi );
+        vo.setIsPublic( permissions[0] );
+        vo.setUserCanWrite( permissions[1] );
+        vo.setIsShared( permissions[2] );
 
         if ( row[23] instanceof AclPrincipalSid ) {
             vo.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[23] ).getPrincipal(),
