@@ -29,7 +29,7 @@ public class Responder {
         // Handle error codes
         if ( isCodeAnError( code ) ) {
             if ( toReturn instanceof WellComposedErrorBody ) {
-                throw new GemmaApiException( ( WellComposedErrorBody ) toReturn, code );
+                throw new GemmaApiException( ( WellComposedErrorBody ) toReturn );
             } else {
                 throw new GemmaApiException( code );
             }

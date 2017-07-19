@@ -65,6 +65,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.*;
 
@@ -824,15 +825,15 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, DatabaseEntry) for
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
      * description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, String accession ) {
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
         return this.expressionExperimentDao
-                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );
+                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
     @Override
@@ -903,7 +904,7 @@ public class ExpressionExperimentServiceImpl
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
             List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
         return this.expressionExperimentDao
-                .loadDetailsValueObjects( orderField, descending, ids, taxon, admin, limit, start );
+                .loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override

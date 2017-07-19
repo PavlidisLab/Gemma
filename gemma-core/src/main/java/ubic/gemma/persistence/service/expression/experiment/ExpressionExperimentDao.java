@@ -16,11 +16,9 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -43,14 +41,14 @@ public interface ExpressionExperimentDao
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, DatabaseEntry) for
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
      * description (no but seriously do look it might not work as you would expect).
      */
     Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            DatabaseEntry accession );
+            ArrayList<ObjectFilter[]> filter );
 
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, boolean admin, int limit, int start );
+            List<Long> ids, Taxon taxon, int limit, int start );
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 

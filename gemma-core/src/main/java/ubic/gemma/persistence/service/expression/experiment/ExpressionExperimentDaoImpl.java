@@ -22,7 +22,6 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
@@ -48,10 +47,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.ChannelUtils;
-import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.*;
 
 import java.util.*;
 
@@ -65,6 +61,7 @@ public class ExpressionExperimentDaoImpl
         implements ExpressionExperimentDao {
 
     private static final int BATCH_SIZE = 1000;
+    private static final int NON_ADMIN_QUERY_FILTER_COUNT = 2;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -309,29 +306,24 @@ public class ExpressionExperimentDaoImpl
      * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
      * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
      *
-     * @param offset    amount of EEs to skip.
-     * @param limit     maximum amount of EEs to retrieve.
-     * @param orderBy   the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
-     *                  be a property of EE itself, or any nested property that hibernate can reach.
-     *                  E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
-     * @param asc       true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param accession specify to limit the list to EEs of specific accession. Ignored if null.
-     *                  TODO generalize the accession argument into an Object array so any property can be used for filtering
+     * @param offset  amount of EEs to skip.
+     * @param limit   maximum amount of EEs to retrieve.
+     * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
+     *                be a property of EE itself, or any nested property that hibernate can reach.
+     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
+     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param filter  A map of properties to filter by. The Key is a String representing the name of the value to
+     *                filter by, and the value is the
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, DatabaseEntry accession ) {
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
 
         String orderByClause = this.getOrderByProperty( orderBy );
-        String restrictionClause = accession != null ? "ee.accession = :accession " : null;
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause, !asc );
-
-        if ( accession != null ) {
-            query.setParameter( "accession", accession );
-        }
+        Query query = this.getLoadValueObjectsQueryString( filter, orderByClause, !asc );
 
         query.setCacheable( true );
         query.setMaxResults( limit );
@@ -358,37 +350,22 @@ public class ExpressionExperimentDaoImpl
      * @param descending whether the ordering by the orderField should be descending.
      * @param ids        only list specific ids.
      * @param taxon      only list experiments within specific taxon.
-     * @param admin      whether the requesting user is administrator or not. Non-administrators will not
-     *                   get troubled experiments.
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Override
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
-            List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
+            List<Long> ids, Taxon taxon, int limit, int start ) {
 
         String orderByClause = this.getOrderByProperty( orderBy );
 
-        String restrictionClause = "";
-        boolean appendAnd = false;
-        // Limit to given ids
-        if ( ids != null ) {
-            restrictionClause += "ee.id in :ids";
-            appendAnd = true;
-        }
-        // Limit to given taxon
+        ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
+        filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS );
         if ( taxon != null ) {
-            restrictionClause += ( appendAnd ? " and" : "" ) + " ee.taxon = :taxon";
-            appendAnd = true;
-        }
-
-        // If user is not admin, exclude troubled experiments ( should be filtered out by the ACL join anyway )
-        if ( !admin ) {
-            restrictionClause += ( appendAnd ? " and" : "" )
-                    + " ee.curationDetails.troubled = false and AD.curationDetails.troubled = false";
+            filters[1] = new ObjectFilter( "taxon", taxon, ObjectFilter.is, null );
         }
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryString( restrictionClause, orderByClause, descending );
+        Query query = this.getLoadValueObjectsQueryString( filters, false, orderByClause, descending );
 
         if ( ids != null ) {
             Collections.sort( ids );
@@ -618,6 +595,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjects() {
+        //noinspection unchecked
         Query queryObject = getLoadValueObjectsQueryString( null, null, false );
         List list = queryObject.list();
 
@@ -630,6 +608,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
         String orderByClause = getOrderByProperty( orderField );
+        //noinspection unchecked
         Query queryObject = getLoadValueObjectsQueryString( null, orderByClause, descending );
 
         List list = queryObject.list();
@@ -639,10 +618,13 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
-        String idRestrictionClause = "taxon.id = (:tid) or taxon.parentTaxon.id = (:tid) ";
-        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, null, false );
-        queryObject.setParameter( "tid", taxon.getId() );
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
+        ObjectFilter[] filter = new ObjectFilter[] {
+                new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
+                new ObjectFilter( "taxon.parentTaxon", taxon, ObjectFilter.is, null ) };
+
+        Query queryObject = getLoadValueObjectsQueryString( filter, true, null, false );
+        queryObject.setParameter( "taxon", taxon );
 
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
@@ -657,8 +639,10 @@ public class ExpressionExperimentDaoImpl
             return new ArrayList<>();
 
         String orderByClause = this.getOrderByProperty( orderField );
-        String idRestrictionClause = "ee.id in (:ids) ";
-        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause, descending );
+        ObjectFilter[] filter = new ObjectFilter[] {
+                new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS ) };
+
+        Query queryObject = getLoadValueObjectsQueryString( filter, false, orderByClause, descending );
         queryObject.setParameterList( "ids", ids );
 
         List list = queryObject.list();
@@ -671,8 +655,12 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon ) {
         String orderByClause = this.getOrderByProperty( orderField );
-        String idRestrictionClause = "(taxon  = :t or taxon.parentTaxon = :t) ";
-        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, orderByClause, descending );
+
+        final ObjectFilter[] filter = new ObjectFilter[] {
+                new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
+                new ObjectFilter( "taxon.parentTaxon", taxon, ObjectFilter.is, null ) };
+
+        Query queryObject = getLoadValueObjectsQueryString( filter, true, orderByClause, descending );
         queryObject.setParameter( "t", taxon );
 
         List list = queryObject.list();
@@ -714,9 +702,10 @@ public class ExpressionExperimentDaoImpl
             return new HashSet<>();
         }
 
-        String idRestrictionClause = "ee.id in (:ids) ";
+        ObjectFilter[] filter = new ObjectFilter[] {
+                new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS ) };
 
-        Query queryObject = getLoadValueObjectsQueryString( idRestrictionClause, null, false );
+        Query queryObject = getLoadValueObjectsQueryString( filter, false, null, false );
 
         List<Long> idl = new ArrayList<>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
@@ -1523,7 +1512,7 @@ public class ExpressionExperimentDaoImpl
      * multiple levels) are allowed. E.g: "accession", "curationDetails.lastUpdated", "curationDetails.lastTroubledEvent.date"
      *
      * @param orderBy the order field requested by front end or API.
-     * @return a string that can be used as the orderByProperty param in {@link this#getLoadValueObjectsQueryString(String, String, boolean)}.
+     * @return a string that can be used as the orderByProperty param in {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
      */
     private String getOrderByProperty( String orderBy ) {
         String orderByField;
@@ -1544,7 +1533,7 @@ public class ExpressionExperimentDaoImpl
                 orderByField = "s.needsAttention";
                 break;
             default:
-                orderByField = "ee." + orderBy;
+                orderByField = ObjectFilter.EEDAO_EE_ALIAS+"." + orderBy;
                 break;
         }
         return orderByField;
@@ -1738,25 +1727,80 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param restrictionClause the restriction clause
-     * @param orderByProperty   the property to order by
-     * @param orderDesc         whether the ordering is ascending or descending
-     * @return an SQL query string
+     * @param filters         An array representing either a conjunction (AND) or disjunction (OR) of filters.
+     * @param disjunction     true to signal that the filters property is a disjunction (OR). False will cause the
+     *                        filters property to be treated as a conjunction (AND).
+     *                        If you are passing a single filter, using <code>false</code> is slightly more effective;
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
-    private Query getLoadValueObjectsQueryString( String restrictionClause, String orderByProperty,
+    private Query getLoadValueObjectsQueryString( ObjectFilter[] filters, boolean disjunction, String orderByProperty,
+            boolean orderDesc ) {
+        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( disjunction ? filters.length : 1 );
+        if ( disjunction ) {
+            ObjectFilter[] filterArray = new ObjectFilter[filters.length];
+            int i = 0;
+            for ( ObjectFilter filter : filters ) {
+                filterArray[i++] = filter;
+            }
+            filterList.add( filterArray );
+        } else {
+            for ( ObjectFilter filter : filters ) {
+                filterList.add( new ObjectFilter[] { filter } );
+            }
+        }
+
+        return this.getLoadValueObjectsQueryString( filterList, orderByProperty, orderDesc );
+    }
+
+    /**
+     * If you have a simple array of filters (either a conjunction or a disjunction), you can use the
+     * {@link this#getLoadValueObjectsQueryString(ObjectFilter[], boolean, String, boolean)} method instead. This method
+     * allows specification of a conjunction of disjunctions (CNF).
+     *
+     * @param filters         A list of filtering properties arrays.<br/>
+     *                        Elements in each array will be in a disjunction (OR) with each other.<br/>
+     *                        Arrays will then be in a conjunction (AND) with each other.<br/>
+     *                        I.e. The filter will be in a conjunctive normal form.<br/>
+     *                        <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code><br/><br/>
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a hibernate Query object ready to be used for EEVO retrieval.
+     */
+    private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
             boolean orderDesc ) {
 
-        String queryString = "select " + "ee.id as id, " // 0
-                + "ee.name, " // 1
-                + "ee.source, " // 2
-                + "ee.shortName, " // 3
-                + "ee.class, " // 4 // FIXME not used in EEVO
-                + "ee.numberOfDataVectors, " // 5
+        // Restrict to non-troubled EEs for non-administrators
+        if ( !SecurityUtil.isUserAdmin() ) {
+
+            if ( filters == null ) {
+                filters = new ArrayList<>( NON_ADMIN_QUERY_FILTER_COUNT );
+            } else {
+                filters.ensureCapacity( filters.size() + NON_ADMIN_QUERY_FILTER_COUNT );
+            }
+
+            // Both restrictions have to be met (AND) therefore they have to be added as separate arrays.
+            filters.add( new ObjectFilter[] {
+                    new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                            ObjectFilter.EEDAO_EE_ALIAS ) } );
+            filters.add( new ObjectFilter[] {
+                    new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                            ObjectFilter.EEDAO_AD_ALIAS ) } );
+        }
+
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select " + ObjectFilter.EEDAO_EE_ALIAS + ".id as id, " // 0
+                + ObjectFilter.EEDAO_EE_ALIAS + ".name, " // 1
+                + ObjectFilter.EEDAO_EE_ALIAS + ".source, " // 2
+                + ObjectFilter.EEDAO_EE_ALIAS + ".shortName, " // 3
+                + ObjectFilter.EEDAO_EE_ALIAS + ".class, " // 4 // FIXME not used in EEVO
+                + ObjectFilter.EEDAO_EE_ALIAS + ".numberOfDataVectors, " // 5
                 + "acc.accession, " // 6
                 + "ED.name, " // 7
                 + "ED.webUri, " // 8
-                + "AD.curationDetails, " // 9 // FIXME not used in EEVO
-                + "AD.technologyType, "// 10
+                + ObjectFilter.EEDAO_AD_ALIAS + ".curationDetails, " // 9 // FIXME not used in EEVO
+                + ObjectFilter.EEDAO_AD_ALIAS + ".technologyType, "// 10
                 + "taxon.commonName, " // 11
                 + "taxon.id, " // 12
                 + "s.lastUpdated, " // 13
@@ -1764,23 +1808,21 @@ public class ExpressionExperimentDaoImpl
                 + "s.needsAttention, " // 15
                 + "s.curationNote, "  // 16
                 + "count(distinct BA), " // 17
-                + "count(distinct AD), " // 18
+                + "count(distinct "+ ObjectFilter.EEDAO_AD_ALIAS + "), " // 18
                 + "count(distinct SU), " // 19
                 + "EDES.id,  " // 20
                 + "ptax.id, " // 21
                 + "aoi, " // 22
                 + "sid " // 23
-                + "from ExpressionExperiment as ee inner join ee.bioAssays as BA  "
-                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
-                + "left join SU.sourceTaxon as taxon left join ee.accession acc "
+                + "from ExpressionExperiment as " + ObjectFilter.EEDAO_EE_ALIAS + " inner join " + ObjectFilter.EEDAO_EE_ALIAS + ".bioAssays as BA  "
+                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "+ ObjectFilter.EEDAO_AD_ALIAS + " "
+                + "left join SU.sourceTaxon as taxon left join " + ObjectFilter.EEDAO_EE_ALIAS + ".accession acc "
                 + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax "
-                + "inner join ee.experimentalDesign as EDES join ee.curationDetails as s "
+                + "inner join " + ObjectFilter.EEDAO_EE_ALIAS + ".experimentalDesign as EDES join " + ObjectFilter.EEDAO_EE_ALIAS + ".curationDetails as s "
                 + ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
-                + "where aoi.identifier = ee.id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
+                + "where aoi.identifier = " + ObjectFilter.EEDAO_EE_ALIAS + ".id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
 
-        if ( StringUtils.stripToNull( restrictionClause ) != null ) {
-            queryString += " and " + restrictionClause + " ";
-        }
+        queryString += this.formRestrictionClause( filters );
 
         boolean hasUserNameParam = false;
 
@@ -1789,7 +1831,7 @@ public class ExpressionExperimentDaoImpl
             // For administrators no filtering is necessary
             if ( !SecurityUtil.isUserAdmin() ) {
                 // For non-admins, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
-                queryString += "and s.troubled = false and ( (sid.principal = :userName or (ace.sid.id in "
+                queryString += "and ( (sid.principal = :userName or (ace.sid.id in "
                         // Subselect
                         + "( select sid.id from UserGroup as ug join ug.authorities as ga "
                         + ", AclGrantedAuthoritySid sid where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
@@ -1804,13 +1846,18 @@ public class ExpressionExperimentDaoImpl
             }
         } else {
             // For anonymous users, only pick publicly readable data
-            queryString += "and ace.mask = 1 and ace.sid.id = 4  and s.troubled = false ";
+            queryString += "and ace.mask = 1 and ace.sid.id = 4 ";
         }
 
         queryString += "group by ee.id ";
 
         if ( orderByProperty != null ) {
-            queryString = queryString + "order by " + orderByProperty  + ( orderDesc ? " desc " : " " );
+            queryString = queryString + "order by " + orderByProperty + ( orderDesc ? " desc " : " " );
+        }
+
+        if ( log.isDebugEnabled() ) {
+            System.out.println("EEVO query: ");
+            System.out.println( queryString );
         }
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -1818,7 +1865,50 @@ public class ExpressionExperimentDaoImpl
         if ( hasUserNameParam ) {
             query.setParameter( "userName", SecurityUtil.getCurrentUsername() );
         }
+        if ( filters != null && !filters.isEmpty() ) {
+            addRestrictionParameters( query, filters );
+        }
         return query;
+    }
+
+    private void addRestrictionParameters(Query query, ArrayList<ObjectFilter[]> filters){
+        for ( ObjectFilter[] filterArray : filters ){
+            if(filterArray == null || filterArray.length < 1) continue;
+            for ( ObjectFilter filter : filterArray ){
+                if(filter == null) continue;
+                query.setParameter( filter.getPropertyName().replace( ".", "" ), filter.getRequiredValue() );
+            }
+        }
+    }
+
+    private String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {
+        if ( filters == null || filters.isEmpty() )
+            return "";
+        StringBuilder conjunction = new StringBuilder();
+        for ( ObjectFilter[] filterArray : filters ) {
+            if ( filterArray.length == 0 )
+                continue;
+
+            StringBuilder disjunction = new StringBuilder(  );
+            boolean first = true;
+            for ( ObjectFilter filter : filterArray ) {
+                if ( filter == null )
+                    continue;
+                if ( !first )
+                    disjunction.append( "or " );
+                if ( filter.getObjectAlias() != null )
+                    disjunction.append( filter.getObjectAlias() ).append( "." );
+                disjunction.append( filter.getPropertyName() ).append( " " ).append( filter.getOperator() )
+                        .append( " :" ).append( filter.getPropertyName().replace( ".", "" ) );
+                first = false;
+            }
+            String disjunctionString = disjunction.toString();
+            if(!disjunctionString.isEmpty()) {
+                conjunction.append( "and ( " ).append( disjunctionString ).append( " ) " );
+            }
+        }
+
+        return conjunction.toString();
     }
 
     private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List list ) {
