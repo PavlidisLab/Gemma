@@ -364,15 +364,14 @@ public class ExpressionExperimentDaoImpl
             filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS );
         }
         if ( taxon != null ) {
-            filters[1] = new ObjectFilter( "taxon", taxon, ObjectFilter.is, null );
+            filters[1] = new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS );
         }
 
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filters, false, orderByClause, descending );
 
         query.setCacheable( true );
-        System.out.println( start + "/" + limit );
-        query.setMaxResults( limit );
+        if(limit > 0 ) query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -614,8 +613,9 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
-        ObjectFilter[] filter = new ObjectFilter[] { new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
-                new ObjectFilter( "taxon.parentTaxon", taxon, ObjectFilter.is, null ) };
+        ObjectFilter[] filter = new ObjectFilter[] {
+                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ),
+                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, true, null, false );
 
@@ -648,8 +648,9 @@ public class ExpressionExperimentDaoImpl
             Taxon taxon ) {
         String orderByClause = this.getOrderByProperty( orderField );
 
-        final ObjectFilter[] filter = new ObjectFilter[] { new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
-                new ObjectFilter( "taxon.parentTaxon", taxon, ObjectFilter.is, null ) };
+        final ObjectFilter[] filter = new ObjectFilter[] {
+                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ),
+                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, true, orderByClause, descending );
 
@@ -1504,6 +1505,7 @@ public class ExpressionExperimentDaoImpl
      * @return a string that can be used as the orderByProperty param in {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
      */
     private String getOrderByProperty( String orderBy ) {
+        if(orderBy == null) return ObjectFilter.EEDAO_EE_ALIAS+".id";
         String orderByField;
         switch ( orderBy ) {
             case "taxon":
@@ -1869,23 +1871,23 @@ public class ExpressionExperimentDaoImpl
                 if ( filter == null )
                     continue;
                 if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
-                    query.setParameterList( filter.getPropertyName().replace( ".", "" ),
+                    query.setParameterList( this.formParamName( filter ),
                             ( Collection ) filter.getRequiredValue() );
                 } else {
-                    query.setParameter( filter.getPropertyName().replace( ".", "" ), filter.getRequiredValue() );
+                    query.setParameter( this.formParamName( filter ), filter.getRequiredValue() );
                 }
             }
         }
     }
 
     private String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {
+
         if ( filters == null || filters.isEmpty() )
             return "";
         StringBuilder conjunction = new StringBuilder();
         for ( ObjectFilter[] filterArray : filters ) {
             if ( filterArray.length == 0 )
                 continue;
-
             StringBuilder disjunction = new StringBuilder();
             boolean first = true;
             for ( ObjectFilter filter : filterArray ) {
@@ -1897,9 +1899,9 @@ public class ExpressionExperimentDaoImpl
                     disjunction.append( filter.getObjectAlias() ).append( "." );
                     disjunction.append( filter.getPropertyName() ).append( " " ).append( filter.getOperator() ) ;
                     if (filter.getOperator().equals( ObjectFilter.in ) ) {
-                        disjunction.append( "( :" ).append( filter.getPropertyName().replace( ".", "" ) ).append( " ) " );
+                        disjunction.append( "( :" ).append( this.formParamName( filter )  ).append( " ) " );
                     } else {
-                        disjunction.append( " :" ).append( filter.getPropertyName().replace( ".", "" ) );
+                        disjunction.append( ":" ).append( this.formParamName( filter ) );
                     }
                 } first = false;
             } String disjunctionString = disjunction.toString();
@@ -1909,6 +1911,10 @@ public class ExpressionExperimentDaoImpl
         }
 
         return conjunction.toString();
+    }
+
+    private String formParamName(ObjectFilter filter){
+        return filter.getObjectAlias()+filter.getPropertyName().replace( ".", "" );
     }
 
     private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List list ) {

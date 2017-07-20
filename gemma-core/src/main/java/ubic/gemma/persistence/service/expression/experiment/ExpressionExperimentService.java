@@ -389,34 +389,6 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> load( Collection<Long> ids );
 
     /**
-     * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
-     * current user has specific write permissions on (as opposed to data sets which are public). Important: This method
-     * will return all experiments if security is not enabled.
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<ExpressionExperiment> loadMyExpressionExperiments();
-
-    /**
-     * * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
-     * current user has specific READ permissions on (as opposed to data sets which are public).
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyPrivateData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<ExpressionExperiment> loadMySharedExpressionExperiments();
-
-    /**
-     * Returns the {@link ExpressionExperiment}s owned by the {@link User} currently logged in. Note: this includes
-     * public and private entities. Important: This method will return all experiments if security is not enabled.
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_USER_OWNED_DATA" })
-    Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
-
-    /**
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -433,13 +405,11 @@ public interface ExpressionExperimentService
      * @param descending whether the ordering by the orderField should be descending.
      * @param ids only list specific ids.
      * @param taxon only list experiments within specific taxon.
-     * @param admin whether the requesting user is administrator or not. Non-administrators will not
-     *        get troubled experiments.
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, boolean admin, int limit, int start );
+            List<Long> ids, Taxon taxon, int limit, int start );
 
     /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.

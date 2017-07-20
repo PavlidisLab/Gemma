@@ -203,7 +203,7 @@ public class ExpressionExperimentController {
             batch.setLimit( ids.size() );
             batch.setStart( 0 );
         }
-        List<Long> noDupIds = new ArrayList<Long>( ids );
+        List<Long> noDupIds = new ArrayList<>( ids );
 
         return this.browseSpecific( batch, noDupIds, null );
 
@@ -212,14 +212,13 @@ public class ExpressionExperimentController {
     private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
 
-        List<ExpressionExperimentDetailsValueObject> records = loadAllValueObjectsOrdered( batch, ids, taxon,
-                SecurityUtil.isUserAdmin() );
+        List<ExpressionExperimentDetailsValueObject> records = loadAllValueObjectsOrdered( batch, ids, taxon );
 
         int count = SecurityUtil.isUserAdmin() ?
                 expressionExperimentService.countAll() :
                 expressionExperimentService.countNotTroubled();
 
-        return new JsonReaderResponse<ExpressionExperimentDetailsValueObject>( records, count );
+        return new JsonReaderResponse<>( records, count );
     }
 
     /**
@@ -418,7 +417,7 @@ public class ExpressionExperimentController {
 
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
 
-        Collection<ExperimentalFactorValueObject> result = new HashSet<ExperimentalFactorValueObject>();
+        Collection<ExperimentalFactorValueObject> result = new HashSet<>();
 
         if ( ee.getExperimentalDesign() == null )
             return null;
@@ -445,7 +444,7 @@ public class ExpressionExperimentController {
         if ( ef == null )
             return null;
 
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        Collection<FactorValueValueObject> result = new HashSet<>();
 
         Collection<FactorValue> values = ef.getFactorValues();
         for ( FactorValue value : values ) {
@@ -546,28 +545,18 @@ public class ExpressionExperimentController {
         /*
          * Sort taxa by name.
          */
-        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
+        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<>( new Comparator<Taxon>() {
             @Override
             public int compare( Taxon o1, Taxon o2 ) {
                 return o1.getScientificName().compareTo( o2.getScientificName() );
             }
         } );
-        LinkedHashMap<String, Long> eesPerTaxonName = new LinkedHashMap<String, Long>();
 
         long expressionExperimentCount = 0; // expressionExperimentService.countAll();
         for ( Taxon t : unsortedEEsPerTaxon.keySet() ) {
             Long c = unsortedEEsPerTaxon.get( t );
 
             eesPerTaxon.put( t, c );
-            eesPerTaxonName.put( t.getScientificName(), c );
-
-            // hide 'uncommon' taxa from this table. See bug 2052
-            // this bug proposed being able to make taxa private
-            // it is now marked as "won't fix" so I assume they want everything to be shown
-            // so I'll comment this out (for now)
-            /*
-             * if ( c < 10 ) { otherTaxaEECount += c; //it.remove(); }
-             */
             expressionExperimentCount += c;
         }
 
@@ -671,7 +660,9 @@ public class ExpressionExperimentController {
             return null;
         }
 
-        getReportData( initialResults );
+        expressionExperimentReportService.getReportInformation( initialResults );
+        expressionExperimentReportService.getAnnotationInformation( initialResults );
+        expressionExperimentReportService.getEventInformation( initialResults );
 
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject(
@@ -680,14 +671,14 @@ public class ExpressionExperimentController {
         // We only need to set the additional values:
 
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        Collection<Long> adids = new HashSet<Long>();
+        Collection<Long> adids = new HashSet<>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             adids.add( ad.getId() );
         }
         finalResult.setArrayDesigns( arrayDesignService.loadValueObjectsByIds( adids ) );
 
         finalResult.setQChtml( getQCTagHTML( ee ) );
-        finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee, false ) );
+        finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
         finalResult = this.setPrefferedAndReprocessed( finalResult, ee );
         finalResult = this.setMutipleTechTypes( finalResult, ee );
@@ -783,7 +774,7 @@ public class ExpressionExperimentController {
      */
     private ExpressionExperimentDetailsValueObject setMutipleTechTypes(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
-        Collection<TechnologyType> techTypes = new HashSet<TechnologyType>();
+        Collection<TechnologyType> techTypes = new HashSet<>();
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             techTypes.add( ad.getTechnologyType() );
         }
@@ -843,12 +834,12 @@ public class ExpressionExperimentController {
      * @param ids of EEs to load
      * @return security-filtered set of value objects.
      */
-    public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
+    public Collection<ExpressionExperimentDetailsValueObject> loadExpressionExperiments( List<Long> ids ) {
         if ( ids.isEmpty() ) {
-            return new HashSet<ExpressionExperimentValueObject>();
+            return new HashSet<>();
         }
 
-        return getFilteredExpressionExperimentValueObjects( null, ids, false, null, true );
+        return getFilteredExpressionExperimentValueObjects( null, ids, -1, true );
     }
 
     /**
@@ -856,10 +847,9 @@ public class ExpressionExperimentController {
      *
      * @param id of platform
      */
-    public Collection<ExpressionExperimentValueObject> loadExperimentsForPlatform( Long id ) {
-        return getFilteredExpressionExperimentValueObjects( null,
-                EntityUtils.getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ),
-                false, null, true );
+    public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
+        return getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils
+                .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), -1, true );
     }
 
     /**
@@ -868,19 +858,20 @@ public class ExpressionExperimentController {
      * @param ids of EEs to load
      * @return security-filtered set of value objects.
      */
-    public Collection<ExpressionExperimentValueObject> loadDetailedExpressionExperiments( Collection<Long> ids ) {
+    public Collection<ExpressionExperimentDetailsValueObject> loadDetailedExpressionExperiments(
+            Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
-            return new HashSet<ExpressionExperimentValueObject>();
+            return new HashSet<>();
         }
-        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
-                false, null, true );
+        Collection<ExpressionExperimentDetailsValueObject> result = getFilteredExpressionExperimentValueObjects( null,
+                null, 0, true );
         this.expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 
     /**
-     * AJAX; get a collection of experiments that have had samples removed due to outliers (TODO: and experiment that
-     * have possible batch effects detected)
+     * AJAX; get a collection of experiments that have had samples removed due to outliers
+     * TODO: and experiment that have possible batch effects detected
      */
     public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
 
@@ -890,13 +881,14 @@ public class ExpressionExperimentController {
         // expressionExperimentService.getExperimentsWithBatchEffect();
         // List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
 
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        Collection<ExpressionExperiment> ees = new HashSet<>();
         ees.addAll( outlierEEs );
         // ees.addAll( batchEffectEEs );
 
-        List<JSONObject> jsonRecords = new ArrayList<JSONObject>();
+        List<JSONObject> jsonRecords = new ArrayList<>();
 
         for ( ExpressionExperiment ee : ees ) {
+            //noinspection MismatchedQueryAndUpdateOfCollection
             JSONObject record = new JSONObject();
             record.element( "id", ee.getId() );
             record.element( "shortName", ee.getShortName() );
@@ -910,7 +902,7 @@ public class ExpressionExperimentController {
             jsonRecords.add( record );
         }
 
-        return new JsonReaderResponse<JSONObject>( jsonRecords );
+        return new JsonReaderResponse<>( jsonRecords );
 
     }
 
@@ -938,21 +930,14 @@ public class ExpressionExperimentController {
      * @param filter     if non-null, limit data sets to ones meeting criteria.
      * @param showPublic return user's public datasets too
      */
-    public Collection<ExpressionExperimentDetailsValueObject> loadStatusSummaries( Long taxonId, Collection<Long> ids,
+    public Collection<ExpressionExperimentDetailsValueObject> loadStatusSummaries( Long taxonId, List<Long> ids,
             Integer limit, Integer filter, Boolean showPublic ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<ExpressionExperimentValueObject> vos;
+        Collection<ExpressionExperimentDetailsValueObject> vos;
 
-        boolean filterDataByUser = false;
-
-        if ( SecurityUtil.isUserAdmin() ) {
-            /* proceed, just being transparent */
-        } else if ( SecurityUtil.isUserLoggedIn() ) {
-            filterDataByUser = true;
-        } else {
-            /* Anonymous */
+        if ( !SecurityUtil.isUserLoggedIn() ) {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
@@ -961,11 +946,10 @@ public class ExpressionExperimentController {
         // will keep from loading a ridiculous number of experiments
         if ( limit == null )
             limit = 50;
-
-        vos = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter, showPublic );
+        vos = getEEVOsForManager( taxonId, ids, limit, filter, showPublic );
 
         if ( vos.isEmpty() ) {
-            return new HashSet<ExpressionExperimentDetailsValueObject>();
+            return new HashSet<>();
         }
 
         if ( timer.getTime() > 1000 ) {
@@ -979,30 +963,26 @@ public class ExpressionExperimentController {
         timer.reset();
         timer.start();
 
-        getReportData( vos );
+        expressionExperimentReportService.getAnnotationInformation( vos );
+        expressionExperimentReportService.getEventInformation( vos );
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Filling in report data for " + vos.size() + " EEs: " + timer.getTime() + "ms" );
         }
 
-        LinkedList<ExpressionExperimentDetailsValueObject> finalVos = new LinkedList<ExpressionExperimentDetailsValueObject>();
-
         // We need to convert the VOs to detailVos and add array designs so trouble info can be correctly displayed.
-        for ( ExpressionExperimentValueObject vo : vos ) {
-            ExpressionExperimentDetailsValueObject detailVo = new ExpressionExperimentDetailsValueObject( vo );
-
-            // Detail VO has many more fields but we currently only use the ADs.
-            detailVo.setArrayDesigns( arrayDesignService.loadValueObjectsForEE( vo.getId() ) );
-            finalVos.add( detailVo );
+        for ( ExpressionExperimentDetailsValueObject vo : vos ) {
+            vo.setArrayDesigns( arrayDesignService.loadValueObjectsForEE( vo.getId() ) );
         }
 
-        return finalVos;
+        return vos;
     }
 
     /**
      * Remove the primary publication for the given expression experiment (by id). The reference is not actually deleted
      * from the system. AJAX
      */
+    @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
     public String removePrimaryPublication( Long eeId ) throws Exception {
         RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
         return taskRunningService.submitLocalTask( task );
@@ -1016,7 +996,7 @@ public class ExpressionExperimentController {
      */
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
         boolean taxonLimited = ( taxonId != null );
-        List<SearchResultDisplayObject> displayResults = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResults = new ArrayList<>();
 
         // add session bound sets
         // get any session-bound groups
@@ -1024,7 +1004,7 @@ public class ExpressionExperimentController {
                 sessionListManager.getModifiedExperimentSets( taxonId ) :
                 sessionListManager.getModifiedExperimentSets();
 
-        List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
         // create SearchResultDisplayObjects
         if ( sessionResult != null && sessionResult.size() > 0 ) {
@@ -1118,7 +1098,7 @@ public class ExpressionExperimentController {
         }
 
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
-        Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
+        Collection<BioMaterial> bioMaterials = new ArrayList<>();
         for ( BioAssay assay : bioAssays ) {
             BioMaterial material = assay.getSampleUsed();
             if ( material != null ) {
@@ -1189,7 +1169,7 @@ public class ExpressionExperimentController {
         }
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<BioMaterial> needToProcess = new HashSet<BioMaterial>();
+        Collection<BioMaterial> needToProcess = new HashSet<>();
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
@@ -1282,6 +1262,7 @@ public class ExpressionExperimentController {
     /**
      * AJAX. Associate the given pubmedId with the given expression experiment.
      */
+    @SuppressWarnings("UnusedReturnValue") // AJAX method - possibly used in JS
     public String updatePubMed( Long eeId, String pubmedId ) throws Exception {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
@@ -1341,15 +1322,12 @@ public class ExpressionExperimentController {
     /**
      * Filter based on criteria of which events etc. the data sets have.
      */
-    private List<ExpressionExperimentValueObject> applyFilter( List<ExpressionExperimentValueObject> eeValObjectCol,
-            Integer filter ) {
-        List<ExpressionExperimentValueObject> filtered = new ArrayList<ExpressionExperimentValueObject>();
+    private List<ExpressionExperimentDetailsValueObject> applyFilter(
+            List<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
+        List<ExpressionExperimentDetailsValueObject> filtered = new ArrayList<>();
         Collection<ExpressionExperiment> eesToKeep = null;
-        List<ExpressionExperimentValueObject> eeVOsToKeep = null;
+        List<ExpressionExperimentDetailsValueObject> eeVOsToKeep = null;
 
-        /*
-         * TODO This could be sped up by passing value objects to the auditEventService.
-         */
         switch ( filter ) {
             case 1: // eligible for diff and don't have it.
                 eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
@@ -1369,6 +1347,7 @@ public class ExpressionExperimentController {
                 auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
+                // FIXME this can now be delegated to the DAO layer
                 eeVOsToKeep = returnTroubled( eeValObjectCol, true );
                 break;
             case 6:
@@ -1395,9 +1374,11 @@ public class ExpressionExperimentController {
                 auditEventService.retainHavingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 12:
+                // FIXME this can now be delegated to the DAO layer
                 eeVOsToKeep = returnNeedsAttention( eeValObjectCol );
                 break;
             case 13:
+                // FIXME this can now be delegated to the DAO layer
                 eeVOsToKeep = returnTroubled( eeValObjectCol, false );
                 break;
             default:
@@ -1414,7 +1395,7 @@ public class ExpressionExperimentController {
             }
             // Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
             Collection<Long> ids = EntityUtils.getIds( eesToKeep );
-            for ( ExpressionExperimentValueObject eevo : eeValObjectCol ) {
+            for ( ExpressionExperimentDetailsValueObject eevo : eeValObjectCol ) {
                 if ( ids.contains( eevo.getId() ) ) {
                     filtered.add( eevo );
                 }
@@ -1483,43 +1464,20 @@ public class ExpressionExperimentController {
      * @param filter     setting
      * @param showPublic return the user's public datasets as well
      */
-    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
-            boolean filterDataByUser, Integer limit, Integer filter, boolean showPublic ) {
-        List<ExpressionExperimentValueObject> eeValObjectCol;
+    private Collection<ExpressionExperimentDetailsValueObject> getEEVOsForManager( Long taxonId, List<Long> ids,
+            Integer limit, Integer filter, boolean showPublic ) {
+        List<ExpressionExperimentDetailsValueObject> eeVos;
+        eeVos = this
+                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, limit, showPublic );
 
-        // taxon specific?
-        if ( taxonId != null && taxonId > 0 ) {
-            Taxon taxon = taxonService.load( taxonId );
-            if ( taxon == null ) {
-                throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
-            }
-            if ( ids == null || ids.isEmpty() ) {
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, filterDataByUser, limit,
-                        showPublic );
-            } else {
-                eeValObjectCol = this
-                        .getFilteredExpressionExperimentValueObjects( taxon, ids, filterDataByUser, limit, showPublic );
-            }
-
-        } else if ( ids == null || ids.isEmpty() ) {
-            // load everything (up to the limit)
-            eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser, limit, showPublic );
-        } else {
-            eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser, limit, showPublic );
+        if ( filter != null && filter > 0 ) {
+            eeVos = applyFilter( eeVos, filter );
+        }
+        if ( eeVos.isEmpty() ) {
+            return eeVos;
         }
 
-        if ( eeValObjectCol.isEmpty() )
-            return eeValObjectCol;
-
-        if ( filter != null && filter > 0 )
-            eeValObjectCol = applyFilter( eeValObjectCol, filter );
-
-        if ( eeValObjectCol.isEmpty() )
-            return eeValObjectCol;
-
-        return eeValObjectCol;
+        return eeVos;
 
     }
 
@@ -1558,115 +1516,45 @@ public class ExpressionExperimentController {
         return expressionExperiment;
     }
 
-    private Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets( BioAssaySet ee,
-            boolean includeAutoGenerated ) {
+    private Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets( BioAssaySet ee ) {
 
         Collection<Long> eeSetIds = expressionExperimentSetService.findIds( ee );
 
         if ( eeSetIds.isEmpty() ) {
-            return new HashSet<ExpressionExperimentSetValueObject>();
+            return new HashSet<>();
         }
 
-        Collection<ExpressionExperimentSetValueObject> dbEEsvos = expressionExperimentSetService
+        Collection<ExpressionExperimentSetValueObject> vos = expressionExperimentSetService
                 .loadValueObjectsByIds( eeSetIds );
-        Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
+        Collection<ExpressionExperimentSetValueObject> sVos = new ArrayList<>();
 
-        if ( !includeAutoGenerated ) {
-            for ( ExpressionExperimentSetValueObject dbEEsvo : dbEEsvos ) {
-                if ( !expressionExperimentSetService.isAutomaticallyGenerated( dbEEsvo.getDescription() ) ) {
-                    eesvos.add( dbEEsvo );
-                }
+        for ( ExpressionExperimentSetValueObject vo : vos ) {
+            if ( !expressionExperimentSetService.isAutomaticallyGenerated( vo.getDescription() ) ) {
+                sVos.add( vo );
             }
         }
 
-        return eesvos;
+        return sVos;
     }
 
     /**
      * Get the expression experiment value objects for the expression experiments.
      *
-     * @param taxon             can be null
-     * @param filterDataForUser if true, then only the data owned by the user are returned (this has no effect if you
-     *                          are an administrator)
+     * @param taxon can be null
      * @return Collection<ExpressionExperimentValueObject>
      */
-    private List<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            Collection<Long> eeIds, boolean filterDataForUser, Integer limit, boolean showPublic ) {
+    private List<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
+            List<Long> eeIds, Integer limit, boolean showPublic ) {
 
-        List<ExpressionExperimentValueObject> valueobjects;
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        /*
-         * FIXME remove troubled? Needs to be optional. For dataset management page, don't.
-         */
-
-        // the front end has the brilliant logic of sending in a negative limit to denote sorting in date ascending
-        // order
-        boolean descending = limit == null || limit > 0;
-
-        if ( filterDataForUser ) {
-            try {
-                /*
-                 * This could be sped up by making value object methods, but because these are not so many, this should
-                 * be acceptable.
-                 */
-                List<ExpressionExperiment> ees = showPublic ?
-                        new ArrayList<ExpressionExperiment>(
-                                expressionExperimentService.loadUserOwnedExpressionExperiments() ) :
-                        new ArrayList<ExpressionExperiment>(
-                                expressionExperimentService.loadMySharedExpressionExperiments() );
-
-                Collection<Long> ownedOrShared = EntityUtils.getIds( ees );
-
-                valueobjects = loadInitialSetOfValueObjects( ownedOrShared, taxon, descending );
-            } catch ( AccessDeniedException e ) {
-                return new ArrayList<ExpressionExperimentValueObject>();
-            }
-        } else {
-            valueobjects = loadInitialSetOfValueObjects( eeIds, taxon, descending );
-        }
-
+        List<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+                .loadDetailsValueObjects( null, false, eeIds, taxon, limit, 0 );
         // Hide public data sets if desired.
-        if ( !valueobjects.isEmpty() && !showPublic ) {
-            Collection<ExpressionExperimentValueObject> publicEEs = securityService.choosePublic( valueobjects );
-            valueobjects.removeAll( publicEEs );
+        if ( !vos.isEmpty() && !showPublic ) {
+            Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
+            vos.removeAll( publicEEs );
         }
 
-        // Finally, trim the list.
-        if ( limit != null ) {
-            valueobjects = getSubList( Math.abs( limit ), valueobjects );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( valueobjects.size() + " EEs in " + timer.getTime() + "ms" );
-        }
-
-        return valueobjects;
-    }
-
-    /**
-     * Updates the value objects with event information and summaries
-     *
-     * @return most recently changed information: Map of EE ID to date of last update (or create)
-     */
-    private Map<Long, Date> getReportData( Collection<ExpressionExperimentValueObject> expressionExperiments ) {
-
-        Map<Long, Date> lastUpdated = expressionExperimentReportService.getReportInformation( expressionExperiments );
-
-        expressionExperimentReportService.getAnnotationInformation( expressionExperiments );
-
-        Map<Long, Date> eventDates = expressionExperimentReportService.getEventInformation( expressionExperiments );
-
-        for ( Long k : eventDates.keySet() ) {
-            if ( lastUpdated.containsKey( k ) ) {
-                if ( lastUpdated.get( k ).after( eventDates.get( k ) ) ) {
-                    eventDates.put( k, lastUpdated.get( k ) );
-                }
-            }
-        }
-        return eventDates;
+        return vos;
     }
 
     private List<ExpressionExperimentValueObject> getSubList( Integer limit,
@@ -1679,48 +1567,12 @@ public class ExpressionExperimentController {
     }
 
     private List<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
-            List<Long> ids, Taxon taxon, boolean admin ) {
+            List<Long> ids, Taxon taxon ) {
         String o = batch.getSort();
         boolean desc = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
         int limit = batch.getLimit();
         int start = batch.getStart();
-        return expressionExperimentService.loadDetailsValueObjects( o, desc, ids, taxon, admin, limit, start );
-    }
-
-    /**
-     * This is security filtered.
-     *
-     * @param descending - if eeIds != null, descending param is ignored and will follow the order of eeIds
-     */
-    private List<ExpressionExperimentValueObject> loadInitialSetOfValueObjects( Collection<Long> eeIds, Taxon taxon,
-            boolean descending ) {
-        List<ExpressionExperimentValueObject> initialListOfValueObject;
-        if ( eeIds != null && !eeIds.isEmpty() ) {
-
-            // only for selected IDs
-            initialListOfValueObject = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
-                    .loadValueObjects( eeIds, true );
-            if ( taxon != null ) {
-                // AND filter for taxon
-                for ( Iterator<ExpressionExperimentValueObject> it = initialListOfValueObject.iterator(); it
-                        .hasNext(); ) {
-                    ExpressionExperimentValueObject evo = it.next();
-                    if ( !evo.getTaxonId().equals( taxon.getId() ) ) {
-                        it.remove();
-                    }
-                }
-            }
-
-        } else if ( taxon != null ) {
-            // everything for taxon
-            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjectsTaxonOrdered( "lastUpdated", descending, taxon ) );
-        } else {
-            // everything
-            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjectsOrdered( "lastUpdated", descending ) );
-        }
-        return initialListOfValueObject;
+        return expressionExperimentService.loadDetailsValueObjects( o, desc, ids, taxon, limit, start );
     }
 
     /**
@@ -1730,11 +1582,11 @@ public class ExpressionExperimentController {
      * @param shouldBeTroubled set to true if the filter should keep the EEVOs that are troubled, or false to keep only
      *                         the not-troubled ones.
      */
-    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> eevos,
+    private <T extends ExpressionExperimentValueObject> List<T> returnTroubled( Collection<T> eevos,
             boolean shouldBeTroubled ) {
-        List<ExpressionExperimentValueObject> filtered = new ArrayList<ExpressionExperimentValueObject>();
+        List<T> filtered = new ArrayList<>();
 
-        for ( ExpressionExperimentValueObject eevo : eevos ) {
+        for ( T eevo : eevos ) {
             if ( eevo.getTroubled() == shouldBeTroubled ) {
                 filtered.add( eevo );
             }
@@ -1746,11 +1598,11 @@ public class ExpressionExperimentController {
     /**
      * Read the needs attention flag in each ExpressionExperimentValueObject and return only those object for which it is true
      */
-    private List<ExpressionExperimentValueObject> returnNeedsAttention(
-            Collection<ExpressionExperimentValueObject> ees ) {
-        List<ExpressionExperimentValueObject> troubled = new ArrayList<ExpressionExperimentValueObject>();
+    private List<ExpressionExperimentDetailsValueObject> returnNeedsAttention(
+            Collection<ExpressionExperimentDetailsValueObject> ees ) {
+        List<ExpressionExperimentDetailsValueObject> troubled = new ArrayList<>();
 
-        for ( ExpressionExperimentValueObject eevo : ees ) {
+        for ( ExpressionExperimentDetailsValueObject eevo : ees ) {
             if ( eevo.getNeedsAttention() ) {
                 troubled.add( eevo );
             }
@@ -1760,8 +1612,8 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Update the file used for the sample correlation heatmaps FIXME make this a background task, use the
-     * ProcessedExpressionDataVectorCreateTask
+     * Update the file used for the sample correlation heatmaps
+     * FIXME make this a background task, use the ProcessedExpressionDataVectorCreateTask
      */
     private void updateCorrelationMatrixFile( Long id ) {
         ExpressionExperiment expressionExperiment;
@@ -1856,7 +1708,7 @@ public class ExpressionExperimentController {
 
                 // search for pubmedId
                 PubMedSearch pms = new PubMedSearch();
-                Collection<String> searchTerms = new ArrayList<String>();
+                Collection<String> searchTerms = new ArrayList<>();
                 searchTerms.add( pubmedId );
                 Collection<BibliographicReference> publications;
                 try {

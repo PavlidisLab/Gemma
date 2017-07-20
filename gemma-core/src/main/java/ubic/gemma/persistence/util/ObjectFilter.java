@@ -12,6 +12,7 @@ public class ObjectFilter {
 
     public static String EEDAO_EE_ALIAS = "ee";
     public static String EEDAO_AD_ALIAS = "AD";
+    public static String EEDAO_TAXON_ALIAS = "taxon";
 
     public static String is = "=";
     public static String isNot = "!=";

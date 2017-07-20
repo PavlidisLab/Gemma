@@ -869,24 +869,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
-        return loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
-        return loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments() {
-        return loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
             boolean maintainOrder ) {
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
@@ -902,7 +884,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
+            List<Long> ids, Taxon taxon, int limit, int start ) {
         return this.expressionExperimentDao
                 .loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
