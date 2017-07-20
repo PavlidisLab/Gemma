@@ -36,9 +36,9 @@ public class ObjectFilter {
      * @param operator      the operator that will be used to compare the value of the object. The requiredValue will
      *                      be the right operand of the given operator.
      *                      Demonstration in pseudo-code: if( object.value lessThan requiredValue) return object.
-     *                      The {@link ObjectFilter#in} operator means that the given requiredValue is an
-     *                      <i>Iterable</i> object, and the checked property has to be equal to at least one of the
-     *                      values contained within that <i>Iterable</i> object.
+     *                      The {@link ObjectFilter#in} operator means that the given requiredValue is expected to be a
+     *                      {@link java.util.Collection}, and the checked property has to be equal to at least one of the
+     *                      values contained within that <i>List</i>.
      * @param objectAlias   The alias of the object in the query. See the DAO for the filtered object to see what
      *                      the alias in the query is. E.g for {@link ubic.gemma.model.expression.experiment.ExpressionExperiment}
      *                      the alias is 'ee', as seen in
@@ -56,8 +56,7 @@ public class ObjectFilter {
                 operator.equals( greaterThan ) || // gt
                         operator.equals( lessThan ) ) // lt
         ) || ( operator.equals( in ) &&  // Check 'in' conditions
-                !( requiredValue == null || requiredValue.getClass().isArray() || requiredValue instanceof Collection<?>
-                        || requiredValue instanceof Map<?, ?> ) ) // Check value is iterable
+                ( requiredValue == null || !(requiredValue instanceof Collection<?>)) ) // Check value is iterable
                 ) {
             throw new IllegalArgumentException(
                     "requiredValue for operator " + operator + " has to be an Iterable Object" );

@@ -359,21 +359,16 @@ public class ExpressionExperimentDaoImpl
         String orderByClause = this.getOrderByProperty( orderBy );
 
         ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
-        filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS );
+        if ( ids != null ) {
+            Collections.sort( ids );
+            filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS );
+        }
         if ( taxon != null ) {
             filters[1] = new ObjectFilter( "taxon", taxon, ObjectFilter.is, null );
         }
 
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filters, false, orderByClause, descending );
-
-        if ( ids != null ) {
-            Collections.sort( ids );
-            query.setParameterList( "ids", ids );
-        }
-        if ( taxon != null ) {
-            query.setParameter( "taxon", taxon );
-        }
 
         query.setCacheable( true );
         System.out.println( start + "/" + limit );
@@ -619,12 +614,10 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
-        ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
+        ObjectFilter[] filter = new ObjectFilter[] { new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
                 new ObjectFilter( "taxon.parentTaxon", taxon, ObjectFilter.is, null ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, true, null, false );
-        queryObject.setParameter( "taxon", taxon );
 
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
@@ -643,7 +636,6 @@ public class ExpressionExperimentDaoImpl
                 new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, false, orderByClause, descending );
-        queryObject.setParameterList( "ids", ids );
 
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
@@ -656,12 +648,10 @@ public class ExpressionExperimentDaoImpl
             Taxon taxon ) {
         String orderByClause = this.getOrderByProperty( orderField );
 
-        final ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
+        final ObjectFilter[] filter = new ObjectFilter[] { new ObjectFilter( "taxon", taxon, ObjectFilter.is, null ),
                 new ObjectFilter( "taxon.parentTaxon", taxon, ObjectFilter.is, null ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, true, orderByClause, descending );
-        queryObject.setParameter( "t", taxon );
 
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
@@ -702,15 +692,14 @@ public class ExpressionExperimentDaoImpl
             return new HashSet<>();
         }
 
-        ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS ) };
-
-        Query queryObject = getLoadValueObjectsQueryString( filter, false, null, false );
-
         List<Long> idl = new ArrayList<>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
 
-        queryObject.setParameterList( "ids", idl );
+        ObjectFilter[] filter = new ObjectFilter[] {
+                new ObjectFilter( "id", idl, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS ) };
+
+        Query queryObject = getLoadValueObjectsQueryString( filter, false, null, false );
+
         queryObject.setCacheable( true );
         List list = queryObject.list();
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list,
@@ -1533,7 +1522,7 @@ public class ExpressionExperimentDaoImpl
                 orderByField = "s.needsAttention";
                 break;
             default:
-                orderByField = ObjectFilter.EEDAO_EE_ALIAS+"." + orderBy;
+                orderByField = ObjectFilter.EEDAO_EE_ALIAS + "." + orderBy;
                 break;
         }
         return orderByField;
@@ -1781,12 +1770,10 @@ public class ExpressionExperimentDaoImpl
             }
 
             // Both restrictions have to be met (AND) therefore they have to be added as separate arrays.
-            filters.add( new ObjectFilter[] {
-                    new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                            ObjectFilter.EEDAO_EE_ALIAS ) } );
-            filters.add( new ObjectFilter[] {
-                    new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                            ObjectFilter.EEDAO_AD_ALIAS ) } );
+            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                    ObjectFilter.EEDAO_EE_ALIAS ) } );
+            filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
+                    ObjectFilter.EEDAO_AD_ALIAS ) } );
         }
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
@@ -1808,19 +1795,22 @@ public class ExpressionExperimentDaoImpl
                 + "s.needsAttention, " // 15
                 + "s.curationNote, "  // 16
                 + "count(distinct BA), " // 17
-                + "count(distinct "+ ObjectFilter.EEDAO_AD_ALIAS + "), " // 18
+                + "count(distinct " + ObjectFilter.EEDAO_AD_ALIAS + "), " // 18
                 + "count(distinct SU), " // 19
                 + "EDES.id,  " // 20
                 + "ptax.id, " // 21
                 + "aoi, " // 22
                 + "sid " // 23
-                + "from ExpressionExperiment as " + ObjectFilter.EEDAO_EE_ALIAS + " inner join " + ObjectFilter.EEDAO_EE_ALIAS + ".bioAssays as BA  "
-                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "+ ObjectFilter.EEDAO_AD_ALIAS + " "
+                + "from ExpressionExperiment as " + ObjectFilter.EEDAO_EE_ALIAS + " inner join "
+                + ObjectFilter.EEDAO_EE_ALIAS + ".bioAssays as BA  "
+                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as " + ObjectFilter.EEDAO_AD_ALIAS + " "
                 + "left join SU.sourceTaxon as taxon left join " + ObjectFilter.EEDAO_EE_ALIAS + ".accession acc "
-                + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax "
-                + "inner join " + ObjectFilter.EEDAO_EE_ALIAS + ".experimentalDesign as EDES join " + ObjectFilter.EEDAO_EE_ALIAS + ".curationDetails as s "
+                + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax " + "inner join "
+                + ObjectFilter.EEDAO_EE_ALIAS + ".experimentalDesign as EDES join " + ObjectFilter.EEDAO_EE_ALIAS
+                + ".curationDetails as s "
                 + ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
-                + "where aoi.identifier = " + ObjectFilter.EEDAO_EE_ALIAS + ".id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
+                + "where aoi.identifier = " + ObjectFilter.EEDAO_EE_ALIAS
+                + ".id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
 
         queryString += this.formRestrictionClause( filters );
 
@@ -1856,7 +1846,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         if ( log.isDebugEnabled() ) {
-            System.out.println("EEVO query: ");
+            System.out.println( "EEVO query: " );
             System.out.println( queryString );
         }
 
@@ -1871,12 +1861,19 @@ public class ExpressionExperimentDaoImpl
         return query;
     }
 
-    private void addRestrictionParameters(Query query, ArrayList<ObjectFilter[]> filters){
-        for ( ObjectFilter[] filterArray : filters ){
-            if(filterArray == null || filterArray.length < 1) continue;
-            for ( ObjectFilter filter : filterArray ){
-                if(filter == null) continue;
-                query.setParameter( filter.getPropertyName().replace( ".", "" ), filter.getRequiredValue() );
+    private void addRestrictionParameters( Query query, ArrayList<ObjectFilter[]> filters ) {
+        for ( ObjectFilter[] filterArray : filters ) {
+            if ( filterArray == null || filterArray.length < 1 )
+                continue;
+            for ( ObjectFilter filter : filterArray ) {
+                if ( filter == null )
+                    continue;
+                if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
+                    query.setParameterList( filter.getPropertyName().replace( ".", "" ),
+                            ( Collection ) filter.getRequiredValue() );
+                } else {
+                    query.setParameter( filter.getPropertyName().replace( ".", "" ), filter.getRequiredValue() );
+                }
             }
         }
     }
@@ -1889,21 +1886,24 @@ public class ExpressionExperimentDaoImpl
             if ( filterArray.length == 0 )
                 continue;
 
-            StringBuilder disjunction = new StringBuilder(  );
+            StringBuilder disjunction = new StringBuilder();
             boolean first = true;
             for ( ObjectFilter filter : filterArray ) {
                 if ( filter == null )
                     continue;
                 if ( !first )
                     disjunction.append( "or " );
-                if ( filter.getObjectAlias() != null )
+                if ( filter.getObjectAlias() != null ) {
                     disjunction.append( filter.getObjectAlias() ).append( "." );
-                disjunction.append( filter.getPropertyName() ).append( " " ).append( filter.getOperator() )
-                        .append( " :" ).append( filter.getPropertyName().replace( ".", "" ) );
-                first = false;
-            }
-            String disjunctionString = disjunction.toString();
-            if(!disjunctionString.isEmpty()) {
+                    disjunction.append( filter.getPropertyName() ).append( " " ).append( filter.getOperator() ) ;
+                    if (filter.getOperator().equals( ObjectFilter.in ) ) {
+                        disjunction.append( "( :" ).append( filter.getPropertyName().replace( ".", "" ) ).append( " ) " );
+                    } else {
+                        disjunction.append( " :" ).append( filter.getPropertyName().replace( ".", "" ) );
+                    }
+                } first = false;
+            } String disjunctionString = disjunction.toString();
+            if ( !disjunctionString.isEmpty() ) {
                 conjunction.append( "and ( " ).append( disjunctionString ).append( " ) " );
             }
         }

@@ -16,7 +16,6 @@ package ubic.gemma.web.services.rest;
 
 import com.sun.jersey.api.NotFoundException;
 import org.hibernate.QueryException;
-import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.description.Characteristic;
