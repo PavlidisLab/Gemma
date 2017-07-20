@@ -11,7 +11,7 @@ public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {
         this.value = s;
-        this.nullCause = "The identifier was recognised to be a short name, but platform with this short name does not exist.";
+        this.nullCause = "The identifier was recognised to be a short name, but platform with this short name does not exist or is not accessible.";
     }
 
     /**

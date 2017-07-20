@@ -3,6 +3,7 @@ package ubic.gemma.web.services.rest.util;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.web.services.rest.util.args.MutableArg;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -20,11 +21,10 @@ import javax.ws.rs.core.UriInfo;
  */
 public abstract class WebService {
 
-    static final String API_VERSION = "2.0";
     protected static final String ERR_MSG_UNMAPPED_PATH = "This URL is not mapped to any API call.";
     protected static final Log log = LogFactory.getLog( WebService.class.getName() );
-
-    protected static String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist";
+    static final String API_VERSION = "2.0";
+    private static String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
 
     @GET
     @Path("/{default: .*}")
@@ -75,8 +75,7 @@ public abstract class WebService {
         if ( response == null ) {
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
                     ERROR_MSG_ENTITY_NOT_FOUND );
-            WellComposedErrorBody
-                    .addExceptionFields( error, new IllegalArgumentException( mutableArg.getNullCause() ) );
+            WellComposedErrorBody.addExceptionFields( error, new EntityNotFoundException( mutableArg.getNullCause() ) );
             response = error;
         }
         return Responder.autoCode( response, sr );

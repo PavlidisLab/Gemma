@@ -6,7 +6,7 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  * Created by tesarst on 25/05/17.
  * Class representing an API argument that should be an integer.
  */
-public class SortArg extends PrimitiveArg {
+public class SortArg extends MalformableArg {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
                     + "Make sure you URL encode the arguments, for example '+' has to be encoded to '%%2B'.";
@@ -61,9 +61,6 @@ public class SortArg extends PrimitiveArg {
         }
         return null;
     }
-
-
-
 
     /**
      * @return the field to sort by. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.

@@ -14,7 +14,7 @@ public class PlatformIdArg extends PlatformArg<Long> {
      */
     PlatformIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but dataset with this ID does not exist.";
+        this.nullCause = "The identifier was recognised to be an ID, but dataset with this ID does not exist or is not accessible.";
     }
 
     @Override

@@ -14,7 +14,6 @@
  */
 package ubic.gemma.web.services.rest;
 
-import com.google.common.io.Files;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +29,7 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.SortArg;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -100,7 +100,7 @@ public class PlatformsWebService extends WebService {
         } catch ( QueryException e ) {
             WellComposedErrorBody error = new WellComposedErrorBody( Status.BAD_REQUEST, ERROR_MSG_PROP_NOT_FOUND );
             WellComposedErrorBody.addExceptionFields( error,
-                    new IllegalArgumentException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
+                    new EntityNotFoundException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
             return Responder.code( error.getStatus(), error, sr );
         }
     }
@@ -160,7 +160,8 @@ public class PlatformsWebService extends WebService {
     ) {
         //FIXME currently not filtering out troubled
         ArrayDesign arrayDesign = platformArg.getPersistentObject( arrayDesignService );
-        if (arrayDesign == null) return this.autoCodeResponse( platformArg, null, sr );
+        if ( arrayDesign == null )
+            return this.autoCodeResponse( platformArg, null, sr );
         return outputAnnotationFile( arrayDesign, sr );
     }
 
@@ -176,10 +177,10 @@ public class PlatformsWebService extends WebService {
         }
 
         try (FileInputStream inputStream = new FileInputStream( file )) {
-            InputStream fileStream = new FileInputStream(file);
-            InputStream gzipStream = new GZIPInputStream(fileStream);
-            Reader decoder = new InputStreamReader(gzipStream, "UTF-8");
-            BufferedReader buffered = new BufferedReader(decoder);
+            InputStream fileStream = new FileInputStream( file );
+            InputStream gzipStream = new GZIPInputStream( fileStream );
+            Reader decoder = new InputStreamReader( gzipStream, "UTF-8" );
+            BufferedReader buffered = new BufferedReader( decoder );
             String content = IOUtils.toString( buffered );
             return Responder.autoCode( content, sr );
         } catch ( IOException e ) {

@@ -689,7 +689,7 @@ public class SecurityControllerImpl implements SecurityController {
      * @return
      */
     private Collection<Securable> getUsersExperiments( boolean privateOnly ) {
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMySharedExpressionExperiments();
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadAll();
 
         Collection<Securable> secs = new HashSet<Securable>();
 
@@ -700,8 +700,7 @@ public class SecurityControllerImpl implements SecurityController {
                 // okay, they just aren't allowed to see those.
             }
         } else {
-            Collection<ExpressionExperiment> usersEEs = expressionExperimentService
-                    .loadUserOwnedExpressionExperiments();
+            Collection<ExpressionExperiment> usersEEs = expressionExperimentService.loadAll();
             secs.addAll( ees );
             secs.addAll( usersEEs );
         }

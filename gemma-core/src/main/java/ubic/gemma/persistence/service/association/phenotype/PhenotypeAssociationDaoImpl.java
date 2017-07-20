@@ -268,7 +268,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( sqlQuery.contains( ":taxonId" ) ) {
             queryObject.setParameter( "taxonId", taxon.getId() );
         }
-        addUserAndGroupParameters( sqlQuery, queryObject );
+        EntityUtils.addUserAndGroupParameters( queryObject, this.getSessionFactory() );
 
         return populateGenesWithPhenotypes( queryObject );
 
@@ -436,7 +436,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             queryObject.setParameter( "taxonId", taxonId );
         }
 
-        addUserAndGroupParameters( sqlQuery, queryObject );
+        EntityUtils.addUserAndGroupParameters( queryObject, this.getSessionFactory() );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
@@ -493,7 +493,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             queryObject.setParameter( "taxonId", taxon.getId() );
         }
 
-        addUserAndGroupParameters( sqlQuery, queryObject );
+        EntityUtils.addUserAndGroupParameters( queryObject, this.getSessionFactory() );
         return populateGenesAssociations( queryObject );
 
     }
@@ -541,7 +541,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             queryObject.setParameter( "taxonId", taxon.getId() );
         }
 
-        addUserAndGroupParameters( sqlQuery, queryObject );
+        EntityUtils.addUserAndGroupParameters( queryObject, this.getSessionFactory() );
         return populateGenesAssociations( queryObject );
 
     }
@@ -903,28 +903,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
 
         return genesWithPhenotypes.values();
-    }
-
-    private void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
-        if ( SecurityUtil.isUserAnonymous() ) {
-            return;
-        }
-
-        String userName = SecurityUtil.getCurrentUsername();
-
-        // if user is member of any groups.
-        if ( sqlQuery.contains( ":groups" ) ) {
-            //noinspection unchecked
-            Collection<String> groups = this.getSessionFactory().getCurrentSession().createQuery(
-                    "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
-                    .setParameter( "user", userName ).list();
-            queryObject.setParameterList( "groups", groups );
-        }
-
-        if ( sqlQuery.contains( ":userName" ) ) {
-            queryObject.setParameter( "userName", userName );
-        }
-
     }
 
 }

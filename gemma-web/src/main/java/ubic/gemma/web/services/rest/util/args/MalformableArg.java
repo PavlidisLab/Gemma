@@ -9,13 +9,13 @@ import javax.ws.rs.core.Response;
  * Created by tesarst on 26/05/17.
  * Base class for non Object-specific functionality argument types.
  */
-abstract class PrimitiveArg {
+abstract class MalformableArg {
 
     private String errorMessage = "";
     private boolean malComposed;
     private Exception exception;
 
-    PrimitiveArg() {
+    MalformableArg() {
         this.malComposed = false;
     }
 
@@ -25,13 +25,11 @@ abstract class PrimitiveArg {
      * @param errorMessage the error message to be displayed to the client.
      * @param exception    the exception that the client should be informed about.
      */
-    PrimitiveArg( String errorMessage, Exception exception ) {
+    MalformableArg( String errorMessage, Exception exception ) {
         this.malComposed = true;
         this.exception = exception;
         this.errorMessage = errorMessage;
     }
-
-
 
     /**
      * Checks whether the instance of this object was created as a malformed argument, and if true, throws an
@@ -39,10 +37,9 @@ abstract class PrimitiveArg {
      */
     void checkMalformed() {
         if ( this.malComposed ) {
-            Response.Status code = Response.Status.BAD_REQUEST;
-            WellComposedErrorBody body = new WellComposedErrorBody( code, errorMessage );
+            WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );
             WellComposedErrorBody.addExceptionFields( body, this.exception );
-            throw new GemmaApiException( body, code );
+            throw new GemmaApiException( body);
         }
     }
 

@@ -48,8 +48,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String source;
     private CurationDetails curationDetails;
 
-
-
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     @Override
     public boolean equals( Object object ) {

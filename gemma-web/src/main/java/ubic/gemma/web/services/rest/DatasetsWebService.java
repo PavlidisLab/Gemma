@@ -32,15 +32,20 @@ import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.DatasetArg;
+import ubic.gemma.web.services.rest.util.args.ExpressionExperimentFilterArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.SortArg;
+import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * RESTful interface for datasets.
@@ -78,13 +83,47 @@ public class DatasetsWebService extends WebService {
     /**
      * Lists all datasets available in gemma.
      *
-     * @param accession optional parameter, filtering the results by accession - provide the accession gsm id.
-     * @param offset    optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
-     * @param limit     optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
-     * @param sort      optional parameter (defaults to +id) sets the ordering property and direction. Format is [+,-][property name].
-     *                  E.g. -accession will convert to descending ordering by the Accession property. Note that this will not necessarily
-     *                  sort the objects in the response, but rather tells the SQL query how to order the table before cropping it as
-     *                  specified in the offset and limit.
+     * @param filter optional parameter (defaults to empty string) filters the result by given properties.
+     *               <br/>
+     *               <p>
+     *               Filtering can be done on any property or nested property that the ExpressionExperiment class has (
+     *               and is mapped by hibernate ). E.g: 'curationDetails' or 'curationDetails.lastTroubledEvent.date'
+     *               </p><p>
+     *               Accepted operator keywords are:
+     *               <ul>
+     *               <li> '=' - equality</li>
+     *               <li> '!=' - non-equality</li>
+     *               <li> '<' - smaller than</li>
+     *               <li> '>' - larger than</li>
+     *               <li> '<=' - smaller or equal</li>
+     *               <li> '=>' - larger or equal</li>
+     *               <li> 'like' - similar string, effectively means 'contains', translates to the sql 'LIKE' operator (given value will be surrounded by % signs)</li>
+     *               </ul>
+     *               Multiple filters can be chained using 'AND' or 'OR' keywords.<br/>
+     *               Leave space between the keywords and the previous/next word! <br/>
+     *               E.g: <code>?filter=property1 < value1 AND property2 ~ value2</code>
+     *               </p><p>
+     *               If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal
+     *               form (CNF). Parentheses are not necessary - every AND keyword separates blocks of disjunctions.
+     *               </p><p>
+     *               Example:<br/>
+     *               <code>?filter=p1 = v1 OR p1 != v2 AND p2 <= v2 AND p3 > v3 OR p3 < v4</code><br/>
+     *               Above query will translate to: <br/>
+     *               <code>(p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4;)</code>
+     *               </p><p>
+     *               Breaking the CNF results in an error.
+     *               </p>
+     *               <p>
+     *               Filter "curationDetails.troubled" will be ignored if user is not an administrator.
+     *               </p>
+     *               <br/>
+     * @param offset <p>optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.</p>
+     * @param limit  <p>optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.</p>
+     * @param sort   <p>optional parameter (defaults to +id) sets the ordering property and direction.<br/>
+     *               Format is [+,-][property name]. E.g. "-accession" will translate to descending ordering by the
+     *               Accession property.<br/>
+     *               Note that this does not guarantee the order of the returned entities.<br/>
+     *               Nested properties are also supported (recursively). E.g. "+curationDetails.lastTroubledEvent.date".<br/></p>
      * @return all datasets in the database, skipping the first [{@code offset}] of datasets, and limiting the amount in the result to
      * the value of the {@code limit} parameter. If the {@code accessionGsmId} parameter is non-null, will limit the result to datasets
      * with specified accession. Note that if the accession GSM id is not valid or no datasets with it are found, a 404 response will be
@@ -94,22 +133,27 @@ public class DatasetsWebService extends WebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject all( // Params:
-            @QueryParam("accession") String accession, // Optional, default null
+            @QueryParam("filter") @DefaultValue("") ExpressionExperimentFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         try {
-            //FIXME currently not filtering out troubled
             return Responder.autoCode( expressionExperimentService
-                            .loadValueObjectsFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ),
-                    sr );
+                    .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
+                            filter.getObjectFilters() ), sr );
         } catch ( QueryException e ) {
+
+            if ( log.isDebugEnabled() ) {
+                e.printStackTrace();
+            }
+
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                     ERROR_MSG_PROP_NOT_FOUND );
             WellComposedErrorBody.addExceptionFields( error,
-                    new IllegalArgumentException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
+                    new EntityNotFoundException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
+
             return Responder.code( error.getStatus(), error, sr );
         }
     }
@@ -128,7 +172,6 @@ public class DatasetsWebService extends WebService {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        //FIXME currently not filtering out troubled
         Object response = datasetArg.getValueObject( expressionExperimentService );
         return this.autoCodeResponse( datasetArg, response, sr );
     }
@@ -147,7 +190,6 @@ public class DatasetsWebService extends WebService {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        //FIXME currently not filtering out troubled
         Object response = datasetArg.getPlatforms( expressionExperimentService, arrayDesignService );
         return this.autoCodeResponse( datasetArg, response, sr );
     }

@@ -13,13 +13,13 @@ public class GemmaApiException extends RuntimeException implements Serializable 
     private ResponseErrorObject errorObject;
 
     public GemmaApiException( Response.Status code ) {
-        this( null, code );
+        this.code = code;
     }
 
-    public GemmaApiException( WellComposedErrorBody body, Response.Status code ) {
+    public GemmaApiException( WellComposedErrorBody body) {
         super( body.getMessage() );
         this.errorObject = new ResponseErrorObject( body );
-        this.code = code;
+        this.code = body.getStatus();
     }
 
     public ResponseErrorObject getErrorObject() {

@@ -12,7 +12,7 @@ public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     DatabaseEntryStringArg( String s ) {
         this.value = s;
-        this.nullCause = "The identifier was recognised to be an accession ID, but database entry with this accession does not exist.";
+        this.nullCause = "The identifier was recognised to be an accession ID, but database entry with this accession does not exist or is not accessible.";
     }
 
     @Override
