@@ -53,8 +53,8 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testLoadStatusSummariesLimit() {
-        ArrayList<Long> ids = new ArrayList<Long>();
-        int limit = -1;
+        ArrayList<Long> ids = new ArrayList<>();
+        int limit;
         for ( int i = 0; i < 2; i++ ) {
             Long eeId = this.getTestPersistentCompleteExpressionExperiment( false ).getId();
             ids.add( eeId );
