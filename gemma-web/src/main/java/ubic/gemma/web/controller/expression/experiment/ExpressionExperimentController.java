@@ -839,7 +839,7 @@ public class ExpressionExperimentController {
             return new HashSet<>();
         }
 
-        return getFilteredExpressionExperimentValueObjects( null, ids, -1, true );
+        return getFilteredExpressionExperimentValueObjects( null, ids, -1, true, false );
     }
 
     /**
@@ -849,7 +849,7 @@ public class ExpressionExperimentController {
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
         return getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils
-                .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), -1, true );
+                .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), -1, true, false );
     }
 
     /**
@@ -864,7 +864,7 @@ public class ExpressionExperimentController {
             return new HashSet<>();
         }
         Collection<ExpressionExperimentDetailsValueObject> result = getFilteredExpressionExperimentValueObjects( null,
-                null, 0, true );
+                null, 0, true, false );
         this.expressionExperimentReportService.getReportInformation( result );
         return result;
     }
@@ -941,9 +941,6 @@ public class ExpressionExperimentController {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        // limit = 10;
-        // default limit to 50, should always be set on front end but it case it wasn't this
-        // will keep from loading a ridiculous number of experiments
         if ( limit == null )
             limit = 50;
         vos = getEEVOsForManager( taxonId, ids, limit, filter, showPublic );
@@ -1467,8 +1464,11 @@ public class ExpressionExperimentController {
     private Collection<ExpressionExperimentDetailsValueObject> getEEVOsForManager( Long taxonId, List<Long> ids,
             Integer limit, Integer filter, boolean showPublic ) {
         List<ExpressionExperimentDetailsValueObject> eeVos;
+
+        // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
         eeVos = this
-                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, limit, showPublic );
+                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, Math
+                        .abs(limit), showPublic, limit > 0 );
 
         if ( filter != null && filter > 0 ) {
             eeVos = applyFilter( eeVos, filter );
@@ -1544,10 +1544,10 @@ public class ExpressionExperimentController {
      * @return Collection<ExpressionExperimentValueObject>
      */
     private List<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            List<Long> eeIds, Integer limit, boolean showPublic ) {
+            List<Long> eeIds, Integer limit, boolean showPublic, boolean descending ) {
 
         List<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( null, false, eeIds, taxon, limit, 0 );
+                .loadDetailsValueObjects( "curationDetails.lastUpdated", descending, eeIds, taxon, limit, 0 );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
