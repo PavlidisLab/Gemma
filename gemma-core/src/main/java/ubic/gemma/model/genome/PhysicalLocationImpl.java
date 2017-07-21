@@ -17,6 +17,7 @@ package ubic.gemma.model.genome;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
 /**
+ * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.genome.PhysicalLocation
@@ -178,50 +179,6 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
         if ( this.getNucleotideLength() != null ) hashCode += this.getNucleotideLength().hashCode();
 
         return hashCode;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalLocation#nearlyEquals(Object)
-     * @deprecated
-     */
-    @Override
-    @Deprecated
-    public boolean nearlyEquals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof PhysicalLocation ) ) {
-            return false;
-        }
-        final PhysicalLocation that = ( PhysicalLocation ) object;
-
-        // if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
-        if ( !this.getChromosome().equals( that.getChromosome() ) ) return false;
-
-        if ( this.getStrand() != null && that.getStrand() != null && !this.getStrand().equals( that.getStrand() ) ) {
-            return false;
-        }
-
-        if ( this.getNucleotide() != null && that.getNucleotide() != null && this.getNucleotideLength() != null
-                && that.getNucleotideLength() != null ) {
-            long starta = this.getNucleotide();
-            long enda = starta + this.getNucleotideLength();
-            long startb = that.getNucleotide();
-            long endb = startb + that.getNucleotideLength();
-
-            int overlap = computeOverlap( starta, enda, startb, endb );
-
-            if ( overlap == 0 ) {
-                return false;
-            }
-        }
-
-        if ( this.getNucleotide() != null && that.getNucleotide() != null
-                && Math.abs( this.getNucleotide() - that.getNucleotide() ) > 1000L ) return false;
-
-        return true;
-        // }
-        // return true;
     }
 
     @Override

@@ -30,12 +30,26 @@ public abstract class QuantitationType extends Describable {
      */
     private static final long serialVersionUID = -9139594736279728431L;
     private GeneralType generalType;
+
     private Boolean isBackground;
+
     private Boolean isBackgroundSubtracted;
+
     private Boolean isBatchCorrected = false;
+
+    /*
+     * FIXME this is useless because
+     * the process data is always masked?
+     */
     private Boolean isMaskedPreferred;
 
+    /*
+     * FIXME this is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
+     * It might be wise to separate out "quantile normalied", but since we always quantile normalize ProcessedData, this
+     * isn't very useful.
+     */
     private Boolean isNormalized;
+
     private Boolean isPreferred;
     private Boolean isRatio;
     private Boolean isRecomputedFromRawData = false;
@@ -59,6 +73,11 @@ public abstract class QuantitationType extends Describable {
         this.generalType = generalType;
     }
 
+    /**
+     * True if this is just a background measurement.
+     * 
+     * @return
+     */
     public Boolean getIsBackground() {
         return this.isBackground;
     }
@@ -67,6 +86,12 @@ public abstract class QuantitationType extends Describable {
         this.isBackground = isBackground;
     }
 
+    /**
+     * True if this is explictly background-subtracted by Gemma (if it was background-subtracted before the data got to
+     * us, we might not know)
+     * 
+     * @return
+     */
     public Boolean getIsBackgroundSubtracted() {
         return this.isBackgroundSubtracted;
     }
@@ -84,9 +109,9 @@ public abstract class QuantitationType extends Describable {
     }
 
     /**
-     * <p>
+     * 
      * If the data represented is a missing-value masked version of the preferred data.
-     * </p>
+     * 
      */
     public Boolean getIsMaskedPreferred() {
         return this.isMaskedPreferred;
@@ -113,10 +138,10 @@ public abstract class QuantitationType extends Describable {
     }
 
     /**
-     * <p>
+     * 
      * Indicates whether the quantitation type is expressed as a ratio (e.g., of expression to a reference or
      * pseudo-reference). This has a natural impact on the interpretation. If false, the value is "absolute".
-     * </p>
+     * 
      */
     public Boolean getIsRatio() {
         return this.isRatio;

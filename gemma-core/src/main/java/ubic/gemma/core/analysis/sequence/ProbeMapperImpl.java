@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,7 +43,7 @@ import ubic.gemma.persistence.util.ChromosomeUtil;
 /**
  * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
  * allows threshold etc. to be modified.
- * 
+ *
  * @author pavlidis
  * @version $Id$
  */
@@ -56,9 +56,10 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
-     * ubic.gemma.core.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
+     * ubic.gemma.core.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.core.externalDb.
+     * GoldenPathSequenceAnalysis,
      * java.util.Collection)
      */
     @Override
@@ -69,9 +70,10 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
-     * ubic.gemma.core.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
+     * ubic.gemma.core.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.core.externalDb.
+     * GoldenPathSequenceAnalysis,
      * java.util.Collection, ubic.gemma.core.analysis.sequence.ProbeMapperConfig)
      */
     @Override
@@ -243,8 +245,9 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processGbId(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
+     *
+     * @see
+     * ubic.gemma.core.analysis.sequence.ProbeMapper#processGbId(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
      * java.lang.String)
      */
     @Override
@@ -265,14 +268,15 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processGbIds(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
+     *
+     * @see
+     * ubic.gemma.core.analysis.sequence.ProbeMapper#processGbIds(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
      * java.util.Collection)
      */
     @Override
     public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPathSequenceAnalysis goldenPathDb,
             Collection<String[]> genbankIds ) {
-        Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
+        Map<String, Collection<BlatAssociation>> allRes = new HashMap<>();
         int count = 0;
         int skipped = 0;
         for ( String[] genbankIdAr : genbankIds ) {
@@ -301,8 +305,9 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processSequence(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
+     *
+     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processSequence(ubic.gemma.core.externalDb.
+     * GoldenPathSequenceAnalysis,
      * ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
@@ -323,8 +328,9 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processSequences(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
+     *
+     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processSequences(ubic.gemma.core.externalDb.
+     * GoldenPathSequenceAnalysis,
      * java.util.Collection, ubic.gemma.core.analysis.sequence.ProbeMapperConfig)
      */
     @Override
@@ -335,7 +341,7 @@ public class ProbeMapperImpl implements ProbeMapper {
 
         try {
             Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
-            Collection<BlatResult> blatres = new HashSet<BlatResult>();
+            Collection<BlatResult> blatres = new HashSet<>();
             for ( Collection<BlatResult> coll : results.values() ) {
                 blatres.addAll( coll );
             }
@@ -349,7 +355,7 @@ public class ProbeMapperImpl implements ProbeMapper {
     /**
      * It is assume that strand should only be used if the sequence type is AFFY_{PROBE,COLLAPSED,TARGET} or OLIGO. In
      * all other cases (ESTs etc) the strand is ignored.
-     * 
+     *
      * @param blatResult
      * @return boolean indicating, essentially, if the sequence on the array is double-stranded.
      */
@@ -376,7 +382,7 @@ public class ProbeMapperImpl implements ProbeMapper {
      * FIXME possibly implement checking the score, not just the exon overlap. As it stands, the scoring has already
      * done its work by removing redundant blat hits, and very weak hits are also already removed. I'm not convinced
      * more filtering on score is needed here.
-     * 
+     *
      * @see BlatAssociationScorer.scoreResults which does some of the filtering
      * @param blatAssociationsForSequence associations for one sequence.
      * @param config
@@ -403,7 +409,7 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /**
      * group results together by BioSequence
-     * 
+     *
      * @param blatResults
      * @return
      */
@@ -423,7 +429,7 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /**
      * Process a single BlatResult, identifying gene products it maps to.
-     * 
+     *
      * @param goldenPathDb
      * @param blatResult
      * @param config
@@ -449,7 +455,7 @@ public class ProbeMapperImpl implements ProbeMapper {
             return blatAssociations;
         }
 
-        return new HashSet<BlatAssociation>();
+        return new HashSet<>();
     }
 
     /**
@@ -459,7 +465,7 @@ public class ProbeMapperImpl implements ProbeMapper {
      * <li>If there are multiple hits, but all are to non-canonical chromosomes, keep them for now.
      * <li>Otherwise keep only the ones to canonical chromosomes.
      * </ol>
-     * 
+     *
      * @param blatResultsForSequence
      * @param config
      * @return trimmed results.

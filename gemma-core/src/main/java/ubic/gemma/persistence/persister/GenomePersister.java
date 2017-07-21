@@ -136,7 +136,8 @@ abstract public class GenomePersister extends CommonPersister {
                 if ( !found ) {
                     throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
                             + " has changed and the previous NCBI id on record with NCBI (" + newGeneInfo
-                            .getPreviousNcbiId() + ") doesn't match." );
+                                    .getPreviousNcbiId()
+                            + ") doesn't match." );
                 }
             }
 
@@ -180,10 +181,8 @@ abstract public class GenomePersister extends CommonPersister {
         existingGene.setOfficialName( newGeneInfo.getOfficialName() );
         existingGene.setOfficialSymbol( newGeneInfo.getOfficialSymbol() );
         existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
-        existingGene.setCytogeneticLocation( newGeneInfo.getCytogeneticLocation() );
 
         fillChromosomeLocationAssociations( existingGene.getPhysicalLocation(), existingGene.getTaxon() );
-        fillChromosomeLocationAssociations( existingGene.getCytogeneticLocation(), existingGene.getTaxon() );
 
         existingGene.getAliases().clear();
         existingGene.getAliases().addAll( newGeneInfo.getAliases() );
@@ -409,7 +408,6 @@ abstract public class GenomePersister extends CommonPersister {
         gene.setProducts( null );
         gene.setTaxon( persistTaxon( gene.getTaxon() ) );
         fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
-        fillChromosomeLocationAssociations( gene.getCytogeneticLocation(), gene.getTaxon() );
 
         if ( log.isInfoEnabled() )
             log.info( "New gene: " + gene );
@@ -687,11 +685,11 @@ abstract public class GenomePersister extends CommonPersister {
                             geneProduct.getGene().getTaxon() ) );
         }
 
-        if ( geneProduct.getExons() != null ) {
-            for ( PhysicalLocation exon : geneProduct.getExons() ) {
-                exon.setChromosome( persistChromosome( exon.getChromosome(), geneProduct.getGene().getTaxon() ) );
-            }
-        }
+        //        if ( geneProduct.getExons() != null ) {
+        //            for ( PhysicalLocation exon : geneProduct.getExons() ) {
+        //                exon.setChromosome( persistChromosome( exon.getChromosome(), geneProduct.getGene().getTaxon() ) );
+        //            }
+        //        }
 
         if ( geneProduct.getAccessions() != null ) {
             for ( DatabaseEntry de : geneProduct.getAccessions() ) {
@@ -961,12 +959,12 @@ abstract public class GenomePersister extends CommonPersister {
                             geneForExistingGeneProduct.getTaxon() ) );
         }
 
-        existingGeneProduct.setExons( updatedGeneProductInfo.getExons() );
-        if ( existingGeneProduct.getExons() != null ) {
-            for ( PhysicalLocation exon : existingGeneProduct.getExons() ) {
-                exon.setChromosome( persistChromosome( exon.getChromosome(), geneForExistingGeneProduct.getTaxon() ) );
-            }
-        }
+        //        existingGeneProduct.setExons( updatedGeneProductInfo.getExons() );
+        //        if ( existingGeneProduct.getExons() != null ) {
+        //            for ( PhysicalLocation exon : existingGeneProduct.getExons() ) {
+        //                exon.setChromosome( persistChromosome( exon.getChromosome(), geneForExistingGeneProduct.getTaxon() ) );
+        //            }
+        //        }
 
     }
 }

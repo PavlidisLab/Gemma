@@ -235,145 +235,10 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     }
 
     @Override
-    public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
-
-        // FIXME Should return a collection of relativeLocationData in the case
-        // of ties
-
-        if ( physicalLocation.getNucleotide() == null ) {
-            throw new IllegalArgumentException( "Locations must have a nucleotide position" );
-        }
-
-        /*
-         * Strategy: start with a small window, enlarge it until we decide enough is enough.
-         */
-        Chromosome chrom = physicalLocation.getChromosome();
-        final Long targetStart = physicalLocation.getNucleotide();
-        Integer nucleotideLength = physicalLocation.getNucleotideLength();
-        final Long targetEnd = targetStart + ( nucleotideLength == null ? 0 : nucleotideLength );
-        final String strand = physicalLocation.getStrand();
-        if ( log.isDebugEnabled() )
-            log.debug( "Start Search: " + physicalLocation + " length=" + ( targetEnd - targetStart ) );
-
-        /*
-         * Starting with exact location, look for genes, enlarging the region as needed -- ignoring strand.. Finds the
-         * nearest hit, but tracks if the strand is the same.
-         */
-        int i = 0;
-        long windowStart = targetStart;
-        long windowEnd = targetEnd;
-        while ( windowStart >= 0 && windowEnd - windowStart < MAX_WINDOW ) {
-            windowStart = windowStart - i * WINDOW_INCREMENT;
-
-            if ( targetStart < 0 )
-                windowStart = 0L;
-
-            windowEnd = windowEnd + i * WINDOW_INCREMENT;
-
-            if ( log.isDebugEnabled() )
-                log.debug( "Search: " + physicalLocation + " length=" + ( windowEnd - windowStart ) + " strand="
-                        + physicalLocation.getStrand() );
-
-            // note that here we ignore the strand.
-            Collection<Gene> candidates = findByPosition( chrom, windowStart, windowEnd, useStrand ? strand : null );
-            if ( !candidates.isEmpty() ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( physicalLocation + ": " + candidates.size() + " nearby genes at window size "
-                            + i * WINDOW_INCREMENT );
-
-                long closestRange = ( long ) 1e10;
-                RelativeLocationData result = null;
-                for ( Gene gene : candidates ) {
-                    this.thaw( gene );
-                    for ( GeneProduct gp : gene.getProducts() ) {
-                        PhysicalLocation genelocation = gp.getPhysicalLocation();
-
-                        boolean onSameStrand = genelocation.getStrand().equals( strand );
-
-                        assert genelocation.getChromosome().equals( physicalLocation.getChromosome() );
-                        Long geneStart = genelocation.getNucleotide();
-                        Long geneEnd = genelocation.getNucleotideLength() + geneStart;
-
-                        RelativeLocationData candidate = new RelativeLocationData( physicalLocation, gene, gp,
-                                genelocation );
-                        candidate.setOnSameStrand( onSameStrand );
-
-                        long range = 0;
-                        // note we use the 'real' location of the par, not the
-                        // window.
-
-                        if ( geneStart > targetEnd ) {
-
-                            range = geneStart - targetEnd;
-                            if ( log.isDebugEnabled() )
-                                log.debug( gene + " is " + range + " from the right end of " + physicalLocation );
-                        } else if ( geneStart <= targetStart ) {
-                            if ( geneEnd >= targetEnd ) {
-
-                                candidate.setContainedWithinGene( true );
-                                candidate.setOverlapsGene( true );
-                                range = 0;
-                                if ( log.isDebugEnabled() )
-                                    log.debug( gene + " contains target " + physicalLocation );
-
-                            } else if ( geneEnd > targetStart ) {
-
-                                range = 0;
-                                candidate.setOverlapsGene( true );
-                                if ( log.isDebugEnabled() )
-                                    log.debug( gene + " overlaps left end of " + physicalLocation );
-
-                            } else {
-                                assert geneEnd < targetStart;
-
-                                log.debug( gene + " is " + range + " from the left end of " + physicalLocation );
-                                range = targetStart - geneEnd;
-                            }
-                        } else {
-                            if ( geneEnd > targetEnd ) {
-
-                                if ( log.isDebugEnabled() )
-                                    log.debug( gene + " overlaps right end of " + physicalLocation );
-                                range = 0;
-                                candidate.setOverlapsGene( true );
-                            } else {
-                                assert geneEnd <= targetEnd;
-
-                                range = 0;
-                                candidate.setOverlapsGene( true );
-                                if ( log.isDebugEnabled() )
-                                    log.debug( gene + " is contained within " + physicalLocation );
-                            }
-                        }
-
-                        assert range >= 0;
-
-                        if ( range < closestRange ) {
-                            result = candidate;
-                            result.setRange( range );
-                            closestRange = range;
-                        }
-
-                    }
-
-                }
-
-                return result;
-            }
-            i++;
-        }
-
-        log.debug( "Nothing found" );
-        return null;
-
-    }
-
-    @Override
     public int getPlatformCountById( Long id ) {
-        final String queryString =
-                "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        final String queryString = "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
+                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         List r = getSession().createQuery( queryString ).setParameter( "id", id ).list();
         return ( ( Long ) r.iterator().next() ).intValue();
 
@@ -523,10 +388,9 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
      */
     @Override
     public long getCompositeSequenceCountById( long id ) {
-        final String queryString =
-                "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        final String queryString = "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
+                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         List<?> r = getHibernateTemplate().findByNamedParam( queryString, "id", id );
         return ( Long ) r.iterator().next();
     }
@@ -534,11 +398,10 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compSeq;
-        final String queryString =
-                "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
-                        + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
+        final String queryString = "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
+                + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
         try {
             org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
@@ -560,10 +423,9 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
      */
     @Override
     public Collection<CompositeSequence> getCompositeSequencesById( long id ) {
-        final String queryString =
-                "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
-                        + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
-                        + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        final String queryString = "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
+                + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
+                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         //noinspection unchecked
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
@@ -641,7 +503,8 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
                         + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
                         + " left join fetch g.taxon t left join fetch t.externalDatabase "
                         + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
-                        + " where g.id=:gid", "gid", gene.getId() );
+                        + " where g.id=:gid",
+                "gid", gene.getId() );
 
         return ( Gene ) res.iterator().next();
     }
@@ -695,7 +558,8 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
         return this.getHibernateTemplate().findByNamedParam(
                 "select g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
-                        + "where g.id in (:gids)", "gids", ids );
+                        + "where g.id in (:gids)",
+                "gids", ids );
     }
 
     private Collection<Gene> doLoadThawedLiter( Collection<Long> ids ) {

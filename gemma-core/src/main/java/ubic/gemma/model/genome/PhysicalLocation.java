@@ -77,16 +77,6 @@ public abstract class PhysicalLocation extends ChromosomeLocation {
     }
 
     /**
-     * <p>
-     * Determine if two PhysicalLocations are very close to each other. If this.equals(that) would return true this
-     * always returns true. Otherwise the meaning of "very close" is implementation-specific, but generally means they
-     * are on the same chromosome and are at overlapping locations and/or are separated by a small distance measured in
-     * nucleotides.
-     * </p>
-     */
-    public abstract boolean nearlyEquals( Object object );
-
-    /**
      * Constructs new instances of {@link PhysicalLocation}.
      */
     public static final class Factory {

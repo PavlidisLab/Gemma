@@ -39,6 +39,7 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
      * region. If strand is non-null, only genes on the same strand are returned.
      */
+    @Deprecated
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
     Gene findByAccession( String accession, ExternalDatabase source );
@@ -81,17 +82,8 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
      */
     Map<Integer, Gene> findByNcbiIds( Collection<Integer> ncbiIds );
 
+    @Deprecated
     Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
-
-    /**
-     * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
-     * single gene closest to the location will be returned, except in the case of ties in which more than one will be
-     * returned.
-     *
-     * @param useStrand if true, the nearest Gene on the same strand will be found. Otherwise the nearest gene on either
-     *                  strand will be returned.
-     */
-    RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
     /**
      * @return how many platform elements (e.g. probes) represent this gene, totalled up over all platforms.

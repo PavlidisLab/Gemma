@@ -29,7 +29,6 @@ import java.util.Collection;
 import org.junit.Test;
 
 import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.CytogeneticLocation;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -60,7 +59,7 @@ public class BlatAssociationScorerTest {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
 
-        Chromosome chr = Chromosome.Factory.newInstance(name, taxon);
+        Chromosome chr = Chromosome.Factory.newInstance( name, taxon );
         blatResult.setTargetChromosome( chr );
 
         return blatResult;
@@ -69,14 +68,11 @@ public class BlatAssociationScorerTest {
     private GeneProduct createGeneProduct( String name ) {
 
         Chromosome chromosome = Chromosome.Factory.newInstance( name, null );
-        CytogeneticLocation cytogenicLocation = CytogeneticLocation.Factory.newInstance( chromosome, null );
         GeneProduct geneProduct = GeneProduct.Factory.newInstance();
         Gene gene = Gene.Factory.newInstance();
 
         geneProduct.setGene( gene );
         geneProduct.setName( name );
-        geneProduct.setCytogeneticLocation( cytogenicLocation );
-        gene.setCytogeneticLocation( cytogenicLocation );
 
         return geneProduct;
     }

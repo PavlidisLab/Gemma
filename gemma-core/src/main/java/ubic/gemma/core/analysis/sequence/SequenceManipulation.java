@@ -166,7 +166,8 @@ public class SequenceManipulation {
 
         if ( gene.getPhysicalLocation().getChromosome() != null
                 && !gene.getPhysicalLocation().getChromosome().getName()
-                        .equals( deBlatFormatChromosomeName( chromosome ) ) ) return 0;
+                        .equals( deBlatFormatChromosomeName( chromosome ) ) )
+            return 0;
 
         int bestOverlap = 0;
         for ( GeneProduct geneProduct : gene.getProducts() ) {
@@ -202,6 +203,7 @@ public class SequenceManipulation {
             return 0;
         }
 
+        // These are transient instances
         Collection<PhysicalLocation> exons = geneProduct.getExons();
 
         int[] startArray = blatLocationsToIntArray( starts );
@@ -296,7 +298,7 @@ public class SequenceManipulation {
     private static char complement( char baseLetter ) {
 
         switch ( baseLetter ) {
-        // basics
+            // basics
             case 'A':
                 return 'T';
             case 'T':
@@ -308,25 +310,25 @@ public class SequenceManipulation {
             case 'U':
                 return 'A';
 
-                // purine/pyrimidine
+            // purine/pyrimidine
             case 'R':
                 return 'Y';
             case 'Y':
                 return 'R';
 
-                // complementary pairs.
+            // complementary pairs.
             case 'S':
                 return 'W';
             case 'W':
                 return 'S';
 
-                // uncomplementary pairs
+            // uncomplementary pairs
             case 'K':
                 return 'M';
             case 'M':
                 return 'K';
 
-                // choice of 3
+            // choice of 3
             case 'B':
                 return 'D';
             case 'D':
@@ -337,7 +339,7 @@ public class SequenceManipulation {
             case 'V':
                 return 'H';
 
-                // special
+            // special
             case 'N':
                 return 'N';
             case '-':
@@ -436,7 +438,7 @@ public class SequenceManipulation {
      * @return
      */
     private static Collection<Reporter> copyReporters( Collection<Reporter> reporters ) {
-        Collection<Reporter> copyReporters = new HashSet<Reporter>();
+        Collection<Reporter> copyReporters = new HashSet<>();
         for ( Reporter next : reporters ) {
             assert next.getStartInBioChar() != null : "Null startInBioChar";
             assert next.getImmobilizedCharacteristic() != null : "Null immob.char.";

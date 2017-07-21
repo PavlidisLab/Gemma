@@ -50,12 +50,13 @@ public class ExpressionDataDoubleMatrixUtil {
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
 
     /**
-     * Log transform if necessary, do any required filtering prior to analysis.
+     * Log2 transform if necessary, do any required filtering prior to analysis. Count data is converted to log2CPM (but
+     * we store log2cpm as the processed data, so that is what would generally be used).
      * 
      * @param quantitationType
      * @param dmatrix
      */
-    public static ExpressionDataDoubleMatrix filterAndLogTransform( QuantitationType quantitationType,
+    public static ExpressionDataDoubleMatrix filterAndLog2Transform( QuantitationType quantitationType,
             ExpressionDataDoubleMatrix dmatrix ) {
 
         ScaleType scaleType = findScale( quantitationType, dmatrix.getMatrix() );
@@ -72,9 +73,13 @@ public class ExpressionDataDoubleMatrixUtil {
             log.info( " **** LOG TRANSFORMING **** " );
             MatrixStats.logTransform( dmatrix.getMatrix() );
         } else if ( scaleType.equals( ScaleType.COUNT ) ) {
+            /*
+             * Since we store log2cpm this shouldn't be reached any more. We don't do it in place.
+             */
             log.info( " **** Converting from count to log2 counts per million **** " );
             DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
-            MatrixStats.convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
+            DoubleMatrix<CompositeSequence, BioMaterial> log2cpm = MatrixStats.convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
+            dmatrix = new ExpressionDataDoubleMatrix( dmatrix, log2cpm );
         } else {
             throw new UnknownLogScaleException( "Can't figure out what scale the data are on" );
         }
@@ -92,7 +97,9 @@ public class ExpressionDataDoubleMatrixUtil {
             log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
         }
         r = dmatrix.rows();
-        /* FIXME refactor as constant. Idea is to skip this if the data set is really small, but this is totally ad hoc. */
+        /*
+         * FIXME refactor as constant. Idea is to skip this if the data set is really small, but this is totally ad hoc.
+         */
         if ( dmatrix.columns() > 4 ) {
             dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, 0.5 );
             if ( dmatrix.rows() < r ) {

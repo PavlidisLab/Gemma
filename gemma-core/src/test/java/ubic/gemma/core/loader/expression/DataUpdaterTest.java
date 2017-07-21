@@ -268,8 +268,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         ee = experimentService.thaw( ee );
 
-        // should have: counts, rpkm, and counts-masked ('preferred')
-        assertEquals( 3, ee.getQuantitationTypes().size() );
+        // should have: log2cpm, counts, rpkm, and counts-masked ('preferred')
+        assertEquals( 4, ee.getQuantitationTypes().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
@@ -283,9 +283,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
         assertEquals( 199, mat.rows() );
-        Double[] column = mat.getColumn( 0 );
-        double sum = Descriptive.sum( new DoubleArrayList( ArrayUtils.toPrimitive( column ) ) );
-        assertEquals( 3949585, sum, 0.01 );
 
         boolean found = false;
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -301,7 +298,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         assertTrue( found );
 
-        assertEquals( 398, ee.getRawExpressionDataVectors().size() );
+        assertEquals( 3 * 199, ee.getRawExpressionDataVectors().size() );
 
         assertEquals( 199, ee.getProcessedExpressionDataVectors().size() );
 
@@ -378,13 +375,11 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
         assertEquals( 199, mat.rows() );
-        Double[] column = mat.getColumn( 0 );
-        double sum = Descriptive.sum( new DoubleArrayList( ArrayUtils.toPrimitive( column ) ) );
-        assertEquals( 437324.86, sum, 0.01 );
+        assertTrue( mat.getQuantitationTypes().iterator().next().getName().startsWith( "log2cpm" ) );
 
         assertEquals( 4, ee.getBioAssays().size() );
 
-        assertEquals( 398, ee.getRawExpressionDataVectors().size() );
+        assertEquals( 199 * 3, ee.getRawExpressionDataVectors().size() );
 
         assertEquals( 199, ee.getProcessedExpressionDataVectors().size() );
 

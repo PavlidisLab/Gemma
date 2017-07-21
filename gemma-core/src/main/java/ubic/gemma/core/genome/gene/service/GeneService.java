@@ -29,7 +29,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
-import ubic.gemma.persistence.service.genome.RelativeLocationData;
 
 import java.util.Collection;
 import java.util.Map;
@@ -89,15 +88,6 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     Collection<AnnotationValueObject> findGOTerms( Long geneId );
 
-    /**
-     * Find the gene(s) nearest to the location.
-     *
-     * @param useStrand if true, the nearest Gene on the same strand will be found. Otherwise the nearest gene on either
-     *                  strand will be returned.
-     * @return RelativeLocationData - a value object for containing the gene that is nearest the given physical location
-     */
-    RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
-
     long getCompositeSequenceCountById( Long id );
 
     /**
@@ -117,12 +107,6 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
      * Gets all the genes for a given taxon
      */
     Collection<Gene> getGenesByTaxon( Taxon taxon );
-
-    /**
-     * Given the gemma id of a valid gemma gene will try to calculate the maximum extend of the transcript length. Does
-     * this by using the gene products to find the largest max and min nucliotide positions
-     */
-    PhysicalLocation getMaxPhysicalLength( Gene gene );
 
     /**
      * @return empty collection if no products

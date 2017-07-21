@@ -34,7 +34,6 @@ import ubic.gemma.core.loader.util.converter.Converter;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.CytogeneticLocation;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
@@ -132,16 +131,14 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         t.setIsSpecies( true );
         gene.setTaxon( t );
 
+        /*
+         * We are going to stop maintaining this information
+         */
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
         Chromosome chrom = Chromosome.Factory.newInstance( info.getChromosome(), t );
         pl.setChromosome( chrom );
 
-        CytogeneticLocation cl = CytogeneticLocation.Factory.newInstance();
-        cl.setChromosome( chrom );
-        cl.setBand( info.getMapLocation() );
-
         gene.setPhysicalLocation( pl );
-        gene.setCytogeneticLocation( cl );
 
         Collection<GeneAlias> aliases = gene.getAliases();
         for ( String alias : info.getSynonyms() ) {
@@ -290,7 +287,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         dbe.setAccessionVersion( acc.getGenomicNucleotideAccessionVersion() );
         chromSeq.setSequenceDatabaseEntry( dbe );
         try {
-            FieldUtils.writeField( chrom, "sequence", chromSeq, true  );
+            FieldUtils.writeField( chrom, "sequence", chromSeq, true );
         } catch ( IllegalAccessException e ) {
             e.printStackTrace();
         }
