@@ -19,21 +19,18 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.core.testing.BaseSpringWebTest;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author ptan
@@ -55,26 +52,26 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
     public void testLoadStatusSummariesLimit() {
         ArrayList<Long> ids = new ArrayList<>();
         int limit;
+
+        // Default ordering is by date last updated
+        ExpressionExperiment lastUpdated = null;
         for ( int i = 0; i < 2; i++ ) {
-            Long eeId = this.getTestPersistentCompleteExpressionExperiment( false ).getId();
-            ids.add( eeId );
+            ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+
+            if ( lastUpdated == null || lastUpdated.getCurationDetails().getLastUpdated()
+                    .before( ee.getCurationDetails().getLastUpdated() ) ) {
+                lastUpdated = ee;
+            }
+
+            ids.add( ee.getId() );
         }
         limit = 1;
         Collection<ExpressionExperimentDetailsValueObject> ret = eeController
                 .loadStatusSummaries( -1L, ids, limit, null, true );
         assertEquals( 1, ret.size() );
-        Iterator<Long> in = ids.iterator();
-        Iterator<ExpressionExperimentDetailsValueObject> out = ret.iterator();
-        assertEquals( in.next(), out.next().getId() );
+        ExpressionExperimentDetailsValueObject out = ret.iterator().next();
 
-        // Negative limit, assumes IDs have been sorted in decreasing order
-        limit = -1;
-        @SuppressWarnings("unchecked") List<Long> idsRev = ( ArrayList<Long> ) ids.clone();
-        Collections.reverse( idsRev );
-        ret = eeController.loadStatusSummaries( -1L, idsRev, limit, null, true );
-        out = ret.iterator();
-        assertEquals( 1, ret.size() );
-        assertEquals( in.next(), out.next().getId() );
+        assertEquals( lastUpdated.getId(), out.getId() );
 
     }
 

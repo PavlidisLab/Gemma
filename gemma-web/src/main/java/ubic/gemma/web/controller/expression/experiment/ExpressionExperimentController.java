@@ -839,7 +839,7 @@ public class ExpressionExperimentController {
             return new HashSet<>();
         }
 
-        return getFilteredExpressionExperimentValueObjects( null, ids, -1, true, false );
+        return getFilteredExpressionExperimentValueObjects( null, ids, 0, true );
     }
 
     /**
@@ -849,7 +849,7 @@ public class ExpressionExperimentController {
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
         return getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils
-                .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), -1, true, false );
+                .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), 0, true );
     }
 
     /**
@@ -864,7 +864,7 @@ public class ExpressionExperimentController {
             return new HashSet<>();
         }
         Collection<ExpressionExperimentDetailsValueObject> result = getFilteredExpressionExperimentValueObjects( null,
-                null, 0, true, false );
+                null, 0, true );
         this.expressionExperimentReportService.getReportInformation( result );
         return result;
     }
@@ -911,9 +911,9 @@ public class ExpressionExperimentController {
      *
      * @return security-filtered set of value objects.
      */
-    public Collection<QuantitationTypeValueObject> loadQuantitationTypes( Long eeid ) {
+    public Collection<QuantitationTypeValueObject> loadQuantitationTypes( Long eeId ) {
 
-        ExpressionExperiment ee = expressionExperimentService.load( eeid );
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
         // need to thaw?
         ee = expressionExperimentService.thawLite( ee );
         Collection<QuantitationType> qts = ee.getQuantitationTypes();
@@ -1467,8 +1467,7 @@ public class ExpressionExperimentController {
 
         // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
         eeVos = this
-                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, Math
-                        .abs(limit), showPublic, limit > 0 );
+                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, limit, showPublic);
 
         if ( filter != null && filter > 0 ) {
             eeVos = applyFilter( eeVos, filter );
@@ -1544,10 +1543,10 @@ public class ExpressionExperimentController {
      * @return Collection<ExpressionExperimentValueObject>
      */
     private List<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            List<Long> eeIds, Integer limit, boolean showPublic, boolean descending ) {
+            List<Long> eeIds, Integer limit, boolean showPublic) {
 
         List<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( "curationDetails.lastUpdated", descending, eeIds, taxon, limit, 0 );
+                .loadDetailsValueObjects( "curationDetails.lastUpdated",limit > 0 , eeIds, taxon, Math.abs(limit), 0 );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
