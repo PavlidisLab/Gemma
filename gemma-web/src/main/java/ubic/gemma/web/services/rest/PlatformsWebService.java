@@ -14,7 +14,6 @@
  */
 package ubic.gemma.web.services.rest;
 
-import org.apache.commons.io.IOUtils;
 import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -22,10 +21,7 @@ import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
+import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.PlatformArg;
 import ubic.gemma.web.services.rest.util.args.SortArg;
@@ -35,10 +31,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.io.*;
+import java.io.File;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
 /**
  * RESTful interface for platforms.
@@ -154,40 +150,30 @@ public class PlatformsWebService extends WebService {
     @Path("/{platformArg: [a-zA-Z0-9\\.]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject platformAnnotations( // Params:
+    public Response platformAnnotations( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         //FIXME currently not filtering out troubled
         ArrayDesign arrayDesign = platformArg.getPersistentObject( arrayDesignService );
-        if ( arrayDesign == null )
-            return this.autoCodeResponse( platformArg, null, sr );
-        return outputAnnotationFile( arrayDesign, sr );
+        if ( arrayDesign == null ) {
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND, platformArg.getNullCause() );
+            throw new GemmaApiException( errorBody );
+        }
+        return outputAnnotationFile( arrayDesign );
     }
 
-    private ResponseDataObject outputAnnotationFile( ArrayDesign arrayDesign, HttpServletResponse sr ) {
+    private Response outputAnnotationFile( ArrayDesign arrayDesign) {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
         if ( !file.exists() ) {
-            WellComposedErrorBody error = new WellComposedErrorBody( Status.NOT_FOUND,
-                    String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
-            return Responder.code( error.getStatus(), error, sr );
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND,
+                    ERROR_ANNOTATION_FILE_NOT_AVAILABLE );
+            throw new GemmaApiException( errorBody );
         }
 
-        try (FileInputStream inputStream = new FileInputStream( file )) {
-            InputStream fileStream = new FileInputStream( file );
-            InputStream gzipStream = new GZIPInputStream( fileStream );
-            Reader decoder = new InputStreamReader( gzipStream, "UTF-8" );
-            BufferedReader buffered = new BufferedReader( decoder );
-            String content = IOUtils.toString( buffered );
-            return Responder.autoCode( content, sr );
-        } catch ( IOException e ) {
-            WellComposedErrorBody error = new WellComposedErrorBody( Status.NOT_FOUND,
-                    String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
-            WellComposedErrorBody.addExceptionFields( error, e );
-            return Responder.code( error.getStatus(), error, sr );
-        }
+        return Response.ok( file ).header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
     }
 }
