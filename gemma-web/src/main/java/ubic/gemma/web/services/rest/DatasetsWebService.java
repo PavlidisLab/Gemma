@@ -25,7 +25,7 @@ import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.DatasetArg;
-import ubic.gemma.web.services.rest.util.args.ExpressionExperimentFilterArg;
+import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.SortArg;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response;
 @Path("/datasets")
 public class DatasetsWebService extends WebService {
 
-    private static final String ERROR_MSG_PROP_NOT_FOUND = "Datasets do not contain the given sort property.";
+    private static final String ERROR_MSG_PROP_NOT_FOUND = "Datasets do not contain the given property.";
     private static final String ERROR_MSG_PROP_NOT_FOUND_DETAIL = "Property of name '%s' not recognized.";
 
     private ExpressionExperimentService expressionExperimentService;
@@ -122,7 +122,7 @@ public class DatasetsWebService extends WebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject all( // Params:
-            @QueryParam("filter") @DefaultValue("") ExpressionExperimentFilterArg filter, // Optional, default null
+            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
@@ -134,9 +134,9 @@ public class DatasetsWebService extends WebService {
                             filter.getObjectFilters() ), sr );
         } catch ( QueryException e ) {
 
-            if ( log.isDebugEnabled() ) {
+            //if ( log.isDebugEnabled() ) {
                 e.printStackTrace();
-            }
+            //}
 
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                     ERROR_MSG_PROP_NOT_FOUND );

@@ -29,7 +29,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -261,8 +263,9 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ArrayDesignValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy, boolean asc ) {
-        return this.arrayDesignDao.listFilter( offset, limit, orderBy, asc );
+    public Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+        return this.arrayDesignDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
     /**

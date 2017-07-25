@@ -37,7 +37,8 @@ public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnab
      * @return the value object whose identifier matches the value of this mutable argument.
      */
     public final VO getValueObject( S service ) {
-        return this.value == null ? null : service.loadValueObject( this.getPersistentObject( service ) );
+        O object = this.value == null ? null : this.getPersistentObject( service );
+        return object == null ? null : service.loadValueObject( object );
     }
 
     /**

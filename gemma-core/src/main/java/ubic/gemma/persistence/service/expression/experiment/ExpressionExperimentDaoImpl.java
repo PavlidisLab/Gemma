@@ -366,10 +366,10 @@ public class ExpressionExperimentDaoImpl
         ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
         if ( ids != null ) {
             Collections.sort( ids );
-            filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS );
+            filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS );
         }
         if ( taxon != null ) {
-            filters[1] = new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS );
+            filters[1] = new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS );
         }
 
         // Compose query
@@ -620,8 +620,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( final Taxon taxon ) {
         ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ),
-                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ) };
+                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ),
+                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, true, null, false );
 
@@ -639,7 +639,7 @@ public class ExpressionExperimentDaoImpl
 
         String orderByClause = this.getOrderByProperty( orderField );
         ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS ) };
+                new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, false, orderByClause, descending );
 
@@ -655,8 +655,8 @@ public class ExpressionExperimentDaoImpl
         String orderByClause = this.getOrderByProperty( orderField );
 
         final ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ),
-                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.EEDAO_TAXON_ALIAS ) };
+                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ),
+                new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, true, orderByClause, descending );
 
@@ -703,7 +703,7 @@ public class ExpressionExperimentDaoImpl
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
 
         ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", idl, ObjectFilter.in, ObjectFilter.EEDAO_EE_ALIAS ) };
+                new ObjectFilter( "id", idl, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS ) };
 
         Query queryObject = getLoadValueObjectsQueryString( filter, false, null, false );
 
@@ -1512,7 +1512,7 @@ public class ExpressionExperimentDaoImpl
      */
     private String getOrderByProperty( String orderBy ) {
         if ( orderBy == null )
-            return ObjectFilter.EEDAO_EE_ALIAS + ".id";
+            return ObjectFilter.DAO_EE_ALIAS + ".id";
         String orderByField;
         switch ( orderBy ) {
             case "taxon":
@@ -1531,7 +1531,7 @@ public class ExpressionExperimentDaoImpl
                 orderByField = "s.needsAttention";
                 break;
             default:
-                orderByField = ObjectFilter.EEDAO_EE_ALIAS + "." + orderBy;
+                orderByField = ObjectFilter.DAO_EE_ALIAS + "." + orderBy;
                 break;
         }
         return orderByField;
@@ -1777,23 +1777,23 @@ public class ExpressionExperimentDaoImpl
 
             // Both restrictions have to be met (AND) therefore they have to be added as separate arrays.
             filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                    ObjectFilter.EEDAO_EE_ALIAS ) } );
+                    ObjectFilter.DAO_EE_ALIAS ) } );
             filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
-                    ObjectFilter.EEDAO_AD_ALIAS ) } );
+                    ObjectFilter.DAO_AD_ALIAS ) } );
         }
 
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
-        String queryString = "select " + ObjectFilter.EEDAO_EE_ALIAS + ".id as id, " // 0
-                + ObjectFilter.EEDAO_EE_ALIAS + ".name, " // 1
-                + ObjectFilter.EEDAO_EE_ALIAS + ".source, " // 2
-                + ObjectFilter.EEDAO_EE_ALIAS + ".shortName, " // 3
-                + ObjectFilter.EEDAO_EE_ALIAS + ".class, " // 4 // FIXME not used in EEVO
-                + ObjectFilter.EEDAO_EE_ALIAS + ".numberOfDataVectors, " // 5
+        String queryString = "select " + ObjectFilter.DAO_EE_ALIAS + ".id as id, " // 0
+                + ObjectFilter.DAO_EE_ALIAS + ".name, " // 1
+                + ObjectFilter.DAO_EE_ALIAS + ".source, " // 2
+                + ObjectFilter.DAO_EE_ALIAS + ".shortName, " // 3
+                + ObjectFilter.DAO_EE_ALIAS + ".class, " // 4 // FIXME not used in EEVO
+                + ObjectFilter.DAO_EE_ALIAS + ".numberOfDataVectors, " // 5
                 + "acc.accession, " // 6
                 + "ED.name, " // 7
                 + "ED.webUri, " // 8
-                + ObjectFilter.EEDAO_AD_ALIAS + ".curationDetails, " // 9 // FIXME not used in EEVO
-                + ObjectFilter.EEDAO_AD_ALIAS + ".technologyType, "// 10
+                + ObjectFilter.DAO_AD_ALIAS + ".curationDetails, " // 9 // FIXME not used in EEVO
+                + ObjectFilter.DAO_AD_ALIAS + ".technologyType, "// 10
                 + "taxon.commonName, " // 11
                 + "taxon.id, " // 12
                 + "s.lastUpdated, " // 13
@@ -1801,55 +1801,25 @@ public class ExpressionExperimentDaoImpl
                 + "s.needsAttention, " // 15
                 + "s.curationNote, "  // 16
                 + "count(distinct BA), " // 17
-                + "count(distinct " + ObjectFilter.EEDAO_AD_ALIAS + "), " // 18
+                + "count(distinct " + ObjectFilter.DAO_AD_ALIAS + "), " // 18
                 + "count(distinct SU), " // 19
                 + "EDES.id,  " // 20
                 + "ptax.id, " // 21
                 + "aoi, " // 22
                 + "sid " // 23
-                + "from ExpressionExperiment as " + ObjectFilter.EEDAO_EE_ALIAS + " inner join "
-                + ObjectFilter.EEDAO_EE_ALIAS + ".bioAssays as BA  "
-                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as " + ObjectFilter.EEDAO_AD_ALIAS + " "
-                + "left join SU.sourceTaxon as taxon left join " + ObjectFilter.EEDAO_EE_ALIAS + ".accession acc "
+                + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " inner join "
+                + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  "
+                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as " + ObjectFilter.DAO_AD_ALIAS + " "
+                + "left join SU.sourceTaxon as taxon left join " + ObjectFilter.DAO_EE_ALIAS + ".accession acc "
                 + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax " + "inner join "
-                + ObjectFilter.EEDAO_EE_ALIAS + ".experimentalDesign as EDES join " + ObjectFilter.EEDAO_EE_ALIAS
-                + ".curationDetails as s "
-                + ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
-                + "where aoi.identifier = " + ObjectFilter.EEDAO_EE_ALIAS
-                + ".id and aoi.type = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' ";
+                + ObjectFilter.DAO_EE_ALIAS + ".experimentalDesign as EDES join " + ObjectFilter.DAO_EE_ALIAS
+                + ".curationDetails as s ";
 
-        queryString += this.formRestrictionClause( filters );
-
-        boolean hasUserNameParam = false;
-
-        // add ACL restrictions
-        if ( !SecurityUtil.isUserAnonymous() ) {
-            // For administrators no filtering is necessary
-            if ( !SecurityUtil.isUserAdmin() ) {
-                // For non-admins, pick non-troubled, publicly readable data and data that are readable by them or a group they belong to
-                queryString += "and ( (sid.principal = :userName or (ace.sid.id in "
-                        // Subselect
-                        + "( select sid.id from UserGroup as ug join ug.authorities as ga "
-                        + ", AclGrantedAuthoritySid sid where sid.grantedAuthority = CONCAT('GROUP_', ga.authority) "
-                        + "and ug.name in ( "
-                        // Sub-subselect
-                        + "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :userName ) "
-                        // Sub-subselect end
-                        + ") and (ace.mask = 1 or ace.mask = 2) )) "
-                        // Subselect end
-                        + " or (ace.sid.id = 4 and ace.mask = 1)) ";
-                hasUserNameParam = true;
-            }
-        } else {
-            // For anonymous users, only pick publicly readable data
-            queryString += "and ace.mask = 1 and ace.sid.id = 4 ";
-        }
-
+        queryString += formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
+                "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
+        queryString += formRestrictionClause( filters );
         queryString += "group by ee.id ";
-
-        if ( orderByProperty != null ) {
-            queryString = queryString + "order by " + orderByProperty + ( orderDesc ? " desc " : " " );
-        }
+        queryString += formOrderByProperty( orderByProperty, orderDesc );
 
         if ( log.isDebugEnabled() ) {
             System.out.println( "EEVO query: " );
@@ -1858,12 +1828,8 @@ public class ExpressionExperimentDaoImpl
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        if ( hasUserNameParam ) {
-            query.setParameter( "userName", SecurityUtil.getCurrentUsername() );
-        }
-        if ( filters != null && !filters.isEmpty() ) {
-            addRestrictionParameters( query, filters );
-        }
+        addRestrictionParameters( query, filters );
+
         return query;
     }
 
