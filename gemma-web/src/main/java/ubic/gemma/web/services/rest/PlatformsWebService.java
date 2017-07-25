@@ -163,14 +163,14 @@ public class PlatformsWebService extends WebService {
         return outputAnnotationFile( arrayDesign );
     }
 
-    private Response outputAnnotationFile( ArrayDesign arrayDesign) {
+    private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
         if ( !file.exists() ) {
             WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND,
-                    ERROR_ANNOTATION_FILE_NOT_AVAILABLE );
+                    String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             throw new GemmaApiException( errorBody );
         }
 
