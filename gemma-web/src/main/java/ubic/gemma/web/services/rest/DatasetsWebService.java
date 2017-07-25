@@ -14,18 +14,11 @@
  */
 package ubic.gemma.web.services.rest;
 
-import com.sun.jersey.api.NotFoundException;
 import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
@@ -42,10 +35,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 
 /**
  * RESTful interface for datasets.
@@ -177,7 +166,7 @@ public class DatasetsWebService extends WebService {
     }
 
     /**
-     * Retrieves platforms for the given experiment
+     * Retrieves platforms for the given experiment.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -195,7 +184,7 @@ public class DatasetsWebService extends WebService {
     }
 
     /**
-     * Retrieves the samples for given experiment
+     * Retrieves the samples for given experiment.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -212,191 +201,22 @@ public class DatasetsWebService extends WebService {
         return this.autoCodeResponse( datasetArg, response, sr );
     }
 
-
-    /* ********************************
-     * OLD METHODS
-     * TODO REMOVE
-     * ********************************/
-
-    @Deprecated
-    @GET
-    @Path("/findByAccession/includeConstantFactorsStructured/{gsmId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, Map<String, String>>> getAnnotationsByGSMIncludeTagsStructured(
-            @PathParam("gsmId") String gsmId ) {
-
-        Collection<BioAssay> foundBioAssays = this.bioAssayService.findByAccession( gsmId );
-
-        if ( foundBioAssays.isEmpty() )
-            throw new NotFoundException( "Sample not found." );
-
-        Collection<Characteristic> characteristics = new HashSet<>();
-        if ( foundBioAssays.size() == 1 ) {
-            ExpressionExperiment ee = this.expressionExperimentService
-                    .findByBioAssay( foundBioAssays.iterator().next() );
-            if ( ee != null ) {
-                characteristics.addAll( ee.getCharacteristics() );
-            }
-        }
-
-        return prepareEEAnnotationsStructured( foundBioAssays, characteristics );
-    }
-
-    @Deprecated
-    @GET
-    @Path("/findByAccession/includeConstantFactors/{gsmId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, String>> getAnnotationsByGSMIncludeTagsUnstructured(
-            @PathParam("gsmId") String gsmId ) {
-
-        Collection<BioAssay> foundBioAssays = this.bioAssayService.findByAccession( gsmId );
-
-        if ( foundBioAssays.isEmpty() )
-            throw new NotFoundException( "Sample not found." );
-
-        Collection<Characteristic> characteristics = new HashSet<>();
-        if ( foundBioAssays.size() == 1 ) {
-            ExpressionExperiment ee = this.expressionExperimentService
-                    .findByBioAssay( foundBioAssays.iterator().next() );
-            if ( ee != null ) {
-                characteristics.addAll( ee.getCharacteristics() );
-            }
-        }
-
-        return prepareEEAnnotationsUnstructured( foundBioAssays, characteristics );
-    }
-
-    @Deprecated
-    @GET
-    @Path("/findByShortName/includeConstantFactorsStructured/{shortName}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, Map<String, String>>> getAnnotationsIncludeTagsStructured(
-            @PathParam("shortName") String shortName ) {
-
-        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
-        if ( experiment == null )
-            throw new NotFoundException( "Dataset not found." );
-        Collection<BioAssay> bioAssays = experiment.getBioAssays();
-        Collection<Characteristic> chars = experiment.getCharacteristics();
-
-        return prepareEEAnnotationsStructured( bioAssays, chars );
-    }
-
-    @Deprecated
-    @GET
-    @Path("/findByShortName/includeConstantFactors/{shortName}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Map<String, String>> getAnnotationsIncludeTagsUnstructured(
-            @PathParam("shortName") String shortName ) {
-
-        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );
-        if ( experiment == null )
-            throw new NotFoundException( "Dataset not found." );
-        Collection<BioAssay> bioAssays = experiment.getBioAssays();
-        Collection<Characteristic> chars = experiment.getCharacteristics();
-
-        return prepareEEAnnotationsUnstructured( bioAssays, chars );
-    }
-
-    @Deprecated
-    private String[] getTagString( Characteristic characteristic ) {
-
-        String[] arr = { "", "" };
-        if ( characteristic == null )
-            return arr;
-        if ( ( characteristic.getCategory() == null || characteristic.getCategory().isEmpty() ) && (
-                characteristic.getValue() == null || characteristic.getValue().isEmpty() ) ) {
-            return arr;
-        } else if ( characteristic.getCategory() == null || characteristic.getCategory().isEmpty() ) {
-            arr[0] = characteristic.getValue();
-            arr[1] = characteristic.getValue();
-        } else if ( characteristic.getValue() == null || characteristic.getValue().isEmpty() ) {
-            arr[0] = characteristic.getCategory();
-            arr[1] = "no value";
-        } else {
-            arr[0] = characteristic.getCategory();
-            arr[1] = characteristic.getValue();
-        }
-        return arr;
-    }
-
-    @Deprecated
-    private Map<String, Map<String, Map<String, String>>> prepareEEAnnotationsStructured(
-            Collection<BioAssay> bioAssays, Collection<Characteristic> characteristics ) {
-        Map<String, Map<String, Map<String, String>>> result = new HashMap<>();
-
-        if ( bioAssays.isEmpty() )
-            throw new NotFoundException( "BioAssays not found" );
-        for ( BioAssay bioAssay : bioAssays ) {
-
-            String accession = bioAssay.getAccession().getAccession();
-
-            Map<String, String> annotations = new HashMap<>();
-            Map<String, String> tagAnnotations = new HashMap<>();
-            Map<String, Map<String, String>> annotationsCategories = new HashMap<>();
-
-            BioMaterial bioMaterial = bioAssay.getSampleUsed();
-
-            for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-                if ( !factorValue.getExperimentalFactor().getName()
-                        .equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
-                    annotations
-                            .put( factorValue.getExperimentalFactor().getName(), factorValue.getDescriptiveString() );
-                }
-            }
-
-            for ( Characteristic characteristic : characteristics ) {
-
-                String[] tagStringArr = getTagString( characteristic );
-                if ( !tagStringArr[0].isEmpty() && !tagStringArr[1].isEmpty() ) {
-                    tagAnnotations.put( tagStringArr[0], tagStringArr[1] );
-                }
-            }
-
-            annotationsCategories.put( "ExperimentFactors", annotations );
-            annotationsCategories.put( "ExperimentTags", tagAnnotations );
-            result.put( accession, annotationsCategories );
-        }
-
-        return result;
-    }
-
     /**
-     * Don't introduce structure to separate experimental factors from experiment tags, instead add a prefix to tag
-     * categories
+     * Retrieves the annotations for given experiment.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
      */
-    @Deprecated
-    private Map<String, Map<String, String>> prepareEEAnnotationsUnstructured( Collection<BioAssay> bioAssays,
-            Collection<Characteristic> characteristics ) {
-        Map<String, Map<String, String>> result = new HashMap<>();
-
-        if ( bioAssays.isEmpty() )
-            throw new NotFoundException( "BioAssays not found" );
-        for ( BioAssay bioAssay : bioAssays ) {
-
-            String accession = bioAssay.getAccession().getAccession();
-            Map<String, String> annotations = new HashMap<>();
-            BioMaterial bioMaterial = bioAssay.getSampleUsed();
-
-            for ( FactorValue factorValue : bioMaterial.getFactorValues() ) {
-                if ( !factorValue.getExperimentalFactor().getName()
-                        .equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
-                    annotations
-                            .put( factorValue.getExperimentalFactor().getName(), factorValue.getDescriptiveString() );
-                }
-            }
-
-            for ( Characteristic characteristic : characteristics ) {
-
-                String[] tagStringArr = getTagString( characteristic );
-                if ( !tagStringArr[0].isEmpty() && !tagStringArr[1].isEmpty() ) {
-                    annotations.put( "constant_" + tagStringArr[0], tagStringArr[1] );
-                }
-            }
-            result.put( accession, annotations );
-        }
-
-        return result;
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/annotations")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetAnnotations( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Object response = datasetArg.getAnnotations( expressionExperimentService );
+        return this.autoCodeResponse( datasetArg, response, sr );
     }
 
 }
