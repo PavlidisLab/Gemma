@@ -298,6 +298,11 @@ public class ExpressionExperimentDaoImpl
 
         Hibernate.initialize( result.getBioAssays() );
 
+        for ( BioAssay ba : result.getBioAssays() ) {
+            Hibernate.initialize( ba.getArrayDesignUsed() );
+            Hibernate.initialize( ba.getSampleUsed() );
+        }
+
         return result;
     }
 
@@ -371,7 +376,8 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getLoadValueObjectsQueryString( filters, false, orderByClause, descending );
 
         query.setCacheable( true );
-        if(limit > 0 ) query.setMaxResults( limit );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -1505,7 +1511,8 @@ public class ExpressionExperimentDaoImpl
      * @return a string that can be used as the orderByProperty param in {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
      */
     private String getOrderByProperty( String orderBy ) {
-        if(orderBy == null) return ObjectFilter.EEDAO_EE_ALIAS+".id";
+        if ( orderBy == null )
+            return ObjectFilter.EEDAO_EE_ALIAS + ".id";
         String orderByField;
         switch ( orderBy ) {
             case "taxon":
@@ -1750,11 +1757,8 @@ public class ExpressionExperimentDaoImpl
      * {@link this#getLoadValueObjectsQueryString(ObjectFilter[], boolean, String, boolean)} method instead. This method
      * allows specification of a conjunction of disjunctions (CNF).
      *
-     * @param filters         A list of filtering properties arrays.<br/>
-     *                        Elements in each array will be in a disjunction (OR) with each other.<br/>
-     *                        Arrays will then be in a conjunction (AND) with each other.<br/>
-     *                        I.e. The filter will be in a conjunctive normal form.<br/>
-     *                        <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code><br/><br/>
+     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *                        description.
      * @param orderByProperty the property to order by.
      * @param orderDesc       whether the ordering is ascending or descending.
      * @return a hibernate Query object ready to be used for EEVO retrieval.
@@ -1861,60 +1865,6 @@ public class ExpressionExperimentDaoImpl
             addRestrictionParameters( query, filters );
         }
         return query;
-    }
-
-    private void addRestrictionParameters( Query query, ArrayList<ObjectFilter[]> filters ) {
-        for ( ObjectFilter[] filterArray : filters ) {
-            if ( filterArray == null || filterArray.length < 1 )
-                continue;
-            for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null )
-                    continue;
-                if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
-                    query.setParameterList( this.formParamName( filter ),
-                            ( Collection ) filter.getRequiredValue() );
-                } else {
-                    query.setParameter( this.formParamName( filter ), filter.getRequiredValue() );
-                }
-            }
-        }
-    }
-
-    private String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {
-
-        if ( filters == null || filters.isEmpty() )
-            return "";
-        StringBuilder conjunction = new StringBuilder();
-        for ( ObjectFilter[] filterArray : filters ) {
-            if ( filterArray.length == 0 )
-                continue;
-            StringBuilder disjunction = new StringBuilder();
-            boolean first = true;
-            for ( ObjectFilter filter : filterArray ) {
-                if ( filter == null )
-                    continue;
-                if ( !first )
-                    disjunction.append( "or " );
-                if ( filter.getObjectAlias() != null ) {
-                    disjunction.append( filter.getObjectAlias() ).append( "." );
-                    disjunction.append( filter.getPropertyName() ).append( " " ).append( filter.getOperator() ) ;
-                    if (filter.getOperator().equals( ObjectFilter.in ) ) {
-                        disjunction.append( "( :" ).append( this.formParamName( filter )  ).append( " ) " );
-                    } else {
-                        disjunction.append( ":" ).append( this.formParamName( filter ) );
-                    }
-                } first = false;
-            } String disjunctionString = disjunction.toString();
-            if ( !disjunctionString.isEmpty() ) {
-                conjunction.append( "and ( " ).append( disjunctionString ).append( " ) " );
-            }
-        }
-
-        return conjunction.toString();
-    }
-
-    private String formParamName(ObjectFilter filter){
-        return filter.getObjectAlias()+filter.getPropertyName().replace( ".", "" );
     }
 
     private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List list ) {

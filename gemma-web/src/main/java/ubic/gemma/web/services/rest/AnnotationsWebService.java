@@ -89,12 +89,11 @@ public class AnnotationsWebService extends WebService {
      * Does a search for ontology terms based on the given string.
      *
      * @param query    the search input query.
-     * @param taxonArg whether to limit the search to a specific taxon, can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
+     * @param taxonArg only limits the genes in the result set. Can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
      *                 scientific name, common name, abbreviation. Using the ID is most efficient.
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
      * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
-     * FIXME are taxons attached to ANY terms at all? - possible redundant optional argument TaxonArg
      */
     @GET
     @Path("/search/{query}")
