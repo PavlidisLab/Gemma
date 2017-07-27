@@ -48,17 +48,22 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     text: 'Save outlier changes',
                     id: 'bioassay-outlier-save-button',
                     handler: function (b, e) {
-
+                        console.log("Saving");
                         // FIXME set this up so we can revert outliers as well.
                         var outliers = [];
+                        var nonOutliers = [];
                         this.store.each(function (record, id) {
-                            if (record.get('userFlaggedOutlier')) {
+                            if (record.get('userFlaggedOutlier') && !record.get('outlier')) {
                                 outliers.push(record.get('id'));
+                            } else if (!record.get('userFlaggedOutlier') && record.get('outlier')) {
+                                nonOutliers.push(record.get('id'));
                             }
                         });
 
                         if (outliers.length > 0) {
                             Ext.getCmp('eemanager').markOutlierBioAssays(outliers);
+                        }else if (nonOutliers.length > 0) {
+                            Ext.getCmp('eemanager').unMarkOutlierBioAssays(nonOutliers);
                         }
                     }.createDelegate(this)
                 }]
@@ -80,6 +85,7 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 reader: new Ext.data.ListRangeReader({
                     id: "id"
                 }, this.record)
+
             })
         });
 
@@ -111,14 +117,20 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
         var isAdmin = Gemma.SecurityManager.isAdmin();
 
         if (isAdmin) {
+
             /*
              * CheckColumn::onMouseDown() sets the outlier status in the record.
              */
-            outlierChx = new Ext.ux.grid.CheckColumn({
+            outlierChx = new ExtJsSucksCheckColumn({
                 header: "Mark outlier",
                 dataIndex: 'userFlaggedOutlier',
                 tooltip: 'Check to indicate this sample is an outlier',
-                width: 0.15
+                width: 0.15,
+                listeners: {
+                    'checkchange': function (column, rowIndex, checked, eOpts) {
+
+                    }
+                }
             });
 
             this.columns.push({
@@ -180,4 +192,36 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
         return "";
     }
 
+});
+
+ExtJsSucksCheckColumn = Ext.extend(Ext.ux.grid.CheckColumn, {
+    // private
+    initComponent: function () {
+        Ext.ux.grid.CheckColumn.superclass.initComponent.call(this);
+
+        this.addEvents(
+            'checkchange'
+        );
+    },
+
+    processEvent: function (name, e, grid, rowIndex, colIndex) {
+        if (name == 'mousedown') {
+            var record = grid.store.getAt(rowIndex);
+            record.set(this.dataIndex, !record.data[this.dataIndex]);
+
+            this.fireEvent('checkchange', this, record.data[this.dataIndex]);
+
+            return false; // Cancel row selection.
+        } else {
+            return Ext.grid.ActionColumn.superclass.processEvent.apply(this, arguments);
+        }
+    },
+
+    renderer: function (v, p, record) {
+        p.css += ' x-grid3-check-col-td';
+        return String.format('<div class="x-grid3-check-col{0}">&#160;</div>', v ? '-on' : '');
+    },
+
+    // Deprecate use as a plugin. Remove in 4.0
+    init: Ext.emptyFn
 });
