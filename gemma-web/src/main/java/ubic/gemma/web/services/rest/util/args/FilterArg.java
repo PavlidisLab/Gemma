@@ -158,7 +158,6 @@ public abstract class FilterArg extends MalformableArg {
      */
     private static void checkProperty( String property, Class cls ) throws NoSuchFieldException {
         String[] parts = property.split( "\\.", 2 );
-        System.out.println("checking class "+cls+" for property "+parts[0]);
         Field field = checkAllFields(cls, parts[0] );
         Class<?> subCls = field.getType();
         if ( parts.length > 1 ) {

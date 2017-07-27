@@ -23,35 +23,19 @@ import ubic.gemma.persistence.service.BaseDao;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface SampleCoexpressionAnalysisDao extends BaseDao<SampleCoexpressionAnalysis> {
 
-    /**
-     * @param ee
-     * @return
-     */
-    public DoubleMatrix<BioAssay, BioAssay> load( ExpressionExperiment ee );
+    DoubleMatrix<BioAssay, BioAssay> load( ExpressionExperiment ee );
 
-    /**
-     * @param matrix
-     * @param bad
-     * @param ee
-     * @return 
-     */
-    public SampleCoexpressionAnalysis create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad, ExpressionExperiment ee );
+    SampleCoexpressionAnalysis create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad,
+            ExpressionExperiment ee );
 
-    /**
-     * @param ee
-     * @return
-     */
-    public boolean hasAnalysis( ExpressionExperiment ee );
+    boolean hasAnalysis( ExpressionExperiment ee );
 
     /**
      * Remove any associated with the given experiment
-     * 
-     * @param ee
      */
-    public void removeForExperiment( ExpressionExperiment ee );
+    void removeForExperiment( ExpressionExperiment ee );
 
 }

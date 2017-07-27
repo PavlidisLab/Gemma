@@ -14,43 +14,38 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
  * @author Paul
- * @version $Id$
  */
 public interface SampleCoexpressionMatrixService {
 
     /**
      * Creates the matrix, or loads it if it already exists.
-     * 
-     * @param expressionExperiment
      */
-    public abstract DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment );
+    DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment );
 
     /**
      * Retrieve (and if necessary compute) the correlation matrix for the samples.
-     * 
-     * @param ee
+     *
      * @return Matrix, sorted by experimental design
      */
-    public abstract DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean forceRecompute );
+    DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean forceRecompute );
 
-    public abstract boolean hasMatrix( ExpressionExperiment ee );
+    boolean hasMatrix( ExpressionExperiment ee );
 
-    public abstract void delete( ExpressionExperiment ee );
+    void delete( ExpressionExperiment ee );
 
     /**
-     * @param processedVectors
      * @return correlation matrix. The matrix is NOT sorted by the experimental design.
      */
-    public abstract DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee,
+    DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors );
 
 }
