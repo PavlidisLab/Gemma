@@ -105,6 +105,11 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             return;
 
         boolean hasNewOutliers = false;
+
+        /*
+         * FIXME: if there are two (or more) platforms, make sure we flag all bioassays that use the same biomaterial.
+         * However, we are intending to turn all multiplatform datasets into single platform ones
+         */
         for ( BioAssay ba : bioAssays ) {
             if ( ba.getIsOutlier() ) {
                 continue;

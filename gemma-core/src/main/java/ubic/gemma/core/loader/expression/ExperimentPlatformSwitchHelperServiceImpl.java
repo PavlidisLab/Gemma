@@ -76,7 +76,7 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
             assert arrayDesign.equals( v.getDesignElement().getArrayDesign() );
         }
 
-        log.info( "Done switching " + expExp );
+        log.info( "Completing switching " + expExp );
     }
 
     /**

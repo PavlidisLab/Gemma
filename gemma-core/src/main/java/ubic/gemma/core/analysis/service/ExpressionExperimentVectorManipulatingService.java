@@ -47,7 +47,7 @@ public abstract class ExpressionExperimentVectorManipulatingService {
     protected ByteArrayConverter converter = new ByteArrayConverter();
 
     /**
-     * @param data where data will be stored
+     * @param data where data will be stored, starts out empty
      * @param representation of the quantitation type for the vector
      * @param oldV vector to be converted
      */

@@ -24,19 +24,14 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import java.util.List;
 
 /**
- * Stores the order of BioAssays referred to in DataVectors. Represents a set of microarrays. It can be associated with
- * one or more BioMaterialDimensions to represent the RNA samples run on the arrays.
- * Note: Not a SecuredChild. Probably should be.
+ * Stores the order of BioAssays referred to in DataVectors.
+ * Note: Not a SecuredChild - maybe should be?
  */
 public abstract class BioAssayDimension extends Describable {
 
-
     private static final long serialVersionUID = 34226197127833406L;
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private List<BioAssay> bioAssays = new java.util.ArrayList<>();
 
+    private List<BioAssay> bioAssays = new java.util.ArrayList<>();
 
     public List<BioAssay> getBioAssays() {
         return this.bioAssays;
