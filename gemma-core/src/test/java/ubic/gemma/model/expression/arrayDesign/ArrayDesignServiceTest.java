@@ -24,16 +24,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateObjectRetrievalFailureException;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -138,7 +138,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testCountAll() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long count = arrayDesignService.countAll();
+        Integer count = arrayDesignService.countAll();
         assertNotNull( count );
         assertTrue( count > 0 );
     }
@@ -333,14 +333,14 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testNumBioSequencesById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long num = arrayDesignService.numBioSequences( ad );
+        Long num = arrayDesignService.numBioSequences( ad );
         assertNotNull( num );
     }
 
     @Test
     public void testNumBlatResultsById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long num = arrayDesignService.numBlatResults( ad );
+        Long num = arrayDesignService.numBlatResults( ad );
         assertNotNull( num );
     }
 
@@ -359,7 +359,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testNumGenesById() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        long num = arrayDesignService.numGenes( ad );
+        Long num = arrayDesignService.numGenes( ad );
         assertNotNull( num );
     }
 
@@ -375,11 +375,13 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = arrayDesignService.thaw( ad );
 
         // make sure we can do this...
+        //noinspection ResultOfMethodCallIgnored
         ad.getPrimaryTaxon().equals( this.taxonService.load( 1L ) );
 
         auditTrailService.addUpdateEvent( ad, "testing" );
 
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            //noinspection ResultOfMethodCallIgnored
             cs.getBiologicalCharacteristic().getName();
         }
     }
