@@ -1080,6 +1080,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += formAclSelectClause( ObjectFilter.DAO_AD_ALIAS,
                 "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
         queryString += formRestrictionClause( filters );
+        queryString += "group by "+ObjectFilter.DAO_AD_ALIAS+".id ";
         queryString += formOrderByProperty( orderByProperty, orderDesc );
 
         if ( log.isDebugEnabled() ) {

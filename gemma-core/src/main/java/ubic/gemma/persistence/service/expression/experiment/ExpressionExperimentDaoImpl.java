@@ -1818,7 +1818,7 @@ public class ExpressionExperimentDaoImpl
         queryString += formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
         queryString += formRestrictionClause( filters );
-        queryString += "group by ee.id ";
+        queryString += "group by "+ObjectFilter.DAO_EE_ALIAS+".id ";
         queryString += formOrderByProperty( orderByProperty, orderDesc );
 
         if ( log.isDebugEnabled() ) {
