@@ -57,7 +57,7 @@
 
 
 
-	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl" maxElementsInMemory="100000" eternal="false"
+	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatResult" maxElementsInMemory="100000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 

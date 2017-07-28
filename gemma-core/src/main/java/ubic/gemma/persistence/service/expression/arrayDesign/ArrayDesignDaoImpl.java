@@ -340,7 +340,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         // Note attempts to do this with bulk updates were unsuccessful due to the need for joins.
         final String queryString = "select br from ArrayDesign ad join ad.compositeSequences as cs "
-                + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
+                + "inner join cs.biologicalCharacteristic bs, BlatResult br "
                 + "where br.querySequence = bs and ad=:arrayDesign";
         //noinspection unchecked
         List<BlatResult> toDelete = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -641,7 +641,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public long numAllCompositeSequenceWithBlatResults() {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic";
+                        + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString ).list().iterator()
                 .next();
     }
@@ -654,7 +654,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
         final String queryString =
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + ", BlatResultImpl as blat where blat.querySequence != null and ar.id in (:ids)";
+                        + ", BlatResult as blat where blat.querySequence != null and ar.id in (:ids)";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list().iterator().next();
     }
@@ -754,7 +754,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequence as cs inner join cs.arrayDesign as ar "
-                        + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
+                        + " , BlatResult as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }

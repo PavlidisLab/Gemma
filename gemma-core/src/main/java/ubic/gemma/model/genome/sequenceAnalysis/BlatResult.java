@@ -18,12 +18,17 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Represents the result of a BLAT search. The column names follow the convention of Kent et al.
  */
-public abstract class BlatResult extends SequenceSimilaritySearchResult {
+public class BlatResult extends SequenceSimilaritySearchResult {
 
     private static final long serialVersionUID = 5703130745858235525L;
+    private static final Log log = LogFactory.getLog( BlatResult.class.getName() );
     private Integer blockCount;
     private String blockSizes;
     private Integer matches;
@@ -41,6 +46,108 @@ public abstract class BlatResult extends SequenceSimilaritySearchResult {
     private Integer targetGapCount;
     private Long targetStart;
     private String targetStarts;
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + ( this.getId() == null ? " " : " Id:" + this.getId() + " " )
+                + "query=" + this.getQuerySequence().getName() + " " + "target=" + this.getTargetChromosome().getName()
+                + ":" + this.getTargetStart() + "-" + this.getTargetEnd();
+    }
+
+    /**
+     * Fraction identity computation, as in psl.c. Modified to INCLUDE repeat matches in the match count.
+     *
+     * @return Value between 0 and 1.
+     * @see <a href="http://genome.ucsc.edu/FAQ/FAQblat#blat4">Blat4 at UCSC</a>.
+     */
+    public Double identity() {
+        int sizeMul = 1; // assuming DNA; use 3 for protein.
+        long qAliSize = sizeMul * this.getQueryEnd() - this.getQueryStart();
+        long tAliSize = this.getTargetEnd() - this.getTargetStart();
+        long aliSize = Math.min( qAliSize, tAliSize );
+
+        if ( aliSize <= 0 )
+            return 0.0;
+
+        long sizeDif = qAliSize - tAliSize;
+        if ( sizeDif < 0 ) {
+            sizeDif = 0; // here assuming "isMRna" is true. ("The parameter isMRna should be set to TRUE, regardless
+            // of whether the input sequence is mRNA or protein")
+        }
+        int insertFactor = this.getQueryGapCount(); // assumes isMRna is true.
+        int total = ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
+        int milliBad = 0;
+        if ( total != 0 ) {
+            milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math
+                    .round( 3.0 * Math.log( 1.0 + sizeDif ) ) ) ) / total;
+        }
+        assert milliBad >= 0 && milliBad <= 1000 :
+                "MilliBad was outside of range 0-1000: " + milliBad + " for result " + this;
+        return ( 100.0 - milliBad * 0.1 ) / 100.0;
+    }
+
+    /**
+     * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches. We also consider repeat matches
+     * to be the same as regular matches.
+     *
+     * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
+     */
+    public Double score() {
+
+        long length;
+        if ( this.getQuerySequence() == null ) {
+            throw new IllegalArgumentException( "Sequence cannot be null" );
+        }
+
+        if ( this.getQuerySequence().getLength() != null && this.getQuerySequence().getLength() != 0 ) {
+            length = this.getQuerySequence().getLength();
+        } else {
+            if ( StringUtils.isNotBlank( this.getQuerySequence().getSequence() ) ) {
+                length = this.getQuerySequence().getSequence().length();
+            } else {
+                throw new IllegalArgumentException(
+                        "Sequence is missing; cannot compute score for " + this.getQuerySequence() );
+            }
+        }
+
+        assert length > 0;
+
+        // Note: we count repeat matches just like regular matches.
+        long matches = this.getMatches() + this.getRepMatches();
+
+        /*
+         * This might happen if the sequence in our system was polyA/T trimmed, which we don't do any more, but there
+         * could be remnants. When blat results come back from goldenpath (rather than computed by us) the lengths can
+         * disagree. Other reasons for this unclear.
+         */
+        if ( matches > length ) {
+            log.warn( "Blat result for " + this.getQuerySequence() + " More matches than sequence length: " + this
+                    .getMatches() + " match + " + this.getRepMatches() + " repMatch = " + matches + " > " + length );
+            matches = length;
+        }
+
+        /*
+         * return sizeMul (psl->match + ( psl->repMatch>>1)) - sizeMul psl->misMatch - psl->qNumInsert -
+         * psl->tNumInsert; Note that: "Currently the program does not distinguish between matches and repMatches.
+         * repMatches is always zero." (http://genome.ucsc.edu/goldenPath/help/blatSpec.html)
+         */
+        double score = ( double ) ( matches - this.getQueryGapCount() - this.getTargetGapCount() ) / ( double ) length;
+
+        // because of repeat matches, score _can_ be negative in some situations (typically, lots of gaps).
+        if ( score < 0.0 && this.getRepMatches() == 0 ) {
+            throw new IllegalStateException(
+                    "Score was " + score + "; matches=" + matches + " repMatches=" + this.getRepMatches()
+                            + " queryGaps=" + this.getQueryGapCount() + " targetGaps=" + this.getTargetGapCount()
+                            + " length=" + length + " sequence=" + this.getQuerySequence() + " id=" + this.getId() );
+        }
+
+        assert score >= 0.0 && score <= 1.0 :
+                "Score was " + score + "; matches=" + matches + " queryGaps=" + this.getQueryGapCount() + " targetGaps="
+                        + this.getTargetGapCount() + " length=" + length + " sequence=" + this.getQuerySequence()
+                        + " id=" + this.getId();
+
+        return score;
+    }
 
     public Integer getBlockCount() {
         return this.blockCount;
@@ -178,10 +285,6 @@ public abstract class BlatResult extends SequenceSimilaritySearchResult {
         this.targetStarts = targetStarts;
     }
 
-    public abstract Double identity();
-
-    public abstract Double score();
-
     /**
      * Constructs new instances of {@link BlatResult}.
      */
@@ -190,7 +293,7 @@ public abstract class BlatResult extends SequenceSimilaritySearchResult {
          * Constructs a new instance of {@link BlatResult}.
          */
         public static BlatResult newInstance() {
-            return new BlatResultImpl();
+            return new BlatResult();
         }
 
     }

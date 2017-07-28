@@ -26,7 +26,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @author pavlidis
  * @version $Id$
  */
-public class BlatResultImplTest extends TestCase {
+public class BlatResultTest extends TestCase {
 
     BlatResult brtest = null;
 
