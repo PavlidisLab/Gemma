@@ -152,7 +152,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatResult" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">

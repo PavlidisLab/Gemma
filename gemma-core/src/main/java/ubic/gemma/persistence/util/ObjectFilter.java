@@ -2,7 +2,6 @@ package ubic.gemma.persistence.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Created by tesarst on 14/07/17.
@@ -10,9 +9,9 @@ import java.util.Map;
  */
 public class ObjectFilter {
 
-    public static String EEDAO_EE_ALIAS = "ee";
-    public static String EEDAO_AD_ALIAS = "AD";
-    public static String EEDAO_TAXON_ALIAS = "taxon";
+    public static String DAO_EE_ALIAS = "ee";
+    public static String DAO_AD_ALIAS = "AD";
+    public static String DAO_TAXON_ALIAS = "taxon";
 
     public static String is = "=";
     public static String isNot = "!=";
@@ -57,7 +56,7 @@ public class ObjectFilter {
                 operator.equals( greaterThan ) || // gt
                         operator.equals( lessThan ) ) // lt
         ) || ( operator.equals( in ) &&  // Check 'in' conditions
-                ( requiredValue == null || !(requiredValue instanceof Collection<?>)) ) // Check value is iterable
+                ( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) ) // Check value is iterable
                 ) {
             throw new IllegalArgumentException(
                     "requiredValue for operator " + operator + " has to be an Iterable Object" );

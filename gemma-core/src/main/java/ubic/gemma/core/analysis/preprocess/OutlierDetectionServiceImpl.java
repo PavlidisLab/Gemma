@@ -287,7 +287,6 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     }
 
     private DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression ) {
-
         /*
          * Get the experimental design
          */
@@ -296,10 +295,10 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         /*
          * Get the data matrix
          */
-        Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
 
-        if ( vectos.isEmpty() ) {
+        if ( vectors.isEmpty() ) {
             log.warn( "Experiment has no processed data vectors" );
             return null;
         }
@@ -307,10 +306,10 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         /*
          * Work with filtered data
          */
-        FilterConfig fconfig = new FilterConfig();
-        fconfig.setIgnoreMinimumRowsThreshold( true );
-        fconfig.setIgnoreMinimumSampleThreshold( true );
-        ExpressionDataDoubleMatrix mat = expressionDataMatrixService.getFilteredMatrix( ee, fconfig, vectos );
+        FilterConfig fConfig = new FilterConfig();
+        fConfig.setIgnoreMinimumRowsThreshold( true );
+        fConfig.setIgnoreMinimumSampleThreshold( true );
+        ExpressionDataDoubleMatrix mat = expressionDataMatrixService.getFilteredMatrix( ee, fConfig, vectors );
 
         /* For test purposes: make note of the number of experimental factors */
         if ( testMode ) {

@@ -18,38 +18,35 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import java.util.Collection;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
 
 /**
  * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control, so
  * we treat this synonymous with "outlier removal".
- * <p>
  * This does not actually remove the samples. It just replaces the data in the processed data with "missing values".
  * This means the data are only recoverable by regenerating the processed data from the raw data
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
-public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipulatingService implements
-        OutlierFlaggingService {
+public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipulatingService
+        implements OutlierFlaggingService {
 
     private static Log log = LogFactory.getLog( OutlierFlaggingServiceImpl.class );
 
@@ -65,15 +62,10 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
     @Autowired
     private PreprocessorService preprocessorService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.service.SampleRemoveService#unmarkAsMissing(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
     @Override
     public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
-        if ( bioAssays.isEmpty() ) return;
+        if ( bioAssays.isEmpty() )
+            return;
 
         boolean hasReversions = false;
         for ( BioAssay bioAssay : bioAssays ) {
@@ -93,8 +85,8 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         }
 
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.Factory.newInstance(), "Marked "
-                + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.Factory.newInstance(),
+                "Marked " + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
 
         assert expExp != null;
 
@@ -106,16 +98,11 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.service.SampleRemoveService#markAsMissing(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment, java.util.Collection)
-     */
     @Override
     public void markAsMissing( Collection<BioAssay> bioAssays ) {
 
-        if ( bioAssays == null || bioAssays.size() == 0 ) return;
+        if ( bioAssays == null || bioAssays.size() == 0 )
+            return;
 
         boolean hasNewOutliers = false;
         for ( BioAssay ba : bioAssays ) {
@@ -129,11 +116,12 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         }
 
         if ( !hasNewOutliers ) {
+            System.out.println( "No new outliers." );
             return;
         }
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(), bioAssays.size()
-                + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(),
+                bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
 
         try {
             preprocessorService.process( expExp );
@@ -142,9 +130,6 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         }
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( BioAssay bioAssay, String note ) {
         AuditEventType eventType = SampleRemovalEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( bioAssay, eventType, note );
