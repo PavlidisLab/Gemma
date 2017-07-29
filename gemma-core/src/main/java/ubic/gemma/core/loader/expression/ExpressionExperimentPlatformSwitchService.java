@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -194,7 +195,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             assert unusedBADs.size() > 1; // otherwise we shouldn't be here.
             unusedBADs.remove( maxBAD );
         }
-        ///////
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
         Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements = new HashMap<>();
@@ -435,7 +435,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         if ( bad != null && !vector.getBioAssayDimension().equals( bad ) ) {
 
             /*
-             * 1. Check if they are already the same; then just switch it.
+             * 1. Check if they are already the same; then just switch it to the desired BAD
              * 2. If not, then the vector data has to be rewritten.
              */
             vectorReWrite( vector, bad );
@@ -445,10 +445,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     }
 
     /**
-     * Rearrange/expand a vector as necessary to use the given BioAssayDimension.
+     * Rearrange/expand a vector as necessary to use the given BioAssayDimension. Only used for multiplatform case of
+     * samples run on multiple platforms.
      *
      * @param vector
-     * @param bad
+     * @param bad to be used as the replacement.
      */
     private void vectorReWrite( DesignElementDataVector vector, BioAssayDimension bad ) {
         List<BioAssay> desiredOrder = bad.getBioAssays();
@@ -459,6 +460,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             return;
         }
 
+        /*
+         * We remake the data vector following the new ordering.
+         */
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         Object missingVal = null;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
@@ -474,26 +478,27 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     + " not supported (when processing " + vector );
         }
 
-        List<Object> data = new ArrayList<>();
-        super.convertFromBytes( data, vector.getQuantitationType().getRepresentation(), vector );
+        List<Object> oldData = new ArrayList<>();
+        super.convertFromBytes( oldData, vector.getQuantitationType().getRepresentation(), vector );
 
         /*
          * Now data has the old data, so we need to rearrange it to match, inserting missings as necessary.
          */
-        Map<BioAssay, Integer> ba2loc = new HashMap<>();
+        Map<BioMaterial, Integer> bm2loc = new HashMap<>();
         int i = 0;
         List<Object> newData = new ArrayList<>();
         // initialize
         for ( BioAssay ba : desiredOrder ) {
-            ba2loc.put( ba, i++ );
+            bm2loc.put( ba.getSampleUsed(), i++ );
             newData.set( i, missingVal );
         }
 
+        // Put data into new locations
         int j = 0;
         for ( BioAssay ba : currentOrder ) {
-            Integer loc = ba2loc.get( ba );
+            Integer loc = bm2loc.get( ba.getSampleUsed() );
             assert loc != null;
-            newData.set( loc, data.get( j++ ) );
+            newData.set( loc, oldData.get( j++ ) );
         }
 
         byte[] newDataAr = converter.toBytes( newData.toArray() );
