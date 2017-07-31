@@ -65,7 +65,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
+ * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
  * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
  * arrays instead.
  *
@@ -130,7 +130,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
 
-        return new JsonReaderResponse<ArrayDesignValueObject>( new ArrayList<ArrayDesignValueObject>( valueObjects ), count );
+        return new JsonReaderResponse<>( new ArrayList<>( valueObjects ), count );
     }
 
     @Override
@@ -219,8 +219,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             } catch ( IOException ioe ) {
                 log.warn( "Failure during streaming of annotation file " + fileName + " Error: " + ioe );
             }
-        } catch ( FileNotFoundException fnfe ) {
-            log.warn( "Annotation file " + fileName + " can't be found at " + fnfe );
+        } catch ( FileNotFoundException e ) {
+            log.warn( "Annotation file " + fileName + " can't be found at " + e );
             return null;
         } catch ( IOException e ) {
             log.warn( "Annotation file " + fileName + " could not be read: " + e.getMessage() );
@@ -306,7 +306,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
-        List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
+        List<ArrayDesignValueObject> result = new ArrayList<>();
 
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( arrayDesignIds == null || arrayDesignIds.length == 0 ) {
@@ -314,12 +314,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         } else {// if ids are specified, then display only those arrayDesigns
 
-            Collection<Long> adCol = new LinkedList<Long>( Arrays.asList( arrayDesignIds ) );
+            Collection<Long> adCol = new LinkedList<>( Arrays.asList( arrayDesignIds ) );
             result.addAll( arrayDesignService.loadValueObjectsByIds( adCol ) );
         }
 
         // Filter...
-        Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
+        Collection<ArrayDesignValueObject> toHide = new HashSet<>();
         for ( ArrayDesignValueObject a : result ) {
             if ( !showMergees && a.getIsMergee() && a.getExpressionExperimentCount() == 0 ) {
                 toHide.add( a );
@@ -346,7 +346,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
         if ( rawSummaries == null ) {
-            return new HashSet<CompositeSequenceMapValueObject>();
+            return new HashSet<>();
         }
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
@@ -392,10 +392,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     /**
-     * Setls alternate names on the given value object.
+     * Set alternate names on the given value object.
      */
     private ArrayDesignValueObjectExt setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
-        Collection<String> names = new HashSet<String>();
+        Collection<String> names = new HashSet<>();
         for ( AlternateName an : arrayDesign.getAlternateNames() ) {
             names.add( an.getName() );
         }
@@ -411,7 +411,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
-        Collection<DatabaseEntryValueObject> externalReferences = new HashSet<DatabaseEntryValueObject>();
+        Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {
             externalReferences.add( new DatabaseEntryValueObject( en ) );
         }
@@ -438,7 +438,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     public Map<String, String> getReportHtml( EntityDelegator ed ) {
         assert ed.getId() != null;
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
 
         result.put( "id", ed.getId().toString() );
         if ( summary == null )
@@ -451,13 +451,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public String getSummaryForArrayDesign( Long id ) {
 
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         ids.add( id );
-        Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjectsByIds( ids );
-        arrayDesignReportService.fillInValueObjects( advos );
+        Collection<ArrayDesignValueObject> adVos = arrayDesignService.loadValueObjectsByIds( ids );
+        arrayDesignReportService.fillInValueObjects( adVos );
 
-        if ( !advos.isEmpty() && advos.toArray()[0] != null ) {
-            ArrayDesignValueObject advo = ( ArrayDesignValueObject ) advos.toArray()[0];
+        if ( !adVos.isEmpty() && adVos.toArray()[0] != null ) {
+            ArrayDesignValueObject advo = ( ArrayDesignValueObject ) adVos.toArray()[0];
             StringBuilder buf = new StringBuilder();
 
             buf.append( "<div style=\"float:left\" >" );
@@ -531,21 +531,21 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new IllegalArgumentException( "Must provide a platform identifier or name" );
         }
 
-        ArrayDesign arrayDesign = null;
+        ArrayDesign arrayDesign;
         if ( idStr != null ) {
             arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
             request.setAttribute( "id", idStr );
-        } else if ( name != null ) {
+        } else {
             arrayDesign = arrayDesignService.findByShortName( name );
             request.setAttribute( "name", name );
 
             if ( arrayDesign == null ) {
-                Collection<ArrayDesign> byname = arrayDesignService.findByName( name );
-                if ( byname.isEmpty() ) {
+                Collection<ArrayDesign> byName = arrayDesignService.findByName( name );
+                if ( byName.isEmpty() ) {
                     throw new IllegalArgumentException( "Must provide a valid platform identifier or name" );
 
                 }
-                arrayDesign = byname.iterator().next();
+                arrayDesign = byName.iterator().next();
             }
         }
 
@@ -623,7 +623,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     private String formatAlternateNames( ArrayDesign ad ) {
-        Collection<String> names = new HashSet<String>();
+        Collection<String> names = new HashSet<>();
         for ( AlternateName an : ad.getAlternateNames() ) {
             names.add( an.getName() );
         }
