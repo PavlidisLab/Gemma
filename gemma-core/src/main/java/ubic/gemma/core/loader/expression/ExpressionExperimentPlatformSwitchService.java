@@ -166,7 +166,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         /*
          * For a multiplatform-per-sample case: (note that some samples might just be on one platform...)
-         * 1. Pick a BAD that can be used for all DataVectors.
+         * 1. Pick a BAD that can be used for all DataVectors (it has all BioAssays in it).
          * 2. Switch vectors to use it - may require adding NaNs and reordering the vectors
          * 3. Delete the Bioassays that are using other BADs
          */
@@ -194,6 +194,17 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             assert unusedBADs.size() > 1; // otherwise we shouldn't be here.
             unusedBADs.remove( maxBAD );
+            if ( maxBAD != null && !maxBAD.getBioAssays().containsAll( expExp.getBioAssays() ) ) {
+                /*
+                 * This is some kind of nutty hybrid case.
+                 */
+                log.warn(
+                        "This experiment looked like it had samples run on more than one platform, "
+                                + "but it also has no BioAssayDimension that is eligible to accomodate all samples. "
+                                + "The experiment will be switched to the merged platform, but no BioAssayDimension switch will be done." );
+                multiPlatformPerSample = false;
+                maxBAD = null;
+            }
         }
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
@@ -301,7 +312,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         helperService.persist( expExp, arrayDesign );
 
-        if ( !unusedBADs.isEmpty() ) {
+        if ( maxBAD != null && !unusedBADs.isEmpty() ) {
             log.info( "Cleaning up unused BioAssayDimensions and BioAssays after merge" );
             // Delete them and the bioassays associated with them.
             for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
@@ -315,7 +326,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     }
 
     /**
-     *
+     * Automatically identify an appropriate merged platform
+     * 
      * @param expExp
      * @return
      */
@@ -490,7 +502,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         // initialize
         for ( BioAssay ba : desiredOrder ) {
             bm2loc.put( ba.getSampleUsed(), i++ );
-            newData.set( i, missingVal );
+            newData.add( missingVal );
         }
 
         // Put data into new locations
