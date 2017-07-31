@@ -73,7 +73,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Boolean hasEitherIntensity = null;
     private Boolean hasProbeSpecificForQueryGene;
     private String investigators;
-    private Boolean isPublic = null;
+    private Boolean isPublic = false;
     private Boolean isShared = false;
     private String linkAnalysisEventType;
     private Double minPvalue;
