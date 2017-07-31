@@ -12,7 +12,7 @@
       new Gemma.GemmaViewPort( {
          centerPanelConfig : new Ext.Panel( {
             items : [ new Gemma.PlatformPage( {
-               platformId : Ext.get( "platformId" ).getValue(),
+               platformId : Ext.get( "platformId" ).getValue()
             } ) ],
             layout : 'fit',
             title : 'Platform details: ' + Ext.get( "shortName" ).getValue()
@@ -21,12 +21,12 @@
    } );
 </script>
 
-<title>${arrayDesignShortName}-${arrayDesignName }</title>
+<title>${arrayDesignShortName} - ${arrayDesignName }</title>
 </head>
 
 <body>
 	<input type="hidden" name="platformId" id="platformId" value="${arrayDesignId}" />
 	<input type="hidden" name="shortName" id="shortName" value="${arrayDesignShortName}" />
-	<input type="hidden" name="shortName" id="shortName" value="${arrayDesignName}" />
+	<input type="hidden" name="ame" id="name" value="${arrayDesignName}" />
 
 </body>
