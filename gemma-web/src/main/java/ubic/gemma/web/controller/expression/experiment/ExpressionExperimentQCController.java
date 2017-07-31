@@ -18,37 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.imageio.ImageIO;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.doublealgo.Formatter;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.jet.stat.Descriptive;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartFactory;
@@ -81,12 +55,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.doublealgo.Formatter;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import cern.jet.stat.Descriptive;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
@@ -104,76 +72,58 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.view.TextView;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 //
+
 /**
  * @author paul
- * @version $Id$
  */
 @Controller
 public class ExpressionExperimentQCController extends BaseController {
 
-    /**
-     * Overrides XYLineAndShapeRenderer such that lines are drawn on top of points.
-     */
-    private class XYRegressionRenderer extends XYLineAndShapeRenderer {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        protected boolean isItemPass( int pass ) {
-            return pass == 0;
-        }
-
-        @Override
-        protected boolean isLinePass( int pass ) {
-            return pass == 1;
-        }
-    }
-
-    private static final int MAX_HEATMAP_CELLSIZE = 12;
-
     public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
-
+    private static final int MAX_HEATMAP_CELLSIZE = 12;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
     @Autowired
     private SVDService svdService;
-
     @Autowired
     private MeanVarianceService meanVarianceService;
-
     @Autowired
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
-
     @Autowired
     private OutlierDetectionService outlierDetectionService;
-
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
-
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
 
-    /**
-     * @param id
-     * @param os
-     * @throws Exception
-     */
     @RequestMapping("/expressionExperiment/detailedFactorAnalysis.html")
     public void detailedFactorAnalysis( Long id, OutputStream os ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -188,10 +138,6 @@ public class ExpressionExperimentQCController extends BaseController {
         }
     }
 
-    /**
-     * @param id of experiment
-     * @throws IOException
-     */
     @RequestMapping("/expressionExperiment/outliersRemoved.html")
     public ModelAndView identifyOutliersRemoved( Long id ) throws IOException {
 
@@ -207,7 +153,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         ee = expressionExperimentService.thawLite( ee );
-        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+        Collection<BioAssay> bioAssays = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
                 bioAssays.add( assay );
@@ -230,10 +176,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return mav;
     }
 
-    /**
-     * @param id of experiment
-     * @throws IOException
-     */
     @RequestMapping("/expressionExperiment/possibleOutliers.html")
     public ModelAndView identifyPossibleOutliers( Long id ) throws IOException {
 
@@ -257,7 +199,7 @@ public class ExpressionExperimentQCController extends BaseController {
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
 
-        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+        Collection<BioAssay> bioAssays = new HashSet<>();
         if ( !outliers.isEmpty() ) {
             for ( OutlierDetails details : outliers ) {
                 bioAssays.add( details.getBioAssay() );
@@ -280,10 +222,11 @@ public class ExpressionExperimentQCController extends BaseController {
         return mav;
     }
 
-
+    @SuppressWarnings("SameReturnValue")
     @RequestMapping("/expressionExperiment/pcaFactors.html")
     public ModelAndView pcaFactors( Long id, OutputStream os ) throws Exception {
-        if ( id == null ) return null;
+        if ( id == null )
+            return null;
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -307,7 +250,7 @@ public class ExpressionExperimentQCController extends BaseController {
         return null;
     }
 
-
+    @SuppressWarnings("SameReturnValue")
     @RequestMapping("/expressionExperiment/pcaScree.html")
     public ModelAndView pcaScree( Long id, OutputStream os ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -328,13 +271,11 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id of experiment
-     * @param size Multiplier on the cell size. 1 or null for standard small size.
-     * @param text if true, output a tabbed file instead of a png
+     * @param id         of experiment
+     * @param size       Multiplier on the cell size. 1 or null for standard small size.
+     * @param text       if true, output a tabbed file instead of a png
      * @param showLabels if the row and column labels of the matrix should be shown.
-     * @param os response output stream
-     * @return
-     * @throws Exception
+     * @param os         response output stream
      */
     @RequestMapping("/expressionExperiment/visualizeCorrMat.html")
     public ModelAndView visualizeCorrMat( Long id, Double size, String contrVal, Boolean text, Boolean showLabels,
@@ -353,17 +294,17 @@ public class ExpressionExperimentQCController extends BaseController {
 
         DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
 
-        List<String> stringNames = new ArrayList<String>();
+        List<String> stringNames = new ArrayList<>();
         for ( BioAssay ba : omatrix.getRowNames() ) {
             stringNames.add( ba.getName() + " ID=" + ba.getId() );
         }
-        DoubleMatrix<String, String> matrix = new DenseDoubleMatrix<String, String>( omatrix.getRawMatrix() );
+        DoubleMatrix<String, String> matrix = new DenseDoubleMatrix<>( omatrix.getRawMatrix() );
         matrix.setRowNames( stringNames );
         matrix.setColumnNames( stringNames );
 
         if ( text != null && text ) {
             StringWriter s = new StringWriter();
-            MatrixWriter<String, String> mw = new MatrixWriter<String, String>( s, new DecimalFormat( "#.##" ) );
+            MatrixWriter<String, String> mw = new MatrixWriter<>( s, new DecimalFormat( "#.##" ) );
             mw.writeMatrix( matrix, true );
             ModelAndView mav = new ModelAndView( new TextView() );
             mav.addObject( TextView.TEXT_PARAM, s.toString() );
@@ -377,14 +318,14 @@ public class ExpressionExperimentQCController extends BaseController {
             matrix.set( i, i, Double.NaN );
         }
 
-        ColorMatrix<String, String> cm = new ColorMatrix<String, String>( matrix );
+        ColorMatrix<String, String> cm = new ColorMatrix<>( matrix );
 
         cleanNames( matrix );
 
         int row = matrix.rows();
         int cellsize = ( int ) Math.min( MAX_HEATMAP_CELLSIZE, Math.max( 1, size * DEFAULT_QC_IMAGE_SIZE_PX / row ) );
 
-        MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( cm );
+        MatrixDisplay<String, String> writer = new MatrixDisplay<>( cm );
 
         boolean reallyShowLabels;
         int minimumCellSizeForText = 9;
@@ -392,7 +333,7 @@ public class ExpressionExperimentQCController extends BaseController {
             cellsize = Math.min( MAX_HEATMAP_CELLSIZE, minimumCellSizeForText );
             reallyShowLabels = true;
         } else {
-            reallyShowLabels = showLabels == null ? false : showLabels && cellsize >= minimumCellSizeForText;
+            reallyShowLabels = showLabels != null && ( showLabels && cellsize >= minimumCellSizeForText );
         }
 
         writer.setCellSize( new Dimension( cellsize, cellsize ) );
@@ -403,12 +344,11 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id of experiment
+     * @param id   of experiment
      * @param size Multiplier on the cell size. 1 or null for standard small size.
      * @param text if true, output a tabbed file instead of a png
-     * @param os response output stream
+     * @param os   response output stream
      * @return ModelAndView object if text is true, otherwise null
-     * @throws Exception
      */
     @RequestMapping("/expressionExperiment/visualizeMeanVariance.html")
     public ModelAndView visualizeMeanVariance( Long id, Double size, Boolean text, OutputStream os ) throws Exception {
@@ -440,8 +380,8 @@ public class ExpressionExperimentQCController extends BaseController {
             matrix.viewColumn( 0 ).assign( means );
             matrix.viewColumn( 1 ).assign( variances );
 
-            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null,
-                    new String[] { "mean", "variance" }, null, null, null, null );
+            String matrixString = new Formatter( "%1.2G" )
+                    .toTitleString( matrix, null, new String[] { "mean", "variance" }, null, null, null, null );
             ModelAndView mav = new ModelAndView( new TextView() );
             mav.addObject( TextView.TEXT_PARAM, matrixString );
 
@@ -453,6 +393,7 @@ public class ExpressionExperimentQCController extends BaseController {
         return null;
     }
 
+    @SuppressWarnings("SameReturnValue")
     @RequestMapping("/expressionExperiment/visualizeProbeCorrDist.html")
     public ModelAndView visualizeProbeCorrDist( Long id, OutputStream os ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -466,15 +407,15 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param id of the experiment
+     * @param id         of the experiment
      * @param analysisId of the analysis
-     * @param rsid resultSet Id
+     * @param rsid       resultSet Id
      * @param factorName deprecated, we will use rsId instead. Maintained for backwards compatibility.
-     * @param size of the image.
-     * @param os stream to write the image to.
+     * @param size       of the image.
+     * @param os         stream to write the image to.
      * @return null
-     * @throws Exception
      */
+    @SuppressWarnings("SameReturnValue")
     @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
     public ModelAndView visualizePvalueDist( Long id, Long analysisId, Long rsid, String factorName, Integer size,
             OutputStream os ) throws Exception {
@@ -515,7 +456,7 @@ public class ExpressionExperimentQCController extends BaseController {
          * String>( omatrix.getRawMatrix() ); matrix.setRowNames( stringNames ); matrix.setColumnNames( stringNames );
          */
         StringWriter s = new StringWriter();
-        MatrixWriter<Long, Integer> mw = new MatrixWriter<Long, Integer>( s, new DecimalFormat( "#.######" ) );
+        MatrixWriter<Long, Integer> mw = new MatrixWriter<>( s, new DecimalFormat( "#.######" ) );
         mw.writeMatrix( vMatrix, true );
         ModelAndView mav = new ModelAndView( new TextView() );
         mav.addObject( TextView.TEXT_PARAM, s.toString() );
@@ -523,14 +464,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     }
 
-    /**
-     * @param chart
-     * @param g2
-     * @param x
-     * @param y
-     * @param width
-     * @param height
-     */
     private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
             double height ) {
         chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
@@ -540,12 +473,10 @@ public class ExpressionExperimentQCController extends BaseController {
      * clean up the names of the correlation matrix rows and columns, so they are not to long and also contain the
      * bioassay id for reference purposes. Note that newly created coexpression matrices already give shorter names, so
      * this is partly for backwards compatibility with the old format.
-     * 
-     * @param matrix
      */
     private void cleanNames( DoubleMatrix<String, String> matrix ) {
         List<String> rawRowNames = matrix.getRowNames();
-        List<String> rowNames = new ArrayList<String>();
+        List<String> rowNames = new ArrayList<>();
         int i = 0;
         Pattern p = Pattern.compile( "^.*?ID=([0-9]+).*$", Pattern.CASE_INSENSITIVE );
         Pattern bipattern = Pattern.compile( "BioAssay Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
@@ -576,14 +507,13 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Support method for writeDetailedFactorAnalysis
-     * 
-     * @param efIdMap
-     * @param efId
+     *
      * @param categories map of factor ID to text value. Strings will be unique, but possibly abbreviated and/or munged.
      */
     private void getCategories( Map<Long, ExperimentalFactor> efIdMap, Long efId, Map<Long, String> categories ) {
         ExperimentalFactor ef = efIdMap.get( efId );
-        if ( ef == null ) return;
+        if ( ef == null )
+            return;
         int maxCategoryLabelLength = 10;
 
         for ( FactorValue fv : ef.getFactorValues() ) {
@@ -620,14 +550,13 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param ee
      * @return JFreeChart XYSeries representing the histogram.
      * @throws FileNotFoundException - only if the coexp dist is being read from a file; when migration to db storage is
-     *         complete this can be removed
-     * @throws IOException - only if the coexp dist is being read from a file; when migration to db storage is complete
-     *         this can be removed
+     *                               complete this can be removed
+     * @throws IOException           - only if the coexp dist is being read from a file; when migration to db storage is complete
+     *                               this can be removed
      */
-    private XYSeries getCorrelHist( ExpressionExperiment ee ) throws FileNotFoundException, IOException {
+    private XYSeries getCorrelHist( ExpressionExperiment ee ) throws IOException {
         CoexpCorrelationDistribution coexpCorrelationDistribution = coexpressionAnalysisService
                 .getCoexpCorrelationDistribution( ee );
 
@@ -669,15 +598,17 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        try (BufferedReader in = new BufferedReader( new FileReader( file ) );) {
+        try (BufferedReader in = new BufferedReader( new FileReader( file ) )) {
             XYSeries series = new XYSeries( ee.getId(), true, true );
             DoubleArrayList counts = new DoubleArrayList();
 
             while ( in.ready() ) {
                 String line = in.readLine().trim();
-                if ( line.startsWith( "#" ) ) continue;
+                if ( line.startsWith( "#" ) )
+                    continue;
                 String[] split = StringUtils.split( line );
-                if ( split.length < 2 ) continue;
+                if ( split.length < 2 )
+                    continue;
                 try {
                     double x = Double.parseDouble( split[0] );
                     double y = Double.parseDouble( split[1] );
@@ -699,16 +630,10 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param ee
-     * @param analysisId
-     * @param rsId
-     * @param factorName
      * @return JFreeChart XYSeries representing the histogram for the requested result set
-     * @throws FileNotFoundException
-     * @throws IOException
      */
     private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId,
-            String factorName ) throws FileNotFoundException, IOException {
+            String factorName ) {
         if ( ee == null || analysisId == null || rsId == null ) {
             log.warn( "Got invalid values: " + ee + " " + analysisId + " " + rsId + " " + factorName );
             return null;
@@ -716,7 +641,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         Histogram hist = differentialExpressionResultService.loadPvalueDistribution( rsId );
 
-        XYSeries xySeries = null;
+        XYSeries xySeries;
 
         if ( hist != null ) {
             xySeries = new XYSeries( rsId, true, true );
@@ -733,30 +658,19 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Get the eigengene for the given component.
-     * <p>
      * The values are rescaled so that jfreechart can cope. Small numbers give it fits.
-     * 
-     * @param svdo
-     * @param component
-     * @return
      */
     private Double[] getEigenGene( SVDValueObject svdo, Integer component ) {
         DoubleArrayList eigenGeneL = new DoubleArrayList(
                 ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj( component ) ) );
         DescriptiveWithMissing.standardize( eigenGeneL );
-        Double[] eigenGene = ArrayUtils.toObject( eigenGeneL.elements() );
-        return eigenGene;
+        return ArrayUtils.toObject( eigenGeneL.elements() );
     }
 
-    /**
-     * @param ee
-     * @param maxWidth
-     * @return
-     */
     private Map<Long, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
-        Map<Long, String> efs = new HashMap<Long, String>();
+        Map<Long, String> efs = new HashMap<>();
         for ( ExperimentalFactor ef : factors ) {
             efs.put( ef.getId(), StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), maxWidth ) );
         }
@@ -794,10 +708,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return dataset;
     }
 
-    /**
-     * @param svdo
-     * @return
-     */
     private CategoryDataset getPCAScree( SVDValueObject svdo ) {
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
@@ -814,17 +724,13 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * For backwards compatibility only; remove when no longer needed.
-     * 
-     * @param ee
-     * @return
      */
     private File locateProbeCorrFile( ExpressionExperiment ee ) {
         String shortName = ee.getShortName();
         String analysisStoragePath = Settings.getAnalysisStoragePath();
 
         String suffix = ".correlDist.txt";
-        File f = new File( analysisStoragePath + File.separatorChar + shortName + suffix );
-        return f;
+        return new File( analysisStoragePath + File.separatorChar + shortName + suffix );
     }
 
     /**
@@ -853,15 +759,10 @@ public class ExpressionExperimentQCController extends BaseController {
         }
     }
 
-    /**
-     * @param ee
-     * @param os
-     * @return
-     * @throws Exception
-     */
     private boolean writeDetailedFactorAnalysis( ExpressionExperiment ee, OutputStream os ) throws Exception {
         SVDValueObject svdo = svdService.getSvdFactorAnalysis( ee.getId() );
-        if ( svdo == null ) return false;
+        if ( svdo == null )
+            return false;
 
         if ( svdo.getFactors().isEmpty() && svdo.getDates().isEmpty() ) {
             return false;
@@ -877,7 +778,7 @@ public class ExpressionExperimentQCController extends BaseController {
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
         Map<Long, ExperimentalFactor> efIdMap = EntityUtils
                 .getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
-        Collection<Long> continuousFactors = new HashSet<Long>();
+        Collection<Long> continuousFactors = new HashSet<>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             boolean isContinous = ExperimentalDesignUtils.isContinuous( ef );
             if ( isContinous ) {
@@ -890,7 +791,7 @@ public class ExpressionExperimentQCController extends BaseController {
          */
         int MAX_COMP = 3;
 
-        Map<Long, List<JFreeChart>> charts = new LinkedHashMap<Long, List<JFreeChart>>();
+        Map<Long, List<JFreeChart>> charts = new LinkedHashMap<>();
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         /*
          * FACTORS
@@ -898,7 +799,8 @@ public class ExpressionExperimentQCController extends BaseController {
         String componentShorthand = "PC";
         for ( Integer component : factorCorrelations.keySet() ) {
 
-            if ( component >= MAX_COMP ) break;
+            if ( component >= MAX_COMP )
+                break;
             String xaxisLabel = componentShorthand + ( component + 1 );
 
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
@@ -918,7 +820,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
                 boolean isCategorical = !continuousFactors.contains( efId );
 
-                Map<Long, String> categories = new HashMap<Long, String>();
+                Map<Long, String> categories = new HashMap<>();
 
                 if ( isCategorical ) {
                     getCategories( efIdMap, efId, categories );
@@ -932,8 +834,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 String plotname = ( efs.get( efId ) == null ? "?" : efs.get( efId ) ) + " " + xaxisLabel; // unique?
 
                 if ( a != null && !Double.isNaN( a ) ) {
-                    Double corr = a;
-                    String title = plotname + " " + String.format( "%.2f", corr );
+                    String title = plotname + " " + String.format( "%.2f", a );
                     List<Double> values = svdo.getFactors().get( efId );
                     Double[] eigenGene = getEigenGene( svdo, component );
                     assert values.size() == eigenGene.length;
@@ -941,7 +842,7 @@ public class ExpressionExperimentQCController extends BaseController {
                     /*
                      * Plot eigengene vs values, add correlation to the plot
                      */
-                    JFreeChart chart = null;
+                    JFreeChart chart;
                     if ( isCategorical ) {
 
                         /*
@@ -949,14 +850,14 @@ public class ExpressionExperimentQCController extends BaseController {
                          */
 
                         // use the absolute value of the correlation, since direction is arbitrary.
-                        title = plotname + " " + String.format( "r=%.2f", Math.abs( corr ) );
+                        title = plotname + " " + String.format( "r=%.2f", Math.abs( a ) );
 
                         DefaultMultiValueCategoryDataset dataset = new DefaultMultiValueCategoryDataset();
 
                         /*
                          * What this code does is organize the factor values by the groups.
                          */
-                        Map<String, List<Double>> groupedValues = new TreeMap<String, List<Double>>();
+                        Map<String, List<Double>> groupedValues = new TreeMap<>();
                         for ( int i = 0; i < values.size(); i++ ) {
                             Long fvId = values.get( i ).longValue();
                             String fvValue = categories.get( fvId );
@@ -973,7 +874,8 @@ public class ExpressionExperimentQCController extends BaseController {
 
                             groupedValues.get( fvValue ).add( eigenGene[i] );
 
-                            if ( log.isDebugEnabled() ) log.debug( fvValue + " " + values.get( i ) );
+                            if ( log.isDebugEnabled() )
+                                log.debug( fvValue + " " + values.get( i ) );
                         }
 
                         for ( String key : groupedValues.keySet() ) {
@@ -1006,7 +908,7 @@ public class ExpressionExperimentQCController extends BaseController {
                     } else {
 
                         /*
-                         * Continous value factor
+                         * Continuous value factor
                          */
 
                         DefaultXYDataset series = new DefaultXYDataset();
@@ -1015,8 +917,9 @@ public class ExpressionExperimentQCController extends BaseController {
                                         ArrayUtils.toPrimitive( eigenGene ) } );
 
                         // don't show x-axis label, which would otherwise be efs.get( efId )
-                        chart = ChartFactory.createScatterPlot( title, null, xaxisLabel, series,
-                                PlotOrientation.VERTICAL, false, false, false );
+                        chart = ChartFactory
+                                .createScatterPlot( title, null, xaxisLabel, series, PlotOrientation.VERTICAL, false,
+                                        false, false );
                         XYPlot plot = chart.getXYPlot();
                         plot.setRangeGridlinesVisible( false );
                         plot.setDomainGridlinesVisible( false );
@@ -1044,15 +947,16 @@ public class ExpressionExperimentQCController extends BaseController {
             String xaxisLabel = componentShorthand + ( component + 1 );
 
             List<Date> dates = svdo.getDates();
-            if ( dates.isEmpty() ) break;
+            if ( dates.isEmpty() )
+                break;
 
             long secspan = ubic.basecode.util.DateUtil.numberOfSecondsBetweenDates( dates );
 
-            if ( component >= MAX_COMP ) break;
+            if ( component >= MAX_COMP )
+                break;
             Double a = dateCorrelations.get( component );
 
             if ( a != null && !Double.isNaN( a ) ) {
-                Double corr = a;
                 Double[] eigenGene = svdo.getvMatrix().getColObj( component );
 
                 /*
@@ -1072,9 +976,9 @@ public class ExpressionExperimentQCController extends BaseController {
                 TimeSeriesCollection dataset = new TimeSeriesCollection();
                 dataset.addSeries( series );
 
-                JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                        "Dates: " + xaxisLabel + " " + String.format( "r=%.2f", corr ), null, xaxisLabel, dataset,
-                        false, false, false );
+                JFreeChart chart = ChartFactory
+                        .createTimeSeriesChart( "Dates: " + xaxisLabel + " " + String.format( "r=%.2f", a ), null,
+                                xaxisLabel, dataset, false, false, false );
 
                 XYPlot xyPlot = chart.getXYPlot();
 
@@ -1101,10 +1005,9 @@ public class ExpressionExperimentQCController extends BaseController {
         /*
          * Plot in a grid, with each factor as a column. FIXME What if we have too many factors to fit on the screen?
          */
-        int rows = MAX_COMP;
         int columns = ( int ) Math.ceil( charts.size() );
         int perChartSize = DEFAULT_QC_IMAGE_SIZE_PX;
-        BufferedImage image = new BufferedImage( columns * perChartSize, rows * perChartSize,
+        BufferedImage image = new BufferedImage( columns * perChartSize, MAX_COMP * perChartSize,
                 BufferedImage.TYPE_INT_ARGB );
         Graphics2D g2 = image.createGraphics();
         int currentX = 0;
@@ -1112,7 +1015,7 @@ public class ExpressionExperimentQCController extends BaseController {
         for ( Long id : charts.keySet() ) {
             for ( JFreeChart chart : charts.get( id ) ) {
                 addChartToGraphics( chart, g2, currentX, currentY, perChartSize, perChartSize );
-                if ( currentY + perChartSize < rows * perChartSize ) {
+                if ( currentY + perChartSize < MAX_COMP * perChartSize ) {
                     currentY += perChartSize;
                 } else {
                     currentY = 0;
@@ -1126,9 +1029,8 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
-     * @param os response output stream
+     * @param os  response output stream
      * @param mvr MeanVarianceRelation object to plot
-     * @param size
      * @return true if mvr data points were plotted
      */
     private boolean writeMeanVariance( OutputStream os, MeanVarianceRelation mvr, Double size ) throws Exception {
@@ -1155,8 +1057,9 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createScatterPlot( "", "mean (log2)", "variance (log2)", collection,
-                PlotOrientation.VERTICAL, false, false, false );
+        JFreeChart chart = ChartFactory
+                .createScatterPlot( "", "mean (log2)", "variance (log2)", collection, PlotOrientation.VERTICAL, false,
+                        false, false );
 
         // adjust colors and shapes
         XYRegressionRenderer renderer = new XYRegressionRenderer();
@@ -1193,8 +1096,8 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = ( int ) Math.min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX,
-                size * DEFAULT_QC_IMAGE_SIZE_PX );
+        int finalSize = ( int ) Math
+                .min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX, size * DEFAULT_QC_IMAGE_SIZE_PX );
 
         ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
 
@@ -1204,10 +1107,6 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * Remove outliers from the MeanVarianceRelation by removing those points which have: (zscore(mean) > zscoreMax ||
      * zscore(variance) > zscoreMax)
-     * 
-     * @param mvr
-     * @param zscoreMax
-     * @return
      */
     @SuppressWarnings("unused")
     private MeanVarianceRelation removeMVOutliers( MeanVarianceRelation mvr, double zscoreMax ) {
@@ -1234,8 +1133,9 @@ public class ExpressionExperimentQCController extends BaseController {
             filteredVars.add( vars.getQuick( i ) );
         }
 
-        log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < " + zscoreMax
-                + ". Max mean,variance is ( " + Descriptive.max( filteredMeans ) + "," + Descriptive.max( filteredVars ) + ")." );
+        log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < "
+                + zscoreMax + ". Max mean,variance is ( " + Descriptive.max( filteredMeans ) + "," + Descriptive
+                .max( filteredVars ) + ")." );
 
         ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
         ret.setMeans( bac.doubleArrayToBytes( filteredMeans ) );
@@ -1249,7 +1149,8 @@ public class ExpressionExperimentQCController extends BaseController {
     private DoubleArrayList zscore( DoubleArrayList d ) {
         DoubleArrayList z = new DoubleArrayList();
         double mean = Descriptive.mean( d );
-        double sd = Descriptive.standardDeviation( Descriptive.variance( d.size(), Descriptive.sum( d ), Descriptive.sumOfSquares( d ) ) );
+        double sd = Descriptive.standardDeviation(
+                Descriptive.variance( d.size(), Descriptive.sum( d ), Descriptive.sumOfSquares( d ) ) );
         for ( int i = 0; i < d.size(); i++ ) {
             z.add( Math.abs( d.getQuick( i ) - mean ) / sd );
         }
@@ -1259,7 +1160,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Visualization of the correlation of principal components with factors or the date samples were run.
-
+     *
      * @param svdo SVD value object
      */
     private void writePCAFactors( OutputStream os, ExpressionExperiment ee, SVDValueObject svdo ) throws Exception {
@@ -1286,7 +1187,8 @@ public class ExpressionExperimentQCController extends BaseController {
         int MAX_COMP = 3;
         double STUB = 0.05; // always plot a little thing so we know its there.
         for ( Integer component : factorCorrelations.keySet() ) {
-            if ( component >= MAX_COMP ) break;
+            if ( component >= MAX_COMP )
+                break;
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
                 Double a = factorCorrelations.get( component ).get( efId );
                 String facname = efs.get( efId ) == null ? "?" : efs.get( efId );
@@ -1298,7 +1200,8 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         for ( Integer component : dateCorrelations.keySet() ) {
-            if ( component >= MAX_COMP ) break;
+            if ( component >= MAX_COMP )
+                break;
             Double a = dateCorrelations.get( component );
             if ( a != null && !Double.isNaN( a ) ) {
                 Double corr = Math.max( STUB, Math.abs( a ) );
@@ -1306,8 +1209,9 @@ public class ExpressionExperimentQCController extends BaseController {
             }
         }
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createBarChart( "", "Factors", "Component assoc.", series,
-                PlotOrientation.VERTICAL, true, false, false );
+        JFreeChart chart = ChartFactory
+                .createBarChart( "", "Factors", "Component assoc.", series, PlotOrientation.VERTICAL, true, false,
+                        false );
 
         chart.getCategoryPlot().getRangeAxis().setRange( 0, 1 );
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
@@ -1351,8 +1255,9 @@ public class ExpressionExperimentQCController extends BaseController {
         }
         int MAX_COMPONENTS_FOR_SCREE = 10;
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createBarChart( "", "Component (up to" + MAX_COMPONENTS_FOR_SCREE + ")",
-                "Fraction of var.", series, PlotOrientation.VERTICAL, false, false, false );
+        JFreeChart chart = ChartFactory
+                .createBarChart( "", "Component (up to" + MAX_COMPONENTS_FOR_SCREE + ")", "Fraction of var.", series,
+                        PlotOrientation.VERTICAL, false, false, false );
 
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
         renderer.setBasePaint( Color.white );
@@ -1365,9 +1270,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Write a blank image so user doesn't see the broken icon.
-     * 
-     * @param os
-     * @throws IOException
      */
     private void writePlaceholderImage( OutputStream os ) throws IOException {
         int placeholderSize = ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 0.75 );
@@ -1382,10 +1284,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Write a blank thumbnail image so user doesn't see the broken icon.
-     * 
-     * @param os
-     * @param placeholderSize
-     * @throws IOException
      */
     private void writePlaceholderThumbnailImage( OutputStream os, int placeholderSize ) throws IOException {
         // Make the image a bit bigger to account for the empty space around the generated image.
@@ -1405,7 +1303,6 @@ public class ExpressionExperimentQCController extends BaseController {
         ImageIO.write( buffer, "png", os );
     }
 
-
     private boolean writeProbeCorrHistImage( OutputStream os, ExpressionExperiment ee ) throws IOException {
         XYSeries series = getCorrelHist( ee );
 
@@ -1416,8 +1313,9 @@ public class ExpressionExperimentQCController extends BaseController {
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( series );
-        JFreeChart chart = ChartFactory.createXYLineChart( "", "Correlation", "Frequency", xySeriesCollection,
-                PlotOrientation.VERTICAL, false, false, false );
+        JFreeChart chart = ChartFactory
+                .createXYLineChart( "", "Correlation", "Frequency", xySeriesCollection, PlotOrientation.VERTICAL, false,
+                        false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
@@ -1431,7 +1329,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Has to handle the situation where there might be more than one ResultSet.
-     *
      */
     private boolean writePValueHistImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
             String factorName ) throws IOException {
@@ -1445,27 +1342,21 @@ public class ExpressionExperimentQCController extends BaseController {
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
 
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createXYLineChart( "", "P-value", "Frequency", xySeriesCollection,
-                PlotOrientation.VERTICAL, false, false, false );
+        JFreeChart chart = ChartFactory
+                .createXYLineChart( "", "P-value", "Frequency", xySeriesCollection, PlotOrientation.VERTICAL, false,
+                        false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setBasePaint( Color.white );
 
-        ChartUtilities.writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ),
-                DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities
+                .writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ), DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }
 
     /**
      * Write p-value histogram thumbnail image.
-     * 
-     * @param os
-     * @param ee
-     * @param analysisId
-     * @param rsId
-     * @param size
-     * @throws IOException
      */
     private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
             String factorName, int size ) throws IOException {
@@ -1480,8 +1371,8 @@ public class ExpressionExperimentQCController extends BaseController {
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection( series );
 
         ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
-        JFreeChart chart = ChartFactory.createXYLineChart( "", "", "", xySeriesCollection, PlotOrientation.VERTICAL,
-                false, false, false );
+        JFreeChart chart = ChartFactory
+                .createXYLineChart( "", "", "", xySeriesCollection, PlotOrientation.VERTICAL, false, false, false );
 
         chart.getXYPlot().setBackgroundPaint( new Color( 230, 230, 230 ) );
         chart.getXYPlot().setRangeGridlinesVisible( false );
@@ -1501,5 +1392,22 @@ public class ExpressionExperimentQCController extends BaseController {
         ChartUtilities.writeChartAsPNG( os, chart, size + 16, size + 9 );
 
         return true;
+    }
+
+    /**
+     * Overrides XYLineAndShapeRenderer such that lines are drawn on top of points.
+     */
+    private class XYRegressionRenderer extends XYLineAndShapeRenderer {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        protected boolean isItemPass( int pass ) {
+            return pass == 0;
+        }
+
+        @Override
+        protected boolean isLinePass( int pass ) {
+            return pass == 1;
+        }
     }
 }

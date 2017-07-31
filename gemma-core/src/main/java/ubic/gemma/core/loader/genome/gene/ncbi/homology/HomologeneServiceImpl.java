@@ -60,20 +60,14 @@ public class HomologeneServiceImpl implements HomologeneService {
     private final Map<Long, Collection<Long>> group2Gene = new ConcurrentHashMap<>(); // Homology group ID to Name of file in NCBI
     private final AtomicBoolean ready = new AtomicBoolean( false );
     private final AtomicBoolean running = new AtomicBoolean( false );
-    private final GeneService geneService;
-    private final TaxonService taxonService;
-    
+
     private String homologeneFileName = "homologene.data";
 
-
+    @Autowired
+    private GeneService geneService;
 
     @Autowired
-    public HomologeneServiceImpl( GeneService geneService, TaxonService taxonService ) {
-        this.geneService = geneService;
-        this.taxonService = taxonService;
-    }
-
-
+    private TaxonService taxonService;
 
     @Override
     public Gene getHomologue( Gene gene, Taxon taxon ) {
@@ -257,7 +251,6 @@ public class HomologeneServiceImpl implements HomologeneService {
         return this.group2Gene.get( homologeneGroupId );
     }
 
-
     @Override
     public void parseHomologeneFile( InputStream is ) throws IOException {
 
@@ -286,13 +279,18 @@ public class HomologeneServiceImpl implements HomologeneService {
             if ( !group2Gene.containsKey( groupId ) ) {
                 group2Gene.put( groupId, new ArrayList<Long>() );
             }
-            group2Gene.get( groupId ).add( geneId );
+            if ( !group2Gene.get( groupId ).contains( geneId ) ) {
+                group2Gene.get( groupId ).add( geneId );
+            } else {
+                log.warn( "Duplicate gene ID encountered (group2Gene).  Skipping: geneID=" + geneId + " , taxonID = "
+                        + taxonId + " , geneSymbol = " + geneSymbol + " for group " + groupId );
+            }
 
             if ( !gene2Group.containsKey( geneId ) ) {
                 gene2Group.put( geneId, groupId );
             } else {
-                log.warn( "Duplicate gene ID encountered.  Skipping: geneID=" + geneId + " ,taxonID = " + taxonId
-                        + " ,geneSymbol = " + geneSymbol );
+                log.warn( "Duplicate gene ID encountered (gene2Group).  Skipping: geneID=" + geneId + " , taxonID = "
+                        + taxonId + " , geneSymbol = " + geneSymbol + " for group " + groupId );
             }
         }
         ready.set( true );
@@ -300,8 +298,6 @@ public class HomologeneServiceImpl implements HomologeneService {
                 .keySet().size() + " groups" );
 
     }
-
-
 
     /**
      * Given an NCBI Homologene Group ID returns a list of all the genes in gemma in that given group
@@ -348,7 +344,5 @@ public class HomologeneServiceImpl implements HomologeneService {
         }
         return this.gene2Group.get( ncbiID );
     }
-
-
 
 }

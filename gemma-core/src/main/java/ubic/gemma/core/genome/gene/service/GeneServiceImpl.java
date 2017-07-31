@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,18 @@
 
 package ubic.gemma.core.genome.gene.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -41,7 +50,12 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.*;
+import ubic.gemma.model.genome.gene.GeneAlias;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -49,9 +63,6 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.RelativeLocationData;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * @author pavlidis
@@ -75,46 +86,6 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     public GeneServiceImpl( GeneDao geneDao ) {
         super( geneDao );
         this.geneDao = geneDao;
-    }
-
-    @Autowired
-    public void setAnnotationAssociationService( AnnotationAssociationService annotationAssociationService ) {
-        this.annotationAssociationService = annotationAssociationService;
-    }
-
-    @Autowired
-    public void setCoexpressionService( CoexpressionService coexpressionService ) {
-        this.coexpressionService = coexpressionService;
-    }
-
-    @Autowired
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    @Autowired
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
-    }
-
-    @Autowired
-    public void setGeneSetSearch( GeneSetSearch geneSetSearch ) {
-        this.geneSetSearch = geneSetSearch;
-    }
-
-    @Autowired
-    public void setGeneSetValueObjectHelper( GeneSetValueObjectHelper geneSetValueObjectHelper ) {
-        this.geneSetValueObjectHelper = geneSetValueObjectHelper;
-    }
-
-    @Autowired
-    public void setHomologeneService( HomologeneService homologeneService ) {
-        this.homologeneService = homologeneService;
-    }
-
-    @Autowired
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
     }
 
     @Override
@@ -158,20 +129,20 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
 
     @Override
     @Transactional(readOnly = true)
-    public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
-        Gene gene = findByNCBIId( accession );
-        return new GeneValueObject( gene );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds ) {
-        Map<Integer, GeneValueObject> result = new HashMap<Integer, GeneValueObject>();
+        Map<Integer, GeneValueObject> result = new HashMap<>();
         Map<Integer, Gene> genes = this.geneDao.findByNcbiIds( ncbiIds );
         for ( Entry<Integer, Gene> entry : genes.entrySet() ) {
             result.put( entry.getKey(), new GeneValueObject( entry.getValue() ) );
         }
         return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
+        Gene gene = findByNCBIId( accession );
+        return new GeneValueObject( gene );
     }
 
     /**
@@ -219,7 +190,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Override
     @Transactional(readOnly = true)
     public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
-        Map<String, GeneValueObject> result = new HashMap<String, GeneValueObject>();
+        Map<String, GeneValueObject> result = new HashMap<>();
         Map<String, Gene> genes = this.geneDao.findByOfficialSymbols( query, taxonId );
         for ( String q : genes.keySet() ) {
             result.put( q, new GeneValueObject( genes.get( q ) ) );
@@ -232,7 +203,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         if ( geneId == null )
             throw new IllegalArgumentException( "Null id for gene" );
-        Collection<AnnotationValueObject> ontologies = new HashSet<AnnotationValueObject>();
+        Collection<AnnotationValueObject> ontologies = new HashSet<>();
         Gene g = load( geneId );
 
         if ( g == null ) {
@@ -389,7 +360,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         if ( gene == null )
             throw new IllegalArgumentException( "No gene with id " + geneId );
 
-        Collection<GeneProductValueObject> result = new ArrayList<GeneProductValueObject>();
+        Collection<GeneProductValueObject> result = new ArrayList<>();
         for ( GeneProduct gp : gene.getProducts() ) {
             result.add( new GeneProductValueObject( gp ) );
         }
@@ -418,7 +389,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<String>();
+        Collection<String> aliasStrings = new ArrayList<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -435,7 +406,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         gvo.setPlatformCount( platformCount );
 
         Collection<GeneSet> geneSets = this.geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsVos = new ArrayList<GeneSetValueObject>();
+        Collection<GeneSetValueObject> gsVos = new ArrayList<>();
         gsVos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( geneSets, false ) );
 
         gvo.setGeneSets( gsVos );
@@ -447,7 +418,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         gvo.setHomologues( homologues );
 
         Collection<PhenotypeAssociation> pas = gene.getPhenotypeAssociations();
-        Collection<CharacteristicValueObject> cVos = new HashSet<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> cVos = new HashSet<>();
         for ( PhenotypeAssociation pa : pas ) {
             cVos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
         }
@@ -490,7 +461,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjects = gene.getAliases();
-        Collection<String> aliasStrings = new ArrayList<String>();
+        Collection<String> aliasStrings = new ArrayList<>();
         for ( GeneAlias ga : aliasObjects ) {
             aliasStrings.add( ga.getAlias() );
         }
@@ -500,7 +471,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         Collection<GeneSet> geneSets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsVos = new ArrayList<GeneSetValueObject>();
+        Collection<GeneSetValueObject> gsVos = new ArrayList<>();
 
         gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
         details.setGeneSets( gsVos );
@@ -556,6 +527,46 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     public Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids ) {
         Collection<Gene> g = this.geneDao.loadThawedLiter( ids );
         return this.loadValueObjects( g );
+    }
+
+    @Autowired
+    public void setAnnotationAssociationService( AnnotationAssociationService annotationAssociationService ) {
+        this.annotationAssociationService = annotationAssociationService;
+    }
+
+    @Autowired
+    public void setCoexpressionService( CoexpressionService coexpressionService ) {
+        this.coexpressionService = coexpressionService;
+    }
+
+    @Autowired
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    @Autowired
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
+    }
+
+    @Autowired
+    public void setGeneSetSearch( GeneSetSearch geneSetSearch ) {
+        this.geneSetSearch = geneSetSearch;
+    }
+
+    @Autowired
+    public void setGeneSetValueObjectHelper( GeneSetValueObjectHelper geneSetValueObjectHelper ) {
+        this.geneSetValueObjectHelper = geneSetValueObjectHelper;
+    }
+
+    @Autowired
+    public void setHomologeneService( HomologeneService homologeneService ) {
+        this.homologeneService = homologeneService;
+    }
+
+    @Autowired
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
     @Override

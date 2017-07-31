@@ -42,6 +42,8 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
                     this.initialTab = param.tab;
                 }
             }
+        }else{
+            this.initialTab = "details";
         }
     },
 
@@ -51,7 +53,7 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
     initComponent: function () {
 
         var platformId = this.platformId;
-        var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+        var isAdmin = Ext.get("hasAdmin").getValue() === 'true';
 
         Gemma.PlatformPage.superclass.initComponent.call(this);
 
@@ -81,6 +83,9 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
         }));
 
         this.adjustForIsAdmin(isAdmin);
+
+        this.checkURLforInitialTab();
+        this.setActiveTab(this.initialTab);
 
         // duplicated from experiment details
         Gemma.Application.currentUser.on("logIn", function (userName, isAdmin) {
@@ -143,8 +148,6 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
                     });
 
                     panel.add(panel.toolTab);
-                    panel.checkURLforInitialTab();
-                    panel.setActiveTab(panel.initialTab);
                 }.createDelegate(this),
                 errorHandler: function (er, exception) {
                     Ext.Msg.alert("Error", er + "\n" + exception.stack);

@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.experiment;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

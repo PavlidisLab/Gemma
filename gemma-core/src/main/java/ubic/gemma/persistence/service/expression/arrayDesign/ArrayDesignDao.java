@@ -14,7 +14,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -47,7 +49,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
-    Collection<ArrayDesignValueObject> listFilter( int offset, int limit, String orderBy, boolean asc);
+    Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc, ArrayList<ObjectFilter[]> filter);
 
     Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 

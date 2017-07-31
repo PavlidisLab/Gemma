@@ -65,6 +65,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.*;
 
@@ -195,7 +196,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public Integer countNotTroubled(){
+    public Integer countNotTroubled() {
         return this.expressionExperimentDao.countNotTroubled();
     }
 
@@ -720,7 +721,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
@@ -823,12 +824,16 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.getTaxa( bioAssaySets );
     }
 
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
+     * description (no but seriously do look it might not work as you would expect).
+     */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy,
-            boolean asc, String accession ) {
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
         return this.expressionExperimentDao
-                .listFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );
+                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
     @Override
@@ -864,24 +869,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
-        return loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
-        return loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments() {
-        return loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
             boolean maintainOrder ) {
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
@@ -897,9 +884,9 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, boolean admin, int limit, int start ) {
+            List<Long> ids, Taxon taxon, int limit, int start ) {
         return this.expressionExperimentDao
-                .loadDetailsValueObjects( orderField, descending, ids, taxon, admin, limit, start );
+                .loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override
@@ -935,8 +922,7 @@ public class ExpressionExperimentServiceImpl
         // to attach to session correctly.
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
 
-        // remove old vectors. FIXME are we sure we want to do this?
-        Collection<QuantitationType> qtsToRemove = new HashSet<QuantitationType>();
+        Collection<QuantitationType> qtsToRemove = new HashSet<>();
         for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
             qtsToRemove.add( oldvec.getQuantitationType() );
         }
@@ -945,8 +931,12 @@ public class ExpressionExperimentServiceImpl
         eeToUpdate.getProcessedExpressionDataVectors().clear();
         eeToUpdate.getRawExpressionDataVectors().clear();
 
+        // These QTs might still be getting used by the replaced vectors.
+        for ( RawExpressionDataVector newVec : newVectors ) {
+            qtsToRemove.remove( newVec.getQuantitationType() );
+        }
+
         for ( QuantitationType oldqt : qtsToRemove ) {
-            log.info( "Removing unused quantitation type: " + oldqt );
             quantitationTypeDao.remove( oldqt );
         }
 
@@ -1008,9 +998,10 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over checking
-     *           the curation details of the object directly, as this method also checks all the array designs the given
-     *           experiment belongs to.
+     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
+     *        checking
+     *        the curation details of the object directly, as this method also checks all the array designs the given
+     *        experiment belongs to.
      * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
@@ -1042,7 +1033,7 @@ public class ExpressionExperimentServiceImpl
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
+     *        be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     @Override

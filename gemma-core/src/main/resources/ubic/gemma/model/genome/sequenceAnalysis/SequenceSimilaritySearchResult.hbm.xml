@@ -27,7 +27,7 @@
       <many-to-one name="targetAlignedRegion" class="ubic.gemma.model.genome.PhysicalLocationImpl"  cascade="all" lazy="false" fetch="select">
          <column name="TARGET_ALIGNED_REGION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <subclass name="ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl" discriminator-value="BlatResultImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+      <subclass name="ubic.gemma.model.genome.sequenceAnalysis.BlatResult" discriminator-value="BlatResultImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
          <property name="matches" type="java.lang.Integer">
             <column name="MATCHES" not-null="false" unique="false" sql-type="INTEGER"/>
          </property>

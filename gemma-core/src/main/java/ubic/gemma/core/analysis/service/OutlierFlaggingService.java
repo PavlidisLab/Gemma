@@ -20,23 +20,19 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface OutlierFlaggingService {
 
     /**
      * This does not actually remove the sample; rather, it sets all values to "missing" in the processed data.
-     * 
-     * @param expExp
-     * @param assaysToRemove
+     *
      */
-    public abstract void markAsMissing( Collection<BioAssay> assaysToRemove );
+    void markAsMissing( Collection<BioAssay> assaysToRemove );
 
     /**
      * Reverts the action of markAsMissing.
-     * 
-     * @param bioAssay
+     *
      */
-    public abstract void unmarkAsMissing( Collection<BioAssay> bioAssays );
+    void unmarkAsMissing( Collection<BioAssay> bioAssays );
 
 }

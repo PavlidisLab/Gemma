@@ -1,12 +1,15 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 import java.util.Collection;
 
@@ -52,7 +55,17 @@ public abstract class DatasetArg<T>
      */
     public Collection<BioAssayValueObject> getSamples( ExpressionExperimentService service,
             BioAssayService baService ) {
-        ExpressionExperiment ee = service.thaw( this.getPersistentObject( service ) );
-        return baService.loadValueObjects( ee.getBioAssays() );
+        ExpressionExperiment ee = service.thawBioAssays( this.getPersistentObject( service ) );
+        return ee == null ? null : baService.loadValueObjects( ee.getBioAssays() );
     }
+
+    /**
+     * @param service service that will be used to retrieve the persistent EE object.
+     * @return a collection of Annotations value objects that represent the experiments annotations.
+     */
+    public Collection<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
+        ExpressionExperiment ee = this.getPersistentObject( service );
+        return ee == null ? null : service.getAnnotations( ee.getId() );
+    }
+
 }

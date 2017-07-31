@@ -30,6 +30,7 @@ import java.util.Collection;
  */
 public interface FactorValueDao extends BaseVoEnabledDao<FactorValue, FactorValueValueObject> {
 
+    @Override
     FactorValue find( FactorValue factorValue );
 
     /**
@@ -37,6 +38,7 @@ public interface FactorValueDao extends BaseVoEnabledDao<FactorValue, FactorValu
      */
     Collection<FactorValue> findByValue( String valuePrefix );
 
+    @Override
     FactorValue findOrCreate( FactorValue factorValue );
 
 }

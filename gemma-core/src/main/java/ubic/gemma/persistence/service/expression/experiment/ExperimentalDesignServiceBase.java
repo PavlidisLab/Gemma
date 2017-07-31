@@ -18,13 +18,11 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.BaseDao;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalDesignService</code>, provides
@@ -51,6 +49,5 @@ public abstract class ExperimentalDesignServiceBase extends AbstractService<Expe
      * Performs the core logic for {@link #getExpressionExperiment(ExperimentalDesign)}
      */
     protected abstract ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign );
-
 
 }

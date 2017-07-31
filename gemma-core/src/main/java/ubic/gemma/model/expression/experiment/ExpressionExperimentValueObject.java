@@ -529,9 +529,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     @Override
     public boolean getIsPublic() {
-        // FIXME - this is sometimes being left as null, but it shouldn't.
-        if ( this.isPublic == null )
-            return false;
         return this.isPublic;
     }
 
@@ -542,9 +539,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     @Override
     public boolean getIsShared() {
-        // FIXME - this is sometimes being left as null, but it shouldn't.
-        if ( this.isShared == null )
-            return false;
         return this.isShared;
     }
 

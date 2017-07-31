@@ -226,9 +226,9 @@ public class DataUpdater {
     /**
      * Replaces data.
      *
-     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
-     *                            data. If this is provided, all the other data will be removed.
-     * @param rpkmMatrix          Representing per-gene normalized data, optional.
+     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
+     *        data. If this is provided, all the other data will be removed.
+     * @param rpkmMatrix Representing per-gene normalized data, optional.
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
@@ -356,13 +356,42 @@ public class DataUpdater {
 
     /**
      * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
+     * quantitation type. Note that this replaces the "raw" data. Similar to
+     * AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
+     * SimpleExpressionDataLoaderService.
+     * 
+     * <p>
+     * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
+     * sample- and element-matching to happen here.
+     * 
+     * @param ee
+     * @param targetPlatform
+     * @param qt
+     * @param data
+     * @return
+     */
+    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
+            DoubleMatrix<String, String> data ) {
+        targetPlatform = this.arrayDesignService.thaw( targetPlatform );
+        ee = this.experimentService.thawLite( ee );
+
+        DoubleMatrix<CompositeSequence, BioMaterial> rdata = matchElementsToRowNames( targetPlatform,
+                data );
+        matchBioMaterialsToColNames( ee, data, rdata );
+        ExpressionDataDoubleMatrix eematrix = new ExpressionDataDoubleMatrix( ee, qt, rdata );
+
+        return this.replaceData( ee, targetPlatform, eematrix );
+    }
+
+    /**
+     * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
      * quantitation type. Note that this replaces the "raw" data.
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param ee             the experiment to be modified
+     * @param ee the experiment to be modified
      * @param targetPlatform the platform for the new data
-     * @param data           the data to be used
+     * @param data the data to be used
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -382,7 +411,7 @@ public class DataUpdater {
         Collection<QuantitationType> qts = data.getQuantitationTypes();
 
         if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( "Only support a single quantitation type" );
+            throw new IllegalArgumentException( "Only supports a single quantitation type" );
         }
 
         if ( qts.isEmpty() ) {
@@ -482,7 +511,11 @@ public class DataUpdater {
 
             log.info( ba + " total library size=" + librarySize );
 
+            /*
+             * FIXME: this creates a mess if you run this multiple times.
+             */
             ba.setDescription( ba.getDescription() + " totalCounts=" + Math.floor( librarySize ) );
+
             ba.setSequenceReadLength( readLength );
             ba.setSequencePairedReads( isPairedReads );
             ba.setSequenceReadCount( ( int ) Math.floor( librarySize ) );

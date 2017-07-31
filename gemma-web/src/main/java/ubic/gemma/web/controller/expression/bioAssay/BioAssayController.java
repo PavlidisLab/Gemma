@@ -102,8 +102,14 @@ public class BioAssayController {
         return result;
     }
 
+    @SuppressWarnings("unused") // Is used in EEManager.js
     public String markOutlier( Collection<Long> ids ) {
         return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids ) );
+    }
+
+    @SuppressWarnings("unused") // Is used in EEManager.js
+    public String unmarkOutlier( Collection<Long> ids ) {
+        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
     @RequestMapping(value = { "/showBioAssay.html", "/" })
@@ -152,10 +158,6 @@ public class BioAssayController {
             }
         }
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssays );
-    }
-
-    public String unmarkOutlier( Collection<Long> ids ) {
-        return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
 }

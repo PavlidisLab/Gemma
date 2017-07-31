@@ -54,7 +54,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * import format.
  * 
  * @author Paul
- * @version $Id$
  * @see ExperimentalDesignWriter
  */
 public interface ExperimentalDesignImporter {

@@ -19,21 +19,14 @@
 package ubic.gemma.web.util;
 
 /**
- * Used to signifity that an entity was not found in the system.
+ * Signals that an entity was not found in the system.
  * 
  * @author pavlidis
- * @version $Id$
  */
 public class EntityNotFoundException extends RuntimeException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -4361183252269974819L;
 
-    /**
-     * @param string
-     */
     public EntityNotFoundException( String string ) {
         super( string );
     }

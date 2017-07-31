@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@ import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
 /**
  * Represents a set of GEO samples that were submitted together. In many cases this corresponds to a full study, but for
  * studies that used more than one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
- * 
+ *
  * @author pavlidis
  * @version $Id$
  */
@@ -46,6 +46,8 @@ public class GeoSeries extends GeoData {
     private static final long serialVersionUID = -1058350558444775537L;
 
     /**
+     * See also GeoDataset.convertStringToExperimentType
+     *
      * @param string
      * @return
      */
@@ -110,7 +112,7 @@ public class GeoSeries extends GeoData {
     private Map<Integer, GeoReplication> replicates;
     private GeoSampleCorrespondence sampleCorrespondence;
     private Collection<GeoSample> samples;
-    private SeriesType seriesType;
+    private Collection<SeriesType> seriesTypes = new HashSet<>();
     private Collection<String> subSeries;
     private String summary = "";
     private String supplementaryFile = "";
@@ -119,16 +121,16 @@ public class GeoSeries extends GeoData {
     private Collection<String> webLinks;
 
     public GeoSeries() {
-        keyWords = new HashSet<String>();
-        pubmedIds = new HashSet<String>();
-        variables = new HashMap<Integer, GeoVariable>();
-        replicates = new HashMap<Integer, GeoReplication>();
-        webLinks = new HashSet<String>();
-        contributers = new HashSet<GeoContact>();
-        samples = new HashSet<GeoSample>();
-        dataSets = new HashSet<GeoDataset>();
+        keyWords = new HashSet<>();
+        pubmedIds = new HashSet<>();
+        variables = new HashMap<>();
+        replicates = new HashMap<>();
+        webLinks = new HashSet<>();
+        contributers = new HashSet<>();
+        samples = new HashSet<>();
+        dataSets = new HashSet<>();
         values = new GeoValues();
-        subSeries = new HashSet<String>();
+        subSeries = new HashSet<>();
     }
 
     /**
@@ -152,7 +154,7 @@ public class GeoSeries extends GeoData {
 
     /**
      * Add a group of samples to this series.
-     * 
+     *
      * @param s
      */
     public void addSamples( Collection<GeoSample> s ) {
@@ -192,6 +194,10 @@ public class GeoSeries extends GeoData {
         this.summary = this.summary + " " + text;
     }
 
+    public void addToSeriesTypes( SeriesType type ) {
+        this.seriesTypes.add( type );
+    }
+
     public void addToVariables( Integer number, GeoVariable variable ) {
         this.variables.put( number, variable );
     }
@@ -219,7 +225,7 @@ public class GeoSeries extends GeoData {
 
     /**
      * Returns the date the series was last updated.
-     * 
+     *
      * @return String
      */
     public String getLastUpdateDate() {
@@ -258,8 +264,8 @@ public class GeoSeries extends GeoData {
         return this.samples;
     }
 
-    public SeriesType getSeriesType() {
-        return seriesType;
+    public Collection<SeriesType> getSeriesTypes() {
+        return seriesTypes;
     }
 
     /**
@@ -289,7 +295,7 @@ public class GeoSeries extends GeoData {
 
     /**
      * Get a subset of the values. This is only used for 'splitting' a series.
-     * 
+     *
      * @param s Samples to include data from.
      * @return
      */
@@ -366,7 +372,7 @@ public class GeoSeries extends GeoData {
 
     /**
      * Sets the date the series was last updated.
-     * 
+     *
      * @param lastUpdateDate
      */
     public void setLastUpdateDate( String lastUpdateDate ) {
@@ -399,10 +405,6 @@ public class GeoSeries extends GeoData {
      */
     public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
         this.sampleCorrespondence = sampleCorrespondence;
-    }
-
-    public void setSeriesType( SeriesType seriesType ) {
-        this.seriesType = seriesType;
     }
 
     /**

@@ -47,7 +47,6 @@ import cern.colt.list.DoubleArrayList;
  * Tools for easily getting data matrices for analysis in a consistent way.
  * 
  * @author keshav
- * @version $Id$
  */
 @Component
 public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixService {
@@ -61,13 +60,6 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataMatrixService#getFilteredMatrix(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, ubic.gemma.core.analysis.preprocess.filter.FilterConfig)
-     */
     @Override
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
@@ -75,13 +67,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         return this.getFilteredMatrix( ee, filterConfig, dataVectors );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataMatrixService#getFilteredMatrix(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, ubic.gemma.core.analysis.preprocess.filter.FilterConfig, java.util.Collection)
-     */
+
     @Override
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) {
@@ -89,28 +75,16 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         return getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
     }
 
-    /**
-     * @param filterConfig
-     * @param dataVectors
-     * @param arrayDesignsUsed
-     * @return
-     */
     private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
         if ( dataVectors == null || dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
         this.processedExpressionDataVectorService.thaw( dataVectors );
-        ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
-        return eeDoubleMatrix;
+        return filter.getFilteredMatrix( dataVectors );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.service.ExpressionDataMatrixService#getFilteredMatrix(java.lang.String,
-     * ubic.gemma.core.analysis.preprocess.filter.FilterConfig, java.util.Collection)
-     */
+
     @Override
     public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) {
@@ -118,18 +92,12 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( ad == null ) {
             throw new IllegalArgumentException( "No platform named '" + arrayDesignName + "'" );
         }
-        Collection<ArrayDesign> arrayDesignsUsed = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> arrayDesignsUsed = new HashSet<>();
         arrayDesignsUsed.add( ad );
         return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataMatrixService#getProcessedExpressionDataMatrix(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
+
     @Override
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
@@ -142,38 +110,25 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataMatrixService#getProcessedExpressionDataVectors(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
+
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
-        Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
-                .getProcessedDataVectors( ee ); // these are already thawed.
-        return dataVectors;
+        return this.processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.service.ExpressionDataMatrixService#getRankMatrix(java.util.Collection,
-     * java.util.Collection, ProcessedExpressionDataVectorDao.RankMethod)
-     */
+
     @Override
     public DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method ) {
 
-        DoubleMatrix<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix<Gene, ExpressionExperiment>(
-                genes.size(), ees.size() );
+        DoubleMatrix<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix<>( genes.size(), ees.size() );
 
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> ranks = processedExpressionDataVectorService.getRanks(
                 ees, genes, method );
 
-        matrix.setRowNames( new ArrayList<Gene>( genes ) );
-        matrix.setColumnNames( new ArrayList<ExpressionExperiment>( ees ) );
+        matrix.setRowNames( new ArrayList<>( genes ) );
+        matrix.setColumnNames( new ArrayList<>( ees ) );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
                 matrix.setByKeys( matrix.getRowName( i ), matrix.getColName( j ), Double.NaN );
