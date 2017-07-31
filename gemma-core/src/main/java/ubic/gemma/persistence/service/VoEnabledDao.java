@@ -102,7 +102,7 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
                     if ( filter.getOperator().equals( ObjectFilter.in ) ) {
                         disjunction.append( "( :" ).append( formParamName( filter ) ).append( " ) " );
                     } else {
-                        disjunction.append( ":" ).append( formParamName( filter ) );
+                        disjunction.append( ":" ).append( formParamName( filter ) ).append( " " );
                     }
                 }
                 first = false;
