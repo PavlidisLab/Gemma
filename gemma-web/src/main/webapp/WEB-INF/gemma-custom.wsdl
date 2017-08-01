@@ -332,12 +332,6 @@
 	<message name="geneIDbyTaxonRequest">
 		<part name="taxon_id" type="xs:integer" />
 	</message>
-	<message name="physicalLocationResponse">
-		<part name="physical_location" type="tns:geneLocation" />
-	</message>
-	<message name="genesAtPhysicalLocationResponse">
-		<part name="genesAtPhysical_location" type="tns:ArrayOfIDs" />
-	</message>
 	<message name="experimentNumSamplesResponse">
 		<part name="eeNumSample_id" type="xs:string" />
 	</message>
@@ -353,15 +347,6 @@
 	</message>
 	<message name="experimentNumSamplesRequest">
 		<part name="ee_id" type="xs:integer" />
-	</message>
-	<message name="physicalLocationRequest">
-		<part name="gene_id" type="xs:integer" />
-	</message>
-	<message name="genesAtPhysicalLocationRequest">
-		<part name="startNucleotide" type="xs:integer" />
-		<part name="endNucleotide" type="xs:integer" />
-		<part name="chromosome" type="xs:string" />
-		<part name="taxon_id" type="xs:integer" />
 	</message>
 	<message name="goTerm2GeneRequest">
 		<part name="go_id" type="xs:string" />
@@ -507,14 +492,6 @@
 		<operation name="experimentNumSamples">
 			<input message="tns:experimentNumSamplesRequest" name="experimentNumSamplesRequest" />
 			<output message="tns:experimentNumSamplesResponse" name="experimentNumSamplesResponse" />
-		</operation>
-		<operation name="physicalLocation">
-			<input message="tns:physicalLocationRequest" name="physicalLocationRequest" />
-			<output message="tns:physicalLocationResponse" name="physicalLocationResponse" />
-		</operation>
-		<operation name="genesAtPhysicalLocation">
-			<input message="tns:genesAtPhysicalLocationRequest" name="genesAtPhysicalLocationRequest" />
-			<output message="tns:genesAtPhysicalLocationResponse" name="genesAtPhysicalLocationResponse" />
 		</operation>
 		<operation name="goTerm2Gene">
 			<input message="tns:goTerm2GeneRequest" name="goTerm2GeneRequest" />
@@ -673,24 +650,6 @@
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
 			</input>
 			<output name="experimentNumSamplesResponse">
-				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
-			</output>
-		</operation>
-		<operation name="physicalLocation">
-			<soap:operation soapAction="" />
-			<input name="physicalLocationRequest">
-				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
-			</input>
-			<output name="physicalLocationResponse">
-				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
-			</output>
-		</operation>
-		<operation name="genesAtPhysicalLocation">
-			<soap:operation soapAction="" />
-			<input name="genesAtPhysicalLocationRequest">
-				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
-			</input>
-			<output name="genesAtPhysicalLocationResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
 			</output>
 		</operation>
