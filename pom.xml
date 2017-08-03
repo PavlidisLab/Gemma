@@ -314,7 +314,7 @@
         <dependency>
             <groupId>baseCode</groupId>
             <artifactId>baseCode</artifactId>
-            <version>1.0.21-SNAPSHOT</version>
+            <version>1.0.21</version>
         </dependency>
     </dependencies>
     <build>
