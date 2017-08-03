@@ -335,6 +335,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                     assertTrue( r.getUpperTail() );
                     assertEquals( logComponentResults( r, gene ), 4.027476e-06, r.getMetaPvalue(), 1e-8 );
                     break;
+                default:
             }
 
             assertNotNull( r.getUpperTail() );

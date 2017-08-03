@@ -14,14 +14,17 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author pavlidis

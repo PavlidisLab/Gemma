@@ -6,7 +6,7 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
  * Created by tesarst on 25/05/17.
  * Class representing an API argument that should be an integer.
  */
-public class IntArg extends PrimitiveArg {
+public class IntArg extends MalformableArg {
     private static final String ERROR_MSG = "Value '%s' can not converted to an integer";
 
     int value;
@@ -22,8 +22,8 @@ public class IntArg extends PrimitiveArg {
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param s the request taxon argument
-     * @return an instance of IntArg representing the input string, or a malformed IntArg that will throw an
+     * @param s the request integer argument
+     * @return an instance of IntArg representing integer value of the input string, or a malformed IntArg that will throw an
      * {@link ubic.gemma.web.services.rest.util.GemmaApiException} when accessing its value, if the input String can not
      * be converted into an integer.
      */

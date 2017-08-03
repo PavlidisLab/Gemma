@@ -33,8 +33,6 @@ public abstract class ChromosomeFeature extends Describable {
     private String ncbiId;
     private String previousNcbiId;
 
-    private CytogeneticLocation cytogeneticLocation;
-
     private PhysicalLocation physicalLocation;
 
     /**
@@ -43,14 +41,6 @@ public abstract class ChromosomeFeature extends Describable {
      * @author Paul
      */
     public ChromosomeFeature() {
-    }
-
-    public CytogeneticLocation getCytogeneticLocation() {
-        return this.cytogeneticLocation;
-    }
-
-    public void setCytogeneticLocation( CytogeneticLocation cytogeneticLocation ) {
-        this.cytogeneticLocation = cytogeneticLocation;
     }
 
     /**

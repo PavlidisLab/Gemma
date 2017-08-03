@@ -151,6 +151,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : valueObjects ) {
+            if(object == null) continue;
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             ids.add( adVo.getId() );
         }
@@ -183,6 +184,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public void fillInValueObjects( Collection<ArrayDesignValueObject> adVos ) {
         for ( ArrayDesignValueObject origVo : adVos ) {
+            if(origVo == null ) continue;
             ArrayDesignValueObject cachedVo = getSummaryObject( origVo.getId() );
             if ( cachedVo != null ) {
                 origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );

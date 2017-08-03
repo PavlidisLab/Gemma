@@ -118,7 +118,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
                                 + qt + ") will be used." );
 
                 try {
-                    intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
+                    intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( qt, intensities );
                 } catch ( UnknownLogScaleException e ) {
                     log.warn(
                             "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );

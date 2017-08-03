@@ -61,17 +61,17 @@ public interface ExpressionExperimentReportService {
     Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids );
 
 
-    void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos );
+    void getAnnotationInformation( Collection<? extends ExpressionExperimentValueObject> vos );
 
 
-    Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos );
+    Map<Long, Date> getEventInformation( Collection<? extends ExpressionExperimentValueObject> vos );
 
     /**
      * Fills in link analysis and differential expression analysis summaries, and other info from the report.
      *
      * @return map of when the objects were most recently updated (or created)
      */
-    Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos );
+    Map<Long, Date> getReportInformation( Collection<? extends ExpressionExperimentValueObject> vos );
 
     /**
      * retrieves a collection of cached value objects containing summary information

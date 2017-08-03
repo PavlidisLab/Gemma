@@ -468,7 +468,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       var eeManager = this;
       Ext.Msg.show( {
          title : 'Are you sure?',
-         msg : 'Outlier status of assays will be updated',
+         msg : 'This will mark selected assays as outliers.',
          buttons : Ext.Msg.YESNO,
          fn : function( btn, text ) {
             if ( btn === 'yes' ) {
@@ -495,53 +495,18 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
    },
 
    /**
-    * Mark a single outlier. This might still be useful for doing spot corrections
+    * Un-mark a single outlier
     */
-   unmarkOutlierBioAssay : function( bioAssayId ) {
+   unMarkOutlierBioAssays : function( bioAssayIds ) {
       var eeManager = this;
       Ext.Msg.show( {
          title : 'Are you sure?',
-         msg : 'Are you sure you want to revert the outlier status of this assay?',
+         msg : 'This will mark de-selected assays as non-outliers.',
          buttons : Ext.Msg.YESNO,
          fn : function( btn, text ) {
             if ( btn === 'yes' ) {
                Ext.getBody().mask();
-               BioAssayController.unmarkOutlier( [ bioAssayId ], {
-                  callback : function( taskId ) {
-                     var task = new Gemma.ObservableSubmittedTask( {
-                        'taskId' : taskId
-                     } );
-                     task.showTaskProgressWindow( {
-                        'showLogButton' : true,
-                        'showBackgroundButton' : true
-                     } );
-                     Ext.getBody().unmask();
-                  },
-                  errorHandler : eeManager.onTaskSubmissionError
-               } );
-            }
-         },
-         animEl : 'elId',
-         icon : Ext.MessageBox.WARNING
-      } );
-   },
-
-   /**
-    * FIX might not be used any more.
-    * 
-    * @param bioAssayIds
-    *           collection of IDs to unmark more than one at a time.
-    */
-   unmarkOutlierBioAssays : function( bioAssayIds ) {
-      var eeManager = this;
-      Ext.Msg.show( {
-         title : 'Are you sure?',
-         msg : 'Outlier status of assays will be updated',
-         buttons : Ext.Msg.YESNO,
-         fn : function( btn, text ) {
-            if ( btn === 'yes' ) {
-               Ext.getBody().mask();
-               BioAssayController.unmarkOutlier( bioAssayIds, {
+               BioAssayController.unmarkOutlier(  bioAssayIds , {
                   callback : function( taskId ) {
                      var task = new Gemma.ObservableSubmittedTask( {
                         'taskId' : taskId

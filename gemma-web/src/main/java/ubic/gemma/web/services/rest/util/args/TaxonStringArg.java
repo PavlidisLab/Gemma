@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
@@ -12,7 +11,7 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
         this.value = s;
-        this.nullCause = "The identifier was recognised to be a name, but no taxon with such scientific or common name, or abbreviation, exists.";
+        this.nullCause = "The identifier was recognised to be a name, but no taxon with such scientific or common name, or abbreviation, exist or is not accessible.";
     }
 
     /**
@@ -29,10 +28,11 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     /**
      * Tries to retrieve a Taxon based on its names.
+     *
      * @param service the TaxonService that handles the search.
      * @return Taxon or null if no taxon with any property matching this#value was found.
      */
-    private Taxon tryAllNameProperties(TaxonService service){
+    private Taxon tryAllNameProperties( TaxonService service ) {
         // Most commonly used
         Taxon taxon = service.findByCommonName( this.value );
 

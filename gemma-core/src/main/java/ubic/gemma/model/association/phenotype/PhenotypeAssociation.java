@@ -73,9 +73,6 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
         this.associationType = associationType;
     }
 
-    /**
-     *
-     */
     public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
     }

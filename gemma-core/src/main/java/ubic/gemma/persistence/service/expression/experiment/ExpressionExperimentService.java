@@ -38,12 +38,10 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author kelsey
@@ -109,7 +107,7 @@ public interface ExpressionExperimentService
 
     /**
      * @return Experiments which have this accession. There can be more than one, because one GEO accession can result
-     * in multiple experiments in Gemma.
+     *         in multiple experiments in Gemma.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
@@ -212,8 +210,8 @@ public interface ExpressionExperimentService
      * TODO allow this for BioAssaySets.
      *
      * @return details for the principal component most associated with batches (even if it isn't "significant"), or
-     * null if there was no batch information available. Note that we don't look at every component, just the
-     * first few.
+     *         null if there was no batch information available. Note that we don't look at every component, just the
+     *         first few.
      */
     BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
 
@@ -358,9 +356,13 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadAll();
 
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
+     * description (no but seriously do look it might not work as you would expect).
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadValueObjectsFilter( int offset, int limit, String orderBy, boolean asc,
-            String accession );
+    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -387,34 +389,6 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperiment> load( Collection<Long> ids );
 
     /**
-     * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
-     * current user has specific write permissions on (as opposed to data sets which are public). Important: This method
-     * will return all experiments if security is not enabled.
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<ExpressionExperiment> loadMyExpressionExperiments();
-
-    /**
-     * * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
-     * current user has specific READ permissions on (as opposed to data sets which are public).
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyPrivateData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<ExpressionExperiment> loadMySharedExpressionExperiments();
-
-    /**
-     * Returns the {@link ExpressionExperiment}s owned by the {@link User} currently logged in. Note: this includes
-     * public and private entities. Important: This method will return all experiments if security is not enabled.
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_USER_OWNED_DATA" })
-    Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
-
-    /**
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -429,15 +403,13 @@ public interface ExpressionExperimentService
      *
      * @param orderField the field to order the results by.
      * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
-     * @param admin      whether the requesting user is administrator or not. Non-administrators will not
-     *                   get troubled experiments.
-     * @return a list of  EE details VOs representing experiments matching the given arguments.
+     * @param ids only list specific ids.
+     * @param taxon only list experiments within specific taxon.
+     * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, boolean admin, int limit, int start );
+            List<Long> ids, Taxon taxon, int limit, int start );
 
     /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.
@@ -448,8 +420,9 @@ public interface ExpressionExperimentService
     int removeData( ExpressionExperiment ee, QuantitationType qt );
 
     /**
-     * Used when we are converting an experiment from one platform to another. Examples would be exon array or MPSS data
-     * sets. Does not take care of computing the processed data vectors, but it does clear them out.
+     * Used when we are replacing data, such as when converting an experiment from one platform to another. Examples
+     * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
+     * computing the processed data vectors, but it does clear them out.
      *
      * @return the updated Experiment
      */
@@ -490,7 +463,7 @@ public interface ExpressionExperimentService
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *           be filled in with IC. A category and value must be provided.
+     *        be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );

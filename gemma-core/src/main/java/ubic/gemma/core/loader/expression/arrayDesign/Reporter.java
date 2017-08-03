@@ -20,6 +20,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 /**
  * A "probe" (Affymetrix); for other types of arrays, there is no practical distinction between compositesequences and
  * reporters, and all analysis would take place at the level of CompositeSequences.
+ * <p>
+ * For a brief time this was part of our core data model; but currently this is used only transiently during parsing
+ * etc. of Affymetrix platform sequence files.
  */
 public class Reporter extends Describable {
 

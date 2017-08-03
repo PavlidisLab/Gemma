@@ -712,7 +712,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * FIXME: remove columns that are marked as outliers.
          */
-        dmatrix = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( quantitationType, dmatrix );
+        dmatrix = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( quantitationType, dmatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
         if ( log.isDebugEnabled() )

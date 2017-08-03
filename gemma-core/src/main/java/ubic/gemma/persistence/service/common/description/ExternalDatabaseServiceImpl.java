@@ -18,41 +18,44 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import java.util.Collection;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
+import java.util.Collection;
+
 /**
  * @author pavlidis
- * @version $Id$
  * @see ExternalDatabaseService
  */
 @Service
 public class ExternalDatabaseServiceImpl extends ExternalDatabaseServiceBase {
+
+    @Autowired
+    private ExternalDatabaseDao externalDatabaseDao;
 
     /**
      * @see ExternalDatabaseService#find(java.lang.String)
      */
     @Override
     protected ExternalDatabase handleFind( java.lang.String name ) {
-        return this.getExternalDatabaseDao().findByName( name );
+        return this.externalDatabaseDao.findByName( name );
     }
 
     @Override
     protected ExternalDatabase handleFindOrCreate( ExternalDatabase externalDatabase ) {
-        return this.getExternalDatabaseDao().findOrCreate( externalDatabase );
+        return this.externalDatabaseDao.findOrCreate( externalDatabase );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExternalDatabase> handleLoadAll() {
-        return ( Collection<ExternalDatabase> ) this.getExternalDatabaseDao().loadAll();
+        return this.externalDatabaseDao.loadAll();
     }
 
     @Override
     protected void handleRemove( ExternalDatabase externalDatabase ) {
-        this.getExternalDatabaseDao().remove( externalDatabase );
+        this.externalDatabaseDao.remove( externalDatabase );
 
     }
 

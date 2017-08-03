@@ -104,7 +104,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private OutlierDetectionService outlierDetectionService;
 
     @Override
-    public ExpressionExperiment batchCorrect( ExpressionExperiment ee ) throws PreprocessingException {
+    public ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean allowOutliers ) throws PreprocessingException {
 
         /*
          * This leaves the raw data alone; it updates the processed data.
@@ -116,7 +116,14 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         this.checkCorrectable( ee );
 
-        this.checkOutliers( ee );
+        /*
+         * If there are predicted outliers, but which we decide are okay, we just go ahead.
+         */
+        if ( !allowOutliers ) {
+            this.checkOutliers( ee );
+        } else {
+            log.warn( "Batch correction is proceeding without checking for outliers" );
+        }
 
         try {
 

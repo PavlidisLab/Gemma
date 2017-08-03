@@ -141,7 +141,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * counted towards the number of factors
      */
     @Override
-    public void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    public void getAnnotationInformation( Collection<? extends ExpressionExperimentValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -175,7 +175,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @return Map of EE ids to the most recent update.
      */
     @Override
-    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    public Map<Long, Date> getEventInformation( Collection<? extends ExpressionExperimentValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -308,7 +308,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    public Map<Long, Date> getReportInformation( Collection<? extends ExpressionExperimentValueObject> vos ) {
         StopWatch timer = new StopWatch();
         Map<Long, Date> result = new HashMap<>();
         timer.start();

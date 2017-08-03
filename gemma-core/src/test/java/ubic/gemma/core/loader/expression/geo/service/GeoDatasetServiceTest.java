@@ -157,21 +157,22 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     }
 
-    @Test
-    public void testFetchAndLoadGSE2122SAGE() throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                getTestFileBasePath( "gse2122shortSage" ) ) );
-        try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE2122", false, true, false, false );
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            log.warn( "Test skipped because GSE2122 was not removed from the system prior to test" );
-            return;
-        }
-        ee = this.eeService.thawLite( ee );
-        assertEquals( 4, ee.getBioAssays().size() );
-        aclTestUtils.checkEEAcls( ee );
-    }
+    // We don't allow SAGE - we could change this test to evaluate its rejection, but not important.
+    //    @Test
+    //    public void testFetchAndLoadGSE2122SAGE() throws Exception {
+    //        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+    //                getTestFileBasePath( "gse2122shortSage" ) ) );
+    //        try {
+    //            Collection<?> results = geoService.fetchAndLoad( "GSE2122", false, true, false, false );
+    //            ee = ( ExpressionExperiment ) results.iterator().next();
+    //        } catch ( AlreadyExistsInSystemException e ) {
+    //            log.warn( "Test skipped because GSE2122 was not removed from the system prior to test" );
+    //            return;
+    //        }
+    //        ee = this.eeService.thawLite( ee );
+    //        assertEquals( 4, ee.getBioAssays().size() );
+    //        aclTestUtils.checkEEAcls( ee );
+    //    }
 
     /**
      * Left out quantitation types due to bug in how quantitation types were cached during persisting, if the QTs didn't

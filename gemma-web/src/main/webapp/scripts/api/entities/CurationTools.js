@@ -71,8 +71,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         var changeTroubleButton = new Ext.Button({
             text: 'Change troubled status',
-            tooltip: 'Create new event to change the trouble status. ' +
-            'This is equivalent to creating a new event in the history tab',
+            tooltip: 'Create new event to change the trouble status. ',
             handler: this.showAddTroubleEventDialog,
             scope: this,
             cls: 'default-button'
@@ -281,7 +280,9 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
      */
     showAddTroubleEventDialog: function () {
         if (!this.addEventDialog) {
-            this.addEventDialog = new Gemma.AddAuditEventDialog();
+            this.addEventDialog = new Gemma.AddAuditEventDialog({
+                comment: false
+            });
             this.addEventDialog.on("commit", function (resultObj) {
                 this.createCurationEvent(resultObj);
             }.createDelegate(this));

@@ -91,8 +91,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final Persister persisterHelper;
     private final ProbeMapper probeMapper;
 
-
-
     @Autowired
     public ArrayDesignProbeMapperServiceImpl( AnnotationAssociationService annotationAssociationService,
             ArrayDesignAnnotationService arrayDesignAnnotationService,
@@ -113,8 +111,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.geneService = geneService;
         this.persisterHelper = persisterHelper;
     }
-
-
 
     @Override
     public void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
@@ -402,8 +398,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         return probeMapper.processBlatResults( db, blatResults, config );
     }
 
-
-
     private void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,
             boolean persist ) {
         int loadedAssociationCount = 0;
@@ -416,10 +410,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 GeneProduct geneProduct = bacs.ba.getGeneProduct();
-
-                if ( geneProduct.getName().equals( "NM_026686" ) ) {
-                    log.debug( "HERE" );
-                }
 
                 if ( geneProduct.getId() == null ) {
                     GeneProduct existing = geneProductService.find( geneProduct );

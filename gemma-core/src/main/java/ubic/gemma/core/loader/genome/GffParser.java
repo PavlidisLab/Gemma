@@ -41,8 +41,9 @@ import ubic.gemma.persistence.util.SequenceBinUtils;
  * expanded/changed.
  * 
  * @author pavlidis
- * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class GffParser extends BasicLineParser<Gene> {
     Collection<Gene> results = new HashSet<Gene>();
 
@@ -125,7 +126,7 @@ public class GffParser extends BasicLineParser<Gene> {
 
         // String comments = fields[9];
 
-        Chromosome chromosome = Chromosome.Factory.newInstance(seqName, taxon); 
+        Chromosome chromosome = Chromosome.Factory.newInstance( seqName, taxon );
 
         PhysicalLocation location = PhysicalLocation.Factory.newInstance();
         location.setChromosome( chromosome );

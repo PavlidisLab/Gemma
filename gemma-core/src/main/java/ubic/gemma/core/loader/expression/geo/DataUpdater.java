@@ -15,6 +15,8 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.ArrayUtils;
@@ -27,6 +29,7 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.ConfigUtils;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
@@ -224,11 +227,11 @@ public class DataUpdater {
     }
 
     /**
-     * Replaces data.
+     * Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation type we
+     * use internally. Counts and FPKM (if provided) are stored in addition.
      *
-     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
-     *                            data. If this is provided, all the other data will be removed.
-     * @param rpkmMatrix          Representing per-gene normalized data, optional.
+     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
+     * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
@@ -257,7 +260,14 @@ public class DataUpdater {
         QuantitationType countqt = makeCountQt();
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
 
-        ee = replaceData( ee, targetArrayDesign, countEEMatrix );
+        QuantitationType log2cpmQt = makelog2cpmQt();
+        DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats.convertToLog2Cpm( properCountMatrix, librarySize );
+
+        ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
+
+        ee = replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+        ee = addData( ee, targetArrayDesign, countEEMatrix );
 
         addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
 
@@ -360,9 +370,9 @@ public class DataUpdater {
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param ee             the experiment to be modified
+     * @param ee the experiment to be modified
      * @param targetPlatform the platform for the new data
-     * @param data           the data to be used
+     * @param data the data to be used
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -382,7 +392,7 @@ public class DataUpdater {
         Collection<QuantitationType> qts = data.getQuantitationTypes();
 
         if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( "Only support a single quantitation type" );
+            throw new IllegalArgumentException( "Only supports a single quantitation type" );
         }
 
         if ( qts.isEmpty() ) {
@@ -426,6 +436,35 @@ public class DataUpdater {
         }
 
         return ee;
+    }
+
+    /**
+     * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
+     * quantitation type. Note that this replaces the "raw" data. Similar to
+     * AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
+     * SimpleExpressionDataLoaderService.
+     * 
+     * <p>
+     * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
+     * sample- and element-matching to happen here.
+     * 
+     * @param ee
+     * @param targetPlatform
+     * @param qt
+     * @param data
+     * @return
+     */
+    public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
+            DoubleMatrix<String, String> data ) {
+        targetPlatform = this.arrayDesignService.thaw( targetPlatform );
+        ee = this.experimentService.thawLite( ee );
+
+        DoubleMatrix<CompositeSequence, BioMaterial> rdata = matchElementsToRowNames( targetPlatform,
+                data );
+        matchBioMaterialsToColNames( ee, data, rdata );
+        ExpressionDataDoubleMatrix eematrix = new ExpressionDataDoubleMatrix( ee, qt, rdata );
+
+        return this.replaceData( ee, targetPlatform, eematrix );
     }
 
     /**
@@ -482,7 +521,11 @@ public class DataUpdater {
 
             log.info( ba + " total library size=" + librarySize );
 
+            /*
+             * FIXME: this creates a mess if you run this multiple times.
+             */
             ba.setDescription( ba.getDescription() + " totalCounts=" + Math.floor( librarySize ) );
+
             ba.setSequenceReadLength( readLength );
             ba.setSequencePairedReads( isPairedReads );
             ba.setSequenceReadCount( ( int ) Math.floor( librarySize ) );
@@ -637,7 +680,7 @@ public class DataUpdater {
     }
 
     private QuantitationType makeCountQt() {
-        QuantitationType countqt = makeQt( true );
+        QuantitationType countqt = makeQt( false );
         countqt.setName( "Counts" );
         countqt.setType( StandardQuantitationType.COUNT );
         countqt.setScale( ScaleType.COUNT );
@@ -646,6 +689,21 @@ public class DataUpdater {
         countqt.setIsNormalized( false );
         countqt.setIsRecomputedFromRawData( true ); // assume this is true...
         return countqt;
+    }
+
+    /**
+     * @return
+     */
+    private QuantitationType makelog2cpmQt() {
+        QuantitationType qt = makeQt( true );
+        qt.setName( "log2cpm" );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setDescription( "log-2 transformed read counts per million" );
+        qt.setIsBackgroundSubtracted( false );
+        qt.setIsNormalized( false );
+        qt.setIsRecomputedFromRawData( true ); // assume this is true...
+        return qt;
     }
 
     private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -711,6 +769,7 @@ public class DataUpdater {
         QuantitationType rpkmqt = makeQt( false );
         rpkmqt.setIsRatio( false );
         rpkmqt.setName( "RPKM" );
+        rpkmqt.setIsPreferred( false );
         rpkmqt.setDescription( "Reads (or fragments) per kb of gene model per million reads" );
         rpkmqt.setIsBackgroundSubtracted( false );
         rpkmqt.setIsNormalized( true );

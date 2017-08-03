@@ -170,7 +170,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         ee = this.eeService.thawLite( ee );
 
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        Collection<BioMaterial> bms = new HashSet<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             bms.add( bm );
@@ -188,7 +188,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         boolean foundpmi = false;
-        Collection<Long> seenFactorValueIds = new HashSet<Long>();
+        Collection<Long> seenFactorValueIds = new HashSet<>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
 
             if ( ef.getName().equals( "Profile" ) ) {

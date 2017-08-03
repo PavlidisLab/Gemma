@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,21 +36,21 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study
@@ -72,9 +72,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * <p>
  * Vectors which are empty (all missing values) are not persisted. If problems are found during merging, an exception
  * will be thrown, though this may leave things in a bad state requiring a reload of the data.
- * 
+ *
+ *
  * @author pavlidis
- * @version $Id$
  * @see ExpressionDataMatrixBuilder
  */
 @Component
@@ -108,7 +108,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * ubic.gemma.core.analysis.preprocess.VectorMergingService#mergeVectors(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment)
@@ -119,7 +119,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
 
         if ( arrayDesigns.size() > 1 ) {
-            throw new IllegalArgumentException( "Cannot cope with more than one platform" );
+            throw new IllegalArgumentException( "Cannot cope with more than one platform; switch experiment to use a (merged) platform first" );
         }
 
         expExp = expressionExperimentService.thaw( expExp );
@@ -198,7 +198,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                  * we joined them up.
                  */
 
-                List<Object> data = new ArrayList<Object>();
+                List<Object> data = new ArrayList<>();
                 int totalMissingInVector = makeMergedData( sortedOldDims, newBioAd, type, de, dedvs, data );
                 missingValuesForQt += totalMissingInVector;
                 if ( totalMissingInVector == totalBioAssays ) {
@@ -299,13 +299,13 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     /**
      * Create a new one or use an existing one. (an existing one might be found if this process was started once before
      * and aborted partway through).
-     * 
+     *
      * @param oldDims in the sort order to be used.
      * @return
      */
     private BioAssayDimension combineBioAssayDimensions( List<BioAssayDimension> oldDims ) {
 
-        List<BioAssay> bioAssays = new ArrayList<BioAssay>();
+        List<BioAssay> bioAssays = new ArrayList<>();
         for ( BioAssayDimension bioAd : oldDims ) {
             for ( BioAssay bioAssay : bioAd.getBioAssays() ) {
                 if ( bioAssays.contains( bioAssay ) ) {
@@ -365,7 +365,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             PrimitiveType representation ) {
         int nullsNeeded = oldDim.getBioAssays().size();
         for ( int i = 0; i < nullsNeeded; i++ ) {
-            // FIXME this code taken from GeoConverter
+            // this code taken from GeoConverter
             if ( representation.equals( PrimitiveType.DOUBLE ) ) {
                 data.add( Double.NaN );
             } else if ( representation.equals( PrimitiveType.STRING ) ) {
@@ -388,7 +388,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
      */
     private Map<CompositeSequence, Collection<DesignElementDataVector>> getDevMap(
             Collection<? extends DesignElementDataVector> oldVectors ) {
-        Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = new HashMap<CompositeSequence, Collection<DesignElementDataVector>>();
+        Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = new HashMap<>();
         boolean atLeastOneMatch = false;
         assert !oldVectors.isEmpty();
 
@@ -423,7 +423,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     /**
      * Get the current set of vectors that need to be updated.
-     * 
+     *
      * @param expExp
      * @param qts - only used to check for problems.
      * @param allOldBioAssayDims
@@ -431,7 +431,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
      */
     private Map<QuantitationType, Collection<DesignElementDataVector>> getVectors( ExpressionExperiment expExp,
             Collection<QuantitationType> qts, Collection<BioAssayDimension> allOldBioAssayDims ) {
-        Collection<DesignElementDataVector> oldVectors = new HashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> oldVectors = new HashSet<>();
 
         for ( BioAssayDimension dim : allOldBioAssayDims ) {
             oldVectors.addAll( super.designElementDataVectorService.find( dim ) );
@@ -442,8 +442,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         }
 
         designElementDataVectorService.thaw( oldVectors );
-        Map<QuantitationType, Collection<DesignElementDataVector>> qt2Vec = new HashMap<QuantitationType, Collection<DesignElementDataVector>>();
-        Collection<QuantitationType> qtsToAdd = new HashSet<QuantitationType>();
+        Map<QuantitationType, Collection<DesignElementDataVector>> qt2Vec = new HashMap<>();
+        Collection<QuantitationType> qtsToAdd = new HashSet<>();
         for ( DesignElementDataVector v : oldVectors ) {
 
             QuantitationType qt = v.getQuantitationType();
@@ -472,7 +472,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     /**
      * Make a (non-persistent) vector that has the right bioassaydimension, designelement and quantitationtype.
-     * 
+     *
      * @param expExp
      * @param newBioAd
      * @param type
@@ -496,8 +496,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
      * @param de
      * @param dedvs
      * @param data
-     * @param mergedData
-     * @return
+     * @param mergedData starts out empty, is initalized to the new data.
+     * @return number of values missing
      */
     private int makeMergedData( List<BioAssayDimension> sortedOldDims, BioAssayDimension newBioAd,
             QuantitationType type, CompositeSequence de, Collection<DesignElementDataVector> dedvs,
@@ -530,7 +530,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     /**
      * Just for debugging.
-     * 
+     *
      * @param newVectors
      */
     @SuppressWarnings("unused")
@@ -571,12 +571,12 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     /**
      * Provide a sorted list of bioassaydimensions for merging. The actual order doesn't matter, just so long as we are
      * consistent further on.
-     * 
+     *
      * @param oldBioAssayDims
      * @return
      */
     private List<BioAssayDimension> sortedBioAssayDimensions( Collection<BioAssayDimension> oldBioAssayDims ) {
-        List<BioAssayDimension> sortedOldDims = new ArrayList<BioAssayDimension>();
+        List<BioAssayDimension> sortedOldDims = new ArrayList<>();
         sortedOldDims.addAll( oldBioAssayDims );
         Collections.sort( sortedOldDims, new Comparator<BioAssayDimension>() {
             @Override

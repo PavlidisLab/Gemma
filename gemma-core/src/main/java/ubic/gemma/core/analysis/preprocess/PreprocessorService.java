@@ -39,7 +39,11 @@ public interface PreprocessorService {
      * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
      * course) the processed data are already available.
      *
+     * @param experiment to be processed
+     * @param allowOutliers whether the computationally predicted outliers should stand in the way of batch correction.
+     *        Set to true to ignore outlier checks. If you have already removed/evaluated outliers then setting this to
+     *        true is safe.
      */
-    ExpressionExperiment batchCorrect( ExpressionExperiment ee ) throws PreprocessingException;
+    ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean allowOutliers ) throws PreprocessingException;
 
 }

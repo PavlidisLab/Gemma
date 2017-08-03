@@ -5,7 +5,7 @@
     <name>Gemma</name>
     <groupId>gemma</groupId>
     <artifactId>gemma</artifactId>
-    <version>1.12.8</version>
+    <version>1.13</version>
     <inceptionYear>2005</inceptionYear>
     <description>
         The Gemma Project for meta-analysis of genomics data
@@ -314,11 +314,33 @@
         <dependency>
             <groupId>baseCode</groupId>
             <artifactId>baseCode</artifactId>
-            <version>1.0.20</version>
+            <version>1.0.21</version>
         </dependency>
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.amashchenko.maven.plugin</groupId>
+                <artifactId>gitflow-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <!-- Do not push to remote -->
+                    <pushRemote>false</pushRemote>
+                    <verbose>true</verbose>
+                    <!-- Branch naming schemes -->
+                    <gitFlowConfig>
+                        <productionBranch>master</productionBranch>
+                        <developmentBranch>development</developmentBranch>
+                        <releaseBranchPrefix>release-</releaseBranchPrefix>
+                        <versionTagPrefix></versionTagPrefix>
+                        <origin>origin</origin>
+                        <!-- Unused for releasing -->
+                        <featureBranchPrefix>feature-</featureBranchPrefix>
+                        <hotfixBranchPrefix>hotfix-</hotfixBranchPrefix>
+                        <supportBranchPrefix>support-</supportBranchPrefix>
+                    </gitFlowConfig>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -612,7 +634,7 @@
                 <site>
                     <id>localDeploy</id>
                     <name>localDeploy</name>
-                    <url>scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite</url>
+                    <url>file:///space/gemmaData/gemma-devsite</url>
                 </site>
                 <repository>
                     <id>repo</id>

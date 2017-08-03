@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,12 +18,21 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.genome.gene.service.GeneService;
+
 import ubic.gemma.core.genome.gene.service.GeneServiceImpl;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
@@ -33,23 +42,15 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.GeneDaoImpl;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author daq2101
  */
 public class GeneServiceImplTest extends BaseSpringContextTest {
 
     private static final String STRAND = "+";
-    private Collection<Gene> allThree = new HashSet<Gene>();
-    private Collection<Gene> justRab = new HashSet<Gene>();
-    private Collection<Gene> justRabble = new HashSet<Gene>();
+    private Collection<Gene> allThree = new HashSet<>();
+    private Collection<Gene> justRab = new HashSet<>();
+    private Collection<Gene> justRabble = new HashSet<>();
     private GeneServiceImpl svc;
     private Gene g = null;
     private Gene g2 = null;
@@ -157,7 +158,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         gp5.setName( "wrong chromosome gp5" );
         gp5.setId( ( long ) 4567 );
 
-        Collection<GeneProduct> gps = new ArrayList<GeneProduct>();
+        Collection<GeneProduct> gps = new ArrayList<>();
         gps.add( gp1 );
         gps.add( gp2 );
         gps.add( gp4 );
@@ -237,13 +238,4 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         verify( geneDaoMock );
     }
 
-    @Test
-    public void testGetMaxPhysicalLength() {
-        reset( geneDaoMock );
-        geneDaoMock.thaw( g3 );
-        expectLastCall().andReturn( g3 );
-        PhysicalLocation ploc = svc.getMaxPhysicalLength( g3 );
-        assertTrue( ploc.getNucleotide() == 90 );
-        assertTrue( ploc.getNucleotideLength() == 120 );
-    }
 }

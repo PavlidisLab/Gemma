@@ -26,7 +26,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author Paul
- * @version $Id$
  */
 @Service
 public class SampleCoexpressionMatrixHelperServiceImpl implements SampleCoexpressionMatrixHelperService {
@@ -44,7 +43,6 @@ public class SampleCoexpressionMatrixHelperServiceImpl implements SampleCoexpres
     @Transactional
     public void create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad, ExpressionExperiment ee ) {
         this.sampleCoexpressionMatrixDao.create( matrix, bad, ee );
-
     }
 
     @Override

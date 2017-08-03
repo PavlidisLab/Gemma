@@ -24,7 +24,8 @@ import java.io.InputStream;
 import java.util.Collection;
 
 /**
- * Load experiment from a flat file.
+ * Load experiment from a flat file. See also {@link ubic.gemma.core.loader.expression.geo.DataUpdater} for related
+ * operations on experiments already in the system.
  *
  * @author paul
  */
@@ -42,7 +43,7 @@ public interface SimpleExpressionDataLoaderService {
      * Parses, converts (into Gemma objects), and loads data into the database.
      *
      * @param data tab-delimited file with row names corresponding to CompositeSequence names and column names
-     *             corresponding to BioAssay names.
+     *        corresponding to BioAssay names.
      */
     ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData, InputStream data ) throws IOException;
 

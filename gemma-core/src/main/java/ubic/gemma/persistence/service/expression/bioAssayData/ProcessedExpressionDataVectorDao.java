@@ -41,7 +41,8 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
-     * should already have been computed. If the values already exist, they will be re-written.
+     * should already have been computed. If the values already exist, they will be re-written. The data will be
+     * quantile normalized (with some exceptions: ratios and count data will not be normalized).
      *
      * @return the updated expressionExperiment.
      */

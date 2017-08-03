@@ -157,8 +157,7 @@ public class CoexpressionSearchController {
 
         // Add the user's datasets to the selected datasets
         if ( searchOptions.isUseMyDatasets() ) {
-            myEE = expressionExperimentService.loadMyExpressionExperiments();
-
+            myEE = expressionExperimentService.loadAll();
         }
 
         Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
@@ -225,7 +224,7 @@ public class CoexpressionSearchController {
         // Add the user's datasets to the selected datasets
         Collection<ExpressionExperiment> myEE = null;
         if ( searchOptions.isUseMyDatasets() ) {
-            myEE = expressionExperimentService.loadMyExpressionExperiments();
+            myEE = expressionExperimentService.loadAll();
         }
 
         Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );

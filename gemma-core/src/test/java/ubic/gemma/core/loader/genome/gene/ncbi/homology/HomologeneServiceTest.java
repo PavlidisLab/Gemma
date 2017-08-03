@@ -18,15 +18,16 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
-import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.io.InputStream;
 import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the homologeneService but only access methods that don't require a DB connection (using the gemma db).
@@ -35,31 +36,26 @@ import java.util.Collection;
  */
 public class HomologeneServiceTest extends BaseSpringContextTest {
 
-    private HomologeneServiceImpl hgs;
-
     @Autowired
-    private GeneService geneService;
+    private HomologeneService hgs;
 
     @Test
     public final void testGetHomologues() {
         long id = 34;
         Collection<Long> homologenes = hgs.getHomologues( id );
-
-        TestCase.assertNotNull( homologenes );
-        TestCase.assertEquals( 11, homologenes.size() );
+        assertNotNull( homologenes );
+        assertEquals( 11, homologenes.size() );
     }
 
     @Test
     public final void testGetHomologues2() {
         Collection<Long> homologenes = hgs.getNCBIGeneIdsInGroup( 3 );
-        TestCase.assertNotNull( homologenes );
-        TestCase.assertEquals( 12, homologenes.size() );
-        System.out.println( homologenes );
+        assertNotNull( homologenes );
+        assertEquals( 12, homologenes.size() );
     }
 
     @Before
     public void setUp() throws Exception {
-        hgs = new HomologeneServiceImpl( geneService, taxonService );
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" )) {
             assert is != null;

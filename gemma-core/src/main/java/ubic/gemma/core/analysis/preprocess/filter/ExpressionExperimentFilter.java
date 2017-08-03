@@ -42,36 +42,29 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * Methods to handle filtering expression experiments for analysis.
  * 
  * @author Paul
- * @version $Id$
  */
 public class ExpressionExperimentFilter {
 
     /**
-     * Minimum number of samples for keeping rows when min-present filtering. Note that this should be set to be the
-     * same as {@link ubic.gemma.core.analysis.preprocess.filter.FilterConfig.MINIMUM_SAMPLE} . Rows with more missing values
-     * than this are always removed. This can be increased by the use of the min fractio npresent filter which sets a
+     * Minimum number of samples for keeping rows when min-present filtering. Rows with more missing values
+     * than this are always removed. This can be increased by the use of the min fraction present filter which sets a
      * fraction.
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.filter.FilterConfig.MINIMUM_SAMPLE
+     *
      */
-    public static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 7;
+    private static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 7;
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
+    private static final Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
 
-    /**
-     * @param matrix
-     * @return
-     */
+
     public static ExpressionDataDoubleMatrix doNothingFilter( ExpressionDataDoubleMatrix matrix ) {
         return new ExpressionDataDoubleMatrix( matrix, matrix.getRowNames() );
     }
 
     /**
      * Remove rows that have a low variance, below the stated quantile
-     * 
-     * @param matrix
+     *
      * @param quantile e.g. 10 to remove 10% lowest variance rows.
-     * @return
+
      */
     public static ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix, int quantile ) {
         if ( quantile <= 0 || quantile >= 100 ) {
@@ -89,11 +82,9 @@ public class ExpressionExperimentFilter {
      * Remove rows that have a low diversity of values (equality judged based on tolerancee set in RowLevelFilter). This
      * happens when people "set values less than 10 equal to 10" for example. This effectively filters rows that have
      * too many missing values, because missing values are counted as a single value.
-     * 
-     * @param matrix
+     *
      * @param threshold fraction of values that must be distinct. Thus if set to 0.5, a vector of 10 values must have at
      *        least 5 distinct values.
-     * @return
      */
     public static ExpressionDataDoubleMatrix tooFewDistinctValues( ExpressionDataDoubleMatrix matrix, double threshold ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
@@ -112,10 +103,7 @@ public class ExpressionExperimentFilter {
 
     /**
      * Remove rows that have a variance of zero (within a small constant)
-     * 
-     * @param matrix
-     * @return
-     * @see Constants.SMALLISH
+     *
      */
     public static ExpressionDataDoubleMatrix zeroVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
@@ -131,7 +119,6 @@ public class ExpressionExperimentFilter {
     private final FilterConfig config;
 
     /**
-     * @param arrayDesignsUsed
      * @param config configuration used for all filtering. This must be defined at construction and cannot be changed
      *        afterwards.
      */
@@ -152,10 +139,7 @@ public class ExpressionExperimentFilter {
      * <li>Remove rows with low variance (ratiometric) or CV (one-color) (as configured)
      * <li>Remove rows with very high or low expression (as configured)
      * </ol>
-     * 
-     * @param ee
-     * @param dataVectors
-     * @return
+     *
      */
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
@@ -165,11 +149,7 @@ public class ExpressionExperimentFilter {
 
     /**
      * Remove probes that are on the array as hybridization or RNA quality controls (AFFX*)
-     * 
-     * @param ee
-     * @param filteredMatrix
-     * @param arrayDesign
-     * @return
+     *
      */
     private ExpressionDataDoubleMatrix affyControlProbeFilter( ExpressionDataDoubleMatrix matrix ) {
         AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
@@ -179,10 +159,9 @@ public class ExpressionExperimentFilter {
     /**
      * Apply filters as configured by the command line parameters and technology type. See getFilteredMatrix for the
      * details of what filters are applied and the ordering.
-     * 
-     * @param dataMatrix
+     *
      * @param eeDoubleMatrix , already masked for missing values.
-     * @param ee
+
      * @return A data matrix in which filters have been applied and missing values (in the PRESENTABSENT quantitation
      *         type, if present) are masked
      */
@@ -294,15 +273,20 @@ public class ExpressionExperimentFilter {
             StringBuilder buf = new StringBuilder();
 
             buf.append( "Filter summary:\n" );
-            buf.append( "Filter summary for " + eeDoubleMatrix.getExpressionExperiment() + ":\n" );
-            buf.append( "Started with\t" + startingRows + " (" + eeDoubleMatrix.columns() + " columns) " + "\n" );
-            if ( config.isRequireSequences() ) buf.append( "After Seq\t" + afterSequenceRemovalRows + "\n" );
-            if ( usesAffymetrix() ) buf.append( "After removing Affy controls\t" + afterAffyControlsFilter + "\n" );
+            buf.append( "Filter summary for " ).append( eeDoubleMatrix.getExpressionExperiment() ).append( ":\n" );
+            buf.append( "Started with\t" ).append( startingRows ).append( " (" ).append( eeDoubleMatrix.columns() )
+                    .append( " columns) " ).append( "\n" );
+            if ( config.isRequireSequences() ) buf.append( "After Seq\t" ).append( afterSequenceRemovalRows )
+                    .append( "\n" );
+            if ( usesAffymetrix() ) buf.append( "After removing Affy controls\t" ).append( afterAffyControlsFilter )
+                    .append( "\n" );
             if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() )
-                buf.append( "After MinPresent\t" + afterMinPresentFilter + "\n" );
-            buf.append( "After ZeroVar\t" + afterZeroVarianceCut + "\n" );
-            if ( config.isLowExpressionCutIsSet() ) buf.append( "After LowExpr\t" + afterLowExpressionCut + "\n" );
-            if ( config.isLowVarianceCutIsSet() ) buf.append( "After LowVar\t" + afterLowVarianceCut + "\n" );
+                buf.append( "After MinPresent\t" ).append( afterMinPresentFilter ).append( "\n" );
+            buf.append( "After ZeroVar\t" ).append( afterZeroVarianceCut ).append( "\n" );
+            if ( config.isLowExpressionCutIsSet() ) buf.append( "After LowExpr\t" ).append( afterLowExpressionCut )
+                    .append( "\n" );
+            if ( config.isLowVarianceCutIsSet() ) buf.append( "After LowVar\t" ).append( afterLowVarianceCut )
+                    .append( "\n" );
             buf.append( "================================================================\n" );
             log.info( buf.toString() );
         }
@@ -312,9 +296,6 @@ public class ExpressionExperimentFilter {
 
     /**
      * @param eeDoubleMatrix , already masked for missing values.
-     * @param ranks
-     * @param arrayDesignsUsed
-     * @return
      */
     private ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         if ( eeDoubleMatrix == null || eeDoubleMatrix.rows() == 0 )
@@ -354,7 +335,6 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * @param eeDoubleMatrix
      * @return true if the data looks like it is already log transformed, false otherwise. This is based on the
      *         quantitation types and, as a check, looking at the data itself.
      */
@@ -391,9 +371,7 @@ public class ExpressionExperimentFilter {
 
     /**
      * Determine if the expression experiment uses two-color arrays.
-     * 
-     * @param ee
-     * @return
+     *
      * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
      */
     private Boolean isTwoColor() {
@@ -415,19 +393,12 @@ public class ExpressionExperimentFilter {
         return answer;
     }
 
-    /**
-     * @param filteredMatrix
-     * @return
-     */
+
     private ExpressionDataDoubleMatrix lowDistinctValueFilter( ExpressionDataDoubleMatrix filteredMatrix ) {
         return tooFewDistinctValues( filteredMatrix, config.getLowDistinctValueCut() );
     }
 
-    /**
-     * @param matrix
-     * @param ranks
-     * @return
-     */
+
     private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix,
             Map<CompositeSequence, Double> ranks ) {
         // check for null ranks, in which case we can't use this.
@@ -445,10 +416,7 @@ public class ExpressionExperimentFilter {
         return rowLevelFilter.filter( matrix );
     }
 
-    /**
-     * @param matrix
-     * @return
-     */
+
     private ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
         rowLevelFilter.setMethod( Method.VAR );
@@ -480,9 +448,7 @@ public class ExpressionExperimentFilter {
 
     /**
      * Filter rows that lack BioSequences associated with the probes.
-     * 
-     * @param eeDoubleMatrix
-     * @return
+     *
      */
     private ExpressionDataDoubleMatrix noSequencesFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         RowsWithSequencesFilter f = new RowsWithSequencesFilter();

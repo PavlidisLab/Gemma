@@ -263,11 +263,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
             assertNotNull( is );
             experimentalDesignImporter.importDesign( ee, is );
         }
-
-        differentialExpressionAnalyzerService.deleteAnalyses( ee );
-
         experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertEquals( 3, experimentalFactors.size() );
+        differentialExpressionAnalyzerService.deleteAnalyses( ee );
 
         // Done with setting it up.
 

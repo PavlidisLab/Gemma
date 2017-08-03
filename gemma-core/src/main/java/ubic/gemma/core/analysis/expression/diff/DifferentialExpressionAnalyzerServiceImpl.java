@@ -1,8 +1,8 @@
 /*
  og* The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,12 +18,21 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
@@ -35,14 +44,14 @@ import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -55,9 +64,29 @@ import java.util.*;
 @Component
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
-    private static final int MINIMUM_NUMBER_OF_HITS_TO_SAVE = 50;
-    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
+    /**
+     * Defines the different types of analyses our linear modeling framework supports:
+     * <ul>
+     * <li>GENERICLM - generic linear regression (interactions are omitted, but this could change)
+     * <li>OSTTEST - one sample t-test
+     * <li>OWA - one-way ANOVA
+     * <li>TTEST - two sample t-test
+     * <li>TWO_WAY_ANOVA_WITH_INTERACTION
+     * <li>TWO_WAY_ANOVA_NO_INTERACTION
+     * </ul>
+     *
+     * @author Paul
+     */
+    public enum AnalysisType {
+        GENERICLM, //
+        OSTTEST, //one-sample
+        OWA, //one-way ANOVA
+        TTEST, //
+        TWO_WAY_ANOVA_WITH_INTERACTION, //with interactions
+        TWO_WAY_ANOVA_NO_INTERACTION //no interactions
+    }
 
+    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
@@ -68,6 +97,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
+
     @Autowired
     private DifferentialExpressionAnalysisHelperService helperService;
 
@@ -117,9 +147,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         File f = prepareDirectoryForDistributions( ee );
 
-        String histFileName =
-                FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "pvalues"
-                        + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "pvalues"
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         File oldf = new File( f, histFileName );
         if ( oldf.exists() && oldf.canWrite() ) {
             if ( !oldf.delete() ) {
@@ -294,48 +323,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
     }
 
-    private int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( expressionExperiment );
-        int numDeleted = 0;
-        if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
-            log.info( "No differential expression analyses to remove for " + expressionExperiment.getShortName() );
-            return numDeleted;
-        }
-
-        this.differentialExpressionAnalysisService.thaw( diffAnalyses );
-
-        for ( DifferentialExpressionAnalysis existingAnalysis : diffAnalyses ) {
-
-            Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<ExperimentalFactor>();
-
-            for ( ExpressionAnalysisResultSet resultSet : existingAnalysis.getResultSets() ) {
-                factorsInAnalysis.addAll( resultSet.getExperimentalFactors() );
-            }
-
-            FactorValue subsetFactorValueForExisting = existingAnalysis.getSubsetFactorValue();
-
-            /*
-             * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
-             */
-            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors ) && (
-                    subsetFactorValueForExisting == null || subsetFactorValueForExisting
-                            .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
-
-                log.info( "Deleting analysis with ID=" + existingAnalysis.getId() );
-                deleteAnalysis( expressionExperiment, existingAnalysis );
-
-                numDeleted++;
-            }
-        }
-
-        if ( numDeleted == 0 ) {
-            log.info( "None of the other existing analyses were eligible for deletion" );
-        }
-        return numDeleted;
-    }
-
     private Histogram addPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
         Histogram pvalHist = new Histogram( "", 100, 0.0, 1.0 );
 
@@ -357,7 +344,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private boolean configsAreEqual( ExpressionAnalysisResultSet temprs, ExpressionAnalysisResultSet oldrs ) {
         return temprs.getBaselineGroup().equals( oldrs.getBaselineGroup() )
                 && temprs.getExperimentalFactors().size() == oldrs.getExperimentalFactors().size() && temprs
-                .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
+                        .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
     }
 
     private DifferentialExpressionAnalysisConfig copyConfig( DifferentialExpressionAnalysis copyMe ) {
@@ -368,7 +355,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         Collection<ExpressionAnalysisResultSet> resultSets = copyMe.getResultSets();
-        Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<>();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             Collection<ExperimentalFactor> oldfactors = rs.getExperimentalFactors();
             factorsFromOldExp.addAll( oldfactors );
@@ -402,19 +389,61 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
     }
 
+    private int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( expressionExperiment );
+        int numDeleted = 0;
+        if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
+            log.info( "No differential expression analyses to remove for " + expressionExperiment.getShortName() );
+            return numDeleted;
+        }
+
+        this.differentialExpressionAnalysisService.thaw( diffAnalyses );
+
+        for ( DifferentialExpressionAnalysis existingAnalysis : diffAnalyses ) {
+
+            Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<>();
+
+            for ( ExpressionAnalysisResultSet resultSet : existingAnalysis.getResultSets() ) {
+                factorsInAnalysis.addAll( resultSet.getExperimentalFactors() );
+            }
+
+            FactorValue subsetFactorValueForExisting = existingAnalysis.getSubsetFactorValue();
+
+            /*
+             * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
+             */
+            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors )
+                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting
+                            .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
+
+                log.info( "Deleting analysis with ID=" + existingAnalysis.getId() );
+                deleteAnalysis( expressionExperiment, existingAnalysis );
+
+                numDeleted++;
+            }
+        }
+
+        if ( numDeleted == 0 ) {
+            log.info( "None of the other existing analyses were eligible for deletion" );
+        }
+        return numDeleted;
+    }
+
     private void extendResultSet( ExpressionAnalysisResultSet oldrs, ExpressionAnalysisResultSet temprs ) {
         assert oldrs.getId() != null;
 
         /*
          * Copy the results over.
          */
-        Map<CompositeSequence, DifferentialExpressionAnalysisResult> p2der = new HashMap<CompositeSequence, DifferentialExpressionAnalysisResult>();
+        Map<CompositeSequence, DifferentialExpressionAnalysisResult> p2der = new HashMap<>();
 
         for ( DifferentialExpressionAnalysisResult der : oldrs.getResults() ) {
             p2der.put( der.getProbe(), der );
         }
 
-        Collection<DifferentialExpressionAnalysisResult> toAdd = new ArrayList<DifferentialExpressionAnalysisResult>();
+        Collection<DifferentialExpressionAnalysisResult> toAdd = new ArrayList<>();
         for ( DifferentialExpressionAnalysisResult newr : temprs.getResults() ) {
             if ( !p2der.containsKey( newr.getProbe() ) ) {
                 toAdd.add( newr );
@@ -470,7 +499,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses,
             DifferentialExpressionAnalysisConfig config ) {
 
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
             DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis,
                     config );
@@ -502,7 +531,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private Collection<DifferentialExpressionAnalysis> redoWithoutSave( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe, DifferentialExpressionAnalysisConfig config ) {
 
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
         BioAssaySet experimentAnalyzed = copyMe.getExperimentAnalyzed();
         assert experimentAnalyzed != null;
@@ -521,44 +550,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         return results;
-    }
-
-    private int trimAboveThreshold( Collection<DifferentialExpressionAnalysisResult> results, Double qvalueThreshold ) {
-        int i = 0;
-        for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
-            DifferentialExpressionAnalysisResult r = it.next();
-
-            if ( r.getPvalue() == null || Double.isNaN( r.getPvalue() ) || r.getCorrectedPvalue() == null
-                    || r.getCorrectedPvalue() >= qvalueThreshold ) {
-                it.remove();
-            } else {
-                i++;
-            }
-
-        }
-        return i;
-    }
-
-    /**
-     * Defines the different types of analyses our linear modeling framework supports:
-     * <ul>
-     * <li>GENERICLM - generic linear regression (interactions are omitted, but this could change)
-     * <li>OSTTEST - one sample t-test
-     * <li>OWA - one-way ANOVA
-     * <li>TTEST - two sample t-test
-     * <li>TWO_WAY_ANOVA_WITH_INTERACTION
-     * <li>TWO_WAY_ANOVA_NO_INTERACTION
-     * </ul>
-     *
-     * @author Paul
-     */
-    public enum AnalysisType {
-        GENERICLM, //
-        OSTTEST, //one-sample
-        OWA, //one-way ANOVA
-        TTEST, //
-        TWO_WAY_ANOVA_WITH_INTERACTION, //with interactions
-        TWO_WAY_ANOVA_NO_INTERACTION //no interactions
     }
 
 }

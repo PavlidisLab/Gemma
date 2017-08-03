@@ -215,7 +215,7 @@
                 </ownedOperation>
                 <ownedOperation xmi:id="_9_5_1_f24035d_1160520271124_334177_10" name="findByBioSequence" type="_9_0_1fe00f9_1119336925531_331753_26">
                   <eAnnotations xmi:id="_0Y4g8B2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                    <contents xmi:type="persistence_0:persistence__FinderMethod" xmi:id="_0Y4g8R2HEeOjaaBf708ONQ" _andromdahibernatequery="from BlatResultImpl br where br.querySequence = :bioSequence"/>
+                    <contents xmi:type="persistence_0:persistence__FinderMethod" xmi:id="_0Y4g8R2HEeOjaaBf708ONQ" _andromdahibernatequery="from BlatResult br where br.querySequence = :bioSequence"/>
                   </eAnnotations>
                   <returnResult xmi:id="_9_5_1_f24035d_1160520269471_502300_8" type="_9_0_1fe00f9_1119336925531_331753_26" direction="return"/>
                   <ownedParameter xmi:id="_9_5_1_f24035d_1160520269471_303315_7" name="bioSequence" type="Im8f64ed4m101a5582751mm782f" direction="inout"/>
