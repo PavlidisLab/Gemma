@@ -11,7 +11,7 @@ import java.text.ParseException;
 
 public abstract class WebServiceWithFiltering extends WebService {
 
-    private static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
+    protected static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
 
     /**
      * Lists all objects available in gemma.
