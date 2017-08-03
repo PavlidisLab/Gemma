@@ -612,7 +612,7 @@
                 <site>
                     <id>localDeploy</id>
                     <name>localDeploy</name>
-                    <url>scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite</url>
+                    <url>file:///space/gemmaData/gemma-devsite</url>
                 </site>
                 <repository>
                     <id>repo</id>
