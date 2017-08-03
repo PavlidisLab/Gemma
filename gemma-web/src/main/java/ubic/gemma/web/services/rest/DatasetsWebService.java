@@ -14,7 +14,6 @@
  */
 package ubic.gemma.web.services.rest;
 
-import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -22,19 +21,14 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
-import ubic.gemma.web.services.rest.util.args.DatasetArg;
-import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
-import ubic.gemma.web.services.rest.util.args.IntArg;
-import ubic.gemma.web.services.rest.util.args.SortArg;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
+import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import java.text.ParseException;
 
 /**
  * RESTful interface for datasets.
@@ -43,10 +37,7 @@ import javax.ws.rs.core.Response;
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService extends WebService {
-
-    private static final String ERROR_MSG_PROP_NOT_FOUND = "Datasets do not contain the given property.";
-    private static final String ERROR_MSG_PROP_NOT_FOUND_DETAIL = "Property of name '%s' not recognized.";
+public class DatasetsWebService extends WebServiceWithFiltering {
 
     private ExpressionExperimentService expressionExperimentService;
     private ArrayDesignService arrayDesignService;
@@ -70,53 +61,7 @@ public class DatasetsWebService extends WebService {
     }
 
     /**
-     * Lists all datasets available in gemma.
-     *
-     * @param filter optional parameter (defaults to empty string) filters the result by given properties.
-     *               <br/>
-     *               <p>
-     *               Filtering can be done on any property or nested property that the ExpressionExperiment class has (
-     *               and is mapped by hibernate ). E.g: 'curationDetails' or 'curationDetails.lastTroubledEvent.date'
-     *               </p><p>
-     *               Accepted operator keywords are:
-     *               <ul>
-     *               <li> '=' - equality</li>
-     *               <li> '!=' - non-equality</li>
-     *               <li> '<' - smaller than</li>
-     *               <li> '>' - larger than</li>
-     *               <li> '<=' - smaller or equal</li>
-     *               <li> '=>' - larger or equal</li>
-     *               <li> 'like' - similar string, effectively means 'contains', translates to the sql 'LIKE' operator (given value will be surrounded by % signs)</li>
-     *               </ul>
-     *               Multiple filters can be chained using 'AND' or 'OR' keywords.<br/>
-     *               Leave space between the keywords and the previous/next word! <br/>
-     *               E.g: <code>?filter=property1 < value1 AND property2 ~ value2</code>
-     *               </p><p>
-     *               If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal
-     *               form (CNF). Parentheses are not necessary - every AND keyword separates blocks of disjunctions.
-     *               </p><p>
-     *               Example:<br/>
-     *               <code>?filter=p1 = v1 OR p1 != v2 AND p2 <= v2 AND p3 > v3 OR p3 < v4</code><br/>
-     *               Above query will translate to: <br/>
-     *               <code>(p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4;)</code>
-     *               </p><p>
-     *               Breaking the CNF results in an error.
-     *               </p>
-     *               <p>
-     *               Filter "curationDetails.troubled" will be ignored if user is not an administrator.
-     *               </p>
-     *               <br/>
-     * @param offset <p>optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.</p>
-     * @param limit  <p>optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.</p>
-     * @param sort   <p>optional parameter (defaults to +id) sets the ordering property and direction.<br/>
-     *               Format is [+,-][property name]. E.g. "-accession" will translate to descending ordering by the
-     *               Accession property.<br/>
-     *               Note that this does not guarantee the order of the returned entities.<br/>
-     *               Nested properties are also supported (recursively). E.g. "+curationDetails.lastTroubledEvent.date".<br/></p>
-     * @return all datasets in the database, skipping the first [{@code offset}] of datasets, and limiting the amount in the result to
-     * the value of the {@code limit} parameter. If the {@code accessionGsmId} parameter is non-null, will limit the result to datasets
-     * with specified accession. Note that if the accession GSM id is not valid or no datasets with it are found, a 404 response will be
-     * supplied instead.
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -128,23 +73,8 @@ public class DatasetsWebService extends WebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        try {
-            return Responder.autoCode( expressionExperimentService
-                    .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
-                            filter.getObjectFilters() ), sr );
-        } catch ( QueryException e ) {
-
-            //if ( log.isDebugEnabled() ) {
-                e.printStackTrace();
-            //}
-
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                    ERROR_MSG_PROP_NOT_FOUND );
-            WellComposedErrorBody.addExceptionFields( error,
-                    new EntityNotFoundException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
-
-            return Responder.code( error.getStatus(), error, sr );
-        }
+        // Uses this.loadVOsPreFilter(...)
+        return super.all( filter, offset, limit, sort, sr );
     }
 
     /**
@@ -217,6 +147,14 @@ public class DatasetsWebService extends WebService {
     ) {
         Object response = datasetArg.getAnnotations( expressionExperimentService );
         return this.autoCodeResponse( datasetArg, response, sr );
+    }
+
+    @Override
+    protected ResponseDataObject loadVOsPreFilter( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
+            HttpServletResponse sr ) throws ParseException {
+        return Responder.autoCode( expressionExperimentService
+                .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
+                        filter.getObjectFilters() ), sr );
     }
 
 }

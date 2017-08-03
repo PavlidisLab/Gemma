@@ -34,7 +34,8 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
             query.setParameter( "userName", SecurityUtil.getCurrentUsername() );
         }
 
-        if(filters == null || filters.isEmpty()) return;
+        if ( filters == null || filters.isEmpty() )
+            return;
 
         for ( ObjectFilter[] filterArray : filters ) {
             if ( filterArray == null || filterArray.length < 1 )
@@ -43,8 +44,10 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
                 if ( filter == null )
                     continue;
                 if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
+                    log.debug( "Setting a list parameter, detected class was: " + filter.getPropertyType().getName() );
                     query.setParameterList( formParamName( filter ), ( Collection ) filter.getRequiredValue() );
                 } else {
+                    log.debug( "Setting a parameter, detected class was: " + filter.getPropertyType().getName() );
                     query.setParameter( formParamName( filter ), filter.getRequiredValue() );
                 }
             }
@@ -59,13 +62,14 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
      * @return an order by clause. Empty string if the orderByProperty argument is null or empty.
      */
     protected static String formOrderByProperty( String orderByProperty, boolean orderDesc ) {
-        if ( Strings.isNullOrEmpty(orderByProperty))
+        if ( Strings.isNullOrEmpty( orderByProperty ) )
             return "";
         return "order by " + orderByProperty + ( orderDesc ? " desc " : " " );
     }
 
     protected static String formAclSelectClause( String alias, String aoiType ) {
-        if(Strings.isNullOrEmpty( alias ) || Strings.isNullOrEmpty( aoiType )) throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
+        if ( Strings.isNullOrEmpty( alias ) || Strings.isNullOrEmpty( aoiType ) )
+            throw new IllegalArgumentException( "Alias and aoiType can not be empty." );
         return ", AclObjectIdentity as aoi inner join aoi.entries ace inner join aoi.ownerSid sid "
                 + "where aoi.identifier = " + alias + ".id and aoi.type = '" + aoiType + "' ";
     }

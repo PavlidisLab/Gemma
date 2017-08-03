@@ -2,7 +2,13 @@ package ubic.gemma.web.services.rest.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.QueryException;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.web.services.rest.util.args.FilterArg;
+import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.MutableArg;
+import ubic.gemma.web.services.rest.util.args.SortArg;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
@@ -11,6 +17,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.text.ParseException;
 
 /**
  * Created by tesarst on 18/05/17.
