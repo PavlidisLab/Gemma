@@ -16,18 +16,22 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
+import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.ParseException;
 
 /**
@@ -39,7 +43,11 @@ import java.text.ParseException;
 @Path("/datasets")
 public class DatasetsWebService extends WebServiceWithFiltering {
 
+    private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
+    private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
+
     private ExpressionExperimentService expressionExperimentService;
+    private ExpressionDataFileService expressionDataFileService;
     private ArrayDesignService arrayDesignService;
     private BioAssayService bioAssayService;
 
@@ -54,8 +62,10 @@ public class DatasetsWebService extends WebServiceWithFiltering {
      */
     @Autowired
     public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
-            ArrayDesignService arrayDesignService, BioAssayService bioAssayService ) {
+            ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
+            BioAssayService bioAssayService ) {
         this.expressionExperimentService = expressionExperimentService;
+        this.expressionDataFileService = expressionDataFileService;
         this.arrayDesignService = arrayDesignService;
         this.bioAssayService = bioAssayService;
     }
@@ -149,12 +159,105 @@ public class DatasetsWebService extends WebServiceWithFiltering {
         return this.autoCodeResponse( datasetArg, response, sr );
     }
 
+    /**
+     * Retrieves the data for given experiment.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     * @param filterData filters the expression data so that they do not contain samples under a minimum threshold.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/data")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response datasetData( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        if ( ee == null ) {
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    datasetArg.getNullCause() );
+            throw new GemmaApiException( errorBody );
+        }
+        return outputDataFile( ee, filterData.getValue() );
+    }
+
+    /**
+     * Retrieves the design for given experiment.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/design")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response datasetDesign( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        if ( ee == null ) {
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    datasetArg.getNullCause() );
+            throw new GemmaApiException( errorBody );
+        }
+        return outputDesignFile( ee );
+    }
+
     @Override
     protected ResponseDataObject loadVOsPreFilter( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
             HttpServletResponse sr ) throws ParseException {
         return Responder.autoCode( expressionExperimentService
                 .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
                         filter.getObjectFilters() ), sr );
+    }
+
+    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
+        ee = expressionExperimentService.thawLite( ee );
+        File file = expressionDataFileService.writeTemporaryDataFile( ee, filter );
+        return outputFile( file, ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
+    }
+
+    private Response outputDesignFile( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawLite( ee );
+        File file = expressionDataFileService.writeTemporaryDesignFile( ee );
+        return outputFile( file, ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
+    }
+
+    private Response outputFile( File file, String error, String shortName ) {
+        try {
+            if ( file == null || !file.exists() ) {
+                WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                        String.format( error, shortName ) );
+                throw new GemmaApiException( errorBody );
+            }
+
+            Response response = Response.ok( Files.readAllBytes( file.toPath() ) )
+                    .header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
+
+            deleteFile( file );
+
+            return response;
+        } catch ( IOException e ) {
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    String.format( error, shortName ) );
+            errorBody.addErrorsField( "error", e.getMessage() );
+
+            deleteFile( file );
+
+            throw new GemmaApiException( errorBody );
+        }
+    }
+
+    private void deleteFile(File file){
+        if ( file.canWrite() && file.delete() ) {
+            log.info( "Deleted: " + file );
+        } else {
+            log.warn( "Could not delete file: " + file );
+        }
     }
 
 }

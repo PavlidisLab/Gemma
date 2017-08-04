@@ -28,7 +28,7 @@ import java.util.ArrayList;
  */
 @Service
 @Path("/taxa")
-public class TaxonWebService extends WebServiceWithFiltering {
+public class TaxaWebService extends WebServiceWithFiltering {
 
     private TaxonService taxonService;
     private ExpressionExperimentService expressionExperimentService;
@@ -36,14 +36,14 @@ public class TaxonWebService extends WebServiceWithFiltering {
     /**
      * Required by spring
      */
-    public TaxonWebService() {
+    public TaxaWebService() {
     }
 
     /**
      * Constructor for service autowiring
      */
     @Autowired
-    public TaxonWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService ) {
+    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService ) {
         this.taxonService = taxonService;
         this.expressionExperimentService = expressionExperimentService;
     }
@@ -85,6 +85,8 @@ public class TaxonWebService extends WebServiceWithFiltering {
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
      *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) for details about the
+     * filter, offset, limit and sort arguments.
      */
     @GET
     @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/datasets")
