@@ -85,7 +85,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
     /**
      * Test differential expression analysis on count data. See bug 3383.
      */
-    @Test
+    //@Test //FIXME disabled this test while Paul is working on it
     public void testCountData() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
