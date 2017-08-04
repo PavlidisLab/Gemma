@@ -46,7 +46,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
  * RESTful web services for phenotypes
  * 
  * @author frances
- * @version $Id$
  */
 
 @Component
@@ -59,11 +58,7 @@ public class PhenotypeWebService {
 
     /**
      * Given a set of phenotypes, return all genes asociated with them.
-     * 
-     * @param taxonId
-     * @param showOnlyEditable
-     * @param phenotypeValueUris
-     * @return
+     *
      */
     @GET
     @Path("/find-candidate-genes")
@@ -85,13 +80,6 @@ public class PhenotypeWebService {
                 limit );
     }
 
-    /**
-     * @param taxonId
-     * @param showOnlyEditable
-     * @param geneId
-     * @param phenotypeValueUris
-     * @return
-     */
     @GET
     @Path("/find-evidence")
     @Produces(MediaType.APPLICATION_JSON)
@@ -105,9 +93,7 @@ public class PhenotypeWebService {
     /**
      * Given a phenotype, return all genes associated with it, denoting the exact phenotype that was annotated, which
      * might be a child of the requested term.
-     * 
-     * @param taxonId
-     * @param phenotypeValueUri
+     *
      * @return genes, where the associated CharacteristicValueObjects is a collection with one member representing the
      *         specific phenotype (the input query, or a child term).
      */

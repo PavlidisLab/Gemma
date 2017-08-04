@@ -40,12 +40,12 @@ public class Gene extends ChromosomeFeature {
     private String officialName;
     private Integer ncbiGeneId;
     private String ensemblId;
-    private Collection<GeneProduct> products = new HashSet<GeneProduct>();
-    private Collection<GeneAlias> aliases = new HashSet<GeneAlias>();
+    private Collection<GeneProduct> products = new HashSet<>();
+    private Collection<GeneAlias> aliases = new HashSet<>();
     private Taxon taxon;
-    private Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
+    private Collection<DatabaseEntry> accessions = new HashSet<>();
     private Multifunctionality multifunctionality;
-    private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<PhenotypeAssociation>();
+    private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
 
 
 
@@ -56,8 +56,6 @@ public class Gene extends ChromosomeFeature {
      */
     public Gene() {
     }
-
-
 
     @Override
     public boolean equals( Object object ) {

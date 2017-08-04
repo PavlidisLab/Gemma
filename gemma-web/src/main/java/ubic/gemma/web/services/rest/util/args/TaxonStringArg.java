@@ -11,7 +11,7 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
         this.value = s;
-        this.nullCause = "The identifier was recognised to be a name, but no taxon with such scientific or common name, or abbreviation, exist or is not accessible.";
+        this.nullCause = "The identifier was recognised to be a name, but no taxon with such scientific or common name, or abbreviation, exists or is accessible.";
     }
 
     /**

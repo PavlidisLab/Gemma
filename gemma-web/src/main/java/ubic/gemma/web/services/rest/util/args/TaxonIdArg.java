@@ -14,7 +14,7 @@ public class TaxonIdArg extends TaxonArg<Long> {
      */
     TaxonIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but no taxon with this ID exist or is not accessible.";
+        this.nullCause = "The identifier was recognised to be an ID, but no taxon with this ID exists or is accessible.";
     }
 
     @Override

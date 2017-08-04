@@ -3,14 +3,13 @@ package ubic.gemma.web.services.rest;
 import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
+import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -31,7 +30,9 @@ import java.util.ArrayList;
 public class TaxaWebService extends WebServiceWithFiltering {
 
     private TaxonService taxonService;
+    private GeneService geneService;
     private ExpressionExperimentService expressionExperimentService;
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     /**
      * Required by spring
@@ -43,9 +44,13 @@ public class TaxaWebService extends WebServiceWithFiltering {
      * Constructor for service autowiring
      */
     @Autowired
-    public TaxaWebService( TaxonService taxonService, ExpressionExperimentService expressionExperimentService ) {
+    public TaxaWebService( TaxonService taxonService, GeneService geneService,
+            ExpressionExperimentService expressionExperimentService,
+            PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
         this.taxonService = taxonService;
+        this.geneService = geneService;
         this.expressionExperimentService = expressionExperimentService;
+        this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
     }
 
     /**
@@ -78,6 +83,47 @@ public class TaxaWebService extends WebServiceWithFiltering {
     ) {
         Object response = taxonArg.getValueObject( taxonService );
         return this.autoCodeResponse( taxonArg, response, sr );
+    }
+
+    /**
+     * Retrieves genes matching the identifier on the given taxon.
+     *
+     * @param geneArg can either be the NCBI ID or official symbol.
+     */
+    @GET
+    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genes( // Params:
+            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Object response = geneArg.getGeneOnTaxon( geneService, taxonService, taxonArg );
+        return this.autoCodeResponse( geneArg, response, sr );
+    }
+
+    /**
+     * Retrieves gene evidence matching the gene identifier on the given taxon
+     *
+     * @param geneArg can either be the NCBI ID or official symbol.
+     */
+    @GET
+    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genesEvidence( // Params:
+            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        if ( taxon == null ) {
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    taxonArg.getNullCause() );
+            throw new GemmaApiException( errorBody );
+        }
+        return this.autoCodeResponse( geneArg, geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon, sr ), sr );
     }
 
     /**
@@ -133,4 +179,5 @@ public class TaxaWebService extends WebServiceWithFiltering {
             HttpServletResponse sr ) throws ParseException {
         return Responder.autoCode( taxonService.loadAllValueObjects(), sr );
     }
+
 }

@@ -31,7 +31,7 @@ public abstract class WebService {
     protected static final String ERR_MSG_UNMAPPED_PATH = "This URL is not mapped to any API call.";
     protected static final Log log = LogFactory.getLog( WebService.class.getName() );
     static final String API_VERSION = "2.0";
-    private static String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
+    public static String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
 
     @GET
     @Path("/{default: .*}")

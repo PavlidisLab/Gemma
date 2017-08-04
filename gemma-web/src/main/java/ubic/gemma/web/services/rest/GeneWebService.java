@@ -14,117 +14,84 @@
  */
 package ubic.gemma.web.services.rest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.Lists;
-
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.service.genome.ChromosomeService;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebService;
+import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
+import ubic.gemma.web.services.rest.util.args.GeneArg;
 
-import com.sun.jersey.api.NotFoundException;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
- * RESTful web services for gene
- * 
- * @author frances
- * @version $Id $
+ * RESTful web services for genes. Does not have 'all' endpoint (no use-cases).
+ *
+ * @author tesarst
  */
 
 @Component
-@Path("/gene")
-@Deprecated
-public class GeneWebService {
+@Path("/genes")
+public class GeneWebService extends WebService {
 
-    @Autowired
-    private GeneCoreService geneCoreService;
-
-    @Autowired
     private GeneService geneService;
-
-    @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
-    @GET
-    @Path("/find-gene-details")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Collection<GeneValueObject> findGeneDetails( @QueryParam("geneId") Long geneId ) {
-        ArrayList<GeneValueObject> valueObjects = new ArrayList<>( 1 ); // Contain only 1 element.
-        valueObjects.add( geneCoreService.loadGeneDetails( geneId ) );
-        return valueObjects;
+    /**
+     * Required by spring
+     */
+    public GeneWebService() {
     }
 
-    @GET
-    @Path("/find-genes-by-ncbi")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<Integer, GeneValueObject> findGenesByNcbiId( @QueryParam("ncbiIds") String ncbiIdsQuery ) {
-        if ( ncbiIdsQuery == null )
-            throw new NotFoundException( "Requires: ncbiIds = comma separated list of NCBI Ids" );
-
-        Collection<Integer> ncbiIds = Lists.newArrayList();
-        for ( String ncbiId : ncbiIdsQuery.split( "," ) ) {
-            try {
-                ncbiIds.add( Integer.valueOf( ncbiId ) );
-            } catch ( NumberFormatException e ) {
-                throw new NotFoundException( "Cannot convert given NCBI Id to integer: " + ncbiId );
-            }
-        }
-
-        Map<Integer, GeneValueObject> result = geneService.findByNcbiIds( ncbiIds );
-        for ( Integer ncbiId : ncbiIds ) {
-            if ( !result.containsKey( ncbiId ) ) {
-                result.put( ncbiId, null );
-            }
-        }
-        return result;
-
+    /**
+     * Constructor for service autowiring
+     */
+    @Autowired
+    public GeneWebService( GeneService geneService,
+            PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
+        this.geneService = geneService;
+        this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
     }
 
+    /**
+     * Retrieves all genes matching the identifier.
+     *
+     * @param geneArg can either be the NCBI ID or official symbol.
+     */
     @GET
-    @Path("/find-genes-by-symbol")
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, GeneValueObject> findGenesBySymbol( @QueryParam("taxonId") Long taxonId,
-            @QueryParam("symbols") String symbolsQuery ) {
-        if ( symbolsQuery == null )
-            throw new NotFoundException( "Requires: symbols = comma separated list of Gene Symbols" );
-
-        if ( taxonId == null )
-            throw new NotFoundException( "Requires: taxonId" );
-
-        Collection<String> symbols = Arrays.asList( symbolsQuery.split( "," ) );
-
-        Map<String, GeneValueObject> result = geneService.findByOfficialSymbols( symbols, taxonId );
-        for ( String symbol : symbols ) {
-            if ( !result.containsKey( symbol.toLowerCase() ) ) {
-                result.put( symbol, null );
-            }
-        }
-        return result;
-
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genes( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Object response = geneArg.getValueObjects( geneService );
+        return this.autoCodeResponse( geneArg, response, sr );
     }
 
+    /**
+     * Retrieves gene evidence matching the gene identifier
+     *
+     * @param geneArg can either be the NCBI ID or official symbol.
+     */
     @GET
-    @Path("/find-genes-with-evidence")
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( @QueryParam("geneSymbol") String geneSymbol ) {
-        return phenotypeAssociationManagerService.findGenesWithEvidence( geneSymbol, null );
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genesEvidence( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return this.autoCodeResponse( geneArg, geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null, sr ), sr );
     }
 
 }
