@@ -45,6 +45,7 @@ import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -1049,6 +1050,20 @@ public class ExpressionExperimentServiceImpl
             return resource.getLabel();
 
         return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#isRNASeq(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+        if ( ads.size() > 1 ) return false;
+
+        return ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
     }
 
 }

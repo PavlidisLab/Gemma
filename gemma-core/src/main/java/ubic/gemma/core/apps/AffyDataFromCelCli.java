@@ -46,12 +46,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     // /space/grp/databases/arrays/cdfs...
     private String cdfFile = null;
 
-
     public static void main( String[] args ) {
         AffyDataFromCelCli c = new AffyDataFromCelCli();
         c.doWork( args );
     }
-
 
     public boolean checkForAlreadyDone( BioAssaySet ee ) {
         for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
@@ -103,6 +101,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
             Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
+            // FIXME this is okay if they are not merged or something. And even if merged we could figure it out.
             if ( arrayDesignsUsed.size() > 1 ) {
                 throw new IllegalArgumentException( "Cannot update data for experiment that uses multiple platforms" );
             }
@@ -110,8 +109,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             ArrayDesign ad = arrayDesignsUsed.iterator().next();
             try {
                 log.info( "Loading data from " + aptFile );
-                if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && (
-                        GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) || ad.getName().toLowerCase()
+                if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                        && ( GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) || ad.getName().toLowerCase()
                                 .contains( "exon" ) ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
@@ -143,6 +142,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
                 Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
+                // FIXME this should be possible.
+                //                for ( ArrayDesign ad : arrayDesignsUsed ) {
+                // Process just the samples on that platform...
+                //                }
                 if ( arrayDesignsUsed.size() > 1 ) {
                     log.warn( ee + ": Cannot update data for experiment that uses multiple platforms" );
                     this.errorObjects.add( ee + ": Cannot update data for experiment that uses multiple platforms" );

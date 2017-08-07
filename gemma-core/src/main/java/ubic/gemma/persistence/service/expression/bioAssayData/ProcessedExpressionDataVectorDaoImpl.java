@@ -44,6 +44,7 @@ import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -137,9 +138,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 preferredDataVectorExemplar.getQuantitationType() );
 
         /*
-         * Note that we used to not normalize count data, but we've removed this restriction; and in any case we
-         * are moving to using non-count summaries for the primary data type.
+         * Note that we used to not normalize count data, but we've removed this restriction; and in any case we have
+         * moved to using non-count summaries for the primary data type.
          */
+        if ( preferredMaskedDataQuantitationType.getType().equals( StandardQuantitationType.COUNT ) ) {
+            /*
+             * Backfill target
+             */
+            log.warn( "Preferred data are counts; please convert to log2cpm" );
+        }
+
         if ( !preferredMaskedDataQuantitationType.getIsRatio()
                 && maskedVectorObjects.size() > MIN_SIZE_FOR_RENORMALIZATION ) {
             log.info( "Normalizing the data" );
@@ -812,6 +820,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee ).list();
     }
 
+    /**
+     * Retrieve the RAW data for the preferred quantitation type.
+     */
     private Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
         final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
                 + " where q.isPreferred = true  and dedv.expressionExperiment.id = :ee";
@@ -820,24 +831,29 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 .list();
     }
 
+    /**
+     * Make a quantitation type for attaching to the new processed data.
+     *
+     * @param preferredQt
+     * @return
+     */
     private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
 
-        // FIXME this name/description is confusing
-        present.setName( preferredQt.getName() + " - Processed data " );
-        present.setDescription( "Processed data (Computed by Gemma) for analysis" );
+        present.setName( preferredQt.getName() + " - Processed version" );
+        present.setDescription( "Processed data (as per Gemma) for analysis, based on the preferred quantitation type raw data" );
 
         present.setGeneralType( preferredQt.getGeneralType() );
-        present.setIsBackground( false );
         present.setRepresentation( preferredQt.getRepresentation() ); // better be a number!
         present.setScale( preferredQt.getScale() );
 
-        present.setIsPreferred( false ); // I think this is the right thing to do (but doesn't really matter)
+        present.setIsBackground( false );
+        present.setIsPreferred( false ); // This is the correct thing to do because it's not raw data.
         present.setIsMaskedPreferred( true );
         present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
 
         present.setIsBatchCorrected( preferredQt.getIsBatchCorrected() );
-        present.setIsRecomputedFromRawData( preferredQt.getIsRecomputedFromRawData() );
+        present.setIsRecomputedFromRawData( preferredQt.getIsRecomputedFromRawData() ); // By "RAW" we mean CEL files or Fasq etc.
 
         present.setIsNormalized( preferredQt.getIsNormalized() );
 

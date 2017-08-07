@@ -90,17 +90,17 @@ public class DifferentialExpressionAnalysisTaskImpl
         return new TaskResult( taskCommand, minimalResults );
     }
 
+    /**
+     *
+     * @return
+     */
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
 
         if ( taskCommand.getToRedo() != null ) {
-            if ( taskCommand.isUpdateStatsOnly() ) {
-                throw new UnsupportedOperationException( "Update stats functionality has been removed" );
-            }
             log.info( "Redoing analysis" );
             ee = expressionExperimentService.thawLite( ee );
             return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(), true );
-
         }
 
         ee = expressionExperimentService.thawLite( ee );
@@ -118,6 +118,8 @@ public class DifferentialExpressionAnalysisTaskImpl
         Collection<ExperimentalFactor> factors = taskCommand.getFactors();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
+        config.setUseWeights( rnaSeq );
         config.setFactorsToInclude( factors );
         config.setSubsetFactor( taskCommand.getSubsetFactor() );
         if ( taskCommand.isIncludeInteractions() && factors.size() == 2 ) {

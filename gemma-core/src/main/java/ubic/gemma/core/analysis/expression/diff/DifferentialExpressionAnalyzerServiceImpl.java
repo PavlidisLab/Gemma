@@ -52,6 +52,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -100,6 +101,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     @Autowired
     private DifferentialExpressionAnalysisHelperService helperService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -287,7 +291,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         log.info( "Will base analysis on old one: " + copyMe );
         DifferentialExpressionAnalysisConfig config = copyConfig( copyMe );
-
+        boolean rnaSeq = this.expressionExperimentService.isRNASeq( ee );
+        config.setUseWeights( rnaSeq );
         Collection<DifferentialExpressionAnalysis> results = redoWithoutSave( ee, copyMe, config );
 
         if ( persist ) {
@@ -300,6 +305,10 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
         try {
+            // This might be redundant in some cases.
+            boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
+            config.setUseWeights( rnaSeq );
+
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
                     .analyze( expressionExperiment, config );
 

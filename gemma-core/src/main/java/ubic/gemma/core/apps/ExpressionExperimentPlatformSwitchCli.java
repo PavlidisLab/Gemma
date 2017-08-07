@@ -121,7 +121,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ats.addUpdateEvent( ee, type, "Switched to use " + ad );
 
             } else {
-                serv.switchExperimentToMergedPlatform( ee );
+                // Identify merged platform automatically; not really recommended as it might not make the optimal choice.
+                ee = serv.switchExperimentToMergedPlatform( ee );
                 ats.addUpdateEvent( ee, type, "Switched to use merged array Design " );
             }
 

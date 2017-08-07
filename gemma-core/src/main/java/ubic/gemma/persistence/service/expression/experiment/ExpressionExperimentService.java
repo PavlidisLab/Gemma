@@ -451,6 +451,8 @@ public interface ExpressionExperimentService
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
+    boolean isRNASeq( ExpressionExperiment expressionExperiment );
+
     /**
      * Will add the vocab characteristic to the expression experiment and persist the changes.
      *

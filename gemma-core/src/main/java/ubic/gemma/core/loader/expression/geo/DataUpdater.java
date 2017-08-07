@@ -14,8 +14,16 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix1D;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -25,6 +33,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -43,25 +54,27 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
@@ -101,6 +114,9 @@ public class DataUpdater {
 
     @Autowired
     private PreprocessorService preprocessorService;
+
+    @Autowired
+    private QuantitationTypeService qtService;
 
     /**
      * For 3' arrays.
@@ -247,9 +263,6 @@ public class DataUpdater {
 
         ee = dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
 
-        /*
-         * Treat this as the preferred data, so we have to do it first.
-         */
         DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames( targetArrayDesign,
                 countMatrix );
         matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
@@ -293,6 +306,9 @@ public class DataUpdater {
      * Add an additional data (with associated quantitation type) to the selected experiment. Will do postprocessing if
      * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
+     *
+     * @param ee
+     * @param targetPlatform optional; if null, uses the platform already used (if there is just one)
      */
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -306,11 +322,13 @@ public class DataUpdater {
             throw new IllegalArgumentException( "Data had no rows" );
         }
 
-        ArrayDesign originalArrayDesign = ads.iterator().next();
-        if ( !targetPlatform.equals( originalArrayDesign ) ) {
+        ArrayDesign originalPlatform = ads.iterator().next();
+        if ( targetPlatform == null ) {
+            targetPlatform = originalPlatform;
+        } else if ( !targetPlatform.equals( originalPlatform ) ) {
             throw new IllegalArgumentException(
                     "You can only add data for a platform that already is used for the experiment: "
-                            + originalArrayDesign + " != targeted " + targetPlatform );
+                            + originalPlatform + " != targeted " + targetPlatform );
         }
 
         Collection<QuantitationType> qts = data.getQuantitationTypes();
@@ -340,7 +358,7 @@ public class DataUpdater {
             throw new IllegalStateException( "no vectors!" );
         }
 
-        ee = experimentService.addVectors( ee, originalArrayDesign, vectors );
+        ee = experimentService.addVectors( ee, targetPlatform, vectors );
 
         audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
 
@@ -362,6 +380,45 @@ public class DataUpdater {
 
     public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
         return this.experimentService.removeData( ee, qt );
+    }
+
+    /**
+     * For backfilling log2cpm when only counts are available. This wouldn't be used routinely, because new experiments
+     * get log2cpm computed when
+     *
+     * @param ee
+     * @param qt
+     */
+    public void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt ) {
+        ee = experimentService.thawLite( ee );
+
+        /*
+         * Get the count data; Make sure it is currently preferred (so we don't do this twice by accident)
+         */
+        Collection<DesignElementDataVector> counts = experimentService.getDesignElementDataVectors( Collections.singleton( qt ) );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( counts );
+
+        // We need to do this from the Raw data, not the data that has been normalized etc.
+        assert counts.iterator().next() instanceof RawExpressionDataVector;
+
+        /*
+         * Get the count data quantitation type and make it non-preferred
+         */
+        qt = countMatrix.getQuantitationTypes().iterator().next();
+        qt.setIsPreferred( false );
+        qtService.update( qt );
+        ee = experimentService.thawLite( ee ); // so updated QT is attached.
+
+        QuantitationType log2cpmQt = makelog2cpmQt();
+        DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats.convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
+
+        ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
+
+        assert log2cpmEEMatrix.getQuantitationTypes().iterator().next().getIsPreferred();
+
+        ee = addData( ee, null, log2cpmEEMatrix );
+
     }
 
     /**
