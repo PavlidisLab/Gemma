@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -46,6 +47,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
 
     private ArrayDesignService arrayDesignService;
     private ExpressionExperimentService expressionExperimentService;
+    private CompositeSequenceService compositeSequenceService;
 
     /**
      * Required by spring
@@ -58,9 +60,10 @@ public class PlatformsWebService extends WebServiceWithFiltering {
      */
     @Autowired
     public PlatformsWebService( ArrayDesignService arrayDesignService,
-            ExpressionExperimentService expressionExperimentService ) {
+            ExpressionExperimentService expressionExperimentService, CompositeSequenceService compositeSequenceService ) {
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
+        this.compositeSequenceService = compositeSequenceService;
     }
 
     /**
@@ -110,9 +113,31 @@ public class PlatformsWebService extends WebServiceWithFiltering {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformDatasets( // Params:
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = platformArg.getExperiments( arrayDesignService, expressionExperimentService );
+        Object response = platformArg.getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue()  );
+        return this.autoCodeResponse( platformArg, response, sr );
+    }
+
+    /**
+     * Retrieves experiments in the given platform.
+     *
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "Generic_yeast" or "GPL1355" ). Retrieval by ID
+     *                    is more efficient. Only platforms that user has access to will be available.
+     */
+    @GET
+    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject platformElements( // Params:
+            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Object response = platformArg.getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() );
         return this.autoCodeResponse( platformArg, response, sr );
     }
 

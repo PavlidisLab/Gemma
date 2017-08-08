@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.util.Collection;
 import java.util.Map;
