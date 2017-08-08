@@ -225,3 +225,34 @@ ExtJsSucksCheckColumn = Ext.extend(Ext.ux.grid.CheckColumn, {
     // Deprecate use as a plugin. Remove in 4.0
     init: Ext.emptyFn
 });
+ExtJsSucksCheckColumn = Ext.extend(Ext.ux.grid.CheckColumn, {
+    // private
+    initComponent: function () {
+        Ext.ux.grid.CheckColumn.superclass.initComponent.call(this);
+
+        this.addEvents(
+            'checkchange'
+        );
+    },
+
+    processEvent: function (name, e, grid, rowIndex, colIndex) {
+        if (name == 'mousedown') {
+            var record = grid.store.getAt(rowIndex);
+            record.set(this.dataIndex, !record.data[this.dataIndex]);
+
+            this.fireEvent('checkchange', this, record.data[this.dataIndex]);
+
+            return false; // Cancel row selection.
+        } else {
+            return Ext.grid.ActionColumn.superclass.processEvent.apply(this, arguments);
+        }
+    },
+
+    renderer: function (v, p, record) {
+        p.css += ' x-grid3-check-col-td';
+        return String.format('<div class="x-grid3-check-col{0}">&#160;</div>', v ? '-on' : '');
+    },
+
+    // Deprecate use as a plugin. Remove in 4.0
+    init: Ext.emptyFn
+});

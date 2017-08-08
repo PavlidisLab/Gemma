@@ -29,30 +29,49 @@ public abstract class QuantitationType extends Describable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -9139594736279728431L;
-    private GeneralType generalType;
 
-    private Boolean isBackground;
+    /**
+     * This will be false except for some Qts on two-colour platforms.
+     */
+    private Boolean isBackground = false;
 
+    /**
+     * True if this is explictly background-subtracted by Gemma. This is not very important and would only apply to
+     * two-colour platforms since we don't background-subtract otherwise.
+     */
     private Boolean isBackgroundSubtracted;
 
+    /**
+     * Refers to batch correction by Gemma. This should only ever be true for the ProcessedData.
+     */
     private Boolean isBatchCorrected = false;
 
-    /*
+    /**
      * FIXME this is useless because
-     * the process data is always masked?
+     * the processed data is always masked?
      */
     private Boolean isMaskedPreferred;
 
-    /*
+    /**
      * FIXME this is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
      * It might be wise to separate out "quantile normalied", but since we always quantile normalize ProcessedData, this
      * isn't very useful.
      */
     private Boolean isNormalized;
 
+    /**
+     * This is only useful for RawExpressionDataVectors; for the ProcessedData it is just confusing
+     */
     private Boolean isPreferred;
-    private Boolean isRatio;
+
+    /**
+     * This is also confusing: it is an attempt to capture whether we just used the data from GEO (or whatever) or went
+     * back to raw CEL or fastq files.
+     */
     private Boolean isRecomputedFromRawData = false;
+
+    private Boolean isRatio;
+    private GeneralType generalType;
     private PrimitiveType representation;
     private ScaleType scale;
     private StandardQuantitationType type;

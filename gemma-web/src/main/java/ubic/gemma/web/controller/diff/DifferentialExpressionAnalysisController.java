@@ -120,7 +120,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
         }
         this.experimentReportService.evictFromCache( ee.getId() );
-        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo, true );
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo );
         return taskRunningService.submitRemoteTask( cmd );
     }
 
@@ -141,8 +141,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
         }
         this.experimentReportService.evictFromCache( ee.getId() );
-        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh,
-                false );
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRefresh );
         return taskRunningService.submitLocalTask( cmd );
     }
 
@@ -183,6 +182,8 @@ public class DifferentialExpressionAnalysisController {
         ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
+        boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
+        cmd.setUseWeights( rnaSeq );
         cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
                 .getExperimentalFactors() ) );
         cmd.setIncludeInteractions( true ); // if possible, might get dropped.
@@ -211,7 +212,7 @@ public class DifferentialExpressionAnalysisController {
         /*
          * Get the factors matching the factorids
          */
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> factors = new HashSet<>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( factorids.contains( ef.getId() ) ) {
                 factors.add( ef );
@@ -240,6 +241,8 @@ public class DifferentialExpressionAnalysisController {
         }
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
+        boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
+        cmd.setUseWeights( rnaSeq );
         cmd.setFactors( factors );
         cmd.setSubsetFactor( subsetFactor );
 

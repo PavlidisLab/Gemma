@@ -56,7 +56,6 @@ import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class AffyPowerToolsProbesetSummarize {
 
@@ -81,9 +80,11 @@ public class AffyPowerToolsProbesetSummarize {
     private static final String r = "RaEx-1_0-st-v1.r2";
 
     /**
+     * Call once for each platform used by the experiment.
+     * 
      * @param ee
      * @param cdfFileName e.g. HG_U95Av2.CDF. Path configured by - can be null, we will try to guess (?)
-     * @param targetPlatform
+     * @param targetPlatform to match the CDF file
      * @param files
      * @return
      */
@@ -155,7 +156,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param ee
-     * @param targetPlatform target platform
+     * @param targetPlatform target platform; call multiplep times if there is more than one platform
      * @param files list of CEL files (any other files included will be ignored)
      * @return
      */
@@ -230,7 +231,7 @@ public class AffyPowerToolsProbesetSummarize {
      * 
      * @param ee
      * @param aptOutputFileToRead
-     * @param targetPlatform
+     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
      * @return
      * @throws IOException
      * @throws FileNotFoundException
@@ -250,7 +251,14 @@ public class AffyPowerToolsProbesetSummarize {
                 throw new IllegalStateException( "Matrix from APT had no columns" );
             }
 
-            Collection<BioAssay> bioAssays = ee.getBioAssays();
+            Collection<BioAssay> allBioAssays = ee.getBioAssays();
+
+            Collection<BioAssay> bioAssays = new HashSet<>();
+            for ( BioAssay bioAssay : allBioAssays ) {
+                if ( bioAssay.getArrayDesignUsed().equals( targetPlatform ) ) {
+                    bioAssays.add( bioAssay );
+                }
+            }
 
             if ( matrix.columns() < bioAssays.size() ) {
                 // having > is okay, there can be extra.
@@ -258,17 +266,17 @@ public class AffyPowerToolsProbesetSummarize {
             }
 
             log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssays.size()
-                    + " samples..." );
+                    + " samples on " + targetPlatform );
 
             BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-            bad.setName( "For " + ee.getShortName() );
+            bad.setName( "For " + ee.getShortName() + " on " + targetPlatform );
             bad.setDescription( "Generated from output of apt-probeset-summarize" );
 
             /*
              * Add them ...
              */
 
-            Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
+            Map<String, BioAssay> bmap = new HashMap<>();
             for ( BioAssay bioAssay : bioAssays ) {
 
                 if ( bmap.containsKey( bioAssay.getAccession().getAccession() )
@@ -284,7 +292,7 @@ public class AffyPowerToolsProbesetSummarize {
                         + StringUtils.join( bmap.keySet(), "\n" ) );
 
             int found = 0;
-            List<String> columnsToKeep = new ArrayList<String>();
+            List<String> columnsToKeep = new ArrayList<>();
             for ( int i = 0; i < matrix.columns(); i++ ) {
                 String columnName = matrix.getColName( i );
 
@@ -333,7 +341,7 @@ public class AffyPowerToolsProbesetSummarize {
             }
 
             if ( found != bioAssays.size() ) {
-                throw new IllegalStateException( "Failed to find a data column for every bioassay" );
+                throw new IllegalStateException( "Failed to find a data column for every bioassay on the given platform " + targetPlatform );
             }
 
             if ( columnsToKeep.size() < matrix.columns() ) {
@@ -402,7 +410,7 @@ public class AffyPowerToolsProbesetSummarize {
      */
     private List<String> getCelFiles( Collection<LocalFile> files ) {
 
-        Set<String> celfiles = new HashSet<String>();
+        Set<String> celfiles = new HashSet<>();
         for ( LocalFile f : files ) {
             try {
                 File fi = new File( f.getLocalURL().toURI() );
@@ -431,7 +439,7 @@ public class AffyPowerToolsProbesetSummarize {
         if ( celfiles.isEmpty() ) {
             throw new IllegalArgumentException( "No valid CEL files were found" );
         }
-        return new ArrayList<String>( celfiles );
+        return new ArrayList<>( celfiles );
     }
 
     /**

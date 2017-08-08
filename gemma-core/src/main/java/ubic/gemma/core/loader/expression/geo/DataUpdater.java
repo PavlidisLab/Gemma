@@ -14,8 +14,16 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix1D;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -25,6 +33,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -43,25 +54,27 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
@@ -102,14 +115,17 @@ public class DataUpdater {
     @Autowired
     private PreprocessorService preprocessorService;
 
+    @Autowired
+    private QuantitationTypeService qtService;
+
     /**
-     * For 3' arrays.
+     * For 3' arrays. This only works for single-platform experiments.
      */
     public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform when passing APT output file." );
         }
 
         ArrayDesign ad = ads.iterator().next();
@@ -125,7 +141,7 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        experimentService.replaceVectors( ee, ad, vectors );
+        experimentService.replaceVectors( ee, vectors );
 
         audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + ad, true );
 
@@ -169,7 +185,7 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        ee = experimentService.replaceVectors( ee, targetPlatform, vectors );
+        ee = experimentService.replaceVectors( ee, vectors );
 
         if ( !targetPlatform.equals( ad ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -192,7 +208,7 @@ public class DataUpdater {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform when passing APT output file" );
         }
 
         ArrayDesign ad = ads.iterator().next();
@@ -211,7 +227,7 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        experimentService.replaceVectors( ee, targetPlatform, vectors );
+        experimentService.replaceVectors( ee, vectors );
 
         if ( !targetPlatform.equals( ad ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -230,6 +246,8 @@ public class DataUpdater {
      * Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation type we
      * use internally. Counts and FPKM (if provided) are stored in addition.
      *
+     * @param ee
+     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms.
      * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
      * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
@@ -247,9 +265,6 @@ public class DataUpdater {
 
         ee = dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
 
-        /*
-         * Treat this as the preferred data, so we have to do it first.
-         */
         DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames( targetArrayDesign,
                 countMatrix );
         matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
@@ -293,24 +308,17 @@ public class DataUpdater {
      * Add an additional data (with associated quantitation type) to the selected experiment. Will do postprocessing if
      * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
+     *
+     * @param ee
+     * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use this
+     *        for a multi-platform dataset)
+     * @param data to slot in
      */
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can only replace data for an experiment that uses one platform; "
-                    + "you must switch/merge first and then provide appropriate replacement data." );
-        }
 
         if ( data.rows() == 0 ) {
             throw new IllegalArgumentException( "Data had no rows" );
-        }
-
-        ArrayDesign originalArrayDesign = ads.iterator().next();
-        if ( !targetPlatform.equals( originalArrayDesign ) ) {
-            throw new IllegalArgumentException(
-                    "You can only add data for a platform that already is used for the experiment: "
-                            + originalArrayDesign + " != targeted " + targetPlatform );
         }
 
         Collection<QuantitationType> qts = data.getQuantitationTypes();
@@ -340,7 +348,7 @@ public class DataUpdater {
             throw new IllegalStateException( "no vectors!" );
         }
 
-        ee = experimentService.addVectors( ee, originalArrayDesign, vectors );
+        ee = experimentService.addVectors( ee, vectors );
 
         audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
 
@@ -365,13 +373,62 @@ public class DataUpdater {
     }
 
     /**
+     * For backfilling log2cpm when only counts are available. This wouldn't be used routinely, because new experiments
+     * get log2cpm computed when loaded.
+     *
+     * @param ee
+     * @param qt
+     */
+    public void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt ) {
+        ee = experimentService.thawLite( ee );
+
+        /*
+         * Get the count data; Make sure it is currently preferred (so we don't do this twice by accident)
+         */
+        Collection<DesignElementDataVector> counts = experimentService.getDesignElementDataVectors( Collections.singleton( qt ) );
+        ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( counts );
+
+        // We need to do this from the Raw data, not the data that has been normalized etc.
+        assert counts.iterator().next() instanceof RawExpressionDataVector;
+
+        try {
+            /*
+             * Get the count data quantitation type and make it non-preferred
+             */
+            qt.setIsPreferred( false );
+            qtService.update( qt );
+            ee = experimentService.thawLite( ee ); // so updated QT is attached.
+
+            QuantitationType log2cpmQt = makelog2cpmQt();
+            DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
+            DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats.convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
+
+            ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
+
+            assert log2cpmEEMatrix.getQuantitationTypes().iterator().next().getIsPreferred();
+
+            Collection<ArrayDesign> platforms = experimentService.getArrayDesignsUsed( ee );
+
+            if ( platforms.size() > 1 ) throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
+
+            ee = addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
+        } catch ( Exception e ) {
+            log.error( e, e );
+            // try to recover.
+            qt.setIsPreferred( true );
+            qtService.update( qt );
+        }
+
+    }
+
+    /**
      * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
      * quantitation type. Note that this replaces the "raw" data.
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
      * @param ee the experiment to be modified
-     * @param targetPlatform the platform for the new data
+     * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets)
      * @param data the data to be used
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -413,7 +470,7 @@ public class DataUpdater {
          */
         analysisUtilService.deleteOldAnalyses( ee );
 
-        ee = experimentService.replaceVectors( ee, targetPlatform, vectors );
+        ee = experimentService.replaceVectors( ee, vectors );
 
         // audit if we switched platforms.
         if ( !targetPlatform.equals( originalArrayDesign ) ) {
@@ -449,7 +506,7 @@ public class DataUpdater {
      * sample- and element-matching to happen here.
      * 
      * @param ee
-     * @param targetPlatform
+     * @param targetPlatform (this only works for a single-platform data set)
      * @param qt
      * @param data
      * @return
@@ -471,48 +528,57 @@ public class DataUpdater {
      * This replaces the existing raw data with the CEL file data.
      */
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" ); // TODO
-        }
-        return reprocessAffyThreePrimeArrayData( ee, cdfFileName, ads.iterator().next() );
+        return reprocessAffyThreePrimeArrayData( ee, cdfFileName );
     }
 
     /**
      * This replaces the existing raw data with the CEL file data.
      */
-    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName,
-            ArrayDesign ad ) {
+    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee ) {
 
-        if ( cdfFileName == null ) {
-            cdfFileName = this.findCdf( ad ).getAbsolutePath();
+        Collection<ArrayDesign> arrayDesignsUsed = this.experimentService.getArrayDesignsUsed( ee );
+
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            log.info( "Processing data for " + ad );
+            String cdfFileName = this.findCdf( ad ).getAbsolutePath();
+
+            if ( cdfFileName == null ) {
+                throw new RuntimeException( "No CDF is locatable (or configured?) for " + ad );
+            }
+
+            RawDataFetcher f = new RawDataFetcher();
+            Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+
+            if ( files.isEmpty() ) {
+                throw new RuntimeException( "Data was apparently not available" );
+            }
+            ad = arrayDesignService.thaw( ad );
+            ee = experimentService.thawLite( ee );
+
+            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
+
+            Collection<RawExpressionDataVector> vectors = apt.processThreeprimeArrayData( ee, cdfFileName, ad, files );
+
+            if ( vectors.isEmpty() ) {
+                throw new IllegalStateException( "No vectors were returned for " + ee );
+            }
+
+            ee = experimentService.replaceVectors( ee, vectors );
         }
 
-        RawDataFetcher f = new RawDataFetcher();
-        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-
-        if ( files.isEmpty() ) {
-            throw new RuntimeException( "Data was apparently not available" );
-        }
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
-
-        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
-
-        Collection<RawExpressionDataVector> vectors = apt.processThreeprimeArrayData( ee, cdfFileName, ad, files );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "No vectors were returned for " + ee );
-        }
-
-        ee = experimentService.replaceVectors( ee, ad, vectors );
-
-        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + ad, true );
+        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils.join( arrayDesignsUsed, "; " ), true );
 
         postprocess( ee );
         return ee;
     }
 
+    /**
+     * 
+     * @param ee
+     * @param countEEMatrix
+     * @param readLength
+     * @param isPairedReads
+     */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             Integer readLength, Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -520,11 +586,6 @@ public class DataUpdater {
             double librarySize = DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
 
             log.info( ba + " total library size=" + librarySize );
-
-            /*
-             * FIXME: this creates a mess if you run this multiple times.
-             */
-            ba.setDescription( ba.getDescription() + " totalCounts=" + Math.floor( librarySize ) );
 
             ba.setSequenceReadLength( readLength );
             ba.setSequencePairedReads( isPairedReads );

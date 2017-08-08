@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.userdetails.User;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -65,7 +64,7 @@ public interface ExpressionExperimentService
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExpressionExperiment addVectors( ExpressionExperiment eeToUpdate, ArrayDesign ad,
+    ExpressionExperiment addVectors( ExpressionExperiment eeToUpdate,
             Collection<RawExpressionDataVector> newVectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -358,7 +357,7 @@ public interface ExpressionExperimentService
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
@@ -424,10 +423,12 @@ public interface ExpressionExperimentService
      * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
      * computing the processed data vectors, but it does clear them out.
      *
+     * @param ee
+     * @param vectors If they are from more than one platform, that will be dealt with.
      * @return the updated Experiment
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
+    ExpressionExperiment replaceVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> vectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -450,6 +451,8 @@ public interface ExpressionExperimentService
     void update( ExpressionExperiment expressionExperiment );
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );
+
+    boolean isRNASeq( ExpressionExperiment expressionExperiment );
 
     /**
      * Will add the vocab characteristic to the expression experiment and persist the changes.

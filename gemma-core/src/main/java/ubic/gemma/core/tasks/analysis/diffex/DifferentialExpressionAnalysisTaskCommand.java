@@ -67,24 +67,20 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private DifferentialExpressionAnalysis toRedo;
 
-    @Deprecated
-    private boolean updateStatsOnly = true;
+    /**
+     * Whether to use weighted regression based on mean-variance relationships (voom)
+     */
+    private boolean useWeights = false;
 
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
         super();
         this.expressionExperiment = ee;
     }
 
-    /**
-     * @param updateAnalysis if true, the analysis is updated. If false, only the summary statistics are updated (e.g.,
-     *                       the pvalue distribution ).
-     */
-    public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee, DifferentialExpressionAnalysis toRedo,
-            boolean updateAnalysis ) {
+    public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee, DifferentialExpressionAnalysis toRedo ) {
         super();
         this.expressionExperiment = ee;
         this.toRedo = toRedo;
-        this.updateStatsOnly = !updateAnalysis;
         this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
@@ -101,24 +97,12 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return analysisType;
     }
 
-    public void setAnalysisType( AnalysisType analysisType ) {
-        this.analysisType = analysisType;
-    }
-
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
     }
 
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
     public Collection<ExperimentalFactor> getFactors() {
         return factors;
-    }
-
-    public void setFactors( Collection<ExperimentalFactor> factors ) {
-        this.factors = factors;
     }
 
     /**
@@ -126,13 +110,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     public ExperimentalFactor getSubsetFactor() {
         return subsetFactor;
-    }
-
-    /**
-     * @param subsetFactor the subsetFactor to set
-     */
-    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
-        this.subsetFactor = subsetFactor;
     }
 
     @Override
@@ -144,20 +121,36 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return toRedo;
     }
 
-    public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
-        this.toRedo = toRedo;
-    }
-
     public boolean isForceAnalysis() {
         return forceAnalysis;
     }
 
-    public void setForceAnalysis( boolean forceAnalysis ) {
-        this.forceAnalysis = forceAnalysis;
-    }
-
     public boolean isIncludeInteractions() {
         return includeInteractions;
+    }
+
+    public boolean isModerateStatistics() {
+        return moderateStatistics;
+    }
+
+    public boolean isUseWeights() {
+        return useWeights;
+    }
+
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
+    }
+
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
+    public void setFactors( Collection<ExperimentalFactor> factors ) {
+        this.factors = factors;
+    }
+
+    public void setForceAnalysis( boolean forceAnalysis ) {
+        this.forceAnalysis = forceAnalysis;
     }
 
     /**
@@ -167,19 +160,22 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.includeInteractions = includeInteractions;
     }
 
-    public boolean isModerateStatistics() {
-        return moderateStatistics;
-    }
-
     public void setModerateStatistics( boolean moderateStatistics ) {
         this.moderateStatistics = moderateStatistics;
     }
 
-    public boolean isUpdateStatsOnly() {
-        return updateStatsOnly;
+    /**
+     * @param subsetFactor the subsetFactor to set
+     */
+    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
+        this.subsetFactor = subsetFactor;
     }
 
-    public void setUpdateStatsOnly( boolean updateStatsOnly ) {
-        this.updateStatsOnly = updateStatsOnly;
+    public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
+        this.toRedo = toRedo;
+    }
+
+    public void setUseWeights( boolean useWeights ) {
+        this.useWeights = useWeights;
     }
 }
