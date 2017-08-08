@@ -203,12 +203,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment addVectors( ExpressionExperiment ee, ArrayDesign ad,
+    public ExpressionExperiment addVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
 
         // ee = this.load( ee.getId() );
-        Collection<BioAssayDimension> bads = new HashSet<BioAssayDimension>();
-        Collection<QuantitationType> qts = new HashSet<QuantitationType>();
+        Collection<BioAssayDimension> bads = new HashSet<>();
+        Collection<QuantitationType> qts = new HashSet<>();
         for ( RawExpressionDataVector vec : newVectors ) {
             bads.add( vec.getBioAssayDimension() );
             qts.add( vec.getQuantitationType() );
@@ -243,26 +243,8 @@ public class ExpressionExperimentServiceImpl
 
         ee = rawExpressionDataVectorDao.addVectors( ee.getId(), newVectors );
 
-        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
-
-        if ( ad == null ) {
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( !vectorAd.equals( ba.getArrayDesignUsed() ) ) {
-                    throw new IllegalArgumentException( "Vectors must use the array design as the bioassays" );
-                }
-            }
-        } else if ( !vectorAd.equals( ad ) ) {
-            throw new IllegalArgumentException( "Vectors must use the array design indicated" );
-        }
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.setArrayDesignUsed( ad );
-        }
-
         // this is a denormalization; easy to forget to update this.
         ee.getQuantitationTypes().add( newQt );
-
-        // this.update( ee ); // is this even necessary? should flush.
 
         log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
 
@@ -827,7 +809,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
+     *      description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
@@ -913,7 +895,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
+    public ExpressionExperiment replaceVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
 
         if ( newVectors == null || newVectors.isEmpty() ) {
@@ -941,7 +923,7 @@ public class ExpressionExperimentServiceImpl
             quantitationTypeDao.remove( oldqt );
         }
 
-        return addVectors( eeToUpdate, ad, newVectors );
+        return addVectors( eeToUpdate, newVectors );
     }
 
     @Override
