@@ -133,10 +133,14 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
             try {
+
+                Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
+
                 /*
-                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
+                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force. Ignore this for
+                 * multiplatform studies (at our peril)
                  */
-                if ( !force && checkForAlreadyDone( ee ) ) {
+                if ( adsUsed.size() == 1 && !force && checkForAlreadyDone( ee ) ) {
                     log.warn( ee + ": Already has been recomputed from raw data, skipping (use 'force' to override')" );
                     this.errorObjects.add( ee + ": Already has been computed from raw data" );
                     continue;
@@ -145,7 +149,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
                 thawedEe = this.eeService.thawLite( thawedEe );
 
-                ArrayDesign ad = this.eeService.getArrayDesignsUsed( ee ).iterator().next();
+                ArrayDesign ad = adsUsed.iterator().next();
                 /*
                  * Even if there are multiple platforms, we assume they are all the same type. If not, that's your
                  * problem :) (seriously, we could check...)
