@@ -32,7 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Designed to add count and/or RPKM data to a data set that has only meta-data.
  * 
  * @author Paul
- * @version $Id$
  */
 public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
