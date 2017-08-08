@@ -374,7 +374,7 @@ public class DataUpdater {
 
     /**
      * For backfilling log2cpm when only counts are available. This wouldn't be used routinely, because new experiments
-     * get log2cpm computed when
+     * get log2cpm computed when loaded.
      *
      * @param ee
      * @param qt
@@ -391,23 +391,33 @@ public class DataUpdater {
         // We need to do this from the Raw data, not the data that has been normalized etc.
         assert counts.iterator().next() instanceof RawExpressionDataVector;
 
-        /*
-         * Get the count data quantitation type and make it non-preferred
-         */
-        qt = countMatrix.getQuantitationTypes().iterator().next();
-        qt.setIsPreferred( false );
-        qtService.update( qt );
-        ee = experimentService.thawLite( ee ); // so updated QT is attached.
+        try {
+            /*
+             * Get the count data quantitation type and make it non-preferred
+             */
+            qt.setIsPreferred( false );
+            qtService.update( qt );
+            ee = experimentService.thawLite( ee ); // so updated QT is attached.
 
-        QuantitationType log2cpmQt = makelog2cpmQt();
-        DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
-        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats.convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
+            QuantitationType log2cpmQt = makelog2cpmQt();
+            DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
+            DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats.convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
 
-        ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
+            ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
 
-        assert log2cpmEEMatrix.getQuantitationTypes().iterator().next().getIsPreferred();
+            assert log2cpmEEMatrix.getQuantitationTypes().iterator().next().getIsPreferred();
 
-        ee = addData( ee, null, log2cpmEEMatrix );
+            Collection<ArrayDesign> platforms = experimentService.getArrayDesignsUsed( ee );
+
+            if ( platforms.size() > 1 ) throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
+
+            ee = addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
+        } catch ( Exception e ) {
+            log.error( e, e );
+            // try to recover.
+            qt.setIsPreferred( true );
+            qtService.update( qt );
+        }
 
     }
 
