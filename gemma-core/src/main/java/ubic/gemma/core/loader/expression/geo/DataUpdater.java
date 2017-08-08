@@ -526,14 +526,7 @@ public class DataUpdater {
     }
 
     /**
-     * This replaces the existing raw data with the CEL file data.
-     */
-    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName ) {
-        return reprocessAffyThreePrimeArrayData( ee, cdfFileName );
-    }
-
-    /**
-     * This replaces the existing raw data with the CEL file data.
+     * This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
      */
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee ) {
 
