@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.designElement;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -96,6 +97,8 @@ public interface CompositeSequenceService
      */
     @Deprecated
     Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
+
+    Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })

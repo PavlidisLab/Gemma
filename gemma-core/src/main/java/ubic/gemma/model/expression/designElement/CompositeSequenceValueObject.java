@@ -18,11 +18,13 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * @author anton
@@ -34,6 +36,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     private String name;
     private String description;
     private ArrayDesignValueObject arrayDesign;
+    private Collection<GeneMappingSummary> geneMappingSummaries;
 
     /**
      * Required when using the class as a spring bean.
@@ -110,4 +113,11 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
         this.name = name;
     }
 
+    public Collection<GeneMappingSummary> getGeneMappingSummaries() {
+        return geneMappingSummaries;
+    }
+
+    public void setGeneMappingSummaries( Collection<GeneMappingSummary> geneMappingSummaries ) {
+        this.geneMappingSummaries = geneMappingSummaries;
+    }
 }
