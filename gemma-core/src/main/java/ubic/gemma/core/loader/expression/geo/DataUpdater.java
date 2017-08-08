@@ -247,7 +247,8 @@ public class DataUpdater {
      * use internally. Counts and FPKM (if provided) are stored in addition.
      *
      * @param ee
-     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms.
+     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms. The data set will be
+     *        switched to use it.
      * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
      * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
