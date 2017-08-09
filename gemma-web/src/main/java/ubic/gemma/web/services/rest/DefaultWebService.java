@@ -1,8 +1,8 @@
 package ubic.gemma.web.services.rest;
 
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebService;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;

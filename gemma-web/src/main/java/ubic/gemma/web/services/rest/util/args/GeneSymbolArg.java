@@ -27,19 +27,19 @@ public class GeneSymbolArg extends GeneArg<String> {
      */
     @Override
     public Gene getPersistentObject( GeneService service ) {
-        if(this.value == null){
+        if ( this.value == null ) {
             return null;
         }
 
         Collection<Gene> genes = service.findByOfficialSymbol( this.value );
-        if(genes == null || genes.isEmpty()){
+        if ( genes == null || genes.isEmpty() ) {
             return null;
         }
         return genes.iterator().next();
     }
 
     @Override
-    public Collection<GeneValueObject> getValueObjects(GeneService service) {
+    public Collection<GeneValueObject> getValueObjects( GeneService service ) {
         return service.loadValueObjects( service.findByOfficialSymbol( this.value ) );
     }
 }

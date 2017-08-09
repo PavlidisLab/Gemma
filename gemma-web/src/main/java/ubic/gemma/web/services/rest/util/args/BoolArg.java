@@ -9,7 +9,7 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 public class BoolArg extends MalformableArg {
     private static final String ERROR_MSG = "Value '%s' can not converted to a boolean";
 
-    boolean value;
+    private boolean value;
 
     private BoolArg( boolean value ) {
         this.value = value;

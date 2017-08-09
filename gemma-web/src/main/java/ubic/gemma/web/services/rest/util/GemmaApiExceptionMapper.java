@@ -21,7 +21,7 @@ public class GemmaApiExceptionMapper implements ExceptionMapper<Throwable> {
         log.error( "Exception caught during API call: " + throwable.getMessage() );
 
         //if ( log.isDebugEnabled() ) {
-            throwable.printStackTrace();
+        throwable.printStackTrace();
         //}
 
         if ( throwable instanceof GemmaApiException ) {

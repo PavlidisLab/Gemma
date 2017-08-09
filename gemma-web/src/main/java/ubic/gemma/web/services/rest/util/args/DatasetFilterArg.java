@@ -36,7 +36,8 @@ public class DatasetFilterArg extends FilterArg {
      */
     @SuppressWarnings("unused")
     public static DatasetFilterArg valueOf( final String s ) {
-        if( Strings.isNullOrEmpty(s)) return new DatasetFilterArg( null, null, null, null );
+        if ( Strings.isNullOrEmpty( s ) )
+            return new DatasetFilterArg( null, null, null, null );
 
         List<String[]> propertyNames = new LinkedList<>();
         List<String[]> propertyValues = new LinkedList<>();

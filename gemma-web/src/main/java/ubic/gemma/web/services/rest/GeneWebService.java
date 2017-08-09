@@ -17,20 +17,15 @@ package ubic.gemma.web.services.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.services.rest.util.args.GeneArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * RESTful web services for genes. Does not have 'all' endpoint (no use-cases).
@@ -91,7 +86,8 @@ public class GeneWebService extends WebService {
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return this.autoCodeResponse( geneArg, geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null, sr ), sr );
+        return this.autoCodeResponse( geneArg,
+                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null, sr ), sr );
     }
 
 }

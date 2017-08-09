@@ -36,7 +36,8 @@ public class PlatformFilterArg extends FilterArg {
      */
     @SuppressWarnings("unused")
     public static PlatformFilterArg valueOf( final String s ) {
-        if( Strings.isNullOrEmpty(s)) return new PlatformFilterArg( null, null, null, null );
+        if ( Strings.isNullOrEmpty( s ) )
+            return new PlatformFilterArg( null, null, null, null );
 
         List<String[]> propertyNames = new LinkedList<>();
         List<String[]> propertyValues = new LinkedList<>();

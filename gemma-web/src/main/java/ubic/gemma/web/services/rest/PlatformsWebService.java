@@ -60,7 +60,8 @@ public class PlatformsWebService extends WebServiceWithFiltering {
      */
     @Autowired
     public PlatformsWebService( ArrayDesignService arrayDesignService,
-            ExpressionExperimentService expressionExperimentService, CompositeSequenceService compositeSequenceService ) {
+            ExpressionExperimentService expressionExperimentService,
+            CompositeSequenceService compositeSequenceService ) {
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
         this.compositeSequenceService = compositeSequenceService;
@@ -117,7 +118,8 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = platformArg.getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue()  );
+        Object response = platformArg
+                .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() );
         return this.autoCodeResponse( platformArg, response, sr );
     }
 
@@ -137,7 +139,8 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = platformArg.getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() );
+        Object response = platformArg
+                .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() );
         return this.autoCodeResponse( platformArg, response, sr );
     }
 

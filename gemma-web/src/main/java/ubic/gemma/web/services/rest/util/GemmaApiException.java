@@ -9,14 +9,14 @@ import java.io.Serializable;
  */
 public class GemmaApiException extends RuntimeException implements Serializable {
 
-    private Response.Status code;
+    private final Response.Status code;
     private ResponseErrorObject errorObject;
 
     public GemmaApiException( Response.Status code ) {
         this.code = code;
     }
 
-    public GemmaApiException( WellComposedErrorBody body) {
+    public GemmaApiException( WellComposedErrorBody body ) {
         super( body.getMessage() );
         this.errorObject = new ResponseErrorObject( body );
         this.code = body.getStatus();

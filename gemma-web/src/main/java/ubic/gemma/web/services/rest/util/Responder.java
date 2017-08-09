@@ -9,6 +9,7 @@ import java.util.Collection;
  * Created by tesarst on 17/05/17.
  * Handles setting of the response status code and composing a proper payload structure.
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // FIXME remove when API is done.
 public class Responder {
 
     private static final String DEFAULT_ERR_MSG_NULL_OBJECT = "Requested resource was not found in our database.";
@@ -63,6 +64,7 @@ public class Responder {
      * @param servletResponse the object to set the appropriate response code on.
      * @return {@link ResponseDataObject} always null, as the response payload for code 204 has to be empty.
      */
+    @SuppressWarnings("SameReturnValue") // Intentional behavior - has to be consistent with other methods.
     public static ResponseDataObject code204( HttpServletResponse servletResponse ) {
         sendHeaders( Response.Status.NO_CONTENT, servletResponse );
         return null;
@@ -144,8 +146,6 @@ public class Responder {
 
         return code200( toReturn, servletResponse );
     }
-
-
 
     private static boolean isCodeAnError( Response.Status code ) {
         return code.getFamily() == Response.Status.Family.CLIENT_ERROR

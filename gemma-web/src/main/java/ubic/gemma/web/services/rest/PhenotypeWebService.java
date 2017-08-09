@@ -14,37 +14,30 @@
  */
 package ubic.gemma.web.services.rest;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * RESTful web services for phenotypes
- * 
+ *
  * @author frances
  */
 
@@ -53,12 +46,18 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 @Deprecated
 public class PhenotypeWebService {
 
-    @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
+    public PhenotypeWebService(){
+    }
+
+    @Autowired
+    public PhenotypeWebService( PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
+        this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
+    }
+
     /**
-     * Given a set of phenotypes, return all genes asociated with them.
-     *
+     * Given a set of phenotypes, return all genes associated with them.
      */
     @GET
     @Path("/find-candidate-genes")
@@ -66,28 +65,29 @@ public class PhenotypeWebService {
     public Collection<GeneEvidenceValueObject> findCandidateGenes( @QueryParam("taxonId") Long taxonId,
             @QueryParam("showOnlyEditable") boolean showOnlyEditable,
             @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
-        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
-                showOnlyEditable ), new HashSet<String>( phenotypeValueUris ) );
+        return this.phenotypeAssociationManagerService
+                .findCandidateGenes( new EvidenceFilter( taxonId, showOnlyEditable ),
+                        new HashSet<>( phenotypeValueUris ) );
     }
 
     @GET
     @Path("/find-evidence-by-external-database")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByExternalDatabase(
-            @QueryParam("externalDatabaseName") String externalDatabaseName,
-            @QueryParam("limit") Integer limit ) {
-        return this.phenotypeAssociationManagerService.loadEvidenceWithExternalDatabaseName( externalDatabaseName,
-                limit );
+            @QueryParam("externalDatabaseName") String externalDatabaseName, @QueryParam("limit") Integer limit ) {
+        return this.phenotypeAssociationManagerService
+                .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit );
     }
 
     @GET
     @Path("/find-evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidence( @QueryParam("taxonId") Long taxonId,
-            @QueryParam("showOnlyEditable") boolean showOnlyEditable, @QueryParam("geneId") Long geneId,
-            @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
-        return this.phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, new HashSet<String>(
-                phenotypeValueUris ), new EvidenceFilter( taxonId, showOnlyEditable ) );
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidence(
+            @QueryParam("taxonId") Long taxonId, @QueryParam("showOnlyEditable") boolean showOnlyEditable,
+            @QueryParam("geneId") Long geneId, @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
+        return this.phenotypeAssociationManagerService
+                .findEvidenceByGeneId( geneId, new HashSet<>( phenotypeValueUris ),
+                        new EvidenceFilter( taxonId, showOnlyEditable ) );
     }
 
     /**
@@ -95,7 +95,7 @@ public class PhenotypeWebService {
      * might be a child of the requested term.
      *
      * @return genes, where the associated CharacteristicValueObjects is a collection with one member representing the
-     *         specific phenotype (the input query, or a child term).
+     * specific phenotype (the input query, or a child term).
      */
     @GET
     @Path("/find-phenotype-genes")
@@ -103,8 +103,8 @@ public class PhenotypeWebService {
     public JSONArray findPhenotypeGenes( @QueryParam("taxonId") Long taxonId,
             @QueryParam("phenotypeValueUri") String phenotypeValueUri ) {
 
-        Map<GeneValueObject, OntologyTerm> results = this.phenotypeAssociationManagerService.findGenesForPhenotype(
-                phenotypeValueUri, taxonId, false );
+        Map<GeneValueObject, OntologyTerm> results = this.phenotypeAssociationManagerService
+                .findGenesForPhenotype( phenotypeValueUri, taxonId, false );
 
         JSONArray answer = new JSONArray();
         for ( GeneValueObject r : results.keySet() ) {
@@ -133,15 +133,15 @@ public class PhenotypeWebService {
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( @QueryParam("taxonId") Long taxonId,
             @QueryParam("showOnlyEditable") boolean showOnlyEditable ) {
-        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
-                showOnlyEditable ) );
+        return this.phenotypeAssociationManagerService
+                .loadAllPhenotypesByTree( new EvidenceFilter( taxonId, showOnlyEditable ) );
     }
-    
+
     @GET
     @Path("/find-all-dumps")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<DumpsValueObject> findAllDumps() {
-        
+
         return this.phenotypeAssociationManagerService.helpFindAllDumps();
     }
 }

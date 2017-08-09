@@ -123,7 +123,8 @@ public class TaxaWebService extends WebServiceWithFiltering {
                     taxonArg.getNullCause() );
             throw new GemmaApiException( errorBody );
         }
-        return this.autoCodeResponse( geneArg, geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon, sr ), sr );
+        return this.autoCodeResponse( geneArg,
+                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon, sr ), sr );
     }
 
     /**

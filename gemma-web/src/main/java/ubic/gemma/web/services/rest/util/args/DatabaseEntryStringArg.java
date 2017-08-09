@@ -1,7 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**

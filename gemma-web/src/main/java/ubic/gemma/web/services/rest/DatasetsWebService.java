@@ -252,7 +252,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
         }
     }
 
-    private void deleteFile(File file){
+    private void deleteFile( File file ) {
         if ( file.canWrite() && file.delete() ) {
             log.info( "Deleted: " + file );
         } else {

@@ -14,8 +14,6 @@ public class SortArg extends MalformableArg {
     private String field;
     private boolean asc;
 
-
-
     private SortArg( String field, boolean asc ) {
         this.field = field;
         this.asc = asc;
@@ -30,8 +28,6 @@ public class SortArg extends MalformableArg {
     private SortArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
-
-
 
     /**
      * Used by RS to parse value of request parameters.
@@ -49,8 +45,6 @@ public class SortArg extends MalformableArg {
             return new SortArg( String.format( ERROR_MSG, s ), e );
         }
     }
-
-
 
     private static Boolean parseBoolean( char c ) {
         if ( c == '+' ) {
