@@ -432,7 +432,7 @@ public class AffyPowerToolsProbesetSummarize {
                                 .endsWith( ".CEL.GZ" ) ) ) {
 
                     if ( accessionsOfInterest != null ) {
-                        String acc = fi.getName().split( "_" )[0];
+                        String acc = fi.getName().replaceAll( "(?=(GSM[0-9]+)).+", "" );
                         if ( !accessionsOfInterest.contains( acc ) ) {
                             continue;
                         }
