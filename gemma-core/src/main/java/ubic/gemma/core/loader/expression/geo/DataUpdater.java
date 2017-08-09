@@ -531,6 +531,13 @@ public class DataUpdater {
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee ) {
 
         Collection<ArrayDesign> arrayDesignsUsed = this.experimentService.getArrayDesignsUsed( ee );
+        ee = experimentService.thawLite( ee );
+        RawDataFetcher f = new RawDataFetcher();
+        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+
+        if ( files.isEmpty() ) {
+            throw new RuntimeException( "Data was apparently not available" );
+        }
 
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             log.info( "Processing data for " + ad );
@@ -540,14 +547,7 @@ public class DataUpdater {
                 throw new RuntimeException( "No CDF is locatable (or configured?) for " + ad );
             }
 
-            RawDataFetcher f = new RawDataFetcher();
-            Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-
-            if ( files.isEmpty() ) {
-                throw new RuntimeException( "Data was apparently not available" );
-            }
             ad = arrayDesignService.thaw( ad );
-            ee = experimentService.thawLite( ee );
 
             AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
