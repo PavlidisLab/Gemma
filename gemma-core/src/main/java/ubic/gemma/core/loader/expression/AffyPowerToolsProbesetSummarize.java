@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -113,7 +114,7 @@ public class AffyPowerToolsProbesetSummarize {
 
         List<String> celfiles = getCelFiles( files, accessionsOfInterest );
 
-        log.info( celfiles.size() + " cel files" );
+        log.info( "Located " + celfiles.size() + " cel files" );
 
         String outputPath = getOutputFilePath( ee, "apt-output" );
 
@@ -272,9 +273,14 @@ public class AffyPowerToolsProbesetSummarize {
                 }
             }
 
+            if ( allBioAssays.size() > bioAssays.size() ) {
+                log.info( "Using " + bioAssays.size() + "/" + allBioAssays.size() + " bioassays (those on " + targetPlatform.getShortName() + ")" );
+            }
+
             if ( matrix.columns() < bioAssays.size() ) {
                 // having > is okay, there can be extra.
-                throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
+                throw new IllegalStateException(
+                        "Matrix from APT had the wrong number of colummns: expected " + bioAssays.size() + ", got " + matrix.columns() );
             }
 
             log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssays.size()
@@ -427,6 +433,8 @@ public class AffyPowerToolsProbesetSummarize {
         for ( LocalFile f : files ) {
             try {
                 File fi = new File( f.getLocalURL().toURI() );
+
+                // FIXME if both unpacked and packed files are there, it looks at both of them. No major problem - the dups are resolved - just a little ugly.
                 if ( fi.canRead()
                         && ( fi.getName().toUpperCase().endsWith( ".CEL" ) || fi.getName().toUpperCase()
                                 .endsWith( ".CEL.GZ" ) ) ) {
@@ -578,7 +586,7 @@ public class AffyPowerToolsProbesetSummarize {
      */
     private String getOutputFilePath( ExpressionExperiment ee, String base ) {
         File tmpdir = new File( Settings.getDownloadPath() );
-        return tmpdir + File.separator + ee.getId() + "_" + base;
+        return tmpdir + File.separator + ee.getId() + "_" + RandomStringUtils.randomAlphanumeric( 4 ) + "_" + base;
     }
 
     /**

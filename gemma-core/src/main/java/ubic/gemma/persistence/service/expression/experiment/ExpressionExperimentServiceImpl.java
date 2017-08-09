@@ -908,7 +908,20 @@ public class ExpressionExperimentServiceImpl
             quantitationTypeDao.remove( oldqt );
         }
 
-        return addVectors( eeToUpdate, newVectors );
+        // Split the vectors up by bioassaydimension, if need be. This could be modified to handle multiple quantitation types if need be.
+        Map<BioAssayDimension, Collection<RawExpressionDataVector>> bads = new HashMap<>();
+        for ( RawExpressionDataVector vec : newVectors ) {
+            BioAssayDimension b = vec.getBioAssayDimension();
+            if ( !bads.containsKey( b ) ) {
+                bads.put( b, new HashSet<RawExpressionDataVector>() );
+            }
+            bads.get( b ).add( vec );
+        }
+
+        for ( Collection<RawExpressionDataVector> vecs : bads.values() ) {
+            ee = addVectors( eeToUpdate, vecs );
+        }
+        return ee;
     }
 
     /**

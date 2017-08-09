@@ -538,7 +538,7 @@ public class DataUpdater {
         if ( files.isEmpty() ) {
             throw new RuntimeException( "Data was apparently not available" );
         }
-
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             log.info( "Processing data for " + ad );
             String cdfFileName = this.findCdf( ad ).getAbsolutePath();
@@ -551,15 +551,14 @@ public class DataUpdater {
 
             AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
-            Collection<RawExpressionDataVector> vectors = apt.processThreeprimeArrayData( ee, cdfFileName, ad, files );
+            vectors.addAll( apt.processThreeprimeArrayData( ee, cdfFileName, ad, files ) );
 
-            if ( vectors.isEmpty() ) {
-                throw new IllegalStateException( "No vectors were returned for " + ee );
-            }
-
-            ee = experimentService.replaceVectors( ee, vectors );
+        }
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
+        ee = experimentService.replaceVectors( ee, vectors );
         audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils.join( arrayDesignsUsed, "; " ), true );
 
         postprocess( ee );
