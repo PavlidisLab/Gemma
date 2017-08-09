@@ -101,7 +101,18 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "Target design had no elements" );
         }
 
-        List<String> celfiles = getCelFiles( files );
+        /*
+         * we may have multiple platforms; we need to get only the bioassays of interest.
+         */
+        Collection<String> accessionsOfInterest = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getArrayDesignUsed().equals( targetPlatform ) ) {
+                accessionsOfInterest.add( ba.getAccession().getAccession() );
+            }
+        }
+
+        List<String> celfiles = getCelFiles( files, accessionsOfInterest );
+
         log.info( celfiles.size() + " cel files" );
 
         String outputPath = getOutputFilePath( ee, "apt-output" );
@@ -156,7 +167,8 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param ee
-     * @param targetPlatform target platform; call multiplep times if there is more than one platform
+     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
+     *        not happen for exon arrays)
      * @param files list of CEL files (any other files included will be ignored)
      * @return
      */
@@ -173,7 +185,7 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "Target design had no elements" );
         }
 
-        List<String> celfiles = getCelFiles( files );
+        List<String> celfiles = getCelFiles( files, null );
         log.info( celfiles.size() + " cel files" );
 
         String outputPath = getOutputFilePath( ee, "apt-output" );
@@ -406,9 +418,10 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param files
+     * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return
      */
-    private List<String> getCelFiles( Collection<LocalFile> files ) {
+    private List<String> getCelFiles( Collection<LocalFile> files, Collection<String> accessionsOfInterest ) {
 
         Set<String> celfiles = new HashSet<>();
         for ( LocalFile f : files ) {
@@ -417,6 +430,13 @@ public class AffyPowerToolsProbesetSummarize {
                 if ( fi.canRead()
                         && ( fi.getName().toUpperCase().endsWith( ".CEL" ) || fi.getName().toUpperCase()
                                 .endsWith( ".CEL.GZ" ) ) ) {
+
+                    if ( accessionsOfInterest != null ) {
+                        String acc = fi.getName().split( "_" )[0];
+                        if ( !accessionsOfInterest.contains( acc ) ) {
+                            continue;
+                        }
+                    }
 
                     if ( FileTools.isGZipped( fi.getName() ) ) {
                         log.info( "Found CEL file " + fi + ", unzipping" );
