@@ -406,10 +406,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             throw new RuntimeException( "No series was parsed for " + seriesAccession );
         }
 
-        // FIXME put this back...or something.
-        // Raw data files have been added to series object as a path (during parsing).
-        // processRawData( series )
-
         Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
         if ( datasetsToProcess != null ) {
             for ( String dataSetAccession : datasetsToProcess ) {

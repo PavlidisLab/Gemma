@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,22 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.tools.ant.filters.StringInputStream;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import ubic.basecode.math.StringDistance;
-import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.loader.entrez.EutilFetch;
-import ubic.gemma.core.loader.expression.geo.model.*;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,9 +25,44 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.tools.ant.filters.StringInputStream;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import ubic.basecode.math.StringDistance;
+import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.loader.entrez.EutilFetch;
+import ubic.gemma.core.loader.expression.geo.model.GeoData;
+import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
+import ubic.gemma.core.loader.expression.geo.model.GeoSample;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
 
 /**
  * Class to handle cases where there are multiple GEO dataset for a single actual experiment. This can occur in at least
@@ -91,7 +110,7 @@ public class DatasetCombiner {
     /**
      * Used to help ignore identifiers of microarrays in sample titles.
      */
-    private static Map<String, Collection<String>> microarrayNameStrings = new HashMap<String, Collection<String>>();
+    private static Map<String, Collection<String>> microarrayNameStrings = new HashMap<>();
 
     static {
         // note : all lower case!
@@ -122,81 +141,6 @@ public class DatasetCombiner {
     }
 
     /**
-     * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
-     * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
-     * as a maximum distance (the pair of descriptors must be at least this close).
-     * Setting this correctly is important if there are to be singletons (samples that don't match to others)
-     */
-    private final double SIMILARITY_THRESHOLD = 0.5;
-    // Maps of sample accessions to other useful bits.
-    LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<String, String>();
-    LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
-    LinkedHashMap<String, String> accToDataset = new LinkedHashMap<String, String>();
-    LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<String, String>();
-    LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<String, String>();
-    private boolean doSampleMatching = true;
-
-    public DatasetCombiner( boolean doSampleMatching ) {
-        this.doSampleMatching = doSampleMatching;
-    }
-
-    public DatasetCombiner() {
-        this.doSampleMatching = true;
-    }
-
-    /**
-     * Given a GDS, find the corresponding GSEs (there can be more than one in rare cases).
-     *
-     * @param datasetAccession
-     * @return Collection of series this data set is derived from (this is almost always just a single item).
-     */
-    public static Collection<String> findGSEforGDS( String datasetAccession ) {
-        /*
-         * go from GDS to GSE, using screen scraping.
-         */
-        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
-        // grep on "GDS[[digits]] record"
-        URL url = null;
-
-        Pattern pat = Pattern.compile( GSE_RECORD_REGEXP );
-
-        Collection<String> associatedSeriesAccession = new HashSet<String>();
-
-        try {
-            url = new URL( ENTREZ_GEO_QUERY_URL_BASE + datasetAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
-            URLConnection conn = url.openConnection();
-            conn.connect();
-
-            try (InputStream is = conn.getInputStream();
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
-
-                String line = null;
-                while ( ( line = br.readLine() ) != null ) {
-                    Matcher mat = pat.matcher( line );
-                    if ( mat.find() ) {
-                        String capturedAccession = mat.group( 1 );
-                        associatedSeriesAccession.add( capturedAccession );
-                    }
-                }
-                is.close();
-            }
-        } catch ( MalformedURLException e ) {
-            log.error( e, e );
-            throw new RuntimeException( "Invalid URL " + url, e );
-        } catch ( IOException e ) {
-            log.error( e, e );
-            throw new RuntimeException( "Could not get data from remote server", e );
-        }
-
-        if ( associatedSeriesAccession.size() == 0 ) {
-            throw new IllegalStateException( "No GSE found for " + datasetAccession );
-        }
-
-        return associatedSeriesAccession;
-
-    }
-
-    /**
      * Given GEO series ids, find all associated data sets.
      *
      * @return a collection of associated GDS accessions. If no GDS is found, the collection will be empty.
@@ -207,7 +151,7 @@ public class DatasetCombiner {
          */
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
         // grep on "GDS[[digits]] record"
-        Collection<String> associatedDatasetAccessions = new HashSet<String>();
+        Collection<String> associatedDatasetAccessions = new HashSet<>();
 
         for ( String seriesAccession : seriesAccessions ) {
             associatedDatasetAccessions.addAll( findGDSforGSE( seriesAccession ) );
@@ -222,7 +166,7 @@ public class DatasetCombiner {
      */
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
 
-        Collection<String> associatedDatasetAccessions = new HashSet<String>();
+        Collection<String> associatedDatasetAccessions = new HashSet<>();
         try {
             String details = EutilFetch.fetch( "gds", seriesAccession, 100 );
             if ( details.equalsIgnoreCase( "no results" ) ) {
@@ -265,8 +209,60 @@ public class DatasetCombiner {
         }
     }
 
+    /**
+     * Given a GDS, find the corresponding GSEs (there can be more than one in rare cases).
+     *
+     * @param datasetAccession
+     * @return Collection of series this data set is derived from (this is almost always just a single item).
+     */
+    public static Collection<String> findGSEforGDS( String datasetAccession ) {
+        /*
+         * go from GDS to GSE, using screen scraping.
+         */
+        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+        // grep on "GDS[[digits]] record"
+        URL url = null;
+
+        Pattern pat = Pattern.compile( GSE_RECORD_REGEXP );
+
+        Collection<String> associatedSeriesAccession = new HashSet<>();
+
+        try {
+            url = new URL( ENTREZ_GEO_QUERY_URL_BASE + datasetAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
+            URLConnection conn = url.openConnection();
+            conn.connect();
+
+            try (InputStream is = conn.getInputStream();
+                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+
+                String line = null;
+                while ( ( line = br.readLine() ) != null ) {
+                    Matcher mat = pat.matcher( line );
+                    if ( mat.find() ) {
+                        String capturedAccession = mat.group( 1 );
+                        associatedSeriesAccession.add( capturedAccession );
+                    }
+                }
+                is.close();
+            }
+        } catch ( MalformedURLException e ) {
+            log.error( e, e );
+            throw new RuntimeException( "Invalid URL " + url, e );
+        } catch ( IOException e ) {
+            log.error( e, e );
+            throw new RuntimeException( "Could not get data from remote server", e );
+        }
+
+        if ( associatedSeriesAccession.size() == 0 ) {
+            throw new IllegalStateException( "No GSE found for " + datasetAccession );
+        }
+
+        return associatedSeriesAccession;
+
+    }
+
     public static Map<GeoPlatform, List<GeoSample>> getPlatformSampleMap( GeoSeries geoSeries ) {
-        Map<GeoPlatform, List<GeoSample>> platformSamples = new HashMap<GeoPlatform, List<GeoSample>>();
+        Map<GeoPlatform, List<GeoSample>> platformSamples = new HashMap<>();
 
         for ( GeoSample sample : geoSeries.getSamples() ) {
 
@@ -281,39 +277,38 @@ public class DatasetCombiner {
     }
 
     /**
+     * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
+     * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
+     * as a maximum distance (the pair of descriptors must be at least this close).
+     * Setting this correctly is important if there are to be singletons (samples that don't match to others)
+     */
+    private final double SIMILARITY_THRESHOLD = 0.5;
+
+    // Maps of sample accessions to other useful bits.
+    private LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<>();
+    private LinkedHashMap<String, String> accToTitle = new LinkedHashMap<>();
+
+    private LinkedHashMap<String, String> accToDataset = new LinkedHashMap<>();
+
+    private LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<>();
+
+    private LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<>();
+
+    private boolean doSampleMatching = true;
+
+    public DatasetCombiner() {
+        this.doSampleMatching = true;
+    }
+
+    public DatasetCombiner( boolean doSampleMatching ) {
+        this.doSampleMatching = doSampleMatching;
+    }
+
+    /**
      * Given a GEO dataset it, find all GDS ids that are associated with it.
      */
     public Collection<String> findGDSforGDS( String datasetAccession ) {
         return findGDSforGSE( findGSEforGDS( datasetAccession ) );
-    }
-
-    /**
-     * Try to line up samples across datasets contained in a series.
-     *
-     * @param series
-     * @return
-     */
-    public GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
-        Collection<GeoDataset> datasets = series.getDatasets();
-        if ( datasets != null && datasets.size() > 0 ) {
-            fillAccessionMaps( datasets );
-
-            // make sure all samples are accounted for - just informative
-            Collection<GeoSample> missed = new HashSet<GeoSample>();
-            for ( GeoSample sample : series.getSamples() ) {
-                if ( !this.accToDataset.containsKey( sample.getGeoAccession() ) ) {
-                    missed.add( sample );
-                }
-            }
-            if ( !missed.isEmpty() ) {
-                log.warn( "There were one or more samples missing from the datasets: " + StringUtils
-                        .join( missed, " | " ) );
-            }
-            return findGSECorrespondence( datasets );
-        }
-
-        int numPlatforms = fillAccessionMaps( series );
-        return findCorrespondence( numPlatforms );
     }
 
     /**
@@ -337,6 +332,35 @@ public class DatasetCombiner {
     }
 
     /**
+     * Try to line up samples across datasets contained in a series.
+     *
+     * @param series
+     * @return
+     */
+    public GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
+        Collection<GeoDataset> datasets = series.getDatasets();
+        if ( datasets != null && datasets.size() > 0 ) {
+            fillAccessionMaps( datasets );
+
+            // make sure all samples are accounted for - just informative
+            Collection<GeoSample> missed = new HashSet<>();
+            for ( GeoSample sample : series.getSamples() ) {
+                if ( !this.accToDataset.containsKey( sample.getGeoAccession() ) ) {
+                    missed.add( sample );
+                }
+            }
+            if ( !missed.isEmpty() ) {
+                log.warn( "There were one or more samples missing from the datasets: " + StringUtils
+                        .join( missed, " | " ) );
+            }
+            return findGSECorrespondence( datasets );
+        }
+
+        int numPlatforms = fillAccessionMaps( series );
+        return findCorrespondence( numPlatforms );
+    }
+
+    /**
      * See bug 1672 for why this is needed.
      *
      * @param dataSets
@@ -349,7 +373,7 @@ public class DatasetCombiner {
             if ( dataset.getSeries().size() == 0 )
                 continue;
 
-            Collection<GeoPlatform> seenPlatforms = new HashSet<GeoPlatform>();
+            Collection<GeoPlatform> seenPlatforms = new HashSet<>();
 
             for ( GeoSeries series : dataset.getSeries() ) {
                 for ( GeoSample sample : series.getSamples() ) {
@@ -379,6 +403,75 @@ public class DatasetCombiner {
     }
 
     /**
+     * compute the distance.
+     */
+    private int computeDistance( String trimmedTest, String trimmedTarget ) {
+
+        return StringDistance.editDistance( trimmedTarget, trimmedTest );
+
+    }
+
+    private void fillAccessionMap( GeoSample sample, GeoData owner ) {
+        String title = sample.getTitle();
+        if ( StringUtils.isNotBlank( title ) ) {
+            accToTitle.put( sample.getGeoAccession(), title );
+        }
+        accToDataset.put( sample.getGeoAccession(), owner.getGeoAccession() );
+        accToSecondaryTitle.put( sample.getGeoAccession(), sample.getTitleInDataset() ); // could be null.
+        String organism = getSampleOrganism( sample );
+        if ( StringUtils.isNotBlank( organism ) ) {
+            accToOrganism.put( sample.getGeoAccession(), organism );
+        }
+    }
+
+    private void fillAccessionMaps( Collection<GeoDataset> dataSets ) {
+
+        for ( GeoDataset dataset : dataSets ) {
+            GeoPlatform platform = dataset.getPlatform();
+            assert platform != null;
+            platform.getOrganisms().add( dataset.getOrganism() );
+            if ( dataset.getSubsets().size() == 0 ) {
+                assert dataset.getSeries().size() > 0;
+                for ( GeoSeries series : dataset.getSeries() ) {
+                    for ( GeoSample sample : series.getSamples() ) {
+
+                        if ( sample.getPlatforms().size() == 0 )
+                            sample.addPlatform( platform );
+                        fillAccessionMap( sample, dataset );
+                    }
+                }
+            } else {
+                for ( GeoSubset subset : dataset.getSubsets() ) {
+                    for ( GeoSample sample : subset.getSamples() ) {
+
+                        if ( sample.getPlatforms().size() == 0 )
+                            sample.addPlatform( platform );
+
+                        fillAccessionMap( sample, dataset );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * This is used if there are no 'datasets' (GDS) to work with; we just use platforms.
+     */
+    private int fillAccessionMaps( GeoSeries series ) {
+
+        Map<GeoPlatform, List<GeoSample>> platformSamples = getPlatformSampleMap( series );
+
+        for ( GeoPlatform platform : platformSamples.keySet() ) {
+            for ( GeoSample sample : platformSamples.get( platform ) ) {
+                assert sample != null : "Null sample for platform " + platform.getDescription();
+                fillAccessionMap( sample, platform );
+            }
+        }
+
+        return platformSamples.keySet().size();
+    }
+
+    /**
      * This is the main point where comparisons are made.
      */
     private GeoSampleCorrespondence findCorrespondence( int numDatasetsOrPlatforms ) {
@@ -386,7 +479,7 @@ public class DatasetCombiner {
 
         result.setAccToTitleMap( accToTitle );
 
-        final List<String> sampleAccs = new ArrayList<String>( accToDataset.keySet() );
+        final List<String> sampleAccs = new ArrayList<>( accToDataset.keySet() );
         assert sampleAccs.size() > 0;
 
         if ( numDatasetsOrPlatforms <= 1 || !this.doSampleMatching ) {
@@ -411,18 +504,18 @@ public class DatasetCombiner {
         // using the sorted order helps find the right matches.
         Collections.sort( sampleAccs );
 
-        Map<String, Collection<String>> alreadyMatched = new HashMap<String, Collection<String>>();
+        Map<String, Collection<String>> alreadyMatched = new HashMap<>();
 
         // do it by data set, so we constrain comparing items in _this_ data set to ones in _other_ data sets (or other
         // platforms)
         // The inner loops are just to get the samples in the data set (platform) being considered.
-        Collection<String> alreadyTestedDatasetsOrPlatforms = new HashSet<String>();
+        Collection<String> alreadyTestedDatasetsOrPlatforms = new HashSet<>();
 
-        List<String> dataSets = new ArrayList<String>();
-        dataSets.addAll( new HashSet<String>( accToDataset.values() ) );
+        List<String> dataSets = new ArrayList<>();
+        dataSets.addAll( new HashSet<>( accToDataset.values() ) );
 
-        List<String> platforms = new ArrayList<String>();
-        platforms.addAll( new HashSet<String>( accToPlatform.values() ) );
+        List<String> platforms = new ArrayList<>();
+        platforms.addAll( new HashSet<>( accToPlatform.values() ) );
 
         List<String> valuesToUse;
         LinkedHashMap<String, String> accToDatasetOrPlatform;
@@ -443,7 +536,7 @@ public class DatasetCombiner {
 
         // we start with the smallest dataset/platform.
 
-        Collection<String> allMatched = new HashSet<String>();
+        Collection<String> allMatched = new HashSet<>();
         for ( String datasetOrPlatformA : valuesToUse ) {
             alreadyTestedDatasetsOrPlatforms.add( datasetOrPlatformA );
             log.debug( "Finding matches for samples in " + datasetOrPlatformA );
@@ -470,10 +563,8 @@ public class DatasetCombiner {
                     targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
                 }
 
-                log.debug( "Target: " + targetAcc + " (" + datasetOrPlatformA + ") " + targetTitle + (
-                        targetSecondaryTitle == null ?
-                                "" :
-                                " a.k.a " + targetSecondaryTitle ) );
+                log.debug( "Target: " + targetAcc + " (" + datasetOrPlatformA + ") " + targetTitle
+                        + ( targetSecondaryTitle == null ? "" : " a.k.a " + targetSecondaryTitle ) );
                 if ( StringUtils.isBlank( targetTitle ) )
                     throw new IllegalArgumentException( "Can't have blank titles for samples" );
 
@@ -622,9 +713,8 @@ public class DatasetCombiner {
                                     bestMatch = testTitle;
                                     bestMatchAcc = testAcc;
                                     log.debug( "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB
-                                            + ") " + testTitle + ( testSecondaryTitle == null ?
-                                            "" :
-                                            " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                                            + ") " + testTitle
+                                            + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
                                     wasTied = false;
                                 }
                                 if ( suffixWeightedDistanceA > suffixWeightedDistanceB ) {
@@ -639,9 +729,8 @@ public class DatasetCombiner {
                                 bestMatchAcc = testAcc;
                                 log.debug(
                                         "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB + ") "
-                                                + testTitle + ( testSecondaryTitle == null ?
-                                                "" :
-                                                " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                                                + testTitle
+                                                + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
                                 wasTied = false;
                             } else if ( prefixWeightedDistanceA < prefixWeightedDistanceB ) {
                                 wasTied = false;
@@ -653,10 +742,8 @@ public class DatasetCombiner {
                             bestMatch = testTitle;
                             bestMatchAcc = testAcc;
                             log.debug(
-                                    "Current best match: " + testAcc + " (" + datasetOrPlatformB + ") " + testTitle + (
-                                            testSecondaryTitle == null ?
-                                                    "" :
-                                                    " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                                    "Current best match: " + testAcc + " (" + datasetOrPlatformB + ") " + testTitle
+                                            + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
                             wasTied = false;
                         }
 
@@ -679,7 +766,8 @@ public class DatasetCombiner {
                             log.debug(
                                     "Match:\n" + targetAcc + "\t" + targetTitle + " (" + accToDataset.get( targetAcc )
                                             + ")" + "\n" + bestMatchAcc + "\t" + bestMatch + " (" + accToDataset
-                                            .get( bestMatchAcc ) + ")" + " (Distance: " + mindistance + ")" );
+                                                    .get( bestMatchAcc )
+                                            + ")" + " (Distance: " + mindistance + ")" );
                         result.addCorrespondence( targetAcc, bestMatchAcc );
                         alreadyMatched.get( bestMatchAcc ).add( datasetOrPlatformA );
                         alreadyMatched.get( targetAcc ).add( datasetOrPlatformB );
@@ -694,6 +782,70 @@ public class DatasetCombiner {
 
         log.debug( result );
         return result;
+    }
+
+    /**
+     * Identify stop-strings relating to microarray names.
+     */
+    private Collection<String> getMicroarrayStringsToMatch( String title ) {
+        Collection<String> result = new HashSet<>();
+        for ( String key : microarrayNameStrings.keySet() ) {
+            if ( title.contains( key ) ) {
+                for ( String value : microarrayNameStrings.get( key ) ) {
+                    if ( title.contains( value ) ) {
+                        result.add( value );
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private String getSampleOrganism( GeoSample sample ) {
+        Collection<GeoPlatform> platforms = sample.getPlatforms();
+        assert platforms.size() > 0 : sample + " had no platform assigned";
+        GeoPlatform platform = platforms.iterator().next();
+        Collection<String> organisms = platform.getOrganisms();
+        assert organisms.size() > 0;
+        String organism = organisms.iterator().next();
+        return organism;
+    }
+
+    private boolean meetsMinimalThreshold( double normalizedDistance ) {
+        return !( normalizedDistance > SIMILARITY_THRESHOLD );
+    }
+
+    /**
+     * Implements constraints on samples to test.
+     *
+     * @param accToDatasetOrPlatform (depending on which we are using, platforms or data sets)
+     */
+    private boolean shouldTest( LinkedHashMap<String, String> accToDatasetOrPlatform,
+            Map<String, Collection<String>> alreadyMatched, String datasetA, String targetAcc, String datasetB,
+            String testAcc ) {
+        boolean shouldTest = true;
+
+        // initialize data structure.
+        if ( alreadyMatched.get( testAcc ) == null ) {
+            alreadyMatched.put( testAcc, new HashSet<String>() );
+        }
+
+        // only use samples from the current test dataset.
+        if ( !accToDatasetOrPlatform.get( testAcc ).equals( datasetB ) ) {
+            shouldTest = false;
+        }
+
+        // disallow multiple matches.
+        if ( alreadyMatched.get( testAcc ).contains( datasetA ) ) {
+            // log.debug( testAcc + " already matched to a sample in " + datasetA + ", skipping" );
+            shouldTest = false;
+        }
+
+        if ( !accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
+            log.debug( testAcc + " From wrong organism" );
+            shouldTest = false;
+        }
+        return shouldTest;
     }
 
     private void sortDataSets( final List<String> sampleAccs, List<String> dataSets ) {
@@ -750,139 +902,6 @@ public class DatasetCombiner {
                 }
             }
         } );
-    }
-
-    /**
-     * Identify stop-strings relating to microarray names.
-     */
-    private Collection<String> getMicroarrayStringsToMatch( String title ) {
-        Collection<String> result = new HashSet<String>();
-        for ( String key : microarrayNameStrings.keySet() ) {
-            if ( title.contains( key ) ) {
-                for ( String value : microarrayNameStrings.get( key ) ) {
-                    if ( title.contains( value ) ) {
-                        result.add( value );
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Implements constraints on samples to test.
-     *
-     * @param accToDatasetOrPlatform (depending on which we are using, platforms or data sets)
-     */
-    private boolean shouldTest( LinkedHashMap<String, String> accToDatasetOrPlatform,
-            Map<String, Collection<String>> alreadyMatched, String datasetA, String targetAcc, String datasetB,
-            String testAcc ) {
-        boolean shouldTest = true;
-
-        // initialize data structure.
-        if ( alreadyMatched.get( testAcc ) == null ) {
-            alreadyMatched.put( testAcc, new HashSet<String>() );
-        }
-
-        // only use samples from the current test dataset.
-        if ( !accToDatasetOrPlatform.get( testAcc ).equals( datasetB ) ) {
-            shouldTest = false;
-        }
-
-        // disallow multiple matches.
-        if ( alreadyMatched.get( testAcc ).contains( datasetA ) ) {
-            // log.debug( testAcc + " already matched to a sample in " + datasetA + ", skipping" );
-            shouldTest = false;
-        }
-
-        if ( !accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
-            log.debug( testAcc + " From wrong organism" );
-            shouldTest = false;
-        }
-        return shouldTest;
-    }
-
-    private boolean meetsMinimalThreshold( double normalizedDistance ) {
-        return !( normalizedDistance > SIMILARITY_THRESHOLD );
-    }
-
-    /**
-     * compute the distance.
-     */
-    private int computeDistance( String trimmedTest, String trimmedTarget ) {
-
-        return StringDistance.editDistance( trimmedTarget, trimmedTest );
-
-    }
-
-    private void fillAccessionMaps( Collection<GeoDataset> dataSets ) {
-
-        for ( GeoDataset dataset : dataSets ) {
-            GeoPlatform platform = dataset.getPlatform();
-            assert platform != null;
-            platform.getOrganisms().add( dataset.getOrganism() );
-            if ( dataset.getSubsets().size() == 0 ) {
-                assert dataset.getSeries().size() > 0;
-                for ( GeoSeries series : dataset.getSeries() ) {
-                    for ( GeoSample sample : series.getSamples() ) {
-
-                        if ( sample.getPlatforms().size() == 0 )
-                            sample.addPlatform( platform );
-                        fillAccessionMap( sample, dataset );
-                    }
-                }
-            } else {
-                for ( GeoSubset subset : dataset.getSubsets() ) {
-                    for ( GeoSample sample : subset.getSamples() ) {
-
-                        if ( sample.getPlatforms().size() == 0 )
-                            sample.addPlatform( platform );
-
-                        fillAccessionMap( sample, dataset );
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * This is used if there are no 'datasets' (GDS) to work with; we just use platforms.
-     */
-    private int fillAccessionMaps( GeoSeries series ) {
-
-        Map<GeoPlatform, List<GeoSample>> platformSamples = getPlatformSampleMap( series );
-
-        for ( GeoPlatform platform : platformSamples.keySet() ) {
-            for ( GeoSample sample : platformSamples.get( platform ) ) {
-                assert sample != null : "Null sample for platform " + platform.getDescription();
-                fillAccessionMap( sample, platform );
-            }
-        }
-
-        return platformSamples.keySet().size();
-    }
-
-    private void fillAccessionMap( GeoSample sample, GeoData owner ) {
-        String title = sample.getTitle();
-        if ( StringUtils.isNotBlank( title ) ) {
-            accToTitle.put( sample.getGeoAccession(), title );
-        }
-        accToDataset.put( sample.getGeoAccession(), owner.getGeoAccession() );
-        accToSecondaryTitle.put( sample.getGeoAccession(), sample.getTitleInDataset() ); // could be null.
-        String organism = getSampleOrganism( sample );
-        if ( StringUtils.isNotBlank( organism ) ) {
-            accToOrganism.put( sample.getGeoAccession(), organism );
-        }
-    }
-
-    private String getSampleOrganism( GeoSample sample ) {
-        Collection<GeoPlatform> platforms = sample.getPlatforms();
-        assert platforms.size() > 0 : sample + " had no platform assigned";
-        GeoPlatform platform = platforms.iterator().next();
-        Collection<String> organisms = platform.getOrganisms();
-        assert organisms.size() > 0;
-        String organism = organisms.iterator().next();
-        return organism;
     }
 
 }
