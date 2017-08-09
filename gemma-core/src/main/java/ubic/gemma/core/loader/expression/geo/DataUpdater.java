@@ -561,7 +561,11 @@ public class DataUpdater {
         ee = experimentService.replaceVectors( ee, vectors );
         audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils.join( arrayDesignsUsed, "; " ), true );
 
-        postprocess( ee );
+        if ( arrayDesignsUsed.size() == 1 )
+            postprocess( ee );
+        else
+            log.warn( "Skipping postprocessing for mult-platform experiments." );
+
         return ee;
     }
 

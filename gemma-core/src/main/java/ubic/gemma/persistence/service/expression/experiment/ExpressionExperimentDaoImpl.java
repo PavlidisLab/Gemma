@@ -86,9 +86,10 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @deprecated use the service layer ({@link ExpressionExperimentService}) for EE removal. There is mandatory house keeping before you can
-     * remove the experiment. Attempting to call this method directly will likely result in
-     * org.hibernate.exception.ConstraintViolationException
+     * @deprecated use the service layer ({@link ExpressionExperimentService}) for EE removal. There is mandatory house
+     *             keeping before you can
+     *             remove the experiment. Attempting to call this method directly will likely result in
+     *             org.hibernate.exception.ConstraintViolationException
      */
     @Override
     @Deprecated
@@ -311,14 +312,14 @@ public class ExpressionExperimentDaoImpl
      * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
      * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
      *
-     * @param offset  amount of EEs to skip.
-     * @param limit   maximum amount of EEs to retrieve.
+     * @param offset amount of EEs to skip.
+     * @param limit maximum amount of EEs to retrieve.
      * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
-     *                be a property of EE itself, or any nested property that hibernate can reach.
-     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
-     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param filter  A map of properties to filter by. The Key is a String representing the name of the value to
-     *                filter by, and the value is the
+     *        be a property of EE itself, or any nested property that hibernate can reach.
+     *        E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
+     * @param asc true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param filter A map of properties to filter by. The Key is a String representing the name of the value to
+     *        filter by, and the value is the
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
@@ -351,10 +352,10 @@ public class ExpressionExperimentDaoImpl
     /**
      * Special method for front-end access
      *
-     * @param orderBy    the field to order the results by.
+     * @param orderBy the field to order the results by.
      * @param descending whether the ordering by the orderField should be descending.
-     * @param ids        only list specific ids.
-     * @param taxon      only list experiments within specific taxon.
+     * @param ids only list specific ids.
+     * @param taxon only list experiments within specific taxon.
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Override
@@ -365,6 +366,7 @@ public class ExpressionExperimentDaoImpl
 
         ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
         if ( ids != null ) {
+            if ( ids.isEmpty() ) return new ArrayList<>();
             Collections.sort( ids );
             filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS );
         }
@@ -522,10 +524,7 @@ public class ExpressionExperimentDaoImpl
         if ( limit == 0 )
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
-        String queryString = "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + (
-                limit < 0 ?
-                        "asc" :
-                        "desc" );
+        String queryString = "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + ( limit < 0 ? "asc" : "desc" );
         Query q = s.createQuery( queryString );
         q.setMaxResults( Math.abs( limit ) );
 
@@ -1027,10 +1026,9 @@ public class ExpressionExperimentDaoImpl
     @Override
     @Deprecated
     public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids ) {
-        final String queryString =
-                "select ee.id, ad.id, event " + "from ExpressionExperiment ee " + "inner join ee.bioAssays b "
-                        + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
-                        + "inner join trail.events event " + "where ee.id in (:ids) ";
+        final String queryString = "select ee.id, ad.id, event " + "from ExpressionExperiment ee " + "inner join ee.bioAssays b "
+                + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
+                + "inner join trail.events event " + "where ee.id in (:ids) ";
 
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
@@ -1063,9 +1061,8 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
-        final String queryString =
-                "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
-                        + " where ee.id in (:ids) ";
+        final String queryString = "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
+                + " where ee.id in (:ids) ";
 
         List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
@@ -1146,9 +1143,8 @@ public class ExpressionExperimentDaoImpl
 
         assert quantitationType.getId() != null;
 
-        final String queryString =
-                "select dev from RawExpressionDataVectorImpl as dev inner join dev.designElement as de "
-                        + " where de in (:des) and dev.quantitationType = :qt";
+        final String queryString = "select dev from RawExpressionDataVectorImpl as dev inner join dev.designElement as de "
+                + " where de in (:des) and dev.quantitationType = :qt";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -1488,11 +1484,14 @@ public class ExpressionExperimentDaoImpl
 
     /**
      * Creates an order by parameter. Expecting either one of the options from the ExtJS frontend (taxon, bioAssayCount,
-     * lastUpdated,troubled or needsAttention), or a property of an {@link ExpressionExperiment}. Nested properties (even
-     * multiple levels) are allowed. E.g: "accession", "curationDetails.lastUpdated", "curationDetails.lastTroubledEvent.date"
+     * lastUpdated,troubled or needsAttention), or a property of an {@link ExpressionExperiment}. Nested properties
+     * (even
+     * multiple levels) are allowed. E.g: "accession", "curationDetails.lastUpdated",
+     * "curationDetails.lastTroubledEvent.date"
      *
      * @param orderBy the order field requested by front end or API.
-     * @return a string that can be used as the orderByProperty param in {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
+     * @return a string that can be used as the orderByProperty param in
+     *         {@link this#getLoadValueObjectsQueryString(ArrayList, String, boolean)}.
      */
     private String getOrderByProperty( String orderBy ) {
         if ( orderBy == null )
@@ -1709,12 +1708,12 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
-     * @param filters         An array representing either a conjunction (AND) or disjunction (OR) of filters.
-     * @param disjunction     true to signal that the filters property is a disjunction (OR). False will cause the
-     *                        filters property to be treated as a conjunction (AND).
-     *                        If you are passing a single filter, using <code>false</code> is slightly more effective;
+     * @param filters An array representing either a conjunction (AND) or disjunction (OR) of filters.
+     * @param disjunction true to signal that the filters property is a disjunction (OR). False will cause the
+     *        filters property to be treated as a conjunction (AND).
+     *        If you are passing a single filter, using <code>false</code> is slightly more effective;
      * @param orderByProperty the property to order by.
-     * @param orderDesc       whether the ordering is ascending or descending.
+     * @param orderDesc whether the ordering is ascending or descending.
      * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( ObjectFilter[] filters, boolean disjunction, String orderByProperty,
@@ -1741,10 +1740,10 @@ public class ExpressionExperimentDaoImpl
      * {@link this#getLoadValueObjectsQueryString(ObjectFilter[], boolean, String, boolean)} method instead. This method
      * allows specification of a conjunction of disjunctions (CNF).
      *
-     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
-     *                        description.
+     * @param filters see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *        description.
      * @param orderByProperty the property to order by.
-     * @param orderDesc       whether the ordering is ascending or descending.
+     * @param orderDesc whether the ordering is ascending or descending.
      * @return a hibernate Query object ready to be used for EEVO retrieval.
      */
     private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
@@ -1781,9 +1780,9 @@ public class ExpressionExperimentDaoImpl
                 + "taxon.commonName, " // 11
                 + "taxon.id, " // 12
                 + "s.lastUpdated, " // 13
-                + "s.troubled, "  // 14
+                + "s.troubled, " // 14
                 + "s.needsAttention, " // 15
-                + "s.curationNote, "  // 16
+                + "s.curationNote, " // 16
                 + "count(distinct BA), " // 17
                 + "count(distinct " + ObjectFilter.DAO_AD_ALIAS + "), " // 18
                 + "count(distinct SU), " // 19
