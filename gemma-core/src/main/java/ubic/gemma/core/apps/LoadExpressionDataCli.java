@@ -201,7 +201,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         ArrayDesignService ads = getBean( ArrayDesignService.class );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
-                            ArrayDesign ad = (ArrayDesign ) object  ;
+                            ArrayDesign ad = ( ArrayDesign ) object;
                             ad = ads.thawLite( ad );
 
                             successObjects.add( ad.getName() + " ("
@@ -282,10 +282,6 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             platformOnly = true;
         }
 
-        if ( hasOption( 'n' ) ) {
-            doMatching = false;
-        }
-
         if ( hasOption( "force" ) ) {
             force = true;
         }
@@ -302,7 +298,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             this.doMatching = false; // defensive
         } else {
             this.splitByPlatform = false;
-            this.doMatching = true;
+            this.doMatching = !hasOption( 'n' );
         }
 
         this.suppressPostProcessing = hasOption( "nopost" );
