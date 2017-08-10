@@ -44,8 +44,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
 
     private String assayDescription;
     private String assayName;
-    private Collection<Long> bioAssays = new HashSet<Long>();
-    private Collection<CharacteristicValueObject> characteristics = new HashSet<CharacteristicValueObject>();
+    private Collection<Long> bioAssays = new HashSet<>();
+    private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
     private String description;
     /**
      * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
@@ -56,7 +56,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
     private Map<String, String> factors;
-    private Collection<FactorValueValueObject> factorValueObjects = new HashSet<FactorValueValueObject>();
+    private Collection<FactorValueValueObject> factorValueObjects = new HashSet<>();
     /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
@@ -82,9 +82,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             this.characteristics.add( new CharacteristicValueObject( ch ) );
         }
 
-        this.factors = new HashMap<String, String>();
-        this.factorValues = new HashMap<String, String>();
-        this.factorIdToFactorValueId = new HashMap<String, String>();
+        this.factors = new HashMap<>();
+        this.factorValues = new HashMap<>();
+        this.factorIdToFactorValueId = new HashMap<>();
         for ( FactorValue fv : bm.getFactorValues() ) {
             this.factorValueObjects.add( new FactorValueValueObject( fv ) );
             ExperimentalFactor factor = fv.getExperimentalFactor();

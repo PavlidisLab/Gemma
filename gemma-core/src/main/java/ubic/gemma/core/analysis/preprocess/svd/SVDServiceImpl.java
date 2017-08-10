@@ -63,7 +63,7 @@ public class SVDServiceImpl implements SVDService {
 
         if ( ee == null ) return null;
 
-        return svdServiceHelper.getTopLoadedVectors( ee, component, count );
+        return svdServiceHelper.getTopLoadedVectors( expressionExperimentService.thawBioAssays( ee ), component, count );
 
     }
 
