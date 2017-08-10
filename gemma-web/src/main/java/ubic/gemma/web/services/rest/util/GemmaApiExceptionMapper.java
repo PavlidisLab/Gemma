@@ -20,6 +20,7 @@ public class GemmaApiExceptionMapper implements ExceptionMapper<Throwable> {
         Log log = LogFactory.getLog( this.getClass().getName() );
         log.error( "Exception caught during API call: " + throwable.getMessage() );
 
+        //FIXME put the if back before release
         //if ( log.isDebugEnabled() ) {
         throwable.printStackTrace();
         //}
@@ -29,8 +30,6 @@ public class GemmaApiExceptionMapper implements ExceptionMapper<Throwable> {
             return Response.status( exception.getCode() ).entity( exception.getErrorObject() ).build();
         } else {
             Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
-            //FIXME remove before production - possibly we do not want to tell client the cause of the problem?
-            //FIXME maybe only to authorised clients
             WellComposedErrorBody errorBody = new WellComposedErrorBody( code, throwable.getMessage() );
             return Response.status( code ).entity( new ResponseErrorObject( errorBody ) ).build();
         }

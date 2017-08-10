@@ -14,8 +14,6 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
         Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
 
         LogFactory.getLog( this.getClass().getName() ).error( "Exception during JSON Mapping: " + exception );
-
-        //FIXME remove before production - possibly we do not want to tell end-users the cause of the problem?
         WellComposedErrorBody errorBody = new WellComposedErrorBody( code, exception.getMessage() );
         return Response.status( code ).entity( new ResponseErrorObject( errorBody ) ).build();
     }
