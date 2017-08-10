@@ -266,24 +266,25 @@ public class AffyPowerToolsProbesetSummarize {
 
             Collection<BioAssay> allBioAssays = ee.getBioAssays();
 
-            Collection<BioAssay> bioAssays = new HashSet<>();
+            Collection<BioAssay> bioAssaysToUse = new HashSet<>();
             for ( BioAssay bioAssay : allBioAssays ) {
                 if ( bioAssay.getArrayDesignUsed().equals( targetPlatform ) ) {
-                    bioAssays.add( bioAssay );
+                    bioAssaysToUse.add( bioAssay );
                 }
             }
 
-            if ( allBioAssays.size() > bioAssays.size() ) {
-                log.info( "Using " + bioAssays.size() + "/" + allBioAssays.size() + " bioassays (those on " + targetPlatform.getShortName() + ")" );
+            if ( allBioAssays.size() > bioAssaysToUse.size() ) {
+                log.info( "Using " + bioAssaysToUse.size() + "/" + allBioAssays.size() + " bioassays (those on " + targetPlatform.getShortName()
+                        + ")" );
             }
 
-            if ( matrix.columns() < bioAssays.size() ) {
+            if ( matrix.columns() < bioAssaysToUse.size() ) {
                 // having > is okay, there can be extra.
                 throw new IllegalStateException(
-                        "Matrix from APT had the wrong number of colummns: expected " + bioAssays.size() + ", got " + matrix.columns() );
+                        "Matrix from APT had the wrong number of colummns: expected " + bioAssaysToUse.size() + ", got " + matrix.columns() );
             }
 
-            log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssays.size()
+            log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssaysToUse.size()
                     + " samples on " + targetPlatform );
 
             BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
@@ -295,8 +296,8 @@ public class AffyPowerToolsProbesetSummarize {
              */
 
             Map<String, BioAssay> bmap = new HashMap<>();
-            for ( BioAssay bioAssay : bioAssays ) {
-
+            for ( BioAssay bioAssay : bioAssaysToUse ) {
+                assert bioAssay.getArrayDesignUsed().equals( targetPlatform );
                 if ( bmap.containsKey( bioAssay.getAccession().getAccession() )
                         || bmap.containsKey( bioAssay.getName() ) ) {
                     throw new IllegalStateException( "Duplicate" );
@@ -341,7 +342,7 @@ public class AffyPowerToolsProbesetSummarize {
                     /*
                      * This is okay, if we have extras
                      */
-                    if ( matrix.columns() == bioAssays.size() ) {
+                    if ( matrix.columns() == bioAssaysToUse.size() ) {
                         throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
                                 + sampleName );
                     }
@@ -353,12 +354,12 @@ public class AffyPowerToolsProbesetSummarize {
                         + assay.getAccession().getAccession() + "]" );
 
                 columnsToKeep.add( columnName );
-                assay.setArrayDesignUsed( targetPlatform ); // OK?
+                assert assay.getArrayDesignUsed().equals( targetPlatform );
                 bad.getBioAssays().add( assay );
                 found++;
             }
 
-            if ( found != bioAssays.size() ) {
+            if ( found != bioAssaysToUse.size() ) {
                 throw new IllegalStateException( "Failed to find a data column for every bioassay on the given platform " + targetPlatform );
             }
 

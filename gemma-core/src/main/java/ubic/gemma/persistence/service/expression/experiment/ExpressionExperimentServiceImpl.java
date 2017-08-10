@@ -190,11 +190,10 @@ public class ExpressionExperimentServiceImpl
         }
 
         /*
-         * This has to be enforced here. If it's not already true, then it better be. Earlier versions of this method
-         * passed in the AD.
+         * This is probably a more or less redundant setting, but doesn't hurt to make sure.
          */
         ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
-        for ( BioAssay ba : ee.getBioAssays() ) {
+        for ( BioAssay ba : bad.getBioAssays() ) {
             ba.setArrayDesignUsed( vectorAd );
         }
 
