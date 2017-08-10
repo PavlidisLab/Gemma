@@ -69,6 +69,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 
         ExpressionExperimentController.loadExpressionExperimentDetails(eeId, {
             callback: function (experimentDetails) {
+                if (experimentDetails === null) throw "Experiment can not be accessed, please log in first.";
                 this.initFromExperimentValueObject(experimentDetails, isAdmin);
 
                 this.checkURLforInitialTab();
@@ -80,7 +81,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 
         Gemma.Application.currentUser.on("logIn", function (userName, isAdmin) {
             var appScope = this;
-            ExpressionExperimentController.canCurrentUserEditExperiment(experimentDetails.id, {
+            ExpressionExperimentController.canCurrentUserEditExperiment(this.experimentDetails.id, {
                 callback: function (editable) {
                     // console.log(this);
                     appScope.adjustForIsAdmin(isAdmin, editable);
@@ -98,6 +99,19 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
     },
     initFromExperimentValueObject: function (experimentDetails, isAdmin) {
 
+        /**
+         * The ExpressionExperimentValueObject - see the Java object for details.
+         *
+         * The following is here to hide JS warnings for unresolved variables.
+         * @param experimentDetails.id
+         * @param experimentDetails.currentUserHasWritePermission
+         * @param experimentDetails.currentUserIsOwner
+         * @param experimentDetails.hasBatchInformation
+         * @param experimentDetails.batchConfound
+         * @param experimentDetails.batchEffect
+         * @param experimentDetails.QChtml
+         * @param experimentDetails.parentTaxonId
+         */
         this.experimentDetails = experimentDetails;
         this.editable = experimentDetails.currentUserHasWritePermission || isAdmin;
         this.ownedByCurrentUser = experimentDetails.currentUserIsOwner;

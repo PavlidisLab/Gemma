@@ -88,6 +88,10 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
+
+        if(this.value == null){
+            log.warn( "Characteristic with null value. Id: "+this.id+" cat: "+this.category+" cat uri: "+this.categoryUri );
+        }
     }
 
     public CharacteristicValueObject( Long id, String valueUri ) {
@@ -107,6 +111,9 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     public CharacteristicValueObject( Long id, String value, String valueUri ) {
         this( id, valueUri );
         this.value = value;
+        if(this.value == null){
+            log.warn( "Characteristic with null value. Id: "+this.id+" cat: "+this.category+" cat uri: "+this.categoryUri );
+        }
     }
 
     public CharacteristicValueObject( Long id, String value, String category, String valueUri, String categoryUri ) {
@@ -142,8 +149,10 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         int result = 1;
         if ( this.valueUri != null ) {
             result = prime * result + this.valueUri.hashCode();
-        } else {
+        } else if (this.value != null){
             result = prime * result + this.value.hashCode();
+        } else{
+            result = prime * result + this.id.hashCode();
         }
         return result;
     }

@@ -90,7 +90,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     }
 
     public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
-        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
+        Collection<BioAssayValueObject> result = new HashSet<>();
         for ( BioAssay bioAssay : bioAssays ) {
             result.add( new BioAssayValueObject( bioAssay ) );
         }
