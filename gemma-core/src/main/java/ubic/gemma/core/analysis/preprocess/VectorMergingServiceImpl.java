@@ -125,6 +125,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         expExp = expressionExperimentService.thaw( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
         log.info( qts.size() + " quantitation types for potential merge" );
+
         /*
          * Load all the bioassay dimensions, which will be merged.
          */
@@ -238,6 +239,10 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         } // for each quantitation type
 
         if ( numSuccessfulMergers == 0 ) {
+            /*
+             * Try to clean up
+             */
+            this.bioAssayDimensionService.remove( newBioAd );
             throw new IllegalStateException( "Nothing was merged. Maybe all the vectors are effectively merged already" );
         }
 
@@ -309,7 +314,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         for ( BioAssayDimension bioAd : oldDims ) {
             for ( BioAssay bioAssay : bioAd.getBioAssays() ) {
                 if ( bioAssays.contains( bioAssay ) ) {
-                    throw new IllegalStateException( "Duplicate bioassay for biodimension: " + bioAssay );
+                    throw new IllegalStateException(
+                            "Duplicate bioassay for biodimension: " + bioAssay + "; inspecting " + oldDims.size() + " BioAssayDimensions" );
                 }
                 bioAssays.add( bioAssay );
 
@@ -401,7 +407,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             }
             deVMap.get( designElement ).add( vector );
 
-            if ( deVMap.get( designElement ).size() > 1 ) {
+            if ( !atLeastOneMatch && deVMap.get( designElement ).size() > 1 ) {
                 atLeastOneMatch = true;
             }
         }

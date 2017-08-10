@@ -158,7 +158,7 @@ public class DataUpdater {
     }
 
     /**
-     * Replaces any existing "preferred" dat.
+     * Replaces any existing "preferred" data. Must be a single-platform study
      */
     public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
 
@@ -202,7 +202,7 @@ public class DataUpdater {
 
     /**
      * Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have them and we ran
-     * apt-probeset-summarize ourselves.
+     * apt-probeset-summarize ourselves. Must be single-platform
      */
     public void addAffyExonArrayData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
@@ -525,6 +525,9 @@ public class DataUpdater {
         return this.replaceData( ee, targetPlatform, eematrix );
     }
 
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+
     /**
      * This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
      */
@@ -539,6 +542,11 @@ public class DataUpdater {
             throw new RuntimeException( "Data was apparently not available" );
         }
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
+
+        // Use the same QT for each one 
+        QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+        qt = quantitationTypeService.create( qt );
+
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             log.info( "Processing data for " + ad );
             String cdfFileName = this.findCdf( ad ).getAbsolutePath();
@@ -549,7 +557,7 @@ public class DataUpdater {
 
             ad = arrayDesignService.thaw( ad );
 
-            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
+            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
 
             vectors.addAll( apt.processThreeprimeArrayData( ee, cdfFileName, ad, files ) );
 
