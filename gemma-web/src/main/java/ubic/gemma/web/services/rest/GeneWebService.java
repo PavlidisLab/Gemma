@@ -14,18 +14,23 @@
  */
 package ubic.gemma.web.services.rest;
 
+import com.sun.jersey.api.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
+import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
 import ubic.gemma.web.services.rest.util.args.GeneArg;
+import ubic.gemma.web.services.rest.util.args.IntArg;
+import ubic.gemma.web.services.rest.util.args.SortArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.Collection;
 
 /**
  * RESTful web services for genes. Does not have 'all' endpoint (no use-cases).

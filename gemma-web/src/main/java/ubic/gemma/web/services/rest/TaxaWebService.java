@@ -7,6 +7,7 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.*;
@@ -33,6 +34,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
     private GeneService geneService;
     private ExpressionExperimentService expressionExperimentService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    private ChromosomeService chromosomeService;
 
     /**
      * Required by spring
@@ -46,11 +48,13 @@ public class TaxaWebService extends WebServiceWithFiltering {
     @Autowired
     public TaxaWebService( TaxonService taxonService, GeneService geneService,
             ExpressionExperimentService expressionExperimentService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
+            PhenotypeAssociationManagerService phenotypeAssociationManagerService,
+            ChromosomeService chromosomeService ) {
         this.taxonService = taxonService;
         this.geneService = geneService;
         this.expressionExperimentService = expressionExperimentService;
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
+        this.chromosomeService = chromosomeService;
     }
 
     /**
@@ -83,6 +87,31 @@ public class TaxaWebService extends WebServiceWithFiltering {
     ) {
         Object response = taxonArg.getValueObject( taxonService );
         return this.autoCodeResponse( taxonArg, response, sr );
+    }
+
+    /**
+     * Find genes located in a given region. Genes that overlap the query region are returned.
+     *
+     * @param chromosomeName - eg: 2, 3, X
+     * @param strand         - '+' or '-', default is '+'. (WIP, currently does not do anything).
+     * @param start          - start of the region (nucleotide position).
+     * @param size           - size of the region (in nucleotides).
+     * @return GeneValue objects of the genes in the region.
+     */
+    @GET
+    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/chromosomes/{chromosomeArg: [a-zA-Z0-9\\.]+}/genes")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseDataObject taxonChromosomeGenes( @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("chromosomeArg") String chromosomeName, // Required
+            @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
+            @QueryParam("start") @DefaultValue("") LongArg start, // Required
+            @QueryParam("size") @DefaultValue("") IntArg size, // Required
+            @Context final HttpServletResponse sr ) {
+        // Handles proper loading of taxon, chromosome and gene search, including exception formulation if needed.
+        Object response = taxonArg
+                .getGenesOnChromosome( taxonService, chromosomeService, geneService, taxonArg, chromosomeName, start,
+                        size );
+        return Responder.autoCode( response, sr );
     }
 
     /**
