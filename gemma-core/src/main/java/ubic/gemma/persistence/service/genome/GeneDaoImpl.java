@@ -179,10 +179,10 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     }
 
     @Override
-    public Collection<? extends Gene> findByEnsemblId( String id ) {
+    public Gene findByEnsemblId( String id ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ensemblId = :id" )
-                .setParameter( "id", id ).list();
+        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ensemblId = :id" )
+                .setParameter( "id", id ).uniqueResult();
     }
 
     @Override

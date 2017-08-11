@@ -39,7 +39,7 @@ public class Gene extends ChromosomeFeature {
     private String officialSymbol;
     private String officialName;
     private Integer ncbiGeneId;
-    private String ensemblId;
+    private String ensemblId; //FIXME non-unique for roughly 2000 genes as of Aug 11th 2017
     private Collection<GeneProduct> products = new HashSet<>();
     private Collection<GeneAlias> aliases = new HashSet<>();
     private Taxon taxon;
@@ -117,8 +117,8 @@ public class Gene extends ChromosomeFeature {
     public String toString() {
 
         // This causes too many lazy load problems.
-        // buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
-        // + this.getPhysicalLocation() + "] " : "" );
+        // buf.append( this.getOfficialName() == null && this.getPhysicalLocationsValueObjects() != null ? "["
+        // + this.getPhysicalLocationsValueObjects() + "] " : "" );
 
         return this.getClass().getSimpleName().replace( "Impl", "" ) + ( this.getId() == null ?
                 " " :

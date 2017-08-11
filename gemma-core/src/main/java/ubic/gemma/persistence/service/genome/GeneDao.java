@@ -49,7 +49,7 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> findByAlias( String search );
 
-    Collection<? extends Gene> findByEnsemblId( String exactString );
+    Gene findByEnsemblId( String exactString );
 
     Gene findByNcbiId( Integer accession );
 

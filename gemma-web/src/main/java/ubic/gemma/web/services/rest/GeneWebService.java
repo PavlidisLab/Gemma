@@ -14,23 +14,18 @@
  */
 package ubic.gemma.web.services.rest;
 
-import com.sun.jersey.api.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
 import ubic.gemma.web.services.rest.util.args.GeneArg;
-import ubic.gemma.web.services.rest.util.args.IntArg;
-import ubic.gemma.web.services.rest.util.args.SortArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
 
 /**
  * RESTful web services for genes. Does not have 'all' endpoint (no use-cases).
@@ -64,7 +59,8 @@ public class GeneWebService extends WebService {
     /**
      * Retrieves all genes matching the identifier.
      *
-     * @param geneArg can either be the NCBI ID or official symbol.
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
     @Path("/{geneArg: [a-zA-Z0-9\\.]+}")
@@ -81,7 +77,8 @@ public class GeneWebService extends WebService {
     /**
      * Retrieves gene evidence matching the gene identifier
      *
-     * @param geneArg can either be the NCBI ID or official symbol.
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
     @Path("/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
@@ -92,7 +89,24 @@ public class GeneWebService extends WebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return this.autoCodeResponse( geneArg,
-                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null, sr ), sr );
+                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ), sr );
+    }
+
+    /**
+     * Retrieves the physical location of the given gene.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/locations")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genesLocations( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return this.autoCodeResponse( geneArg, geneArg.getGeneLocation( geneService ), sr );
     }
 
 }

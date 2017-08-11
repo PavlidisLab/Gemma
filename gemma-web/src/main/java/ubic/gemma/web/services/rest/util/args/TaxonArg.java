@@ -38,14 +38,14 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, Tax
     }
 
     public Collection<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
-            ChromosomeService chromosomeService, GeneService geneService, TaxonArg<Object> taxonArg,
+            ChromosomeService chromosomeService, GeneService geneService,
             String chromosomeName, LongArg start, IntArg size ) {
         // Taxon argument
-        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        Taxon taxon = getPersistentObject( taxonService );
         if ( taxon == null ) {
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
                     WebService.ERROR_MSG_ENTITY_NOT_FOUND );
-            WellComposedErrorBody.addExceptionFields( error, new EntityNotFoundException( taxonArg.getNullCause() ) );
+            WellComposedErrorBody.addExceptionFields( error, new EntityNotFoundException( getNullCause() ) );
             throw new GemmaApiException( error );
         }
 

@@ -19,18 +19,9 @@
 
 package ubic.gemma.core.genome.gene.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -46,22 +37,21 @@ import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneAlias;
-import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * @author pavlidis
@@ -80,6 +70,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
     private HomologeneService homologeneService;
     private SearchService searchService;
+    private TaxonService taxonService;
 
     @Autowired
     public GeneServiceImpl( GeneDao geneDao ) {
@@ -113,7 +104,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<? extends Gene> findByEnsemblId( String exactString ) {
+    public Gene findByEnsemblId( String exactString ) {
         return this.geneDao.findByEnsemblId( exactString );
     }
 
@@ -265,6 +256,40 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Transactional(readOnly = true)
     public Collection<Gene> getGenesByTaxon( final Taxon taxon ) {
         return this.geneDao.getGenesByTaxon( taxon );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene ) {
+        if ( gene == null ) {
+            return Collections.emptyList();
+        }
+
+        gene = thaw( gene );
+
+        Collection<GeneProduct> gpCollection = gene.getProducts();
+        Collection<PhysicalLocationValueObject> locations = new LinkedList<>();
+
+        if ( gpCollection == null )
+            return null;
+
+        for ( GeneProduct gp : gpCollection ) {
+
+            PhysicalLocation physicalLocation = gp.getPhysicalLocation();
+
+            if ( physicalLocation == null ) {
+                log.warn( gene.getOfficialSymbol() + " product " + gp.getName() + " (id:" + gp.getId()
+                        + ") has no location." );
+                continue;
+            }
+            // Only add if the physical location of the product is different from any we already know.
+            PhysicalLocationValueObject vo = new PhysicalLocationValueObject( physicalLocation );
+            if ( !locations.contains( vo ) ) {
+                locations.add( vo );
+            }
+        }
+
+        return locations;
     }
 
     @Override
@@ -484,6 +509,11 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Autowired
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
+    }
+
+    @Autowired
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     @Override

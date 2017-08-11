@@ -1391,7 +1391,7 @@ public class SearchServiceImpl implements SearchService {
             geneSet.addAll( geneProductService.getGenesByNcbiId( exactString ) );
             geneSet.addAll( bioSequenceService.getGenesByAccession( exactString ) );
             geneSet.addAll( bioSequenceService.getGenesByName( exactString ) );
-            geneSet.addAll( geneService.findByEnsemblId( exactString ) );
+            geneSet.add( geneService.findByEnsemblId( exactString ) );
         }
 
         watch.stop();

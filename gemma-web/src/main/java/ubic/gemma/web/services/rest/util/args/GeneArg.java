@@ -3,18 +3,19 @@ package ubic.gemma.web.services.rest.util.args;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Created by tesarst on 16/05/17.
@@ -22,32 +23,42 @@ import java.util.Collection;
  */
 public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneValueObject> {
 
+    private static final String ERROR_MSG_DEFAULT = "The identifier was recognised to be an %s, but no Gene with this %s exists.";
+    private static final String ERROR_MSG_TAXON = "Gene with given %s does not exist on this taxon";
+    private static final String ENSEMBL_ID_REGEX = "(ENSTBE|MGP_BALBcJ_|MGP_PWKPhJ_|ENSMUS|MGP_129S1SvImJ_|"
+            + "ENSSHA|ENSPFO|ENSRNO|FB|MGP_NODShiLtJ_|ENSLAF|ENSOAN|MGP_FVBNJ_|ENSDAR|ENSSSC|ENSGGO|ENSAMX|"
+            + "ENSXMA|ENSCHO|ENSGAC|ENSDOR|MGP_CASTEiJ_|ENSGMO|ENSTSY|ENSAME|ENSLOC|MGP_LPJ_|ENSCPO|ENSPAN|"
+            + "ENSTRU|ENSNLE|ENSPCA|ENSXET|ENSDNO|MGP_AJ_|MGP_DBA2J_|ENSMPU|ENSMOD|ENSVPA|ENS|ENSMMU|ENSOCU|"
+            + "MGP_CBAJ_|MGP_NZOHlLtJ_|ENSSCE|ENSOPR|ENSACA|ENSCSA|ENSORL|ENSCSAV|ENSTNI|ENSECA|MGP_C3HHeJ_|"
+            + "ENSCEL|ENSFAL|ENSPSI|ENSAPL|ENSCAF|MGP_SPRETEiJ_|ENSLAC|MGP_C57BL6NJ_|ENSSAR|ENSBTA|ENSMIC|"
+            + "ENSEEU|ENSTTR|ENSOGA|ENSMLU|ENSSTO|ENSCIN|MGP_WSBEiJ_|ENSMEU|ENSPVA|ENSPMA|ENSPTR|ENSFCA|"
+            + "ENSPPY|ENSMGA|ENSOAR|ENSCJA|ENSETE|ENSTGU|MGP_AKRJ_|ENSONI|ENSGAL).*";
+
     /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request Gene argument
-     * @return instance of appropriate implementation of GeneArg based on the actual Type the argument represents.
+     * @return instance of appropriate implementation of GeneArg based on the actual property the argument represents.
      */
     @SuppressWarnings("unused")
     public static GeneArg valueOf( final String s ) {
         try {
             return new GeneNcbiIdArg( Integer.parseInt( s.trim() ) );
         } catch ( NumberFormatException e ) {
-            return new GeneSymbolArg( s );
+            if ( s.matches( ENSEMBL_ID_REGEX ) ) {
+                return new GeneEnsemblIdArg( s );
+            } else {
+                return new GeneSymbolArg( s );
+            }
         }
     }
 
     /**
-     * @param service the service used to load the Gene value objects.
-     * @return all genes that match the value of the GeneArg.
-     */
-    public abstract Collection<GeneValueObject> getValueObjects( GeneService service );
-
-    /**
-     * @param service service that will be used to retrieve the persistent Gene object.
+     * @param geneService service that will be used to retrieve the persistent Gene object.
      * @return a collection of Gene value objects..
      */
-    public GeneValueObject getGeneOnTaxon( GeneService service, TaxonService taxonService, TaxonArg taxonArg ) {
+    public Collection<GeneValueObject> getGenesOnTaxon( GeneService geneService, TaxonService taxonService,
+            TaxonArg taxonArg ) {
         //noinspection unchecked
         Taxon taxon = ( Taxon ) taxonArg.getPersistentObject( taxonService );
         if ( taxon == null ) {
@@ -57,24 +68,71 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneVa
             throw new GemmaApiException( error );
         }
 
-        Gene gene = this.getPersistentObject( service );
-        if ( gene == null )
-            return null;
-        gene = service.findByOfficialSymbol( gene.getOfficialSymbol(), taxon );
-        if ( gene == null )
-            return null;
-        return service.loadValueObject( gene );
+        return this.getValueObjects( geneService, taxon );
     }
 
+    /**
+     * Searches for gene evidence of the gene that this GeneArg represents, on the given taxon.
+     *
+     * @param geneService                        service that will be used to retrieve the persistent Gene object.
+     * @param phenotypeAssociationManagerService service used to execute the search.
+     * @param taxon                              the taxon to limit the search to. Can be null.
+     * @return collection of gene evidence VOs matching the criteria, or an error response, if there is an error.
+     */
     public Object getGeneEvidence( GeneService geneService,
-            PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon,
-            HttpServletResponse sr ) {
+            PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon ) {
         Gene gene = this.getPersistentObject( geneService );
-        if ( gene == null ) {
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND, this.getNullCause() );
-            return Responder.code( error.getStatus(), error, sr );
+        return gene == null ?
+                null :
+                phenotypeAssociationManagerService
+                        .findGenesWithEvidence( gene.getOfficialSymbol(), taxon == null ? null : taxon.getId() );
+    }
+
+    /**
+     * @param service the service used to load the Gene value objects.
+     * @return all genes that match the value of the GeneArg.
+     */
+    public abstract Collection<GeneValueObject> getValueObjects( GeneService service );
+
+    /**
+     * Returns all known locations of the gene(s) that this GeneArg represents.
+     *
+     * @param geneService service that will be used to retrieve the persistent Gene object.
+     * @return collection of physical location objects.
+     */
+    public abstract Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService );
+
+    /**
+     * Returns all known locations of the gene that this GeneArg represents.
+     *
+     * @param geneService service that will be used to retrieve the persistent Gene object.
+     * @param taxon       the taxon to limit the search to. Can be null.
+     * @return collection of physical location objects.
+     */
+    public abstract Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon );
+
+    abstract String getIdentifierName();
+
+    String getDefaultError() {
+        return String.format( ERROR_MSG_DEFAULT, getIdentifierName(), getIdentifierName() );
+    }
+
+    String getTaxonError() {
+        return String.format( ERROR_MSG_TAXON, getIdentifierName() );
+    }
+
+    private Collection<GeneValueObject> getValueObjects( GeneService service, Taxon taxon ) {
+        Collection<GeneValueObject> genes = this.getValueObjects( service );
+        Collection<GeneValueObject> result = new ArrayList<>( genes.size() );
+        for ( GeneValueObject vo : genes ) {
+            if ( Objects.equals( vo.getTaxonId(), taxon.getId() ) ) {
+                result.add( vo );
+            }
         }
-        return phenotypeAssociationManagerService
-                .findGenesWithEvidence( gene.getOfficialSymbol(), taxon == null ? null : taxon.getId() );
+        if ( result.isEmpty() ) {
+            this.nullCause = getTaxonError();
+            return null;
+        }
+        return result;
     }
 }

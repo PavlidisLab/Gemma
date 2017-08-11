@@ -78,7 +78,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
      *                 scientific name, common name, abbreviation. Using the ID is most efficient.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}")
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject taxon( // Params:
@@ -92,6 +92,8 @@ public class TaxaWebService extends WebServiceWithFiltering {
     /**
      * Find genes located in a given region. Genes that overlap the query region are returned.
      *
+     * @param taxonArg       can either be Taxon ID or one of its string identifiers:
+     *                       scientific name, common name, abbreviation. Using the ID is most efficient.
      * @param chromosomeName - eg: 2, 3, X
      * @param strand         - '+' or '-', default is '+'. (WIP, currently does not do anything).
      * @param start          - start of the region (nucleotide position).
@@ -99,7 +101,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
      * @return GeneValue objects of the genes in the region.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/chromosomes/{chromosomeArg: [a-zA-Z0-9\\.]+}/genes")
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/chromosomes/{chromosomeArg: [a-zA-Z0-9\\.]+}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject taxonChromosomeGenes( @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @PathParam("chromosomeArg") String chromosomeName, // Required
@@ -109,18 +111,20 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr ) {
         // Handles proper loading of taxon, chromosome and gene search, including exception formulation if needed.
         Object response = taxonArg
-                .getGenesOnChromosome( taxonService, chromosomeService, geneService, taxonArg, chromosomeName, start,
-                        size );
+                .getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName, start, size );
         return Responder.autoCode( response, sr );
     }
 
     /**
      * Retrieves genes matching the identifier on the given taxon.
      *
-     * @param geneArg can either be the NCBI ID or official symbol.
+     * @param taxonArg can either be Taxon ID or one of its string identifiers:
+     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}")
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject genes( // Params:
@@ -128,17 +132,20 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = geneArg.getGeneOnTaxon( geneService, taxonService, taxonArg );
+        Object response = geneArg.getGenesOnTaxon( geneService, taxonService, taxonArg );
         return this.autoCodeResponse( geneArg, response, sr );
     }
 
     /**
      * Retrieves gene evidence matching the gene identifier on the given taxon
      *
-     * @param geneArg can either be the NCBI ID or official symbol.
+     * @param taxonArg can either be Taxon ID or one of its string identifiers:
+     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject genesEvidence( // Params:
@@ -153,7 +160,33 @@ public class TaxaWebService extends WebServiceWithFiltering {
             throw new GemmaApiException( errorBody );
         }
         return this.autoCodeResponse( geneArg,
-                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon, sr ), sr );
+                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ), sr );
+    }
+
+    /**
+     * Retrieves gene location for the gene on matching taxon.
+     *
+     * @param taxonArg can either be Taxon ID or one of its string identifiers:
+     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/genes/{geneArg: [a-zA-Z0-9\\.]+}/locations")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genesLocation( // Params:
+            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        if ( taxon == null ) {
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    taxonArg.getNullCause() );
+            throw new GemmaApiException( errorBody );
+        }
+        return this.autoCodeResponse( geneArg, geneArg.getGeneLocation( geneService, taxon ), sr );
     }
 
     /**
@@ -165,7 +198,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
      * filter, offset, limit and sort arguments.
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9\\.]+}/datasets")
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject taxonDatasets( // Params:

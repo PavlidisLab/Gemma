@@ -86,7 +86,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29 * hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() );
+        hashCode = 29 * (hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() ));
 
         return hashCode;
     }
