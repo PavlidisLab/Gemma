@@ -1,6 +1,9 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;

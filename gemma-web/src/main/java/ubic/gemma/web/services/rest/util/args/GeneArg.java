@@ -2,7 +2,9 @@ package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -110,6 +112,17 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneVa
      * @return collection of physical location objects.
      */
     public abstract Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon );
+
+    /**
+     * Returns GO terms for the gene that this GeneArg represents.
+     *
+     * @param geneService service that will be used to retrieve the persistent Gene object.
+     * @return collection of physical location objects.
+     */
+    public Collection<GeneOntologyTermValueObject> getGoTerms( GeneService geneService, GeneOntologyService geneOntologyService ) {
+        Gene gene = this.getPersistentObject( geneService );
+        return gene == null ? null : geneOntologyService.getValueObjects( gene );
+    }
 
     abstract String getIdentifierName();
 

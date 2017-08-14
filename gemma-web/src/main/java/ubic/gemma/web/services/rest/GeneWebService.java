@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.GeneArg;
@@ -38,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 public class GeneWebService extends WebService {
 
     private GeneService geneService;
+    private GeneOntologyService geneOntologyService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     /**
@@ -50,9 +52,10 @@ public class GeneWebService extends WebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public GeneWebService( GeneService geneService,
+    public GeneWebService( GeneService geneService, GeneOntologyService geneOntologyService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
         this.geneService = geneService;
+        this.geneOntologyService = geneOntologyService;
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
     }
 
@@ -107,6 +110,23 @@ public class GeneWebService extends WebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return this.autoCodeResponse( geneArg, geneArg.getGeneLocation( geneService ), sr );
+    }
+
+    /**
+     * Retrieves the GO terms of the given gene.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/goTerms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genesGoTerms( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return this.autoCodeResponse( geneArg, geneArg.getGoTerms( geneService, geneOntologyService ), sr );
     }
 
 }
