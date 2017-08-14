@@ -14,11 +14,11 @@ public class DatasetIdArg extends DatasetArg<Long> {
      */
     DatasetIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but dataset with this ID does not exist or is not accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Dataset" );
     }
 
     @Override
     public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return service.load( this.value );
+        return check(service.load( this.value ));
     }
 }

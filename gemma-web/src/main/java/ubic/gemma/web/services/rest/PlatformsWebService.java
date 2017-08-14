@@ -98,8 +98,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = platformArg.getValueObject( arrayDesignService );
-        return this.autoCodeResponse( platformArg, response, sr );
+        return Responder.autoCode( platformArg.getValueObject( arrayDesignService ), sr );
     }
 
     /**
@@ -118,16 +117,18 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = platformArg
-                .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() );
-        return this.autoCodeResponse( platformArg, response, sr );
+        return Responder.autoCode( platformArg
+                        .getExperiments( arrayDesignService, expressionExperimentService, limit.getValue(), offset.getValue() ),
+                sr );
     }
 
     /**
-     * Retrieves experiments in the given platform.
+     * Retrieves the composite sequences (elements) for the given platform.
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "Generic_yeast" or "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
+     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
+     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
      */
     @GET
     @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements")
@@ -139,9 +140,33 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = platformArg
-                .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() );
-        return this.autoCodeResponse( platformArg, response, sr );
+        return Responder.autoCode( platformArg
+                .getElements( arrayDesignService, compositeSequenceService, limit.getValue(), offset.getValue() ), sr );
+    }
+
+    /**
+     * Retrieves the genes on the given platform element
+     *
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "Generic_yeast" or "GPL1355" ). Retrieval by ID
+     *                    is more efficient. Only platforms that user has access to will be available.
+     * @param probeArg    the name of the platform element for which the genes should be retrieved.
+     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
+     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
+     */
+    @GET
+    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probeArg: [a-zA-Z0-9_\\.]+}/genes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject platformElementGenes( // Params:
+            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
+            @PathParam("probeArg") CompositeSequenceArg probeArg, // Required
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        probeArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
+        return Responder.autoCode(
+                compositeSequenceService.getGenes( probeArg.getPersistentObject( compositeSequenceService ) ), sr );
     }
 
     /**
@@ -159,12 +184,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @PathParam("platformArg") PlatformArg<Object> platformArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ArrayDesign arrayDesign = platformArg.getPersistentObject( arrayDesignService );
-        if ( arrayDesign == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND, platformArg.getNullCause() );
-            throw new GemmaApiException( errorBody );
-        }
-        return outputAnnotationFile( arrayDesign );
+        return outputAnnotationFile( platformArg.getPersistentObject( arrayDesignService ) );
     }
 
     @Override

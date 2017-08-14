@@ -11,7 +11,7 @@ public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {
         this.value = s;
-        this.nullCause = "The identifier was recognised to be a short name, but platform with this short name does not exist or is accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "short name", "Platform" );
     }
 
     /**
@@ -23,7 +23,7 @@ public class PlatformStringArg extends PlatformArg<String> {
      */
     @Override
     public ArrayDesign getPersistentObject( ArrayDesignService service ) {
-        return this.value == null ? null : service.findByShortName( this.value );
+        return check(this.value == null ? null : service.findByShortName( this.value ));
     }
 
 }

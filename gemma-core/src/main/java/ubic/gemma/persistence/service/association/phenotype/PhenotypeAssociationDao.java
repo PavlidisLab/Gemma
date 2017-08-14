@@ -54,7 +54,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
      * find all evidences from a specific external database
      */
     Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
-            Integer limit );
+            Integer limit, int start );
 
     /**
      * find all evidence that doesn't come from an external course

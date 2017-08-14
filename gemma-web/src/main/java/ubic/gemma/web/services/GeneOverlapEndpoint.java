@@ -42,7 +42,6 @@ import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
  * delimited by white space.
  * 
  * @author gavin, klc
- * @version$Id$
  */
 
 public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
@@ -56,7 +55,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
     /**
      * The local name of the expected request/response.
      */
-    public static final String LOCAL_NAME = "geneOverlap";
+    private static final String LOCAL_NAME = "geneOverlap";
 
     /**
      * Sets the "business service" to delegate to.

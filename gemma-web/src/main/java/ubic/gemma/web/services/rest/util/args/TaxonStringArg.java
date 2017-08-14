@@ -11,7 +11,7 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
         this.value = s;
-        this.nullCause = "The identifier was recognised to be a name, but no taxon with such scientific or common name, or abbreviation, exists or is accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "common or scientific name, or abbreviation,", "Taxon" );
     }
 
     /**
@@ -23,7 +23,7 @@ public class TaxonStringArg extends TaxonArg<String> {
      */
     @Override
     public Taxon getPersistentObject( TaxonService service ) {
-        return this.value == null ? null : this.tryAllNameProperties( service );
+        return check(this.value == null ? null : this.tryAllNameProperties( service ));
     }
 
     /**

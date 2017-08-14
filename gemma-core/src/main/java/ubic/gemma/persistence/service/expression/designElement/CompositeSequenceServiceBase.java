@@ -75,6 +75,15 @@ public abstract class CompositeSequenceServiceBase extends VoEnabledService<Comp
     }
 
     /**
+     * @see CompositeSequenceService#loadValueObjectsForGene(Gene, int, int)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<CompositeSequenceValueObject> loadValueObjectsForGene( final Gene gene, int start, int limit ) {
+        return this.handleLoadValueObjectsForGene( gene, start, limit );
+    }
+
+    /**
      * @see CompositeSequenceService#findByGene(Gene, ArrayDesign)
      */
     @Override
@@ -189,6 +198,11 @@ public abstract class CompositeSequenceServiceBase extends VoEnabledService<Comp
      * Performs the core logic for {@link #findByGene(Gene)}
      */
     protected abstract Collection<CompositeSequence> handleFindByGene( Gene gene );
+
+    /**
+     * Performs the core logic for {@link #loadValueObjectsForGene(Gene, int, int)}
+     */
+    protected abstract Collection<CompositeSequenceValueObject> handleLoadValueObjectsForGene( Gene gene, int start, int limit );
 
     /**
      * Performs the core logic for

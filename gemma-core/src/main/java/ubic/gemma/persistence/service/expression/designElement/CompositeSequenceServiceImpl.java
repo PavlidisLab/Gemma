@@ -23,6 +23,7 @@ import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
@@ -84,7 +85,8 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
         Collection<BioSequence2GeneProduct> bs2gps = biologicalCharacteristic.getBioSequence2GeneProduct();
 
         for ( BioSequence2GeneProduct bs2gp : bs2gps ) {
-            GeneProductValueObject geneProduct = new GeneProductValueObject( geneProductService.thaw( bs2gp.getGeneProduct() ) );
+            GeneProductValueObject geneProduct = new GeneProductValueObject(
+                    geneProductService.thaw( bs2gp.getGeneProduct() ) );
 
             GeneValueObject gene = new GeneValueObject( bs2gp.getGeneProduct().getGene() );
 
@@ -148,6 +150,12 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
     @Override
     protected Collection<CompositeSequence> handleFindByGene( Gene gene ) {
         return this.compositeSequenceDao.findByGene( gene );
+    }
+
+    @Override
+    protected Collection<CompositeSequenceValueObject> handleLoadValueObjectsForGene( Gene gene, int start,
+            int limit ) {
+        return loadValueObjects( this.compositeSequenceDao.findByGene( gene, start, limit ) );
     }
 
     @Override

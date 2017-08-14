@@ -43,7 +43,7 @@ public abstract class DatasetArg<T>
     public Collection<ArrayDesignValueObject> getPlatforms( ExpressionExperimentService service,
             ArrayDesignService adService ) {
         ExpressionExperiment ee = this.getPersistentObject( service );
-        return ee == null ? null : adService.loadValueObjectsForEE( ee.getId() );
+        return adService.loadValueObjectsForEE( ee.getId() );
     }
 
     /**
@@ -54,7 +54,7 @@ public abstract class DatasetArg<T>
     public Collection<BioAssayValueObject> getSamples( ExpressionExperimentService service,
             BioAssayService baService ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getPersistentObject( service ) );
-        return ee == null ? null : baService.loadValueObjects( ee.getBioAssays() );
+        return baService.loadValueObjects( ee.getBioAssays() );
     }
 
     /**
@@ -63,7 +63,7 @@ public abstract class DatasetArg<T>
      */
     public Collection<AnnotationValueObject> getAnnotations( ExpressionExperimentService service ) {
         ExpressionExperiment ee = this.getPersistentObject( service );
-        return ee == null ? null : service.getAnnotations( ee.getId() );
+        return service.getAnnotations( ee.getId() );
     }
 
 }

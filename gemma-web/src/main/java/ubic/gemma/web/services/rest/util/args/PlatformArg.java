@@ -8,6 +8,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +44,10 @@ public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDes
     public Collection<ExpressionExperimentValueObject> getExperiments( ArrayDesignService service,
             ExpressionExperimentService eeService, int limit, int offset ) {
         ArrayDesign ad = this.getPersistentObject( service );
-        return ad == null ? null : eeService.loadValueObjectsPreFilter( offset, limit, "id", true, null );
+
+        ArrayList<ObjectFilter[]> filters = new ArrayList<>( 1 );
+        filters.add( new ObjectFilter[] { new ObjectFilter( "id", ad.getId(), ObjectFilter.is, ObjectFilter.DAO_AD_ALIAS ) } );
+        return eeService.loadValueObjectsPreFilter( offset, limit, "id", true, filters );
     }
 
     /**

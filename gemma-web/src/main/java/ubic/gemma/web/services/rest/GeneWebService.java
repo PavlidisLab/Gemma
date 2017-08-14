@@ -19,9 +19,12 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.GeneArg;
+import ubic.gemma.web.services.rest.util.args.IntArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -33,13 +36,13 @@ import javax.ws.rs.core.MediaType;
  *
  * @author tesarst
  */
-
 @Component
 @Path("/genes")
 public class GeneWebService extends WebService {
 
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
+    private CompositeSequenceService compositeSequenceService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     /**
@@ -53,9 +56,11 @@ public class GeneWebService extends WebService {
      */
     @Autowired
     public GeneWebService( GeneService geneService, GeneOntologyService geneOntologyService,
+            CompositeSequenceService compositeSequenceService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
         this.geneService = geneService;
         this.geneOntologyService = geneOntologyService;
+        this.compositeSequenceService = compositeSequenceService;
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
     }
 
@@ -73,8 +78,7 @@ public class GeneWebService extends WebService {
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = geneArg.getValueObjects( geneService );
-        return this.autoCodeResponse( geneArg, response, sr );
+        return Responder.autoCode( geneArg.getValueObjects( geneService ), sr );
     }
 
     /**
@@ -87,12 +91,12 @@ public class GeneWebService extends WebService {
     @Path("/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject genesEvidence( // Params:
+    public ResponseDataObject geneEvidence( // Params:
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return this.autoCodeResponse( geneArg,
-                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ), sr );
+        return Responder
+                .autoCode( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ), sr );
     }
 
     /**
@@ -105,11 +109,31 @@ public class GeneWebService extends WebService {
     @Path("/{geneArg: [a-zA-Z0-9\\.]+}/locations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject genesLocations( // Params:
+    public ResponseDataObject geneLocations( // Params:
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return this.autoCodeResponse( geneArg, geneArg.getGeneLocation( geneService ), sr );
+        return Responder.autoCode( geneArg.getGeneLocation( geneService ), sr );
+    }
+
+    /**
+     * Retrieves the composite sequences (probes) with this gene.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/probes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject geneProbes( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( compositeSequenceService
+                .loadValueObjectsForGene( geneArg.getPersistentObject( geneService ), offset.getValue(), limit.getValue() ), sr );
     }
 
     /**
@@ -126,7 +150,7 @@ public class GeneWebService extends WebService {
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return this.autoCodeResponse( geneArg, geneArg.getGoTerms( geneService, geneOntologyService ), sr );
+        return Responder.autoCode( geneArg.getGoTerms( geneService, geneOntologyService ), sr );
     }
 
 }

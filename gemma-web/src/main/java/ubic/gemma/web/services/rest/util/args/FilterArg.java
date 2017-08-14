@@ -18,8 +18,10 @@ import java.util.List;
  */
 public abstract class FilterArg extends MalformableArg {
 
-    private static final String ERROR_PARTS_TOO_SHORT = "Provided filter string does not contain at least one of property-operator-value sets.";
-    private static final String ERROR_ILLEGAL_OPERATOR = "Illegal operator: %s is not an accepted operator.";
+    public static final String ERROR_MSG_MALFORMED_REQUEST = "Entity does not contain the given property, or the provided value can not be converted to the property type.";
+    private static final String ERROR_MSG_PARTS_TOO_SHORT = "Provided filter string does not contain at least one of property-operator-value sets.";
+    private static final String ERROR_MSG_ILLEGAL_OPERATOR = "Illegal operator: %s is not an accepted operator.";
+    private static final String ERROR_MSG_ARGS_MISALIGNED = "Filter query problem: Amount of properties, operators and values does not match";
 
     private List<String[]> propertyNames;
     private List<String[]> propertyValues;
@@ -92,7 +94,7 @@ public abstract class FilterArg extends MalformableArg {
         List<String> propertyOperatorsDisjunction = new LinkedList<>();
         List<String> propertyValuesDisjunction = new LinkedList<>();
         if ( parts.length < 3 ) {
-            throw new IllegalArgumentException( ERROR_PARTS_TOO_SHORT );
+            throw new IllegalArgumentException( ERROR_MSG_PARTS_TOO_SHORT );
         }
 
         for ( int i = 0; i < parts.length; ) {
@@ -143,6 +145,13 @@ public abstract class FilterArg extends MalformableArg {
         }
     }
 
+    /**
+     * Checks whether a field exists among all declared fields on the given class.
+     * @param cls the class to check.
+     * @param field the field name to check for.
+     * @return the Field from the given class matching the given field name.
+     * @throws NoSuchFieldException if a field of given name was not found on the given class.
+     */
     private static Field checkAllFields( Class<?> cls, String field ) throws NoSuchFieldException {
         List<Field> fields = new ArrayList<>();
         for ( Class<?> c = cls; c != null; c = c.getSuperclass() ) {
@@ -170,7 +179,7 @@ public abstract class FilterArg extends MalformableArg {
                 .equals( ObjectFilter.in ) ) {
             return s;
         }
-        throw new IllegalArgumentException( String.format( ERROR_ILLEGAL_OPERATOR, s ) );
+        throw new IllegalArgumentException( String.format( ERROR_MSG_ILLEGAL_OPERATOR, s ) );
     }
 
     /**
@@ -180,7 +189,7 @@ public abstract class FilterArg extends MalformableArg {
      * @return an ArrayList of Object Filter arrays, each array represents a disjunction (OR) of filters. Arrays
      * then represent a conjunction (AND) with other arrays in the list.
      */
-    public ArrayList<ObjectFilter[]> getObjectFilters() throws ParseException {
+    public ArrayList<ObjectFilter[]> getObjectFilters() {
         this.checkMalformed();
         if ( propertyNames == null || propertyNames.isEmpty() )
             return null;
@@ -200,8 +209,13 @@ public abstract class FilterArg extends MalformableArg {
                 filterList.add( filterArray );
 
             } catch ( IndexOutOfBoundsException e ) {
-                throw new GemmaApiException( new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                        "Filter query problem: Amount of properties, operators and values does not match" ) );
+                throw new GemmaApiException(
+                        new WellComposedErrorBody( Response.Status.BAD_REQUEST, ERROR_MSG_ARGS_MISALIGNED ) );
+            } catch ( ParseException e ) {
+                WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
+                        ERROR_MSG_MALFORMED_REQUEST );
+                WellComposedErrorBody.addExceptionFields( error, e );
+                throw new GemmaApiException( error );
             }
         }
 

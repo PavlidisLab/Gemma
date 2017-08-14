@@ -11,7 +11,7 @@ public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {
         this.value = s;
-        this.nullCause = "The identifier was recognised to be a short name, but dataset with this short name does not exist or is not accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "short name", "Dataset" );
     }
 
     /**
@@ -23,7 +23,7 @@ public class DatasetStringArg extends DatasetArg<String> {
      */
     @Override
     public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return this.value == null ? null : service.findByShortName( this.value );
+        return check(this.value == null ? null : service.findByShortName( this.value ));
     }
 
 }

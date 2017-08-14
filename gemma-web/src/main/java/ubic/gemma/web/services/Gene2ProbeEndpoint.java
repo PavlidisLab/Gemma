@@ -39,7 +39,6 @@ import ubic.gemma.model.genome.Taxon;
  * for that given gene.
  * 
  * @author gavin, klc
- * @version$Id$
  */
 
 public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {

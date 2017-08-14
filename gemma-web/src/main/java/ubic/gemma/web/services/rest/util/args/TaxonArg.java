@@ -1,19 +1,21 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
-import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -37,17 +39,23 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, Tax
         }
     }
 
+    public Collection<ExpressionExperimentValueObject> getTaxonDatasets(
+            ExpressionExperimentService expressionExperimentService, Taxon taxon, ArrayList<ObjectFilter[]> filters,
+            int offset, int limit, String sort, boolean sortAsc ) {
+        if ( filters == null ) {
+            filters = new ArrayList<>( 1 );
+        }
+        filters.add( new ObjectFilter[] {
+                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) } );
+
+        return expressionExperimentService.loadValueObjectsPreFilter( offset, limit, sort, sortAsc, filters );
+    }
+
     public Collection<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
-            ChromosomeService chromosomeService, GeneService geneService,
-            String chromosomeName, LongArg start, IntArg size ) {
+            ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, LongArg start,
+            IntArg size ) {
         // Taxon argument
         Taxon taxon = getPersistentObject( taxonService );
-        if ( taxon == null ) {
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    WebService.ERROR_MSG_ENTITY_NOT_FOUND );
-            WellComposedErrorBody.addExceptionFields( error, new EntityNotFoundException( getNullCause() ) );
-            throw new GemmaApiException( error );
-        }
 
         //Chromosome argument
         Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );

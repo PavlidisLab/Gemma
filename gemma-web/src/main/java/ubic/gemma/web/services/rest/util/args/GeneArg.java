@@ -10,7 +10,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -63,13 +62,6 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneVa
             TaxonArg taxonArg ) {
         //noinspection unchecked
         Taxon taxon = ( Taxon ) taxonArg.getPersistentObject( taxonService );
-        if ( taxon == null ) {
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    WebService.ERROR_MSG_ENTITY_NOT_FOUND );
-            WellComposedErrorBody.addExceptionFields( error, new EntityNotFoundException( taxonArg.getNullCause() ) );
-            throw new GemmaApiException( error );
-        }
-
         return this.getValueObjects( geneService, taxon );
     }
 
@@ -84,10 +76,8 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneVa
     public Object getGeneEvidence( GeneService geneService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService, Taxon taxon ) {
         Gene gene = this.getPersistentObject( geneService );
-        return gene == null ?
-                null :
-                phenotypeAssociationManagerService
-                        .findGenesWithEvidence( gene.getOfficialSymbol(), taxon == null ? null : taxon.getId() );
+        return phenotypeAssociationManagerService
+                .findGenesWithEvidence( gene.getOfficialSymbol(), taxon == null ? null : taxon.getId() );
     }
 
     /**
@@ -119,9 +109,10 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneVa
      * @param geneService service that will be used to retrieve the persistent Gene object.
      * @return collection of physical location objects.
      */
-    public Collection<GeneOntologyTermValueObject> getGoTerms( GeneService geneService, GeneOntologyService geneOntologyService ) {
+    public Collection<GeneOntologyTermValueObject> getGoTerms( GeneService geneService,
+            GeneOntologyService geneOntologyService ) {
         Gene gene = this.getPersistentObject( geneService );
-        return gene == null ? null : geneOntologyService.getValueObjects( gene );
+        return geneOntologyService.getValueObjects( gene );
     }
 
     abstract String getIdentifierName();

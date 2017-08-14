@@ -14,11 +14,11 @@ public class TaxonIdArg extends TaxonArg<Long> {
      */
     TaxonIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but no taxon with this ID exists or is accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Taxon" );
     }
 
     @Override
     public Taxon getPersistentObject( TaxonService service ) {
-        return service.load( this.value );
+        return check(service.load( this.value ));
     }
 }

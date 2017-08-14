@@ -27,14 +27,12 @@ public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
     @Override
     public Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService ) {
         Gene gene = this.getPersistentObject( geneService );
-        return gene == null ? null : geneService.getPhysicalLocationsValueObjects( gene );
+        return geneService.getPhysicalLocationsValueObjects( gene );
     }
 
     @Override
     public Collection<PhysicalLocationValueObject> getGeneLocation( GeneService geneService, Taxon taxon ) {
         Gene gene = this.getPersistentObject( geneService );
-        if ( gene == null )
-            return null;
         if ( !gene.getTaxon().equals( taxon ) ) {
             this.nullCause = getTaxonError();
             return null;

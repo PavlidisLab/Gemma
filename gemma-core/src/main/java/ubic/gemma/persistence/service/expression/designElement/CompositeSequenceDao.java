@@ -41,6 +41,8 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
 
     Collection<CompositeSequence> findByGene( Gene gene );
 
+    Collection<CompositeSequence> findByGene( Gene gene, int start, int limit );
+
     Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
 
     Collection<CompositeSequence> findByName( String name );

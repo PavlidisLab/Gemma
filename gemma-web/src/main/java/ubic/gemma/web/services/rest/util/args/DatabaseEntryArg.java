@@ -14,7 +14,7 @@ public abstract class DatabaseEntryArg<T>
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param s the request dataset argument
+     * @param s the request database entry argument
      * @return instance of appropriate implementation of DatabaseEntryArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")

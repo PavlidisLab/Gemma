@@ -14,12 +14,6 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-/**
- * TODO Document Me
- * 
- * @author Paul
- * @version $Id$
- */
 public class PhenotypeValueObject {
 
     private String value = "";
@@ -33,16 +27,23 @@ public class PhenotypeValueObject {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         PhenotypeValueObject other = ( PhenotypeValueObject ) obj;
         if ( value == null ) {
-            if ( other.value != null ) return false;
-        } else if ( !value.equals( other.value ) ) return false;
+            if ( other.value != null )
+                return false;
+        } else if ( !value.equals( other.value ) )
+            return false;
         if ( valueUri == null ) {
-            if ( other.valueUri != null ) return false;
-        } else if ( !valueUri.equals( other.valueUri ) ) return false;
+            if ( other.valueUri != null )
+                return false;
+        } else if ( !valueUri.equals( other.valueUri ) )
+            return false;
         return true;
     }
 
@@ -50,8 +51,16 @@ public class PhenotypeValueObject {
         return this.value;
     }
 
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
     public String getValueUri() {
         return this.valueUri;
+    }
+
+    public void setValueUri( String valueUri ) {
+        this.valueUri = valueUri;
     }
 
     @Override
@@ -61,14 +70,6 @@ public class PhenotypeValueObject {
         result = prime * result + ( ( value == null ) ? 0 : value.hashCode() );
         result = prime * result + ( ( valueUri == null ) ? 0 : valueUri.hashCode() );
         return result;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
     }
 
     @Override

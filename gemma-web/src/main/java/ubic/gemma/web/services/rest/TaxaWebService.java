@@ -1,25 +1,24 @@
 package ubic.gemma.web.services.rest;
 
-import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.ObjectFilter;
-import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
 import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.text.ParseException;
-import java.util.ArrayList;
 
 /**
  * RESTful interface for taxa.
@@ -85,8 +84,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = taxonArg.getValueObject( taxonService );
-        return this.autoCodeResponse( taxonArg, response, sr );
+        return Responder.autoCode( taxonArg.getValueObject( taxonService ), sr );
     }
 
     /**
@@ -109,10 +107,9 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @QueryParam("start") @DefaultValue("") LongArg start, // Required
             @QueryParam("size") @DefaultValue("") IntArg size, // Required
             @Context final HttpServletResponse sr ) {
-        // Handles proper loading of taxon, chromosome and gene search, including exception formulation if needed.
-        Object response = taxonArg
-                .getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName, start, size );
-        return Responder.autoCode( response, sr );
+        return Responder.autoCode(
+                taxonArg.getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName, start,
+                        size ), sr );
     }
 
     /**
@@ -132,8 +129,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @PathParam("geneArg") GeneArg<Object> geneArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = geneArg.getGenesOnTaxon( geneService, taxonService, taxonArg );
-        return this.autoCodeResponse( geneArg, response, sr );
+        return Responder.autoCode( geneArg.getGenesOnTaxon( geneService, taxonService, taxonArg ), sr );
     }
 
     /**
@@ -154,13 +150,8 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         Taxon taxon = taxonArg.getPersistentObject( taxonService );
-        if ( taxon == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    taxonArg.getNullCause() );
-            throw new GemmaApiException( errorBody );
-        }
-        return this.autoCodeResponse( geneArg,
-                geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ), sr );
+        return Responder
+                .autoCode( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, taxon ), sr );
     }
 
     /**
@@ -181,12 +172,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         Taxon taxon = taxonArg.getPersistentObject( taxonService );
-        if ( taxon == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    taxonArg.getNullCause() );
-            throw new GemmaApiException( errorBody );
-        }
-        return this.autoCodeResponse( geneArg, geneArg.getGeneLocation( geneService, taxon ), sr );
+        return Responder.autoCode( geneArg.getGeneLocation( geneService, taxon ), sr );
     }
 
     /**
@@ -209,34 +195,33 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        try {
-            Taxon taxon = taxonArg.getPersistentObject( taxonService );
-            ArrayList<ObjectFilter[]> filters = filter.getObjectFilters();
-
-            if ( filters == null ) {
-                filters = new ArrayList<>( 1 );
-            }
-
-            filters.add( new ObjectFilter[] {
-                    new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) } );
-
-            return Responder.autoCode( expressionExperimentService
-                    .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
-                            filters ), sr );
-        } catch ( QueryException | ParseException e ) {
-            if ( log.isDebugEnabled() ) {
-                e.printStackTrace();
-            }
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                    ERROR_MSG_MALFORMED_REQUEST );
-            WellComposedErrorBody.addExceptionFields( error, e );
-            return Responder.code( error.getStatus(), error, sr );
-        }
+        return Responder.autoCode(
+                taxonArg.getTaxonDatasets( expressionExperimentService, taxonArg.getPersistentObject( taxonService ),
+                        filter.getObjectFilters(), offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc() ),
+                sr );
     }
 
     /**
-     * This filtering is not for Taxa but for Datasets.
+     * Loads all phenotypes for the given taxon. Unfortunately, further pagination is not possible as the
+     * phenotypes are loaded in a tree structure.
+     * @param taxonArg the taxon to list the phenotypes for.
+     * @param editableOnly whether to only show editable phenotypes.
+     * @return a list of Simple Tree value objects allowing a reconstruction of a tree.
      */
+    @GET
+    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/phenotypes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject taxonPhenotypes( // Params:
+            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+            @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting
+    ) {
+        Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        return Responder.autoCode( phenotypeAssociationManagerService
+                .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ), sr );
+    }
+
     @Override
     protected ResponseDataObject loadVOsPreFilter( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
             HttpServletResponse sr ) throws ParseException {

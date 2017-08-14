@@ -33,15 +33,14 @@ public class GeneSymbolArg extends GeneArg<String> {
      */
     @Override
     public Gene getPersistentObject( GeneService service ) {
-        if ( this.value == null ) {
-            return null;
-        }
-
-        Collection<Gene> genes = service.findByOfficialSymbol( this.value );
+        Gene gene;
+        Collection<Gene> genes = this.value == null ? null : service.findByOfficialSymbol( this.value );
         if ( genes == null || genes.isEmpty() ) {
-            return null;
+            gene = null;
+        }else {
+            gene = genes.iterator().next();
         }
-        return genes.iterator().next();
+        return check(gene);
     }
 
     @Override

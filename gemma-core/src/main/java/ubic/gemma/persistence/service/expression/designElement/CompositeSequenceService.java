@@ -57,6 +57,8 @@ public interface CompositeSequenceService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene );
+    
+    Collection<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );

@@ -101,8 +101,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getValueObject( expressionExperimentService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
     }
 
     /**
@@ -119,8 +118,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getPlatforms( expressionExperimentService, arrayDesignService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ), sr );
     }
 
     /**
@@ -137,8 +135,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getSamples( expressionExperimentService, bioAssayService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService ), sr );
     }
 
     /**
@@ -155,8 +152,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getAnnotations( expressionExperimentService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getAnnotations( expressionExperimentService ), sr );
     }
 
     /**
@@ -176,11 +172,6 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        if ( ee == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    datasetArg.getNullCause() );
-            throw new GemmaApiException( errorBody );
-        }
         return outputDataFile( ee, filterData.getValue() );
     }
 
@@ -199,11 +190,6 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        if ( ee == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    datasetArg.getNullCause() );
-            throw new GemmaApiException( errorBody );
-        }
         return outputDesignFile( ee );
     }
 

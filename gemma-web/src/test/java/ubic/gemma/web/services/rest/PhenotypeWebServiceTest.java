@@ -77,14 +77,14 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
         }
     }
 
-    @Test
-    public void test1() {
-        JSONArray response = pws.findPhenotypeGenes( 1L, "http://purl.obolibrary.org/obo/DOID_2531" );
-        assertTrue( response.toString().contains( "http://purl.obolibrary.org/obo/DOID_2531" ) );
-        assertTrue( response.toString().contains( "RAT1" ) );
-
-        System.err.println( response.toString( 4 ) );
-    }
+//    @Test
+//    public void test1() {
+//        JSONArray response = pws.findPhenotypeGenes( 1L, "http://purl.obolibrary.org/obo/DOID_2531" );
+//        assertTrue( response.toString().contains( "http://purl.obolibrary.org/obo/DOID_2531" ) );
+//        assertTrue( response.toString().contains( "RAT1" ) );
+//
+//        System.err.println( response.toString( 4 ) );
+//    }
 
     private void createExternalDatabase() {
         ExternalDatabase externalDatabase = ExternalDatabase.Factory.newInstance();

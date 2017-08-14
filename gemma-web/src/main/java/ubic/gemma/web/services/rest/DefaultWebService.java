@@ -29,7 +29,7 @@ public class DefaultWebService extends WebService {
     public ResponseDataObject all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code404( ERR_MSG_UNMAPPED_PATH, sr );
+        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
 }

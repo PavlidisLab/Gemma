@@ -11,12 +11,12 @@ import javax.ws.rs.core.Response;
  */
 abstract class MalformableArg {
 
-    private final boolean malComposed;
+    private final boolean malformed;
     private String errorMessage = "";
     private Exception exception;
 
     MalformableArg() {
-        this.malComposed = false;
+        this.malformed = false;
     }
 
     /**
@@ -26,7 +26,7 @@ abstract class MalformableArg {
      * @param exception    the exception that the client should be informed about.
      */
     MalformableArg( String errorMessage, Exception exception ) {
-        this.malComposed = true;
+        this.malformed = true;
         this.exception = exception;
         this.errorMessage = errorMessage;
     }
@@ -36,7 +36,7 @@ abstract class MalformableArg {
      * exception using the information provided in the constructor.
      */
     void checkMalformed() {
-        if ( this.malComposed ) {
+        if ( this.malformed ) {
             WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );
             WellComposedErrorBody.addExceptionFields( body, this.exception );
             throw new GemmaApiException( body );
