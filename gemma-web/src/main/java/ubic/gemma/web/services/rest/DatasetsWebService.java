@@ -92,7 +92,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves single dataset based on the given identifier.
+     * Retrieves single dataset based on the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -109,7 +109,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves platforms for the given experiment.
+     * Retrieves platforms for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -126,7 +126,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves the samples for given experiment.
+     * Retrieves the samples for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -143,7 +143,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves the annotations for given experiment.
+     * Retrieves the differential analysis results for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -165,7 +165,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves the annotations for given experiment.
+     * Retrieves the annotations for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -182,7 +182,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves the data for given experiment.
+     * Retrieves the data for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -202,7 +202,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves the design for given experiment.
+     * Retrieves the design for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.

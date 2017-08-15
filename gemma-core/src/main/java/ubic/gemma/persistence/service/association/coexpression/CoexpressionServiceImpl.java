@@ -73,23 +73,11 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return this.coexpressionDao.countLinks( gene, ee );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CoexpressionService#countOldLinks(java.util.Collection)
-     */
     @Override
     public Map<Gene, Integer> countOldLinks( Collection<Gene> genes ) {
         return this.coexpressionDao.countOldLinks( genes );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#createOrUpdate(ubic.gemma.model.expression
-     * .experiment.BioAssaySet, java.util.Collection, boolean)
-     */
     @Override
     @Transactional
     public void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
@@ -108,25 +96,11 @@ public class CoexpressionServiceImpl implements CoexpressionService {
                 .removeFromQueue( genes, CoexpressionQueryUtils.getGeneLinkClassName( genesTested.iterator().next() ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#deleteLinks(ubic.gemma.model.expression
-     * .experiment.BioAssaySet)
-     */
     @Override
     public void deleteLinks( BioAssaySet experiment ) {
         this.coexpressionDao.deleteLinks( this.experimentDao.getTaxon( experiment ), experiment );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CoexpressionService#findCoexpressionRelationships(ubic.gemma.model.
-     * genome.Gene, java.util.Collection, int, boolean)
-     */
     @Override
     @Transactional(readOnly = true)
     public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int maxResults,
@@ -141,13 +115,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findCoexpressionRelationships(ubic.gemma
-     * .model.genome.Gene, java.util.Collection, int, int)
-     */
     @Override
     public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int stringency,
             int maxResults, boolean quick ) {
@@ -158,13 +125,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return r.containsKey( gene.getId() ) ? r.get( gene.getId() ) : new ArrayList<CoexpressionValueObject>();
     }
 
-    /*
-     * Find coexpression links for the genes that are common to all the given datasets
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findCoexpressionRelationships(java.util
-     * .Collection, java.util.Collection, int)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
@@ -184,13 +144,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findCoexpressionRelationships(ubic.gemma
-     * .model.genome.Taxon, java.util.Collection, java.util.Collection, int, int)
-     */
     @Override
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
@@ -204,13 +157,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findInterCoexpressionRelationship(java
-     * .util.Collection, java.util.Collection, int)
-     */
     @Override
     public Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, boolean quick ) {
@@ -304,10 +250,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     }
 
-    /**
-     * @param forRanks
-     * @return
-     */
     private Map<Long, List<Double>> computeRelativeRanks( TreeMap<Integer, Map<Long, Integer>> forRanks ) {
         Map<Long, List<Double>> relRanks = new HashMap<>();
         for ( Integer support : forRanks.keySet() ) {
@@ -335,8 +277,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     /**
      * Check for results which were not in the cache, and which were not cached; make sure we fully query them.
      *
-     * @param t
-     * @param links
      */
     private void possiblyAddToCacheQueue( Taxon t, Map<Long, List<CoexpressionValueObject>> links ) {
 
@@ -365,11 +305,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return this.coexpressionDao.updateNodeDegree( gene, nd );
     }
 
-    /**
-     * @param g
-     * @param forRanksPos
-     * @param forRanksNeg
-     */
     private void updateNodeDegree( Gene g, TreeMap<Integer, Map<Long, Integer>> forRanksPos,
             TreeMap<Integer, Map<Long, Integer>> forRanksNeg ) {
         GeneCoexpressionNodeDegreeValueObject updatedVO = this.updateNodeDegree( g );

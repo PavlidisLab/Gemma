@@ -21,15 +21,8 @@ import java.util.Collection;
  * Gene2GeneCoexpressionService.
  * 
  * @author Paul
- * @version $Id$
  */
 public interface GeneCoexpressionSearchService {
-
-    /**
-     * The smallest support value dealt with by the system. (in the old days, this was 2, but it's a bit of an artifact
-     * now)
-     */
-    public static final int MINIMUM_SUPPORT = 1;
 
     /**
      * @param inputEeIds Expression experiments ids to consider; if null, use all available data.
@@ -40,20 +33,16 @@ public interface GeneCoexpressionSearchService {
      *        one). Otherwise, coexpression with genes 'external' to the queries will be returned.
      * @return CoexpressionMetaValueObject in which the results are already populated and sorted.
      */
-    public abstract CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds,
-            Collection<Long> genes, int stringency, int maxResults, boolean queryGenesOnly );
+    CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds, Collection<Long> genes, int stringency,
+            int maxResults, boolean queryGenesOnly );
 
     /**
      * Skips some of the postprocessing steps, use in situations where raw speed is more important than details.
      * 
      * @param inputEeIds Expression experiments ids to consider; if null or empty, use all available data.
-     * @param genes
-     * @param stringency
-     * @param maxResults
-     * @param queryGenesOnly
      * @return CoexpressionMetaValueObject in which the results are already populated and sorted.
      */
-    public abstract CoexpressionMetaValueObject coexpressionSearchQuick( Collection<Long> inputEeIds,
-            Collection<Long> genes, int stringency, int maxResults, boolean queryGenesOnly );
+    CoexpressionMetaValueObject coexpressionSearchQuick( Collection<Long> inputEeIds, Collection<Long> genes,
+            int stringency, int maxResults, boolean queryGenesOnly );
 
 }
