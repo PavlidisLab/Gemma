@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -46,6 +47,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
+    private DifferentialExpressionResultService differentialExpressionResultService;
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionDataFileService expressionDataFileService;
     private ArrayDesignService arrayDesignService;
@@ -61,9 +63,11 @@ public class DatasetsWebService extends WebServiceWithFiltering {
      * Constructor for service autowiring
      */
     @Autowired
-    public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
+    public DatasetsWebService( DifferentialExpressionResultService differentialExpressionResultService,
+            ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService ) {
+        this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
         this.arrayDesignService = arrayDesignService;
@@ -136,6 +140,28 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService ), sr );
+    }
+
+    /**
+     * Retrieves the annotations for given experiment.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/analyses/differential")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetDiffAnalysis( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @QueryParam("qValueThreshold") @DefaultValue("") DoubleArg qValueThreshold, // Required
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( differentialExpressionResultService
+                .getVOsForExperiment( datasetArg.getPersistentObject( expressionExperimentService ),
+                        qValueThreshold.getValue(), offset.getValue(), limit.getValue() ), sr );
     }
 
     /**

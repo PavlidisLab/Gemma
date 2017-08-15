@@ -36,6 +36,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     private static final long serialVersionUID = -1342753625018841735L;
     private DatabaseEntry accession;
+    private CurationDetails curationDetails;
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
     private MeanVarianceRelation meanVarianceRelation;
@@ -46,9 +47,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
     private String shortName;
     private String source;
-    private CurationDetails curationDetails;
 
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass") // It does check, just not the classic way.
     @Override
     public boolean equals( Object object ) {
         if ( object == null )
@@ -65,7 +65,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
             return this.getShortName().equals( that.getShortName() );
         }
         return false;
-
     }
 
     @Override
@@ -77,15 +76,12 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
             return this.getShortName().hashCode();
         }
         return result;
-
     }
 
     @Override
     public String toString() {
         return super.toString() + " (" + this.getShortName() + ")";
     }
-
-
 
     public DatabaseEntry getAccession() {
         return this.accession;
@@ -206,8 +202,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     public void setCurationDetails( CurationDetails curationDetails ) {
         this.curationDetails = curationDetails;
     }
-
-
 
     /**
      * Constructs new instances of {@link ExpressionExperiment}.

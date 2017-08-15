@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -38,6 +39,10 @@ import java.util.Map;
  */
 public interface DifferentialExpressionResultService extends BaseService<DifferentialExpressionAnalysisResult> {
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee, double qValueThreshold,
+            int offset, int limit );
+
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
      * experiments
@@ -50,7 +55,6 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
      * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
      * {@link ExpressionExperiment}.
      */
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
 
@@ -103,6 +107,9 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
      * Fetch the analysis associated with a result set.
      */
     DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
+
+    Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExperimentalFactor> getExperimentalFactors(

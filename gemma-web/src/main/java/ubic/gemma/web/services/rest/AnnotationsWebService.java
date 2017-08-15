@@ -99,7 +99,7 @@ public class AnnotationsWebService extends WebService {
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject search( // Params:
-            @PathParam("query") String query, // Required, part of url
+            @PathParam("query") String query, // Required
             @QueryParam("taxon") @DefaultValue("") TaxonArg<Object> taxonArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {

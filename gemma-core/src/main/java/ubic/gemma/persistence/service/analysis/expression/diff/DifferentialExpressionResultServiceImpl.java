@@ -24,8 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.AbstractService;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,12 +38,25 @@ import java.util.Map;
  * @see DifferentialExpressionResultService
  */
 @Service
-public class DifferentialExpressionResultServiceImpl extends DifferentialExpressionResultServiceBase {
+public class DifferentialExpressionResultServiceImpl extends AbstractService<DifferentialExpressionAnalysisResult>
+        implements DifferentialExpressionResultService {
+
+    final DifferentialExpressionResultDao DERDao;
+    final ExpressionAnalysisResultSetDao EARDao;
 
     @Autowired
     public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao,
             ExpressionAnalysisResultSetDao EARDao ) {
-        super( DERDao, EARDao );
+        super( DERDao );
+        this.DERDao = DERDao;
+        this.EARDao = EARDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee,
+            double qValueThreshold, int offset, int limit ) {
+        return this.DERDao.getVOsForExperiment( ee, qValueThreshold, offset, limit );
     }
 
     @Override
@@ -139,8 +154,7 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw(
-            Collection<DifferentialExpressionAnalysisResult> results ) {
+    public void thaw( Collection<DifferentialExpressionAnalysisResult> results ) {
         this.DERDao.thaw( results );
     }
 
@@ -160,7 +174,12 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     @Transactional(readOnly = true)
     public void thawLite( ExpressionAnalysisResultSet resultSet ) {
         this.EARDao.thawLite( resultSet );
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
+        return this.EARDao.thawWithoutContrasts( resultSet );
     }
 
     @Override
@@ -170,13 +189,15 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     }
 
     @Override
-    protected Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
+    @Transactional(readOnly = true)
+    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
             Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
         return this.DERDao.getExperimentalFactors( differentialExpressionAnalysisResults );
     }
 
     @Override
-    protected Collection<ExperimentalFactor> handleGetExperimentalFactors(
+    @Transactional(readOnly = true)
+    public Collection<ExperimentalFactor> getExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
         return this.DERDao.getExperimentalFactors( differentialExpressionAnalysisResult );
     }

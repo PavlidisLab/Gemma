@@ -22,6 +22,7 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseDao;
@@ -43,6 +44,9 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
+
+    Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee, double qValueThreshold,
+            int offset, int limit );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
