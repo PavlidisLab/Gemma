@@ -17,6 +17,7 @@ package ubic.gemma.web.services.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -45,6 +46,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
 
+    private GeneService geneService;
     private ArrayDesignService arrayDesignService;
     private ExpressionExperimentService expressionExperimentService;
     private CompositeSequenceService compositeSequenceService;
@@ -59,9 +61,10 @@ public class PlatformsWebService extends WebServiceWithFiltering {
      * Constructor for service autowiring
      */
     @Autowired
-    public PlatformsWebService( ArrayDesignService arrayDesignService,
+    public PlatformsWebService( GeneService geneService, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
             CompositeSequenceService compositeSequenceService ) {
+        this.geneService = geneService;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;
         this.compositeSequenceService = compositeSequenceService;
@@ -154,7 +157,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
      * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probeArg: [a-zA-Z0-9_\\.]+}/genes")
+    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probeArg: [a-zA-Z0-9_%2F\\.-]+}/genes")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformElementGenes( // Params:
@@ -165,8 +168,8 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         probeArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
-        return Responder.autoCode(
-                compositeSequenceService.getGenes( probeArg.getPersistentObject( compositeSequenceService ) ), sr );
+        return Responder.autoCode( geneService.loadValueObjects(
+                compositeSequenceService.getGenes( probeArg.getPersistentObject( compositeSequenceService ), offset.getValue(), limit.getValue() ) ), sr );
     }
 
     /**

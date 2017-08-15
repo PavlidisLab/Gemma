@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
@@ -44,17 +45,19 @@ import java.util.*;
  * @see CompositeSequenceService
  */
 @Service
-public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
+public class CompositeSequenceServiceImpl extends VoEnabledService<CompositeSequence, CompositeSequenceValueObject> implements CompositeSequenceService {
 
     private final BioSequenceService bioSequenceService;
     private final GeneProductService geneProductService;
     private final BlatResultService blatResultService;
+    private final CompositeSequenceDao compositeSequenceDao;
 
     @Autowired
     public CompositeSequenceServiceImpl( CompositeSequenceDao compositeSequenceDao,
             BioSequenceService bioSequenceService, GeneProductService geneProductService,
             BlatResultService blatResultService ) {
-        super( compositeSequenceDao );
+        super(compositeSequenceDao);
+        this.compositeSequenceDao = compositeSequenceDao;
         this.bioSequenceService = bioSequenceService;
         this.geneProductService = geneProductService;
         this.blatResultService = blatResultService;
@@ -89,8 +92,6 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
                     geneProductService.thaw( bs2gp.getGeneProduct() ) );
 
             GeneValueObject gene = new GeneValueObject( bs2gp.getGeneProduct().getGene() );
-
-            assert gene != null;
 
             BlatResultValueObject blatResult = null;
 
@@ -138,38 +139,38 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
     }
 
     @Override
-    protected Collection<CompositeSequence> handleFindByBioSequence( BioSequence bioSequence ) {
+    public Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence ) {
         return this.compositeSequenceDao.findByBioSequence( bioSequence );
     }
 
     @Override
-    protected Collection<CompositeSequence> handleFindByBioSequenceName( String name ) {
+    public Collection<CompositeSequence> findByBioSequenceName( String name ) {
         return this.compositeSequenceDao.findByBioSequenceName( name );
     }
 
     @Override
-    protected Collection<CompositeSequence> handleFindByGene( Gene gene ) {
+    public Collection<CompositeSequence> findByGene( Gene gene ) {
         return this.compositeSequenceDao.findByGene( gene );
     }
 
     @Override
-    protected Collection<CompositeSequenceValueObject> handleLoadValueObjectsForGene( Gene gene, int start,
+    public Collection<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start,
             int limit ) {
         return loadValueObjects( this.compositeSequenceDao.findByGene( gene, start, limit ) );
     }
 
     @Override
-    protected Collection<CompositeSequence> handleFindByGene( Gene gene, ArrayDesign arrayDesign ) {
+    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
         return this.compositeSequenceDao.findByGene( gene, arrayDesign );
     }
 
     @Override
-    protected CompositeSequence handleFindByName( ArrayDesign arrayDesign, String name ) {
+    public CompositeSequence findByName( ArrayDesign arrayDesign, String name ) {
         return this.compositeSequenceDao.findByName( arrayDesign, name );
     }
 
     @Override
-    protected Collection<CompositeSequence> handleFindByName( String name ) {
+    public Collection<CompositeSequence> findByName( String name ) {
         return this.compositeSequenceDao.findByName( name );
     }
 
@@ -178,7 +179,7 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
      * collection of composite sequences as a HashSet, preserving order based on insertion.
      */
     @Override
-    protected Collection<CompositeSequence> handleFindByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
+    public Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns ) {
         LinkedHashMap<String, CompositeSequence> compositeSequencesMap = new LinkedHashMap<>();
 
@@ -203,39 +204,44 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
     }
 
     @Override
-    protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection<CompositeSequence> sequences ) {
+    public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> sequences ) {
         return this.compositeSequenceDao.getGenes( sequences );
     }
 
     @Override
-    protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) {
-        return this.compositeSequenceDao.getGenes( compositeSequence );
+    public Collection<Gene> getGenes( CompositeSequence compositeSequence ) {
+        return this.getGenes( compositeSequence, 0, -1 );
     }
 
     @Override
-    protected Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
+    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
+        return this.compositeSequenceDao.getGenes( compositeSequence, offset, limit );
+    }
+
+    @Override
+    public Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences ) {
         return this.compositeSequenceDao.getGenesWithSpecificity( compositeSequences );
     }
 
     @Override
-    protected Collection<Object[]> handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
+    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
         return this.compositeSequenceDao.getRawSummary( arrayDesign, numResults );
     }
 
     @Override
-    protected Collection<Object[]> handleGetRawSummary( Collection<CompositeSequence> compositeSequences,
+    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences,
             Integer numResults ) {
         return this.compositeSequenceDao.getRawSummary( compositeSequences, numResults );
     }
 
     @Override
-    protected Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
+    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
         return this.compositeSequenceDao.getRawSummary( compositeSequence, numResults );
     }
 
     @Override
-    protected void handleRemove( Collection<CompositeSequence> sequencesToDelete ) {
+    public void remove( Collection<CompositeSequence> sequencesToDelete ) {
         // check the collection to make sure it contains no transitive entities (just check the id and make sure its
         // non-null
         Collection<CompositeSequence> filteredSequence = new Vector<>();

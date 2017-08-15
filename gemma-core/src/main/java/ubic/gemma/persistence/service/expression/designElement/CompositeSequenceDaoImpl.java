@@ -209,7 +209,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     @Override
     protected Map<CompositeSequence, Collection<Gene>> handleGetGenes(
             Collection<CompositeSequence> compositeSequences ) {
-        Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
+        Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<>();
 
         int BATCH_SIZE = 2000;
 
@@ -225,13 +225,13 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             returnVal.put( cs, new HashSet<Gene>() );
         }
 
-        List<Object> csGene = new ArrayList<Object>();
+        List<Object> csGene = new ArrayList<>();
         Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
         queryObject.addScalar( "cs", new LongType() );
         queryObject.addScalar( "gene", new LongType() );
 
-        Collection<Long> csIdBatch = new HashSet<Long>();
+        Collection<Long> csIdBatch = new HashSet<>();
         for ( CompositeSequence cs : compositeSequences ) {
             csIdBatch.add( cs.getId() );
 
@@ -253,8 +253,8 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         watch.start();
 
         int count = 0;
-        Collection<Long> genesToFetch = new HashSet<Long>();
-        Map<Long, Collection<Long>> cs2geneIds = new HashMap<Long, Collection<Long>>();
+        Collection<Long> genesToFetch = new HashSet<>();
+        Map<Long, Collection<Long>> cs2geneIds = new HashMap<>();
 
         for ( Object object : csGene ) {
             Object[] ar = ( Object[] ) object;
@@ -278,8 +278,8 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                     "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size() + " genes." );
 
         // fetch the genes
-        Collection<Long> batch = new HashSet<Long>();
-        Collection<Gene> genes = new HashSet<Gene>();
+        Collection<Long> batch = new HashSet<>();
+        Collection<Gene> genes = new HashSet<>();
         String geneQuery = "from Gene g where g.id in ( :gs )";
 
         org.hibernate.Query geneQueryObject = this.getSessionFactory().getCurrentSession().createQuery( geneQuery )
@@ -303,7 +303,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         if ( log.isDebugEnabled() )
             log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
 
-        Map<Long, Gene> geneIdMap = new HashMap<Long, Gene>();
+        Map<Long, Gene> geneIdMap = new HashMap<>();
         for ( Gene g : genes ) {
             Hibernate.initialize( g );
             Long id = g.getId();
@@ -334,14 +334,16 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     }
 
     @Override
-    protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) {
+    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
         // gets all kinds of associations, not just blat.
         final String queryString =
                 "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
                         + "GeneProductImpl gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
                         + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "cs", compositeSequence ).setFirstResult( offset ).setMaxResults( limit ).list();
 
-        return this.getHibernateTemplate().findByNamedParam( queryString, "cs", compositeSequence );
     }
 
     @Override
@@ -349,7 +351,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             Collection<CompositeSequence> compositeSequences ) {
 
         log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size() + " composite sequences" );
-        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<CompositeSequence, Collection<BioSequence2GeneProduct>>();
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<>();
 
         BatchIterator<CompositeSequence> it = BatchIterator.batches( compositeSequences, PROBE_TO_GENE_MAP_BATCH_SIZE );
 
@@ -406,7 +408,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         if ( compositeSequences == null || compositeSequences.size() == 0 )
             return null;
 
-        Collection<CompositeSequence> compositeSequencesForQuery = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> compositeSequencesForQuery = new HashSet<>();
 
         /*
          * Note that running this without a limit is dangerous. If the sequence is an unmasked repeat, then we can get
@@ -488,14 +490,14 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     protected Collection<CompositeSequence> handleLoad( Collection<Long> ids ) {
 
         if ( ids == null || ids.size() == 0 ) {
-            return new HashSet<CompositeSequence>();
+            return new HashSet<>();
         }
 
         final String queryString = "select cs from CompositeSequence cs where cs.id in (:ids)";
         org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         int batchSize = 2000;
-        Collection<Long> batch = new HashSet<Long>();
-        Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
+        Collection<Long> batch = new HashSet<>();
+        Collection<CompositeSequence> results = new HashSet<>();
         for ( Long id : ids ) {
             batch.add( id );
 
@@ -670,7 +672,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
     @Override
     public Collection<CompositeSequenceValueObject> loadValueObjects( Collection<CompositeSequence> entities ) {
-        Collection<CompositeSequenceValueObject> vos = new LinkedHashSet<CompositeSequenceValueObject>();
+        Collection<CompositeSequenceValueObject> vos = new LinkedHashSet<>();
         for ( CompositeSequence e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }

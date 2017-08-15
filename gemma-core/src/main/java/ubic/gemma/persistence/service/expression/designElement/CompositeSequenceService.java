@@ -84,6 +84,8 @@ public interface CompositeSequenceService
 
     Collection<Gene> getGenes( CompositeSequence compositeSequence );
 
+    Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
+
     /**
      * Returns a map of CompositeSequences to collection of BioSequence2GeneProducts at each location.
      */

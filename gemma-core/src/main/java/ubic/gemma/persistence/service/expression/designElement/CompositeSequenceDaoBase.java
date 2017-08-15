@@ -33,10 +33,10 @@ import java.util.Map;
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ubic.gemma.model.expression.designElement.CompositeSequence</code>.
+ * <code>CompositeSequence</code>.
  * </p>
  *
- * @see ubic.gemma.model.expression.designElement.CompositeSequence
+ * @see CompositeSequence
  */
 public abstract class CompositeSequenceDaoBase extends VoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
         implements CompositeSequenceDao {
@@ -77,8 +77,8 @@ public abstract class CompositeSequenceDaoBase extends VoEnabledDao<CompositeSeq
 
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.expression.designElement.CompositeSequence"
-                            + "' was found for name '" + name + "' and array design '" + arrayDesign.getId() + "'" );
+                    "More than one instance of 'CompositeSequence" + "' was found for name '" + name
+                            + "' and array design '" + arrayDesign.getId() + "'" );
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }
@@ -91,15 +91,6 @@ public abstract class CompositeSequenceDaoBase extends VoEnabledDao<CompositeSeq
     @Override
     public Map<CompositeSequence, Collection<Gene>> getGenes( final Collection<CompositeSequence> compositeSequences ) {
         return this.handleGetGenes( compositeSequences );
-    }
-
-    /**
-     * @see CompositeSequenceDao#getGenes(ubic.gemma.model.expression.designElement.CompositeSequence)
-     */
-    @Override
-    public Collection<Gene> getGenes(
-            final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
-        return this.handleGetGenes( compositeSequence );
     }
 
     /**
@@ -124,9 +115,7 @@ public abstract class CompositeSequenceDaoBase extends VoEnabledDao<CompositeSeq
     }
 
     @Override
-    public Collection<Object[]> getRawSummary(
-            final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence,
-            final Integer numResults ) {
+    public Collection<Object[]> getRawSummary( final CompositeSequence compositeSequence, final Integer numResults ) {
         return this.handleGetRawSummary( compositeSequence, numResults );
     }
 
@@ -164,12 +153,6 @@ public abstract class CompositeSequenceDaoBase extends VoEnabledDao<CompositeSeq
             Collection<CompositeSequence> compositeSequences );
 
     /**
-     * Performs the core logic for {@link #getGenes(ubic.gemma.model.expression.designElement.CompositeSequence)}
-     */
-    protected abstract Collection<Gene> handleGetGenes(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
-
-    /**
      * Performs the core logic for {@link #getGenesWithSpecificity(Collection)}
      */
     protected abstract Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
@@ -190,10 +173,10 @@ public abstract class CompositeSequenceDaoBase extends VoEnabledDao<CompositeSeq
 
     /**
      * Performs the core logic for
-     * {@link #getRawSummary(ubic.gemma.model.expression.designElement.CompositeSequence, Integer)}
+     * {@link #getRawSummary(CompositeSequence, Integer)}
      */
-    protected abstract Collection<Object[]> handleGetRawSummary(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence, Integer numResults );
+    protected abstract Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence,
+            Integer numResults );
 
     /**
      * Performs the core logic for {@link #load(Collection)}

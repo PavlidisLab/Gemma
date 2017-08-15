@@ -9,15 +9,10 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  * Created by tesarst on 25/05/17.
  * Mutable argument type base class for Composite Sequence arguments.
  */
-public class CompositeSequenceArg
-        extends MutableArg<String, CompositeSequence, CompositeSequenceService, CompositeSequenceValueObject> {
+public abstract class CompositeSequenceArg<T>
+        extends MutableArg<T, CompositeSequence, CompositeSequenceService, CompositeSequenceValueObject> {
 
-    private ArrayDesign arrayDesign;
-
-    private CompositeSequenceArg( String s ) {
-        this.value = s;
-        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "name", "Composite Sequence" );
-    }
+    protected ArrayDesign arrayDesign;
 
     /**
      * Used by RS to parse value of request parameters.
@@ -27,13 +22,11 @@ public class CompositeSequenceArg
      */
     @SuppressWarnings("unused")
     public static CompositeSequenceArg valueOf( final String s ) {
-        return new CompositeSequenceArg( s );
-    }
-
-    @Override
-    public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
-        assert ( arrayDesign != null );
-        return check( this.value == null ? null : service.findByName( arrayDesign, this.value ) );
+        try {
+            return new CompositeSequenceIdArg( Long.parseLong( s.trim() ) );
+        } catch ( NumberFormatException e ) {
+            return new CompositeSequenceNameArg( s );
+        }
     }
 
     /**
@@ -42,4 +35,7 @@ public class CompositeSequenceArg
     public void setPlatform( ArrayDesign arrayDesign ) {
         this.arrayDesign = arrayDesign;
     }
+
+    @Override
+    public abstract CompositeSequence getPersistentObject( CompositeSequenceService service );
 }
