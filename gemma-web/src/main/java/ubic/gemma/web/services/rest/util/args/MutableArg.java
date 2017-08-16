@@ -55,7 +55,7 @@ public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnab
      */
     public final VO getValueObject( S service ) {
         O object = this.value == null ? null : this.getPersistentObject( service );
-        return service.loadValueObject( object );
+        return check(service.loadValueObject( object ));
     }
 
     /**
@@ -68,20 +68,43 @@ public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnab
     public abstract O getPersistentObject( S service );
 
     /**
-     * Checks whether the given response object is null, and throws an appropriate exception if necessary.
+     * Checks whether the given object is null, and throws an appropriate exception if necessary.
      *
-     * @param response the response object that should be checked for being null.
+     * @param response the object that should be checked for being null.
      * @return the same object as given.
      * @throws GemmaApiException if the given response is null.
      */
     protected O check( O response ) {
         if ( response == null ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    ERROR_MSG_ENTITY_NOT_FOUND );
-            WellComposedErrorBody.addExceptionFields( errorBody, new EntityNotFoundException( getNullCause() ) );
-            throw new GemmaApiException( errorBody );
+            throwNotFound();
         }
         return response;
+    }
+
+    /**
+     * Checks whether the response Value Object is null, and throws an appropriate exception if necessary.
+     * This double check on the VO is necessary, as some services will allow to return the persistent object, but not
+     * the value object (interceptors have different rules for them).
+     *
+     * @param response the Value Object that should be checked for being null.
+     * @return the same object as given.
+     * @throws GemmaApiException if the given response is null.
+     */
+    protected VO check( VO response ) {
+        if ( response == null ) {
+            throwNotFound();
+        }
+        return response;
+    }
+
+    /**
+     * Throws a GemmaApiException informing that the object this argument represents was not found.
+     */
+    private void throwNotFound() {
+        WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                ERROR_MSG_ENTITY_NOT_FOUND );
+        WellComposedErrorBody.addExceptionFields( errorBody, new EntityNotFoundException( getNullCause() ) );
+        throw new GemmaApiException( errorBody );
     }
 
 }
