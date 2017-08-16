@@ -12,8 +12,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collection;
 
 /**
- * Created by tesarst on 24/05/17.
- * Mutable argument type base class for dataset (ExpressionExperiment) API
+ * Mutable argument type base class for dataset (ExpressionExperiment) API.
+ *
+ * @author tesarst
  */
 public abstract class DatasetArg<T>
         extends MutableArg<T, ExpressionExperiment, ExpressionExperimentService, ExpressionExperimentValueObject> {

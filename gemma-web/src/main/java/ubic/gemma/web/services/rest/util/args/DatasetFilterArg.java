@@ -9,8 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created by tesarst on 17/07/17.
  * Filter argument for ExpressionExperiment filtering.
+ *
+ * @author tesarst
  */
 public class DatasetFilterArg extends FilterArg {
 

@@ -3,6 +3,9 @@ package ubic.gemma.web.services.rest.util.args;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
+/**
+ * Composite Sequence argument for CS ID.
+ */
 public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     CompositeSequenceIdArg( long s ) {

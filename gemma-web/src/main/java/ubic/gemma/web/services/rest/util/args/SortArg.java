@@ -3,8 +3,9 @@ package ubic.gemma.web.services.rest.util.args;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 
 /**
- * Created by tesarst on 25/05/17.
  * Class representing an API argument that should be an integer.
+ *
+ * @author tesarst
  */
 public class SortArg extends MalformableArg {
     private static final String ERROR_MSG =
@@ -46,16 +47,6 @@ public class SortArg extends MalformableArg {
         }
     }
 
-    private static Boolean parseBoolean( char c ) {
-        if ( c == '+' ) {
-            return true;
-        }
-        if ( c == '-' ) {
-            return false;
-        }
-        return null;
-    }
-
     /**
      * @return the field to sort by. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.
      */
@@ -70,6 +61,21 @@ public class SortArg extends MalformableArg {
     public boolean isAsc() {
         this.checkMalformed();
         return asc;
+    }
+
+    /**
+     * Decides whether the given char represents a true or false.
+     * @param c '+' or '-' character.
+     * @return true if character was '+', false if it was '-'. Null in any other case.
+     */
+    private static Boolean parseBoolean( char c ) {
+        if ( c == '+' ) {
+            return true;
+        }
+        if ( c == '-' ) {
+            return false;
+        }
+        return null;
     }
 
 }

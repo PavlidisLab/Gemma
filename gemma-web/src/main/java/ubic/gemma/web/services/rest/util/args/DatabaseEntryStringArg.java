@@ -4,8 +4,9 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**
- * Created by tesarst on 25/05/17.
  * String argument type for DatabaseEntry API, Can also be null.
+ *
+ * @author tesarst
  */
 public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 

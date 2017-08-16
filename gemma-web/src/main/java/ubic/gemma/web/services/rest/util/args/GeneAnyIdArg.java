@@ -1,9 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -15,7 +12,8 @@ import java.util.Collections;
 /**
  * Base class for GeneArg representing any of the identifiers of a Gene.
  *
- * @param <T>
+ * @param <T> the type of the Gene Identifier.
+ * @author tesarst
  */
 public abstract class GeneAnyIdArg<T> extends GeneArg<T> {
 

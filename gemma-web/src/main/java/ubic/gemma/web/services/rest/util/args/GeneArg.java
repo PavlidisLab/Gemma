@@ -19,8 +19,9 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * Created by tesarst on 16/05/17.
- * Mutable argument type base class for Gene API
+ * Mutable argument type base class for Gene API.
+ *
+ * @author tesarst
  */
 public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneValueObject> {
 
@@ -115,16 +116,32 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneVa
         return geneOntologyService.getValueObjects( gene );
     }
 
+    /**
+     * @return the name of the identifier that the GeneArg represents.
+     */
     abstract String getIdentifierName();
 
+    /**
+     * @return the default null cause error message.
+     */
     String getDefaultError() {
         return String.format( ERROR_MSG_DEFAULT, getIdentifierName(), getIdentifierName() );
     }
 
+    /**
+     * @return the error message for when the null cause is gene not existing on a taxon.
+     */
     String getTaxonError() {
         return String.format( ERROR_MSG_TAXON, getIdentifierName() );
     }
 
+    /**
+     * Lists Gene Value Objects of all genes that this GeneArg represents, discarding any genes that are not on the
+     * given taxon.
+     * @param service the service to use to retrieve the Gene Value Objects.
+     * @param taxon the taxon to limit the genes search to.
+     * @return collection of Gene Value Objects.
+     */
     private Collection<GeneValueObject> getValueObjects( GeneService service, Taxon taxon ) {
         Collection<GeneValueObject> genes = this.getValueObjects( service );
         Collection<GeneValueObject> result = new ArrayList<>( genes.size() );

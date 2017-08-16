@@ -4,8 +4,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
- * Created by tesarst on 24/05/17.
  * Long argument type for dataset API, referencing the Dataset ID.
+ *
+ * @author tesarst
  */
 public class DatasetIdArg extends DatasetArg<Long> {
 

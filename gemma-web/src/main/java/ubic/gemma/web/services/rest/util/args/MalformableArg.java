@@ -6,8 +6,10 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import javax.ws.rs.core.Response;
 
 /**
- * Created by tesarst on 26/05/17.
- * Base class for non Object-specific functionality argument types.
+ * Base class for non Object-specific functionality argument types, that can be malformed on input (E.g an argument
+ * representing a number was a non-numeric string in the request).
+ *
+ * @author tesarst
  */
 abstract class MalformableArg {
 

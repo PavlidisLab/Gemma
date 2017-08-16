@@ -4,8 +4,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
- * Created by tesarst on 16/05/17.
  * Long argument type for taxon API, referencing the Taxon ID.
+ *
+ * @author tesarst
  */
 public class TaxonIdArg extends TaxonArg<Long> {
 

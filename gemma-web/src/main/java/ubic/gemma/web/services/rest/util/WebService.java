@@ -13,7 +13,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * Created by tesarst on 18/05/17.
  * A class containing common functionality for all other API services. E.g. a fallback mapping that presents a 404
  * response code with appropriate payload.
  *
@@ -25,6 +24,9 @@ public abstract class WebService {
     protected static final Log log = LogFactory.getLog( WebService.class.getName() );
     protected static final String API_VERSION = "2.0";
 
+    /**
+     * Fallback for unmapped GET calls
+     */
     @GET
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -36,6 +38,9 @@ public abstract class WebService {
         return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
+    /**
+     * Fallback for unmapped POST calls
+     */
     @POST
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -47,6 +52,10 @@ public abstract class WebService {
         return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
+
+    /**
+     * Fallback for unmapped DELETE calls
+     */
     @DELETE
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -58,6 +67,9 @@ public abstract class WebService {
         return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
+    /**
+     * Fallback for unmapped PUT calls
+     */
     @PUT
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)

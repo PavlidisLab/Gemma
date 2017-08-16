@@ -19,8 +19,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by tesarst on 16/05/17.
  * Mutable argument type base class for Taxon API
+ *
+ * @author tesarst
  */
 public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, TaxonValueObject> {
 

@@ -6,8 +6,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 /**
- * Created by tesarst on 25/05/17.
  * Mutable argument type base class for Composite Sequence arguments.
+ *
+ * @author tesarst
  */
 public abstract class CompositeSequenceArg<T>
         extends MutableArg<T, CompositeSequence, CompositeSequenceService, CompositeSequenceValueObject> {

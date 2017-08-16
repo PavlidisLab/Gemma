@@ -5,8 +5,9 @@ import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**
- * Created by tesarst on 25/05/17.
- * Mutable argument type base class for DatabaseEntry API
+ * Mutable argument type base class for DatabaseEntry API.
+ *
+ * @author tesarst
  */
 public abstract class DatabaseEntryArg<T>
         extends MutableArg<T, DatabaseEntry, DatabaseEntryService, DatabaseEntryValueObject> {

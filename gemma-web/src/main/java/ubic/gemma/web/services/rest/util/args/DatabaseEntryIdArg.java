@@ -4,8 +4,9 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**
- * Created by tesarst on 25/05/17.
  * Long argument type for DatabaseEntry API, referencing the Taxon ID.
+ *
+ * @author tesarst
  */
 public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 

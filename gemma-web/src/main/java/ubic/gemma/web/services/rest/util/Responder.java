@@ -6,10 +6,10 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 
 /**
- * Created by tesarst on 17/05/17.
  * Handles setting of the response status code and composing a proper payload structure.
+ *
+ * @author tesarst
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // FIXME remove when API is done.
 public class Responder {
 
     private static final String DEFAULT_ERR_MSG_NULL_OBJECT = "Requested resource was not found in our database.";
@@ -64,7 +64,9 @@ public class Responder {
      * @param servletResponse the object to set the appropriate response code on.
      * @return {@link ResponseDataObject} always null, as the response payload for code 204 has to be empty.
      */
-    @SuppressWarnings("SameReturnValue") // Intentional behavior - has to be consistent with other methods.
+    @SuppressWarnings({ "SameReturnValue", "WeakerAccess", "unused" })
+    // Same return value: Intentional behavior - has to be consistent with other methods.
+    // Weaker access, unused - we currently only have GET methods, none of which uses 204. Keeping the method for future use.
     public static ResponseDataObject code204( HttpServletResponse servletResponse ) {
         sendHeaders( Response.Status.NO_CONTENT, servletResponse );
         return null;
@@ -112,21 +114,21 @@ public class Responder {
      * @param servletResponse the object to set the appropriate response code on.
      *                        return see {@link this#code(Response.Status, Object, HttpServletResponse)}
      */
+    @SuppressWarnings("unused") // Keeping the method in case we need it handy on short notice.
     public static ResponseDataObject code503( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.SERVICE_UNAVAILABLE;
         return code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
 
     /**
-     * Tries to guess the code of the response based on the given arguments, and create a {@link ResponseErrorObject} if necessary.
-     * Code defaults to 200 - OK, even for empty collections and arrays.
-     * Common recognised codes:
-     * toReturn is null: 404 - Not found. - use {@link this#code204(HttpServletResponse)} if you wish to set 204 - No content instead
-     * toReturn is an instance of {@link WellComposedErrorBody}: reads the code from the object.
+     * Tries to guess the code of the response based on the given arguments, and creates a {@link ResponseErrorObject} if necessary.
+     * Code defaults to '200 - OK', even for empty collections and arrays.
+     * If toReturn is null: '404 - Not found'. Use {@link this#code204(HttpServletResponse)} if you wish to set '204 - No content' instead
+     * If toReturn is an instance of {@link WellComposedErrorBody}: reads the code from the object.
      *
      * @param toReturn        an object to be wrapped in a ResponseObject to be published to the API.
      * @param servletResponse the object to set the appropriate response code on.
-     * @return see {@link this#code(Response.Status, Object, HttpServletResponse)}.
+     * @return see {@link this#code(Response.Status, Object, HttpServletResponse)} for manual code setting.
      */
     public static ResponseDataObject autoCode( Object toReturn, HttpServletResponse servletResponse ) {
         if ( toReturn == null ) { // object is null.
@@ -142,16 +144,23 @@ public class Responder {
             return code( ( ( WellComposedErrorBody ) toReturn ).getStatus(), toReturn, servletResponse );
         }
 
-        //TODO add more cases. Update javadoc.
-
         return code200( toReturn, servletResponse );
     }
 
+    /**
+     * Checks whether the given code is an error.
+     *
+     * @param code the code to check.
+     * @return true, if the given code is from the client or server error family.
+     */
     private static boolean isCodeAnError( Response.Status code ) {
         return code.getFamily() == Response.Status.Family.CLIENT_ERROR
                 || code.getFamily() == Response.Status.Family.SERVER_ERROR;
     }
 
+    /**
+     * Sets a response code and flushes the servlet response buffer.
+     */
     private static void sendHeaders( Response.Status code, HttpServletResponse servletResponse ) {
         servletResponse.setStatus( code.getStatusCode() );
         try {

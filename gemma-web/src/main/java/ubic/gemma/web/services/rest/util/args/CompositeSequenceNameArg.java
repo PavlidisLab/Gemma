@@ -4,8 +4,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 /**
- * Composite sequence argument for CS name.
+ * Composite Sequence argument for CS name.
  * ArrayDesign property has to be populated via parent class setter before getPersistentObject is called!
+ *
+ * @author tesarst
  */
 public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 

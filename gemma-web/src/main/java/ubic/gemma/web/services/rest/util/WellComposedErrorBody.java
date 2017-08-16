@@ -8,8 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by tesarst on 17/05/17.
- * The object acting as a payload for the ResponseErrorObject.
+ * Object acting as a payload for the ResponseErrorObject.
+ *
+ * @author tesarst
  */
 public class WellComposedErrorBody {
     private final Response.Status status;

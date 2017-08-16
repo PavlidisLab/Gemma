@@ -14,15 +14,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by tesarst on 24/05/17.
- * Mutable argument type base class for dataset (ExpressionExperiment) API
+ * Mutable argument type base class for dataset (ExpressionExperiment) API.
+ *
+ * @author tesarst
  */
 public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDesignService, ArrayDesignValueObject> {
 
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param s the request dataset argument
+     * @param s the request dataset argument.
      * @return instance of appropriate implementation of DatasetArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")

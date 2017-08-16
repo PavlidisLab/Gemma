@@ -9,6 +9,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.text.ParseException;
 
+/**
+ * Base class for APIs that have an endpoint allowing filtering and sorting of entities.
+ *
+ * @author tesarst
+ */
 public abstract class WebServiceWithFiltering extends WebService {
 
     /**

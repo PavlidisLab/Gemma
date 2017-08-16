@@ -13,8 +13,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created by tesarst on 17/07/17.
- * An abstract filter argument implementing methods common for all filter arguments
+ * A base class for filter arguments implementing methods common to all filter arguments.
+ *
+ * @author tesarst
  */
 public abstract class FilterArg extends MalformableArg {
 

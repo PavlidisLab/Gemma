@@ -4,8 +4,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**
- * Created by tesarst on 24/05/17.
  * Long argument type for platform API, referencing the platform ID.
+ *
+ * @author tesarst
  */
 public class PlatformIdArg extends PlatformArg<Long> {
 

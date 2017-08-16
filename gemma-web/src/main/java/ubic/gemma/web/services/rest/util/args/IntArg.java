@@ -3,8 +3,9 @@ package ubic.gemma.web.services.rest.util.args;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 
 /**
- * Created by tesarst on 25/05/17.
  * Class representing an API argument that should be an integer.
+ *
+ * @author tesarst
  */
 public class IntArg extends MalformableArg {
     private static final String ERROR_MSG = "Value '%s' can not converted to an integer";

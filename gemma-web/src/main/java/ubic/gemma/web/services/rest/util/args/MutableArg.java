@@ -11,20 +11,21 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import javax.ws.rs.core.Response;
 
 /**
- * Created by tesarst on 16/05/17.
- * Class created to allow some API methods to allow various parameter types. E.g a taxon can be represented by Long (ID)
- * or a String (scientific/common name, abbreviation)
+ * Class representing and API call argument that can represent various identifiers of different types.
+ * E.g a taxon can be represented by Long number (ID) or multiple String properties (scientific/common name, abbreviation).
  *
  * @param <A>  the type that the argument is expected to mutate to.
  * @param <O>  the persistent object type.
  * @param <S>  the service for the object type.
  * @param <VO> the value object type.
+ * @author tesarst
  */
 public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnabledService<O, VO>, VO extends IdentifiableValueObject<O>> {
 
     static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' of given value does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
     /**
+     * The value in a Type that the argument represents.
      * Should only be used by the implementations of this class, which is why there is no setter for it,
      * as the whole reason behind this class is to delegate the functionality from the web service controllers.
      */

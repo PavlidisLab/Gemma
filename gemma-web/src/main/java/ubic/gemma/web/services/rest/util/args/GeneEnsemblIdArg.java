@@ -4,8 +4,9 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * Created by tesarst on 16/05/17.
  * Long argument type for Gene API, referencing the Gene Ensembl ID.
+ *
+ * @author tesarst
  */
 public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
 

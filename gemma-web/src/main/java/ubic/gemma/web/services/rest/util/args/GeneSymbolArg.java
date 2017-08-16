@@ -10,9 +10,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created by tesarst on 16/05/17.
  * String argument type for Gene API. Represents the official symbol, which is non-taxon specific, so the argument
  * effectively represents all homologues that match the symbol.
+ *
+ * @author tesarst
  */
 public class GeneSymbolArg extends GeneArg<String> {
 
@@ -23,14 +24,6 @@ public class GeneSymbolArg extends GeneArg<String> {
         this.nullCause = this.getDefaultError();
     }
 
-    /**
-     * Tries to retrieve a Gene object based on its official symbol. Note that if the gene has multiple homologies,
-     * a random taxon homology will be returned.
-     *
-     * @param service the GeneService that handles the search.
-     * @return a Gene object of random homology, if found, or null, if the original argument value was null, or if the search did not find
-     * any Gene that would match the string.
-     */
     @Override
     public Gene getPersistentObject( GeneService service ) {
         Gene gene;
