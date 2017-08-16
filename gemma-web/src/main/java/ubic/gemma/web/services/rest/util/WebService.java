@@ -23,7 +23,7 @@ public abstract class WebService {
 
     protected static final String ERROR_MSG_UNMAPPED_PATH = "This URL is not mapped to any API call.";
     protected static final Log log = LogFactory.getLog( WebService.class.getName() );
-    static final String API_VERSION = "2.0";
+    protected static final String API_VERSION = "2.0";
 
     @GET
     @Path("/{default: .*}")

@@ -11,6 +11,7 @@ import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -18,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.text.ParseException;
 
 /**
  * RESTful interface for taxa.
@@ -27,7 +27,7 @@ import java.text.ParseException;
  */
 @Service
 @Path("/taxa")
-public class TaxaWebService extends WebServiceWithFiltering {
+public class TaxaWebService extends WebService {
 
     private TaxonService taxonService;
     private GeneService geneService;
@@ -57,17 +57,16 @@ public class TaxaWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Unlike most other web services, Taxa do not offer any advanced filtering or sorting functionality.
-     * The reason for this is that Taxa are a fairly small set of objects that rarely change.
+     * Lists all available taxa. Does not offer any advanced filtering or sorting functionality.
+     * The reason for this is that Taxa are a relatively small set of objects that rarely change.
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject all( @Context final HttpServletResponse sr
-            // The servlet response, needed for response code setting.
+    public ResponseDataObject all( // Params:
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        // Uses this.loadVOsPreFilter(...)
-        return super.all( null, null, null, null, sr );
+        return Responder.autoCode( taxonService.loadAllValueObjects(), sr );
     }
 
     /**
@@ -101,15 +100,16 @@ public class TaxaWebService extends WebServiceWithFiltering {
     @GET
     @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/chromosomes/{chromosomeArg: [a-zA-Z0-9\\.]+}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject taxonChromosomeGenes( @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+    public ResponseDataObject taxonChromosomeGenes( // Params:
+            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @PathParam("chromosomeArg") String chromosomeName, // Required
             @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
             @QueryParam("start") @DefaultValue("") LongArg start, // Required
             @QueryParam("size") @DefaultValue("") IntArg size, // Required
             @Context final HttpServletResponse sr ) {
         return Responder.autoCode(
-                taxonArg.getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName, start,
-                        size ), sr );
+                taxonArg.getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName,
+                        start.getValue(), size.getValue() ), sr );
     }
 
     /**
@@ -202,9 +202,10 @@ public class TaxaWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Loads all phenotypes for the given taxon. Unfortunately, further pagination is not possible as the
+     * Loads all phenotypes for the given taxon. Unfortunately, pagination is not possible as the
      * phenotypes are loaded in a tree structure.
-     * @param taxonArg the taxon to list the phenotypes for.
+     *
+     * @param taxonArg     the taxon to list the phenotypes for.
      * @param editableOnly whether to only show editable phenotypes.
      * @return a list of Simple Tree value objects allowing a reconstruction of a tree.
      */
@@ -220,12 +221,6 @@ public class TaxaWebService extends WebServiceWithFiltering {
         Taxon taxon = taxonArg.getPersistentObject( taxonService );
         return Responder.autoCode( phenotypeAssociationManagerService
                 .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ), sr );
-    }
-
-    @Override
-    protected ResponseDataObject loadVOsPreFilter( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
-            HttpServletResponse sr ) throws ParseException {
-        return Responder.autoCode( taxonService.loadAllValueObjects(), sr );
     }
 
 }

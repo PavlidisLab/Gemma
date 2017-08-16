@@ -52,8 +52,8 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, Tax
     }
 
     public Collection<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
-            ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, LongArg start,
-            IntArg size ) {
+            ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
+            int size ) {
         // Taxon argument
         Taxon taxon = getPersistentObject( taxonService );
 
@@ -68,8 +68,8 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, Tax
 
         // Setup chromosome location
         PhysicalLocation region = PhysicalLocation.Factory.newInstance( chromosome );
-        region.setNucleotide( start.getValue() );
-        region.setNucleotideLength( size.getValue() );
+        region.setNucleotide( start );
+        region.setNucleotideLength( size );
         // region.setStrand( strand );
 
         Collection<GeneValueObject> GVOs = geneService.loadValueObjects( geneService.find( region ) );

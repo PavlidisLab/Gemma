@@ -19,7 +19,9 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
 import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.web.services.rest.util.args.BoolArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
+import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -28,7 +30,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * RESTful web services for phenotypes.
+ * RESTful interface for phenotypes.
+ * Does not have an 'all' endpoint (no use-cases). To list all phenotypes on a specific taxon,
+ * see {@link TaxaWebService#taxonPhenotypes(TaxonArg, BoolArg, HttpServletResponse)}.
  *
  * @author tesarst
  */
@@ -68,8 +72,7 @@ public class PhenotypeWebService extends WebService {
     public ResponseDataObject evidence( // Params:
             @QueryParam("database") String database, // required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") IntArg limit,
-            // Optional, default PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT
+            @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") IntArg limit, // Opt.
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
         if ( database == null || database.isEmpty() ) {
@@ -81,6 +84,12 @@ public class PhenotypeWebService extends WebService {
                 .loadEvidenceWithExternalDatabaseName( database, limit.getValue(), offset.getValue() ), sr );
     }
 
+    /**
+     * Finds all dumps.
+     *
+     * @return A collection of Dumps Value Objects.
+     * @see PhenotypeAssociationManagerService#helpFindAllDumps()
+     */
     @GET
     @Path("/dumps")
     @Produces(MediaType.APPLICATION_JSON)

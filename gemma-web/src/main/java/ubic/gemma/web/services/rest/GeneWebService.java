@@ -34,7 +34,10 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 
 /**
- * RESTful web services for genes. Does not have 'all' endpoint (no use-cases).
+ * RESTful interface for genes.
+ * Does not have an 'all' endpoint (no use-cases).
+ * Most methods also have a taxon-specific counterpart in the {@link TaxaWebService} (useful when using the 'official
+ * symbol' identifier, as this class will just return a random taxon homologue).
  *
  * @author tesarst
  */

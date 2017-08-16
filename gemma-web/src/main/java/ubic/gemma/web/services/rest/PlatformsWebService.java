@@ -168,8 +168,9 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         probeArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
-        return Responder.autoCode( geneService.loadValueObjects(
-                compositeSequenceService.getGenes( probeArg.getPersistentObject( compositeSequenceService ), offset.getValue(), limit.getValue() ) ), sr );
+        return Responder.autoCode( geneService.loadValueObjects( compositeSequenceService
+                .getGenes( probeArg.getPersistentObject( compositeSequenceService ), offset.getValue(),
+                        limit.getValue() ) ), sr );
     }
 
     /**
@@ -198,6 +199,11 @@ public class PlatformsWebService extends WebServiceWithFiltering {
                         filter.getObjectFilters() ), sr );
     }
 
+    /**
+     * Creates a response with the annotation file for given array design
+     * @param arrayDesign the platform to fetch and output the annotation file for.
+     * @return a Response object containing the annotation file.
+     */
     private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
