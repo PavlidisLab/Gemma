@@ -2,14 +2,11 @@ package ubic.gemma.web.services.rest.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.web.services.rest.util.args.MutableArg;
-import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -51,7 +48,6 @@ public abstract class WebService {
         log.warn( "Someone attempted a POST on " + uriInfo.getAbsolutePath() );
         return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
-
 
     /**
      * Fallback for unmapped DELETE calls

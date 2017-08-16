@@ -17,6 +17,6 @@ public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
 
     @Override
     public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
-        return check(this.value == null ? null : service.load( this.value ));
+        return check( this.value == null ? null : service.load( this.value ) );
     }
 }

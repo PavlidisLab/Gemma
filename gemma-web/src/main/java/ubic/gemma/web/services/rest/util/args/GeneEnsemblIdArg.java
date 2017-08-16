@@ -22,7 +22,7 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
 
     @Override
     public Gene getPersistentObject( GeneService service ) {
-        return check(service.findByEnsemblId( this.value ));
+        return check( service.findByEnsemblId( this.value ) );
     }
 
     @Override

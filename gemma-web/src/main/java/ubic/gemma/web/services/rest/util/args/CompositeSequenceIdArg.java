@@ -15,7 +15,7 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     @Override
     public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
-        return check( this.value == null ? null : service.load( this.value ));
+        return check( this.value == null ? null : service.load( this.value ) );
     }
 
 }

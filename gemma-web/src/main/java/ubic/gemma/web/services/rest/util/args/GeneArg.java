@@ -9,11 +9,7 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
-import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -138,8 +134,9 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneVa
     /**
      * Lists Gene Value Objects of all genes that this GeneArg represents, discarding any genes that are not on the
      * given taxon.
+     *
      * @param service the service to use to retrieve the Gene Value Objects.
-     * @param taxon the taxon to limit the genes search to.
+     * @param taxon   the taxon to limit the genes search to.
      * @return collection of Gene Value Objects.
      */
     private Collection<GeneValueObject> getValueObjects( GeneService service, Taxon taxon ) {

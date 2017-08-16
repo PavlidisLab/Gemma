@@ -201,6 +201,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
 
     /**
      * Creates a response with the annotation file for given array design
+     *
      * @param arrayDesign the platform to fetch and output the annotation file for.
      * @return a Response object containing the annotation file.
      */
