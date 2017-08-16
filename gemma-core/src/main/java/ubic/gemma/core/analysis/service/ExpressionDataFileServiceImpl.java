@@ -729,13 +729,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered, File f ) {
-
-        FilterConfig filterConfig = new FilterConfig();
-        filterConfig.setIgnoreMinimumSampleThreshold( true );
-        filterConfig.setIgnoreMinimumRowsThreshold( true );
         ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix;
         if ( filtered ) {
+            FilterConfig filterConfig = new FilterConfig();
+            filterConfig.setIgnoreMinimumSampleThreshold( true );
+            filterConfig.setIgnoreMinimumRowsThreshold( true );
             matrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );
         } else {
             matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );

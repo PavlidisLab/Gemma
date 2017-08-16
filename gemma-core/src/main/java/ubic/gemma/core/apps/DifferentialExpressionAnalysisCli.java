@@ -127,7 +127,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
                         + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                        + " GENERICLM (generic LM, no interactions); default: auto-detect" ).create( "type" );
+                        + " GENERICLM (generic LM, no interactions); default: auto-detect" )
+                .create( "type" );
 
         super.addOption( analysisType );
 
@@ -238,7 +239,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setSubsetFactor( subsetFactor );
                 config.setModerateStatistics( this.ebayes );
                 config.setPersist( this.persist );
-
+                boolean rnaSeq = super.eeService.isRNASeq( ee );
+                config.setUseWeights( rnaSeq );
                 /*
                  * Interactions included by default. It's actually only complicated if there is a subset factor.
                  */
@@ -294,6 +296,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         // include intearactions by default
                         config.addInteractionToInclude( factorsToUse );
                     }
+
+                    boolean rnaSeq = super.eeService.isRNASeq( ee );
+                    config.setUseWeights( rnaSeq );
 
                     results = this.differentialExpressionAnalyzerService
                             .runDifferentialExpressionAnalyses( ee, config );

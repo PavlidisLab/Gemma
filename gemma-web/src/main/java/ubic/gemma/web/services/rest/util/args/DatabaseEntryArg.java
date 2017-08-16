@@ -5,8 +5,9 @@ import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**
- * Created by tesarst on 25/05/17.
- * Mutable argument type base class for DatabaseEntry API
+ * Mutable argument type base class for DatabaseEntry API.
+ *
+ * @author tesarst
  */
 public abstract class DatabaseEntryArg<T>
         extends MutableArg<T, DatabaseEntry, DatabaseEntryService, DatabaseEntryValueObject> {
@@ -14,7 +15,7 @@ public abstract class DatabaseEntryArg<T>
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param s the request dataset argument
+     * @param s the request database entry argument
      * @return instance of appropriate implementation of DatabaseEntryArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")

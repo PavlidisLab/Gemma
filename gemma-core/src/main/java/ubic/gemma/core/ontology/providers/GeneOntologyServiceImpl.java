@@ -42,11 +42,11 @@ import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.util.Settings;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -70,31 +70,30 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private static final String PART_OF_URI = "http://purl.obolibrary.org/obo/BFO_0000050";
     private static final AtomicBoolean ready = new AtomicBoolean( false );
     private static final AtomicBoolean running = new AtomicBoolean( false );
-    private static boolean enabled = true;
-    private static Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
     // cache
-    private static Map<String, GOAspect> term2Aspect = new HashMap<>();
+    private static final Map<String, GOAspect> term2Aspect = new HashMap<>();
+    private static boolean enabled = true;
     // cache
     private static Map<String, OntologyTerm> uri2Term = new HashMap<>();
     /**
      * Cache of go term -> child terms
      */
-    private Map<String, Collection<OntologyTerm>> childrenCache = Collections
+    private final Map<String, Collection<OntologyTerm>> childrenCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
-
-    private Gene2GOAssociationService gene2GOAssociationService;
-    private GeneService geneService;
     /**
      * Cache of gene -> go terms.
      */
-    private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
-    private Collection<SearchIndex> indices = new HashSet<>();
-    private OntModel model;
+    private final Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<>();
+    private final Collection<SearchIndex> indices = new HashSet<>();
     /**
      * Cache of go term -> parent terms
      */
-    private Map<String, Collection<OntologyTerm>> parentsCache = Collections
+    private final Map<String, Collection<OntologyTerm>> parentsCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
+    private Gene2GOAssociationService gene2GOAssociationService;
+    private GeneService geneService;
+    private OntModel model;
 
     /**
      * @return Usual formatted GO id, e.g., GO:0039392
@@ -105,7 +104,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * @param term
      * @return Usual formatted GO id, e.g., GO:0039392
      */
     public static String asRegularGoId( OntologyTerm term ) {
@@ -173,7 +171,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     @Override
     public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection<Long> geneIds ) {
 
-        Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
+        Map<Long, Collection<OntologyTerm>> overlap = new HashMap<>();
         if ( queryGene == null )
             return null;
         if ( geneIds.size() == 0 )
@@ -205,7 +203,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     @Override
     public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Long queryGene, Collection<Long> geneIds ) {
-        Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
+        Map<Long, Collection<OntologyTerm>> overlap = new HashMap<>();
         if ( queryGene == null )
             return null;
         if ( geneIds.size() == 0 )
@@ -224,10 +222,10 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     @Override
-    public Collection<OntologyTerm> computeOverlap( Collection<OntologyTerm> masterOntos,
-            Collection<OntologyTerm> comparisonOntos ) {
-        Collection<OntologyTerm> overlapTerms = new HashSet<OntologyTerm>( masterOntos );
-        overlapTerms.retainAll( comparisonOntos );
+    public Collection<OntologyTerm> computeOverlap( Collection<OntologyTerm> masterTerms,
+            Collection<OntologyTerm> comparisonTerms ) {
+        Collection<OntologyTerm> overlapTerms = new HashSet<>( masterTerms );
+        overlapTerms.retainAll( comparisonTerms );
 
         return overlapTerms;
     }
@@ -236,7 +234,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     public Collection<OntologyTerm> findTerm( String queryString ) {
 
         if ( !isReady() )
-            return new HashSet<OntologyTerm>();
+            return new HashSet<>();
 
         if ( log.isDebugEnabled() )
             log.debug( "Searching Gene Ontology for '" + queryString + "'" );
@@ -292,8 +290,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     @Override
     public Collection<String> getAllGOTermIds() {
-        Collection<String> goTermIds = uri2Term.keySet();
-        return goTermIds;
+        return uri2Term.keySet();
     }
 
     @Override
@@ -305,7 +302,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
         if ( entries == null )
             return null;
-        Collection<OntologyTerm> result = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> result = new HashSet<>();
         for ( OntologyTerm entry : entries ) {
             result.addAll( getAncestors( entry, includePartOf ) );
         }
@@ -320,7 +317,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     @Override
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf ) {
         if ( entry == null )
-            return new HashSet<OntologyTerm>();
+            return new HashSet<>();
         return getAncestors( entry, includePartOf );
     }
 
@@ -350,7 +347,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         if ( t == null )
             return null;
         Collection<OntologyTerm> terms = getAllChildren( t );
-        Collection<Gene> results = new HashSet<Gene>( this.gene2GOAssociationService.findByGOTerm( goId, taxon ) );
+        Collection<Gene> results = new HashSet<>( this.gene2GOAssociationService.findByGOTerm( goId, taxon ) );
 
         for ( OntologyTerm term : terms ) {
             results.addAll( this.gene2GOAssociationService.findByGOTerm( asRegularGoId( term ), taxon ) );
@@ -376,7 +373,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         }
 
         if ( cachedTerms == null ) {
-            Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
+            Collection<OntologyTerm> allGOTermSet = new HashSet<>();
 
             Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
             for ( VocabCharacteristic c : annotations ) {
@@ -397,7 +394,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
         if ( goAspect != null ) {
 
-            Collection<OntologyTerm> finalTerms = new HashSet<OntologyTerm>();
+            Collection<OntologyTerm> finalTerms = new HashSet<>();
 
             for ( OntologyTerm ontologyTerm : cachedTerms ) {
                 if ( getTermAspect( ontologyTerm ).equals( goAspect ) ) {
@@ -431,7 +428,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     @Override
     public Collection<OntologyTerm> getParents( OntologyTerm entry, boolean includePartOf ) {
         Collection<OntologyTerm> parents = entry.getParents( true );
-        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> results = new HashSet<>();
         for ( OntologyTerm term : parents ) {
             // The isRoot() returns true for the MolecularFunction, BiologicalProcess, CellularComponent
             if ( term.isRoot() )
@@ -462,6 +459,25 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     @Override
     public Collection<OntologyTerm> listTerms() {
         return uri2Term.values();
+    }
+
+    @Override
+    public Collection<GeneOntologyTermValueObject> getValueObjects(Gene gene){
+        return gene == null ? null : getValueObjects( getGOTerms( gene ) );
+    }
+
+    @Override
+    public Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms ) {
+        Collection<GeneOntologyTermValueObject> vos = new ArrayList<>( terms.size() );
+        for( OntologyTerm term : terms){
+            vos.add( getValueObject( term ) );
+        }
+        return vos;
+    }
+
+    @Override
+    public GeneOntologyTermValueObject getValueObject( OntologyTerm term ) {
+        return new GeneOntologyTermValueObject(asRegularGoId( term ), term);
     }
 
     @Override
@@ -519,9 +535,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         if ( !this.isReady() ) {
             throw new UnsupportedOperationException( "Gene ontology isn't ready so cannot check validity of IDs" );
         }
-        if ( uri2Term.containsKey( toUri( goId ) ) )
-            return true;
-        return uri2Term.containsKey( toUri( goId.replaceFirst( "_", ":" ) ) );
+        return uri2Term.containsKey( toUri( goId ) ) || uri2Term.containsKey( toUri( goId.replaceFirst( "_", ":" ) ) );
     }
 
     @Override
@@ -614,10 +628,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         initializeGeneOntology();
     }
 
-    /**
-     * @param url
-     * @throws IOException
-     */
     protected void loadTermsInNameSpace( String url ) {
         this.model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM );
         Collection<OntologyResource> terms = OntologyLoader.initialize( url, model );
@@ -665,7 +675,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
      * Return terms to which the given term has a part_of relation (it is "part_of" them).
      */
     private Collection<OntologyTerm> getIsPartOf( OntologyTerm entry ) {
-        Collection<OntologyTerm> r = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> r = new HashSet<>();
         String u = entry.getUri();
         String queryString = "SELECT ?x WHERE {  <" + u + ">  <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?v . "
                 + "?v <http://www.w3.org/2002/07/owl#onProperty>  <" + PART_OF_URI + "> . "
@@ -694,7 +704,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
      * Return terms which have "part_of" relation with the given term (they are "part_of" the given term).
      */
     private Collection<OntologyTerm> getPartsOf( OntologyTerm entry ) {
-        Collection<OntologyTerm> r = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> r = new HashSet<>();
         String u = entry.getUri();
         String queryString = "SELECT ?x WHERE {" + "?x <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?v . "
                 + "?v <http://www.w3.org/2002/07/owl#onProperty> <" + PART_OF_URI + ">  . "
@@ -721,10 +731,10 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     private GOAspect getTermAspect( OntologyTerm term ) {
         assert term != null;
-        String goid = term.getTerm();
+        String goId = term.getTerm();
 
-        if ( term2Aspect.containsKey( goid ) ) {
-            return term2Aspect.get( goid );
+        if ( term2Aspect.containsKey( goId ) ) {
+            return term2Aspect.get( goId );
         }
 
         String nameSpace = null;
@@ -746,7 +756,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         }
 
         GOAspect aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
-        term2Aspect.put( goid, aspect );
+        term2Aspect.put( goId, aspect );
 
         return aspect;
     }
@@ -754,12 +764,12 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private synchronized Collection<OntologyTerm> getAncestors( OntologyTerm entry, boolean includePartOf ) {
 
         if ( entry == null ) {
-            return new HashSet<OntologyTerm>();
+            return new HashSet<>();
         }
 
         Collection<OntologyTerm> ancestors = parentsCache.get( entry.getUri() );
         if ( ancestors == null ) {
-            ancestors = new HashSet<OntologyTerm>();
+            ancestors = new HashSet<>();
 
             Collection<OntologyTerm> parents = getParents( entry, includePartOf );
             if ( parents != null ) {
@@ -772,18 +782,18 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             ancestors = Collections.unmodifiableCollection( ancestors );
             parentsCache.put( entry.getUri(), ancestors );
         }
-        return new HashSet<OntologyTerm>( ancestors );
+        return new HashSet<>( ancestors );
     }
 
     /**
-     * @return Given an ontology term recursivly determines all the children and adds them to a cache (same as
-     * getAllParents but the recusive code is a little cleaner and doesn't use and accumulator)
+     * @return Given an ontology term recursively determines all the children and adds them to a cache (same as
+     * getAllParents but the recursive code is a little cleaner and doesn't use and accumulator)
      */
     private synchronized Collection<OntologyTerm> getDescendants( OntologyTerm entry, boolean includePartOf ) {
 
         Collection<OntologyTerm> descendants = childrenCache.get( entry.getUri() );
         if ( descendants == null ) {
-            descendants = new HashSet<OntologyTerm>();
+            descendants = new HashSet<>();
 
             Collection<OntologyTerm> children = getChildren( entry, includePartOf );
             if ( children != null ) {
@@ -796,7 +806,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             descendants = Collections.unmodifiableCollection( descendants );
             childrenCache.put( entry.getUri(), descendants );
         }
-        return new HashSet<OntologyTerm>( descendants );
+        return new HashSet<>( descendants );
 
     }
 
@@ -808,7 +818,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             @Override
             public void run() {
                 running.set( true );
-                uri2Term = new HashMap<String, OntologyTerm>();
+                uri2Term = new HashMap<>();
                 log.info( "Loading Gene Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
@@ -838,7 +848,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     private void logIds( String prefix, Collection<OntologyTerm> terms ) {
-        StringBuffer buf = new StringBuffer( prefix );
+        StringBuilder buf = new StringBuilder( prefix );
         buf.append( ": [ " );
         Iterator<OntologyTerm> i = terms.iterator();
         while ( i.hasNext() ) {

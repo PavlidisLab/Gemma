@@ -292,7 +292,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Test
     public void testLoadEvidenceWithExternalDatabaseName() {
         assertTrue( !this.phenotypeAssociationManagerService
-                .loadEvidenceWithExternalDatabaseName( TEST_EXTERNAL_DATABASE, null ).isEmpty() );
+                .loadEvidenceWithExternalDatabaseName( TEST_EXTERNAL_DATABASE, null, 0 ).isEmpty() );
 
         assertTrue( this.phenotypeAssociationManagerService.loadEvidenceWithoutExternalDatabaseName().isEmpty() );
     }

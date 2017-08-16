@@ -194,16 +194,31 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             assert unusedBADs.size() > 1; // otherwise we shouldn't be here.
             unusedBADs.remove( maxBAD );
-            if ( maxBAD != null && !maxBAD.getBioAssays().containsAll( expExp.getBioAssays() ) ) {
-                /*
-                 * This is some kind of nutty hybrid case.
-                 */
-                log.warn(
-                        "This experiment looked like it had samples run on more than one platform, "
-                                + "but it also has no BioAssayDimension that is eligible to accomodate all samples. "
-                                + "The experiment will be switched to the merged platform, but no BioAssayDimension switch will be done." );
-                multiPlatformPerSample = false;
-                maxBAD = null;
+
+            /*
+             * Make sure all biomaterials in the study are included in the chosen bioassaydimension. If not, we'd have
+             * to make a new BAD. I haven't implemented that case.
+             */
+            if ( maxBAD != null ) {
+                Collection<BioMaterial> bmsInmaxBAD = new HashSet<>();
+                for ( BioAssay ba : maxBAD.getBioAssays() ) {
+                    bmsInmaxBAD.add( ba.getSampleUsed() );
+                }
+
+                for ( BioAssay ba : expExp.getBioAssays() ) {
+                    if ( !bmsInmaxBAD.contains( ba.getSampleUsed() ) ) {
+
+                        log.warn(
+                                "This experiment looked like it had samples run on more than one platform, "
+                                        + "but it also has no BioAssayDimension that is eligible to accomodate all samples (Example: "
+                                        + ba.getSampleUsed()
+                                        + ") The experiment will be switched to the merged platform, but no BioAssayDimension switch will be done." );
+                        multiPlatformPerSample = false;
+                        maxBAD = null;
+                        break;
+                    }
+                }
+
             }
         }
 
@@ -307,8 +322,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             }
         }
 
-        expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName()
-                + " by Gemma]" );
+        expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName() + " by Gemma]" );
 
         helperService.persist( expExp, arrayDesign );
 

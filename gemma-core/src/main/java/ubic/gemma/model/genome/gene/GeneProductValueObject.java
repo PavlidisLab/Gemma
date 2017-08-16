@@ -60,9 +60,9 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
             }
             this.strand = entity.getPhysicalLocation().getStrand();
 //             TODO check if the numbering here is correct
-//            if ( entity.getPhysicalLocation().getNucleotide() != null ) {
-//                this.nucleotideStart = entity.getPhysicalLocation().getNucleotide();
-//                this.nucleotideEnd = entity.getPhysicalLocation().getNucleotide() + entity.getPhysicalLocation().getNucleotideLength();
+//            if ( entity.getPhysicalLocationsValueObjects().getNucleotide() != null ) {
+//                this.nucleotideStart = entity.getPhysicalLocationsValueObjects().getNucleotide();
+//                this.nucleotideEnd = entity.getPhysicalLocationsValueObjects().getNucleotide() + entity.getPhysicalLocationsValueObjects().getNucleotideLength();
 //            }
         }
     }

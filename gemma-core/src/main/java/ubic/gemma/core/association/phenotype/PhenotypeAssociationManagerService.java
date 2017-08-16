@@ -40,7 +40,6 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Find all phenotypes associated to a pubmedID
      *
-
      * @param evidenceId optional, used if we are updating to know current annotation
      * @return BibliographicReferenceValueObject
      */
@@ -50,7 +49,7 @@ public interface PhenotypeAssociationManagerService {
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      *
      * @param phenotypesValuesUris the roots phenotype of the query
-     * @param taxon               the name of the taxon (optional)
+     * @param taxon                the name of the taxon (optional)
      * @return A map or uris to collections of the genes found
      */
     Collection<GeneEvidenceValueObject> findCandidateGenes( Collection<String> phenotypesValuesUris, Taxon taxon );
@@ -68,8 +67,6 @@ public interface PhenotypeAssociationManagerService {
     /**
      * For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds
      * genes associated with <em>all</em> the phenotypes together.
-     *
-
      */
     Map<String, Collection<? extends GeneValueObject>> findCandidateGenesForEach( Set<String> phenotypeUris,
             Taxon taxon );
@@ -83,7 +80,8 @@ public interface PhenotypeAssociationManagerService {
      * @param userName user name
      * @return evidence satisfying the specified filters
      */
-    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId, Integer limit, String userName );
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId, Integer limit,
+            String userName );
 
     /**
      * Return all evidence for a specific gene id
@@ -101,8 +99,8 @@ public interface PhenotypeAssociationManagerService {
      * @param evidenceFilter      can specify a taxon and to show modifiable evidence (optional)
      * @return The Gene we are interested in
      */
-    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
-            EvidenceFilter evidenceFilter );
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneId( Long geneId,
+            Set<String> phenotypesValuesUri, EvidenceFilter evidenceFilter );
 
     /**
      * Return all evidence for a specific gene NCBI
@@ -142,13 +140,11 @@ public interface PhenotypeAssociationManagerService {
      */
     Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
 
-
     Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( String phenotype, Long taxonId, boolean includeIEA );
 
     /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      *
-
      * @param taxonId, can be null to not constrain by taxon
      * @return Collection<GeneEvidenceValueObject> list of Genes
      */
@@ -177,6 +173,13 @@ public interface PhenotypeAssociationManagerService {
     Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
     /**
+     * Same as {@link this#loadAllPhenotypesByTree(EvidenceFilter)}, but does not flatten out the tree.
+     *
+     * @return a tree set of phenotypes
+     */
+    Collection<TreeCharacteristicValueObject> loadAllPhenotypesAsTree( EvidenceFilter evidenceFilter );
+
+    /**
      * Get information about external data sources from Phenocarta, including URLs and timestamps of the most recent
      * update dates/times.
      *
@@ -187,7 +190,8 @@ public interface PhenotypeAssociationManagerService {
     /**
      * use if we want to reimport data from a specific external Database
      */
-    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName( String externalDatabaseName, Integer limit );
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
+            String externalDatabaseName, Integer limit, int start );
 
     /**
      * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
@@ -283,7 +287,6 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
      * by Quartz
-     *
      */
     @Secured({ "GROUP_AGENT" })
     void writeAllEvidenceToFile() throws IOException;

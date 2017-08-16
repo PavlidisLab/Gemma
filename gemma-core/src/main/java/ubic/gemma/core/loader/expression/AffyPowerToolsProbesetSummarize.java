@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -56,107 +57,211 @@ import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class AffyPowerToolsProbesetSummarize {
 
     private static final long AFFY_UPDATE_INTERVAL_MS = 1000 * 30;
 
-    private static Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
+    /*
+     * Current as of May 2012
+     */
+    private static final String h = "HuEx-1_0-st-v2.r2";
 
     /*
      * These are supplied by Affymetrix. Current as of May 2012
      */
     private static final String hg = "hg18";
-    private static final String mm = "mm9";
-    private static final String rn = "rn4";
+    private static Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
+    private static final String m = "MoEx-1_0-st-v1.r2";
 
     private static final String METHOD = "rma";
 
-    /*
-     * Current as of May 2012
-     */
-    private static final String h = "HuEx-1_0-st-v2.r2";
-    private static final String m = "MoEx-1_0-st-v1.r2";
+    private static final String mm = "mm9";
     private static final String r = "RaEx-1_0-st-v1.r2";
+    private static final String rn = "rn4";
 
     /**
-     * @param ee
-     * @param cdfFileName e.g. HG_U95Av2.CDF. Path configured by - can be null, we will try to guess (?)
-     * @param targetPlatform
-     * @param files
      * @return
      */
-    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee, String cdfFileName,
-            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
+    public static QuantitationType makeAffyQuantitationType() {
+        QuantitationType result = QuantitationType.Factory.newInstance();
 
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
+        result.setGeneralType( GeneralType.QUANTITATIVE );
+        result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
+        result.setIsPreferred( Boolean.TRUE );
+        result.setIsNormalized( Boolean.TRUE );
+        result.setIsBackgroundSubtracted( Boolean.TRUE );
+        result.setIsBackground( false );
+        result.setName( METHOD + " value" );
+        result.setDescription( "Computed in Gemma by apt-probeset-summarize" );
+        result.setType( StandardQuantitationType.AMOUNT );
+        result.setIsMaskedPreferred( false ); // this is raw data.
+        result.setScale( ScaleType.LOG2 );
+        result.setIsRatio( false );
+        result.setIsRecomputedFromRawData( true );
 
-        if ( bioAssays.isEmpty() ) {
-            throw new IllegalArgumentException( "Experiment had no assays" );
-        }
+        return result;
+    }
 
-        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
-            throw new IllegalArgumentException( "Target design had no elements" );
-        }
+    private QuantitationType quantitationType;
 
-        List<String> celfiles = getCelFiles( files );
-        log.info( celfiles.size() + " cel files" );
+    /**
+     * 
+     */
+    public AffyPowerToolsProbesetSummarize() {
+        this.quantitationType = makeAffyQuantitationType();
+    }
 
-        String outputPath = getOutputFilePath( ee, "apt-output" );
+    /**
+     * This constructor is used for multiplatform situations where the same QT must be used for each platform.
+     * 
+     * @param qt
+     */
+    public AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
+        this.quantitationType = qt;
+    }
 
-        String cmd = getThreePrimeSummarizationCommand( targetPlatform, cdfFileName, celfiles, outputPath );
+    /**
+     * For either 3' or Exon arrays.
+     * 
+     * @param ee
+     * @param aptOutputFileToRead
+     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
+     * @return
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
+            ArrayDesign targetPlatform ) throws IOException, FileNotFoundException {
 
-        log.info( "Running: " + cmd );
+        log.info( "Parsing " + aptOutputFileToRead );
 
-        int exitVal = Integer.MIN_VALUE;
+        try (InputStream is = new FileInputStream( aptOutputFileToRead )) {
+            DoubleMatrix<String, String> matrix = parse( is );
 
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-        try {
-            final Process run = Runtime.getRuntime().exec( cmd );
-            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
-            GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
-            gscErr.start();
-            gscIn.start();
+            if ( matrix.rows() == 0 ) {
+                throw new IllegalStateException( "Matrix from APT had no rows" );
+            }
+            if ( matrix.columns() == 0 ) {
+                throw new IllegalStateException( "Matrix from APT had no columns" );
+            }
 
-            while ( exitVal == Integer.MIN_VALUE ) {
-                try {
-                    exitVal = run.exitValue();
-                } catch ( IllegalThreadStateException e ) {
-                    // okay, still
-                    // waiting.
-                }
-                Thread.sleep( AFFY_UPDATE_INTERVAL_MS );
+            Collection<BioAssay> allBioAssays = ee.getBioAssays();
 
-                synchronized ( outputPath ) {
-                    File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
-                    Long size = outputFile.length();
-
-                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                    log.info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
-                            + " kb (" + minutes + " minutes elapsed)" );
+            Collection<BioAssay> bioAssaysToUse = new HashSet<>();
+            for ( BioAssay bioAssay : allBioAssays ) {
+                if ( bioAssay.getArrayDesignUsed().equals( targetPlatform ) ) {
+                    bioAssaysToUse.add( bioAssay );
                 }
             }
 
-            overallWatch.stop();
-            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-            log.info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
+            if ( allBioAssays.size() > bioAssaysToUse.size() ) {
+                log.info( "Using " + bioAssaysToUse.size() + "/" + allBioAssays.size() + " bioassays (those on " + targetPlatform.getShortName()
+                        + ")" );
+            }
 
-            return processData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
+            if ( matrix.columns() < bioAssaysToUse.size() ) {
+                // having > is okay, there can be extra.
+                throw new IllegalStateException(
+                        "Matrix from APT had the wrong number of colummns: expected " + bioAssaysToUse.size() + ", got " + matrix.columns() );
+            }
 
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+            log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssaysToUse.size()
+                    + " samples on " + targetPlatform );
+
+            BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+            bad.setName( "For " + ee.getShortName() + " on " + targetPlatform );
+            bad.setDescription( "Generated from output of apt-probeset-summarize" );
+
+            /*
+             * Add them ...
+             */
+
+            Map<String, BioAssay> bmap = new HashMap<>();
+            for ( BioAssay bioAssay : bioAssaysToUse ) {
+                assert bioAssay.getArrayDesignUsed().equals( targetPlatform );
+                if ( bmap.containsKey( bioAssay.getAccession().getAccession() )
+                        || bmap.containsKey( bioAssay.getName() ) ) {
+                    throw new IllegalStateException( "Duplicate" );
+                }
+                bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
+                bmap.put( bioAssay.getName(), bioAssay );
+            }
+
+            if ( log.isDebugEnabled() )
+                log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
+                        + StringUtils.join( bmap.keySet(), "\n" ) );
+
+            int found = 0;
+            List<String> columnsToKeep = new ArrayList<>();
+            for ( int i = 0; i < matrix.columns(); i++ ) {
+                String columnName = matrix.getColName( i );
+
+                String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
+
+                /*
+                 * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
+                 */
+                BioAssay assay = null;
+                if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
+                    String geoAcc = sampleName.split( "_" )[0];
+
+                    log.info( "Found column for " + geoAcc );
+                    if ( bmap.containsKey( geoAcc ) ) {
+                        assay = bmap.get( geoAcc );
+                    } else {
+                        log.warn( "No bioassay for " + geoAcc );
+                    }
+                } else {
+
+                    /*
+                     * Sometimes column names are like Aud_19L.CEL or
+                     */
+                    assay = bmap.get( sampleName );
+                }
+
+                if ( assay == null ) {
+                    /*
+                     * This is okay, if we have extras
+                     */
+                    if ( matrix.columns() == bioAssaysToUse.size() ) {
+                        throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
+                                + sampleName );
+                    }
+                    log.warn( "No bioassay for " + sampleName );
+                    continue;
+                }
+
+                log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
+                        + assay.getAccession().getAccession() + "]" );
+
+                columnsToKeep.add( columnName );
+                assert assay.getArrayDesignUsed().equals( targetPlatform );
+                bad.getBioAssays().add( assay );
+                found++;
+            }
+
+            if ( found != bioAssaysToUse.size() ) {
+                throw new IllegalStateException( "Failed to find a data column for every bioassay on the given platform " + targetPlatform );
+            }
+
+            if ( columnsToKeep.size() < matrix.columns() ) {
+                matrix = matrix.subsetColumns( columnsToKeep );
+            }
+
+            if ( quantitationType == null ) {
+                quantitationType = makeAffyQuantitationType();
+            }
+            return convertDesignElementDataVectors( ee, bad, targetPlatform, matrix );
         }
-
     }
 
     /**
      * @param ee
-     * @param targetPlatform target platform
+     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
+     *        not happen for exon arrays)
      * @param files list of CEL files (any other files included will be ignored)
+     * 
      * @return
      */
     public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
@@ -172,7 +277,7 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "Target design had no elements" );
         }
 
-        List<String> celfiles = getCelFiles( files );
+        List<String> celfiles = getCelFiles( files, null );
         log.info( celfiles.size() + " cel files" );
 
         String outputPath = getOutputFilePath( ee, "apt-output" );
@@ -226,122 +331,89 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * For either 3' or Exon arrays.
+     * Call once for each platform used by the experiment.
      * 
      * @param ee
-     * @param aptOutputFileToRead
-     * @param targetPlatform
+     * @param cdfFileName e.g. HG_U95Av2.CDF. Path configured by - can be null, we will try to guess (?)
+     * @param targetPlatform to match the CDF file
+     * @param files
      * @return
-     * @throws IOException
-     * @throws FileNotFoundException
      */
-    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
-            ArrayDesign targetPlatform ) throws IOException, FileNotFoundException {
+    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee, String cdfFileName,
+            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
 
-        log.info( "Parsing " + aptOutputFileToRead );
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
 
-        try (InputStream is = new FileInputStream( aptOutputFileToRead )) {
-            DoubleMatrix<String, String> matrix = parse( is );
-
-            if ( matrix.rows() == 0 ) {
-                throw new IllegalStateException( "Matrix from APT had no rows" );
-            }
-            if ( matrix.columns() == 0 ) {
-                throw new IllegalStateException( "Matrix from APT had no columns" );
-            }
-
-            Collection<BioAssay> bioAssays = ee.getBioAssays();
-
-            if ( matrix.columns() < bioAssays.size() ) {
-                // having > is okay, there can be extra.
-                throw new IllegalStateException( "Matrix from APT had the wrong number of colummns" );
-            }
-
-            log.info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssays.size()
-                    + " samples..." );
-
-            BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-            bad.setName( "For " + ee.getShortName() );
-            bad.setDescription( "Generated from output of apt-probeset-summarize" );
-
-            /*
-             * Add them ...
-             */
-
-            Map<String, BioAssay> bmap = new HashMap<String, BioAssay>();
-            for ( BioAssay bioAssay : bioAssays ) {
-
-                if ( bmap.containsKey( bioAssay.getAccession().getAccession() )
-                        || bmap.containsKey( bioAssay.getName() ) ) {
-                    throw new IllegalStateException( "Duplicate" );
-                }
-                bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
-                bmap.put( bioAssay.getName(), bioAssay );
-            }
-
-            if ( log.isDebugEnabled() )
-                log.debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
-                        + StringUtils.join( bmap.keySet(), "\n" ) );
-
-            int found = 0;
-            List<String> columnsToKeep = new ArrayList<String>();
-            for ( int i = 0; i < matrix.columns(); i++ ) {
-                String columnName = matrix.getColName( i );
-
-                String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
-
-                /*
-                 * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
-                 */
-                BioAssay assay = null;
-                if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
-                    String geoAcc = sampleName.split( "_" )[0];
-
-                    log.info( "Found column for " + geoAcc );
-                    if ( bmap.containsKey( geoAcc ) ) {
-                        assay = bmap.get( geoAcc );
-                    } else {
-                        log.warn( "No bioassay for " + geoAcc );
-                    }
-                } else {
-
-                    /*
-                     * Sometimes column names are like Aud_19L.CEL or
-                     */
-                    assay = bmap.get( sampleName );
-                }
-
-                if ( assay == null ) {
-                    /*
-                     * This is okay, if we have extras
-                     */
-                    if ( matrix.columns() == bioAssays.size() ) {
-                        throw new IllegalStateException( "No bioassay could be matched to CEL file identified by "
-                                + sampleName );
-                    }
-                    log.warn( "No bioassay for " + sampleName );
-                    continue;
-                }
-
-                log.info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " ["
-                        + assay.getAccession().getAccession() + "]" );
-
-                columnsToKeep.add( columnName );
-                assay.setArrayDesignUsed( targetPlatform ); // OK?
-                bad.getBioAssays().add( assay );
-                found++;
-            }
-
-            if ( found != bioAssays.size() ) {
-                throw new IllegalStateException( "Failed to find a data column for every bioassay" );
-            }
-
-            if ( columnsToKeep.size() < matrix.columns() ) {
-                matrix = matrix.subsetColumns( columnsToKeep );
-            }
-
-            return convertDesignElementDataVectors( ee, bad, targetPlatform, makeAffyQuantitationType(), matrix );
+        if ( bioAssays.isEmpty() ) {
+            throw new IllegalArgumentException( "Experiment had no assays" );
         }
+
+        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+            throw new IllegalArgumentException( "Target design had no elements" );
+        }
+
+        /*
+         * we may have multiple platforms; we need to get only the bioassays of interest.
+         */
+        Collection<String> accessionsOfInterest = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getArrayDesignUsed().equals( targetPlatform ) ) {
+                accessionsOfInterest.add( ba.getAccession().getAccession() );
+            }
+        }
+
+        List<String> celfiles = getCelFiles( files, accessionsOfInterest );
+
+        log.info( "Located " + celfiles.size() + " cel files" );
+
+        String outputPath = getOutputFilePath( ee, "apt-output" );
+
+        String cmd = getThreePrimeSummarizationCommand( targetPlatform, cdfFileName, celfiles, outputPath );
+
+        log.info( "Running: " + cmd );
+
+        int exitVal = Integer.MIN_VALUE;
+
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+        try {
+            final Process run = Runtime.getRuntime().exec( cmd );
+            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
+            GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
+            gscErr.start();
+            gscIn.start();
+
+            while ( exitVal == Integer.MIN_VALUE ) {
+                try {
+                    exitVal = run.exitValue();
+                } catch ( IllegalThreadStateException e ) {
+                    // okay, still
+                    // waiting.
+                }
+                Thread.sleep( AFFY_UPDATE_INTERVAL_MS );
+
+                synchronized ( outputPath ) {
+                    File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
+                    Long size = outputFile.length();
+
+                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+                    log.info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
+                            + " kb (" + minutes + " minutes elapsed)" );
+                }
+            }
+
+            overallWatch.stop();
+            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+            log.info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
+
+            return processData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
+
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 
     /**
@@ -359,13 +431,12 @@ public class AffyPowerToolsProbesetSummarize {
      * @param expressionExperiment
      * @param bioAssayDimension
      * @param arrayDesign target design
-     * @param quantitationType
      * @param matrix
      * @return Collection<DesignElementDataVector>
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
-            QuantitationType quantitationType, DoubleMatrix<String, String> matrix ) {
+            DoubleMatrix<String, String> matrix ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
@@ -386,7 +457,7 @@ public class AffyPowerToolsProbesetSummarize {
                 continue;
             }
             vector.setDesignElement( cs );
-            vector.setQuantitationType( quantitationType );
+            vector.setQuantitationType( this.quantitationType );
             vector.setExpressionExperiment( expressionExperiment );
             vector.setBioAssayDimension( bioAssayDimension );
             vectors.add( vector );
@@ -398,17 +469,27 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * @param files
+     * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return
      */
-    private List<String> getCelFiles( Collection<LocalFile> files ) {
+    private List<String> getCelFiles( Collection<LocalFile> files, Collection<String> accessionsOfInterest ) {
 
-        Set<String> celfiles = new HashSet<String>();
+        Set<String> celfiles = new HashSet<>();
         for ( LocalFile f : files ) {
             try {
                 File fi = new File( f.getLocalURL().toURI() );
+
+                // FIXME if both unpacked and packed files are there, it looks at both of them. No major problem - the dups are resolved - just a little ugly.
                 if ( fi.canRead()
                         && ( fi.getName().toUpperCase().endsWith( ".CEL" ) || fi.getName().toUpperCase()
                                 .endsWith( ".CEL.GZ" ) ) ) {
+
+                    if ( accessionsOfInterest != null ) {
+                        String acc = fi.getName().replaceAll( "(GSM[0-9]+).+", "$1" );
+                        if ( !accessionsOfInterest.contains( acc ) ) {
+                            continue;
+                        }
+                    }
 
                     if ( FileTools.isGZipped( fi.getName() ) ) {
                         log.info( "Found CEL file " + fi + ", unzipping" );
@@ -431,54 +512,7 @@ public class AffyPowerToolsProbesetSummarize {
         if ( celfiles.isEmpty() ) {
             throw new IllegalArgumentException( "No valid CEL files were found" );
         }
-        return new ArrayList<String>( celfiles );
-    }
-
-    /**
-     * For 3' arrays. Run RMA with quantile normalization.
-     * 
-     * <pre>
-     * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
-     * /bigscratch/GSE123/*.CEL
-     * </pre>
-     * 
-     * @param targetPlatform
-     * @param cdfFileName e g. HG-U133A_2.cdf
-     * @param celfiles
-     * @param outputPath
-     * @return
-     */
-    private String getThreePrimeSummarizationCommand( ArrayDesign targetPlatform, String cdfFileName,
-            List<String> celfiles, String outputPath ) {
-        String toolPath = Settings.getString( "affy.power.tools.exec" );
-
-        /*
-         * locate the CDF file
-         */
-        String cdfPath = Settings.getString( "affy.power.tools.cdf.path" );
-        String cdfName;
-        if ( cdfFileName != null ) {
-            cdfName = cdfFileName;
-        } else {
-            String shortName = targetPlatform.getShortName();
-            // probably won't work ...
-            cdfName = shortName + ".cdf";
-        }
-        String cdfFullPath = null;
-        if ( !cdfName.contains( cdfPath ) ) {
-            cdfFullPath = cdfPath + File.separator + cdfName; // might be .cdf or .cdf.gz
-        } else {
-            cdfFullPath = cdfName;
-        }
-        checkFileReadable( cdfFullPath );
-
-        /*
-         * HG_U95C.CDF.gz, Mouse430_2.cdf.gz etc.
-         */
-
-        String cmd = toolPath + " -a " + METHOD + " -d " + cdfFullPath + " -o " + outputPath + " "
-                + StringUtils.join( celfiles, " " );
-        return cmd;
+        return new ArrayList<>( celfiles );
     }
 
     /**
@@ -550,30 +584,54 @@ public class AffyPowerToolsProbesetSummarize {
      */
     private String getOutputFilePath( ExpressionExperiment ee, String base ) {
         File tmpdir = new File( Settings.getDownloadPath() );
-        return tmpdir + File.separator + ee.getId() + "_" + base;
+        return tmpdir + File.separator + ee.getId() + "_" + RandomStringUtils.randomAlphanumeric( 4 ) + "_" + base;
     }
 
     /**
+     * For 3' arrays. Run RMA with quantile normalization.
+     * 
+     * <pre>
+     * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
+     * /bigscratch/GSE123/*.CEL
+     * </pre>
+     * 
+     * @param targetPlatform
+     * @param cdfFileName e g. HG-U133A_2.cdf
+     * @param celfiles
+     * @param outputPath
      * @return
      */
-    private QuantitationType makeAffyQuantitationType() {
-        QuantitationType result = QuantitationType.Factory.newInstance();
+    private String getThreePrimeSummarizationCommand( ArrayDesign targetPlatform, String cdfFileName,
+            List<String> celfiles, String outputPath ) {
+        String toolPath = Settings.getString( "affy.power.tools.exec" );
 
-        result.setGeneralType( GeneralType.QUANTITATIVE );
-        result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
-        result.setIsPreferred( Boolean.TRUE );
-        result.setIsNormalized( Boolean.TRUE );
-        result.setIsBackgroundSubtracted( Boolean.TRUE );
-        result.setIsBackground( false );
-        result.setName( METHOD + " value" );
-        result.setDescription( "Computed in Gemma by apt-probeset-summarize" );
-        result.setType( StandardQuantitationType.AMOUNT );
-        result.setIsMaskedPreferred( false ); // this is raw data.
-        result.setScale( ScaleType.LOG2 );
-        result.setIsRatio( false );
-        result.setIsRecomputedFromRawData( true );
+        /*
+         * locate the CDF file
+         */
+        String cdfPath = Settings.getString( "affy.power.tools.cdf.path" );
+        String cdfName;
+        if ( cdfFileName != null ) {
+            cdfName = cdfFileName;
+        } else {
+            String shortName = targetPlatform.getShortName();
+            // probably won't work ...
+            cdfName = shortName + ".cdf";
+        }
+        String cdfFullPath = null;
+        if ( !cdfName.contains( cdfPath ) ) {
+            cdfFullPath = cdfPath + File.separator + cdfName; // might be .cdf or .cdf.gz
+        } else {
+            cdfFullPath = cdfName;
+        }
+        checkFileReadable( cdfFullPath );
 
-        return result;
+        /*
+         * HG_U95C.CDF.gz, Mouse430_2.cdf.gz etc.
+         */
+
+        String cmd = toolPath + " -a " + METHOD + " -d " + cdfFullPath + " -o " + outputPath + " "
+                + StringUtils.join( celfiles, " " );
+        return cmd;
     }
 
     /**

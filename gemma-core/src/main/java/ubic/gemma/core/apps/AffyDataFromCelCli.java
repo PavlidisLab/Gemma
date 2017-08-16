@@ -46,12 +46,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     // /space/grp/databases/arrays/cdfs...
     private String cdfFile = null;
 
-
     public static void main( String[] args ) {
         AffyDataFromCelCli c = new AffyDataFromCelCli();
         c.doWork( args );
     }
-
 
     public boolean checkForAlreadyDone( BioAssaySet ee ) {
         for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
@@ -93,32 +91,32 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
         DataUpdater serv = getBean( DataUpdater.class );
 
+        // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
+        Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( this.expressionExperiments.iterator().next() );
+
         if ( StringUtils.isNotBlank( aptFile ) ) {
             if ( this.expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException( "Can't use -aptfile unless you are doing just one experiment" );
+                throw new IllegalArgumentException( "Can't use " + APT_FILE_OPT + " unless you are doing just one experiment" );
             }
-            BioAssaySet ee = this.expressionExperiments.iterator().next();
-            ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
+            ExpressionExperiment thawedEe = ( ExpressionExperiment ) this.expressionExperiments.iterator().next();
             thawedEe = this.eeService.thawLite( thawedEe );
 
-            Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
-
             if ( arrayDesignsUsed.size() > 1 ) {
-                throw new IllegalArgumentException( "Cannot update data for experiment that uses multiple platforms" );
+                throw new IllegalArgumentException( "Cannot use " + APT_FILE_OPT + " for experiment that uses multiple platforms" );
             }
 
             ArrayDesign ad = arrayDesignsUsed.iterator().next();
             try {
                 log.info( "Loading data from " + aptFile );
-                if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && (
-                        GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) || ad.getName().toLowerCase()
+                if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                        && ( GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) || ad.getName().toLowerCase()
                                 .contains( "exon" ) ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
                         .contains( "affy" ) ) {
                     serv.addAffyData( thawedEe, aptFile );
                 } else {
-                    throw new IllegalArgumentException( "Option -aptfile only valid if you are using an exon array." );
+                    throw new IllegalArgumentException( "Option " + APT_FILE_OPT + " only valid if you are using an exon array." );
                 }
             } catch ( Exception e ) {
                 log.error( e, e );
@@ -127,12 +125,22 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             return null;
         }
 
+        if ( StringUtils.isNotBlank( cdfFile ) ) {
+            if ( arrayDesignsUsed.size() > 1 ) {
+                throw new IllegalArgumentException( "Cannot use " + CDF_FILE_OPT + " for experiment that uses multiple platforms" );
+            }
+        }
+
         for ( BioAssaySet ee : this.expressionExperiments ) {
             try {
+
+                Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
+
                 /*
-                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
+                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force. Ignore this for
+                 * multiplatform studies (at our peril)
                  */
-                if ( !force && checkForAlreadyDone( ee ) ) {
+                if ( adsUsed.size() == 1 && !force && checkForAlreadyDone( ee ) ) {
                     log.warn( ee + ": Already has been recomputed from raw data, skipping (use 'force' to override')" );
                     this.errorObjects.add( ee + ": Already has been computed from raw data" );
                     continue;
@@ -141,16 +149,11 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
                 thawedEe = this.eeService.thawLite( thawedEe );
 
-                Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
-
-                if ( arrayDesignsUsed.size() > 1 ) {
-                    log.warn( ee + ": Cannot update data for experiment that uses multiple platforms" );
-                    this.errorObjects.add( ee + ": Cannot update data for experiment that uses multiple platforms" );
-                    continue;
-                }
-
-                ArrayDesign ad = arrayDesignsUsed.iterator().next();
-
+                ArrayDesign ad = adsUsed.iterator().next();
+                /*
+                 * Even if there are multiple platforms, we assume they are all the same type. If not, that's your
+                 * problem :) (seriously, we could check...)
+                 */
                 if ( ad.getName().toLowerCase().contains( "exon" ) && ad.getTechnologyType()
                         .equals( TechnologyType.ONECOLOR ) ) {
                     log.info( thawedEe + " looks like affy exon array" );
@@ -160,7 +163,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
                         .contains( "affy" ) ) {
                     log.info( thawedEe + " looks like a affy 3-prime array" );
-                    serv.reprocessAffyThreePrimeArrayData( thawedEe, cdfFile );
+                    serv.reprocessAffyThreePrimeArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
                     log.info( "Successfully processed: " + thawedEe );
                 } else {
@@ -168,6 +171,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                     this.errorObjects.add( ee
                             + ": This CLI can only deal with Affymetrix platforms (exon or 3' probe designs)" );
                 }
+
             } catch ( Exception e ) {
                 log.error( e, e );
                 this.errorObjects.add( ee + " " + e.getLocalizedMessage() );

@@ -1,12 +1,12 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
- * Created by tesarst on 24/05/17.
  * Long argument type for dataset API, referencing the Dataset ID.
+ *
+ * @author tesarst
  */
 public class DatasetIdArg extends DatasetArg<Long> {
 
@@ -15,11 +15,11 @@ public class DatasetIdArg extends DatasetArg<Long> {
      */
     DatasetIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but dataset with this ID does not exist or is not accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Dataset" );
     }
 
     @Override
     public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return service.load( this.value );
+        return check(service.load( this.value ));
     }
 }

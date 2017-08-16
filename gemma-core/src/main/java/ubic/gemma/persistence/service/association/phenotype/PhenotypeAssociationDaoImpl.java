@@ -46,8 +46,8 @@ import java.util.*;
  * deals with all basic queries used by Neurocarta
  *
  * @author Nicolas
- *         TODO: change criteria queries
- *         to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ * TODO: change criteria queries
+ * to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -141,12 +141,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
-            Integer limit ) {
+            Integer limit, int start ) {
 
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "select p from PhenotypeAssociation as p fetch all properties where "
-                + "p.evidenceSource.externalDatabase.name=:name" ).setParameter( "name", externalDatabaseName )
-                .setMaxResults( limit != null ? limit : DEFAULT_PA_LIMIT ).list();
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select p from PhenotypeAssociation as p fetch all properties where "
+                        + "p.evidenceSource.externalDatabase.name=:name" ).setParameter( "name", externalDatabaseName )
+                .setFirstResult( start ).setMaxResults( limit != null ? limit : DEFAULT_PA_LIMIT ).list();
     }
 
     /**

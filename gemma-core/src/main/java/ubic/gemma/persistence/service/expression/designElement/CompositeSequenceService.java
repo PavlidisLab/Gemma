@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.designElement;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -56,6 +57,8 @@ public interface CompositeSequenceService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene );
+    
+    Collection<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
@@ -81,6 +84,8 @@ public interface CompositeSequenceService
 
     Collection<Gene> getGenes( CompositeSequence compositeSequence );
 
+    Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
+
     /**
      * Returns a map of CompositeSequences to collection of BioSequence2GeneProducts at each location.
      */
@@ -96,6 +101,8 @@ public interface CompositeSequenceService
      */
     @Deprecated
     Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
+
+    Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })

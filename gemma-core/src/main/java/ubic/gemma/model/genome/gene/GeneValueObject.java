@@ -54,6 +54,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Double multifunctionalityRank = 0.0;
     private String name;
     private Integer ncbiId;
+    private String ensemblId;
     private double[] nodeDegreeNegRanks;
     private double[] nodeDegreePosRanks;
     /**
@@ -101,6 +102,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
+        this.ensemblId = gene.getEnsemblId();
     }
 
     /**
@@ -426,10 +428,11 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         return taxonScientificName;
     }
 
-
-
     public void setTaxonScientificName( String taxonScientificName ) {
         this.taxonScientificName = taxonScientificName;
     }
 
+    public String getEnsemblId() {
+        return ensemblId;
+    }
 }

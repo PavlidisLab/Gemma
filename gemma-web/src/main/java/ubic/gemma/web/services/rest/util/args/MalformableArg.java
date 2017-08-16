@@ -6,17 +6,19 @@ import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 import javax.ws.rs.core.Response;
 
 /**
- * Created by tesarst on 26/05/17.
- * Base class for non Object-specific functionality argument types.
+ * Base class for non Object-specific functionality argument types, that can be malformed on input (E.g an argument
+ * representing a number was a non-numeric string in the request).
+ *
+ * @author tesarst
  */
 abstract class MalformableArg {
 
+    private final boolean malformed;
     private String errorMessage = "";
-    private boolean malComposed;
     private Exception exception;
 
     MalformableArg() {
-        this.malComposed = false;
+        this.malformed = false;
     }
 
     /**
@@ -26,7 +28,7 @@ abstract class MalformableArg {
      * @param exception    the exception that the client should be informed about.
      */
     MalformableArg( String errorMessage, Exception exception ) {
-        this.malComposed = true;
+        this.malformed = true;
         this.exception = exception;
         this.errorMessage = errorMessage;
     }
@@ -36,10 +38,10 @@ abstract class MalformableArg {
      * exception using the information provided in the constructor.
      */
     void checkMalformed() {
-        if ( this.malComposed ) {
+        if ( this.malformed ) {
             WellComposedErrorBody body = new WellComposedErrorBody( Response.Status.BAD_REQUEST, errorMessage );
             WellComposedErrorBody.addExceptionFields( body, this.exception );
-            throw new GemmaApiException( body);
+            throw new GemmaApiException( body );
         }
     }
 

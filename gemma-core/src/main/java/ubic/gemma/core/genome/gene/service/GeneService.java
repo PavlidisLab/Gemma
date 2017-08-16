@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -56,7 +57,14 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     Collection<Gene> findByAlias( String search );
 
-    Collection<? extends Gene> findByEnsemblId( String exactString );
+    /**
+     * Searches for a gene based on its ensembl ID.
+     * FIXME There is a small amount of genes in our database that have duplicate ensembl IDs. These genes are believed
+     * to be somehow unusable anyway, so we ignore those cases at the moment - Aug. 11th 2017.
+     * @param exactString the ensembl ID that the gene will be looked up by.
+     * @return a Gene with the given Ensembl ID.
+     */
+    Gene findByEnsemblId( String exactString );
 
     Gene findByNCBIId( Integer accession );
 
@@ -107,6 +115,8 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
      * Gets all the genes for a given taxon
      */
     Collection<Gene> getGenesByTaxon( Taxon taxon );
+
+    Collection<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );
 
     /**
      * @return empty collection if no products

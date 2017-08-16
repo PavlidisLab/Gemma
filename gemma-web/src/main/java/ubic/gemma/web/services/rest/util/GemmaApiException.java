@@ -4,19 +4,21 @@ import javax.ws.rs.core.Response;
 import java.io.Serializable;
 
 /**
- * Created by tesarst on 17/05/17.
- * Exception used to handle api error code setting.
+ * Exception for the REST API related issues.
+ *
+ * @author tesarst
  */
+@SuppressWarnings("WeakerAccess") // Getters used by RS serializer.
 public class GemmaApiException extends RuntimeException implements Serializable {
 
-    private Response.Status code;
+    private final Response.Status code;
     private ResponseErrorObject errorObject;
 
     public GemmaApiException( Response.Status code ) {
         this.code = code;
     }
 
-    public GemmaApiException( WellComposedErrorBody body) {
+    public GemmaApiException( WellComposedErrorBody body ) {
         super( body.getMessage() );
         this.errorObject = new ResponseErrorObject( body );
         this.code = body.getStatus();

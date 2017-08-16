@@ -19,7 +19,6 @@ import org.hibernate.*;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.VoEnabledDao;
@@ -38,20 +37,18 @@ import java.util.List;
 @Repository
 public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
-
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
         super( Taxon.class, sessionFactory );
     }
-
-
 
     @Override
     public Taxon find( Taxon taxon ) {
 
         BusinessKey.checkValidKey( taxon );
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Taxon.class ).setReadOnly( true );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Taxon.class )
+                .setReadOnly( true );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         BusinessKey.addRestrictions( queryObject, taxon );
@@ -114,7 +111,8 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     @Override
     public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
                 .setParameter( "parentTaxon", parentTaxon ).list();
     }
 
@@ -133,12 +131,13 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
 
     @Override
     public TaxonValueObject loadValueObject( Taxon entity ) {
+        thaw( entity );
         return new TaxonValueObject( entity );
     }
 
     @Override
     public Collection<TaxonValueObject> loadValueObjects( Collection<Taxon> entities ) {
-        Collection<TaxonValueObject> vos = new LinkedHashSet<TaxonValueObject>();
+        Collection<TaxonValueObject> vos = new LinkedHashSet<>();
         for ( Taxon e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }

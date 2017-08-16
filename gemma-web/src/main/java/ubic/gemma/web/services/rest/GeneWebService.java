@@ -14,117 +14,178 @@
  */
 package ubic.gemma.web.services.rest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.Lists;
-
+import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.service.genome.ChromosomeService;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebService;
+import ubic.gemma.web.services.rest.util.args.GeneArg;
+import ubic.gemma.web.services.rest.util.args.IntArg;
 
-import com.sun.jersey.api.NotFoundException;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 
 /**
- * RESTful web services for gene
- * 
- * @author frances
- * @version $Id $
+ * RESTful interface for genes.
+ * Does not have an 'all' endpoint (no use-cases).
+ * Most methods also have a taxon-specific counterpart in the {@link TaxaWebService} (useful when using the 'official
+ * symbol' identifier, as this class will just return a random taxon homologue).
+ *
+ * @author tesarst
  */
-
 @Component
-@Path("/gene")
-@Deprecated
-public class GeneWebService {
+@Path("/genes")
+public class GeneWebService extends WebService {
 
-    @Autowired
-    private GeneCoreService geneCoreService;
-
-    @Autowired
     private GeneService geneService;
-
-    @Autowired
+    private GeneOntologyService geneOntologyService;
+    private CompositeSequenceService compositeSequenceService;
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    private GeneCoexpressionSearchService geneCoexpressionSearchService;
 
-    @GET
-    @Path("/find-gene-details")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Collection<GeneValueObject> findGeneDetails( @QueryParam("geneId") Long geneId ) {
-        ArrayList<GeneValueObject> valueObjects = new ArrayList<>( 1 ); // Contain only 1 element.
-        valueObjects.add( geneCoreService.loadGeneDetails( geneId ) );
-        return valueObjects;
+    /**
+     * Required by spring
+     */
+    public GeneWebService() {
     }
 
-    @GET
-    @Path("/find-genes-by-ncbi")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<Integer, GeneValueObject> findGenesByNcbiId( @QueryParam("ncbiIds") String ncbiIdsQuery ) {
-        if ( ncbiIdsQuery == null )
-            throw new NotFoundException( "Requires: ncbiIds = comma separated list of NCBI Ids" );
-
-        Collection<Integer> ncbiIds = Lists.newArrayList();
-        for ( String ncbiId : ncbiIdsQuery.split( "," ) ) {
-            try {
-                ncbiIds.add( Integer.valueOf( ncbiId ) );
-            } catch ( NumberFormatException e ) {
-                throw new NotFoundException( "Cannot convert given NCBI Id to integer: " + ncbiId );
-            }
-        }
-
-        Map<Integer, GeneValueObject> result = geneService.findByNcbiIds( ncbiIds );
-        for ( Integer ncbiId : ncbiIds ) {
-            if ( !result.containsKey( ncbiId ) ) {
-                result.put( ncbiId, null );
-            }
-        }
-        return result;
-
+    /**
+     * Constructor for service autowiring
+     */
+    @Autowired
+    public GeneWebService( GeneService geneService, GeneOntologyService geneOntologyService,
+            CompositeSequenceService compositeSequenceService,
+            PhenotypeAssociationManagerService phenotypeAssociationManagerService,
+            GeneCoexpressionSearchService geneCoexpressionSearchService ) {
+        this.geneService = geneService;
+        this.geneOntologyService = geneOntologyService;
+        this.compositeSequenceService = compositeSequenceService;
+        this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
+        this.geneCoexpressionSearchService = geneCoexpressionSearchService;
     }
 
+    /**
+     * Retrieves all genes matching the identifier.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
     @GET
-    @Path("/find-genes-by-symbol")
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, GeneValueObject> findGenesBySymbol( @QueryParam("taxonId") Long taxonId,
-            @QueryParam("symbols") String symbolsQuery ) {
-        if ( symbolsQuery == null )
-            throw new NotFoundException( "Requires: symbols = comma separated list of Gene Symbols" );
-
-        if ( taxonId == null )
-            throw new NotFoundException( "Requires: taxonId" );
-
-        Collection<String> symbols = Arrays.asList( symbolsQuery.split( "," ) );
-
-        Map<String, GeneValueObject> result = geneService.findByOfficialSymbols( symbols, taxonId );
-        for ( String symbol : symbols ) {
-            if ( !result.containsKey( symbol.toLowerCase() ) ) {
-                result.put( symbol, null );
-            }
-        }
-        return result;
-
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genes( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( geneArg.getValueObjects( geneService ), sr );
     }
 
+    /**
+     * Retrieves gene evidence matching the gene identifier
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
     @GET
-    @Path("/find-genes-with-evidence")
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( @QueryParam("geneSymbol") String geneSymbol ) {
-        return phenotypeAssociationManagerService.findGenesWithEvidence( geneSymbol, null );
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject geneEvidence( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder
+                .autoCode( geneArg.getGeneEvidence( geneService, phenotypeAssociationManagerService, null ), sr );
+    }
+
+    /**
+     * Retrieves the physical location of the given gene.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/locations")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject geneLocations( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( geneArg.getGeneLocation( geneService ), sr );
+    }
+
+    /**
+     * Retrieves the composite sequences (probes) with this gene.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/probes")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject geneProbes( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( compositeSequenceService
+                .loadValueObjectsForGene( geneArg.getPersistentObject( geneService ), offset.getValue(),
+                        limit.getValue() ), sr );
+    }
+
+    /**
+     * Retrieves the GO terms of the given gene.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/goTerms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject genesGoTerms( // Params:
+            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( geneArg.getGoTerms( geneService, geneOntologyService ), sr );
+    }
+
+    /**
+     * Retrieves the coexpression of the two given genes.
+     *
+     * @param geneArg    can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                   guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     * @param with       the gene to calculate the coexpression with. Same formatting rules as with the 'geneArg' apply.
+     * @param stringency optional parameter controlling the stringency of coexpression search. Defaults to 1.
+     */
+    @GET
+    @Path("/{geneArg: [a-zA-Z0-9\\.]+}/coexpression")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject geneCoexpression( // Params:
+            @PathParam("geneArg") final GeneArg<Object> geneArg, // Required
+            @QueryParam("with") @DefaultValue("") final GeneArg<Object> with, // Required
+            @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("stringency") @DefaultValue("1") IntArg stringency, // Optional, default 1
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder
+                .autoCode( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
+                    this.add( geneArg.getPersistentObject( geneService ).getId() );
+                    this.add( with.getPersistentObject( geneService ).getId() );
+                }}, 1, limit.getValue(), false ).getResults(), sr );
     }
 
 }

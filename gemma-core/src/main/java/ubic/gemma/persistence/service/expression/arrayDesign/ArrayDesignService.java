@@ -126,6 +126,9 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 

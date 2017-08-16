@@ -57,7 +57,8 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.loader.expression.ExperimentPlatformSwitchHelperService#persist(ubic.gemma.model.expression.experiment
+     * ubic.gemma.core.loader.expression.ExperimentPlatformSwitchHelperService#persist(ubic.gemma.model.expression.
+     * experiment
      * .ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
@@ -73,10 +74,13 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
         audit( expExp, "Switch to use " + arrayDesign.getShortName() );
 
         for ( RawExpressionDataVector v : expExp.getRawExpressionDataVectors() ) {
-            assert arrayDesign.equals( v.getDesignElement().getArrayDesign() );
+            if ( !arrayDesign.equals( v.getDesignElement().getArrayDesign() ) ) {
+                throw new IllegalStateException(
+                        "A raw vector for QT =" + v.getQuantitationType() + " was not correctly switched to the target platform " + arrayDesign );
+            }
         }
 
-        log.info( "Completing switching " + expExp );
+        log.info( "Completing switching " + expExp ); // flush of transaction happens after this, can take a while.
     }
 
     /**

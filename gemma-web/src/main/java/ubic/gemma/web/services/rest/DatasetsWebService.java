@@ -14,27 +14,26 @@
  */
 package ubic.gemma.web.services.rest;
 
-import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.services.rest.util.Responder;
-import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
-import ubic.gemma.web.services.rest.util.args.DatasetArg;
-import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
-import ubic.gemma.web.services.rest.util.args.IntArg;
-import ubic.gemma.web.services.rest.util.args.SortArg;
-import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.text.ParseException;
 
 /**
  * RESTful interface for datasets.
@@ -43,12 +42,14 @@ import javax.ws.rs.core.Response;
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService extends WebService {
+public class DatasetsWebService extends WebServiceWithFiltering {
 
-    private static final String ERROR_MSG_PROP_NOT_FOUND = "Datasets do not contain the given property.";
-    private static final String ERROR_MSG_PROP_NOT_FOUND_DETAIL = "Property of name '%s' not recognized.";
+    private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
+    private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
 
+    private DifferentialExpressionResultService differentialExpressionResultService;
     private ExpressionExperimentService expressionExperimentService;
+    private ExpressionDataFileService expressionDataFileService;
     private ArrayDesignService arrayDesignService;
     private BioAssayService bioAssayService;
 
@@ -62,61 +63,19 @@ public class DatasetsWebService extends WebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
-            ArrayDesignService arrayDesignService, BioAssayService bioAssayService ) {
+    public DatasetsWebService( DifferentialExpressionResultService differentialExpressionResultService,
+            ExpressionExperimentService expressionExperimentService,
+            ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
+            BioAssayService bioAssayService ) {
+        this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
+        this.expressionDataFileService = expressionDataFileService;
         this.arrayDesignService = arrayDesignService;
         this.bioAssayService = bioAssayService;
     }
 
     /**
-     * Lists all datasets available in gemma.
-     *
-     * @param filter optional parameter (defaults to empty string) filters the result by given properties.
-     *               <br/>
-     *               <p>
-     *               Filtering can be done on any property or nested property that the ExpressionExperiment class has (
-     *               and is mapped by hibernate ). E.g: 'curationDetails' or 'curationDetails.lastTroubledEvent.date'
-     *               </p><p>
-     *               Accepted operator keywords are:
-     *               <ul>
-     *               <li> '=' - equality</li>
-     *               <li> '!=' - non-equality</li>
-     *               <li> '<' - smaller than</li>
-     *               <li> '>' - larger than</li>
-     *               <li> '<=' - smaller or equal</li>
-     *               <li> '=>' - larger or equal</li>
-     *               <li> 'like' - similar string, effectively means 'contains', translates to the sql 'LIKE' operator (given value will be surrounded by % signs)</li>
-     *               </ul>
-     *               Multiple filters can be chained using 'AND' or 'OR' keywords.<br/>
-     *               Leave space between the keywords and the previous/next word! <br/>
-     *               E.g: <code>?filter=property1 < value1 AND property2 ~ value2</code>
-     *               </p><p>
-     *               If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal
-     *               form (CNF). Parentheses are not necessary - every AND keyword separates blocks of disjunctions.
-     *               </p><p>
-     *               Example:<br/>
-     *               <code>?filter=p1 = v1 OR p1 != v2 AND p2 <= v2 AND p3 > v3 OR p3 < v4</code><br/>
-     *               Above query will translate to: <br/>
-     *               <code>(p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4;)</code>
-     *               </p><p>
-     *               Breaking the CNF results in an error.
-     *               </p>
-     *               <p>
-     *               Filter "curationDetails.troubled" will be ignored if user is not an administrator.
-     *               </p>
-     *               <br/>
-     * @param offset <p>optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.</p>
-     * @param limit  <p>optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.</p>
-     * @param sort   <p>optional parameter (defaults to +id) sets the ordering property and direction.<br/>
-     *               Format is [+,-][property name]. E.g. "-accession" will translate to descending ordering by the
-     *               Accession property.<br/>
-     *               Note that this does not guarantee the order of the returned entities.<br/>
-     *               Nested properties are also supported (recursively). E.g. "+curationDetails.lastTroubledEvent.date".<br/></p>
-     * @return all datasets in the database, skipping the first [{@code offset}] of datasets, and limiting the amount in the result to
-     * the value of the {@code limit} parameter. If the {@code accessionGsmId} parameter is non-null, will limit the result to datasets
-     * with specified accession. Note that if the accession GSM id is not valid or no datasets with it are found, a 404 response will be
-     * supplied instead.
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -128,27 +87,12 @@ public class DatasetsWebService extends WebService {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        try {
-            return Responder.autoCode( expressionExperimentService
-                    .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
-                            filter.getObjectFilters() ), sr );
-        } catch ( QueryException e ) {
-
-            //if ( log.isDebugEnabled() ) {
-                e.printStackTrace();
-            //}
-
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                    ERROR_MSG_PROP_NOT_FOUND );
-            WellComposedErrorBody.addExceptionFields( error,
-                    new EntityNotFoundException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
-
-            return Responder.code( error.getStatus(), error, sr );
-        }
+        // Uses this.loadVOsPreFilter(...)
+        return super.all( filter, offset, limit, sort, sr );
     }
 
     /**
-     * Retrieves single dataset based on the given identifier.
+     * Retrieves single dataset based on the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -161,12 +105,11 @@ public class DatasetsWebService extends WebService {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getValueObject( expressionExperimentService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
     }
 
     /**
-     * Retrieves platforms for the given experiment.
+     * Retrieves platforms for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -179,12 +122,11 @@ public class DatasetsWebService extends WebService {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getPlatforms( expressionExperimentService, arrayDesignService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ), sr );
     }
 
     /**
-     * Retrieves the samples for given experiment.
+     * Retrieves the samples for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -197,12 +139,33 @@ public class DatasetsWebService extends WebService {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getSamples( expressionExperimentService, bioAssayService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService ), sr );
     }
 
     /**
-     * Retrieves the annotations for given experiment.
+     * Retrieves the differential analysis results for the given dataset.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/analyses/differential")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetDiffAnalysis( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @QueryParam("qValueThreshold") @DefaultValue("") DoubleArg qValueThreshold, // Required
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( differentialExpressionResultService
+                .getVOsForExperiment( datasetArg.getPersistentObject( expressionExperimentService ),
+                        qValueThreshold.getValue(), offset.getValue(), limit.getValue() ), sr );
+    }
+
+    /**
+     * Retrieves the annotations for the given dataset.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -215,8 +178,98 @@ public class DatasetsWebService extends WebService {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        Object response = datasetArg.getAnnotations( expressionExperimentService );
-        return this.autoCodeResponse( datasetArg, response, sr );
+        return Responder.autoCode( datasetArg.getAnnotations( expressionExperimentService ), sr );
+    }
+
+    /**
+     * Retrieves the data for the given dataset.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     * @param filterData filters the expression data so that they do not contain samples under a minimum threshold.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/data")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response datasetData( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        return outputDataFile( ee, filterData.getValue() );
+    }
+
+    /**
+     * Retrieves the design for the given dataset.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/design")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response datasetDesign( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        return outputDesignFile( ee );
+    }
+
+    @Override
+    protected ResponseDataObject loadVOsPreFilter( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
+            HttpServletResponse sr ) throws ParseException {
+        return Responder.autoCode( expressionExperimentService
+                .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
+                        filter.getObjectFilters() ), sr );
+    }
+
+    private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
+        ee = expressionExperimentService.thawLite( ee );
+        File file = expressionDataFileService.writeTemporaryDataFile( ee, filter );
+        return outputFile( file, ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
+    }
+
+    private Response outputDesignFile( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawLite( ee );
+        File file = expressionDataFileService.writeTemporaryDesignFile( ee );
+        return outputFile( file, ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
+    }
+
+    private Response outputFile( File file, String error, String shortName ) {
+        try {
+            if ( file == null || !file.exists() ) {
+                WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                        String.format( error, shortName ) );
+                throw new GemmaApiException( errorBody );
+            }
+
+            Response response = Response.ok( Files.readAllBytes( file.toPath() ) )
+                    .header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
+
+            deleteFile( file );
+
+            return response;
+        } catch ( IOException e ) {
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    String.format( error, shortName ) );
+            errorBody.addErrorsField( "error", e.getMessage() );
+
+            deleteFile( file );
+
+            throw new GemmaApiException( errorBody );
+        }
+    }
+
+    private void deleteFile( File file ) {
+        if ( file.canWrite() && file.delete() ) {
+            log.info( "Deleted: " + file );
+        } else {
+            log.warn( "Could not delete file: " + file );
+        }
     }
 
 }

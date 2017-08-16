@@ -120,7 +120,8 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
     }
 
     /**
-     * See bug 2064. GSE14618 is a superseries of GSE14613 and GSE14615
+     * See bug 2064. GSE14618 is a superseries of GSE14613 and GSE14615. This is actually even worse, because some
+     * samples were run on both platforms. This is a situation we don't really want to handle completely.
      *
      */
     @Test

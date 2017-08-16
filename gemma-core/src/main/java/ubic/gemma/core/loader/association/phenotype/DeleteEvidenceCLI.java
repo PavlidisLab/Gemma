@@ -115,7 +115,7 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
         log.info( "Loading " + limit + " evidence (this takes some time)" );
 
         Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidenceToDelete = this.phenotypeAssociationService
-                .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit );
+                .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit, 0 );
         int i = 0;
 
         while ( evidenceToDelete.size() > 0 ) {
@@ -124,7 +124,7 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
                 log.info( i++ );
             }
             evidenceToDelete = this.phenotypeAssociationService
-                    .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit );
+                    .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit, 0 );
         }
         System.exit( -1 );
         return null;

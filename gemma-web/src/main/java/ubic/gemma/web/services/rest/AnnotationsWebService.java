@@ -70,7 +70,7 @@ public class AnnotationsWebService extends WebService {
     public ResponseDataObject all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code404( ERR_MSG_UNMAPPED_PATH, sr );
+        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     /**
@@ -99,12 +99,11 @@ public class AnnotationsWebService extends WebService {
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject search( // Params:
-            @PathParam("query") String query, // Required, part of url
+            @PathParam("query") String query, // Required
             @QueryParam("taxon") @DefaultValue("") TaxonArg<Object> taxonArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder
-                .autoCode( ontologyService.findTermsInexact( query, taxonArg.getPersistentObject( this.taxonService ) ),
-                        sr );
+        return Responder.autoCode( ontologyService.findTermsInexact( query,
+                taxonArg.isNull() ? null : taxonArg.getPersistentObject( this.taxonService ) ), sr );
     }
 }

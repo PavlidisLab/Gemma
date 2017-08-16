@@ -41,6 +41,8 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
 
     Collection<CompositeSequence> findByGene( Gene gene );
 
+    Collection<CompositeSequence> findByGene( Gene gene, int start, int limit );
+
     Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
 
     Collection<CompositeSequence> findByName( String name );
@@ -57,7 +59,7 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
     /**
      * given a composite sequence returns a collection of genes
      */
-    Collection<Gene> getGenes( CompositeSequence compositeSequence );
+    Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit );
 
     /**
      * Returns a map of CompositeSequences to BlatAssociations .

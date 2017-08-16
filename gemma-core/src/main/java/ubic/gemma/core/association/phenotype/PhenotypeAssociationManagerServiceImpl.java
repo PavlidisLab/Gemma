@@ -565,15 +565,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return this.phenoAssocService.loadAllNeurocartaPhenotypes();
     }
 
-    /**
-     * This method loads all phenotypes in the database and counts their occurrence using the database It builds the tree
-     * using parents of terms, and will return 3 trees representing Disease, HP and MP
-     *
-     * @return A collection of the phenotypes with the gene occurrence
-     */
     @Override
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter ) {
-
         addDefaultExcludedDatabases( evidenceFilter );
 
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<>();
@@ -589,6 +582,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return simpleTreeValueObjects;
+    }
+
+    @Override
+    public Collection<TreeCharacteristicValueObject> loadAllPhenotypesAsTree( EvidenceFilter evidenceFilter ) {
+        Collection<TreeCharacteristicValueObject> phenotypes = findAllPhenotypesByTree( true, evidenceFilter,
+                SecurityUtil.isUserAdmin(), false );
+
+        return customTreeFeatures( phenotypes );
     }
 
     @Override
@@ -613,15 +614,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return dumpsValueObjects;
     }
 
-    /**
-     * this method can be used if we want to reimport data from a specific external Database
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
-            String externalDatabaseName, Integer limit ) {
+            String externalDatabaseName, Integer limit, int start ) {
         Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
-                .findEvidencesWithExternalDatabaseName( externalDatabaseName, limit );
+                .findEvidencesWithExternalDatabaseName( externalDatabaseName, limit, start );
 
         return this.convert2ValueObjects( phenotypeAssociations );
     }
@@ -1226,7 +1224,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         phenotypeAssociations = this.phenoAssocService.findEvidencesWithoutExternalDatabaseName();
                     } else {
                         phenotypeAssociations = this.phenoAssocService
-                                .findEvidencesWithExternalDatabaseName( externalDatabaseValueObject.getName(), null );
+                                .findEvidencesWithExternalDatabaseName( externalDatabaseValueObject.getName(), null,
+                                        0 );
                     }
 
                     for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {

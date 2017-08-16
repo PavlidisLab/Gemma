@@ -4,18 +4,19 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 
 /**
- * Created by tesarst on 25/05/17.
  * Long argument type for DatabaseEntry API, referencing the Taxon ID.
+ *
+ * @author tesarst
  */
 public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 
     DatabaseEntryIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but database entry with this ID does not exist or is not accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Database Entry" );
     }
 
     @Override
     public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
-        return service.load( value );
+        return check(service.load( value ));
     }
 }

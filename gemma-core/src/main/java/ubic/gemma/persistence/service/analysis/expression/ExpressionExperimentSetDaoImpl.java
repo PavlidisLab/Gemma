@@ -226,7 +226,7 @@ public class ExpressionExperimentSetDaoImpl
      */
     private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids,
             boolean loadEEIds ) {
-        Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentSetValueObject>();
+        Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<>();
         Query queryObject = this.getLoadValueObjectsQueryString( ids );
         List<?> list = queryObject.list();
         for ( Object object : list ) {

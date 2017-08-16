@@ -955,10 +955,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Collection<CompositeSequence> loadCompositeSequences( Long id ) {
+    public Collection<CompositeSequence> loadCompositeSequences( Long id, int limit, int offset ) {
         final String queryString = "select cs from CompositeSequence as cs where cs.arrayDesign.id = :id";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
+                .setFirstResult( offset ).setMaxResults( limit ).list();
     }
 
     /**
@@ -1080,7 +1081,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += formAclSelectClause( ObjectFilter.DAO_AD_ALIAS,
                 "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
         queryString += formRestrictionClause( filters );
-        queryString += "group by "+ObjectFilter.DAO_AD_ALIAS+".id ";
+        queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id ";
         queryString += formOrderByProperty( orderByProperty, orderDesc );
 
         if ( log.isDebugEnabled() ) {

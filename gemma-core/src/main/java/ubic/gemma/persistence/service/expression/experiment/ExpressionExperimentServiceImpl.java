@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +18,19 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import gemma.gsec.SecurityService;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundValueObject;
@@ -41,10 +50,15 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -52,7 +66,13 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.VoEnabledService;
@@ -60,14 +80,11 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoe
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.util.ObjectFilter;
-
-import java.util.*;
 
 /**
  * @author pavlidis
@@ -86,7 +103,6 @@ public class ExpressionExperimentServiceImpl
     private AuditEventDao auditEventDao;
     private BioAssayDimensionDao bioAssayDimensionDao;
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
-    private DatabaseEntryService databaseEntryService;
     private ExpressionExperimentSetService expressionExperimentSetService;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
     private ExperimentalFactorDao experimentalFactorDao;
@@ -107,107 +123,45 @@ public class ExpressionExperimentServiceImpl
         this.expressionExperimentDao = expressionExperimentDao;
     }
 
-    @Autowired
-    public void setAuditEventDao( AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
-    }
-
-    @Autowired
-    public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
-        this.bioAssayDimensionDao = bioAssayDimensionDao;
-    }
-
-    @Autowired
-    public void setDifferentialExpressionAnalysisDao(
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
-    }
-
-    @Autowired
-    public void setDatabaseEntryService( DatabaseEntryService databaseEntryService ) {
-        this.databaseEntryService = databaseEntryService;
-    }
-
-    @Autowired
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
-    }
-
-    @Autowired
-    public void setExpressionExperimentSubSetService(
-            ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
-        this.expressionExperimentSubSetService = expressionExperimentSubSetService;
-    }
-
-    @Autowired
-    public void setExperimentalFactorDao( ExperimentalFactorDao experimentalFactorDao ) {
-        this.experimentalFactorDao = experimentalFactorDao;
-    }
-
-    @Autowired
-    public void setFactorValueDao( FactorValueDao factorValueDao ) {
-        this.factorValueDao = factorValueDao;
-    }
-
-    @Autowired
-    public void setRawExpressionDataVectorDao( RawExpressionDataVectorDao rawExpressionDataVectorDao ) {
-        this.rawExpressionDataVectorDao = rawExpressionDataVectorDao;
-    }
-
-    @Autowired
-    public void setOntologyService( OntologyService ontologyService ) {
-        this.ontologyService = ontologyService;
-    }
-
-    @Autowired
-    public void setPrincipalComponentAnalysisService(
-            PrincipalComponentAnalysisService principalComponentAnalysisService ) {
-        this.principalComponentAnalysisService = principalComponentAnalysisService;
-    }
-
-    @Autowired
-    public void setProcessedVectorService( ProcessedExpressionDataVectorService processedVectorService ) {
-        this.processedVectorService = processedVectorService;
-    }
-
-    @Autowired
-    public void setQuantitationTypeDao( QuantitationTypeService quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    @Autowired
-    public void setSampleCoexpressionAnalysisDao( SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao ) {
-        this.sampleCoexpressionAnalysisDao = sampleCoexpressionAnalysisDao;
-    }
-
-    @Autowired
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    @Autowired
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
-    @Autowired
-    public void setSvdService( SVDService svdService ) {
-        this.svdService = svdService;
-    }
-
     @Override
-    public Integer countNotTroubled() {
-        return this.expressionExperimentDao.countNotTroubled();
+    @Transactional
+    public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
+        ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
+        factor.setExperimentalDesign( experiment.getExperimentalDesign() );
+        factor.setSecurityOwner( experiment );
+        factor = experimentalFactorDao.create( factor ); // to make sure we get acls.
+        experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
+        expressionExperimentDao.update( experiment );
+        return factor;
     }
 
     @Override
     @Transactional
-    public ExpressionExperiment addVectors( ExpressionExperiment ee, ArrayDesign ad,
+    public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
+        assert fv.getExperimentalFactor() != null;
+        ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
+        fv.setSecurityOwner( experiment );
+        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
+        fv = this.factorValueDao.create( fv );
+        for ( ExperimentalFactor ef : efs ) {
+            if ( fv.getExperimentalFactor().equals( ef ) ) {
+                ef.getFactorValues().add( fv );
+                break;
+            }
+        }
+        expressionExperimentDao.update( experiment );
+        return fv;
+
+    }
+
+    @Override
+    @Transactional
+    public ExpressionExperiment addVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
 
         // ee = this.load( ee.getId() );
-        Collection<BioAssayDimension> bads = new HashSet<BioAssayDimension>();
-        Collection<QuantitationType> qts = new HashSet<QuantitationType>();
+        Collection<BioAssayDimension> bads = new HashSet<>();
+        Collection<QuantitationType> qts = new HashSet<>();
         for ( RawExpressionDataVector vec : newVectors ) {
             bads.add( vec.getBioAssayDimension() );
             qts.add( vec.getQuantitationType() );
@@ -235,6 +189,14 @@ public class ExpressionExperimentServiceImpl
             log.warn( "Quantitation type already had an ID...:" + newQt );
         }
 
+        /*
+         * This is probably a more or less redundant setting, but doesn't hurt to make sure.
+         */
+        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
+        for ( BioAssay ba : bad.getBioAssays() ) {
+            ba.setArrayDesignUsed( vectorAd );
+        }
+
         for ( RawExpressionDataVector vec : newVectors ) {
             vec.setBioAssayDimension( bad );
             vec.setQuantitationType( newQt );
@@ -242,26 +204,8 @@ public class ExpressionExperimentServiceImpl
 
         ee = rawExpressionDataVectorDao.addVectors( ee.getId(), newVectors );
 
-        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
-
-        if ( ad == null ) {
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( !vectorAd.equals( ba.getArrayDesignUsed() ) ) {
-                    throw new IllegalArgumentException( "Vectors must use the array design as the bioassays" );
-                }
-            }
-        } else if ( !vectorAd.equals( ad ) ) {
-            throw new IllegalArgumentException( "Vectors must use the array design indicated" );
-        }
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.setArrayDesignUsed( ad );
-        }
-
         // this is a denormalization; easy to forget to update this.
         ee.getQuantitationTypes().add( newQt );
-
-        // this.update( ee ); // is this even necessary? should flush.
 
         log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
 
@@ -281,71 +225,8 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional
-    public void remove( Long id ) {
-        final ExpressionExperiment ee = this.load( id );
-
-        if ( !securityService.isEditable( ee ) ) {
-            throw new SecurityException(
-                    "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
-                            + " You do not have permission to edit this experiment." );
-        }
-
-        // Remove subsets
-        Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
-        for ( ExpressionExperimentSubSet subset : subsets ) {
-            expressionExperimentSubSetService.delete( subset );
-        }
-
-        // Remove differential expression analyses
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
-                .findByInvestigation( ee );
-        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            Long toDelete = de.getId();
-            this.differentialExpressionAnalysisDao.remove( toDelete );
-        }
-
-        // remove any sample coexpression matrices
-        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
-
-        // Remove PCA
-        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisService.findByExperiment( ee );
-        for ( PrincipalComponentAnalysis pca : pcas ) {
-            this.principalComponentAnalysisService.remove( pca );
-        }
-
-        /*
-         * FIXME: delete probecoexpression analysis; gene coexexpression will linger.
-         */
-
-        /*
-         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
-         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
-         * analyses!
-         */
-        Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
-        for ( ExpressionExperimentSet eeset : sets ) {
-            if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
-                log.info( "Removing from set " + eeset );
-                this.expressionExperimentSetService
-                        .remove( eeset ); // remove the set because in only contains this experiment
-            } else {
-                log.info( "Removing " + ee + " from " + eeset );
-                eeset.getExperiments().remove( ee );
-                this.expressionExperimentSetService.update( eeset ); // update set to not reference this experiment.
-            }
-        }
-        this.expressionExperimentDao.remove( ee );
-    }
-
-    /**
-     * @see ExpressionExperimentService#remove(ExpressionExperiment)
-     */
-    @Override
-    @Transactional
-    public void remove( ExpressionExperiment expressionExperiment ) {
-        // Can not call DAO directly since we have to do some service-layer level house keeping
-        this.remove( expressionExperiment.getId() );
+    public Integer countNotTroubled() {
+        return this.expressionExperimentDao.countNotTroubled();
     }
 
     /**
@@ -364,7 +245,7 @@ public class ExpressionExperimentServiceImpl
 
         Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
-        Collection<Long> ids = new ArrayList<Long>( searchResults.size() );
+        Collection<Long> ids = new ArrayList<>( searchResults.size() );
 
         for ( SearchResult s : searchResults ) {
             ids.add( s.getId() );
@@ -373,18 +254,18 @@ public class ExpressionExperimentServiceImpl
         return ids;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
-    }
-
     /**
      * @see ExpressionExperimentService#findByAccession(DatabaseEntry)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByAccession( final DatabaseEntry accession ) {
+        return this.expressionExperimentDao.findByAccession( accession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByAccession( String accession ) {
         return this.expressionExperimentDao.findByAccession( accession );
     }
 
@@ -551,7 +432,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = load( eeId );
-        Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
+        Collection<AnnotationValueObject> annotations = new ArrayList<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
             annotationValue.setId( c.getId() );
@@ -650,7 +531,7 @@ public class ExpressionExperimentServiceImpl
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
-        Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<BioAssayDimension>();
+        Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<>();
         for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
             thawedBioAssayDimensions.add( this.bioAssayDimensionDao.thaw( bioAssayDimension ) );
         }
@@ -719,21 +600,6 @@ public class ExpressionExperimentServiceImpl
         return getLastEvent( this.load( ids ), ProcessedVectorComputationEvent.Factory.newInstance() );
     }
 
-    /**
-     * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
-     */
-    private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
-
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        AuditEvent last;
-        for ( ExpressionExperiment experiment : ees ) {
-            last = this.auditEventDao.getLastEvent( experiment, type.getClass() );
-            lastEventMap.put( experiment.getId(), last );
-        }
-        return lastEventMap;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Map<Taxon, Long> getPerTaxonCount() {
@@ -755,7 +621,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
+        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<>();
 
         Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
 
@@ -814,26 +680,47 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
-        return this.expressionExperimentDao.getTaxon( bioAssaySet );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
         return this.expressionExperimentDao.getTaxa( bioAssaySets );
     }
 
-    /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
-     */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
-        return this.expressionExperimentDao
-                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+    public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
+        return this.expressionExperimentDao.getTaxon( bioAssaySet );
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#isRNASeq(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+        if ( ads.size() > 1 ) return false;
+
+        return ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
+    }
+
+    /**
+     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
+     *        checking
+     *        the curation details of the object directly, as this method also checks all the array designs the given
+     *        experiment belongs to.
+     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     */
+    @Override
+    public boolean isTroubled( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails().getTroubled() )
+            return true;
+        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
+        for ( ArrayDesign ad : ads ) {
+            if ( ad.getCurationDetails().getTroubled() )
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -853,6 +740,13 @@ public class ExpressionExperimentServiceImpl
     public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
+    }
+
+    @Override
+    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+            List<Long> ids, Taxon taxon, int limit, int start ) {
+        return this.expressionExperimentDao
+                .loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override
@@ -878,22 +772,95 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
-        return new ArrayList<ExpressionExperimentValueObject>(
+        return new ArrayList<>(
                 this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
     }
 
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
+     *      description (no but seriously do look it might not work as you would expect).
+     */
     @Override
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, int limit, int start ) {
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
         return this.expressionExperimentDao
-                .loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
+                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+    }
+
+    /**
+     * @see ExpressionExperimentService#remove(ExpressionExperiment)
+     */
+    @Override
+    @Transactional
+    public void remove( ExpressionExperiment expressionExperiment ) {
+        // Can not call DAO directly since we have to do some service-layer level house keeping
+        this.remove( expressionExperiment.getId() );
+    }
+
+    @Override
+    @Transactional
+    public void remove( Long id ) {
+        final ExpressionExperiment ee = this.load( id );
+
+        if ( !securityService.isEditable( ee ) ) {
+            throw new SecurityException(
+                    "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
+                            + " You do not have permission to edit this experiment." );
+        }
+
+        // Remove subsets
+        Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
+        for ( ExpressionExperimentSubSet subset : subsets ) {
+            expressionExperimentSubSetService.delete( subset );
+        }
+
+        // Remove differential expression analyses
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
+                .findByInvestigation( ee );
+        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
+            Long toDelete = de.getId();
+            this.differentialExpressionAnalysisDao.remove( toDelete );
+        }
+
+        // remove any sample coexpression matrices
+        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
+
+        // Remove PCA
+        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisService.findByExperiment( ee );
+        for ( PrincipalComponentAnalysis pca : pcas ) {
+            this.principalComponentAnalysisService.remove( pca );
+        }
+
+        /*
+         * FIXME: delete probecoexpression analysis; gene coexexpression will linger.
+         */
+
+        /*
+         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
+         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
+         * analyses!
+         */
+        Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
+        for ( ExpressionExperimentSet eeset : sets ) {
+            if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
+                log.info( "Removing from set " + eeset );
+                this.expressionExperimentSetService
+                        .remove( eeset ); // remove the set because in only contains this experiment
+            } else {
+                log.info( "Removing " + ee + " from " + eeset );
+                eeset.getExperiments().remove( ee );
+                this.expressionExperimentSetService.update( eeset ); // update set to not reference this experiment.
+            }
+        }
+        this.expressionExperimentDao.remove( ee );
     }
 
     @Override
     @Transactional
     public int removeData( ExpressionExperiment ee, QuantitationType qt ) {
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
-        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<>();
         for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
             if ( oldvec.getQuantitationType().equals( qt ) ) {
                 vecsToRemove.add( oldvec );
@@ -912,7 +879,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
+    public ExpressionExperiment replaceVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
 
         if ( newVectors == null || newVectors.isEmpty() ) {
@@ -940,80 +907,20 @@ public class ExpressionExperimentServiceImpl
             quantitationTypeDao.remove( oldqt );
         }
 
-        return addVectors( eeToUpdate, ad, newVectors );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
-    }
-
-    @Override
-    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
-    }
-
-    @Override
-    @Transactional
-    public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
-        ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
-        factor.setExperimentalDesign( experiment.getExperimentalDesign() );
-        factor.setSecurityOwner( experiment );
-        factor = experimentalFactorDao.create( factor ); // to make sure we get acls.
-        experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
-        expressionExperimentDao.update( experiment );
-        return factor;
-    }
-
-    @Override
-    @Transactional
-    public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
-        assert fv.getExperimentalFactor() != null;
-        ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
-        fv.setSecurityOwner( experiment );
-        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        fv = this.factorValueDao.create( fv );
-        for ( ExperimentalFactor ef : efs ) {
-            if ( fv.getExperimentalFactor().equals( ef ) ) {
-                ef.getFactorValues().add( fv );
-                break;
+        // Split the vectors up by bioassaydimension, if need be. This could be modified to handle multiple quantitation types if need be.
+        Map<BioAssayDimension, Collection<RawExpressionDataVector>> bads = new HashMap<>();
+        for ( RawExpressionDataVector vec : newVectors ) {
+            BioAssayDimension b = vec.getBioAssayDimension();
+            if ( !bads.containsKey( b ) ) {
+                bads.put( b, new HashSet<RawExpressionDataVector>() );
             }
+            bads.get( b ).add( vec );
         }
-        expressionExperimentDao.update( experiment );
-        return fv;
 
-    }
-
-    /**
-     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *        checking
-     *        the curation details of the object directly, as this method also checks all the array designs the given
-     *        experiment belongs to.
-     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
-     */
-    @Override
-    public boolean isTroubled( ExpressionExperiment ee ) {
-        if ( ee.getCurationDetails().getTroubled() )
-            return true;
-        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
-        for ( ArrayDesign ad : ads ) {
-            if ( ad.getCurationDetails().getTroubled() )
-                return true;
+        for ( Collection<RawExpressionDataVector> vecs : bads.values() ) {
+            ee = addVectors( eeToUpdate, vecs );
         }
-        return false;
+        return ee;
     }
 
     /**
@@ -1043,12 +950,133 @@ public class ExpressionExperimentServiceImpl
         }
     }
 
+    @Autowired
+    public void setAuditEventDao( AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
+    }
+
+    @Autowired
+    public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
+        this.bioAssayDimensionDao = bioAssayDimensionDao;
+    }
+
+    @Autowired
+    public void setDifferentialExpressionAnalysisDao(
+            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
+    }
+
+    @Autowired
+    public void setExperimentalFactorDao( ExperimentalFactorDao experimentalFactorDao ) {
+        this.experimentalFactorDao = experimentalFactorDao;
+    }
+
+    @Autowired
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
+    }
+
+    @Autowired
+    public void setExpressionExperimentSubSetService(
+            ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
+        this.expressionExperimentSubSetService = expressionExperimentSubSetService;
+    }
+
+    @Autowired
+    public void setFactorValueDao( FactorValueDao factorValueDao ) {
+        this.factorValueDao = factorValueDao;
+    }
+
+    @Autowired
+    public void setOntologyService( OntologyService ontologyService ) {
+        this.ontologyService = ontologyService;
+    }
+
+    @Autowired
+    public void setPrincipalComponentAnalysisService(
+            PrincipalComponentAnalysisService principalComponentAnalysisService ) {
+        this.principalComponentAnalysisService = principalComponentAnalysisService;
+    }
+
+    @Autowired
+    public void setProcessedVectorService( ProcessedExpressionDataVectorService processedVectorService ) {
+        this.processedVectorService = processedVectorService;
+    }
+
+    @Autowired
+    public void setQuantitationTypeDao( QuantitationTypeService quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
+    }
+
+    @Autowired
+    public void setRawExpressionDataVectorDao( RawExpressionDataVectorDao rawExpressionDataVectorDao ) {
+        this.rawExpressionDataVectorDao = rawExpressionDataVectorDao;
+    }
+
+    @Autowired
+    public void setSampleCoexpressionAnalysisDao( SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao ) {
+        this.sampleCoexpressionAnalysisDao = sampleCoexpressionAnalysisDao;
+    }
+
+    @Autowired
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
+    }
+
+    @Autowired
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
+
+    @Autowired
+    public void setSvdService( SVDService svdService ) {
+        this.svdService = svdService;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thaw( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+    }
+
+    @Override
+    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
+    }
+
     private String getLabelFromUri( String uri ) {
         OntologyResource resource = ontologyService.getResource( uri );
         if ( resource != null )
             return resource.getLabel();
 
         return null;
+    }
+
+    /**
+     * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
+     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     */
+    private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
+
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        AuditEvent last;
+        for ( ExpressionExperiment experiment : ees ) {
+            last = this.auditEventDao.getLastEvent( experiment, type.getClass() );
+            lastEventMap.put( experiment.getId(), last );
+        }
+        return lastEventMap;
     }
 
 }

@@ -4,8 +4,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**
- * Created by tesarst on 24/05/17.
  * Long argument type for platform API, referencing the platform ID.
+ *
+ * @author tesarst
  */
 public class PlatformIdArg extends PlatformArg<Long> {
 
@@ -14,11 +15,11 @@ public class PlatformIdArg extends PlatformArg<Long> {
      */
     PlatformIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but dataset with this ID does not exist or is not accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Platform" );
     }
 
     @Override
     public ArrayDesign getPersistentObject( ArrayDesignService service ) {
-        return service.load( this.value );
+        return check(service.load( this.value ));
     }
 }

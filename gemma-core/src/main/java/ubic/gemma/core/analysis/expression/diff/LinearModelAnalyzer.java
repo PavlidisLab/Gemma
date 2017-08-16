@@ -194,8 +194,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
             Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
 
-            assert !( allGenes.size() < upGenes || allGenes.size() < downGenes || allGenes.size()
-                    < eitherGenes ) : "There were more genes differentially expressed than exist in the experment";
+            assert !( allGenes.size() < upGenes || allGenes.size() < downGenes
+                    || allGenes.size() < eitherGenes ) : "There were more genes differentially expressed than exist in the experment";
 
             HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
             HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
@@ -254,10 +254,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param matrix      on which to perform regression.
-     * @param config      containing configuration of factors to include. Any interactions or subset configuration is
-     *                    ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qvaluethreshold will be
-     *                    ignored)
+     * @param matrix on which to perform regression.
+     * @param config containing configuration of factors to include. Any interactions or subset configuration is
+     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qvaluethreshold will be
+     *        ignored)
      * @param retainScale if true, the data retain the global mean (intercept)
      * @return residuals from the regression.
      */
@@ -610,8 +610,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Add interaction terms
          */
-        boolean hasInteractionTerms =
-                config.getInteractionsToInclude() != null && !config.getInteractionsToInclude().isEmpty();
+        boolean hasInteractionTerms = config.getInteractionsToInclude() != null && !config.getInteractionsToInclude().isEmpty();
 
         if ( hasInteractionTerms ) {
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
@@ -631,7 +630,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
     }
 
-
     private int countNumberOfGenesNotSeenAlready( Collection<Gene> genesForProbe, Collection<Gene> seenGenes ) {
         int numGenes = 0;
         if ( genesForProbe != null ) {
@@ -648,10 +646,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param bioAssaySet       source data, could be a SubSet
-     * @param dmatrix           data
-     * @param samplesUsed       analyzed
-     * @param factors           included in the model
+     * @param bioAssaySet source data, could be a SubSet
+     * @param dmatrix data
+     * @param samplesUsed analyzed
+     * @param factors included in the model
      * @param subsetFactorValue null unless analyzing a subset (only used for book-keeping)
      * @return analysis, or null if there was a problem.
      */
@@ -728,7 +726,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * Run the analysis NOTE this can be simplified if we strip out R code.
          */
         final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, sNamedMatrix, properDesignMatrix,
-                quantitationType, librarySize, config.getModerateStatistics() );
+                librarySize, config );
 
         if ( rawResults.size() == 0 ) {
             log.error( "Got no results from the analysis" );
@@ -936,9 +934,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Remove all configurations that have to do with factors that aren't in the selected factors.
      *
-     * @param factors           the factors that will be included
+     * @param factors the factors that will be included
      * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
-     * involve the given factors.
+     *         involve the given factors.
      */
     private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
             DifferentialExpressionAnalysisConfig config, FactorValue subsetFactorValue ) {
@@ -1093,8 +1091,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 continue;
             }
 
-            assert pvalArray.length == resultLists.get( fName ).size() :
-                    pvalArray.length + " != " + resultLists.get( fName ).size();
+            assert pvalArray.length == resultLists.get( fName ).size() : pvalArray.length + " != " + resultLists.get( fName ).size();
 
             assert pvalArray.length == ranks.length;
 
@@ -1138,14 +1135,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * Complete analysis config
          */
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors" + (
-                interceptFactor == null ?
-                        "" :
-                        " with intercept treated as factor" ) + ( interactionFactorLists.isEmpty() ?
-                "" :
-                " with interaction" ) + ( subsetFactorValue == null ?
-                "" :
-                "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
+        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
+                + ( interceptFactor == null ? "" : " with intercept treated as factor" )
+                + ( interactionFactorLists.isEmpty() ? "" : " with interaction" )
+                + ( subsetFactorValue == null ? "" : "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Collection<ExpressionAnalysisResultSet> resultSets = makeResultSets( label2Factors, baselineConditions,
@@ -1310,8 +1303,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
              */
             log.info( ef );
 
-            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) :
-                    baselineConditions.get( ef ) + " is not a value of " + ef;
+            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) : baselineConditions.get( ef ) + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
         }
         return properDesignMatrix;
@@ -1424,12 +1416,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private Map<String, LinearModelSummary> runAnalysis( final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
             final DoubleMatrix<String, String> sNamedMatrix, DesignMatrix designMatrix,
-            QuantitationType quantitationType, final DoubleMatrix1D librarySize, final boolean ebayes ) {
+            final DoubleMatrix1D librarySize, final DifferentialExpressionAnalysisConfig config ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<>();
 
-        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType, librarySize,
-                ebayes );
+        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, librarySize,
+                config );
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1473,8 +1465,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             throw new RuntimeException( e );
         }
 
-        assert rawResults.size() == namedMatrix.rows() :
-                "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
+        assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
         return rawResults;
     }
 
@@ -1482,8 +1473,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * Linear models solved
      */
     private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
-            final Map<String, LinearModelSummary> rawResults, final QuantitationType quantitationType,
-            final DoubleMatrix1D librarySize, final boolean ebayes ) {
+            final Map<String, LinearModelSummary> rawResults,
+            final DoubleMatrix1D librarySize, final DifferentialExpressionAnalysisConfig config ) {
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
@@ -1492,7 +1483,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 StopWatch timer = new StopWatch();
                 timer.start();
                 LeastSquaresFit fit;
-                if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
+                if ( config.getUseWeights() ) {
                     MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, data, librarySize );
                     log.info( "Model weights from mean-variance model: " + timer.getTime() + "ms" );
                     timer.reset();
@@ -1506,7 +1497,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 timer.reset();
 
                 timer.start();
-                if ( ebayes ) {
+                if ( config.getModerateStatistics() ) {
                     if ( fit.isHasMissing() ) {
                         // not implemented yet.
                         throw new UnsupportedOperationException(

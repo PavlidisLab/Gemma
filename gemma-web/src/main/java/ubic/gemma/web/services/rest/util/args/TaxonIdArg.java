@@ -4,8 +4,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
- * Created by tesarst on 16/05/17.
  * Long argument type for taxon API, referencing the Taxon ID.
+ *
+ * @author tesarst
  */
 public class TaxonIdArg extends TaxonArg<Long> {
 
@@ -14,11 +15,11 @@ public class TaxonIdArg extends TaxonArg<Long> {
      */
     TaxonIdArg( long l ) {
         this.value = l;
-        this.nullCause = "The identifier was recognised to be an ID, but no taxon with this ID exist or is not accessible.";
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Taxon" );
     }
 
     @Override
     public Taxon getPersistentObject( TaxonService service ) {
-        return service.load( this.value );
+        return check(service.load( this.value ));
     }
 }

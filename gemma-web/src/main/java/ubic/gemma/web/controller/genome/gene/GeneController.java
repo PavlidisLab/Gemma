@@ -192,8 +192,8 @@ public class GeneController extends BaseController {
                 geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
 
             } else if ( StringUtils.isNotBlank( ensemblId ) ) {
-                @SuppressWarnings("unchecked") Collection<Gene> foundGenes = ( Collection<Gene> ) geneService
-                        .findByEnsemblId( ensemblId );
+                @SuppressWarnings("unchecked") Collection<Gene> foundGenes = Collections.singleton( geneService
+                        .findByEnsemblId( ensemblId ));
 
                 if ( foundGenes.size() == 1 ) {
                     Gene gene = foundGenes.iterator().next();
