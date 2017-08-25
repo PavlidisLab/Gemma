@@ -108,9 +108,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             ArrayDesign ad = arrayDesignsUsed.iterator().next();
             try {
                 log.info( "Loading data from " + aptFile );
-                if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
-                        && ( GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) || ad.getName().toLowerCase()
-                                .contains( "exon" ) ) ) {
+                if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                        && GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) ) || ad.getName().toLowerCase()
+                                .contains( "exon" ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
                         .contains( "affy" ) ) {
@@ -154,8 +154,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * Even if there are multiple platforms, we assume they are all the same type. If not, that's your
                  * problem :) (seriously, we could check...)
                  */
-                if ( ad.getName().toLowerCase().contains( "exon" ) && ad.getTechnologyType()
-                        .equals( TechnologyType.ONECOLOR ) ) {
+                if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                        && GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) ) || ad.getName().toLowerCase()
+                                .contains( "exon" ) ) {
                     log.info( thawedEe + " looks like affy exon array" );
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
