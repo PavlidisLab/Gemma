@@ -1775,11 +1775,6 @@ public class ExpressionExperimentDaoImpl
         queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
         queryString += formOrderByProperty( orderByProperty, orderDesc );
 
-        if ( log.isDebugEnabled() ) {
-            System.out.println( "EEVO query: " );
-            System.out.println( queryString );
-        }
-
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         addRestrictionParameters( query, filters );

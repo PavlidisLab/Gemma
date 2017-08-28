@@ -58,12 +58,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.ExpressionExperimentPrePersistService#prepare(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment)
-     */
+
     @Override
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee ) {
         return prepare( ee, new ArrayDesignsForExperimentCache() );
