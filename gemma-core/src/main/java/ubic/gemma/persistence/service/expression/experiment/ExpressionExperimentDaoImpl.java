@@ -714,7 +714,9 @@ public class ExpressionExperimentDaoImpl
         if ( maintainOrder ) {
             Map<Long, ExpressionExperimentValueObject> map = this.getExpressionExperimentValueObjectMap( vos );
             for ( Long id : ids ) {
-                finalValues.add( map.get( id ) );
+                if ( map.get( id ) != null ) {
+                    finalValues.add( map.get( id ) );
+                }
             }
         } else {
             finalValues = vos;
