@@ -149,7 +149,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     @Override
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         for ( Object object : valueObjects ) {
             if(object == null) continue;
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
