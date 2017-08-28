@@ -212,7 +212,7 @@ public class ExpressionExperimentController {
     private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
 
-        List<ExpressionExperimentDetailsValueObject> records = loadAllValueObjectsOrdered( batch, ids, taxon );
+        Collection<ExpressionExperimentDetailsValueObject> records = loadAllValueObjectsOrdered( batch, ids, taxon );
 
         int count = SecurityUtil.isUserAdmin() ?
                 expressionExperimentService.countAll() :
@@ -1319,8 +1319,8 @@ public class ExpressionExperimentController {
     /**
      * Filter based on criteria of which events etc. the data sets have.
      */
-    private List<ExpressionExperimentDetailsValueObject> applyFilter(
-            List<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
+    private Collection<ExpressionExperimentDetailsValueObject> applyFilter(
+            Collection<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
         List<ExpressionExperimentDetailsValueObject> filtered = new ArrayList<>();
         Collection<ExpressionExperiment> eesToKeep = null;
         List<ExpressionExperimentDetailsValueObject> eeVOsToKeep = null;
@@ -1463,7 +1463,7 @@ public class ExpressionExperimentController {
      */
     private Collection<ExpressionExperimentDetailsValueObject> getEEVOsForManager( Long taxonId, List<Long> ids,
             Integer limit, Integer filter, boolean showPublic ) {
-        List<ExpressionExperimentDetailsValueObject> eeVos;
+        Collection<ExpressionExperimentDetailsValueObject> eeVos;
 
         // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
         eeVos = this
@@ -1542,10 +1542,10 @@ public class ExpressionExperimentController {
      * @param taxon can be null
      * @return Collection<ExpressionExperimentValueObject>
      */
-    private List<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
+    private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             List<Long> eeIds, Integer limit, boolean showPublic) {
 
-        List<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjects( "curationDetails.lastUpdated",limit > 0 , eeIds, taxon, Math.abs(limit), 0 );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
@@ -1565,7 +1565,7 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
-    private List<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
+    private Collection<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
         String o = batch.getSort();
         boolean desc = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );

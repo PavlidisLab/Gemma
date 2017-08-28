@@ -392,7 +392,7 @@ public class EntityUtils {
             }
         }
 
-        return new boolean[] { canWrite, isPublic, isShared };
+        return new boolean[] { isPublic, canWrite, isShared };
     }
 
 }

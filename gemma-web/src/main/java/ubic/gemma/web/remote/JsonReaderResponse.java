@@ -18,13 +18,13 @@
  */
 package ubic.gemma.web.remote;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
  * Creates a response that can be consumed by an Ext.data.JsonReader. The client-side Ext.data.JsonReader must have the
  * "root" property set to "records". Note: Ext documentation often uses "rows" for this property, but "records" is more
  * clear. Example Ext.data.JsonReader configuration:
- * 
  * <pre>
  * {
  *  root : 'records',
@@ -33,10 +33,8 @@ import java.util.List;
  *  totalProperty : 'totalRecords'
  * }
  * </pre>
- * 
  * If the parameterized type has two properties "field1" and "field2", then when an instance of this class is read by
  * the client and there are 100 records in total to page through, it will look like:
- * 
  * <pre>
  *  {
  *      records : [
@@ -53,10 +51,9 @@ import java.util.List;
  *      message : &quot;Yay!&quot; // optional.
  * }
  * </pre>
- * <p>
  * Note that for Gemma, 'success' is rarely all that useful because even though DWR will always (?) return a 200, the
  * error handler gets called.
- * 
+ *
  * @param <T> Type of Objects that will be converted to Ext.data.Records by the client-side Ext.data.DataReader.
  * @author paul (based on http://github.com/BigLep/ExtJsWithDwr/)
  * @version $Id$
@@ -66,25 +63,27 @@ public class JsonReaderResponse<T> {
     /**
      * @see Ext.data.DataReader.messageProperty
      */
+    @SuppressWarnings("JavadocReference") // JS
     public String message = "";
 
-    public List<T> records;
+    public Collection<T> records;
 
     /**
      * @see Ext.data.JsonReader.successProperty
      */
+    @SuppressWarnings("JavadocReference") // JS
     public boolean success = false;
 
     /**
      * @see Ext.data.JsonReader.totalProperty
      */
+    @SuppressWarnings("JavadocReference") // JS
     public int totalRecords = 0;
 
     /**
-     * Creates a {@link #success}ful JsonReaderResponse with the provided {@link #objectsToConvertToRecords}. The
+     * Creates a {@link #success}ful JsonReaderResponse with the provided objectsToConvertToRecords. The
      * totalRecords is assumed to be the length of objectsToConvertToRecords
-     * 
-     * @param objectsToConvertToRecords
+     *
      */
     public JsonReaderResponse( List<T> objectsToConvertToRecords ) {
         this.records = objectsToConvertToRecords;
@@ -93,13 +92,9 @@ public class JsonReaderResponse<T> {
     }
 
     /**
-     * Use for remote paging applications. Creates a {@link #success}ful JsonReaderResponse with the provided
-     * {@link #objectsToConvertToRecords}.
-     * 
-     * @param objectsToConvertToRecords
-     * @param totalRecords
+     * Use for remote paging applications. Creates a {@link #success}ful JsonReaderResponse with the provided objectsToConvertToRecords.
      */
-    public JsonReaderResponse( List<T> objectsToConvertToRecords, int totalRecords ) {
+    public JsonReaderResponse( Collection<T> objectsToConvertToRecords, int totalRecords ) {
         this.records = objectsToConvertToRecords;
         this.success = true;
         this.totalRecords = totalRecords;
@@ -109,7 +104,7 @@ public class JsonReaderResponse<T> {
      * Creates an un{@link #success}ful JsonReaderResponse with null {@link #records}. This signals the case where the
      * client established a connection with the server, but the server couldn't fulfill it (e.g., user doesn't have
      * proper user credentials).
-     * 
+     *
      * @param message an error message to give to the client.
      */
     public JsonReaderResponse( String message ) {
@@ -126,31 +121,17 @@ public class JsonReaderResponse<T> {
     }
 
     /**
-     * @return the records
-     */
-    public List<T> getRecords() {
-        return records;
-    }
-
-    /**
-     * @return the totalRecords
-     */
-    public int getTotalRecords() {
-        return totalRecords;
-    }
-
-    /**
-     * @return the success
-     */
-    public boolean isSuccess() {
-        return success;
-    }
-
-    /**
      * @param message the message to set
      */
     public void setMessage( String message ) {
         this.message = message;
+    }
+
+    /**
+     * @return the records
+     */
+    public Collection<T> getRecords() {
+        return records;
     }
 
     /**
@@ -161,10 +142,10 @@ public class JsonReaderResponse<T> {
     }
 
     /**
-     * @param success the success to set
+     * @return the totalRecords
      */
-    public void setSuccess( boolean success ) {
-        this.success = success;
+    public int getTotalRecords() {
+        return totalRecords;
     }
 
     /**
@@ -172,5 +153,19 @@ public class JsonReaderResponse<T> {
      */
     public void setTotalRecords( int totalRecords ) {
         this.totalRecords = totalRecords;
+    }
+
+    /**
+     * @return the success
+     */
+    public boolean isSuccess() {
+        return success;
+    }
+
+    /**
+     * @param success the success to set
+     */
+    public void setSuccess( boolean success ) {
+        this.success = success;
     }
 }

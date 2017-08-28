@@ -79,14 +79,14 @@ public interface ExpressionExperimentDao
 
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
-    List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
 
-    List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
 
     Collection<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids );
 
-    List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon );
 
     Collection<ExpressionExperiment> loadLackingFactors();
