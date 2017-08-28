@@ -60,26 +60,21 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
      * Updates the given curatable object based on the provided event type.
      *
      * @param curatable  the curatable object that should be updated with the given event.
-     * @param auditEvent the event containing information about the necessary update. This method only
-     *                   accepts events whose type is an extension of {@link CurationDetailsEvent}. Audit events
-     *                   with any other type will cause an exception.
-     * @throws IllegalArgumentException if the given audit event had an unrecognised type.
+     * @param auditEvent the event containing information about the necessary update.
      */
     @Override
     public void update( Curatable curatable, AuditEvent auditEvent ) {
-
-        if ( !this.isEventLegal( auditEvent ) ) {
-            throw new IllegalArgumentException( ILLEGAL_EVENT_TYPE_ERR_MSG );
-        }
-
         Hibernate.initialize( curatable );
+        // Update the lastUpdated property.
+        auditEvent.getEventType().updateLastUpdated( curatable );
 
-        CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
-
-        eventType.setCurationDetails( curatable, auditEvent );
-
+        // Update other curatable properties, if the event updates them.
+        if ( this.isEventCurationUpdate( auditEvent ) ) {
+            CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
+            eventType.setCurationDetails( curatable, auditEvent );
+        }
+        // Persist changes
         this.getSessionFactory().getCurrentSession().merge( curatable.getCurationDetails() );
-
     }
 
     /**
@@ -88,7 +83,7 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
      * @param auditEvent the audit event to be checked
      * @return true, if the given audit event satisfies all the conditions, false otherwise.
      */
-    private boolean isEventLegal( AuditEvent auditEvent ) {
+    private boolean isEventCurationUpdate( AuditEvent auditEvent ) {
         return auditEvent != null // Can not be null
                 && auditEvent.getEventType() != null // Type must be set
                 && CurationDetailsEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() )

@@ -45,7 +45,6 @@ public class TroubledStatusFlagEvent extends CurationDetailsEvent {
     public final void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
         curatable.getCurationDetails().setTroubled( true );
         curatable.getCurationDetails().setLastTroubledEvent( auditEvent );
-        curatable.getCurationDetails().setLastUpdated( new Date() );
     }
 
     /**
