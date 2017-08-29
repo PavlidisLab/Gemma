@@ -1873,6 +1873,10 @@ public class ExpressionExperimentDaoImpl
 
         Map<Long, ExpressionExperimentValueObject> voIdMap = getExpressionExperimentValueObjectMap( vos );
 
+        if(voIdMap.isEmpty()){
+            return;
+        }
+
         StopWatch timer = new StopWatch();
         timer.start();
 
