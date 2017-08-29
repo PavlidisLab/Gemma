@@ -91,12 +91,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( RandomStringUtils.randomAlphanumeric( 8 ) );
 
-        expressionExperiment = ExpressionExperiment.Factory.newInstance();
-        expressionExperiment.setName( "testing ee " + RandomStringUtils.randomAlphanumeric( 32 ) );
-        expressionExperiment.setShortName( RandomStringUtils.randomAlphanumeric( 8 ) );
-        expressionExperiment.setBioAssays( Collections.singleton( bioAssay ) );
-        expressionExperiment.setExperimentalDesign( ed );
-        expressionExperiment = ( ExpressionExperiment ) this.persisterHelper.persist( expressionExperiment );
+        expressionExperiment = super.getTestPersistentBasicExpressionExperiment();
 
     }
 
