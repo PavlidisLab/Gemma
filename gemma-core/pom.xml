@@ -90,7 +90,6 @@
 				<version>1.7</version>
 				<configuration>
 					<target>
-						<echo message="******* Building DDL file *******" />
 						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
 							<classpath>
 								<path refid="maven.dependency.classpath" />
