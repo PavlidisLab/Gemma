@@ -1084,11 +1084,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         queryString += "group by " + ObjectFilter.DAO_AD_ALIAS + ".id ";
         queryString += formOrderByProperty( orderByProperty, orderDesc );
 
-        if ( log.isDebugEnabled() ) {
-            System.out.println( "ADVO query: " );
-            System.out.println( queryString );
-        }
-
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         addRestrictionParameters( query, filters );
