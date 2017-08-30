@@ -61,8 +61,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public ExpressionExperimentDetailsValueObject() {
     }
 
-    public ExpressionExperimentDetailsValueObject(Long id) {
-        super(id);
+    public ExpressionExperimentDetailsValueObject( Long id ) {
+        super( id );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject otherBean ) {

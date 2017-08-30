@@ -53,8 +53,8 @@ import java.util.HashSet;
  * annotations, OR the 'filtered masked' matrix for the expression experiment.
  *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("unused") // Called from JS
 @Controller
 public class ExpressionExperimentDataFetchController {
 
@@ -109,9 +109,6 @@ public class ExpressionExperimentDataFetchController {
     /**
      * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited co-expression data
      * file
-     *
-     * @param eeId
-     * @return
      */
     public String getCoExpressionDataFile( Long eeId ) {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
@@ -123,10 +120,6 @@ public class ExpressionExperimentDataFetchController {
     /**
      * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design
      * data file
-     *
-     * @param command
-     * @return
-     * @throws InterruptedException
      */
     public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
         DataWriterJob job = new DataWriterJob( command );
@@ -136,9 +129,6 @@ public class ExpressionExperimentDataFetchController {
     /**
      * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited differential
      * expression data file
-     *
-     * @param analysisId
-     * @return
      */
     public String getDiffExpressionDataFile( Long analysisId ) {
         ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
@@ -147,10 +137,6 @@ public class ExpressionExperimentDataFetchController {
         return taskRunningService.submitLocalTask( job );
     }
 
-    /**
-     * @param filename
-     * @return
-     */
     public File getOutputFile( String filename ) {
         String fullFilePath = DATA_DIR + filename;
         File f = new File( fullFilePath );
@@ -321,9 +307,6 @@ public class ExpressionExperimentDataFetchController {
 
     }
 
-    // ========================================================
-
-    // ==========================================================
     class DiffExpressionDataWriterTask extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
 
         protected Log log = LogFactory.getLog( this.getClass().getName() );

@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -473,16 +474,19 @@ public class ExpressionExperimentServiceImpl
         } catch ( Exception e ) {
             return null;
         }
-        String result = null;
+        StringBuilder result = new StringBuilder( "" );
 
         for ( BatchConfoundValueObject c : confounds ) {
             if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
                 String factorName = c.getEf().getName();
-                result = "Factor: " + factorName + " may be confounded with batches; p=" + String
-                        .format( "%.2g", c.getP() ) + "<br />";
+                if(!result.toString().isEmpty()){
+                    result.append( ", " );
+                }
+                result.append( "Factor: " ).append( factorName ).append( " may be confounded with batches; p=" )
+                        .append( String.format( "%.2g", c.getP() ) );
             }
         }
-        return result;
+        return Strings.emptyToNull(result.toString());
     }
 
     @Override

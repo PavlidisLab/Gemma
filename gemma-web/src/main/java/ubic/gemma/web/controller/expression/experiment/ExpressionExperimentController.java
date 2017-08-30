@@ -716,7 +716,7 @@ public class ExpressionExperimentController {
 
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
-            finalResult.setBatchConfound( batchConfound( ee ) );
+            finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
             finalResult.setBatchEffect( batchEffect( ee ) );
         }
 
@@ -1223,34 +1223,39 @@ public class ExpressionExperimentController {
                 throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
                         + "' already exists, you must use a unique name" );
             }
-            details += "short name ("+ee.getShortName()+" -> "+command.getShortName()+")";
+            details += "short name (" + ee.getShortName() + " -> " + command.getShortName() + ")";
             changed = true;
             ee.setShortName( command.getShortName() );
         }
         if ( StringUtils.isNotBlank( command.getName() ) && !command.getName().equals( ee.getName() ) ) {
-            details += (changed?", ":"") + "name ("+ee.getName()+" -> "+command.getName()+")";
+            details += ( changed ? ", " : "" ) + "name (" + ee.getName() + " -> " + command.getName() + ")";
             changed = true;
             ee.setName( command.getName() );
         }
         if ( StringUtils.isNotBlank( command.getDescription() ) && !command.getDescription()
                 .equals( ee.getDescription() ) ) {
-            details += (changed?", ":"") + "description ("+ee.getDescription()+" -> "+command.getDescription()+")";
+            details +=
+                    ( changed ? ", " : "" ) + "description (" + ee.getDescription() + " -> " + command.getDescription()
+                            + ")";
             changed = true;
             ee.setDescription( command.getDescription() );
         }
         if ( !command.isRemovePrimaryPublication() && StringUtils.isNotBlank( command.getPubMedId() ) ) {
-            details += (changed?", ":"") + "primary publication (id "+ee.getPrimaryPublication().getId()+" -> "+command.getPubMedId()+")";
+            details +=
+                    ( changed ? ", " : "" ) + "primary publication (id " + ee.getPrimaryPublication().getId() + " -> "
+                            + command.getPubMedId() + ")";
             changed = true;
             updatePubMed( entityId, command.getPubMedId() );
         } else if ( command.isRemovePrimaryPublication() ) {
-            details += (changed?", ":"") + "removed primary publication";
+            details += ( changed ? ", " : "" ) + "removed primary publication";
             changed = true;
             removePrimaryPublication( entityId );
         }
 
-        if(changed) {
+        if ( changed ) {
             log.info( "Updating " + ee );
-            auditTrailService.addUpdateEvent( ee, CommentedEvent.Factory.newInstance(), "Updated experiment details", details );
+            auditTrailService
+                    .addUpdateEvent( ee, CommentedEvent.Factory.newInstance(), "Updated experiment details", details );
             expressionExperimentService.update( ee );
         }
 
@@ -1420,14 +1425,6 @@ public class ExpressionExperimentController {
         return eeValObjectCol;
     }
 
-    private String batchConfound( ExpressionExperiment ee ) {
-        String result = expressionExperimentService.getBatchConfound( ee );
-        if ( result == null ) {
-            result = "";
-        }
-        return result;
-    }
-
     private String batchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails batchEffectDetails = expressionExperimentService.getBatchEffect( ee );
         String result = "";
@@ -1480,7 +1477,7 @@ public class ExpressionExperimentController {
 
         // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
         eeVos = this
-                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, limit, showPublic);
+                .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, limit, showPublic );
 
         if ( filter != null && filter > 0 ) {
             eeVos = applyFilter( eeVos, filter );
@@ -1556,10 +1553,11 @@ public class ExpressionExperimentController {
      * @return Collection<ExpressionExperimentValueObject>
      */
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
-            List<Long> eeIds, Integer limit, boolean showPublic) {
+            List<Long> eeIds, Integer limit, boolean showPublic ) {
 
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( "curationDetails.lastUpdated",limit > 0 , eeIds, taxon, Math.abs(limit), 0 );
+                .loadDetailsValueObjects( "curationDetails.lastUpdated", limit > 0, eeIds, taxon, Math.abs( limit ),
+                        0 );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );

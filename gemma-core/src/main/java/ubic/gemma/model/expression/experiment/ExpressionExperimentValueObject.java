@@ -93,8 +93,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Long taxonId;
     private String technologyType;
 
-
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -236,8 +234,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.technologyType = technologyType;
     }
 
-
-
     /**
      * Creates a value object for either EE or EESubSet.
      *
@@ -262,8 +258,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
         return result;
     }
-
-
 
     @Override
     public int compareTo( ExpressionExperimentValueObject arg0 ) {
@@ -299,8 +293,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     public String toString() {
         return this.getShortName() + " (id = " + this.getId() + ")";
     }
-
-
 
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
         Collection<AuditEventValueObject> converted = new HashSet<>();
