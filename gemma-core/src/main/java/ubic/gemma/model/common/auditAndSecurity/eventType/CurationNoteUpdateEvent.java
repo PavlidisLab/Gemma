@@ -53,7 +53,6 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
     public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
         curatable.getCurationDetails().setCurationNote( auditEvent.getNote() );
         curatable.getCurationDetails().setLastNoteUpdateEvent( auditEvent );
-        curatable.getCurationDetails().setLastUpdated( new Date() );
     }
 
     /**

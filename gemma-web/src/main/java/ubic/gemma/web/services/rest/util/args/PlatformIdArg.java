@@ -20,6 +20,6 @@ public class PlatformIdArg extends PlatformArg<Long> {
 
     @Override
     public ArrayDesign getPersistentObject( ArrayDesignService service ) {
-        return check(service.load( this.value ));
+        return check( service.load( this.value ) );
     }
 }

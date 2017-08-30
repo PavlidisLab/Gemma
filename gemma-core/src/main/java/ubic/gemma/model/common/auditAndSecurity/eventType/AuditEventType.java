@@ -18,14 +18,19 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-public abstract class AuditEventType implements java.io.Serializable {
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+
+import java.io.Serializable;
+import java.util.Date;
+
+public abstract class AuditEventType implements Serializable {
 
     private static final long serialVersionUID = -7397754091918396538L;
     final private Long id = null;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public AuditEventType() {
@@ -52,6 +57,15 @@ public abstract class AuditEventType implements java.io.Serializable {
 
     public Long getId() {
         return this.id;
+    }
+
+    /**
+     * Sets the lastUpdated property of the curation details of the given curatable object to current Date.
+     *
+     * @param curatable the object to update the last update property of.
+     */
+    public void updateLastUpdated( Curatable curatable ) {
+        curatable.getCurationDetails().setLastUpdated( new Date() );
     }
 
     /**

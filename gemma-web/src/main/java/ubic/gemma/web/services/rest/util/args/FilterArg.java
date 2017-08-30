@@ -148,7 +148,8 @@ public abstract class FilterArg extends MalformableArg {
 
     /**
      * Checks whether a field exists among all declared fields on the given class.
-     * @param cls the class to check.
+     *
+     * @param cls   the class to check.
      * @param field the field name to check for.
      * @return the Field from the given class matching the given field name.
      * @throws NoSuchFieldException if a field of given name was not found on the given class.

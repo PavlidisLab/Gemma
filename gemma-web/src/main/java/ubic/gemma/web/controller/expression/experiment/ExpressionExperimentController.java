@@ -68,6 +68,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -124,6 +125,8 @@ public class ExpressionExperimentController {
     private ExpressionExperimentReportService expressionExperimentReportService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private AuditTrailService auditTrailService;
     @Autowired
     private ExpressionExperimentSearchService expressionExperimentSearchService;
     @Autowired
@@ -212,7 +215,7 @@ public class ExpressionExperimentController {
     private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
 
-        List<ExpressionExperimentDetailsValueObject> records = loadAllValueObjectsOrdered( batch, ids, taxon );
+        Collection<ExpressionExperimentDetailsValueObject> records = loadAllValueObjectsOrdered( batch, ids, taxon );
 
         int count = SecurityUtil.isUserAdmin() ?
                 expressionExperimentService.countAll() :
@@ -1208,9 +1211,8 @@ public class ExpressionExperimentController {
         /*
          * This should be fast so I'm not using a background task.
          */
-
-        // UpdateBasics runner = new UpdateBasics( command );
-        // startTask( runner );
+        String details = "Changed: ";
+        boolean changed = false;
         Long entityId = command.getEntityId();
         ExpressionExperiment ee = expressionExperimentService.load( entityId );
         if ( ee == null )
@@ -1221,26 +1223,37 @@ public class ExpressionExperimentController {
                 throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
                         + "' already exists, you must use a unique name" );
             }
+            details += "short name ("+ee.getShortName()+" -> "+command.getShortName()+")";
+            changed = true;
             ee.setShortName( command.getShortName() );
         }
         if ( StringUtils.isNotBlank( command.getName() ) && !command.getName().equals( ee.getName() ) ) {
+            details += (changed?", ":"") + "name ("+ee.getName()+" -> "+command.getName()+")";
+            changed = true;
             ee.setName( command.getName() );
         }
         if ( StringUtils.isNotBlank( command.getDescription() ) && !command.getDescription()
                 .equals( ee.getDescription() ) ) {
+            details += (changed?", ":"") + "description ("+ee.getDescription()+" -> "+command.getDescription()+")";
+            changed = true;
             ee.setDescription( command.getDescription() );
         }
         if ( !command.isRemovePrimaryPublication() && StringUtils.isNotBlank( command.getPubMedId() ) ) {
+            details += (changed?", ":"") + "primary publication (id "+ee.getPrimaryPublication().getId()+" -> "+command.getPubMedId()+")";
+            changed = true;
             updatePubMed( entityId, command.getPubMedId() );
-
         } else if ( command.isRemovePrimaryPublication() ) {
+            details += (changed?", ":"") + "removed primary publication";
+            changed = true;
             removePrimaryPublication( entityId );
         }
 
-        log.info( "Updating " + ee );
-        expressionExperimentService.update( ee );
+        if(changed) {
+            log.info( "Updating " + ee );
+            auditTrailService.addUpdateEvent( ee, CommentedEvent.Factory.newInstance(), "Updated experiment details", details );
+            expressionExperimentService.update( ee );
+        }
 
-        // return runner.getTaskId();
         return loadExpressionExperimentDetails( ee.getId() );
     }
 
@@ -1319,8 +1332,8 @@ public class ExpressionExperimentController {
     /**
      * Filter based on criteria of which events etc. the data sets have.
      */
-    private List<ExpressionExperimentDetailsValueObject> applyFilter(
-            List<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
+    private Collection<ExpressionExperimentDetailsValueObject> applyFilter(
+            Collection<ExpressionExperimentDetailsValueObject> eeValObjectCol, Integer filter ) {
         List<ExpressionExperimentDetailsValueObject> filtered = new ArrayList<>();
         Collection<ExpressionExperiment> eesToKeep = null;
         List<ExpressionExperimentDetailsValueObject> eeVOsToKeep = null;
@@ -1463,7 +1476,7 @@ public class ExpressionExperimentController {
      */
     private Collection<ExpressionExperimentDetailsValueObject> getEEVOsForManager( Long taxonId, List<Long> ids,
             Integer limit, Integer filter, boolean showPublic ) {
-        List<ExpressionExperimentDetailsValueObject> eeVos;
+        Collection<ExpressionExperimentDetailsValueObject> eeVos;
 
         // Limit default desc - lastUpdated is a date and the most recent date is the largest one.
         eeVos = this
@@ -1542,10 +1555,10 @@ public class ExpressionExperimentController {
      * @param taxon can be null
      * @return Collection<ExpressionExperimentValueObject>
      */
-    private List<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
+    private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             List<Long> eeIds, Integer limit, boolean showPublic) {
 
-        List<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjects( "curationDetails.lastUpdated",limit > 0 , eeIds, taxon, Math.abs(limit), 0 );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
@@ -1565,7 +1578,7 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
-    private List<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
+    private Collection<ExpressionExperimentDetailsValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
             List<Long> ids, Taxon taxon ) {
         String o = batch.getSort();
         boolean desc = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );

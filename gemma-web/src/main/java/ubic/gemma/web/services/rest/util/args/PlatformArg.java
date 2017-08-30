@@ -47,7 +47,8 @@ public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDes
         ArrayDesign ad = this.getPersistentObject( service );
 
         ArrayList<ObjectFilter[]> filters = new ArrayList<>( 1 );
-        filters.add( new ObjectFilter[] { new ObjectFilter( "id", ad.getId(), ObjectFilter.is, ObjectFilter.DAO_AD_ALIAS ) } );
+        filters.add( new ObjectFilter[] {
+                new ObjectFilter( "id", ad.getId(), ObjectFilter.is, ObjectFilter.DAO_AD_ALIAS ) } );
         return eeService.loadValueObjectsPreFilter( offset, limit, "id", true, filters );
     }
 

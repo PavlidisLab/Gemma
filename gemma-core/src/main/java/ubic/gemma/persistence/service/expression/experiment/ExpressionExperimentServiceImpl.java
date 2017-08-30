@@ -725,25 +725,25 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
         return this.expressionExperimentDao.loadAllValueObjectsOrdered( orderField, descending );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxon( taxon );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
     }
 
     @Override
-    public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
             List<Long> ids, Taxon taxon, int limit, int start ) {
         return this.expressionExperimentDao
                 .loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );

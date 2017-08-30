@@ -47,7 +47,6 @@ public class NeedsAttentionEvent extends CurationDetailsEvent {
     public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
         curatable.getCurationDetails().setNeedsAttention( true );
         curatable.getCurationDetails().setLastNeedsAttentionEvent( auditEvent );
-        curatable.getCurationDetails().setLastUpdated( new Date() );
     }
 
     /**

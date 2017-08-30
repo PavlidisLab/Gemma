@@ -22,7 +22,7 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
 
     @Override
     public Gene getPersistentObject( GeneService service ) {
-        return check(service.findByNCBIId( this.value ));
+        return check( service.findByNCBIId( this.value ) );
     }
 
     @Override

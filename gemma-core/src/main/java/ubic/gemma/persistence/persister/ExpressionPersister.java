@@ -578,7 +578,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private void processBioAssays( ExpressionExperiment expressionExperiment, ArrayDesignsForExperimentCache c ) {
 
-        Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
+        Collection<BioAssay> alreadyFilled = new HashSet<>();
 
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             log.info( "Filling in bioassays" );

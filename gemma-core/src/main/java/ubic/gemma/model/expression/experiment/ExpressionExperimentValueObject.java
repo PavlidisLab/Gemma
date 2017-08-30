@@ -63,7 +63,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Date datePcaAnalysis;
     private Date dateProcessedDataVectorComputation;
     private Integer designElementDataVectorCount;
-    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysisValueObject>();
+    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
     private Long experimentalDesign;
     private String externalDatabase;
     private String externalUri;
@@ -73,7 +73,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Boolean hasEitherIntensity = null;
     private Boolean hasProbeSpecificForQueryGene;
     private String investigators;
-    private Boolean isPublic = false;
+    private boolean isPublic;
     private Boolean isShared = false;
     private String linkAnalysisEventType;
     private Double minPvalue;
@@ -256,7 +256,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
             Collection<ExpressionExperiment> collection ) {
-        Collection<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> result = new ArrayList<>();
         for ( ExpressionExperiment ee : collection ) {
             result.add( new ExpressionExperimentValueObject( ee ) );
         }
@@ -303,7 +303,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
 
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
-        Collection<AuditEventValueObject> converted = new HashSet<AuditEventValueObject>();
+        Collection<AuditEventValueObject> converted = new HashSet<>();
 
         for ( AuditEvent ae : s ) {
             converted.add( new AuditEventValueObject( ae ) );

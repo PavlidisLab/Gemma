@@ -17,6 +17,6 @@ public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 
     @Override
     public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
-        return check(service.load( value ));
+        return check( service.load( value ) );
     }
 }

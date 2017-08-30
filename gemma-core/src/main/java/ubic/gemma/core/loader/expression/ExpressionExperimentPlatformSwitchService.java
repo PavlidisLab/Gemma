@@ -326,13 +326,22 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         helperService.persist( expExp, arrayDesign );
 
+        /*
+         * This might need to be done inside the transaction we're using to make the switch.
+         */
         if ( maxBAD != null && !unusedBADs.isEmpty() ) {
             log.info( "Cleaning up unused BioAssayDimensions and BioAssays after merge" );
-            // Delete them and the bioassays associated with them.
+            // Delete them and the bioassays associated with them. 
             for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
                 List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
-                bioAssayDimensionService.remove( bioAssayDimension );
-                bioAssayService.remove( bioAssays );
+                //    bioAssayDimensionService.remove( bioAssayDimension );
+                for ( BioAssay ba : bioAssays ) {
+                    if ( !maxBAD.getBioAssays().contains( ba ) ) {
+                        log.info( "Unused bioassay: " + ba );
+
+                        //     bioAssayService.remove( bioAssays );
+                    }
+                }
             }
         }
 

@@ -20,9 +20,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * <p>
- * Indicates that samples that were previously removed have been "put back". In our current implementation, this is done
- * by re-running the ProcessedDataVector processing step. This event is not sample-specific: it assumes they are all
- * back.
+ * Indicates that samples that were previously removed have been "put back", e.g. un-marked as an outlier.
  * </p>
  */
 public class SampleRemovalReversionEvent extends

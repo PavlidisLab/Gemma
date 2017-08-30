@@ -358,6 +358,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         log.info( "Loading details of " + arrayDesign );
 
         ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesignService.load( id ) );
+        if ( vo == null ) {
+            throw new IllegalArgumentException( "You do not have appropriate rights to see this platform. This is likely due "
+                    + "to the platform being marked as unusable." );
+        }
         arrayDesignReportService.fillInValueObjects( Lists.newArrayList( vo ) );
         arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );
 

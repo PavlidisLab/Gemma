@@ -20,17 +20,19 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
+
+import java.util.Date;
 
 /**
  * Event types that can change CurationDetails of Curatable objects.
  * Anytime a new extension of this event type is implemented, add a new handler to the
- * {@link ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao#update(ubic.gemma.model.common.auditAndSecurity.curation.Curatable, ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
+ * {@link CurationDetailsDao#update(Curatable, AuditEvent)}
  * method.
  *
  * @author tesarst
  */
-public abstract class CurationDetailsEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
+public abstract class CurationDetailsEvent extends AuditEventType {
 
     /**
      * The serial version UID of this class. Needed for serialization.

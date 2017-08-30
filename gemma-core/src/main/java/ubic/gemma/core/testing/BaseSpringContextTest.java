@@ -433,9 +433,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
             }
             return readOnlyee;
         }
-        ExpressionExperiment ee = testHelper.getTestExpressionExperimentWithAllDependencies();
 
-        return ee;
+        return testHelper.getTestExpressionExperimentWithAllDependencies();
     }
 
     /**

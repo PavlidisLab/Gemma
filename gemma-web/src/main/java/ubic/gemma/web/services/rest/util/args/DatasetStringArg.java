@@ -17,7 +17,7 @@ public class DatasetStringArg extends DatasetArg<String> {
 
     @Override
     public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return check(this.value == null ? null : service.findByShortName( this.value ));
+        return check( this.value == null ? null : service.findByShortName( this.value ) );
     }
 
 }

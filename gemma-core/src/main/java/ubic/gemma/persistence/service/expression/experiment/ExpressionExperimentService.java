@@ -368,13 +368,13 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxon( Taxon taxon );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+    Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
             Taxon taxon );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
@@ -407,7 +407,7 @@ public interface ExpressionExperimentService
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
+    Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
             List<Long> ids, Taxon taxon, int limit, int start );
 
     /**
@@ -423,7 +423,6 @@ public interface ExpressionExperimentService
      * would be exon array or RNA-seq data sets, or other situations where we are replacing data. Does not take care of
      * computing the processed data vectors, but it does clear them out.
      *
-     * @param ee
      * @param vectors If they are from more than one platform, that will be dealt with.
      * @return the updated Experiment
      */

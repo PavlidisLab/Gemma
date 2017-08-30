@@ -20,7 +20,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * <p>
- * Event used when a sample is removed from an experiment (typically due to QC concerns)
+ * Event used when a sample is removed from an experiment (typically due to QC concerns or when marked as an outlier).
  * </p>
  */
 public class SampleRemovalEvent extends

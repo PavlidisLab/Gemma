@@ -109,8 +109,8 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
                 .newInstance( new Date(), AuditAction.UPDATE, note, detail, null, auditEventType );
         auditEvent = this.auditTrailDao.addEvent( auditable, auditEvent );
 
-        //If conditions are met, update the CurationDetails
-        if ( auditable instanceof Curatable && auditEvent.getEventType() instanceof CurationDetailsEvent ) {
+        //If object is curatable, update curation details
+        if ( auditable instanceof Curatable && auditEvent != null && auditEvent.getEventType() != null ) {
             curationDetailsService.update( ( Curatable ) auditable, auditEvent );
         }
 

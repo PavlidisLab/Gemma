@@ -141,8 +141,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         ExternalDatabase geo = externalDatabaseService.find( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<>();
         assert geo != null;
-        rec:
-        for ( GeoRecord record : records ) {
+        rec: for ( GeoRecord record : records ) {
 
             if ( record.getNumSamples() < MIN_SAMPLES ) {
                 toRemove.add( record );
@@ -221,9 +220,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                 if ( arrayDesign.getCurationDetails().getTroubled() ) {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
-                        trouble =
-                                "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
-                                        + lastTroubleEvent.getNote() + "\"/>";
+                        trouble = "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
+                                + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
                 buf.append(
@@ -241,6 +239,10 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         return new File( path + File.separatorChar + GEO_DATA_STORE_FILE_NAME );
     }
 
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
     private void initializeLocalInfo() {
         File f = getInfoStoreFile();
         if ( f.exists() ) {
@@ -251,8 +253,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                 fis.close();
 
             } catch ( Exception e ) {
-                log.error( "Failed to load local GEO info, reinitializing..." );
+                log.error( "Failed to load local GEO info from " + f.getAbsolutePath() + ", reinitializing..." );
                 this.localInfo = new HashMap<>();
+                saveLocalInfo(); // ensure this gets initilized even if unused
             }
         } else {
             this.localInfo = new HashMap<>();
@@ -268,6 +271,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         }
     }
 
+    /**
+     * Save the cached GEO information for next time
+     */
     private void saveLocalInfo() {
         if ( this.localInfo == null )
             return;

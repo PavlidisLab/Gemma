@@ -25,9 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
 /**
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
@@ -39,9 +36,6 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  */
 @Service
 public class PersisterHelper extends RelationshipPersister {
-
-    @Autowired
-    private CurationDetailsDao curationDetailsDao;
 
     @Autowired
     public PersisterHelper( SessionFactory sessionFactory ) {
