@@ -18,20 +18,11 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.base.Strings;
+import gemma.gsec.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import gemma.gsec.SecurityService;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfoundValueObject;
@@ -51,11 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -67,13 +54,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.VoEnabledService;
@@ -86,6 +67,8 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionD
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.util.ObjectFilter;
+
+import java.util.*;
 
 /**
  * @author pavlidis
@@ -157,19 +140,17 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
-    public ExpressionExperiment addVectors( ExpressionExperiment ee,
-            Collection<RawExpressionDataVector> newVectors ) {
+    public ExpressionExperiment addVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> newVectors ) {
 
-        // ee = this.load( ee.getId() );
-        Collection<BioAssayDimension> bads = new HashSet<>();
+        Collection<BioAssayDimension> BADs = new HashSet<>();
         Collection<QuantitationType> qts = new HashSet<>();
         for ( RawExpressionDataVector vec : newVectors ) {
-            bads.add( vec.getBioAssayDimension() );
+            BADs.add( vec.getBioAssayDimension() );
             qts.add( vec.getQuantitationType() );
         }
 
-        if ( bads.size() > 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common bioassaydimension" );
+        if ( BADs.size() > 1 ) {
+            throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
         }
 
         if ( qts.size() > 1 ) {
@@ -177,7 +158,7 @@ public class ExpressionExperimentServiceImpl
                     "Can only replace with one type of vector (only one quantitation type)" );
         }
 
-        BioAssayDimension bad = bads.iterator().next();
+        BioAssayDimension bad = BADs.iterator().next();
 
         bad = this.bioAssayDimensionDao.findOrCreate( bad );
         assert bad.getBioAssays().size() > 0;
@@ -479,14 +460,14 @@ public class ExpressionExperimentServiceImpl
         for ( BatchConfoundValueObject c : confounds ) {
             if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
                 String factorName = c.getEf().getName();
-                if(!result.toString().isEmpty()){
+                if ( !result.toString().isEmpty() ) {
                     result.append( ", " );
                 }
                 result.append( "Factor: " ).append( factorName ).append( " may be confounded with batches; p=" )
                         .append( String.format( "%.2g", c.getP() ) );
             }
         }
-        return Strings.emptyToNull(result.toString());
+        return Strings.emptyToNull( result.toString() );
     }
 
     @Override
@@ -510,17 +491,17 @@ public class ExpressionExperimentServiceImpl
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
                 if ( svd == null )
                     break;
-                double minp = 1.0;
+                double minP = 1.0;
 
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
 
-                    Double pval = cmpEffects.get( ef.getId() );
-                    if ( pval != null && pval < minp ) {
-                        details.setPvalue( pval );
+                    Double pVal = cmpEffects.get( ef.getId() );
+                    if ( pVal != null && pVal < minP ) {
+                        details.setPvalue( pVal );
                         details.setComponent( component + 1 );
                         details.setComponentVarianceProportion( svd.getVariances()[component] );
-                        minp = pval;
+                        minP = pVal;
                     }
 
                 }
@@ -694,25 +675,17 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.getTaxon( bioAssaySet );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#isRNASeq(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment)
-     */
     @Override
     public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
-        if ( ads.size() > 1 ) return false;
-
-        return ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
+        return ads.size() <= 1 && ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
     }
 
     /**
      * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *        checking
-     *        the curation details of the object directly, as this method also checks all the array designs the given
-     *        experiment belongs to.
+     *           checking
+     *           the curation details of the object directly, as this method also checks all the array designs the given
+     *           experiment belongs to.
      * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
      */
     @Override
@@ -729,7 +702,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending ) {
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField,
+            boolean descending ) {
         return this.expressionExperimentDao.loadAllValueObjectsOrdered( orderField, descending );
     }
 
@@ -741,16 +715,15 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
-            Taxon taxon ) {
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
+            boolean descending, Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
     }
 
     @Override
-    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, int limit, int start ) {
-        return this.expressionExperimentDao
-                .loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
+    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField,
+            boolean descending, List<Long> ids, Taxon taxon, int limit, int start ) {
+        return this.expressionExperimentDao.loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override
@@ -776,20 +749,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
-        return new ArrayList<>(
-                this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
+        return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
     }
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     *      description (no but seriously do look it might not work as you would expect).
+     * description (no but seriously do look it might not work as you would expect).
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, ArrayList<ObjectFilter[]> filter ) {
-        return this.expressionExperimentDao
-                .loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+        return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
     }
 
     /**
@@ -837,7 +808,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         /*
-         * FIXME: delete probecoexpression analysis; gene coexexpression will linger.
+         * FIXME: delete probe coexpression analysis; gene coexpression will linger.
          */
 
         /*
@@ -846,15 +817,15 @@ public class ExpressionExperimentServiceImpl
          * analyses!
          */
         Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
-        for ( ExpressionExperimentSet eeset : sets ) {
-            if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
-                log.info( "Removing from set " + eeset );
+        for ( ExpressionExperimentSet eeSet : sets ) {
+            if ( eeSet.getExperiments().size() == 1 && eeSet.getExperiments().iterator().next().equals( ee ) ) {
+                log.info( "Removing from set " + eeSet );
                 this.expressionExperimentSetService
-                        .remove( eeset ); // remove the set because in only contains this experiment
+                        .remove( eeSet ); // remove the set because in only contains this experiment
             } else {
-                log.info( "Removing " + ee + " from " + eeset );
-                eeset.getExperiments().remove( ee );
-                this.expressionExperimentSetService.update( eeset ); // update set to not reference this experiment.
+                log.info( "Removing " + ee + " from " + eeSet );
+                eeSet.getExperiments().remove( ee );
+                this.expressionExperimentSetService.update( eeSet ); // update set to not reference this experiment.
             }
         }
         this.expressionExperimentDao.remove( ee );
@@ -864,21 +835,21 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public int removeData( ExpressionExperiment ee, QuantitationType qt ) {
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
-        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<>();
-        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
-            if ( oldvec.getQuantitationType().equals( qt ) ) {
-                vecsToRemove.add( oldvec );
+        Collection<RawExpressionDataVector> vectorsToRemove = new ArrayList<>();
+        for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
+            if ( oldV.getQuantitationType().equals( qt ) ) {
+                vectorsToRemove.add( oldV );
             }
         }
 
-        if ( vecsToRemove.isEmpty() ) {
+        if ( vectorsToRemove.isEmpty() ) {
             throw new IllegalArgumentException( "No vectors to remove for quantitation type=" + qt );
         }
 
-        eeToUpdate.getRawExpressionDataVectors().removeAll( vecsToRemove );
+        eeToUpdate.getRawExpressionDataVectors().removeAll( vectorsToRemove );
         log.info( "Removing unused quantitation type: " + qt );
         eeToUpdate.getQuantitationTypes().remove( qt );
-        return vecsToRemove.size();
+        return vectorsToRemove.size();
     }
 
     @Override
@@ -894,8 +865,8 @@ public class ExpressionExperimentServiceImpl
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
 
         Collection<QuantitationType> qtsToRemove = new HashSet<>();
-        for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
-            qtsToRemove.add( oldvec.getQuantitationType() );
+        for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
+            qtsToRemove.add( oldV.getQuantitationType() );
         }
         rawExpressionDataVectorDao.remove( eeToUpdate.getRawExpressionDataVectors() );
         processedVectorService.remove( eeToUpdate.getProcessedExpressionDataVectors() );
@@ -907,22 +878,22 @@ public class ExpressionExperimentServiceImpl
             qtsToRemove.remove( newVec.getQuantitationType() );
         }
 
-        for ( QuantitationType oldqt : qtsToRemove ) {
-            quantitationTypeDao.remove( oldqt );
+        for ( QuantitationType oldQt : qtsToRemove ) {
+            quantitationTypeDao.remove( oldQt );
         }
 
-        // Split the vectors up by bioassaydimension, if need be. This could be modified to handle multiple quantitation types if need be.
-        Map<BioAssayDimension, Collection<RawExpressionDataVector>> bads = new HashMap<>();
+        // Split the vectors up by bioassay dimension, if need be. This could be modified to handle multiple quantitation types if need be.
+        Map<BioAssayDimension, Collection<RawExpressionDataVector>> BADs = new HashMap<>();
         for ( RawExpressionDataVector vec : newVectors ) {
             BioAssayDimension b = vec.getBioAssayDimension();
-            if ( !bads.containsKey( b ) ) {
-                bads.put( b, new HashSet<RawExpressionDataVector>() );
+            if ( !BADs.containsKey( b ) ) {
+                BADs.put( b, new HashSet<RawExpressionDataVector>() );
             }
-            bads.get( b ).add( vec );
+            BADs.get( b ).add( vec );
         }
 
-        for ( Collection<RawExpressionDataVector> vecs : bads.values() ) {
-            ee = addVectors( eeToUpdate, vecs );
+        for ( Collection<RawExpressionDataVector> vectors : BADs.values() ) {
+            ee = addVectors( eeToUpdate, vectors );
         }
         return ee;
     }
@@ -944,7 +915,7 @@ public class ExpressionExperimentServiceImpl
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *        be filled in with IC. A category and value must be provided.
+     *           be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     @Override
@@ -1070,7 +1041,7 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *         can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
