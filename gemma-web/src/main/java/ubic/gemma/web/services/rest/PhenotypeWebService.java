@@ -75,11 +75,7 @@ public class PhenotypeWebService extends WebService {
             @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") IntArg limit, // Opt.
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
-        if ( database == null || database.isEmpty() ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                    ERROR_MSG_DB_NAME_EMPTY );
-            throw new GemmaApiException( errorBody );
-        }
+        super.checkReqArg( database, "database" );
         return Responder.autoCode( this.phenotypeAssociationManagerService
                 .loadEvidenceWithExternalDatabaseName( database, limit.getValue(), offset.getValue() ), sr );
     }

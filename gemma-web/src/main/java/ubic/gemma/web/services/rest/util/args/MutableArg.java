@@ -33,6 +33,12 @@ public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnab
 
     String nullCause = "No cause specified.";
 
+    @Override
+    public String toString() {
+        if(this.value == null) return "";
+        return String.valueOf( this.value );
+    }
+
     /**
      * @return the reason that the object represented by the argument was null.
      */

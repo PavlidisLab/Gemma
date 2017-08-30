@@ -10,7 +10,7 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 public class LongArg extends MalformableArg {
     private static final String ERROR_MSG = "Value '%s' can not converted to a long number";
 
-    private long value;
+    private Long value;
 
     private LongArg( long value ) {
         this.value = value;
@@ -18,6 +18,12 @@ public class LongArg extends MalformableArg {
 
     private LongArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
+    }
+
+    @Override
+    public String toString() {
+        if(this.value == null) return "";
+        return String.valueOf( this.value );
     }
 
     /**

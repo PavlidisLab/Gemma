@@ -104,9 +104,11 @@ public class TaxaWebService extends WebService {
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @PathParam("chromosomeArg") String chromosomeName, // Required
             @QueryParam("strand") @DefaultValue("+") String strand, //Optional, default +
-            @QueryParam("start") @DefaultValue("") LongArg start, // Required
-            @QueryParam("size") @DefaultValue("") IntArg size, // Required
+            @QueryParam("start") LongArg start, // Required
+            @QueryParam("size") IntArg size, // Required
             @Context final HttpServletResponse sr ) {
+        super.checkReqArg( start, "start" );
+        super.checkReqArg( size, "size" );
         return Responder.autoCode(
                 taxonArg.getGenesOnChromosome( taxonService, chromosomeService, geneService, chromosomeName,
                         start.getValue(), size.getValue() ), sr );

@@ -10,7 +10,7 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 public class IntArg extends MalformableArg {
     private static final String ERROR_MSG = "Value '%s' can not converted to an integer";
 
-    private int value;
+    private Integer value;
 
     private IntArg( int value ) {
         this.value = value;
@@ -18,6 +18,12 @@ public class IntArg extends MalformableArg {
 
     private IntArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
+    }
+
+    @Override
+    public String toString() {
+        if(this.value == null) return "";
+        return String.valueOf( this.value );
     }
 
     /**

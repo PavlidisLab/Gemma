@@ -154,11 +154,12 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetDiffAnalysis( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
-            @QueryParam("qValueThreshold") @DefaultValue("") DoubleArg qValueThreshold, // Required
+            @QueryParam("qValueThreshold") DoubleArg qValueThreshold, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
+        super.checkReqArg(qValueThreshold, "qValueThreshold");
         return Responder.autoCode( differentialExpressionResultService
                 .getVOsForExperiment( datasetArg.getPersistentObject( expressionExperimentService ),
                         qValueThreshold.getValue(), offset.getValue(), limit.getValue() ), sr );
@@ -194,7 +195,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
-            @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Required
+            @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );

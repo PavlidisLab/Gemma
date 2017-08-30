@@ -176,11 +176,12 @@ public class GeneWebService extends WebService {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject geneCoexpression( // Params:
             @PathParam("geneArg") final GeneArg<Object> geneArg, // Required
-            @QueryParam("with") @DefaultValue("") final GeneArg<Object> with, // Required
+            @QueryParam("with") final GeneArg<Object> with, // Required
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
             @QueryParam("stringency") @DefaultValue("1") IntArg stringency, // Optional, default 1
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
+        super.checkReqArg(with, "with");
         return Responder
                 .autoCode( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
                     this.add( geneArg.getPersistentObject( geneService ).getId() );
