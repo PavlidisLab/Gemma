@@ -92,7 +92,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves single dataset based on the given dataset.
+     * Retrieves single dataset based on the given dataset identifier.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.

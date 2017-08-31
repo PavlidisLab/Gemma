@@ -27,6 +27,7 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@SuppressWarnings("unused") // ValueObject accessed from JS
 public class ExpressionExperimentDetailsValueObject extends ExpressionExperimentValueObject {
 
     private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";

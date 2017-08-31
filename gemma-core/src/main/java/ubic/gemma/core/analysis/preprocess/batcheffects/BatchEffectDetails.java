@@ -16,52 +16,44 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 /**
  * provide some basic information about the strength of a batch effect.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class BatchEffectDetails {
 
     private Integer component;
-
     private double componentVarianceProportion;
-
     private boolean hasBatchInformation = false;
-     
     private boolean dataWasBatchCorrected = false;
-
     private double pvalue;
 
     public Integer getComponent() {
         return component;
     }
 
+    public void setComponent( Integer component ) {
+        this.component = component;
+    }
+
     public double getComponentVarianceProportion() {
         return componentVarianceProportion;
+    }
+
+    public void setComponentVarianceProportion( double componentVarianceProportion ) {
+        this.componentVarianceProportion = componentVarianceProportion;
     }
 
     public boolean getDataWasBatchCorrected() {
         return this.dataWasBatchCorrected;
     }
 
-    public double getPvalue() {
-        return pvalue;
-    }
-
-    public void setComponent( Integer component ) {
-        this.component = component;
-    }
-
-    public void setComponentVarianceProportion( double compomentVarianceProportion ) {
-        this.componentVarianceProportion = compomentVarianceProportion;
-    }
-
-    /**
-     * @param b
-     */
     public void setDataWasBatchCorrected( boolean b ) {
         this.dataWasBatchCorrected = b;
 
+    }
+
+    public double getPvalue() {
+        return pvalue;
     }
 
     public void setPvalue( double pvalue ) {
@@ -74,16 +66,10 @@ public class BatchEffectDetails {
                 componentVarianceProportion );
     }
 
-    /**
-     * @return the hasBatchInformation
-     */
     public boolean isHasBatchInformation() {
         return hasBatchInformation;
     }
 
-    /**
-     * @param hasBatchInformation the hasBatchInformation to set
-     */
     public void setHasBatchInformation( boolean hasBatchInformation ) {
         this.hasBatchInformation = hasBatchInformation;
     }

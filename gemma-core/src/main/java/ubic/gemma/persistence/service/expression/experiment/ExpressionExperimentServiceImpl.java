@@ -482,7 +482,6 @@ public class ExpressionExperimentServiceImpl
                 details.setDataWasBatchCorrected( true );
                 details.setHasBatchInformation( true );
             }
-
         }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
