@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -841,7 +841,6 @@ public class ExpressionExperimentController {
         if ( ids.isEmpty() ) {
             return new HashSet<>();
         }
-
         return getFilteredExpressionExperimentValueObjects( null, ids, 0, true );
     }
 

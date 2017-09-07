@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -365,7 +365,7 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getLoadValueObjectsQueryString( filter, orderByClause, !asc );
 
         query.setCacheable( true );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( offset );
 
         //noinspection unchecked
@@ -413,7 +413,7 @@ public class ExpressionExperimentDaoImpl
                 getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -436,7 +436,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -447,7 +447,7 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         Query query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from ExpressionExperiment order by " + orderField + " " + ( descending ? "desc" : "" ) );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -459,7 +459,7 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from ExpressionExperiment where id in (:ids) " );
         query.setParameterList( "ids", ids );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -475,7 +475,7 @@ public class ExpressionExperimentDaoImpl
                         "desc" :
                         "" ) );
         query.setParameterList( "ids", ids );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
