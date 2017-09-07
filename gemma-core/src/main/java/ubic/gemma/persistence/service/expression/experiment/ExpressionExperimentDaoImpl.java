@@ -1741,7 +1741,7 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_EE_ALIAS + ".name, " // 1
                 + ObjectFilter.DAO_EE_ALIAS + ".source, " // 2
                 + ObjectFilter.DAO_EE_ALIAS + ".shortName, " // 3
-                + ObjectFilter.DAO_EE_ALIAS + ".class, " // 4 // FIXME not used in EEVO
+                + ObjectFilter.DAO_EE_ALIAS + ".metadata, " // 4
                 + ObjectFilter.DAO_EE_ALIAS + ".numberOfDataVectors, " // 5
                 + "acc.accession, " // 6
                 + "ED.name, " // 7
@@ -1802,6 +1802,7 @@ public class ExpressionExperimentDaoImpl
         vo.setName( ( String ) row[1] );
         vo.setSource( ( String ) row[2] );
         vo.setShortName( ( String ) row[3] );
+        vo.setMetadata( ( String ) row[4] );
         if ( row[5] != null )
             vo.setProcessedExpressionVectorCount( ( Integer ) row[5] );
 

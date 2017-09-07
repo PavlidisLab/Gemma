@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -28,6 +28,7 @@ import java.util.HashSet;
 /**
  * @author Paul
  */
+@SuppressWarnings("unused") // ValueObject accessed from JS
 public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> implements Serializable {
 
     private static final long serialVersionUID = 9164284536309673585L;
@@ -46,6 +47,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     private Integer sequenceReadLength;
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
+    private String metadata;
 
     /**
      * Required when using the class as a spring bean.
@@ -72,6 +74,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         this.sequencePairedReads = bioAssay.getSequencePairedReads();
         this.sequenceReadLength = bioAssay.getSequenceReadLength();
         this.sequenceReadCount = bioAssay.getSequenceReadCount();
+        this.metadata = bioAssay.getMetadata();
 
         if ( bioAssay.getAccession() != null ) {
             this.accession = new DatabaseEntryValueObject( bioAssay.getAccession() );
@@ -233,4 +236,11 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
                 + ( description != null ? "description=" + description : "" ) + "]";
     }
 
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata( String metadata ) {
+        this.metadata = metadata;
+    }
 }

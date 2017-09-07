@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     private BioMaterial sampleUsed;
     private DatabaseEntry accession;
     private LocalFile rawDataFile;
-
+    private String metadata;
     private Collection<LocalFile> derivedDataFiles = new HashSet<>();
 
     @Override
@@ -196,6 +196,14 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
 
     public void setSequenceReadLength( Integer sequenceReadLength ) {
         this.sequenceReadLength = sequenceReadLength;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata( String metadata ) {
+        this.metadata = metadata;
     }
 
     /**
