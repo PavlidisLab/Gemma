@@ -73,7 +73,7 @@ public class TaxaWebService extends WebService {
      * Retrieves single taxon based on the given identifier.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     *                 scientific name, common name, abbreviation. It is recommended to use ID for efficiency.
      */
     @GET
     @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}")
@@ -87,12 +87,12 @@ public class TaxaWebService extends WebService {
     }
 
     /**
-     * Find genes located in a given region. Genes that overlap the query region are returned.
+     * Finds genes overlapping a given region.
      *
      * @param taxonArg       can either be Taxon ID or one of its string identifiers:
-     *                       scientific name, common name, abbreviation. Using the ID is most efficient.
-     * @param chromosomeName - eg: 2, 3, X
-     * @param strand         - '+' or '-', default is '+'. (WIP, currently does not do anything).
+     *                       scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
+     * @param chromosomeName - eg: 3, 21, X
+     * @param strand         - '+' or '-'. Defaults to '+'. (WIP, currently does not do anything).
      * @param start          - start of the region (nucleotide position).
      * @param size           - size of the region (in nucleotides).
      * @return GeneValue objects of the genes in the region.
@@ -118,7 +118,7 @@ public class TaxaWebService extends WebService {
      * Retrieves genes matching the identifier on the given taxon.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
@@ -135,10 +135,10 @@ public class TaxaWebService extends WebService {
     }
 
     /**
-     * Retrieves gene evidence matching the gene identifier on the given taxon
+     * Retrieves gene evidence for the gene on the given taxon.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
@@ -157,10 +157,10 @@ public class TaxaWebService extends WebService {
     }
 
     /**
-     * Retrieves gene location for the gene on matching taxon.
+     * Retrieves gene location for the gene on the given taxon.
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
      * @param geneArg  can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                 guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
@@ -178,10 +178,10 @@ public class TaxaWebService extends WebService {
     }
 
     /**
-     * Retrieves datasets in the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#all(DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}
+     * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#all(DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}
      *
      * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
      * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) for details about the
      * filter, offset, limit and sort arguments.
      */
@@ -208,7 +208,7 @@ public class TaxaWebService extends WebService {
      * phenotypes are loaded in a tree structure.
      *
      * @param taxonArg     the taxon to list the phenotypes for.
-     * @param editableOnly whether to only show editable phenotypes.
+     * @param editableOnly whether to only list editable phenotypes.
      * @return a list of Simple Tree value objects allowing a reconstruction of a tree.
      */
     @GET

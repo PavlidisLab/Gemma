@@ -106,7 +106,7 @@ public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnab
     /**
      * Throws a GemmaApiException informing that the object this argument represents was not found.
      */
-    private void throwNotFound() {
+    void throwNotFound() {
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
                 ERROR_MSG_ENTITY_NOT_FOUND );
         WellComposedErrorBody.addExceptionFields( errorBody, new EntityNotFoundException( getNullCause() ) );

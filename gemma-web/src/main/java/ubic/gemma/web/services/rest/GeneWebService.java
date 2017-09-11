@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -75,8 +75,8 @@ public class GeneWebService extends WebService {
     /**
      * Retrieves all genes matching the identifier.
      *
-     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
-     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
+     *                guaranteed to be unique) identifier. Official symbol returns a gene homologue on a random taxon.
      */
     @GET
     @Path("/{geneArg: [a-zA-Z0-9\\.]+}")
@@ -90,7 +90,7 @@ public class GeneWebService extends WebService {
     }
 
     /**
-     * Retrieves gene evidence matching the gene identifier
+     * Retrieves gene evidence for the given gene.
      *
      * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
@@ -125,7 +125,7 @@ public class GeneWebService extends WebService {
     }
 
     /**
-     * Retrieves the composite sequences (probes) with this gene.
+     * Retrieves the probes (composite sequences) with this gene.
      *
      * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
@@ -163,7 +163,7 @@ public class GeneWebService extends WebService {
     }
 
     /**
-     * Retrieves the coexpression of the two given genes.
+     * Retrieves the coexpression of two given genes.
      *
      * @param geneArg    can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
      *                   guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.

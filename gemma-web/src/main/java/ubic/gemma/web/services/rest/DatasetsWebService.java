@@ -147,7 +147,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
      *
      * @param datasetArg      can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                        is more efficient. Only datasets that user has access to will be available.
-     * @param qValueThreshold Q-value threshold.
+     * @param qValueThreshold the Q-value threshold.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/analyses/differential")

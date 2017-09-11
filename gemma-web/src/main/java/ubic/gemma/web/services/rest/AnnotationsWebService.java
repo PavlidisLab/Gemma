@@ -1,8 +1,8 @@
 /*
  * The gemma-web project
- * 
+ *
  * Copyright (c) 2015 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -88,9 +88,9 @@ public class AnnotationsWebService extends WebService {
     /**
      * Does a search for ontology terms based on the given string.
      *
-     * @param query    the search input query.
+     * @param query    the search query.
      * @param taxonArg only limits the genes in the result set. Can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
+     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
      * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
