@@ -1746,7 +1746,7 @@ public class ExpressionExperimentDaoImpl
                 + "acc.accession, " // 6
                 + "ED.name, " // 7
                 + "ED.webUri, " // 8
-                + ObjectFilter.DAO_AD_ALIAS + ".curationDetails, " // 9 // FIXME not used in EEVO
+                + ObjectFilter.DAO_EE_ALIAS + ".description, " // 9
                 + ObjectFilter.DAO_AD_ALIAS + ".technologyType, "// 10
                 + "taxon.commonName, " // 11
                 + "taxon.id, " // 12
@@ -1812,6 +1812,9 @@ public class ExpressionExperimentDaoImpl
         // ED
         vo.setExternalDatabase( ( String ) row[7] );
         vo.setExternalUri( ( String ) row[8] );
+
+        // Description
+        vo.setDescription( ( String ) row[9] );
 
         // AD
         Object technology = row[10];

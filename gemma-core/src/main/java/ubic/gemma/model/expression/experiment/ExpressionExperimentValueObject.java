@@ -96,6 +96,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String metadata;
     private String batchConfound;
     private String batchEffect;
+    private String description;
 
     /**
      * Required when using the class as a spring bean.
@@ -765,5 +766,13 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setBatchEffect( String batchEffect ) {
         this.batchEffect = batchEffect;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
     }
 }
