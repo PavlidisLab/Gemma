@@ -460,7 +460,7 @@ public class ExpressionExperimentServiceImpl
                 if ( !result.toString().isEmpty() ) {
                     result.append( ", " );
                 }
-                result.append( "Factor: " ).append( factorName ).append( " may be confounded with batches; p=" )
+                result.append( "Factor  '" ).append( factorName ).append( "' may be confounded with batches; p=" )
                         .append( String.format( "%.2g", c.getP() ) );
             }
         }

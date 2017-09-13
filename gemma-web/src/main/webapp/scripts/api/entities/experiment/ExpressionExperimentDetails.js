@@ -122,7 +122,7 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 if (ee.batchConfound !== null && ee.batchConfound !== "") {
-                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                    result = result + '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ext:qtip="'
                         + ee.batchConfound + " (batch confound)"
                         + '"></i> ';
                 }

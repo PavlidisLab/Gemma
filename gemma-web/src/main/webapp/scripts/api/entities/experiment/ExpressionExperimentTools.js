@@ -58,15 +58,63 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         // Batch information
         var batchInfo = this.batchPanelRenderer(this.experimentDetails, manager);
         this.add(batchInfo);
-
-        this.add({
-            html: '&nbsp;<h4>Analyses:<br></h4>'
-        });
+        this.add({html: "<br/>"});
+        var batchConfoundPanel = this.batchConfoundRenderer();
+        this.add(batchConfoundPanel);
         var differentialAnalysisInfo = this.differentialAnalysisPanelRenderer(this.experimentDetails, manager);
         this.add(differentialAnalysisInfo);
         var linkAnalysisInfo = this.linkAnalysisPanelRenderer(this.experimentDetails, manager);
         this.add(linkAnalysisInfo);
 
+    },
+
+    batchConfoundRenderer: function(){
+        if (this.experimentDetails.batchConfound !== null && this.experimentDetails.batchConfound !== "") {
+
+            var panelBC = new Ext.Panel({
+                layout: 'hbox',
+                defaults: {
+                    border: false,
+                    padding: 2
+                },
+                items: []
+            });
+
+            var be = {
+                html: '<h4 style="display:inline-block">Analyses:</h4>&nbsp;<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                + this.experimentDetails.batchConfound + " (batch confound)"
+                + '"></i> Batch confound '
+            };
+
+            panelBC.add(be);
+
+            var self = this;
+
+            var recalculateBCBtn = new Ext.Button({
+                tooltip: 'Recalculate batch confound',
+                handler: function(b, e) {
+                    ExpressionExperimentController.recalculateBatchConfound(self.experimentDetails.id, {
+                        callback: function () {
+                            window.location.reload();
+                        }
+                    });
+                    b.setIconClass("btn-loading");
+                    },
+                scope: this,
+                cls: 'transparent-btn'
+            });
+
+            recalculateBCBtn.setIconClass('btn-not-loading');
+
+            //return recalculateBCBtn;
+            panelBC.add(recalculateBCBtn);
+            return panelBC;
+
+        } else {
+            return {
+                html: '<h4>Analyses:</h4>'
+            };
+        }
     },
 
     linkAnalysisPanelRenderer: function (ee, manager) {
@@ -103,7 +151,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis )
+                + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis)
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -154,7 +202,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Gemma.Renderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
+                    + Gemma.Renderers.dateRenderer(ee.dateMissingValueAnalysis) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -212,7 +260,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer(ee.dateProcessedDataVectorComputation) + '&nbsp;'
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -262,7 +310,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 }
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Gemma.Renderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
+                    + Gemma.Renderers.dateRenderer(ee.dateDifferentialAnalysis) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -327,7 +375,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer( ee.datePcaAnalysis ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
             });
         } else
             panel.add({
@@ -391,7 +439,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer( ee.dateBatchFetch ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer(ee.dateBatchFetch) + '&nbsp;'
             });
             panel.add(runBtn);
         } else if (hasBatchInformation) {

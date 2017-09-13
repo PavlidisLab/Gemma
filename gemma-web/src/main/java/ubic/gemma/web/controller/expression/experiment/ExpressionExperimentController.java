@@ -698,6 +698,12 @@ public class ExpressionExperimentController {
         return finalResult;
     }
 
+    public void recalculateBatchConfound(Long id){
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ee.setBatchConfound( expressionExperimentService.getBatchConfound( ee ));
+        expressionExperimentService.update( ee );
+    }
+
     /**
      * Sets batch information and related properties
      */
