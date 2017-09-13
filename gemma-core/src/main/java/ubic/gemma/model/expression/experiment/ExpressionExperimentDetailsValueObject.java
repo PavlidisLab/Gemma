@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@SuppressWarnings("unused") // ValueObject accessed from JS
 public class ExpressionExperimentDetailsValueObject extends ExpressionExperimentValueObject {
 
     private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
@@ -44,8 +45,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Boolean hasMultipleTechnologyTypes = false;
     private String QChtml;
     private boolean hasBatchInformation;
-    private String batchConfound;
-    private String batchEffect;
     private String lastArrayDesignUpdateDate;
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
 
@@ -61,8 +60,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public ExpressionExperimentDetailsValueObject() {
     }
 
-    public ExpressionExperimentDetailsValueObject(Long id) {
-        super(id);
+    public ExpressionExperimentDetailsValueObject( Long id ) {
+        super( id );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject otherBean ) {
@@ -169,22 +168,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public void setHasBatchInformation( boolean hasBatchInformation ) {
         this.hasBatchInformation = hasBatchInformation;
-    }
-
-    public String getBatchConfound() {
-        return batchConfound;
-    }
-
-    public void setBatchConfound( String batchConfound ) {
-        this.batchConfound = batchConfound;
-    }
-
-    public String getBatchEffect() {
-        return batchEffect;
-    }
-
-    public void setBatchEffect( String batchEffect ) {
-        this.batchEffect = batchEffect;
     }
 
     public String getLastArrayDesignUpdateDate() {

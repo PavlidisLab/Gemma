@@ -1,9 +1,9 @@
 /*
 
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ import java.util.HashSet;
 /**
  * @author kelsey
  */
+@SuppressWarnings("unused") // ValueObject accessed from JS
 public class ExpressionExperimentValueObject extends AbstractCuratableValueObject<ExpressionExperiment>
         implements Comparable<ExpressionExperimentValueObject>, SecureValueObject {
 
@@ -92,8 +93,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String taxon;
     private Long taxonId;
     private String technologyType;
-
-
+    private String metadata;
+    private String batchConfound;
+    private String batchEffect;
+    private String description;
 
     /**
      * Required when using the class as a spring bean.
@@ -164,7 +167,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
                 otherBean.numPopulatedFactors, otherBean.parentTaxonId, otherBean.pcaAnalysisEventType,
                 otherBean.processedDataVectorComputationEventType, otherBean.processedExpressionVectorCount,
                 otherBean.pubmedId, otherBean.sampleRemovedFlags, otherBean.shortName, otherBean.source,
-                otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType );
+                otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType,
+                otherBean.metadata );
     }
 
     private ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
@@ -184,7 +188,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             String pcaAnalysisEventType, String processedDataVectorComputationEventType,
             Integer processedExpressionVectorCount, Integer pubmedId,
             Collection<AuditEventValueObject> sampleRemovedFlags, String shortName, String source,
-            Long sourceExperiment, String taxon, Long taxonId, String technologyType ) {
+            Long sourceExperiment, String taxon, Long taxonId, String technologyType, String metadata ) {
         super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.accession = accession;
         this.arrayDesignCount = arrayDesignCount;
@@ -234,9 +238,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.taxon = taxon;
         this.taxonId = taxonId;
         this.technologyType = technologyType;
+        this.metadata = metadata;
     }
-
-
 
     /**
      * Creates a value object for either EE or EESubSet.
@@ -262,8 +265,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
         return result;
     }
-
-
 
     @Override
     public int compareTo( ExpressionExperimentValueObject arg0 ) {
@@ -299,8 +300,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     public String toString() {
         return this.getShortName() + " (id = " + this.getId() + ")";
     }
-
-
 
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
         Collection<AuditEventValueObject> converted = new HashSet<>();
@@ -743,5 +742,37 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setSubset( boolean isSubset ) {
         this.isSubset = isSubset;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata( String metadata ) {
+        this.metadata = metadata;
+    }
+
+    public String getBatchConfound() {
+        return batchConfound;
+    }
+
+    public void setBatchConfound( String batchConfound ) {
+        this.batchConfound = batchConfound;
+    }
+
+    public String getBatchEffect() {
+        return batchEffect;
+    }
+
+    public void setBatchEffect( String batchEffect ) {
+        this.batchEffect = batchEffect;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
     }
 }

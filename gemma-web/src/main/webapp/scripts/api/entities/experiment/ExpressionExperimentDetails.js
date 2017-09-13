@@ -1,827 +1,839 @@
-Ext.namespace( 'Gemma' );
+Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
 /**
- * 
+ *
  * Panel containing the most interesting info about an experiment. Used as one tab of the EE page
- * 
+ *
  * pass in the ee details obj as experimentDetails
- * 
+ *
  * @class Gemma.ExpressionExperimentDetails
  * @extends Ext.Panel
- * 
+ *
  */
 Gemma.ExpressionExperimentDetails = Ext
-   .extend(
-      Ext.Panel,
-      {
+    .extend(
+        Ext.Panel,
+        {
 
-         dirtyForm : false,
-         listeners : {
-            leavingTab : function() {
-               if ( this.editModeOn && this.dirtyForm ) {
-                  var leave = confirm( "You are still in edit mode. Your unsaved changes will be discarded when you switch tabs. Do you want to continue?" );
-                  if ( leave ) {
-                     return true;
-                  }
-                  return false;
-               }
-               return true;
+            dirtyForm: false,
+            listeners: {
+                leavingTab: function () {
+                    if (this.editModeOn && this.dirtyForm) {
+                        return confirm("You are still in edit mode. Your unsaved changes will be discarded when you switch tabs. Do you want to continue?");
+                    }
+                    return true;
+                },
+                tabChanged: function () {
+                    this.fireEvent('toggleEditMode', false);
+                }
             },
-            tabChanged : function() {
-               this.fireEvent( 'toggleEditMode', false );
-            }
-         },
 
-         /**
-          * @memberOf Gemma.ExpressionExperimentDetails
-          */
-         renderArrayDesigns : function( arrayDesigns ) {
-            var result = '';
-            for (var i = 0; i < arrayDesigns.length; i++) {
-               var ad = arrayDesigns[i];
-               result = result + '<a href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName
-                  + '</a> - ' + ad.name;
-
-               if ( arrayDesigns[i].troubled ) {
-                  result = result + ' <i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                     + arrayDesigns[i].troubleDetails + '"></i>';
-               }
-               if ( i < arrayDesigns.length - 1 ) {
-                  result = result + "<br/>";
-               }
-            }
-            return result;
-         },
-         renderCoExpressionLinkCount : function( ee ) {
-
-            if ( ee.coexpressionLinkCount === null ) {
-               return "Unavailable"; // analysis not run.
-            }
-
-            var downloadCoExpressionDataLink = String.format(
-               "<span style='cursor:pointer'  ext:qtip='Download all coexpression  data in a tab delimited format'  "
-                  + "onClick='fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
-               ee.id );
-            var count;
-
-            return ee.coexpressionLinkCount + "&nbsp;" + downloadCoExpressionDataLink;
-
-         },
-
-         /**
-          * 
-          */
-         renderSourceDatabaseEntry : function( ee ) {
-            var result = '';
-
-            var logo = '';
-            if ( ee.externalDatabase == 'GEO' ) {
-               var acc = ee.accession;
-               acc = acc.replace( /\.[1-9]$/, '' ); // in case of multi-species.
-               logo = '/Gemma/images/logo/geoTiny.png';
-               result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
-                  + '"><img src="' + logo + '"/></a>';
-
-            } else if ( ee.externalDatabase == 'ArrayExpress' ) {
-               logo = '/Gemma/images/logo/arrayExpressTiny.png';
-               result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
-                  + ee.accession + '"><img src="' + logo + '"/></a>';
-            } else {
-               result = "Direct upload";
-            }
-
-            return result;
-
-         },
-
-         /**
-          * Link for samples details page.
-          *
-          */
-         renderSamples : function( ee ) {
-            var result = ee.bioAssayCount;
-            if ( this.editable ) {
-               result = result
-                  + '&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
-                  + ee.id
-                  + '"><img ext:qtip="View the details of the samples" src="/Gemma/images/icons/magnifier.png"/></a>';
-            }
-            return '' + result; // hack for possible problem with extjs 3.1 - bare
-            // number not displayed, coerce to string.
-         },
-
-         renderStatus : function( ee ) {
-
-            var result = '';
-            if ( ee.troubled ) {
-               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" alt="trouble" ext:qtip="'
-                  + ee.troubleDetails + '"></i> ';
-            }
-
-            result = result
-               + (ee.reprocessedFromRawData ? "Reprocessed from raw data by Gemma." : "Data are from external source.")
-               + "&nbsp;";
-            result = result + (ee.batchEffect != null ? ee.batchEffect : ""); // string description.
-
-            if ( ee.hasMultiplePreferredQuantitationTypes ) {
-               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'+
-                  + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes
-                  + '"></i>';
-            }
-
-            if ( ee.hasMultipleTechnologyTypes ) {
-               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'+
-                  + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"></i>';
-            }
-
-            var isUserLoggedIn = (Ext.get( 'hasUser' ) && Ext.get( 'hasUser' ).getValue() === 'true') ? true : false;
-
-            if ( isUserLoggedIn ) {
-               result = result
-                  + Gemma.SecurityManager.getSecurityLink(
-                     'ubic.gemma.model.expression.experiment.ExpressionExperiment', ee.id, ee.isPublic,
-                     ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned );
-            }
-
-            return result || "No flags";
-
-         },
-
-         linkAnalysisRenderer : function( ee ) {
-            var id = ee.id;
-            var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-               + id
-               + '-eemanager\').doLinks('
-               + id
-               + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
-            if ( ee.dateLinkAnalysis ) {
-               var type = ee.linkAnalysisEventType;
-               var color = "#000";
-               var suggestRun = true;
-               var qtip = 'ext:qtip="OK"';
-               if ( type == 'FailedLinkAnalysisEvent' ) {
-                  color = 'red';
-                  qtip = 'ext:qtip="Failed"';
-               } else if ( type == 'TooSmallDatasetLinkAnalysisEvent' ) {
-                  color = '#CCC';
-                  qtip = 'ext:qtip="Too small"';
-                  suggestRun = false;
-               }
-
-               return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Gemma.Renderers.dateRenderer( ee.dateLinkAnalysis ) + '&nbsp;' + (suggestRun ? runurl : '');
-            } else {
-               return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-            }
-
-         },
-
-         missingValueAnalysisRenderer : function( ee ) {
-            var id = ee.id;
-            var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-               + id
-               + '-eemanager\').doMissingValues('
-               + id
-               + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
-
-            /*
-             * Offer missing value analysis if it's possible (this might need tweaking).
+            /**
+             * @memberOf Gemma.ExpressionExperimentDetails
              */
-            if ( ee.technologyType != 'ONECOLOR' && ee.technologyType != 'NONE' && ee.hasEitherIntensity ) {
+            renderArrayDesigns: function (arrayDesigns) {
+                var result = '';
+                for (var i = 0; i < arrayDesigns.length; i++) {
+                    var ad = arrayDesigns[i];
+                    result = result + '<a href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName
+                        + '</a> - ' + ad.name;
 
-               if ( ee.dateMissingValueAnalysis ) {
-                  var type = ee.missingValueAnalysisEventType;
-                  var color = "#000";
-                  var suggestRun = true;
-                  var qtip = 'ext:qtip="OK"';
-                  if ( type == 'FailedMissingValueAnalysisEvent' ) {
-                     color = 'red';
-                     qtip = 'ext:qtip="Failed"';
-                  }
+                    if (arrayDesigns[i].troubled) {
+                        result = result + ' <i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                            + arrayDesigns[i].troubleDetails + '"></i>';
+                    }
+                    if (i < arrayDesigns.length - 1) {
+                        result = result + "<br/>";
+                    }
+                }
+                return result;
+            },
+            renderCoExpressionLinkCount: function (ee) {
 
-                  return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Gemma.Renderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
-                     + (suggestRun ? runurl : '');
-               } else {
-                  return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-               }
+                if (ee.coexpressionLinkCount === null) {
+                    return "Unavailable"; // analysis not run.
+                }
 
-            } else {
-               return '<span ext:qtip="Only relevant for two-channel microarray studies with intensity data available." style="color:#CCF;">NA</span>';
-            }
-         },
+                var downloadCoExpressionDataLink = String.format(
+                    "<span style='cursor:pointer'  ext:qtip='Download all coexpression  data in a tab delimited format'  "
+                    + "onClick='fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
+                    ee.id);
+                var count;
 
-         processedVectorCreateRenderer : function( ee ) {
-            var id = ee.id;
-            var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-               + id
-               + '-eemanager\').doProcessedVectors('
-               + id
-               + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
+                return ee.coexpressionLinkCount + "&nbsp;" + downloadCoExpressionDataLink;
 
-            if ( ee.dateProcessedDataVectorComputation ) {
-               var type = ee.processedDataVectorComputationEventType;
-               var color = "#000";
+            },
 
-               var suggestRun = true;
-               var qtip = 'ext:qtip="OK"';
-               if ( type == 'FailedProcessedVectorComputationEvent' ) { // note:
-                  // no
-                  // such
-                  // thing.
-                  color = 'red';
-                  qtip = 'ext:qtip="Failed"';
-               }
-
-               return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Gemma.Renderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
-                  + (suggestRun ? runurl : '');
-            } else {
-               return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-            }
-         },
-
-         // FIXME is this used?
-         differentialAnalysisRenderer : function( ee ) {
-            var id = ee.id;
-            var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-               + panelId
-               + 'eemanager\').doDifferential('
-               + id
-               + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
-
-            if ( ee.numPopulatedFactors > 0 ) {
-               if ( ee.dateDifferentialAnalysis ) {
-                  var type = ee.differentialAnalysisEventType;
-
-                  var color = "#000";
-                  var suggestRun = true;
-                  var qtip = 'ext:qtip="OK"';
-                  if ( type == 'FailedDifferentialExpressionAnalysisEvent' ) {
-                     color = 'red';
-                     qtip = 'ext:qtip="Failed"';
-                  } else if ( record.get( 'differentialExpressionAnalyses' ).length == 0 ) {
-                     // we ran it, but the analyses were apparently deleted.
-                     return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-                  }
-
-                  return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Gemma.Renderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
-                     + (suggestRun ? runurl : '');
-               } else {
-                  return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-               }
-            } else {
-               return '<span style="color:#CCF;">NA</span>';
-            }
-         },
-         renderProcessedExpressionVectorCount : function( e ) {
-            return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
-         },
-         renderEESets : function( eeSets ) {
-            eeSets.sort( function( a, b ) {
-               var A = a.name.toLowerCase();
-               var B = b.name.toLowerCase();
-               if ( A < B )
-                  return -1;
-               if ( A > B )
-                  return 1;
-               return 0;
-            } );
-            var eeSetLinks = [];
-            var i;
-            for (i = 0; i < eeSets.length; i++) {
-               if ( eeSets[i] && eeSets[i].name && eeSets[i].id ) {
-                  eeSetLinks
-                     .push( ' <a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='
-                        + eeSets[i].id + '">' + eeSets[i].name + '</a>' );
-               }
-            }
-            if ( eeSetLinks.length === 0 ) {
-               eeSetLinks.push( 'Not currently a member of any experiment group' );
-            }
-            return eeSetLinks;
-         },
-
-         initComponent : function() {
-
-            this.panelId = this.getId();
-            Gemma.ExpressionExperimentDetails.superclass.initComponent.call( this );
-
-            // this.editable && this.admin may also have been set in component configs
-
-            var panelId = this.getId();
-            var e = this.experimentDetails;
-            var currentDescription = e.description;
-            var currentName = e.name;
-            var currentShortName = e.shortName;
-            var currentPubMedId = (e.primaryCitation) ? e.primaryCitation.pubmedAccession : '';
-            var currentPrimaryCitation = e.primaryCitation;
-            var manager = new Gemma.EEManager( {
-               editable : this.editable,
-               id : e.id + '-eemanager'
-            } );
-            this.manager = manager;
-
-            /* PUB MED REGION */
-
-            var pubMedDisplay = new Ext.Panel( {
-               xtype : 'panel',
-               fieldLabel : 'Publication',
-               baseCls : 'x-plain-panel',
-               style : 'padding-top:5px',
-               tpl : new Ext.XTemplate( Gemma.Common.tpl.pubmedLink.complex ),
-               data : {
-                  pubAvailable : (currentPrimaryCitation) ? 'true' : 'false',
-                  primaryCitationStr : (currentPrimaryCitation) ? currentPrimaryCitation.citation : '',
-                  pubmedURL : (currentPrimaryCitation) ? currentPrimaryCitation.pubmedURL : ''
-               },
-               listeners : {
-                  'toggleEditMode' : function( editOn ) {
-                     this.setVisible( !editOn );
-                  }
-               }
-            } );
-            var pubMedIdField = new Ext.form.NumberField( {
-               xtype : 'numberfield',
-               allowDecimals : false,
-               minLength : 1,
-               maxLength : 9,
-               allowNegative : false,
-               emptyText : (this.isAdmin || this.editable) ? 'Enter pubmed id' : 'Not Available',
-               width : 100,
-               value : currentPubMedId,
-               enableKeyEvents : true,
-               bubbleEvents : [ 'changeMade' ],
-               listeners : {
-                  'keyup' : function( field, event ) {
-                     if ( field.isDirty() ) {
-                        field.fireEvent( 'changeMade', field.isValid() );
-                     }
-                  },
-                  scope : this
-
-               }
-            } );
-            var pubMedDelete = {
-               xtype : 'button',
-               text : 'Clear',
-               icon : '/Gemma/images/icons/cross.png',
-               tooltip : 'Remove this experiment\'s association with this publication',
-               bubbleEvents : [ 'changeMade' ],
-               handler : function() {
-                  pubMedIdField.setValue( '' );
-                  field.fireEvent( 'changeMade', true );
-               },
-               scope : this
-            };
-            var pubMedForm = new Ext.Panel( {
-               fieldLabel : 'Publication',
-               xtype : 'panel',
-               layout : 'hbox',
-               hidden : true,// hide until edit mode is activated
-               padding : 3,
-               items : [ pubMedIdField, pubMedDelete ],
-               listeners : {
-                  'toggleEditMode' : function( editOn ) {
-                     this.setVisible( editOn );
-                     this.doLayout();
-                  }
-               }
-            } );
-
-            /*
-             * This is needed to make the annotator initialize properly.
+            /**
+             *
              */
-            new Gemma.CategoryCombo( {} );
+            renderSourceDatabaseEntry: function (ee) {
+                var result = '';
 
-            var taggerurl = "<span style='cursor:pointer' onClick=\"return Ext.getCmp('" + e.id+ "-eemanager')" +
-                ".tagger(" + e.id + "," + e.taxonId + "," + this.editable + ", null)\" >" +
-                "<i class='gray-blue fa fa-tags fa-lg -fa-fw' ext:qtip='add/view tags'></i></span>";
+                var logo = '';
+                if (ee.externalDatabase == 'GEO') {
+                    var acc = ee.accession;
+                    acc = acc.replace(/\.[1-9]$/, ''); // in case of multi-species.
+                    logo = '/Gemma/images/logo/geoTiny.png';
+                    result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
+                        + '"><img src="' + logo + '"/></a>';
 
-            var tagView = new Gemma.AnnotationDataView( {
-               readParams : [ {
-                  id : e.id,
-                  classDelegatingFor : "ExpressionExperiment"
-               } ]
-            } );
+                } else if (ee.externalDatabase == 'ArrayExpress') {
+                    logo = '/Gemma/images/logo/arrayExpressTiny.png';
+                    result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
+                        + ee.accession + '"><img src="' + logo + '"/></a>';
+                } else {
+                    result = "Direct upload";
+                }
 
-            manager.on( 'tagsUpdated', function() {
-               tagView.store.reload();
-            } );
+                return result;
 
-            manager.on( 'done', function() {
-               /*
-                * After a process that requires refreshing the page.
-                */
-               window.location.reload();
-            } );
+            },
 
-            manager.on( 'reportUpdated', function( data ) {
-               ob = data[0];
-               var k = Ext.get( 'coexpressionLinkCount-region' );
-               Ext.DomHelper.overwrite( k, {
-                  html : ob.coexpressionLinkCount
-               } );
-               k.highlight();
-               k = Ext.get( 'processedExpressionVectorCount-region' );
-               Ext.DomHelper.overwrite( k, {
-                  html : ob.processedExpressionVectorCount
-               } );
-               k.highlight();
-            }, this );
+            /**
+             * Link for samples details page.
+             *
+             */
+            renderSamples: function (ee) {
+                var result = ee.bioAssayCount;
+                if (this.editable) {
+                    result = result
+                        + '&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
+                        + ee.id
+                        + '"><img ext:qtip="View the details of the samples" src="/Gemma/images/icons/magnifier.png"/></a>';
+                }
+                return '' + result; // hack for possible problem with extjs 3.1 - bare
+                // number not displayed, coerce to string.
+            },
 
-            manager.on( 'differential', function() {
-               window.location.reload( true );
-            } );
+            renderStatus: function (ee) {
 
-            save = function() {
-               if ( !this.saveMask ) {
-                  this.saveMask = new Ext.LoadMask( this.getEl(), {
-                     msg : "Saving ..."
-                  } );
-               }
-               this.saveMask.show();
-               var shortName = shortNameField.getValue();
-               var description = descriptionArea.getValue();
-               var name = nameArea.getValue();
-               var newPubMedId = pubMedIdField.getValue();
+                var result = '';
+                if (ee.troubled) {
+                    result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                        + ee.troubleDetails + '"></i> ';
+                }
 
-               var entity = {
-                  entityId : e.id
-               };
+                if (ee.batchEffect !== null && ee.batchEffect !== "") {
+                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                        + ee.batchEffect + ""
+                        + '"></i> ';
+                }
 
-               if ( shortName != currentShortName ) {
-                  entity.shortName = shortName;
-               }
+                if (ee.batchConfound !== null && ee.batchConfound !== "") {
+                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                        + ee.batchConfound + " (batch confound)"
+                        + '"></i> ';
+                }
 
-               if ( description != currentDescription ) {
-                  entity.description = description;
-               }
+                if (ee.hasMultiplePreferredQuantitationTypes) {
+                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes
+                        + '"></i> ';
+                }
 
-               if ( name != currentName ) {
-                  entity.name = name;
-               }
+                if (ee.hasMultipleTechnologyTypes) {
+                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"></i> ';
+                }
 
-               if ( !newPubMedId ) {
-                  entity.pubMedId = currentPubMedId;
-                  entity.removePrimaryPublication = true;
-               } else if ( newPubMedId !== currentPubMedId ) {
-                  entity.pubMedId = newPubMedId;
-                  entity.removePrimaryPublication = false;
-               } else {
-                  entity.removePrimaryPublication = false;
-               }
-               // returns ee details object
-               ExpressionExperimentController.updateBasics( entity, function( data ) {
 
-                  shortNameField.setValue( data.shortName );
-                  nameArea.setValue( data.name );
-                  descriptionArea.setValue( data.description );
-                  pubMedIdField.setValue( data.pubmedId );
-                  pubMedDisplay.update( {
-                     pubAvailable : (data.pubmedId) ? 'true' : 'false',
-                     primaryCitation : (data.primaryCitation) ? data.primaryCitation.citation : '',
-                     pubmedURL : (data.primaryCitation) ? data.primaryCitation.pubmedURL : ''
-                  } );
+                if(ee.reprocessedFromRawData){
+                    result = result + '<i class="gray-blue fa fa-cog fa-lg" ext:qtip="'
+                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataReprocessed + '"></i> ';
+                }else{
+                    result = result + '<i class="gray-blue fa fa-cloud-download fa-lg" ext:qtip="'
+                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal + '"></i> ';
+                }
 
-                  currentShortName = data.shortName;
-                  currentName = data.name;
-                  currentDescription = data.description;
-                  currentPubMedId = (data.primaryCitation) ? data.primaryCitation.pubmedAccession : '';
-                  currentPrimaryCitation = data.primaryCitation;
+                var isUserLoggedIn = (Ext.get('hasUser') && Ext.get('hasUser').getValue() === 'true') ? true : false;
 
-                  this.dirtyForm = false;
-                  this.saveMask.hide();
+                if (isUserLoggedIn) {
+                    result = result
+                        + Gemma.SecurityManager.getSecurityLink(
+                            'ubic.gemma.model.expression.experiment.ExpressionExperiment', ee.id, ee.isPublic,
+                            ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned);
+                }
 
-               }.createDelegate( this ) );
+                return result ? result : "No flags";
 
-            }.createDelegate( this );
+            },
 
-            var descriptionArea = new Ext.form.TextArea( {
-               allowBlank : true,
-               resizable : true,
-               readOnly : true,
-               disabled : false,
-               growMin : 1,
-               growMax : 150,
-               growAppend : '',
-               grow : true,
-               disabledClass : 'disabled-plain',
-               fieldClass : '',
-               emptyText : 'No description provided',
-               enableKeyEvents : true,
-               bubbleEvents : [ 'changeMade' ],
-               listeners : {
-                  'keyup' : function( field, e ) {
-                     if ( field.isDirty() ) {
-                        field.fireEvent( 'changeMade', field.isValid() );
-                     }
-                  },
-                  'toggleEditMode' : function( editOn ) {
-                     this.setReadOnly( !editOn );
-                     if ( editOn ) {
-                        this.removeClass( 'x-bare-field' );
-                     } else {
-                        this.addClass( 'x-bare-field' );
-                     }
-                  }
-               },
-               style : 'width: 100%; background-color: #fcfcfc; border: 1px solid #cccccc;',
-               value : currentDescription
-            } );
+            linkAnalysisRenderer: function (ee) {
+                var id = ee.id;
+                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                    + id
+                    + '-eemanager\').doLinks('
+                    + id
+                    + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
+                if (ee.dateLinkAnalysis) {
+                    var type = ee.linkAnalysisEventType;
+                    var color = "#000";
+                    var suggestRun = true;
+                    var qtip = 'ext:qtip="OK"';
+                    if (type == 'FailedLinkAnalysisEvent') {
+                        color = 'red';
+                        qtip = 'ext:qtip="Failed"';
+                    } else if (type == 'TooSmallDatasetLinkAnalysisEvent') {
+                        color = '#CCC';
+                        qtip = 'ext:qtip="Too small"';
+                        suggestRun = false;
+                    }
 
-            var shortNameField = new Ext.form.TextField( {
-               enableKeyEvents : true,
-               allowBlank : false,
-               grow : true,
-               disabledClass : 'disabled-plain',
-               readOnly : true,
-               // disabled: true,
-               style : 'font-weight: bold; font-size:1.4em; height:1.5em; color:black',
-               bubbleEvents : [ 'changeMade' ],
-               listeners : {
-                  'keyup' : function( field, e ) {
-                     if ( field.isDirty() ) {
-                        field.fireEvent( 'changeMade', field.isValid() );
-                     }
-                  },
-                  'toggleEditMode' : function( editOn ) {
-                     this.setReadOnly( !editOn );
-                     // this.setDisabled(!editOn);
-                     if ( editOn ) {
-                        this.removeClass( 'x-bare-field' );
-                     } else {
-                        this.addClass( 'x-bare-field' );
-                     }
-                  }
-               },
-               value : currentShortName
-            } );
+                    return '<span style="color:' + color + ';" ' + qtip + '>'
+                        + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis) + '&nbsp;' + (suggestRun ? runurl : '');
+                } else {
+                    return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                }
 
-            var nameArea = new Ext.form.TextArea( {
-               allowBlank : false,
-               grow : true,
-               // growMin: 22,
-               growAppend : '',
-               readOnly : true,// !this.editable,
-               cls : 'disabled-plain',
-               emptyText : 'No description provided',
-               enableKeyEvents : true,
-               bubbleEvents : [ 'changeMade' ],
-               editOn : false,
-               listeners : {
-                  'keyup' : function( field, e ) {
-                     if ( field.isDirty() ) {
-                        field.fireEvent( 'changeMade', field.isValid() );
-                     }
-                  },
-                  'focus' : function( field ) {
-                     if ( !field.editOn ) {
-                        this.removeClass( 'x-form-focus' );
-                     }
-                  },
-                  'toggleEditMode' : function( editOn ) {
-                     this.setReadOnly( !editOn );
-                     this.editOn = editOn;
-                     if ( editOn ) {
-                        this.removeClass( 'x-bare-field' );
-                     } else {
-                        this.addClass( 'x-bare-field' );
-                     }
-                  }
-               },
-               style : 'font-weight: bold; font-size:1.3em; width:100%',
-               value : currentName
-            } );
+            },
 
-            resetEditableFields = function() {
-               shortNameField.setValue( currentShortName );
-               nameArea.setValue( currentName );
-               descriptionArea.setValue( currentDescription );
-               pubMedIdField.setValue( currentPubMedId );
-               saveBtn.disable();
-               cancelBtn.disable();
-            };
+            missingValueAnalysisRenderer: function (ee) {
+                var id = ee.id;
+                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                    + id
+                    + '-eemanager\').doMissingValues('
+                    + id
+                    + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
 
-            var editBtn = new Ext.Button( {
-               // would like to use on/off slider or swtich type control here
-               text : 'Start editing',
-               editOn : false,
-               disabled : !this.editable,
-               handler : function( button, event ) {
-                  this.fireEvent( 'toggleEditMode', true );
-               },
-               scope : this
-            } );
-            var cancelBtn = new Ext.Button( {
-               text : 'Cancel',
-               disabled : true,
-               toolTip : 'Reset all fields to saved values',
-               handler : function() {
-                  this.fireEvent( 'toggleEditMode', false );
-               },
-               scope : this
-            } );
+                /*
+                 * Offer missing value analysis if it's possible (this might need tweaking).
+                 */
+                if (ee.technologyType != 'ONECOLOR' && ee.technologyType != 'NONE' && ee.hasEitherIntensity) {
 
-            var saveBtn = new Ext.Button( {
-               text : 'Save',
-               disabled : true,
-               handler : function() {
-                  save();
-                  this.fireEvent( 'toggleEditMode', false );
-               },
-               scope : this
-            } );
-            var editEEButton = new Ext.Button( {
-               text : 'More edit options',
-               icon : '/Gemma/images/icons/wrench.png',
-               toolTip : 'Go to editor page for this experiment',
-               disabled : !this.editable,
-               handler : function() {
-                  window.open( '/Gemma/expressionExperiment/editExpressionExperiment.html?id='
-                     + this.experimentDetails.id );
-               },
-               scope : this
-            } );
-            var deleteEEButton = new Ext.Button( {
-               text : 'Delete Experiment',
-               icon : '/Gemma/images/icons/cross.png',
-               toolTip : 'Delete the experiment from the system',
-               disabled : !this.editable,
-               handler : function() {
-                  manager.deleteExperiment( this.experimentDetails.id, true );
-               },
-               scope : this
-            } );
+                    if (ee.dateMissingValueAnalysis) {
+                        var type = ee.missingValueAnalysisEventType;
+                        var color = "#000";
+                        var suggestRun = true;
+                        var qtip = 'ext:qtip="OK"';
+                        if (type == 'FailedMissingValueAnalysisEvent') {
+                            color = 'red';
+                            qtip = 'ext:qtip="Failed"';
+                        }
 
-            this.on( 'toggleEditMode', function( editOn ) {
-               // is there a way to make this even propagate to all children automatically?
-               this.editModeOn = editOn; // needed to warn user before tab change
-               editBtn.setText( (editOn) ? 'Editing mode on' : 'Start editing' );
-               editBtn.setDisabled( editOn );
-               nameArea.fireEvent( 'toggleEditMode', editOn );
-               descriptionArea.fireEvent( 'toggleEditMode', editOn );
-               shortNameField.fireEvent( 'toggleEditMode', editOn );
-               pubMedForm.fireEvent( 'toggleEditMode', editOn );
-               pubMedDisplay.fireEvent( 'toggleEditMode', editOn );
-               resetEditableFields();
-               saveBtn.setDisabled( !editOn );
-               cancelBtn.setDisabled( !editOn );
-               if ( !editOn ) {
-                  resetEditableFields();
-                  this.dirtyForm = false;
-               }
-            } );
+                        return '<span style="color:' + color + ';" ' + qtip + '>'
+                            + Gemma.Renderers.dateRenderer(ee.dateMissingValueAnalysis) + '&nbsp;'
+                            + (suggestRun ? runurl : '');
+                    } else {
+                        return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                    }
 
-            this.on( 'changeMade', function( wasValid ) {
-               // enable save button
-               saveBtn.setDisabled( !wasValid );
-               cancelBtn.setDisabled( !wasValid );
-               this.dirtyForm = true;
+                } else {
+                    return '<span ext:qtip="Only relevant for two-channel microarray studies with intensity data available." style="color:#CCF;">NA</span>';
+                }
+            },
 
-            } );
-            var basics = new Ext.Panel(
-               {
-                  ref : 'fieldPanel',
-                  collapsible : false,
-                  bodyBorder : false,
-                  frame : false,
-                  baseCls : 'x-plain-panel',
-                  bodyStyle : 'padding:10px',
-                  defaults : {
-                     bodyStyle : 'vertical-align:top;font-size:12px;color:black',
-                     baseCls : 'x-plain-panel',
-                     fieldClass : 'x-bare-field'
-                  },
-                  tbar : new Ext.Toolbar( {
-                     hidden : !this.editable,
-                     items : [ editBtn, ' ', saveBtn, ' ', cancelBtn, '-', editEEButton, '-', deleteEEButton ]
-                  } ),
-                  items : [
-                           shortNameField,
-                           nameArea,
-                           {
-                              layout : 'form',
-                              defaults : {
-                                 border : false
-                              },
-                              items : [
-                                       {
-                                          fieldLabel : "Taxon",
-                                          html : e.taxon
-                                       },
-                                       {
-                                          fieldLabel : 'Tags&nbsp;' + taggerurl,
-                                          items : [ tagView ]
-                                       },
-                                       {
-                                          fieldLabel : 'Experiment Groups',
-                                          html : this.renderEESets( e.expressionExperimentSets ).join( ',' )
-                                       },
-                                       {
-                                          fieldLabel : 'Samples',
-                                          html : this.renderSamples( e ),
-                                          width : 60
-                                       },
-                                       {
-                                          fieldLabel : 'Profiles',
-                                          // id: 'processedExpressionVectorCount-region',
-                                          html : '<div id="downloads"> '
-                                             + this.renderProcessedExpressionVectorCount( e )
-                                             + '&nbsp;&nbsp;'
-                                             + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
-                                             + e.id
-                                             + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
-                                             + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
-                                             + e.id
-                                             + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
-                                             + '<i class="qtp fa fa-question-circle fa-fw"></i>'
-                                             + '</div>',
-                                          width : 400,
-                                          listeners : {
-                                             'afterrender' : function( c ) {
-                                                jQuery( '#downloads i' )
-                                                   .qtip(
-                                                      {
-                                                         content : Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.profileDownloadTT,
-                                                         style : {
-                                                            name : 'cream'
-                                                         }
-                                                      } );
-                                             }
-                                          }
-                                       }, {
-                                          fieldLabel : 'Platforms',
-                                          html : this.renderArrayDesigns( e.arrayDesigns ),
-                                          width : 480
-                                       }, {
-                                          fieldLabel : 'Coexpr. Links',
-                                          html : this.renderCoExpressionLinkCount( e ),
-                                          width : 80
-                                       }, {
-                                          fieldLabel : 'Differential Expr. Analyses',
-                                          items : new Gemma.DifferentialExpressionAnalysesSummaryTree( {
-                                             experimentDetails : e,
-                                             editable : this.editable,
-                                             listeners : {
-                                                'analysisDeleted' : function() {
-                                                   this.fireEvent( 'experimentDetailsReloadRequired' );
+            processedVectorCreateRenderer: function (ee) {
+                var id = ee.id;
+                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                    + id
+                    + '-eemanager\').doProcessedVectors('
+                    + id
+                    + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
+
+                if (ee.dateProcessedDataVectorComputation) {
+                    var type = ee.processedDataVectorComputationEventType;
+                    var color = "#000";
+
+                    var suggestRun = true;
+                    var qtip = 'ext:qtip="OK"';
+                    if (type == 'FailedProcessedVectorComputationEvent') { // note:
+                        // no
+                        // such
+                        // thing.
+                        color = 'red';
+                        qtip = 'ext:qtip="Failed"';
+                    }
+
+                    return '<span style="color:' + color + ';" ' + qtip + '>'
+                        + Gemma.Renderers.dateRenderer(ee.dateProcessedDataVectorComputation) + '&nbsp;'
+                        + (suggestRun ? runurl : '');
+                } else {
+                    return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                }
+            },
+
+            // FIXME is this used?
+            differentialAnalysisRenderer: function (ee) {
+                var id = ee.id;
+                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
+                    + this.panelId
+                    + 'eemanager\').doDifferential('
+                    + id
+                    + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
+
+                if (ee.numPopulatedFactors > 0) {
+                    if (ee.dateDifferentialAnalysis) {
+                        var type = ee.differentialAnalysisEventType;
+
+                        var color = "#000";
+                        var suggestRun = true;
+                        var qtip = 'ext:qtip="OK"';
+                        if (type == 'FailedDifferentialExpressionAnalysisEvent') {
+                            color = 'red';
+                            qtip = 'ext:qtip="Failed"';
+                        } else if (record.get('differentialExpressionAnalyses').length == 0) {
+                            // we ran it, but the analyses were apparently deleted.
+                            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                        }
+
+                        return '<span style="color:' + color + ';" ' + qtip + '>'
+                            + Gemma.Renderers.dateRenderer(ee.dateDifferentialAnalysis) + '&nbsp;'
+                            + (suggestRun ? runurl : '');
+                    } else {
+                        return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                    }
+                } else {
+                    return '<span style="color:#CCF;">NA</span>';
+                }
+            },
+            renderProcessedExpressionVectorCount: function (e) {
+                return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
+            },
+            renderEESets: function (eeSets) {
+                eeSets.sort(function (a, b) {
+                    var A = a.name.toLowerCase();
+                    var B = b.name.toLowerCase();
+                    if (A < B)
+                        return -1;
+                    if (A > B)
+                        return 1;
+                    return 0;
+                });
+                var eeSetLinks = [];
+                var i;
+                for (i = 0; i < eeSets.length; i++) {
+                    if (eeSets[i] && eeSets[i].name && eeSets[i].id) {
+                        eeSetLinks
+                            .push(' <a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='
+                                + eeSets[i].id + '">' + eeSets[i].name + '</a>');
+                    }
+                }
+                if (eeSetLinks.length === 0) {
+                    eeSetLinks.push('Not currently a member of any experiment group');
+                }
+                return eeSetLinks;
+            },
+
+            initComponent: function () {
+
+                this.panelId = this.getId();
+                Gemma.ExpressionExperimentDetails.superclass.initComponent.call(this);
+
+                // this.editable && this.admin may also have been set in component configs
+
+                var panelId = this.getId();
+                var e = this.experimentDetails;
+                var currentDescription = e.description;
+                var currentName = e.name;
+                var currentShortName = e.shortName;
+                var currentPubMedId = (e.primaryCitation) ? e.primaryCitation.pubmedAccession : '';
+                var currentPrimaryCitation = e.primaryCitation;
+                var manager = new Gemma.EEManager({
+                    editable: this.editable,
+                    id: e.id + '-eemanager'
+                });
+                this.manager = manager;
+
+                /* PUB MED REGION */
+
+                var pubMedDisplay = new Ext.Panel({
+                    xtype: 'panel',
+                    fieldLabel: 'Publication',
+                    baseCls: 'x-plain-panel',
+                    style: 'padding-top:5px',
+                    tpl: new Ext.XTemplate(Gemma.Common.tpl.pubmedLink.complex),
+                    data: {
+                        pubAvailable: (currentPrimaryCitation) ? 'true' : 'false',
+                        primaryCitationStr: (currentPrimaryCitation) ? currentPrimaryCitation.citation : '',
+                        pubmedURL: (currentPrimaryCitation) ? currentPrimaryCitation.pubmedURL : ''
+                    },
+                    listeners: {
+                        'toggleEditMode': function (editOn) {
+                            this.setVisible(!editOn);
+                        }
+                    }
+                });
+                var pubMedIdField = new Ext.form.NumberField({
+                    xtype: 'numberfield',
+                    allowDecimals: false,
+                    minLength: 1,
+                    maxLength: 9,
+                    allowNegative: false,
+                    emptyText: (this.isAdmin || this.editable) ? 'Enter pubmed id' : 'Not Available',
+                    width: 100,
+                    value: currentPubMedId,
+                    enableKeyEvents: true,
+                    bubbleEvents: ['changeMade'],
+                    listeners: {
+                        'keyup': function (field, event) {
+                            if (field.isDirty()) {
+                                field.fireEvent('changeMade', field.isValid());
+                            }
+                        },
+                        scope: this
+
+                    }
+                });
+                var pubMedDelete = {
+                    xtype: 'button',
+                    text: 'Clear',
+                    icon: '/Gemma/images/icons/cross.png',
+                    tooltip: 'Remove this experiment\'s association with this publication',
+                    bubbleEvents: ['changeMade'],
+                    handler: function () {
+                        pubMedIdField.setValue('');
+                        field.fireEvent('changeMade', true);
+                    },
+                    scope: this
+                };
+                var pubMedForm = new Ext.Panel({
+                    fieldLabel: 'Publication',
+                    xtype: 'panel',
+                    layout: 'hbox',
+                    hidden: true,// hide until edit mode is activated
+                    padding: 3,
+                    items: [pubMedIdField, pubMedDelete],
+                    listeners: {
+                        'toggleEditMode': function (editOn) {
+                            this.setVisible(editOn);
+                            this.doLayout();
+                        }
+                    }
+                });
+
+                /*
+                 * This is needed to make the annotator initialize properly.
+                 */
+                new Gemma.CategoryCombo({});
+
+                var taggerurl = "<span style='cursor:pointer' onClick=\"return Ext.getCmp('" + e.id + "-eemanager')" +
+                    ".tagger(" + e.id + "," + e.taxonId + "," + this.editable + ", null)\" >" +
+                    "<i class='gray-blue fa fa-tags fa-lg -fa-fw' ext:qtip='add/view tags'></i></span>";
+
+                var tagView = new Gemma.AnnotationDataView({
+                    readParams: [{
+                        id: e.id,
+                        classDelegatingFor: "ExpressionExperiment"
+                    }]
+                });
+
+                manager.on('tagsUpdated', function () {
+                    tagView.store.reload();
+                });
+
+                manager.on('done', function () {
+                    /*
+                     * After a process that requires refreshing the page.
+                     */
+                    window.location.reload();
+                });
+
+                manager.on('reportUpdated', function (data) {
+                    var ob = data[0];
+                    var k = Ext.get('coexpressionLinkCount-region');
+                    Ext.DomHelper.overwrite(k, {
+                        html: ob.coexpressionLinkCount
+                    });
+                    k.highlight();
+                    k = Ext.get('processedExpressionVectorCount-region');
+                    Ext.DomHelper.overwrite(k, {
+                        html: ob.processedExpressionVectorCount
+                    });
+                    k.highlight();
+                }, this);
+
+                manager.on('differential', function () {
+                    window.location.reload(true);
+                });
+
+                var save = function () {
+                    if (!this.saveMask) {
+                        this.saveMask = new Ext.LoadMask(this.getEl(), {
+                            msg: "Saving ..."
+                        });
+                    }
+                    this.saveMask.show();
+                    var shortName = shortNameField.getValue();
+                    var description = descriptionArea.getValue();
+                    var name = nameArea.getValue();
+                    var newPubMedId = pubMedIdField.getValue();
+
+                    var entity = {
+                        entityId: e.id
+                    };
+
+                    if (shortName != currentShortName) {
+                        entity.shortName = shortName;
+                    }
+
+                    if (description != currentDescription) {
+                        entity.description = description;
+                    }
+
+                    if (name != currentName) {
+                        entity.name = name;
+                    }
+
+                    if (!newPubMedId) {
+                        entity.pubMedId = currentPubMedId;
+                        entity.removePrimaryPublication = true;
+                    } else if (newPubMedId !== currentPubMedId) {
+                        entity.pubMedId = newPubMedId;
+                        entity.removePrimaryPublication = false;
+                    } else {
+                        entity.removePrimaryPublication = false;
+                    }
+                    // returns ee details object
+                    ExpressionExperimentController.updateBasics(entity, function (data) {
+
+                        shortNameField.setValue(data.shortName);
+                        nameArea.setValue(data.name);
+                        descriptionArea.setValue(data.description);
+                        pubMedIdField.setValue(data.pubmedId);
+                        pubMedDisplay.update({
+                            pubAvailable: (data.pubmedId) ? 'true' : 'false',
+                            primaryCitation: (data.primaryCitation) ? data.primaryCitation.citation : '',
+                            pubmedURL: (data.primaryCitation) ? data.primaryCitation.pubmedURL : ''
+                        });
+
+                        currentShortName = data.shortName;
+                        currentName = data.name;
+                        currentDescription = data.description;
+                        currentPubMedId = (data.primaryCitation) ? data.primaryCitation.pubmedAccession : '';
+                        currentPrimaryCitation = data.primaryCitation;
+
+                        this.dirtyForm = false;
+                        this.saveMask.hide();
+
+                    }.createDelegate(this));
+
+                }.createDelegate(this);
+
+                var descriptionArea = new Ext.form.TextArea({
+                    allowBlank: true,
+                    resizable: true,
+                    readOnly: true,
+                    disabled: false,
+                    growMin: 1,
+                    growMax: 150,
+                    growAppend: '',
+                    grow: true,
+                    disabledClass: 'disabled-plain',
+                    fieldClass: '',
+                    emptyText: 'No description provided',
+                    enableKeyEvents: true,
+                    bubbleEvents: ['changeMade'],
+                    listeners: {
+                        'keyup': function (field, e) {
+                            if (field.isDirty()) {
+                                field.fireEvent('changeMade', field.isValid());
+                            }
+                        },
+                        'toggleEditMode': function (editOn) {
+                            this.setReadOnly(!editOn);
+                            if (editOn) {
+                                this.removeClass('x-bare-field');
+                            } else {
+                                this.addClass('x-bare-field');
+                            }
+                        }
+                    },
+                    style: 'width: 100%; background-color: #fcfcfc; border: 1px solid #cccccc;',
+                    value: currentDescription
+                });
+
+                var shortNameField = new Ext.form.TextField({
+                    enableKeyEvents: true,
+                    allowBlank: false,
+                    grow: true,
+                    disabledClass: 'disabled-plain',
+                    readOnly: true,
+                    // disabled: true,
+                    style: 'font-weight: bold; font-size:1.4em; height:1.5em; color:black',
+                    bubbleEvents: ['changeMade'],
+                    listeners: {
+                        'keyup': function (field, e) {
+                            if (field.isDirty()) {
+                                field.fireEvent('changeMade', field.isValid());
+                            }
+                        },
+                        'toggleEditMode': function (editOn) {
+                            this.setReadOnly(!editOn);
+                            // this.setDisabled(!editOn);
+                            if (editOn) {
+                                this.removeClass('x-bare-field');
+                            } else {
+                                this.addClass('x-bare-field');
+                            }
+                        }
+                    },
+                    value: currentShortName
+                });
+
+                var nameArea = new Ext.form.TextArea({
+                    allowBlank: false,
+                    grow: true,
+                    // growMin: 22,
+                    growAppend: '',
+                    readOnly: true,// !this.editable,
+                    cls: 'disabled-plain',
+                    emptyText: 'No description provided',
+                    enableKeyEvents: true,
+                    bubbleEvents: ['changeMade'],
+                    editOn: false,
+                    listeners: {
+                        'keyup': function (field, e) {
+                            if (field.isDirty()) {
+                                field.fireEvent('changeMade', field.isValid());
+                            }
+                        },
+                        'focus': function (field) {
+                            if (!field.editOn) {
+                                this.removeClass('x-form-focus');
+                            }
+                        },
+                        'toggleEditMode': function (editOn) {
+                            this.setReadOnly(!editOn);
+                            this.editOn = editOn;
+                            if (editOn) {
+                                this.removeClass('x-bare-field');
+                            } else {
+                                this.addClass('x-bare-field');
+                            }
+                        }
+                    },
+                    style: 'font-weight: bold; font-size:1.3em; width:100%',
+                    value: currentName
+                });
+
+                var resetEditableFields = function () {
+                    shortNameField.setValue(currentShortName);
+                    nameArea.setValue(currentName);
+                    descriptionArea.setValue(currentDescription);
+                    pubMedIdField.setValue(currentPubMedId);
+                    saveBtn.disable();
+                    cancelBtn.disable();
+                };
+
+                var editBtn = new Ext.Button({
+                    // would like to use on/off slider or swtich type control here
+                    text: 'Start editing',
+                    editOn: false,
+                    disabled: !this.editable,
+                    handler: function (button, event) {
+                        this.fireEvent('toggleEditMode', true);
+                    },
+                    scope: this
+                });
+                var cancelBtn = new Ext.Button({
+                    text: 'Cancel',
+                    disabled: true,
+                    toolTip: 'Reset all fields to saved values',
+                    handler: function () {
+                        this.fireEvent('toggleEditMode', false);
+                    },
+                    scope: this
+                });
+
+                var saveBtn = new Ext.Button({
+                    text: 'Save',
+                    disabled: true,
+                    handler: function () {
+                        save();
+                        this.fireEvent('toggleEditMode', false);
+                    },
+                    scope: this
+                });
+                var editEEButton = new Ext.Button({
+                    text: 'More edit options',
+                    icon: '/Gemma/images/icons/wrench.png',
+                    toolTip: 'Go to editor page for this experiment',
+                    disabled: !this.editable,
+                    handler: function () {
+                        window.open('/Gemma/expressionExperiment/editExpressionExperiment.html?id='
+                            + this.experimentDetails.id);
+                    },
+                    scope: this
+                });
+                var deleteEEButton = new Ext.Button({
+                    text: 'Delete Experiment',
+                    icon: '/Gemma/images/icons/cross.png',
+                    toolTip: 'Delete the experiment from the system',
+                    disabled: !this.editable,
+                    handler: function () {
+                        manager.deleteExperiment(this.experimentDetails.id, true);
+                    },
+                    scope: this
+                });
+
+                this.on('toggleEditMode', function (editOn) {
+                    // is there a way to make this even propagate to all children automatically?
+                    this.editModeOn = editOn; // needed to warn user before tab change
+                    editBtn.setText((editOn) ? 'Editing mode on' : 'Start editing');
+                    editBtn.setDisabled(editOn);
+                    nameArea.fireEvent('toggleEditMode', editOn);
+                    descriptionArea.fireEvent('toggleEditMode', editOn);
+                    shortNameField.fireEvent('toggleEditMode', editOn);
+                    pubMedForm.fireEvent('toggleEditMode', editOn);
+                    pubMedDisplay.fireEvent('toggleEditMode', editOn);
+                    resetEditableFields();
+                    saveBtn.setDisabled(!editOn);
+                    cancelBtn.setDisabled(!editOn);
+                    if (!editOn) {
+                        resetEditableFields();
+                        this.dirtyForm = false;
+                    }
+                });
+
+                this.on('changeMade', function (wasValid) {
+                    // enable save button
+                    saveBtn.setDisabled(!wasValid);
+                    cancelBtn.setDisabled(!wasValid);
+                    this.dirtyForm = true;
+
+                });
+                var basics = new Ext.Panel(
+                    {
+                        ref: 'fieldPanel',
+                        collapsible: false,
+                        bodyBorder: false,
+                        frame: false,
+                        baseCls: 'x-plain-panel',
+                        bodyStyle: 'padding:10px',
+                        defaults: {
+                            bodyStyle: 'vertical-align:top;font-size:12px;color:black',
+                            baseCls: 'x-plain-panel',
+                            fieldClass: 'x-bare-field'
+                        },
+                        tbar: new Ext.Toolbar({
+                            hidden: !this.editable,
+                            items: [editBtn, ' ', saveBtn, ' ', cancelBtn, '-', editEEButton, '-', deleteEEButton]
+                        }),
+                        items: [
+                            shortNameField,
+                            nameArea,
+                            {
+                                layout: 'form',
+                                defaults: {
+                                    border: false
+                                },
+                                items: [
+                                    {
+                                        fieldLabel: "Taxon",
+                                        html: e.taxon
+                                    },
+                                    {
+                                        fieldLabel: 'Tags&nbsp;' + taggerurl,
+                                        items: [tagView]
+                                    },
+                                    {
+                                        fieldLabel: 'Experiment Groups',
+                                        html: this.renderEESets(e.expressionExperimentSets).join(',')
+                                    },
+                                    {
+                                        fieldLabel: 'Samples',
+                                        html: this.renderSamples(e),
+                                        width: 60
+                                    },
+                                    {
+                                        fieldLabel: 'Profiles',
+                                        // id: 'processedExpressionVectorCount-region',
+                                        html: '<div id="downloads"> '
+                                        + this.renderProcessedExpressionVectorCount(e)
+                                        + '&nbsp;&nbsp;'
+                                        + '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
+                                        + e.id
+                                        + ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
+                                        + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
+                                        + e.id
+                                        + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
+                                        + '<i class="qtp fa fa-question-circle fa-fw"></i>'
+                                        + '</div>',
+                                        width: 400,
+                                        listeners: {
+                                            'afterrender': function (c) {
+                                                jQuery('#downloads').find('i')
+                                                    .qtip(
+                                                        {
+                                                            content: Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.profileDownloadTT,
+                                                            style: {
+                                                                name: 'cream'
+                                                            }
+                                                        });
+                                            }
+                                        }
+                                    }, {
+                                        fieldLabel: 'Platforms',
+                                        html: this.renderArrayDesigns(e.arrayDesigns),
+                                        width: 480
+                                    }, {
+                                        fieldLabel: 'Coexpr. Links',
+                                        html: this.renderCoExpressionLinkCount(e),
+                                        width: 80
+                                    }, {
+                                        fieldLabel: 'Differential Expr. Analyses',
+                                        items: new Gemma.DifferentialExpressionAnalysesSummaryTree({
+                                            experimentDetails: e,
+                                            editable: this.editable,
+                                            listeners: {
+                                                'analysisDeleted': function () {
+                                                    this.fireEvent('experimentDetailsReloadRequired');
                                                 },
-                                                scope : this
-                                             }
-                                          } )
-                                       }, {
-                                          fieldLabel : 'Status',
-                                          html : this.renderStatus( e )
-                                       } ]
-                           },
-                           descriptionArea,
-                           {
-                              layout : 'form',
-                              defaults : {
-                                 border : false
-                              },
-                              items : [
-                                       pubMedDisplay,
-                                       pubMedForm,
-                                       {
-                                          fieldLabel : 'Source',
-                                          html : this.renderSourceDatabaseEntry( e )
-                                       },
-                                       {
-                                          html : 'The last time a platform associated with this experiment was updated: '
-                                             + Gemma.Renderers.dateTimeRenderer(e.lastArrayDesignUpdateDate),
-                                          hidden : !e.lastArrayDesignUpdateDate
-                                       } ]
-                           } ]
-               } );
+                                                scope: this
+                                            }
+                                        })
+                                    }, {
+                                        fieldLabel: 'Status',
+                                        html: this.renderStatus(e)
+                                    }]
+                            },
+                            descriptionArea,
+                            {
+                                layout: 'form',
+                                defaults: {
+                                    border: false
+                                },
+                                items: [
+                                    pubMedDisplay,
+                                    pubMedForm,
+                                    {
+                                        fieldLabel: 'Source',
+                                        html: this.renderSourceDatabaseEntry(e)
+                                    },
+                                    {
+                                        html: 'The last time a platform associated with this experiment was updated: '
+                                        + Gemma.Renderers.dateTimeRenderer(e.lastArrayDesignUpdateDate),
+                                        hidden: !e.lastArrayDesignUpdateDate
+                                    }]
+                            }]
+                    });
 
-            this.add( basics );
+                this.add(basics);
 
-            // adjust when user logs in or out
-            Gemma.Application.currentUser.on( "logIn", function( userName, isAdmin ) {
-               var appScope = this;
-               ExpressionExperimentController.canCurrentUserEditExperiment( this.experimentDetails.id, {
-                  callback : function( editable ) {
-                     // console.log(this);
-                     appScope.adjustForIsEditable( editable );
-                  },
-                  scope : appScope
-               } );
+                // adjust when user logs in or out
+                Gemma.Application.currentUser.on("logIn", function (userName, isAdmin) {
+                    var appScope = this;
+                    ExpressionExperimentController.canCurrentUserEditExperiment(this.experimentDetails.id, {
+                        callback: function (editable) {
+                            // console.log(this);
+                            appScope.adjustForIsEditable(editable);
+                        },
+                        scope: appScope
+                    });
 
-            }, this );
-            Gemma.Application.currentUser.on( "logOut", function() {
-               this.adjustForIsEditable( false );
-               // TODO reset widget if experiment is private!
-            }, this );
+                }, this);
+                Gemma.Application.currentUser.on("logOut", function () {
+                    this.adjustForIsEditable(false);
+                    // TODO reset widget if experiment is private!
+                }, this);
 
-            this.doLayout();
-            this.fireEvent( "ready" );
+                this.doLayout();
+                this.fireEvent("ready");
 
-         }, // end of initComponent
-         adjustForIsEditable : function( editable ) {
-            this.fieldPanel.getTopToolbar().setVisible( editable );
-         }
-      } );
+            }, // end of initComponent
+            adjustForIsEditable: function (editable) {
+                this.fieldPanel.getTopToolbar().setVisible(editable);
+            }
+        });

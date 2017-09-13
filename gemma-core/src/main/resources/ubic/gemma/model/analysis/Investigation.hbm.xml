@@ -67,6 +67,17 @@
 				<property name="numberOfDataVectors" type="java.lang.Integer">
 					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER" />
 				</property>
+				<property name="metadata" type="org.springframework.orm.hibernate3.support.ClobStringType">
+					<column name="METADATA" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
+				</property>
+				<property name="batchEffect" type="java.lang.String">
+					<column name="BATCH_EFFECT" not-null="false" unique="true"
+							sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				</property>
+				<property name="batchConfound" type="java.lang.String">
+					<column name="BATCH_CONFOUND" not-null="false" unique="true"
+							sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+				</property>
 				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.GeeqImpl" cascade="all"
 					lazy="proxy" fetch="select">
 					<column name="GEEQ_FK" not-null="false" sql-type="BIGINT" unique="true"/>

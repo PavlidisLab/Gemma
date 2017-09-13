@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -61,8 +61,8 @@ public class PhenotypeWebService extends WebService {
      * Finds all evidence with the given external database name.
      *
      * @param database The name of external database to match.
-     * @param offset   only return the result collection from this index.
-     * @param limit    limit the result to this amount.
+     * @param offset   Only return the result collection from this index.
+     * @param limit    Limit the number of results to this amount.
      * @return A collection of Evidence Value Objects.
      */
     @GET
@@ -75,11 +75,7 @@ public class PhenotypeWebService extends WebService {
             @QueryParam("limit") @DefaultValue(PhenotypeAssociationDaoImpl.DEFAULT_PA_LIMIT + "") IntArg limit, // Opt.
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
-        if ( database == null || database.isEmpty() ) {
-            WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
-                    ERROR_MSG_DB_NAME_EMPTY );
-            throw new GemmaApiException( errorBody );
-        }
+        super.checkReqArg( database, "database" );
         return Responder.autoCode( this.phenotypeAssociationManagerService
                 .loadEvidenceWithExternalDatabaseName( database, limit.getValue(), offset.getValue() ), sr );
     }

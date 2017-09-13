@@ -39,7 +39,6 @@ import java.util.Map;
  */
 public interface DifferentialExpressionResultService extends BaseService<DifferentialExpressionAnalysisResult> {
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee, double qValueThreshold,
             int offset, int limit );
 

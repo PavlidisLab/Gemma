@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -109,6 +109,8 @@ public class PlatformsWebService extends WebServiceWithFiltering {
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "Generic_yeast" or "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
+     * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
+     * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
      */
     @GET
     @Path("/{platformArg: [a-zA-Z0-9\\.]+}/datasets")
@@ -148,11 +150,33 @@ public class PlatformsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves the genes on the given platform element
+     * Retrieves a specific composite sequence (element) for the given platform.
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "Generic_yeast" or "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
-     * @param probeArg    the name of the platform element for which the genes should be retrieved.
+     * @param probeArg    the name or ID of the platform element for which the genes should be retrieved. Note that names containing
+     *                    a forward slash are not accepted. Should you need this restriction temporarily lifted, please contact us.
+     */
+    @GET
+    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probeArg: [a-zA-Z0-9_%2F\\.-]+}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject platformElement( // Params:
+            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
+            @PathParam("probeArg") CompositeSequenceArg probeArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        probeArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
+        return Responder.autoCode( probeArg.getVoForPlatform( compositeSequenceService ), sr );
+    }
+
+    /**
+     * Retrieves the genes on the given platform element.
+     *
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "Generic_yeast" or "GPL1355" ). Retrieval by ID
+     *                    is more efficient. Only platforms that user has access to will be available.
+     * @param probeArg    the name or ID of the platform element for which the genes should be retrieved. Note that names containing
+     *                    a forward slash are not accepted. Should you need this restriction temporarily lifted, please contact us.
      * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.
      * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
      */

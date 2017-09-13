@@ -14,20 +14,14 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.IntArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
-
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.IntArrayList;
 import ubic.basecode.math.KruskalWallis;
+import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelperImpl;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -35,72 +29,38 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.util.*;
+
 /**
  * Test if an experimental design is confounded with batches.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class BatchConfound {
 
-    private static Log log = LogFactory.getLog( BatchConfound.class.getName() );
+    private static final Log log = LogFactory.getLog( BatchConfound.class.getName() );
 
-    /**
-     * @param ee
-     */
     public static Collection<BatchConfoundValueObject> test( ExpressionExperiment ee ) {
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = getBioMaterialFactorMap( ee );
         return factorBatchConfoundTest( ee, bioMaterialFactorMap );
     }
 
-    /**
-     * @param ee
-     * @return
-     */
     private static Map<ExperimentalFactor, Map<Long, Double>> getBioMaterialFactorMap( ExpressionExperiment ee ) {
-        Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
+        Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<>();
 
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
             BioMaterial bm = bioAssay.getSampleUsed();
-            for ( FactorValue fv : bm.getFactorValues() ) {
-                ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
-                if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
-                    bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
-                }
-
-                double valueToStore;
-                if ( fv.getMeasurement() != null ) {
-                    try {
-                        valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
-                    } catch ( NumberFormatException e ) {
-                        log.warn( "Measurement wasn't a number for " + fv );
-                        valueToStore = Double.NaN;
-                    }
-
-                } else {
-                    /*
-                     * This is a hack. We're storing the ID but as a double.
-                     */
-                    valueToStore = fv.getId().doubleValue();
-                }
-                bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
-            }
-
+            SVDServiceHelperImpl.populateBMFMap( bioMaterialFactorMap, bm );
         }
         return bioMaterialFactorMap;
     }
 
-    /**
-     * @param ee
-     * @param bioMaterialFactorMap
-     * @param svdo
-     */
     private static Collection<BatchConfoundValueObject> factorBatchConfoundTest( ExpressionExperiment ee,
             Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) throws IllegalArgumentException {
 
-        Map<Long, Long> batchMembership = new HashMap<Long, Long>();
+        Map<Long, Long> batchMembership = new HashMap<>();
         ExperimentalFactor batchFactor = null;
-        Map<Long, Integer> batchIndexes = new HashMap<Long, Integer>();
+        Map<Long, Integer> batchIndexes = new HashMap<>();
         for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
             if ( ExperimentalDesignUtils.isBatch( ef ) ) {
                 batchFactor = ef;
@@ -135,7 +95,8 @@ public class BatchConfound {
 
         for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
 
-            if ( ef.equals( batchFactor ) ) continue;
+            if ( ef.equals( batchFactor ) )
+                continue;
 
             Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
             int numBioMaterials = bmToFv.keySet().size();
@@ -143,7 +104,7 @@ public class BatchConfound {
             assert numBioMaterials > 0 : "No biomaterials for " + ef;
 
             double p = Double.NaN;
-            double chiSquare = Double.NaN;
+            double chiSquare;
             int df;
 
             int numBatches = batchFactor.getFactorValues().size();
@@ -170,17 +131,17 @@ public class BatchConfound {
                 df = KruskalWallis.dof( factorValues, batches );
                 chiSquare = KruskalWallis.kwStatistic( factorValues, batches );
 
-                log.debug( "KWallis\t" + ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t"
-                        + ef.getName() + "\t" + String.format( "%.2f", chiSquare ) + "\t" + df + "\t"
-                        + String.format( "%.2g", p ) + "\t" + numBatches );
+                log.debug( "KWallis\t" + ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getName()
+                        + "\t" + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p )
+                        + "\t" + numBatches );
             } else {
 
-                Map<Long, Integer> factorValueIndexes = new HashMap<Long, Integer>();
+                Map<Long, Integer> factorValueIndexes = new HashMap<>();
                 int index = 0;
                 for ( FactorValue fv : ef.getFactorValues() ) {
                     factorValueIndexes.put( fv.getId(), index++ );
                 }
-                Map<Long, Long> factorValueMembership = new HashMap<Long, Long>();
+                Map<Long, Long> factorValueMembership = new HashMap<>();
 
                 for ( Long bmId : bmToFv.keySet() ) {
                     factorValueMembership.put( bmId, bmToFv.get( bmId ).longValue() );
@@ -211,8 +172,8 @@ public class BatchConfound {
                 try {
                     chiSquare = cst.chiSquare( counts );
                 } catch ( IllegalArgumentException e ) {
-                    log.warn( "IllegalArgumentException exception computing ChiSq for : " + ef + "; Error was: "
-                            + e.getMessage() );
+                    log.warn( "IllegalArgumentException exception computing ChiSq for : " + ef + "; Error was: " + e
+                            .getMessage() );
                     chiSquare = Double.NaN;
                 }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -365,7 +365,7 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getLoadValueObjectsQueryString( filter, orderByClause, !asc );
 
         query.setCacheable( true );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( offset );
 
         //noinspection unchecked
@@ -413,7 +413,7 @@ public class ExpressionExperimentDaoImpl
                 getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -436,7 +436,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -447,7 +447,7 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         Query query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from ExpressionExperiment order by " + orderField + " " + ( descending ? "desc" : "" ) );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -459,7 +459,7 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from ExpressionExperiment where id in (:ids) " );
         query.setParameterList( "ids", ids );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -475,7 +475,7 @@ public class ExpressionExperimentDaoImpl
                         "desc" :
                         "" ) );
         query.setParameterList( "ids", ids );
-        query.setMaxResults( limit );
+        if(limit > 0)query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -1741,12 +1741,12 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_EE_ALIAS + ".name, " // 1
                 + ObjectFilter.DAO_EE_ALIAS + ".source, " // 2
                 + ObjectFilter.DAO_EE_ALIAS + ".shortName, " // 3
-                + ObjectFilter.DAO_EE_ALIAS + ".class, " // 4 // FIXME not used in EEVO
+                + ObjectFilter.DAO_EE_ALIAS + ".metadata, " // 4
                 + ObjectFilter.DAO_EE_ALIAS + ".numberOfDataVectors, " // 5
                 + "acc.accession, " // 6
                 + "ED.name, " // 7
                 + "ED.webUri, " // 8
-                + ObjectFilter.DAO_AD_ALIAS + ".curationDetails, " // 9 // FIXME not used in EEVO
+                + ObjectFilter.DAO_EE_ALIAS + ".description, " // 9
                 + ObjectFilter.DAO_AD_ALIAS + ".technologyType, "// 10
                 + "taxon.commonName, " // 11
                 + "taxon.id, " // 12
@@ -1802,6 +1802,7 @@ public class ExpressionExperimentDaoImpl
         vo.setName( ( String ) row[1] );
         vo.setSource( ( String ) row[2] );
         vo.setShortName( ( String ) row[3] );
+        vo.setMetadata( ( String ) row[4] );
         if ( row[5] != null )
             vo.setProcessedExpressionVectorCount( ( Integer ) row[5] );
 
@@ -1811,6 +1812,9 @@ public class ExpressionExperimentDaoImpl
         // ED
         vo.setExternalDatabase( ( String ) row[7] );
         vo.setExternalUri( ( String ) row[8] );
+
+        // Description
+        vo.setDescription( ( String ) row[9] );
 
         // AD
         Object technology = row[10];

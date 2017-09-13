@@ -1,15 +1,15 @@
 /**
  * Main user interface for viewing, creating and editing DatasetGroups. Three panes.
- * 
+ *
  * At the top, the available ExpressionExperimentSets are shown. At the bottom left, searching for experiments; at the
  * bottom right, the experiments that are in the set. If the user is authenticated, they can save new DatasetGroups to
  * the database.
- * 
+ *
  * @author Paul
- * 
+ *
  * @version $Id$
- * 
- * 
+ *
+ *
  * @class Gemma.DatasetGroupEditor
  * @extends Ext.Panel
  */

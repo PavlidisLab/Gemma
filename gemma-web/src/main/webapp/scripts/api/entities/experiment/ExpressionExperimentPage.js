@@ -109,8 +109,26 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
          * @param experimentDetails.hasBatchInformation
          * @param experimentDetails.batchConfound
          * @param experimentDetails.batchEffect
+         * @param experimentDetails.troubled
+         * @param experimentDetails.troubleDetails
+         * @param experimentDetails.reprocessedFromRawData
          * @param experimentDetails.QChtml
+         * @param experimentDetails.hasMultiplePreferredQuantitationTypes
+         * @param experimentDetails.hasMultipleTechnologyTypes
          * @param experimentDetails.parentTaxonId
+         * @param experimentDetails.externalDatabase
+         * @param experimentDetails.coexpressionLinkCount
+         * @param experimentDetails.bioAssayCount
+         * @param experimentDetails.dateLinkAnalysis
+         * @param experimentDetails.technologyType
+         * @param experimentDetails.hasEitherIntensity
+         * @param experimentDetails.dateMissingValueAnalysis
+         * @param experimentDetails.dateProcessedDataVectorComputation
+         * @param experimentDetails.dateDifferentialAnalysis
+         * @param experimentDetails.differentialAnalysisEventType
+         * @param experimentDetails.pubmedId
+         * @param experimentDetails.expressionExperimentSets
+         * @param experimentDetails.lastArrayDesignUpdateDate
          */
         this.experimentDetails = experimentDetails;
         this.editable = experimentDetails.currentUserHasWritePermission || isAdmin;

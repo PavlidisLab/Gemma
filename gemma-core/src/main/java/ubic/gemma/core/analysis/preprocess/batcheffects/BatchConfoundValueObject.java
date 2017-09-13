@@ -21,7 +21,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Represents a summary of a batch effect confound.
  * 
  * @author paul
- * @version $Id$
  */
 public class BatchConfoundValueObject {
 
@@ -32,14 +31,7 @@ public class BatchConfoundValueObject {
     private final double p;
     private int numBatches;
 
-    /**
-     * @param ee
-     * @param ef
-     * @param chiSquare
-     * @param df
-     * @param p
-     * @param numBatches
-     */
+
     public BatchConfoundValueObject( ExpressionExperiment ee, ExperimentalFactor ef, double chiSquare, int df,
             double p, int numBatches ) {
         this.ee = ee;

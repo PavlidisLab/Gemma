@@ -106,7 +106,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
-        Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
+        Map<Long, StringBuilder> probe2String = new HashMap<>();
 
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
 
@@ -126,7 +126,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             throw new IllegalStateException( "No results for " );
         }
 
-        // Dump the probe data in the sorted order of the 1st column that we orginally sorted
+        // Dump the probe data in the sorted order of the 1st column that we originally sorted
         for ( DifferentialExpressionAnalysisResult sortedResult : sortedFirstColumnOfResults ) {
 
             CompositeSequence cs = sortedResult.getProbe();
@@ -147,7 +147,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults ) {
 
         if ( sortedFirstColumnOfResults == null ) { // Sort P values in ears (because 1st column)
-            sortedFirstColumnOfResults = new ArrayList<DifferentialExpressionAnalysisResult>( ears.getResults() );
+            sortedFirstColumnOfResults = new ArrayList<>( ears.getResults() );
             Collections.sort( sortedFirstColumnOfResults,
                     DifferentialExpressionAnalysisResultComparator.Factory.newInstance() );
         }
@@ -234,11 +234,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
                 ContrastResult contrast = dear.getContrasts().iterator().next();
 
-                Double coef = contrast.getCoefficient();
+                Double coefficient = contrast.getCoefficient();
                 Double pValue = contrast.getPvalue();
                 String formattedPvalue = pValue == null ? "" : String.format( DECIMAL_FORMAT, pValue );
-                String formattedcoef = coef == null ? "" : String.format( DECIMAL_FORMAT, coef );
-                String contrastData = "\t" + formattedcoef + "\t" + formattedPvalue;
+                String formattedCoefficient = coefficient == null ? "" : String.format( DECIMAL_FORMAT, coefficient );
+                String contrastData = "\t" + formattedCoefficient + "\t" + formattedPvalue;
 
                 rowBuffer.append( contrastData );
 
@@ -248,7 +248,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
 
             Long baselineId = resultSet.getBaselineGroup().getId();
-            List<Long> factorValueIdOrder = new ArrayList<Long>();
+            List<Long> factorValueIdOrder = new ArrayList<>();
             for ( FactorValue factorValue : ef.getFactorValues() ) {
                 if ( Objects.equals( factorValue.getId(), baselineId ) ) {
                     continue;
@@ -268,7 +268,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
                 addGeneAnnotationsToLine( rowBuffer, dear, hasNCBIIDs, geneAnnotations );
 
-                Map<Long, String> factorValueIdToData = new HashMap<Long, String>();
+                Map<Long, String> factorValueIdToData = new HashMap<>();
                 // I don't think we can expect them in the same order.
                 for ( ContrastResult contrast : dear.getContrasts() ) {
                     Double foldChange = contrast.getLogFoldChange();
@@ -551,7 +551,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         Collection<DifferentialExpressionAnalysis> analyses = this.differentialExpressionAnalysisService
                 .getAnalyses( ee );
 
-        Collection<File> result = new HashSet<File>();
+        Collection<File> result = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
             assert analysis.getId() != null;
             result.add( this.getDiffExpressionAnalysisArchiveFile( analysis.getId(), forceWrite ) );
@@ -709,7 +709,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private Collection<ArrayDesign> getArrayDesigns( Collection<? extends DesignElementDataVector> vectors ) {
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
         for ( DesignElementDataVector v : vectors ) {
             ads.add( v.getDesignElement().getArrayDesign() );
         }
@@ -786,7 +786,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private Map<Long, Collection<Gene>> getGeneAnnotations( Collection<ArrayDesign> ads ) {
-        Map<Long, Collection<Gene>> annots = new HashMap<Long, Collection<Gene>>();
+        Map<Long, Collection<Gene>> annots = new HashMap<>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
             annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFile( arrayDesign ) );
@@ -799,7 +799,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * id(s), ncbi id(s)].
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
-        Map<Long, String[]> annots = new HashMap<Long, String[]>();
+        Map<Long, String[]> annots = new HashMap<>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
             annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
@@ -808,7 +808,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private Map<CompositeSequence, String[]> getGeneAnnotationsAsStringsByProbe( Collection<ArrayDesign> ads ) {
-        Map<CompositeSequence, String[]> annots = new HashMap<CompositeSequence, String[]>();
+        Map<CompositeSequence, String[]> annots = new HashMap<>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
 
@@ -989,6 +989,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         buf.append( "#\n# Generated by Gemma " ).append( timestamp ).append( " \n" );
         buf.append( DISCLAIMER + "#\n#\n" );
+
+        String batchConf = expressionExperimentService.getBatchConfound( ee );
+
+        if ( batchConf != null ) {
+            buf.append( "# !!! Batch confound" );
+        }
 
         if ( geneAnnotations.isEmpty() ) {
             // log.debug( "Annotation file is missing for this experiment, unable to include gene annotation information" );

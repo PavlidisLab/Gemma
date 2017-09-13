@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -92,7 +93,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves single dataset based on the given dataset.
+     * Retrieves single dataset based on the given dataset identifier.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
@@ -105,7 +106,12 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        ExpressionExperimentValueObject vo = datasetArg.getValueObject( expressionExperimentService );
+        ee = expressionExperimentService.thaw( ee );
+        vo.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
+        vo.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
+        return Responder.autoCode( vo, sr );
     }
 
     /**
@@ -145,8 +151,9 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     /**
      * Retrieves the differential analysis results for the given dataset.
      *
-     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient. Only datasets that user has access to will be available.
+     * @param datasetArg      can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                        is more efficient. Only datasets that user has access to will be available.
+     * @param qValueThreshold the Q-value threshold.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/analyses/differential")
@@ -154,11 +161,12 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetDiffAnalysis( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
-            @QueryParam("qValueThreshold") @DefaultValue("") DoubleArg qValueThreshold, // Required
+            @QueryParam("qValueThreshold") DoubleArg qValueThreshold, // Required
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
+        super.checkReqArg( qValueThreshold, "qValueThreshold" );
         return Responder.autoCode( differentialExpressionResultService
                 .getVOsForExperiment( datasetArg.getPersistentObject( expressionExperimentService ),
                         qValueThreshold.getValue(), offset.getValue(), limit.getValue() ), sr );
@@ -194,7 +202,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
-            @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Required
+            @QueryParam("filter") @DefaultValue("false") BoolArg filterData, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );

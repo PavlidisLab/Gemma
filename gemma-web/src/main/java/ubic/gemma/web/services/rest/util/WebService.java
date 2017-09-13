@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -77,4 +78,12 @@ public abstract class WebService {
         return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
+    protected void checkReqArg( Object arg, String name ) {
+        if ( arg == null || arg.toString().isEmpty()) {
+            Response.Status code = Response.Status.BAD_REQUEST;
+            WellComposedErrorBody errorBody = new WellComposedErrorBody( code,
+                    String.format( "Value for required parameter '%s' not found.", name ) );
+            throw new GemmaApiException( errorBody );
+        }
+    }
 }

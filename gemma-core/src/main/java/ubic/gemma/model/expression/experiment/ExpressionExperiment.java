@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -47,6 +47,9 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
     private String shortName;
     private String source;
+    private String metadata;
+    private String batchEffect;
+    private String batchConfound;
 
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass") // It does check, just not the classic way.
     @Override
@@ -96,6 +99,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.bioAssays;
     }
 
+    @Override
     public void setBioAssays( Collection<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
     }
@@ -193,6 +197,14 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.source = source;
     }
 
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata( String metadata ) {
+        this.metadata = metadata;
+    }
+
     @Override
     public CurationDetails getCurationDetails() {
         return this.curationDetails;
@@ -201,6 +213,22 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Override
     public void setCurationDetails( CurationDetails curationDetails ) {
         this.curationDetails = curationDetails;
+    }
+
+    public String getBatchConfound() {
+        return batchConfound;
+    }
+
+    public void setBatchConfound( String batchConfound ) {
+        this.batchConfound = batchConfound;
+    }
+
+    public String getBatchEffect() {
+        return batchEffect;
+    }
+
+    public void setBatchEffect( String batchEffect ) {
+        this.batchEffect = batchEffect;
     }
 
     /**
