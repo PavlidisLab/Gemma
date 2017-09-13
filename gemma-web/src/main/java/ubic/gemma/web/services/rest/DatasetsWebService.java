@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -105,7 +106,12 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        ExpressionExperimentValueObject vo = datasetArg.getValueObject( expressionExperimentService );
+        ee = expressionExperimentService.thaw( ee );
+        vo.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
+        vo.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
+        return Responder.autoCode( vo, sr );
     }
 
     /**

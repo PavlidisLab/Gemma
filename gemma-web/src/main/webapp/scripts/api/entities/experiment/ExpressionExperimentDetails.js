@@ -138,9 +138,14 @@ Gemma.ExpressionExperimentDetails = Ext
                         + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"></i> ';
                 }
 
-                result = result
-                    + (ee.reprocessedFromRawData ? "Reprocessed from raw data by Gemma." : "Data are from external source.")
-                    + "&nbsp;";
+
+                if(ee.reprocessedFromRawData){
+                    result = result + '<i class="gray-blue fa fa-cog fa-lg" ext:qtip="'
+                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataReprocessed + '"></i> ';
+                }else{
+                    result = result + '<i class="gray-blue fa fa-cloud-download fa-lg" ext:qtip="'
+                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal + '"></i> ';
+                }
 
                 var isUserLoggedIn = (Ext.get('hasUser') && Ext.get('hasUser').getValue() === 'true') ? true : false;
 
@@ -151,7 +156,7 @@ Gemma.ExpressionExperimentDetails = Ext
                             ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned);
                 }
 
-                return result || "No flags";
+                return result ? result : "No flags";
 
             },
 

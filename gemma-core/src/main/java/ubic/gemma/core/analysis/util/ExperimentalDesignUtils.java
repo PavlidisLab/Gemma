@@ -204,9 +204,9 @@ public class ExperimentalDesignUtils {
      * @return true if this factor appears to be a "batch" factor.
      */
     public static boolean isBatch( ExperimentalFactor ef ) {
-        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) )
+        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) ) {
             return false;
-
+        }
         Characteristic category = ef.getCategory();
         return ef.getName().equals( BATCH_FACTOR_NAME ) && category.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME );
     }

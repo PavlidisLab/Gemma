@@ -82,6 +82,7 @@ public class ExpressionExperimentServiceImpl
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
+    private static final double BATCH_EFFECT_THRESHOLD = 0.01;
 
     private final ExpressionExperimentDao expressionExperimentDao;
     private AuditEventDao auditEventDao;
@@ -449,12 +450,8 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public String getBatchConfound( ExpressionExperiment ee ) {
-        Collection<BatchConfoundValueObject> confounds;
-        try {
-            confounds = BatchConfound.test( ee );
-        } catch ( Exception e ) {
-            return null;
-        }
+        ee = thawBioAssays( ee );
+        Collection<BatchConfoundValueObject> confounds = BatchConfound.test( ee );
         StringBuilder result = new StringBuilder( "" );
 
         for ( BatchConfoundValueObject c : confounds ) {
@@ -508,6 +505,24 @@ public class ExpressionExperimentServiceImpl
             }
         }
         return details;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getBatchEffectDescription( ExpressionExperiment ee ) {
+        BatchEffectDetails batchEffectDetails = getBatchEffect( ee );
+        String result = "";
+        if ( batchEffectDetails == null ) {
+            result = "";
+        } else {
+            if ( batchEffectDetails.getDataWasBatchCorrected() ) {
+                result = "Data has been batch-corrected";
+            } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_THRESHOLD ) {
+                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
+                        + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
+            }
+        }
+        return Strings.emptyToNull( result );
     }
 
     @Override

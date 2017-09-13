@@ -437,7 +437,9 @@ Gemma.HelpText.WidgetDefaults = {
          + 'This isn\'t necessarily a problem but is suspicious.',
       statusMultipleTechnologyTypes : 'This experiment seems to mix platforms with different technology types.',
       profileDownloadTT : 'Tab-delimited data file for this experiment. '
-         + 'The filtered version corresponds to what is used in most Gemma analyses, removing some probes/elements. Unfiltered includes all elements'
+         + 'The filtered version corresponds to what is used in most Gemma analyses, removing some probes/elements. Unfiltered includes all elements',
+       dataReprocessed : "Reprocessed from raw data by Gemma.",
+       dataExternal : "Data are from external source."
    },
    ExpressionExperimentGrid : {
    // only column TTs, skipped

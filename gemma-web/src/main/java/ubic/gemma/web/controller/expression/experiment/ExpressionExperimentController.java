@@ -36,7 +36,6 @@ import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -105,7 +104,6 @@ public class ExpressionExperimentController {
     private static final Log log = LogFactory.getLog( ExpressionExperimentController.class.getName() );
     private static final Boolean AJAX = true;
     private static final int TRIM_SIZE = 800;
-    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
     @Autowired
     private TaskRunningService taskRunningService;
@@ -717,7 +715,7 @@ public class ExpressionExperimentController {
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
             finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
-            finalResult.setBatchEffect( batchEffect( ee ) );
+            finalResult.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
         }
 
         return finalResult;
@@ -1422,23 +1420,6 @@ public class ExpressionExperimentController {
         }
 
         return eeValObjectCol;
-    }
-
-    private String batchEffect( ExpressionExperiment ee ) {
-        BatchEffectDetails batchEffectDetails = expressionExperimentService.getBatchEffect( ee );
-        String result = "";
-        if ( batchEffectDetails == null ) {
-            result = "";
-        } else {
-            if ( batchEffectDetails.getDataWasBatchCorrected() ) {
-                result = "Data has been batch-corrected";
-            } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_PVALTHRESHOLD ) {
-                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
-                        + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
-            }
-        }
-        return result;
-
     }
 
     private String format4File( Collection<ExpressionExperimentValueObject> ees, String eeSetName ) {

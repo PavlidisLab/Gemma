@@ -203,6 +203,11 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
+    /**
+     * Checks the experiment for a batch confound.
+     * @param ee the experiment to check.
+     * @return a string describing the batch confound, or null if there was no batch confound.
+     */
     String getBatchConfound( ExpressionExperiment ee );
 
     /**
@@ -213,6 +218,13 @@ public interface ExpressionExperimentService
      *         first few.
      */
     BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
+
+    /**
+     * Composes a string describing the batch effect state of the given experiment.
+     * @param ee the experiment to get the batch effect for.
+     * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
+     */
+    String getBatchEffectDescription( ExpressionExperiment ee);
 
     /**
      * Retrieve the BioAssayDimensions for the study.
