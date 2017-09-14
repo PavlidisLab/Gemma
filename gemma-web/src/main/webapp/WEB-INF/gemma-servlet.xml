@@ -286,6 +286,8 @@
 			<dwr:include method="loadCountsForDataSummaryTable" />
 			<dwr:include method="loadExpressionExperimentsWithQcIssues" />
 			<dwr:include method="clearFromCaches" />
+			<dwr:include method="recalculateBatchConfound" />
+			<dwr:include method="recalculateBatchEffect" />
 		</dwr:remote>
 	</bean>
 

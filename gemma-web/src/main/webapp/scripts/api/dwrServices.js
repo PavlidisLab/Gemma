@@ -599,6 +599,14 @@ ExpressionExperimentController.loadExpressionExperimentsWithQcIssues = function(
    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
       'loadExpressionExperimentsWithQcIssues', callback );
 };
+ExpressionExperimentController.recalculateBatchConfound = function( p0, callback ) {
+    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
+        'recalculateBatchConfound', p0, callback );
+};
+ExpressionExperimentController.recalculateBatchEffect = function( p0, callback ) {
+    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
+        'recalculateBatchEffect', p0, callback );
+};
 
 // ====================================================================================
 if ( typeof ExpressionExperimentDataFetchController === 'undefined' ) {

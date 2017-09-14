@@ -460,7 +460,7 @@ public class ExpressionExperimentServiceImpl
                 if ( !result.toString().isEmpty() ) {
                     result.append( ", " );
                 }
-                result.append( "Factor: " ).append( factorName ).append( " may be confounded with batches; p=" )
+                result.append( "Factor  '" ).append( factorName ).append( "' may be confounded with batches; p=" )
                         .append( String.format( "%.2g", c.getP() ) );
             }
         }
@@ -470,7 +470,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
-
+        ee = this.thawLiter( ee );
         BatchEffectDetails details = new BatchEffectDetails();
 
         details.setDataWasBatchCorrected( false );
@@ -516,7 +516,7 @@ public class ExpressionExperimentServiceImpl
             result = "";
         } else {
             if ( batchEffectDetails.getDataWasBatchCorrected() ) {
-                result = "Data has been batch-corrected";
+                result = "Data has been batch-corrected"; // Referenced in ExpressionExperimentDetails.js::renderStatus()
             } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_THRESHOLD ) {
                 result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
                         + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";

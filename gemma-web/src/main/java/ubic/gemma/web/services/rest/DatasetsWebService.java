@@ -108,7 +108,6 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
         ExpressionExperimentValueObject vo = datasetArg.getValueObject( expressionExperimentService );
-        ee = expressionExperimentService.thaw( ee );
         vo.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
         vo.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
         return Responder.autoCode( vo, sr );
