@@ -238,16 +238,19 @@ hr.normal {
     height: 1px;
 }
 
-.x-form-item:nth-child(odd) {
-    vertical-align: bottom;
-    /* border-bottom: solid 1px #eeeeee; */
-    background: #f4f4f4;
-    padding: 0;
+.x-form-item{
+    padding-left: 5px;
     width: 100%;
     text-align: left;
+    vertical-align: bottom;
 }
 
-.x-form-item:nth-child(odd) *:not(textarea) {
+.x-form-item:nth-child(odd) {
+    /* border-bottom: solid 1px #eeeeee; */
+    background: #f4f4f4;
+}
+
+.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link) {
     background: #f4f4f4;
 }
 
@@ -321,6 +324,8 @@ i[class*=qtp] {
     font-style: normal;
 }
 
+/* Text colors */
+
 .green {
     color: #3A3;
 }
@@ -353,14 +358,71 @@ i[class*=qtp] {
     color: #3b5a82;
 }
 
+/* Background colors */
+
+.bg-green {
+    background-color: #3A3;
+}
+
+.bg-gold {
+    background-color: gold;
+}
+
+.bg-dark-yellow {
+    background-color: #c39800;
+}
+
+.bg-orange {
+    background-color: #ff8700;
+}
+
+.bg-red {
+    background-color: #DD2222;
+}
+
+.bg-gray-red {
+    background-color: #8e5a57;
+}
+
+.bg-dark-gray {
+    background-color: darkgray;
+}
+
+.bg-gray-blue {
+    background-color: #3b5a82;
+}
+
+/* Other */
+
 .bold {
     font-weight: bold;
 }
 
-.btn-not-loading{
+.btn-not-loading {
     background: url("/Gemma/images/icons/control_play_blue.png") no-repeat center;
 }
 
 .btn-loading {
     background: url("/Gemma/images/loading.gif") no-repeat center;
+}
+
+.ee-status-badge {
+    top: 5px;
+    color: #f4f4f4;
+    font-weight: bold;
+    border-radius: 5px;
+    border: none;
+    margin: 5px;
+    padding: 5px;
+    height: 20px;
+}
+
+.ee-status-badge.outline{
+    border: 1px solid #3b5a82;
+}
+
+.status-bcls {
+    vertical-align: middle;
+    padding-top: 10px;
+    height: 25px;
 }

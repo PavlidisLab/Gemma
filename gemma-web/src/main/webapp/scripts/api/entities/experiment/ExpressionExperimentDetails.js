@@ -110,54 +110,56 @@ Gemma.ExpressionExperimentDetails = Ext
             renderStatus: function (ee) {
 
                 var result = '';
-                if (ee.troubled) {
-                    result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                        + ee.troubleDetails + '"></i> ';
-                }
-
-                if (ee.batchEffect !== null && ee.batchEffect !== "") {
-                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                        + ee.batchEffect + ""
-                        + '"></i> ';
-                }
-
-                if (ee.batchConfound !== null && ee.batchConfound !== "") {
-                    result = result + '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                        + ee.batchConfound + " (batch confound)"
-                        + '"></i> ';
-                }
-
-                if (ee.hasMultiplePreferredQuantitationTypes) {
-                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes
-                        + '"></i> ';
-                }
-
-                if (ee.hasMultipleTechnologyTypes) {
-                    result = result + '<i class="orange fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"></i> ';
-                }
-
-
-                if(ee.reprocessedFromRawData){
-                    result = result + '<i class="gray-blue fa fa-cog fa-lg" ext:qtip="'
-                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataReprocessed + '"></i> ';
-                }else{
-                    result = result + '<i class="gray-blue fa fa-cloud-download fa-lg" ext:qtip="'
-                        + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal + '"></i> ';
-                }
 
                 var isUserLoggedIn = (Ext.get('hasUser') && Ext.get('hasUser').getValue() === 'true') ? true : false;
 
                 if (isUserLoggedIn) {
                     result = result
-                        + Gemma.SecurityManager.getSecurityLink(
+                        + '<span class="ee-status-badge outline">' + Gemma.SecurityManager.getSecurityLink(
                             'ubic.gemma.model.expression.experiment.ExpressionExperiment', ee.id, ee.isPublic,
-                            ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned);
+                            ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned) + "</span>";
+                }
+
+                if (ee.troubled) {
+                    result = result + this.getStatusbadge('exclamation-triangle', 'red', 'unusable',
+                        ee.troubleDetails)
+                }
+
+                if (ee.hasMultiplePreferredQuantitationTypes) {
+                    result = result + this.getStatusbadge('exclamation-triangle', 'orange', 'multi-QT',
+                        Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes)
+                }
+
+                if (ee.hasMultipleTechnologyTypes) {
+                    result = result + this.getStatusbadge('exclamation-triangle', 'orange', 'multi-Tech',
+                        Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes)
+                }
+
+                if (ee.batchEffect !== null && ee.batchEffect !== "") {
+                    result = result + this.getStatusbadge('exclamation-triangle', 'dark-yellow', 'batch effect',
+                        ee.batchEffect)
+                }
+
+                if (ee.batchConfound !== null && ee.batchConfound !== "") {
+                    result = result + this.getStatusbadge('exclamation-triangle', 'dark-yellow', 'batch confound',
+                        ee.batchConfound)
+                }
+
+                if (ee.reprocessedFromRawData) {
+                    result = result + this.getStatusbadge('cog', 'gray-blue', 'reprocessed',
+                        Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataReprocessed)
+                } else {
+                    result = result + this.getStatusbadge('cloud-download', 'gray-blue', 'external',
+                        Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal)
                 }
 
                 return result ? result : "No flags";
 
+            },
+
+            getStatusbadge: function (faIconClass, colorClass, title, qTip) {
+                return '<span class="ee-status-badge bg-' + colorClass + ' " ext:qtip="' + qTip + '" >' +
+                    '<i class=" fa fa-' + faIconClass + ' fa-lg"></i> ' + title + '</span>';
             },
 
             linkAnalysisRenderer: function (ee) {
@@ -786,6 +788,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         })
                                     }, {
                                         fieldLabel: 'Status',
+                                        baseCls: 'status-bcls',
                                         html: this.renderStatus(e)
                                     }]
                             },

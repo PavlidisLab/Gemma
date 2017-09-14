@@ -357,19 +357,17 @@ Gemma.SecurityManager.updateSecurityLink = function( elid, clazz, id, isPublic, 
 /**
  * Display an icon representing the security status. The icon is a link to the security manager for that entity. If
  * IsPublic and isShared not provided Locked icon is returned
- * 
- * @param {string}
- *           clazz full qualified class name of Gemma entity impl, e.g.
+ *
+ * @param {string} clazz full qualified class name of Gemma entity impl, e.g.
  *           ubic.gemma.model.expression.experiment.ExpressionExperiment.
- * @param {string}
- *           id of the entity
- * @param {boolean}
- *           isPublic
- * @param {boolean}
- *           isShared
- * @param {boolean}
- *           canEdit if the current user should be able to edit permissions.
- * @return {} html for the link
+ * @param {string} id of the entity
+ * @param {boolean} isPublic
+ * @param {boolean} isShared
+ * @param {boolean} canEdit if the current user should be able to edit permissions.
+ * @param elid
+ * @param forUpdate
+ * @param securityFormTitle
+ * @param currentUserIsOwner
  */
 Gemma.SecurityManager.getSecurityLink = function( clazz, id, isPublic, isShared, canEdit, elid, forUpdate,
    securityFormTitle, currentUserIsOwner ) {
@@ -398,7 +396,7 @@ Gemma.SecurityManager.getSecurityLink = function( clazz, id, isPublic, isShared,
       var elid = Ext.id();
    }
 
-   var dialog = 'style="cursor:pointer" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid + '\', \''
+   var dialog = 'style="cursor:pointer" class="security-link" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid + '\', \''
       + clazz + '\',\'' + id + '\'' + (securityFormTitle == null ? '' : ', \'' + securityFormTitle + '\'') + ');"';
    if ( forUpdate ) {
       return icon + '&nbsp;' + sharedIcon;

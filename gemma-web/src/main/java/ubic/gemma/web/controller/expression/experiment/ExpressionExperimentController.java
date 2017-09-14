@@ -704,6 +704,12 @@ public class ExpressionExperimentController {
         expressionExperimentService.update( ee );
     }
 
+    public void recalculateBatchEffect(Long id){
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        ee.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
+        expressionExperimentService.update( ee );
+    }
+
     /**
      * Sets batch information and related properties
      */

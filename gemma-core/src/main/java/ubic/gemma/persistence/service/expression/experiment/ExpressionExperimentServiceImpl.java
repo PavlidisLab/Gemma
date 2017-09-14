@@ -470,7 +470,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
-
+        ee = this.thawLiter( ee );
         BatchEffectDetails details = new BatchEffectDetails();
 
         details.setDataWasBatchCorrected( false );

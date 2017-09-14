@@ -58,18 +58,26 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         // Batch information
         var batchInfo = this.batchPanelRenderer(this.experimentDetails, manager);
         this.add(batchInfo);
-        this.add({html: "<br/>"});
-        var batchConfoundPanel = this.batchConfoundRenderer();
-        this.add(batchConfoundPanel);
+
+        var batchConfoundPanel = this.batchConfoundRenderer(this.experimentDetails, manager);
+        var batchEffectPanel = this.batchEffectRenderer(this.experimentDetails, manager);
+        if(batchConfoundPanel !== null || batchEffectPanel !== null){
+            this.add({html: "<br/><h4>Batch problems:</h4>"});
+            if(batchConfoundPanel !== null) this.add(batchConfoundPanel);
+            if(batchEffectPanel !== null) this.add(batchEffectPanel);
+        }
+
+        this.add({html: "<br/><h4>Analyses:</h4>"});
         var differentialAnalysisInfo = this.differentialAnalysisPanelRenderer(this.experimentDetails, manager);
         this.add(differentialAnalysisInfo);
         var linkAnalysisInfo = this.linkAnalysisPanelRenderer(this.experimentDetails, manager);
         this.add(linkAnalysisInfo);
+        this.add({html: "<br/><hr class='normal'>"});
 
     },
 
-    batchConfoundRenderer: function(){
-        if (this.experimentDetails.batchConfound !== null && this.experimentDetails.batchConfound !== "") {
+    batchEffectRenderer: function(ee, mgr){
+        if (ee.batchEffect !== null && ee.batchEffect !== "") {
 
             var panelBC = new Ext.Panel({
                 layout: 'hbox',
@@ -81,19 +89,59 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             });
 
             var be = {
-                html: '<h4 style="display:inline-block">Analyses:</h4>&nbsp;<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                + this.experimentDetails.batchConfound + " (batch confound)"
-                + '"></i> Batch confound '
+                html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
+                + ee.batchEffect
             };
 
             panelBC.add(be);
 
-            var self = this;
+            var recalculateBCBtn = new Ext.Button({
+                tooltip: 'Recalculate batch effect',
+                handler: function(b, e) {
+                    ExpressionExperimentController.recalculateBatchEffect(ee.id, {
+                        callback: function () {
+                            window.location.reload();
+                        }
+                    });
+                    b.setIconClass("btn-loading");
+                },
+                scope: this,
+                cls: 'transparent-btn'
+            });
+
+            recalculateBCBtn.setIconClass('btn-not-loading');
+
+            panelBC.add(recalculateBCBtn);
+            return panelBC;
+
+        } else {
+            return null;
+        }
+    },
+
+    batchConfoundRenderer: function(ee, mgr){
+        if (ee.batchConfound !== null && ee.batchConfound !== "") {
+
+            var panelBC = new Ext.Panel({
+                layout: 'hbox',
+                defaults: {
+                    border: false,
+                    padding: 2
+                },
+                items: []
+            });
+
+            var be = {
+                html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
+                + ee.batchConfound + " (batch confound)"
+            };
+
+            panelBC.add(be);
 
             var recalculateBCBtn = new Ext.Button({
                 tooltip: 'Recalculate batch confound',
                 handler: function(b, e) {
-                    ExpressionExperimentController.recalculateBatchConfound(self.experimentDetails.id, {
+                    ExpressionExperimentController.recalculateBatchConfound(ee.id, {
                         callback: function () {
                             window.location.reload();
                         }
@@ -106,14 +154,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             recalculateBCBtn.setIconClass('btn-not-loading');
 
-            //return recalculateBCBtn;
             panelBC.add(recalculateBCBtn);
             return panelBC;
 
         } else {
-            return {
-                html: '<h4>Analyses:</h4>'
-            };
+            return null;
         }
     },
 
