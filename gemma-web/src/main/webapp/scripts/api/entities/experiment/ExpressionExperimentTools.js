@@ -59,13 +59,13 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var batchInfo = this.batchPanelRenderer(this.experimentDetails, manager);
         this.add(batchInfo);
 
-        var batchConfoundPanel = this.batchConfoundRenderer(this.experimentDetails, manager);
-        var batchEffectPanel = this.batchEffectRenderer(this.experimentDetails, manager);
-        if(batchConfoundPanel !== null || batchEffectPanel !== null){
-            this.add({html: "<br/><h4>Batch problems:</h4>"});
-            if(batchConfoundPanel !== null) this.add(batchConfoundPanel);
-            if(batchEffectPanel !== null) this.add(batchEffectPanel);
-        }
+        // var batchConfoundPanel = this.batchConfoundRenderer(this.experimentDetails, manager);
+        // var batchEffectPanel = this.batchEffectRenderer(this.experimentDetails, manager);
+        // if(batchConfoundPanel !== null || batchEffectPanel !== null){
+        //     this.add({html: "<br/><h4>Batch problems:</h4>"});
+        //     if(batchConfoundPanel !== null) this.add(batchConfoundPanel);
+        //     if(batchEffectPanel !== null) this.add(batchEffectPanel);
+        // }
 
         this.add({html: "<br/><h4>Analyses:</h4>"});
         var differentialAnalysisInfo = this.differentialAnalysisPanelRenderer(this.experimentDetails, manager);
