@@ -59,14 +59,107 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var batchInfo = this.batchPanelRenderer(this.experimentDetails, manager);
         this.add(batchInfo);
 
-        this.add({
-            html: '&nbsp;<h4>Analyses:<br></h4>'
-        });
+        // var batchConfoundPanel = this.batchConfoundRenderer(this.experimentDetails, manager);
+        // var batchEffectPanel = this.batchEffectRenderer(this.experimentDetails, manager);
+        // if(batchConfoundPanel !== null || batchEffectPanel !== null){
+        //     this.add({html: "<br/><h4>Batch problems:</h4>"});
+        //     if(batchConfoundPanel !== null) this.add(batchConfoundPanel);
+        //     if(batchEffectPanel !== null) this.add(batchEffectPanel);
+        // }
+
+        this.add({html: "<br/><h4>Analyses:</h4>"});
         var differentialAnalysisInfo = this.differentialAnalysisPanelRenderer(this.experimentDetails, manager);
         this.add(differentialAnalysisInfo);
         var linkAnalysisInfo = this.linkAnalysisPanelRenderer(this.experimentDetails, manager);
         this.add(linkAnalysisInfo);
+        this.add({html: "<br/><hr class='normal'>"});
 
+    },
+
+    batchEffectRenderer: function(ee, mgr){
+        if (ee.batchEffect !== null && ee.batchEffect !== "") {
+
+            var panelBC = new Ext.Panel({
+                layout: 'hbox',
+                defaults: {
+                    border: false,
+                    padding: 2
+                },
+                items: []
+            });
+
+            var be = {
+                html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
+                + ee.batchEffect
+            };
+
+            panelBC.add(be);
+
+            var recalculateBCBtn = new Ext.Button({
+                tooltip: 'Recalculate batch effect',
+                handler: function(b, e) {
+                    ExpressionExperimentController.recalculateBatchEffect(ee.id, {
+                        callback: function () {
+                            window.location.reload();
+                        }
+                    });
+                    b.setIconClass("btn-loading");
+                },
+                scope: this,
+                cls: 'transparent-btn'
+            });
+
+            recalculateBCBtn.setIconClass('btn-not-loading');
+
+            panelBC.add(recalculateBCBtn);
+            return panelBC;
+
+        } else {
+            return null;
+        }
+    },
+
+    batchConfoundRenderer: function(ee, mgr){
+        if (ee.batchConfound !== null && ee.batchConfound !== "") {
+
+            var panelBC = new Ext.Panel({
+                layout: 'hbox',
+                defaults: {
+                    border: false,
+                    padding: 2
+                },
+                items: []
+            });
+
+            var be = {
+                html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
+                + ee.batchConfound + " (batch confound)"
+            };
+
+            panelBC.add(be);
+
+            var recalculateBCBtn = new Ext.Button({
+                tooltip: 'Recalculate batch confound',
+                handler: function(b, e) {
+                    ExpressionExperimentController.recalculateBatchConfound(ee.id, {
+                        callback: function () {
+                            window.location.reload();
+                        }
+                    });
+                    b.setIconClass("btn-loading");
+                    },
+                scope: this,
+                cls: 'transparent-btn'
+            });
+
+            recalculateBCBtn.setIconClass('btn-not-loading');
+
+            panelBC.add(recalculateBCBtn);
+            return panelBC;
+
+        } else {
+            return null;
+        }
     },
 
     linkAnalysisPanelRenderer: function (ee, manager) {
@@ -103,7 +196,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis )
+                + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis)
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -154,7 +247,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Gemma.Renderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
+                    + Gemma.Renderers.dateRenderer(ee.dateMissingValueAnalysis) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -212,7 +305,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer(ee.dateProcessedDataVectorComputation) + '&nbsp;'
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -262,7 +355,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 }
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Gemma.Renderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
+                    + Gemma.Renderers.dateRenderer(ee.dateDifferentialAnalysis) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -327,7 +420,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer( ee.datePcaAnalysis ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer(ee.datePcaAnalysis) + '&nbsp;'
             });
         } else
             panel.add({
@@ -391,7 +484,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.Renderers.dateRenderer( ee.dateBatchFetch ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer(ee.dateBatchFetch) + '&nbsp;'
             });
             panel.add(runBtn);
         } else if (hasBatchInformation) {
