@@ -136,8 +136,13 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 if (ee.batchEffect !== null && ee.batchEffect !== "") {
-                    result = result + this.getStatusbadge('exclamation-triangle', 'dark-yellow', 'batch effect',
-                        ee.batchEffect)
+                    if(ee.batchEffect === "Data has been batch-corrected"){ // ExpressionExperimentServiceImpl::getBatchEffectDescription()
+                        result = result + this.getStatusbadge('cogs', 'green', 'batch corrected',
+                            ee.batchEffect)
+                    }else{
+                        result = result + this.getStatusbadge('exclamation-triangle', 'dark-yellow', 'batch effect',
+                            ee.batchEffect)
+                    }
                 }
 
                 if (ee.batchConfound !== null && ee.batchConfound !== "") {

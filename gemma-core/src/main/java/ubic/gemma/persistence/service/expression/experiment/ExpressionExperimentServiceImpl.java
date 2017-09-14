@@ -516,7 +516,7 @@ public class ExpressionExperimentServiceImpl
             result = "";
         } else {
             if ( batchEffectDetails.getDataWasBatchCorrected() ) {
-                result = "Data has been batch-corrected";
+                result = "Data has been batch-corrected"; // Referenced in ExpressionExperimentDetails.js::renderStatus()
             } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_THRESHOLD ) {
                 result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
                         + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
