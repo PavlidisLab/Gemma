@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Strings;
 import gemma.gsec.SecurityService;
+import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -451,7 +452,14 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public String getBatchConfound( ExpressionExperiment ee ) {
         ee = thawBioAssays( ee );
-        Collection<BatchConfoundValueObject> confounds = BatchConfound.test( ee );
+        Collection<BatchConfoundValueObject> confounds;
+        try {
+            confounds = BatchConfound.test( ee );
+        }catch(NotStrictlyPositiveException e ){
+            log.error( "Batch confound test thrown a NonStrictlyPositiveException! Returning null." );
+            return null;
+        }
+
         StringBuilder result = new StringBuilder( "" );
 
         for ( BatchConfoundValueObject c : confounds ) {
