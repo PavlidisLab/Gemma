@@ -19,7 +19,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * TODO Document Me
- * 
+ *
  * @author Paul
  */
 @Service
@@ -29,20 +29,19 @@ public interface PreprocessorService {
 
     /**
      * @param light if true, just do the bare minimum. The following are skipped: two-channel missing values; redoing
-     *        differential expression.
+     *              differential expression.
      */
-    ExpressionExperiment process( ExpressionExperiment ee, boolean light )
-            throws PreprocessingException;
+    ExpressionExperiment process( ExpressionExperiment ee, boolean light ) throws PreprocessingException;
 
     /**
      * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
      * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
      * course) the processed data are already available.
      *
-     * @param experiment to be processed
+     * @param ee            to be processed
      * @param allowOutliers whether the computationally predicted outliers should stand in the way of batch correction.
-     *        Set to true to ignore outlier checks. If you have already removed/evaluated outliers then setting this to
-     *        true is safe.
+     *                      Set to true to ignore outlier checks. If you have already removed/evaluated outliers then setting this to
+     *                      true is safe.
      */
     ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean allowOutliers ) throws PreprocessingException;
 
