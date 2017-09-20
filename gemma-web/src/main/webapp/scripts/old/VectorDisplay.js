@@ -79,7 +79,7 @@ Gemma.VectorDisplay = Ext.extend( Ext.Window,
 
       this.sampleLabels = data[0].data.sampleNames;
 
-      this.preparedData = Gemma.prepareProfiles( data[0].data );
+      this.preparedData = Gemma.prepareProfiles( data[0].data, true );
 
       Heatmap.draw( $( this.body.id ), this.preparedData.profiles, this.graphConfig, this.sampleLabels );
 

@@ -47,6 +47,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend( Ext.DataView, {
    name : "vectorDV",
 
    singleSelect : true,
+   showPValues: true,
 
    itemSelector : 'div.vizWrap',
 
@@ -57,7 +58,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend( Ext.DataView, {
     * @memberOf Gemma.DataVectorThumbnailsView
     */
    prepareData : function( data ) {
-      return Gemma.prepareProfiles( data );
+      return Gemma.prepareProfiles( data, this.showPValues );
    },
 
    /**
@@ -100,7 +101,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend( Ext.DataView, {
  * Takes a collection of VisualizationValueObjects, which in turn each contain a collection of GeneExpressionProfiles.
  *
  */
-Gemma.prepareProfiles = function( data ) {
+Gemma.prepareProfiles = function( data, showPValues ) {
    var preparedData = [];
    var geneExpressionProfile = data.profiles;
 
@@ -165,7 +166,7 @@ Gemma.prepareProfiles = function( data ) {
 
       // Label for the thumbnail legend.
       var pvalueLabel = "";
-      if ( pvalue !== undefined ) {
+      if ( pvalue !== undefined && showPValues ) {
          pvalueLabel = sprintf( "%.2e ", pvalue );
       }
 
@@ -568,7 +569,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend( Ext.Window, {
          this.title = config.title;
          delete config.title;
       }
-      var panelConfigParam = {};
+      var panelConfigParam = {
+          havePvalues: true
+      };
 
       // add extra config params to panel
       if ( this.extraPanelParams ) {
@@ -646,11 +649,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
    stateful : true,
    stateId : "visualization-window",
    stateEvents : [ 'destroy' ],
-
-   /*
-    * old comment said heatmapMode must start as false, but we'd like it to default to heatmap, so I'm trying true see
-    * bug 2316
-    */
    heatmapMode : true,
    forceFitPlots : false,
    smoothLineGraphs : false,
@@ -892,7 +890,8 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
       this.dv = new Gemma.DataVectorThumbnailsView( {
          tpl : this.tpl,
          store : this.store,
-         heatmapSortMethod : this.heatmapSortMethod
+         heatmapSortMethod : this.heatmapSortMethod,
+         showPValues : this.havePvalues
       } );
 
       this.zoomPanel = new Gemma.VisualizationZoomPanel( {
