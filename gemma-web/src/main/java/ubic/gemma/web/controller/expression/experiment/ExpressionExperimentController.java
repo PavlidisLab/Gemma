@@ -827,7 +827,9 @@ public class ExpressionExperimentController {
      */
     private ExpressionExperimentDetailsValueObject setParentTaxon( ExpressionExperimentDetailsValueObject finalResult,
             Long taxonId ) {
-        assert taxonId != null;
+        if(taxonId == null){
+            throw new IllegalArgumentException( "Taxon ID can not be null!" );
+        }
         Taxon taxon = taxonService.load( taxonId );
         taxonService.thaw( taxon );
 

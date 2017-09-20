@@ -44,10 +44,8 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
                 if ( filter == null )
                     continue;
                 if ( Objects.equals( filter.getOperator(), ObjectFilter.in ) ) {
-                    log.debug( "Setting a list parameter, detected class was: " + filter.getPropertyType().getName() );
                     query.setParameterList( formParamName( filter ), ( Collection ) filter.getRequiredValue() );
                 } else {
-                    log.debug( "Setting a parameter, detected class was: " + filter.getPropertyType().getName() );
                     query.setParameter( formParamName( filter ), filter.getRequiredValue() );
                 }
             }

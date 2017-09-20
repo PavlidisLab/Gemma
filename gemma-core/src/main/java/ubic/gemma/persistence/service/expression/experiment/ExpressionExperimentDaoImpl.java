@@ -365,7 +365,8 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getLoadValueObjectsQueryString( filter, orderByClause, !asc );
 
         query.setCacheable( true );
-        if(limit > 0)query.setMaxResults( limit );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
         query.setFirstResult( offset );
 
         //noinspection unchecked
@@ -413,7 +414,8 @@ public class ExpressionExperimentDaoImpl
                 getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
-        if(limit > 0)query.setMaxResults( limit );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -436,7 +438,8 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
-        if(limit > 0)query.setMaxResults( limit );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -447,7 +450,8 @@ public class ExpressionExperimentDaoImpl
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         Query query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from ExpressionExperiment order by " + orderField + " " + ( descending ? "desc" : "" ) );
-        if(limit > 0)query.setMaxResults( limit );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -459,7 +463,8 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from ExpressionExperiment where id in (:ids) " );
         query.setParameterList( "ids", ids );
-        if(limit > 0)query.setMaxResults( limit );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -475,7 +480,8 @@ public class ExpressionExperimentDaoImpl
                         "desc" :
                         "" ) );
         query.setParameterList( "ids", ids );
-        if(limit > 0)query.setMaxResults( limit );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
         query.setFirstResult( start );
 
         //noinspection unchecked
@@ -1763,11 +1769,11 @@ public class ExpressionExperimentDaoImpl
                 + "sid, " // 23
                 + "qts " // 24
                 + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " inner join "
-                + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "inner join " + ObjectFilter.DAO_EE_ALIAS
+                + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
                 + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "
                 + ObjectFilter.DAO_AD_ALIAS + " left join SU.sourceTaxon as taxon left join "
                 + ObjectFilter.DAO_EE_ALIAS + ".accession acc "
-                + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax " + "inner join "
+                + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax " + "left join "
                 + ObjectFilter.DAO_EE_ALIAS + ".experimentalDesign as EDES join " + ObjectFilter.DAO_EE_ALIAS
                 + ".curationDetails as s ";
 
@@ -1877,7 +1883,7 @@ public class ExpressionExperimentDaoImpl
 
         Map<Long, ExpressionExperimentValueObject> voIdMap = getExpressionExperimentValueObjectMap( vos );
 
-        if(voIdMap.isEmpty()){
+        if ( voIdMap.isEmpty() ) {
             return;
         }
 
