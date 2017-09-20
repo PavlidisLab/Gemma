@@ -100,9 +100,7 @@ public class AnnotationsWebService extends WebService {
     /**
      * Does a search for annotation tags based on the given string.
      *
-     * @param query    the search query.
-     * @param taxonArg only limits the genes in the result set. Can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
+     * @param query    the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
      * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
@@ -112,17 +110,15 @@ public class AnnotationsWebService extends WebService {
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject search( // Params:
             @PathParam("query") String query, // Required
-            @QueryParam("taxon") @DefaultValue("") TaxonArg<Object> taxonArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode(
-                getTerms( query, taxonArg.isNull() ? null : taxonArg.getPersistentObject( this.taxonService ) ), sr );
+        return Responder.autoCode( getTerms( query ), sr );
     }
 
     /**
      * Does a search for datasets containing ontology terms matching the given string.
      *
-     * @param query the search query.
+     * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
      * @see ExpressionExperimentSearchService#searchExpressionExperiments(String) for better description of the search process.
      */
@@ -136,7 +132,7 @@ public class AnnotationsWebService extends WebService {
         return Responder.autoCode( expressionExperimentSearchService.searchExpressionExperiments( query ), sr );
     }
 
-    private Collection<CharacteristicValueObject> getTerms( String query, Taxon taxon ) {
+    private Collection<CharacteristicValueObject> getTerms( String query) {
         if ( query.startsWith( URL_PREFIX ) ) {
             return characteristicService.loadValueObjects(
                     characteristicService.findByUri( StringEscapeUtils.escapeJava( StringUtils.strip( query ) ) ) );
