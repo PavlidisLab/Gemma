@@ -723,6 +723,19 @@ public class ExpressionExperimentController {
                 break;
             }
         }
+        if(!hasBatchInformation){
+            boolean allBAsHaveDate = true;
+            ee = expressionExperimentService.thawBioAssays( ee );
+            for(BioAssay ba : ee.getBioAssays()){
+                if(ba.getProcessingDate() == null){
+                    allBAsHaveDate = false;
+                    break;
+                }
+            }
+            if(allBAsHaveDate){
+                hasBatchInformation = true;
+            }
+        }
 
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
