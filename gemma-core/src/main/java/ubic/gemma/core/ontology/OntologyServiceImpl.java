@@ -878,7 +878,8 @@ public class OntologyServiceImpl implements OntologyService {
     /**
      * Convert raw ontology resources into VocabCharacteristics.
      */
-    private Collection<VocabCharacteristic> termsToCharacteristics(
+    @Override
+    public Collection<VocabCharacteristic> termsToCharacteristics(
             final Collection<? extends OntologyResource> terms ) {
 
         Collection<VocabCharacteristic> results = new HashSet<>();
