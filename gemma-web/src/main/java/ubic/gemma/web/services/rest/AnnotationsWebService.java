@@ -32,10 +32,12 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.Collection;
@@ -100,7 +102,7 @@ public class AnnotationsWebService extends WebService {
     /**
      * Does a search for annotation tags based on the given string.
      *
-     * @param query    the search query. Either plain text, or an ontology term URI
+     * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
      * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
@@ -132,7 +134,13 @@ public class AnnotationsWebService extends WebService {
         return Responder.autoCode( expressionExperimentSearchService.searchExpressionExperiments( query ), sr );
     }
 
-    private Collection<CharacteristicValueObject> getTerms( String query) {
+    /**
+     * Finds characteristics by either a plain text or URI.
+     *
+     * @param query the string to search for.
+     * @return a collection of characteristics matching the input query.
+     */
+    private Collection<CharacteristicValueObject> getTerms( String query ) {
         if ( query.startsWith( URL_PREFIX ) ) {
             return characteristicService.loadValueObjects(
                     characteristicService.findByUri( StringEscapeUtils.escapeJava( StringUtils.strip( query ) ) ) );
