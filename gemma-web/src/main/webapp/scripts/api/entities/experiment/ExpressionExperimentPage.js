@@ -1,5 +1,34 @@
 Ext.namespace('Gemma');
 
+function getStatusBadge(faIconClass, colorClass, title, qTip) {
+    return '<span class="ee-status-badge bg-' + colorClass + ' " ext:qtip="' + qTip + '" >' +
+        '<i class=" fa fa-' + faIconClass + ' fa-lg"></i> ' + title + '</span>';
+}
+
+function getBatchInfoBadges(ee) {
+    var result = "";
+
+    if (ee.hasBatchInformation === false) {
+        result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info',
+            Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo)
+    }
+
+    if (ee.batchEffect !== null && ee.batchEffect !== "") {
+        if (ee.batchEffect === "Data has been batch-corrected") { // ExpressionExperimentServiceImpl::getBatchEffectDescription()
+            result = result + getStatusBadge('cogs', 'green', 'batch corrected', ee.batchEffect)
+        } else {
+            result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect', ee.batchEffect)
+        }
+    }
+
+    if (ee.batchConfound !== null && ee.batchConfound !== "") {
+        result = result + getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch confound',
+            ee.batchConfound)
+    }
+
+    return result;
+}
+
 /**
  *
  * Top level container for all sections of expression experiment info Sections are: 1. Details (has editing tools) 2.
@@ -184,11 +213,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
     },
     makeDesignTab: function (experimentDetails) {
         var batchInfo = '';
-        if (experimentDetails.hasBatchInformation) {
-            batchInfo = '<span style="font-size: smaller">This experimental design also '
-                + 'has information on batches, not shown.</span>' + '<br />'
-                + '<span style="color:#DD2222;font-size: smaller"> ' + experimentDetails.batchConfound + ' </span>'
-                + '<span style="color:#DD2222;font-size: smaller"> ' + experimentDetails.batchEffect + ' </span>';
+        if (experimentDetails.hasBatchInformation && (experimentDetails.batchConfound !== null || experimentDetails.batchEffect !== null)) {
+            batchInfo = '<div class="ed-batch-info">' + getBatchInfoBadges(experimentDetails) + '</div>';
         }
 
         return {

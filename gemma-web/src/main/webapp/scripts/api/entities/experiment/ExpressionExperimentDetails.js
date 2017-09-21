@@ -121,55 +121,32 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 if (ee.troubled) {
-                    result = result + this.getStatusBadge('exclamation-triangle', 'red', 'unusable',
+                    result = result + getStatusBadge('exclamation-triangle', 'red', 'unusable',
                         ee.troubleDetails)
                 }
 
                 if (ee.hasMultiplePreferredQuantitationTypes) {
-                    result = result + this.getStatusBadge('exclamation-triangle', 'orange', 'multi-QT',
+                    result = result + getStatusBadge('exclamation-triangle', 'orange', 'multi-QT',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes)
                 }
 
                 if (ee.hasMultipleTechnologyTypes) {
-                    result = result + this.getStatusBadge('exclamation-triangle', 'orange', 'multi-Tech',
+                    result = result + getStatusBadge('exclamation-triangle', 'orange', 'multi-Tech',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes)
                 }
 
-                if (ee.batchEffect !== null && ee.batchEffect !== "") {
-                    if(ee.batchEffect === "Data has been batch-corrected"){ // ExpressionExperimentServiceImpl::getBatchEffectDescription()
-                        result = result + this.getStatusBadge('cogs', 'green', 'batch corrected',
-                            ee.batchEffect)
-                    }else{
-                        result = result + this.getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch effect',
-                            ee.batchEffect)
-                    }
-                }
-
-                if(ee.hasBatchInformation === false){
-                    result = result + this.getStatusBadge('exclamation-triangle', 'dark-yellow', 'no batch info',
-                        Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo)
-                }
-
-                if (ee.batchConfound !== null && ee.batchConfound !== "") {
-                    result = result + this.getStatusBadge('exclamation-triangle', 'dark-yellow', 'batch confound',
-                        ee.batchConfound)
-                }
+                result = result + getBatchInfoBadges(ee);
 
                 if (ee.reprocessedFromRawData) {
-                    result = result + this.getStatusBadge('cog', 'gray-blue', 'reprocessed',
+                    result = result + getStatusBadge('cog', 'gray-blue', 'reprocessed',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataReprocessed)
                 } else {
-                    result = result + this.getStatusBadge('cloud-download', 'gray-blue', 'external',
+                    result = result + getStatusBadge('cloud-download', 'gray-blue', 'external',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal)
                 }
 
                 return result ? result : "No flags";
 
-            },
-
-            getStatusBadge: function (faIconClass, colorClass, title, qTip) {
-                return '<span class="ee-status-badge bg-' + colorClass + ' " ext:qtip="' + qTip + '" >' +
-                    '<i class=" fa fa-' + faIconClass + ' fa-lg"></i> ' + title + '</span>';
             },
 
             linkAnalysisRenderer: function (ee) {
