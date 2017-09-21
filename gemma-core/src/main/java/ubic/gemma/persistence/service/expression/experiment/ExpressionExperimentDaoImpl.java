@@ -577,6 +577,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
+        if(date == null) return Collections.emptyList();
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated > :date" )
+                .setDate( "date", date ).list();
+    }
+
+    @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
 
         ExpressionExperiment ee;
@@ -1125,7 +1133,6 @@ public class ExpressionExperimentDaoImpl
      * @param Id if of the expression experiment
      * @return count of RAW vectors.
      */
-
     @Override
     public Integer getDesignElementDataVectorCountById( long Id ) {
 
@@ -1767,7 +1774,9 @@ public class ExpressionExperimentDaoImpl
                 + "ptax.id, " // 21
                 + "aoi, " // 22
                 + "sid, " // 23
-                + "qts " // 24
+                + "qts, " // 24
+                + ObjectFilter.DAO_EE_ALIAS + ".batchEffect, " // 25
+                + ObjectFilter.DAO_EE_ALIAS + ".batchConfound " // 26
                 + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " inner join "
                 + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
                 + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "
@@ -1871,6 +1880,10 @@ public class ExpressionExperimentDaoImpl
             fillQuantitationTypeInfo( Collections.singleton( ( QuantitationType ) row[24] ), vo, ( Long ) row[0],
                     vo.getTechnologyType() );
         }
+
+        // Batch info
+        vo.setBatchEffect( ( String ) row[25] );
+        vo.setBatchConfound( ( String ) row[26] );
 
         // This was causing null results when being retrieved through the original query
         this.addCurationEvents( vo );

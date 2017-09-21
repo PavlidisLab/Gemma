@@ -170,4 +170,6 @@ public interface ExpressionExperimentDao
     Taxon getTaxon( BioAssaySet ee );
 
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
+
+    Collection<ExpressionExperiment> findUpdatedAfter( Date date );
 }

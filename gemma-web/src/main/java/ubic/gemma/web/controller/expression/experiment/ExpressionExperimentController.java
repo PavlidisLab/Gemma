@@ -704,7 +704,7 @@ public class ExpressionExperimentController {
         expressionExperimentService.update( ee );
     }
 
-    public void recalculateBatchEffect(Long id){
+    public void recalculateBatchEffect( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         ee.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
         expressionExperimentService.update( ee );
@@ -723,16 +723,16 @@ public class ExpressionExperimentController {
                 break;
             }
         }
-        if(!hasBatchInformation){
+        if ( !hasBatchInformation ) {
             boolean allBAsHaveDate = true;
             ee = expressionExperimentService.thawBioAssays( ee );
-            for(BioAssay ba : ee.getBioAssays()){
-                if(ba.getProcessingDate() == null){
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( ba.getProcessingDate() == null ) {
                     allBAsHaveDate = false;
                     break;
                 }
             }
-            if(allBAsHaveDate){
+            if ( allBAsHaveDate ) {
                 hasBatchInformation = true;
             }
         }
@@ -840,7 +840,7 @@ public class ExpressionExperimentController {
      */
     private ExpressionExperimentDetailsValueObject setParentTaxon( ExpressionExperimentDetailsValueObject finalResult,
             Long taxonId ) {
-        if(taxonId == null){
+        if ( taxonId == null ) {
             throw new IllegalArgumentException( "Taxon ID can not be null!" );
         }
         Taxon taxon = taxonService.load( taxonId );

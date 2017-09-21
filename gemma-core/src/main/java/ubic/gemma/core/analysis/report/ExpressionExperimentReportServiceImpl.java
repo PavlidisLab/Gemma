@@ -28,20 +28,20 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorCache;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
-import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 
 import java.util.*;
 
@@ -368,6 +368,37 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             log.info( incache + "/" + ids.size() + " reports were found in the cache" );
         }
         return eeValueObjects;
+    }
+
+    @Override
+    public void recalculateBatchInfo() {
+        log.info( "Started batch info recalculation task." );
+        Calendar calendar = Calendar.getInstance();
+        calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day
+
+        Collection<ExpressionExperiment> ees = this.expressionExperimentService.findUpdatedAfter( calendar.getTime() );
+        log.info( "Will be checking " + ees.size() + " experiments." );
+        for ( ExpressionExperiment ee : ees ) {
+            String confound = expressionExperimentService.getBatchConfound( ee );
+            String effect = expressionExperimentService.getBatchEffectDescription( ee );
+            boolean update = false;
+
+            if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
+                ee.setBatchConfound( confound );
+                update = true;
+            }
+
+            if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
+                ee.setBatchEffect( effect );
+                update = true;
+            }
+
+            if ( update ) {
+                log.info( "New batch info for experiment " + ee.getShortName() + " id:" + ee.getId() );
+                expressionExperimentService.update( ee );
+            }
+        }
+        log.info( "Finished batch info recalculation task." );
     }
 
     private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(

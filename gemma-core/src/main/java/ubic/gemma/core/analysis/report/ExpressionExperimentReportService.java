@@ -18,25 +18,23 @@
  */
 package ubic.gemma.core.analysis.report;
 
+import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import org.springframework.security.access.annotation.Secured;
-
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-
 /**
  * Methods for reading and creating reports on ExpressinExperiments. Reports are typically updated either on demand or
  * after an analysis; and retrieval is usually from the web interface.
- * 
+ *
  * @author paul
  */
 public interface ExpressionExperimentReportService {
 
     /**
      * Invalidate the cached 'report' for the experiment with the given id. If it is not cached nothing happens.
-     *
      */
     void evictFromCache( Long id );
 
@@ -48,7 +46,6 @@ public interface ExpressionExperimentReportService {
     /**
      * Generates reports on ALL experiments, including 'private' ones. This should only be run by administrators as it
      * takes a while to run.
-     *
      */
     @Secured({ "GROUP_AGENT" })
     void generateSummaryObjects();
@@ -56,13 +53,10 @@ public interface ExpressionExperimentReportService {
     /**
      * generates a collection of value objects that contain summary information about links, biomaterials, and
      * dataVectors
-     *
      */
     Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids );
 
-
     void getAnnotationInformation( Collection<? extends ExpressionExperimentValueObject> vos );
-
 
     Map<Long, Date> getEventInformation( Collection<? extends ExpressionExperimentValueObject> vos );
 
@@ -75,9 +69,14 @@ public interface ExpressionExperimentReportService {
 
     /**
      * retrieves a collection of cached value objects containing summary information
-     * 
+     *
      * @return a collection of cached value objects
      */
     Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids );
 
+    /**
+     * Recalculates the batch effect and batch confound information for datasets that have been updated
+     * in the last 24 hours.
+     */
+    void recalculateBatchInfo();
 }

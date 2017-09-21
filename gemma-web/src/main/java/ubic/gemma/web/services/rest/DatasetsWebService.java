@@ -106,11 +106,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        ExpressionExperimentValueObject vo = datasetArg.getValueObject( expressionExperimentService );
-        vo.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
-        vo.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
-        return Responder.autoCode( vo, sr );
+        return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
     }
 
     /**
