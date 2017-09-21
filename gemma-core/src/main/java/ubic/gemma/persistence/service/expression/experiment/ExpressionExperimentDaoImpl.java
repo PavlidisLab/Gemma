@@ -578,9 +578,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
-        if(date == null) return Collections.emptyList();
+        if ( date == null )
+            return Collections.emptyList();
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated > :date" )
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated > :date" )
                 .setDate( "date", date ).list();
     }
 
