@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType;
 public class RootWebService extends WebService {
 
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
-    private static final String APIDOCS_URL = "http://www.chibi.ubc.ca/Gemma/resources/apidocs/ubic/gemma/web/services/rest/package-summary.html";
+    private static final String APIDOCS_URL = "http://www.chibi.ubc.ca/Gemma/resources/restapidocs/";
 
     /**
      * Required by spring
