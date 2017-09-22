@@ -31,6 +31,7 @@ import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -52,6 +53,10 @@ public abstract class ArrayDesignServiceBase extends VoEnabledService<ArrayDesig
         super( arrayDesignDao );
         this.arrayDesignDao = arrayDesignDao;
         this.auditEventDao = auditEventDao;
+    }
+
+    public File getAnnotationFile( String shortName ){
+        return this.arrayDesignDao.getAnnotationFile( shortName );
     }
 
     /**
