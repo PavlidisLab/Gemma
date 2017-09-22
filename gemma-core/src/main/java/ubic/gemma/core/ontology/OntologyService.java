@@ -161,4 +161,6 @@ public interface OntologyService extends InitializingBean {
     void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
     void sort( List<CharacteristicValueObject> characteristics );
+
+    Collection<VocabCharacteristic> termsToCharacteristics( Collection<? extends OntologyResource> terms );
 }

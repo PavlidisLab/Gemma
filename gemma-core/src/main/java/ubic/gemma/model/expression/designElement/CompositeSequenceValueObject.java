@@ -49,7 +49,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     }
 
     public CompositeSequenceValueObject( CompositeSequence cs ) {
-        this(cs.getId(), cs.getName(), cs.getDescription(), new ArrayDesignValueObject(cs.getArrayDesign().getId()));
+        this(cs.getId(), cs.getName(), cs.getDescription(), new ArrayDesignValueObject(cs.getArrayDesign()));
     }
 
     public CompositeSequenceValueObject( Describable describable, ArrayDesignValueObject arrayDesignVo ) {

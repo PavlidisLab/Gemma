@@ -31,53 +31,43 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * factors recorded in the experimental design.
  * 
  * @author paul
- * @version $Id$
  */
 public interface SVDServiceHelper {
 
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public SVDValueObject retrieveSvd( ExpressionExperiment ee );
+    SVDValueObject retrieveSvd( ExpressionExperiment ee );
 
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void svd( Collection<ExpressionExperiment> ees );
+    void svd( Collection<ExpressionExperiment> ees );
 
-    /**
-     * @param ee
-     */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public SVDValueObject svd( ExpressionExperiment ee );
+    SVDValueObject svd( ExpressionExperiment ee );
 
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
-            int count );
+    Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component, int count );
 
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public boolean hasPca( ExpressionExperiment ee );
+    boolean hasPca( ExpressionExperiment ee );
 
     /**
-     * @param ee
      * @param experimentalFactors to consider
      * @param importanceThreshold threshold for pvalue of association with factor. Suggested value might be 0.01.
      * @return factors which are "significantly" associated with one of the first three PCs
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
+    Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
             Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold );
 
     /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
-     * 
-     * @param ee
-     * @return
+     *
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca );
+    SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca );
 
     /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
-     * 
-     * @param ee
-     * @return
+     *
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );

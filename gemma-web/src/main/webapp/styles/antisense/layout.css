@@ -238,7 +238,7 @@ hr.normal {
     height: 1px;
 }
 
-.x-form-item{
+.x-form-item {
     padding-left: 5px;
     width: 100%;
     text-align: left;
@@ -417,7 +417,7 @@ i[class*=qtp] {
     height: 20px;
 }
 
-.ee-status-badge.outline{
+.ee-status-badge.outline {
     border: 1px solid #3b5a82;
 }
 
@@ -425,4 +425,9 @@ i[class*=qtp] {
     vertical-align: middle;
     padding-top: 10px;
     height: 25px;
+}
+
+.ed-batch-info {
+    padding: 15px;
+    font-size: smaller;
 }

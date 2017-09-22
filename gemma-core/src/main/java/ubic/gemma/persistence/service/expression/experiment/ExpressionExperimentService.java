@@ -64,8 +64,7 @@ public interface ExpressionExperimentService
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExpressionExperiment addVectors( ExpressionExperiment eeToUpdate,
-            Collection<RawExpressionDataVector> newVectors );
+    ExpressionExperiment addVectors( ExpressionExperiment eeToUpdate, Collection<RawExpressionDataVector> newVectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( Integer start, Integer limit );
@@ -106,7 +105,7 @@ public interface ExpressionExperimentService
 
     /**
      * @return Experiments which have this accession. There can be more than one, because one GEO accession can result
-     *         in multiple experiments in Gemma.
+     * in multiple experiments in Gemma.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
@@ -182,6 +181,9 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> findUpdatedAfter( Date date );
+
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
@@ -205,6 +207,7 @@ public interface ExpressionExperimentService
 
     /**
      * Checks the experiment for a batch confound.
+     *
      * @param ee the experiment to check.
      * @return a string describing the batch confound, or null if there was no batch confound.
      */
@@ -214,17 +217,18 @@ public interface ExpressionExperimentService
      * TODO allow this for BioAssaySets.
      *
      * @return details for the principal component most associated with batches (even if it isn't "significant"), or
-     *         null if there was no batch information available. Note that we don't look at every component, just the
-     *         first few.
+     * null if there was no batch information available. Note that we don't look at every component, just the
+     * first few.
      */
     BatchEffectDetails getBatchEffect( ExpressionExperiment ee );
 
     /**
      * Composes a string describing the batch effect state of the given experiment.
+     *
      * @param ee the experiment to get the batch effect for.
      * @return a string describing the batch effect. If there is no batch effect on the given ee, null is returned.
      */
-    String getBatchEffectDescription( ExpressionExperiment ee);
+    String getBatchEffectDescription( ExpressionExperiment ee );
 
     /**
      * Retrieve the BioAssayDimensions for the study.
@@ -369,11 +373,11 @@ public interface ExpressionExperimentService
 
     /**
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     *      description (no but seriously do look it might not work as you would expect).
+     * description (no but seriously do look it might not work as you would expect).
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter );
+    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -414,8 +418,8 @@ public interface ExpressionExperimentService
      *
      * @param orderField the field to order the results by.
      * @param descending whether the ordering by the orderField should be descending.
-     * @param ids only list specific ids.
-     * @param taxon only list experiments within specific taxon.
+     * @param ids        only list specific ids.
+     * @param taxon      only list experiments within specific taxon.
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -439,8 +443,7 @@ public interface ExpressionExperimentService
      * @return the updated Experiment
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    ExpressionExperiment replaceVectors( ExpressionExperiment ee,
-            Collection<RawExpressionDataVector> vectors );
+    ExpressionExperiment replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
@@ -477,7 +480,7 @@ public interface ExpressionExperimentService
      * Will add all the vocab characteristics to the expression experiment and persist the changes.
      *
      * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
-     *        be filled in with IC. A category and value must be provided.
+     *           be filled in with IC. A category and value must be provided.
      * @param ee the experiment to add the characteristics to.
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );

@@ -7,7 +7,7 @@
 
            http://www.springframework.org/schema/task
           http://www.springframework.org/schema/task/spring-task-3.0.xsd">
-	<!-- author: keshav $Id$ -->
+	<!-- author: keshav -->
 
 	<task:annotation-driven />
 	<!-- Note: we cannot use @Scheduled and @Async because the security context is not available to the runnables they create. -->
@@ -24,6 +24,7 @@
 				<ref local="gene2CsUpdateTrigger" />
 				<ref local="twitterOutboundTrigger" />
 				<ref local="neurocartaTrigger" />
+				<ref local="batchInfoTrigger" />
 				<!-- <ref local="viewTrigger" /> -->
 				<!--<ref local="monitorSpaceTrigger" /> -->
 			</list>
@@ -35,6 +36,14 @@
 		W Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year (Optional) empty, 1970-2099 , - * / See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html 
 		for details, http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples. If you want a schedule that 
 		fire frequently for testing, try <value>0 0/2 * ? * *</value>. -->
+	<bean id="batchInfoTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail">
+			<ref bean="batchInfoDetail" />
+		</property>
+		<property name="cronExpression">
+			<value>0 30 0 ? * *</value><!-- Daily at 0:30 -->
+		</property>
+	</bean>
 	<bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="indexJobDetail" />
@@ -109,6 +118,15 @@
 
 
 	<!-- Job details -->
+	<bean id="batchInfoDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="expressionExperimentReportService" />
+		</property>
+		<property name="concurrent" value="false" />
+		<property name="targetMethod">
+			<value>recalculateBatchInfo</value>
+		</property>
+	</bean>
 	<bean id="indexJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="indexService" />

@@ -401,6 +401,11 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
+        return this.expressionExperimentDao.findUpdatedAfter( date );
+    }
+
+    @Override
     @Transactional
     public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.findOrCreate( expressionExperiment );
@@ -455,8 +460,8 @@ public class ExpressionExperimentServiceImpl
         Collection<BatchConfoundValueObject> confounds;
         try {
             confounds = BatchConfound.test( ee );
-        }catch(NotStrictlyPositiveException e ){
-            log.error( "Batch confound test thrown a NonStrictlyPositiveException! Returning null." );
+        } catch ( NotStrictlyPositiveException e ) {
+            log.error( "Batch confound test threw a NonStrictlyPositiveException! Returning null." );
             return null;
         }
 
@@ -468,7 +473,7 @@ public class ExpressionExperimentServiceImpl
                 if ( !result.toString().isEmpty() ) {
                     result.append( ", " );
                 }
-                result.append( "Factor  '" ).append( factorName ).append( "' may be confounded with batches; p=" )
+                result.append( "Factor '" ).append( factorName ).append( "' may be confounded with batches; p=" )
                         .append( String.format( "%.2g", c.getP() ) );
             }
         }
@@ -527,7 +532,7 @@ public class ExpressionExperimentServiceImpl
                 result = "Data has been batch-corrected"; // Referenced in ExpressionExperimentDetails.js::renderStatus()
             } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_THRESHOLD ) {
                 result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
-                        + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
+                        + String.format( "%.2g", batchEffectDetails.getPvalue() );
             }
         }
         return Strings.emptyToNull( result );

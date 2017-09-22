@@ -17,6 +17,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 import cern.colt.matrix.DoubleMatrix2D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -29,18 +30,18 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
 
@@ -103,18 +104,23 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             log.warn( "No batch factor found: " + ee );
             return false;
         }
+        try {
 
-        Collection<BatchConfoundValueObject> test = BatchConfound.test( ee );
+            Collection<BatchConfoundValueObject> test = BatchConfound.test( ee );
 
-        for ( BatchConfoundValueObject batchConfoundValueObject : test ) {
-            if ( batchConfoundValueObject.getP() < 1e-4 ) {
-                log.info( "Batch confound detected: " + ee + "p=" + batchConfoundValueObject.getP() );
-                /*
-                 * How bad is it ... note that if it is really bad but miss it here, we won't be able to correct so will
-                 * get an exception later.
-                 */
-                return false;
+            for ( BatchConfoundValueObject batchConfoundValueObject : test ) {
+                if ( batchConfoundValueObject.getP() < 1e-4 ) {
+                    log.warn( "Batch confound detected on " + ee.getShortName() + ", p=" + batchConfoundValueObject.getP() );
+                    /*
+                     * How bad is it ... note that if it is really bad but miss it here, we won't be able to correct so will
+                     * get an exception later.
+                     */
+                    return false;
+                }
             }
+
+        } catch ( NotStrictlyPositiveException e ) {
+            log.error( "Batch confound test threw a NonStrictlyPositiveException! Skipping." );
         }
 
         /*
@@ -326,9 +332,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         List<BioMaterial> orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, factors );
 
-        return ExperimentalDesignUtils
-                .sampleInfoMatrix( factors, orderedSamples,
-                        ExperimentalDesignUtils.getBaselineConditions( orderedSamples, factors ) );
+        return ExperimentalDesignUtils.sampleInfoMatrix( factors, orderedSamples,
+                ExperimentalDesignUtils.getBaselineConditions( orderedSamples, factors ) );
     }
 
     private QuantitationType makeNewQuantitationType( QuantitationType oldQt ) {
