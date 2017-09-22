@@ -118,7 +118,7 @@ public class AnnotationsWebService extends WebService {
     }
 
     /**
-     * Does a search for datasets containing ontology terms matching the given string.
+     * Does a search for datasets containing characteristics matching the given string.
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
