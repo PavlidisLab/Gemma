@@ -25,10 +25,61 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
  */
 public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4340621792397336563L;
+    private BioAssayDimension bioAssayDimension;
+    private byte[] coexpressionMatrix;
+    private Long id;
+
+    /**
+     * Returns <code>true</code> if the argument is an SampleCoexpressionMatrix instance and all identifiers for this
+     * entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof SampleCoexpressionMatrix ) ) {
+            return false;
+        }
+        final SampleCoexpressionMatrix that = ( SampleCoexpressionMatrix ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
+    public BioAssayDimension getBioAssayDimension() {
+        return this.bioAssayDimension;
+    }
+
+    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+        this.bioAssayDimension = bioAssayDimension;
+    }
+
+    public byte[] getCoexpressionMatrix() {
+        return this.coexpressionMatrix;
+    }
+
+    public void setCoexpressionMatrix( byte[] coexpressionMatrix ) {
+        this.coexpressionMatrix = coexpressionMatrix;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
 
     /**
      * Constructs new instances of {@link SampleCoexpressionMatrix}.
@@ -52,75 +103,6 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
             entity.setBioAssayDimension( bioAssayDimension );
             return entity;
         }
-    }
-
-    private BioAssayDimension bioAssayDimension;
-
-    private byte[] coexpressionMatrix;
-
-    private Long id;
-
-    /**
-     * Returns <code>true</code> if the argument is an SampleCoexpressionMatrix instance and all identifiers for this
-     * entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof SampleCoexpressionMatrix ) ) {
-            return false;
-        }
-        final SampleCoexpressionMatrix that = ( SampleCoexpressionMatrix ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 
-     */
-    public BioAssayDimension getBioAssayDimension() {
-        return this.bioAssayDimension;
-    }
-
-    /**
-     * 
-     */
-    public byte[] getCoexpressionMatrix() {
-        return this.coexpressionMatrix;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
-        this.bioAssayDimension = bioAssayDimension;
-    }
-
-    public void setCoexpressionMatrix( byte[] coexpressionMatrix ) {
-        this.coexpressionMatrix = coexpressionMatrix;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
 }

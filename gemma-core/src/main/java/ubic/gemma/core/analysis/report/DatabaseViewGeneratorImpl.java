@@ -18,63 +18,50 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.util.Collection;
-import java.util.zip.GZIPOutputStream;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.*;
+import java.util.Collection;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Generates textual views of the database so other people can use the data.
- * <p>
- * Development of this was started due to the collaboration with NIF. See <a href=" http
- * ://www.chibi.ubc.ca/faculty/pavlidis/bugs/show_bug.cgi?id=1747">bug 1747</a>
- * <p>
+ * Development of this was started due to the collaboration with NIF.
  * It is essential that these views be created by a principal with Anonymous status, so as not to create views of
  * private data (that could be done, but would be separate).
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
     private static final double THRESH_HOLD = 0.01;
-
-    private static Log log = LogFactory.getLog( DatabaseViewGeneratorImpl.class );
-
     private static final String DATASET_SUMMARY_VIEW_BASENAME = "DatasetSummary";
     private static final String DATASET_TISSUE_VIEW_BASENAME = "DatasetTissue";
     private static final String DATASET_DIFFEX_VIEW_BASENAME = "DatasetDiffEx";
-
+    private static Log log = LogFactory.getLog( DatabaseViewGeneratorImpl.class );
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -87,43 +74,26 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.report.DatabaseViewGenerator#runAll(java.lang.Integer)
-     */
     @Override
     public void runAll( Integer limit ) {
-        // TODO: put the loading and thawing of EE's here and pass the EE in as a parameter so that the
-        // EE's are not thawed multiple times (will this matter?)
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadAll();
         try {
-            generateDatasetView( limit );
-            generateDatasetTissueView( limit );
-            generateDifferentialExpressionView( limit );
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
+            generateDatasetView( limit, ees );
+            generateDatasetTissueView( limit, ees );
+            generateDifferentialExpressionView( limit, ees );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.report.DatabaseViewGenerator#runAll()
-     */
     @Override
     public void runAll() {
         runAll( null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.report.DatabaseViewGenerator#generateDatasetView(int)
-     */
     @Override
-    public void generateDatasetView( int limit ) throws FileNotFoundException, IOException {
+    public void generateDatasetView( int limit, Collection<ExpressionExperiment> experiments )
+            throws FileNotFoundException, IOException {
 
         log.info( "Generating dataset summary view" );
 
@@ -134,42 +104,38 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         log.info( "Writing to " + file );
         try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
 
-            /*
-             * Load all the data sets
-             */
-            Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
-
             writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
 
             /*
              * Print out their names etc.
              */
             int i = 0;
-            for ( ExpressionExperiment vo : vos ) {
-                vo = expressionExperimentService.thawLite( vo );
-                log.info( "Processing: " + vo.getShortName() );
+            for ( ExpressionExperiment ee : experiments ) {
+                ee = expressionExperimentService.thawLite( ee );
+                log.info( "Processing: " + ee.getShortName() );
 
                 String acc = "";
                 String source = "";
 
-                if ( vo.getAccession() != null && vo.getAccession().getAccession() != null ) {
-                    acc = vo.getAccession().getAccession();
-                    source = vo.getAccession().getExternalDatabase().getName();
+                if ( ee.getAccession() != null && ee.getAccession().getAccession() != null ) {
+                    acc = ee.getAccession().getAccession();
+                    source = ee.getAccession().getExternalDatabase().getName();
                 }
 
-                Long gemmaId = vo.getId();
-                String shortName = vo.getShortName();
-                String name = vo.getName();
-                String description = vo.getDescription();
+                Long gemmaId = ee.getId();
+                String shortName = ee.getShortName();
+                String name = ee.getName();
+                String description = ee.getDescription();
                 description = StringUtils.replaceChars( description, '\t', ' ' );
                 description = StringUtils.replaceChars( description, '\n', ' ' );
                 description = StringUtils.replaceChars( description, '\r', ' ' );
 
-                Taxon taxon = expressionExperimentService.getTaxon( vo );
+                Taxon taxon = expressionExperimentService.getTaxon( ee );
 
-                if ( taxon == null ) continue;
+                if ( taxon == null )
+                    continue;
 
-                Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( vo );
+                Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
                 StringBuffer manufacturers = new StringBuffer();
 
                 // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
@@ -186,20 +152,17 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                 writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
                         description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) );
 
-                if ( limit > 0 && ++i > limit ) break;
+                if ( limit > 0 && ++i > limit )
+                    break;
 
             }
 
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.report.DatabaseViewGenerator#generateDatasetTissueView(int)
-     */
     @Override
-    public void generateDatasetTissueView( int limit ) throws FileNotFoundException, IOException {
+    public void generateDatasetTissueView( int limit, Collection<ExpressionExperiment> experiments )
+            throws FileNotFoundException, IOException {
         log.info( "Generating dataset tissue view" );
 
         /*
@@ -210,22 +173,18 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
 
             /*
-             * Load all the data sets
-             */Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
-
-            /*
              * For all of their annotations... if it's a tissue, print out a line
              */
             writer.write( "GemmaDsId\tTerm\tTermURI\n" );
             int i = 0;
-            for ( ExpressionExperiment vo : vos ) {
-                vo = expressionExperimentService.thawLite( vo );
+            for ( ExpressionExperiment ee : experiments ) {
+                ee = expressionExperimentService.thawLite( ee );
 
-                log.info( "Processing: " + vo.getShortName() );
+                log.info( "Processing: " + ee.getShortName() );
 
-                Long gemmaId = vo.getId();
+                Long gemmaId = ee.getId();
 
-                for ( Characteristic c : vo.getCharacteristics() ) {
+                for ( Characteristic c : ee.getCharacteristics() ) {
 
                     if ( StringUtils.isBlank( c.getValue() ) ) {
                         continue;
@@ -251,20 +210,17 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 }
 
-                if ( limit > 0 && ++i > limit ) break;
+                if ( limit > 0 && ++i > limit )
+                    break;
 
             }
 
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.report.DatabaseViewGenerator#generateDifferentialExpressionView(int)
-     */
     @Override
-    public void generateDifferentialExpressionView( int limit ) throws FileNotFoundException, IOException {
+    public void generateDifferentialExpressionView( int limit, Collection<ExpressionExperiment> experiments )
+            throws FileNotFoundException, IOException {
         log.info( "Generating dataset diffex view" );
 
         /*
@@ -273,10 +229,6 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         File file = getViewFile( DATASET_DIFFEX_VIEW_BASENAME );
         log.info( "Writing to " + file );
         try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
-
-            /*
-             * Load all the data sets
-             */Collection<ExpressionExperiment> experiments = expressionExperimentService.loadAll();
 
             /*
              * For each gene that is differentially expressed, print out a line per contrast
@@ -355,22 +307,20 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                             String formatted = formatDiffExResult( ee, dear, factorName, factorURI,
                                     baselineDescription );
 
-                            if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
+                            if ( StringUtils.isNotBlank( formatted ) )
+                                writer.write( formatted );
 
                         } // dear loop
                     } // ears loop
                 } // analysis loop
 
-                if ( limit > 0 && ++i > limit ) break;
+                if ( limit > 0 && ++i > limit )
+                    break;
 
             } // EE loop
         }
     }
 
-    /**
-     * @param probeAnalysisResult
-     * @return
-     */
     private String formatDiffExResult( ExpressionExperiment ee,
             DifferentialExpressionAnalysisResult probeAnalysisResult, String factorName, String factorURI,
             String baselineDescription ) {
@@ -385,7 +335,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
         Gene g = genes.iterator().next();
 
-        if ( g.getNcbiGeneId() == null ) return null;
+        if ( g.getNcbiGeneId() == null )
+            return null;
 
         Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
 
@@ -405,19 +356,10 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         return buf.toString();
     }
 
-    /**
-     * @param datasetDiffexViewBasename
-     * @return
-     */
     private File getViewFile( String datasetDiffexViewBasename ) {
         return getOutputFile( datasetDiffexViewBasename + VIEW_FILE_SUFFIX );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.report.DatabaseViewGenerator#getOutputFile(java.lang.String)
-     */
     @Override
     public File getOutputFile( String filename ) {
         String fullFilePath = VIEW_DIR + filename;
@@ -428,7 +370,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         }
 
         File parentDir = f.getParentFile();
-        if ( !parentDir.exists() ) parentDir.mkdirs();
+        if ( !parentDir.exists() )
+            parentDir.mkdirs();
         return f;
     }
 

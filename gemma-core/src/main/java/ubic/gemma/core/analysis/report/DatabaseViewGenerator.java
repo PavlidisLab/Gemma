@@ -1,48 +1,32 @@
 package ubic.gemma.core.analysis.report;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 
 public interface DatabaseViewGenerator {
 
-    public static final String VIEW_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles"
-            + File.separatorChar;
-    public static final String VIEW_FILE_SUFFIX = ".view.txt.gz";
+    String VIEW_DIR =
+            Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
+    String VIEW_FILE_SUFFIX = ".view.txt.gz";
 
-    /**
-     * @param limit
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    public abstract void generateDatasetTissueView( int limit ) throws FileNotFoundException, IOException;
+    void generateDatasetTissueView( int limit, Collection<ExpressionExperiment> experiments ) throws IOException;
 
-    /**
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    public abstract void generateDatasetView( int limit ) throws FileNotFoundException, IOException;
+    void generateDatasetView( int limit, Collection<ExpressionExperiment> experiments ) throws IOException;
 
-    /**
-     * @param limit how many experiments to use
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    public abstract void generateDifferentialExpressionView( int limit ) throws FileNotFoundException, IOException;
+    void generateDifferentialExpressionView( int limit, Collection<ExpressionExperiment> experiments )
+            throws IOException;
 
-    /**
-     * @param filename
-     * @return
-     */
-    public abstract File getOutputFile( String filename );
+    File getOutputFile( String filename );
 
-    public abstract void runAll();
+    void runAll();
 
     /**
      * @param limit if null will run against every dataset in Gemma else will only do the 1st to the given limit
      */
-    public abstract void runAll( Integer limit );
+    void runAll( Integer limit );
 
 }

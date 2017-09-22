@@ -18,57 +18,39 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Simple driver of DatabaseViewGenerator. Developed to support NIF and other external data consumers.
- * 
+ *
  * @author paul
- * @version $Id$
- * @see DatabaseViewGenerator.
  */
 public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
-    /**
-     * @param args
-     */
+    private boolean generateDatasetSummary = false;
+    private boolean generateDiffExpressionSummary = false;
+    private boolean generateTissueSummary = false;
+    private int limit = 0;
+
     public static void main( String[] args ) {
         DatabaseViewGeneratorCLI o = new DatabaseViewGeneratorCLI();
         o.doWork( args );
     }
 
-    private boolean generateDatasetSummary = false;
-    private boolean generateDiffExpressionSummary = false;
-    private boolean generateTissueSummary = false;
-
-    private int limit = 0;
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.ANALYSIS;
     }
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
+
     @Override
     public String getCommandName() {
         return "dumpForNIF";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#getShortDesc()
-     */
     @Override
     public String getShortDesc() {
         return "Generate views of the database in flat files";
@@ -83,13 +65,13 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
         OptionBuilder.withLongOpt( "dataset" );
         Option datasetSummary = OptionBuilder.create( 'd' );
 
-        OptionBuilder
-                .withDescription( "Will generate a zip file containing a summary of all the tissues in accesable datasets" );
+        OptionBuilder.withDescription(
+                "Will generate a zip file containing a summary of all the tissues in accesable datasets" );
         OptionBuilder.withLongOpt( "tissue" );
         Option datasetTissueSummary = OptionBuilder.create( 't' );
 
-        OptionBuilder
-                .withDescription( "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" );
+        OptionBuilder.withDescription(
+                "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" );
         OptionBuilder.withLongOpt( "diffexpression" );
         Option diffExpSummary = OptionBuilder.create( 'x' );
 
@@ -109,20 +91,11 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = super.processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         DatabaseViewGenerator v = getBean( DatabaseViewGenerator.class );
-
-        try {
-            if ( generateDatasetSummary ) v.generateDatasetView( limit );
-            if ( generateTissueSummary ) v.generateDatasetTissueView( limit );
-            if ( generateDiffExpressionSummary ) v.generateDifferentialExpressionView( limit );
-
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        v.runAll();
         return null;
     }
 

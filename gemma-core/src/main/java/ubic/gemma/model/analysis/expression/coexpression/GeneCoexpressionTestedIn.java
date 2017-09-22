@@ -19,15 +19,11 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Tracks the datasets in which coexpression for a gene has been tested. Determining if two genes were tested together
  * requires using the and() method.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class GeneCoexpressionTestedIn extends IdArray {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 3122664964809277501L;
 
     /**
@@ -35,7 +31,9 @@ public class GeneCoexpressionTestedIn extends IdArray {
      */
     private Long geneId;
 
-    /** we store this separately as a column in the DB, which is why it is a field. Otherwise we infer it from the data. */
+    /**
+     * we store this separately as a column in the DB, which is why it is a field. Otherwise we infer it from the data.
+     */
     private int numDatasetsTestedIn;
 
     // needed to fulfil javabean contract
@@ -54,40 +52,42 @@ public class GeneCoexpressionTestedIn extends IdArray {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         GeneCoexpressionTestedIn other = ( GeneCoexpressionTestedIn ) obj;
 
-        if ( geneId != null ) return this.geneId.equals( other.geneId );
-
-        // really the geneId has to be non-null
-        if ( geneId == null ) {
-            if ( other.geneId != null ) return false;
+        if ( geneId != null ) {
+            return this.geneId.equals( other.geneId );
+        } else if ( other.geneId != null ) {
+            return false;
         }
 
-        if ( numDatasetsTestedIn != other.numDatasetsTestedIn ) return false;
-
-        return true;
+        return numDatasetsTestedIn == other.numDatasetsTestedIn;
     }
 
-    /**
-     * @return
-     */
     public Long getGeneId() {
         return geneId;
     }
 
-    /**
-     * @return
-     */
     public int getNumDatasetsTestedIn() {
         return getNumIds();
     }
 
+    /**
+     * Used for serializing/marshalling only. Do not set this value directly otherwise.
+     */
+    public void setNumDatasetsTestedIn( int numDatasetsTestedIn ) {
+        this.numDatasetsTestedIn = numDatasetsTestedIn;
+    }
+
     @Override
     public int getNumIds() {
-        if ( numDatasetsTestedIn > 0 ) return numDatasetsTestedIn;
+        if ( numDatasetsTestedIn > 0 )
+            return numDatasetsTestedIn;
         refreshCount();
         return numDatasetsTestedIn;
     }
@@ -97,7 +97,8 @@ public class GeneCoexpressionTestedIn extends IdArray {
         final int prime = 31;
         int result = 1;
 
-        if ( geneId != null ) return geneId.hashCode();
+        if ( geneId != null )
+            return geneId.hashCode();
 
         result = prime * result + numDatasetsTestedIn;
         return result;
@@ -109,24 +110,12 @@ public class GeneCoexpressionTestedIn extends IdArray {
         refreshCount();
     }
 
-    /**
-     * Used for serializing/marshalling only. Do not set this value directly otherwise.
-     * 
-     * @return
-     */
-    public void setNumDatasetsTestedIn( int numDatasetsTestedIn ) {
-        this.numDatasetsTestedIn = numDatasetsTestedIn;
-    }
-
     @Override
     public String toString() {
         return "GeneCoexpressionTestedIn [geneId=" + geneId + ", numDatasetsTestedIn=" + getNumIds() + ", data="
                 + StringUtils.join( super.getIds(), "," ) + "]";
     }
 
-    /**
-     * 
-     */
     private void refreshCount() {
         this.numDatasetsTestedIn = super.getNumIds();
     }

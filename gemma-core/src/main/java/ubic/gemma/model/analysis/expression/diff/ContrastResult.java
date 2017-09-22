@@ -26,51 +26,13 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public abstract class ContrastResult implements java.io.Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 7800859456071333232L;
-
-    /**
-     * Constructs new instances of {@link ContrastResult}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ContrastResult}.
-         */
-        public static ContrastResult newInstance() {
-            return new ContrastResultImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ContrastResult}, taking all possible properties (except the
-         * identifier(s))as arguments.
-         */
-        public static ContrastResult newInstance( Double pvalue, Double tstat, Double coefficient,
-                Double logFoldChange, FactorValue factorValue, FactorValue secondFactorValue ) {
-            final ContrastResult entity = new ContrastResultImpl();
-            entity.setPvalue( pvalue );
-            entity.setTstat( tstat );
-            entity.setCoefficient( coefficient );
-            entity.setLogFoldChange( logFoldChange );
-            entity.setFactorValue( factorValue );
-            entity.setSecondFactorValue( secondFactorValue );
-            return entity;
-        }
-    }
-
     private Double pvalue;
-
     private Double tstat;
-
     private Double coefficient;
-
     private Double logFoldChange;
-
     private Long id;
-
     private FactorValue factorValue;
-
     private FactorValue secondFactorValue;
 
     /**
@@ -99,6 +61,10 @@ public abstract class ContrastResult implements java.io.Serializable {
         return this.coefficient;
     }
 
+    public void setCoefficient( Double coefficient ) {
+        this.coefficient = coefficient;
+    }
+
     /**
      * The factorValue for the group of samples that is being compared to baseline. The baseline itself is a property of
      * the ResultSet. For factors that have continuous values, this will be null.
@@ -107,11 +73,16 @@ public abstract class ContrastResult implements java.io.Serializable {
         return this.factorValue;
     }
 
-    /**
-     * 
-     */
+    public void setFactorValue( FactorValue factorValue ) {
+        this.factorValue = factorValue;
+    }
+
     public Long getId() {
         return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     /**
@@ -122,18 +93,24 @@ public abstract class ContrastResult implements java.io.Serializable {
         return this.logFoldChange;
     }
 
-    /**
-     * 
-     */
+    public void setLogFoldChange( Double logFoldChange ) {
+        this.logFoldChange = logFoldChange;
+    }
+
     public Double getPvalue() {
         return this.pvalue;
     }
 
-    /**
-     * 
-     */
+    public void setPvalue( Double pvalue ) {
+        this.pvalue = pvalue;
+    }
+
     public FactorValue getSecondFactorValue() {
         return this.secondFactorValue;
+    }
+
+    public void setSecondFactorValue( FactorValue secondFactorValue ) {
+        this.secondFactorValue = secondFactorValue;
     }
 
     /**
@@ -141,6 +118,10 @@ public abstract class ContrastResult implements java.io.Serializable {
      */
     public Double getTstat() {
         return this.tstat;
+    }
+
+    public void setTstat( Double tstat ) {
+        this.tstat = tstat;
     }
 
     /**
@@ -154,32 +135,32 @@ public abstract class ContrastResult implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setCoefficient( Double coefficient ) {
-        this.coefficient = coefficient;
-    }
+    /**
+     * Constructs new instances of {@link ContrastResult}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ContrastResult}.
+         */
+        public static ContrastResult newInstance() {
+            return new ContrastResultImpl();
+        }
 
-    public void setFactorValue( FactorValue factorValue ) {
-        this.factorValue = factorValue;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setLogFoldChange( Double logFoldChange ) {
-        this.logFoldChange = logFoldChange;
-    }
-
-    public void setPvalue( Double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    public void setSecondFactorValue( FactorValue secondFactorValue ) {
-        this.secondFactorValue = secondFactorValue;
-    }
-
-    public void setTstat( Double tstat ) {
-        this.tstat = tstat;
+        /**
+         * Constructs a new instance of {@link ContrastResult}, taking all possible properties (except the
+         * identifier(s))as arguments.
+         */
+        public static ContrastResult newInstance( Double pvalue, Double tstat, Double coefficient, Double logFoldChange,
+                FactorValue factorValue, FactorValue secondFactorValue ) {
+            final ContrastResult entity = new ContrastResultImpl();
+            entity.setPvalue( pvalue );
+            entity.setTstat( tstat );
+            entity.setCoefficient( coefficient );
+            entity.setLogFoldChange( logFoldChange );
+            entity.setFactorValue( factorValue );
+            entity.setSecondFactorValue( secondFactorValue );
+            return entity;
+        }
     }
 
 }
