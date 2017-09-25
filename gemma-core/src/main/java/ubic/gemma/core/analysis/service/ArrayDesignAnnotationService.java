@@ -14,18 +14,18 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Collection;
-import java.util.Map;
-
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Methods to generate annotations for array designs, based on information already in the database. This can be used to
@@ -44,7 +44,7 @@ import ubic.gemma.persistence.util.Settings;
  * <p>
  * Note that for backwards compatibility, GO terms are not segregated by gene cluster.
  * </p>
- * 
+ *
  * @author paul
  */
 public interface ArrayDesignAnnotationService {
@@ -56,22 +56,19 @@ public interface ArrayDesignAnnotationService {
      * String included in file names for standard (default) annotation files. These include GO terms and all parents.
      */
     String STANDARD_FILE_SUFFIX = "";
-    String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
-            + "microAnnots" + File.separatorChar;
-
+    String ANNOT_DATA_DIR =
+            Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "microAnnots" + File.separatorChar;
 
     void deleteExistingFiles( ArrayDesign arrayDesign ) throws IOException;
 
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
      * available.
-     *
      */
     int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type );
 
     /**
      * Format details:
-     * <p>
      * There is a one-line header. The columns are:
      * <ol>
      * <li>Probe name
@@ -83,9 +80,9 @@ public interface ArrayDesignAnnotationService {
      * <li>NCBI gene ids, delimited by '|'
      * </ol>
      *
-     * @param genesWithSpecificity map of cs ->* physical location ->* ( blat association ->* gene product -> gene)
-     * @param ty whether to include parents (OutputType.LONG); only use biological process (OutputType.BIOPROCESS) or
-     *        'standard' output (OutputType.SHORT).
+     * @param genesWithSpecificity map of cs -&gt;* physical location -&gt;* ( blat association -&gt;* gene product -&gt; gene)
+     * @param ty                   whether to include parents (OutputType.LONG); only use biological process (OutputType.BIOPROCESS) or
+     *                             'standard' output (OutputType.SHORT).
      * @return number processed.
      */
     int generateAnnotationFile( Writer writer,
@@ -96,10 +93,9 @@ public interface ArrayDesignAnnotationService {
      * Opens a file for writing and adds the header.
      *
      * @param fileBaseName if Null, output will be written to standard output.
-     * @param overWrite clobber existing file. Otherwise returns null.
+     * @param overWrite    clobber existing file. Otherwise returns null.
      * @return writer to use
      */
-    Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite )
-            throws IOException;
+    Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite ) throws IOException;
 
 }

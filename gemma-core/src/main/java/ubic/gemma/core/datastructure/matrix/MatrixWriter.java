@@ -60,6 +60,7 @@ public class MatrixWriter {
      *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
      *                        files.
      */
+    @SuppressWarnings("WeakerAccess") // possible external use
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<?> matrix,
             Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence,
             boolean writeGeneInfo, boolean orderByDesign ) throws IOException {

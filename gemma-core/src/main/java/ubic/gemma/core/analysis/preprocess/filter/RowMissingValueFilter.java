@@ -18,51 +18,43 @@
  */
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import cern.colt.list.IntArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import cern.colt.list.IntArrayList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Filter out rows that have "too many" missing values.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix> {
 
-    private static Log log = LogFactory.getLog( RowMissingValueFilter.class.getName() );
+    private static final Log log = LogFactory.getLog( RowMissingValueFilter.class.getName() );
+    private static final int ABSOLUTE_MIN_PRESENT = 1;
+    private ExpressionDataBooleanMatrix absentPresentCalls = null;
     private int minPresentCount = 5;
-    private static final int ABSOLUTEMINPRESENT = 1;
     private double maxFractionRemoved = 0.0;
     private double minPresentFraction = 1.0;
     private boolean minPresentFractionIsSet = false;
     private boolean minPresentIsSet = false;
 
-    ExpressionDataBooleanMatrix absentPresentCalls = null;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.filter.Filter#filter(ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix)
-     */
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {
         int numRows = data.rows();
         int numCols = data.columns();
         IntArrayList present = new IntArrayList( numRows );
 
-        List<CompositeSequence> kept = new ArrayList<CompositeSequence>();
+        List<CompositeSequence> kept = new ArrayList<>();
 
         /*
-         * Do not allow minpresentfraction to override minpresent if minpresent is higher.
+         * Do not allow minPresentFraction to override minPresent if minPresent is higher.
          */
         if ( minPresentFractionIsSet ) {
             int proposedMinimumNumberOfSamples = ( int ) Math.ceil( minPresentFraction * numCols );
@@ -81,8 +73,9 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         }
 
         if ( minPresentCount > numCols ) {
-            throw new IllegalStateException( "Minimum present count is set to " + minPresentCount
-                    + " but there are only " + numCols + " columns in the matrix." );
+            throw new IllegalStateException(
+                    "Minimum present count is set to " + minPresentCount + " but there are only " + numCols
+                            + " columns in the matrix." );
         }
 
         if ( !minPresentIsSet ) {
@@ -95,8 +88,8 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             CompositeSequence designElementForRow = data.getDesignElementForRow( i );
 
             /* allow for the possibility that the absent/present matrix is not in the same order, etc. */
-            int absentPresentRow = absentPresentCalls == null ? -1 : absentPresentCalls
-                    .getRowIndex( designElementForRow );
+            int absentPresentRow =
+                    absentPresentCalls == null ? -1 : absentPresentCalls.getRowIndex( designElementForRow );
 
             int presentCount = 0;
             for ( int j = 0; j < numCols; j++ ) {
@@ -109,29 +102,29 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
                 }
             }
             present.add( presentCount );
-            if ( presentCount >= ABSOLUTEMINPRESENT && presentCount >= minPresentCount ) {
+            if ( presentCount >= ABSOLUTE_MIN_PRESENT && presentCount >= minPresentCount ) {
                 kept.add( designElementForRow );
             }
         }
 
         /* decide whether we need to invoke the 'too many removed' clause, to avoid removing too many rows. */
         if ( maxFractionRemoved != 0.0 && kept.size() < numRows * ( 1.0 - maxFractionRemoved ) ) {
-            IntArrayList sortedPresent = new IntArrayList( numRows );
-            sortedPresent = present.copy();
+            IntArrayList sortedPresent = present.copy();
             sortedPresent.sort();
             sortedPresent.reverse();
 
             log.info( "There are " + kept.size() + " rows that meet criterion of at least " + minPresentCount
                     + " non-missing values, but that's too many given the max fraction of " + maxFractionRemoved
-                    + "; minpresent adjusted to " + sortedPresent.get( ( int ) ( numRows * ( maxFractionRemoved ) ) ) );
+                    + "; minPresent adjusted to " + sortedPresent.get( ( int ) ( numRows * ( maxFractionRemoved ) ) ) );
 
             minPresentCount = sortedPresent.get( ( int ) ( numRows * ( maxFractionRemoved ) ) );
 
             // Do another pass to add rows we missed before.
             for ( int i = 0; i < numRows; i++ ) {
-                if ( present.get( i ) >= minPresentCount && present.get( i ) >= ABSOLUTEMINPRESENT ) {
+                if ( present.get( i ) >= minPresentCount && present.get( i ) >= ABSOLUTE_MIN_PRESENT ) {
                     CompositeSequence designElementForRow = data.getDesignElementForRow( i );
-                    if ( kept.contains( designElementForRow ) ) continue; // FIXME SLOW because it is a
+                    if ( kept.contains( designElementForRow ) )
+                        continue; // FIXME SLOW because it is a
                     // list.
                     kept.add( designElementForRow );
                 }
@@ -149,9 +142,6 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
     /**
      * Supply a separate matrix of booleans. This is not necessary if the input matrix is already 'masked' for missing
      * values.
-     * 
-     * @param absentPresentCalls
-     * @see ExpressionDataMatrixBuilder.maskMissing
      */
     public void setAbsentPresentCalls( ExpressionDataBooleanMatrix absentPresentCalls ) {
         this.absentPresentCalls = absentPresentCalls;
@@ -160,7 +150,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
     /**
      * Set the maximum fraction of rows which will be removed from the data set. The default value is 0.3 Set it to 1.0
      * to remove this restriction.
-     * 
+     *
      * @param f double
      */
     public void setMaxFractionRemoved( double f ) {
@@ -172,8 +162,8 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
     /**
      * Set the minimum number of values that must be present in each row. The default value is 5. This is always
      * overridden by a hard-coded value (currently 2) that must be present for a row to be kept; but this value is in
-     * turn overridden by the maxfractionRemoved.
-     * 
+     * turn overridden by the maxFractionRemoved.
+     *
      * @param m int
      */
     public void setMinPresentCount( int m ) {

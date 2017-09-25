@@ -155,6 +155,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
         }
     }
 
+    @SuppressWarnings("WeakerAccess") // Possible external use
     public Date parseGenericCCHeader( DataInputStream str ) throws IOException {
         /*
          * FIXME store values in an object. All I need right now is the date, though.

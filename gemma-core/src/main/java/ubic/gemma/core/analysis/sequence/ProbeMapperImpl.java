@@ -18,17 +18,10 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.apps.Blat;
 import ubic.gemma.core.apps.ShellDelegatingBlat;
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
@@ -40,42 +33,31 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 import ubic.gemma.persistence.util.ChromosomeUtil;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
  * allows threshold etc. to be modified.
  *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class ProbeMapperImpl implements ProbeMapper {
 
     private static final int MAX_WARNINGS = 100;
-    private Log log = LogFactory.getLog( ProbeMapperImpl.class.getName() );
-    private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
+    private final Log log = LogFactory.getLog( ProbeMapperImpl.class.getName() );
+    private final ThreePrimeDistanceMethod threePrimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.core.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.core.externalDb.
-     * GoldenPathSequenceAnalysis,
-     * java.util.Collection)
-     */
     @Override
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
             Collection<BlatResult> blatResults ) {
         return this.processBlatResults( goldenPathDb, blatResults, new ProbeMapperConfig() );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.core.analysis.sequence.ProbeMapper#processBlatResults(ubic.gemma.core.externalDb.
-     * GoldenPathSequenceAnalysis,
-     * java.util.Collection, ubic.gemma.core.analysis.sequence.ProbeMapperConfig)
-     */
     @Override
     public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
             Collection<BlatResult> blatResults, ProbeMapperConfig config ) {
@@ -115,7 +97,8 @@ public class ProbeMapperImpl implements ProbeMapper {
                     && trimmedBlatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
                 if ( config.getWarnings() < MAX_WARNINGS ) {
                     log.info( "Skipped " + sequence + " due to repeat content (" + fractionRepeats + ")" );
-                    if ( config.getWarnings() == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                    if ( config.getWarnings() == MAX_WARNINGS )
+                        log.info( "Further non-mappings will not be logged" );
 
                     config.incrementWarnings();
                 }
@@ -129,9 +112,10 @@ public class ProbeMapperImpl implements ProbeMapper {
              */
             if ( trimmedBlatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
                 if ( config.getWarnings() < MAX_WARNINGS ) {
-                    log.info( "Skipped " + sequence + " due to non-specificity ("
-                            + trimmedBlatResultsForSequence.size() + " hits)" );
-                    if ( config.getWarnings() == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                    log.info( "Skipped " + sequence + " due to non-specificity (" + trimmedBlatResultsForSequence.size()
+                            + " hits)" );
+                    if ( config.getWarnings() == MAX_WARNINGS )
+                        log.info( "Further non-mappings will not be logged" );
 
                     config.incrementWarnings();
                 }
@@ -151,22 +135,21 @@ public class ProbeMapperImpl implements ProbeMapper {
             // map each blat result.
             for ( BlatResult blatResult : trimmedBlatResultsForSequence ) {
 
-                if ( blatResult.getQuerySequence() == null
-                        || ( blatResult.getQuerySequence().getLength() == null && StringUtils.isBlank( blatResult
-                                .getQuerySequence().getSequence() ) ) ) {
+                if ( blatResult.getQuerySequence() == null || ( blatResult.getQuerySequence().getLength() == null
+                        && StringUtils.isBlank( blatResult.getQuerySequence().getSequence() ) ) ) {
                     log.warn( "Blat result had no sequence: " + blatResult );
                     continue;
                 }
 
                 assert blatResult.score() >= 0 && blatResult.score() <= 1.0 : "Score was " + blatResult.score();
-                assert blatResult.identity() >= 0 && blatResult.identity() <= 1.0 : "Identity was "
-                        + blatResult.identity();
+                assert blatResult.identity() >= 0 && blatResult.identity() <= 1.0 :
+                        "Identity was " + blatResult.identity();
 
-                if ( blatResult.score() < config.getBlatScoreThreshold()
-                        || blatResult.identity() < config.getIdentityThreshold() ) {
+                if ( blatResult.score() < config.getBlatScoreThreshold() || blatResult.identity() < config
+                        .getIdentityThreshold() ) {
                     if ( log.isDebugEnabled() )
-                        log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score()
-                                + " identity=" + blatResult.identity() );
+                        log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score() + " identity="
+                                + blatResult.identity() );
                     skipped++;
                     continue;
                 }
@@ -211,7 +194,8 @@ public class ProbeMapperImpl implements ProbeMapper {
                     log.info( "No mappings for " + sequence + "; " + trimmedBlatResultsForSequence.size()
                             + " individual blat results checked; " + skipped
                             + " had identity or score below threshold, rest had no mapping" );
-                    if ( config.getWarnings() == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                    if ( config.getWarnings() == MAX_WARNINGS )
+                        log.info( "Further non-mappings will not be logged" );
                 }
                 config.incrementWarnings();
                 continue;
@@ -243,13 +227,6 @@ public class ProbeMapperImpl implements ProbeMapper {
         return allRes;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.core.analysis.sequence.ProbeMapper#processGbId(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
-     * java.lang.String)
-     */
     @Override
     public Map<String, Collection<BlatAssociation>> processGbId( GoldenPathSequenceAnalysis goldenPathDb,
             String genbankId ) {
@@ -266,19 +243,11 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.core.analysis.sequence.ProbeMapper#processGbIds(ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis,
-     * java.util.Collection)
-     */
     @Override
     public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPathSequenceAnalysis goldenPathDb,
             Collection<String[]> genbankIds ) {
         Map<String, Collection<BlatAssociation>> allRes = new HashMap<>();
         int count = 0;
-        int skipped = 0;
         for ( String[] genbankIdAr : genbankIds ) {
 
             if ( genbankIdAr == null || genbankIdAr.length == 0 ) {
@@ -295,21 +264,13 @@ public class ProbeMapperImpl implements ProbeMapper {
             allRes.putAll( res );
 
             count++;
-            if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
+            if ( count % 100 == 0 )
+                log.info( "Annotations computed for " + count + " genbank identifiers" );
         }
         log.info( "Annotations computed for " + count + " genbank identifiers" );
-        if ( log.isInfoEnabled() && skipped > 0 )
-            log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         return allRes;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processSequence(ubic.gemma.core.externalDb.
-     * GoldenPathSequenceAnalysis,
-     * ubic.gemma.model.genome.biosequence.BioSequence)
-     */
     @Override
     public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
 
@@ -326,13 +287,6 @@ public class ProbeMapperImpl implements ProbeMapper {
         return allRes.values().iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.analysis.sequence.ProbeMapper#processSequences(ubic.gemma.core.externalDb.
-     * GoldenPathSequenceAnalysis,
-     * java.util.Collection, ubic.gemma.core.analysis.sequence.ProbeMapperConfig)
-     */
     @Override
     public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
             Collection<BioSequence> sequences, ProbeMapperConfig config ) {
@@ -341,12 +295,11 @@ public class ProbeMapperImpl implements ProbeMapper {
 
         try {
             Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
-            Collection<BlatResult> blatres = new HashSet<>();
+            Collection<BlatResult> blatRes = new HashSet<>();
             for ( Collection<BlatResult> coll : results.values() ) {
-                blatres.addAll( coll );
+                blatRes.addAll( coll );
             }
-            Map<String, Collection<BlatAssociation>> allRes = processBlatResults( goldenpath, blatres );
-            return allRes;
+            return processBlatResults( goldenpath, blatRes );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -356,7 +309,6 @@ public class ProbeMapperImpl implements ProbeMapper {
      * It is assume that strand should only be used if the sequence type is AFFY_{PROBE,COLLAPSED,TARGET} or OLIGO. In
      * all other cases (ESTs etc) the strand is ignored.
      *
-     * @param blatResult
      * @return boolean indicating, essentially, if the sequence on the array is double-stranded.
      */
     private boolean determineStrandTreatment( BlatResult blatResult ) {
@@ -383,16 +335,16 @@ public class ProbeMapperImpl implements ProbeMapper {
      * done its work by removing redundant blat hits, and very weak hits are also already removed. I'm not convinced
      * more filtering on score is needed here.
      *
-     * @see BlatAssociationScorer.scoreResults which does some of the filtering
      * @param blatAssociationsForSequence associations for one sequence.
-     * @param config
      * @return filtered collection
+     * @see BlatAssociationScorer#scoreResults(Collection, ProbeMapperConfig) which does some of the filtering
      */
     private Collection<BlatAssociation> filterOnScores( Collection<BlatAssociation> blatAssociationsForSequence,
             ProbeMapperConfig config ) {
 
         double minimumExonOverlapFraction = config.getMinimumExonOverlapFraction();
-        if ( minimumExonOverlapFraction == 0 ) return blatAssociationsForSequence;
+        if ( minimumExonOverlapFraction == 0 )
+            return blatAssociationsForSequence;
 
         Collection<BlatAssociation> result = new HashSet<>();
 
@@ -409,9 +361,6 @@ public class ProbeMapperImpl implements ProbeMapper {
 
     /**
      * group results together by BioSequence
-     *
-     * @param blatResults
-     * @return
      */
     private Map<BioSequence, Collection<BlatResult>> groupBlatResultsByBioSequence(
             Collection<BlatResult> blatResults ) {
@@ -430,9 +379,6 @@ public class ProbeMapperImpl implements ProbeMapper {
     /**
      * Process a single BlatResult, identifying gene products it maps to.
      *
-     * @param goldenPathDb
-     * @param blatResult
-     * @param config
      * @return BlatAssociations between the queried biosequence and one or more gene products.
      */
     private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
@@ -441,11 +387,12 @@ public class ProbeMapperImpl implements ProbeMapper {
 
         boolean ignoreStrand = determineStrandTreatment( blatResult );
 
-        String strand = ignoreStrand == true ? null : blatResult.getStrand();
+        String strand = ignoreStrand ? null : blatResult.getStrand();
 
-        Collection<BlatAssociation> blatAssociations = goldenPathDb.findAssociations( blatResult.getTargetChromosome()
-                .getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult.getTargetStarts(),
-                blatResult.getBlockSizes(), strand, threeprimeMethod, config );
+        Collection<BlatAssociation> blatAssociations = goldenPathDb
+                .findAssociations( blatResult.getTargetChromosome().getName(), blatResult.getTargetStart(),
+                        blatResult.getTargetEnd(), blatResult.getTargetStarts(), blatResult.getBlockSizes(), strand,
+                        threePrimeMethod, config );
 
         if ( blatAssociations != null && blatAssociations.size() > 0 ) {
             for ( BlatAssociation association : blatAssociations ) {
@@ -466,8 +413,6 @@ public class ProbeMapperImpl implements ProbeMapper {
      * <li>Otherwise keep only the ones to canonical chromosomes.
      * </ol>
      *
-     * @param blatResultsForSequence
-     * @param config
      * @return trimmed results.
      */
     private Collection<BlatResult> trimNonCanonicalChromosomeHits( Collection<BlatResult> blatResultsForSequence,

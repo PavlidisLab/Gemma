@@ -54,7 +54,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
             buf.append( cs.getName() ).append( "\t" );
             for ( BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
                 Gene g = bs2gp.getGeneProduct().getGene();
-                if ( g instanceof Gene ) {
+                if ( g != null ) {
                     buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() ).append( "," );
                     count++;
                 }

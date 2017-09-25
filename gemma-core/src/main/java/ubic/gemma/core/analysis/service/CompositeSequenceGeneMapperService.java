@@ -18,49 +18,44 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Set;
+
 /**
  * @author keshav
- * @version $Id$
  * @deprecated Methods here can be done other ways, or added to the CompositeSequenceService if need be.
  */
 @Deprecated
 @Component
 public class CompositeSequenceGeneMapperService {
-    private Log log = LogFactory.getLog( this.getClass() );
-
     @Autowired
     GeneService geneService;
+    private final Log log = LogFactory.getLog( this.getClass() );
 
     /**
-     * @param officialSymbols
      * @param arrayDesigns to look in
-     * @return LinkedHashMap<Gene, Collection<CompositeSequence>>
      */
     public LinkedHashMap<Gene, Collection<CompositeSequence>> getGene2ProbeMapByOfficialSymbols(
             Collection<String> officialSymbols, Collection<ArrayDesign> arrayDesigns ) {
 
         LinkedHashMap<String, Collection<Gene>> genesMap = findGenesByOfficialSymbols( officialSymbols );
 
-        Set<String> geneOfficialSymbolKeyset = genesMap.keySet();
+        Set<String> geneOfficialSymbolKeySet = genesMap.keySet();
 
-        LinkedHashMap<Gene, Collection<CompositeSequence>> compositeSequencesForGeneMap = new LinkedHashMap<Gene, Collection<CompositeSequence>>();
+        LinkedHashMap<Gene, Collection<CompositeSequence>> compositeSequencesForGeneMap = new LinkedHashMap<>();
 
-        for ( String officialSymbol : geneOfficialSymbolKeyset ) {
+        for ( String officialSymbol : geneOfficialSymbolKeySet ) {
             log.debug( "official symbol: " + officialSymbol );
             Collection<Gene> genes = genesMap.get( officialSymbol );
             for ( Gene g : genes ) {
@@ -80,13 +75,10 @@ public class CompositeSequenceGeneMapperService {
 
     /**
      * Returns a map of gene collections, each keyed by a gene official symbol.
-     * 
-     * @param officialSymbols
-     * @return LinkedHashMap
      */
-    protected LinkedHashMap<String, Collection<Gene>> findGenesByOfficialSymbols( Collection<String> officialSymbols ) {
+    private LinkedHashMap<String, Collection<Gene>> findGenesByOfficialSymbols( Collection<String> officialSymbols ) {
 
-        LinkedHashMap<String, Collection<Gene>> geneMap = new LinkedHashMap<String, Collection<Gene>>();
+        LinkedHashMap<String, Collection<Gene>> geneMap = new LinkedHashMap<>();
         for ( String officialSymbol : officialSymbols ) {
             Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
             if ( genes == null || genes.isEmpty() ) {

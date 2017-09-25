@@ -33,17 +33,10 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
         this.sampleCoexpressionMatrix = sampleCoexpressionMatrix;
     }
 
-    /**
-     * Constructs new instances of {@link SampleCoexpressionAnalysis}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link SampleCoexpressionAnalysis}.
-         */
         public static SampleCoexpressionAnalysis newInstance() {
             return new SampleCoexpressionAnalysis();
         }
-
     }
 
 }

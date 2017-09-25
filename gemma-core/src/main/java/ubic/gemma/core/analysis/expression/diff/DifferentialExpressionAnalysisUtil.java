@@ -18,18 +18,9 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -38,23 +29,23 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.util.*;
+
 /**
  * A helper class for the differential expression analyzers. This class contains helper methods commonly needed when
  * performing an analysis.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisUtil {
 
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisUtil.class );
+    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisUtil.class );
 
     /**
      * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
      * false otherwise. When determining completeness, a biomaterial's factor values are only considered if they are
      * equivalent to one of the input experimental factors.
-     * 
-     * @param expressionExperiment
+     *
      * @param factors to consider completeness for.
      * @return boolean
      */
@@ -70,7 +61,6 @@ public class DifferentialExpressionAnalysisUtil {
                 biomaterials );
 
         boolean completeBlock = checkBlockDesign( biomaterialsWithGivenFactorValues, factors );
-
         boolean hasAllReps = checkBiologicalReplicates( expressionExperiment, factors );
 
         return completeBlock && hasAllReps;
@@ -78,10 +68,6 @@ public class DifferentialExpressionAnalysisUtil {
 
     /**
      * See if there are at least two samples for each factor value combination.
-     * 
-     * @param expressionExperiment
-     * @param factors
-     * @return
      */
     protected static boolean checkBiologicalReplicates( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
@@ -95,20 +81,21 @@ public class DifferentialExpressionAnalysisUtil {
             boolean match = false;
             for ( BioMaterial secondBm : biomaterials ) {
 
-                if ( firstBm.equals( secondBm ) ) continue;
+                if ( firstBm.equals( secondBm ) )
+                    continue;
 
                 Collection<FactorValue> factorValuesToCompareTo = getRelevantFactorValues( factors, secondBm );
 
-                if ( factorValuesToCheck.size() == factorValuesToCompareTo.size()
-                        && factorValuesToCheck.containsAll( factorValuesToCompareTo ) ) {
+                if ( factorValuesToCheck.size() == factorValuesToCompareTo.size() && factorValuesToCheck
+                        .containsAll( factorValuesToCompareTo ) ) {
                     log.debug( "Replicate found for biomaterial " + firstBm + "." );
                     match = true;
                     break;
                 }
             }
             if ( !match ) {
-                log.warn( "No replicate found for biomaterial " + firstBm + ", with factor values"
-                        + StringUtils.join( factorValuesToCheck, "," ) );
+                log.warn( "No replicate found for biomaterial " + firstBm + ", with factor values" + StringUtils
+                        .join( factorValuesToCheck, "," ) );
                 return false;
             }
         }
@@ -120,26 +107,21 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Check that <em>at least one</em> of the given factors is valid: the factorvalues are measurements, or that there
      * are at least two assays for at least one factor value.
-     * 
-     * @param expressionExperiment
-     * @param experimentalFactors
-     * @return
      */
     public static boolean checkValidForLm( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
         for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
             boolean ok = checkValidForLm( expressionExperiment, experimentalFactor );
-            if ( ok ) return true;
+            if ( ok )
+                return true;
         }
         return false;
     }
 
     /**
-     * Check that the factorvalues are measurements, or that there are at least two assays for at least one factor
+     * Check that the factorValues are measurements, or that there are at least two assays for at least one factor
      * value. Otherwise the model fit will be perfect and pvalues will not be returned.
-     * 
-     * @param expressionExperiment
-     * @param experimentalFactor
+     *
      * @return true if it's okay, false otherwise.
      */
     public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
@@ -188,10 +170,6 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Returns a List of all the different types of biomaterials across all bioassays in the experiment. If there is
      * more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
-     * 
-     * @param expressionExperiment
-     * @return
-     * @throws Exception
      */
     public static List<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix<?> matrix ) {
 
@@ -221,11 +199,8 @@ public class DifferentialExpressionAnalysisUtil {
      * Returns the factors that can be used by R for a one way anova or t-test. There requirement here is that there is
      * only one factor value per factor per biomaterial (of course), and all factor values are from the same
      * experimental factor.
-     * <p>
      * FIXME use the ExperimentalFactor as the input, not the FactorValues.
-     * 
-     * @param factorValues
-     * @param samplesUsed
+     *
      * @return list of strings representing the factor, in the same order as the supplied samplesUsed.
      */
     public static List<String> getRFactorsFromFactorValuesForOneWayAnova( Collection<FactorValue> factorValues,
@@ -248,8 +223,9 @@ public class DifferentialExpressionAnalysisUtil {
                 ExperimentalFactor seen = null;
                 for ( FactorValue fv : factorValuesFromBioMaterial ) {
                     if ( seen != null && fv.getExperimentalFactor().equals( seen ) ) {
-                        throw new RuntimeException( "There should only be one factorvalue per factor per biomaterial, "
-                                + biomaterial + " had multiple values for " + seen );
+                        throw new RuntimeException(
+                                "There should only be one factorvalue per factor per biomaterial, " + biomaterial
+                                        + " had multiple values for " + seen );
                     }
                     seen = fv.getExperimentalFactor();
                 }
@@ -265,8 +241,9 @@ public class DifferentialExpressionAnalysisUtil {
             }
 
             if ( !found ) {
-                throw new IllegalStateException( "No match for factorvalue on " + biomaterial
-                        + " among possible factorValues: " + StringUtils.join( factorValues, "\n" ) );
+                throw new IllegalStateException(
+                        "No match for factorvalue on " + biomaterial + " among possible factorValues: " + StringUtils
+                                .join( factorValues, "\n" ) );
             }
         }
         return rFactors;
@@ -275,8 +252,7 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Returns the factors that can be used by R for a two way anova. Each sample must have a factor value equal to one
      * of the supplied factor values. This assumes that "equals" works correctly on the factor values.
-     * 
-     * @param experimentalFactor
+     *
      * @param samplesUsed the samples we want to assign to the various factors
      * @return R factor representation, in the same order as the given samplesUsed.
      */
@@ -311,9 +287,7 @@ public class DifferentialExpressionAnalysisUtil {
      * biomaterial has a factor value from one of the input factors paired with a factor value from the other input
      * factors, and all factor values from 1 factor have been paired with all factor values from the other factors,
      * across all biomaterials.
-     * 
-     * @param biomaterials
-     * @param factorValues
+     *
      * @return false if not a complete block design.
      */
     protected static boolean checkBlockDesign( Collection<BioMaterial> biomaterials,
@@ -367,9 +341,8 @@ public class DifferentialExpressionAnalysisUtil {
 
     /**
      * Generates all possible factor value pairings for the given experimental factors.
-     * 
-     * @param experimentalFactors
-     * @return A collection of hashsets, where each hashset is a pairing.
+     *
+     * @return A collection of hashSets, where each hashSet is a pairing.
      */
     protected static Collection<Set<FactorValue>> generateFactorValuePairings(
             Collection<ExperimentalFactor> experimentalFactors ) {
@@ -380,12 +353,12 @@ public class DifferentialExpressionAnalysisUtil {
         }
 
         Collection<FactorValue> allFactorValuesCopy = allFactorValues;
-
         Collection<Set<FactorValue>> factorValuePairings = new HashSet<>();
 
         for ( FactorValue factorValue : allFactorValues ) {
             for ( FactorValue f : allFactorValuesCopy ) {
-                if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) continue;
+                if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) )
+                    continue;
 
                 HashSet<FactorValue> factorValuePairing = new HashSet<>();
                 factorValuePairing.add( factorValue );
@@ -402,11 +375,8 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Returns biomaterials with 'filtered' factor values. That is, each biomaterial will only contain those factor
      * values equivalent to a factor value from one of the input experimental factors.
-     * <p>
      * FIXME I don't like the way this code modifies the factorvalues associated with the biomaterial.
-     * 
-     * @param factors
-     * @param biomaterials
+     *
      * @return Collection<BioMaterial>
      */
     private static Collection<BioMaterial> filterFactorValuesFromBiomaterials( Collection<ExperimentalFactor> factors,
@@ -444,10 +414,7 @@ public class DifferentialExpressionAnalysisUtil {
     }
 
     /**
-     * Returns a collection of all the different types of biomaterials across all bioassays in the experiment.
-     * 
-     * @param expressionExperiment
-     * @return
+     * @return a collection of all the different types of biomaterials across all bioassays in the experiment.
      */
     private static List<BioMaterial> getBioMaterials( BioAssaySet ee ) {
 
@@ -464,9 +431,7 @@ public class DifferentialExpressionAnalysisUtil {
 
     /**
      * Isolate a biomaterial's factor values for a specific factor(s).
-     * 
-     * @param factors
-     * @param biomaterial
+     *
      * @return the factor values the biomaterial has for the given factors.
      */
     private static Collection<FactorValue> getRelevantFactorValues( Collection<ExperimentalFactor> factors,

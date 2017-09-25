@@ -44,6 +44,7 @@ import java.util.*;
  *
  * @author pavlidis
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class ExpressionDataMatrixBuilder {
 
     private static final Log log = LogFactory.getLog( ExpressionDataMatrixBuilder.class.getName() );
@@ -277,10 +278,6 @@ public class ExpressionDataMatrixBuilder {
             if ( !dimMap.containsKey( adUsed ) ) {
                 dimMap.put( adUsed, vector.getBioAssayDimension() );
             }
-            assert vector.getBioAssayDimension() != null;
-            assert vector.getBioAssayDimension().getId() != null;
-            vector.getBioAssayDimension().hashCode();
-
             dimensions.add( vector.getBioAssayDimension() );
         }
 

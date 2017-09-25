@@ -162,11 +162,9 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     }
 
     public static final class Factory {
-
         public static DifferentialExpressionAnalysisResult newInstance() {
             return new DifferentialExpressionAnalysisResultImpl();
         }
-
     }
 
 }

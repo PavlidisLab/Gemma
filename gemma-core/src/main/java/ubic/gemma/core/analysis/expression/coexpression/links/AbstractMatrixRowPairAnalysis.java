@@ -18,18 +18,14 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import cern.colt.bitvector.BitMatrix;
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.ObjectArrayList;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.Matrix2D;
@@ -38,69 +34,51 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
-import cern.colt.bitvector.BitMatrix;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.ObjectArrayList;
+
+import java.util.*;
 
 /**
  * @author paul
- * @version $Id$
  */
 public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnalysis {
     /**
      * Absolute lower limit to minNumUsed. (This used to be 3, and then 5). It doesn't make much sense to set this
      * higher than ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT
      */
+    @SuppressWarnings("WeakerAccess") // Possible external use
     public static final int HARD_LIMIT_MIN_NUM_USED = 8;
-
-    protected static final int HALF_BIN = NUM_BINS / 2;
-
     protected static final Log log = LogFactory.getLog( PearsonMetrics.class );
-
+    private static final int HALF_BIN = NUM_BINS / 2;
+    private final int[] fastHistogram = new int[NUM_BINS];
+    private final Map<ExpressionDataMatrixRowElement, CompositeSequence> rowMapCache = new HashMap<>();
     protected ExpressionDataDoubleMatrix dataMatrix;
-
-    protected int[] fastHistogram = new int[NUM_BINS];
-    protected Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
-    protected double globalMean = 0.0; // mean of the entire distribution.
-    protected double globalTotal = 0.0; // used to store the running total of the matrix values.
-    protected boolean[] hasGenesCache;
-    protected boolean[] hasMissing = null;
-    protected boolean histogramIsFilled = false;
-    protected ObjectArrayList keepers = null;
-    protected double lowerTailThreshold = 0.0;
-
+    protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
+    protected BitMatrix used = null;
+    Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
+    boolean[] hasMissing = null;
+    ObjectArrayList keepers = null;
     /**
      * If fewer than this number values are available, the correlation is rejected. This helps keep the correlation
      * distribution reasonable. This is primarily relevant when there are missing values in the data, but to be
      * consistent we check it for other cases as well.
      */
-    protected int minNumUsed = HARD_LIMIT_MIN_NUM_USED;
-
+    int minNumUsed = HARD_LIMIT_MIN_NUM_USED;
     // store total number of missing values.
-    protected int numMissing;
-
-    protected int numVals = 0; // number of values actually stored in the matrix
-
-    protected Map<CompositeSequence, Set<Gene>> probeToGeneMap = null;
-
-    protected double pValueThreshold = 0.0;
-    protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
-
-    protected Map<ExpressionDataMatrixRowElement, CompositeSequence> rowMapCache = new HashMap<>();
-
-    protected double storageThresholdValue;
-
-    protected double upperTailThreshold = 0.0;
-
-    protected boolean useAbsoluteValue = false;
-
-    protected BitMatrix used = null;
-
-    protected boolean usePvalueThreshold = true;
-
+    int numMissing;
+    private double globalMean = 0.0; // mean of the entire distribution.
+    private double globalTotal = 0.0; // used to store the running total of the matrix values.
+    private boolean[] hasGenesCache;
+    private boolean histogramIsFilled = false;
+    private double lowerTailThreshold = 0.0;
+    private int numVals = 0; // number of values actually stored in the matrix
+    private Map<CompositeSequence, Set<Gene>> probeToGeneMap = null;
+    private double pValueThreshold = 0.0;
+    private double storageThresholdValue;
+    private double upperTailThreshold = 0.0;
+    private boolean useAbsoluteValue = false;
+    private boolean usePvalueThreshold = true;
     private long crossHybridizationRejections = 0;
     private int numUniqueGenes = 0;
-
     private boolean omitNegativeCorrelationLinks = false;
 
     @Override
@@ -110,22 +88,22 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Read back the histogram as a DoubleArrayList of counts.
-     * 
+     * TODO put this somewhere more generically useful!
+     *
      * @return cern.colt.list.DoubleArrayList
-     * @todo - put this somewhere more generically useful!
      */
     @Override
     public DoubleArrayList getHistogramArrayList() {
         DoubleArrayList r = new DoubleArrayList( fastHistogram.length );
-        for ( int i = 0; i < fastHistogram.length; i++ ) {
-            r.add( fastHistogram[i] );
+        for ( int aFastHistogram : fastHistogram ) {
+            r.add( aFastHistogram );
         }
         return r;
     }
 
     /**
      * Identify the correlations that are above the set thresholds.
-     * 
+     *
      * @return cern.colt.list.ObjectArrayList
      */
     @Override
@@ -145,10 +123,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         return numUniqueGenes;
     }
 
-    /**
-     * @param rowEl
-     * @return
-     */
     @Override
     public CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl ) {
         return this.rowMapCache.get( rowEl );
@@ -170,6 +144,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
+     * @param usePvalueThreshold the usePvalueThreshold to set
+     */
+    @Override
+    public void setUsePvalueThreshold( boolean usePvalueThreshold ) {
+        this.usePvalueThreshold = usePvalueThreshold;
+    }
+
+    /**
      * @return double
      */
     public double kurtosis() {
@@ -184,14 +166,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
                     r = results.get( i, j );
                 } else {
                     r = 0;
-                    /** @todo calculate the value */
+                    // todo calculate the value
                 }
                 double deviation = r - globalMean;
                 sumsquare += deviation * deviation;
             }
         }
-        return sumsquare * numVals * ( numVals + 1.0 ) / ( numVals - 1.0 ) - 3 * sumsquare * sumsquare / ( numVals - 2 )
-                * ( numVals - 3 );
+        return sumsquare * numVals * ( numVals + 1.0 ) / ( numVals - 1.0 )
+                - 3 * sumsquare * sumsquare / ( numVals - 2 ) * ( numVals - 3 );
     }
 
     /**
@@ -210,9 +192,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         return results.cardinality();
     }
 
-    /**
-     * 
-     */
     @Override
     public void setDuplicateMap( Map<CompositeSequence, Set<Gene>> probeToGeneMap ) {
         this.probeToGeneMap = probeToGeneMap;
@@ -221,7 +200,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Set the threshold, below which correlations are kept (e.g., negative values)
-     * 
+     *
      * @param k double
      */
     @Override
@@ -235,7 +214,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      */
     @Override
     public void setMinNumpresent( int minSamplesToKeepCorrelation ) {
-        if ( minSamplesToKeepCorrelation > HARD_LIMIT_MIN_NUM_USED ) this.minNumUsed = minSamplesToKeepCorrelation;
+        if ( minSamplesToKeepCorrelation > HARD_LIMIT_MIN_NUM_USED )
+            this.minNumUsed = minSamplesToKeepCorrelation;
     }
 
     /**
@@ -260,7 +240,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Set the threshold, above which correlations are kept.
-     * 
+     *
      * @param k double
      */
     @Override
@@ -271,7 +251,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * If set to true, then the absolute value of the correlation is used for histograms and choosing correlations to
      * keep. The correlation matrix, if actually used to store all the values, maintains the actual number.
-     * 
+     *
      * @param k boolean
      */
     @Override
@@ -279,19 +259,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         useAbsoluteValue = k;
     }
 
-    /**
-     * @param usePvalueThreshold the usePvalueThreshold to set
-     */
-    @Override
-    public void setUsePvalueThreshold( boolean usePvalueThreshold ) {
-        this.usePvalueThreshold = usePvalueThreshold;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.expression.coexpression.links.MatrixRowPairAnalysis#size()
-     */
     @Override
     public int size() {
         return this.dataMatrix.rows();
@@ -307,15 +274,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Get correlation pvalue corrected for multiple testing of the genes by different probes.
-     * <p>
      * Current implementation: We conservatively penalize the p-values for each additional test the gene received. For
      * example, if correlation is between two genes that are each assayed twice on the platform, the pvalue is penalized
      * by a factor of 4.0. If either probe assays more than one gene, we penalize according to the gene which is tested
      * the most times on the platform.
-     * 
-     * @param i int
-     * @param j int
-     * @param correl double
+     *
+     * @param i       int
+     * @param j       int
+     * @param correl  double
      * @param numused int
      * @return double (can be greater than 1.0, we don't care)
      */
@@ -329,10 +295,10 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Store information about whether data includes missing values.
-     * 
+     *
      * @return int
      */
-    protected int fillUsed() {
+    int fillUsed() {
 
         int missingCount = 0;
         int numrows = this.dataMatrix.rows();
@@ -365,33 +331,26 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         return missingCount;
     }
 
-    /**
-     *  
-     */
-    protected void finishMetrics() {
+    void finishMetrics() {
         this.histogramIsFilled = true;
         globalMean = globalTotal / numVals;
     }
 
-    /**
-     * @param j
-     * @return
-     */
-    protected Set<Gene> getGenesForRow( int j ) {
+    Set<Gene> getGenesForRow( int j ) {
         return this.probeToGeneMap.get( getProbeForRow( dataMatrix.getRowElement( j ) ) );
     }
 
     /**
      * Skip the probes without blat association
      */
-    protected boolean hasGene( ExpressionDataMatrixRowElement rowEl ) {
+    boolean hasGene( ExpressionDataMatrixRowElement rowEl ) {
         return hasGenesCache[rowEl.getIndex()];
     }
 
     /**
      * Initialize caches.
      */
-    protected void init() {
+    private void init() {
 
         initGeneToProbeMap();
 
@@ -414,20 +373,15 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Decide whether to keep the correlation. The correlation must be greater or equal to the set thresholds.
-     * 
-     * @param i int
-     * @param j int
-     * @param correl double
-     * @param numused int
-     * @return boolean
      */
-    protected boolean keepCorrel( int i, int j, double correl, int numused ) {
+    boolean keepCorrel( int i, int j, double correl, int numused ) {
 
         if ( keepers == null ) {
             return false;
         }
 
-        if ( Double.isNaN( correl ) ) return false;
+        if ( Double.isNaN( correl ) )
+            return false;
 
         if ( omitNegativeCorrelationLinks && correl < 0.0 ) {
             return false;
@@ -446,15 +400,13 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             c = correl;
         }
 
-        if ( upperTailThreshold != 0.0 && c >= upperTailThreshold
-                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) <= this.pValueThreshold ) ) {
+        if ( upperTailThreshold != 0.0 && c >= upperTailThreshold && ( !this.usePvalueThreshold
+                || correctedPvalue( i, j, correl, numused ) <= this.pValueThreshold ) ) {
 
             keepers.add( new Link( i, j, correl ) );
             return true;
-        }
-
-        else if ( !useAbsoluteValue && lowerTailThreshold != 0.0 && c <= lowerTailThreshold
-                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) <= this.pValueThreshold ) ) {
+        } else if ( !useAbsoluteValue && lowerTailThreshold != 0.0 && c <= lowerTailThreshold && (
+                !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) <= this.pValueThreshold ) ) {
             keepers.add( new Link( i, j, correl ) );
             return true;
         }
@@ -465,10 +417,10 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * Tests whether the correlations still need to be calculated for final retrieval, or if they can just be retrieved.
      * This looks at the current settings and decides whether the value would already have been cached.
-     * 
+     *
      * @return boolean
      */
-    protected boolean needToCalculateMetrics() {
+    boolean needToCalculateMetrics() {
 
         /* are we on the first pass, or haven't stored any values? */
         if ( !histogramIsFilled || results == null ) {
@@ -496,22 +448,74 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     protected abstract void rowStatistics();
 
+    int getNumComputed( int numrows, int numcols, boolean docalcs, double[][] data, StopWatch timer,
+            ExpressionDataMatrixRowElement itemA, double[] vectorA, int numComputed, int i ) {
+        ExpressionDataMatrixRowElement itemB;
+        for ( int j = i + 1; j < numrows; j++ ) {
+            itemB = this.dataMatrix.getRowElement( j );
+            if ( !this.hasGene( itemB ) )
+                continue;
+            if ( !docalcs || results.get( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
+                // if we
+                // already have it. Just do the requisite checks.
+                keepCorrel( i, j, results.get( i, j ), numcols );
+                continue;
+            }
+
+            double[] vectorB = data[j];
+            setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
+            ++numComputed;
+        }
+        computeRow( timer, itemA, numComputed, i );
+        return numComputed;
+    }
+
+    void computeRow( StopWatch timer, ExpressionDataMatrixRowElement itemA, int numComputed, int i ) {
+        if ( ( i + 1 ) % 2000 == 0 ) {
+            double t = timer.getTime() / 1000.0;
+            log.info(
+                    ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " " + (
+                            keepers.size() > 0 ?
+                                    keepers.size() + " scores retained" :
+                                    "" ) + String.format( ", time elapsed since last check: %.2f", t ) + "s" );
+            timer.reset();
+            timer.start();
+        }
+    }
+
+    int computeMetrics( int numrows, int numcols, boolean docalcs, StopWatch timer, int skipped, int numComputed,
+            double[][] data ) {
+        ExpressionDataMatrixRowElement itemA;
+        double[] vectorA = null;
+        for ( int i = 0; i < numrows; i++ ) {
+            itemA = this.dataMatrix.getRowElement( i );
+            if ( !this.hasGene( itemA ) ) {
+                skipped++;
+                continue;
+            }
+            if ( docalcs ) {
+                vectorA = data[i];
+            }
+
+            numComputed = getNumComputed( numrows, numcols, docalcs, data, timer, itemA, vectorA, numComputed, i );
+        }
+        return skipped;
+    }
+
+    abstract double correlFast( double[] ival, double[] jval, int i, int j );
+
     /**
      * Checks for valid values of correlation and encoding.
-     * 
-     * @param i int
-     * @param j int
-     * @param correl double
-     * @param numused int
      */
-    protected void setCorrel( int i, int j, double correl, int numused ) {
+    void setCorrel( int i, int j, double correl, int numused ) {
 
         if ( crossHybridizes( i, j ) ) {
             crossHybridizationRejections++;
             return;
         }
 
-        if ( Double.isNaN( correl ) ) return;
+        if ( Double.isNaN( correl ) )
+            return;
 
         if ( correl < -1.00001 || correl > 1.00001 ) {
             throw new IllegalArgumentException( "Correlation out of valid range: " + correl );
@@ -555,10 +559,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * Set an (absolute value) correlation, below which values are not maintained in the correlation matrix. They are
      * still kept in the histogram. (In some implementations this can greatly reduce the memory requirements for the
      * correlation matrix).
-     * 
-     * @param k double
      */
-    protected void setStorageThresholdValue( double k ) {
+    void setStorageThresholdValue( double k ) {
         if ( k < 0.0 || k > 1.0 ) {
             throw new IllegalArgumentException( "Correlation must be given as between 0 and 1" );
         }
@@ -569,16 +571,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * Determine if the probes at this location in the matrix assay any of the same gene(s). This has nothing to do with
      * whether the probes are specific, though non-specific probes (which hit more than one gene) are more likely to be
      * affected by this.
-     * <p>
      * FIXME this is going to be slow? We call it for every cell.
-     * 
-     * @param i
-     * @param j
+     *
      * @return true if the probes hit the same gene; false otherwise. If the probes hit more than one gene, and any of
-     *         the genes are in common, the result is 'true'.
+     * the genes are in common, the result is 'true'.
      */
     private boolean crossHybridizes( int i, int j ) {
-        if ( this.dataMatrix == null ) return false; // can happen in tests.
+        if ( this.dataMatrix == null )
+            return false; // can happen in tests.
         ExpressionDataMatrixRowElement itemA = this.dataMatrix.getRowElement( i );
         ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
 
@@ -586,31 +586,30 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         Collection<Gene> genesB = this.probeToGeneMap.get( itemB.getDesignElement() );
 
         // nonspecific probe  TEST CODE
-//        if ( itemA.getDesignElement().getName().equals( "8179731" ) ) {
-//            for ( Gene g : genesB ) {
-//                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
-//                    log.info( "NOOOOO" );
-//                }
-//            }
-//        }
-//        
-//
-//        if ( itemA.getDesignElement().getName().equals( "8124911" ) ) {
-//            for ( Gene g : genesB ) {
-//                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
-//                    log.info( "yay" );
-//                }
-//            }
-//        }
-//        
-//        if ( itemA.getDesignElement().getName().equals( "8178498" ) ) {
-//            for ( Gene g : genesB ) {
-//                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
-//                    log.info( "yay" );
-//                }
-//            }
-//        }
-
+        //        if ( itemA.getDesignElement().getName().equals( "8179731" ) ) {
+        //            for ( Gene g : genesB ) {
+        //                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
+        //                    log.info( "NOOOOO" );
+        //                }
+        //            }
+        //        }
+        //
+        //
+        //        if ( itemA.getDesignElement().getName().equals( "8124911" ) ) {
+        //            for ( Gene g : genesB ) {
+        //                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
+        //                    log.info( "yay" );
+        //                }
+        //            }
+        //        }
+        //
+        //        if ( itemA.getDesignElement().getName().equals( "8178498" ) ) {
+        //            for ( Gene g : genesB ) {
+        //                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
+        //                    log.info( "yay" );
+        //                }
+        //            }
+        //        }
 
         return CollectionUtils.containsAny( genesA, genesB );
     }
@@ -621,7 +620,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     private void initGeneToProbeMap() {
 
         this.numUniqueGenes = 0;
-        this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
+        this.geneToProbeMap = new HashMap<>();
         for ( CompositeSequence cs : probeToGeneMap.keySet() ) {
 
             Set<Gene> genes = probeToGeneMap.get( cs );
@@ -629,7 +628,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             /*
              * Genes will be empty if the probe does not map to any genes.
              */
-            if ( genes == null ) continue; // defensive.
+            if ( genes == null )
+                continue; // defensive.
             for ( Gene g : genes ) {
                 numUniqueGenes++;
 
@@ -659,21 +659,18 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             stats[c - 1]++;
         }
 
-        log.info( "Mapping Stats: " + numUniqueGenes + " unique genes; gene representation summary: "
-                + ArrayUtils.toString( stats ) );
+        log.info( "Mapping Stats: " + numUniqueGenes + " unique genes; gene representation summary: " + ArrayUtils
+                .toString( stats ) );
     }
 
-    /**
-     * @param index
-     * @return
-     */
     private double numberOfTestsForGeneAtRow( int index ) {
         double testCount = 0;
         Set<Gene> clusters = getGenesForRow( index );
         for ( Gene geneId : clusters ) {
             // how many probes assay that gene
             int c = this.geneToProbeMap.get( geneId ).size();
-            if ( c > testCount ) testCount = c;
+            if ( c > testCount )
+                testCount = c;
         }
         return testCount;
     }

@@ -81,19 +81,13 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
         return hashCode;
     }
 
-    /**
-     * Constructs new instances of {@link SampleCoexpressionMatrix}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link SampleCoexpressionMatrix}.
-         */
         public static SampleCoexpressionMatrix newInstance() {
             return new SampleCoexpressionMatrixImpl();
         }
 
         /**
-         * Constructs a new instance of {@link SampleCoexpressionMatrix}, taking all possible properties (except the
+         * @return Constructs a new instance of {@link SampleCoexpressionMatrix}, taking all possible properties (except the
          * identifier(s))as arguments.
          */
         public static SampleCoexpressionMatrix newInstance( byte[] coexpressionMatrix,

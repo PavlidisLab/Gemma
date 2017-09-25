@@ -19,33 +19,26 @@ import ubic.gemma.model.genome.Taxon;
 
 /**
  * Handles the persistence phase of a Link analysis.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public interface LinkAnalysisPersister {
 
     /**
      * Remove any links and coexpression analyses for the given experiment. It gets called
      * automatically by saveLinksToDb();
-     * 
-     * @param ee
+     *
      * @return true if anything was deleted.
      */
-    public boolean deleteAnalyses( BioAssaySet ee );
+    boolean deleteAnalyses( BioAssaySet ee );
 
     /**
      * Temporary method.
-     * 
-     * @param t
      */
-    public void initializeLinksFromOldData( Taxon t );
+    void initializeLinksFromOldData( Taxon t );
 
     /**
      * Persist links to the database. This takes care of saving a 'flipped' version of the links.
-     * 
-     * @param p2v
-     * @param la
      */
-    public void saveLinksToDb( LinkAnalysis la );
+    void saveLinksToDb( LinkAnalysis la );
 }

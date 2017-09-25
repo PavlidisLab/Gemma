@@ -29,8 +29,6 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.*;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -78,18 +76,14 @@ import java.util.HashSet;
 public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
     private static final int QUANTILE_OF_SIGNAL_TO_USE_IF_NO_BKG_AVAILABLE = 1;
-
     private static final Log log = LogFactory.getLog( TwoChannelMissingValuesImpl.class.getName() );
 
     @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-
     @Autowired
     private TwoChannelMissingValueHelperService twoChannelMissingValueHelperService;
 
@@ -125,11 +119,6 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
          * must be associated with the correct BioAssayDimension.
          */
         log.info( "Study has " + dims.size() + " bioassaydimensions" );
-        Collection<BioAssay> bioAssays = expExp.getBioAssays();
-        Collection<ArrayDesign> ads = new HashSet<>();
-        for ( BioAssay ba : bioAssays ) {
-            ads.add( ba.getArrayDesignUsed() );
-        }
 
         if ( extraMissingValueIndicators != null && extraMissingValueIndicators.size() > 0 ) {
             log.info( "There are " + extraMissingValueIndicators.size() + " manually-set missing value indicators" );
@@ -253,7 +242,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             if ( bkgChannelB != null )
                 bkgB = bkgChannelB.getRow( designElement );
 
-            // columns only for this designelement!
+            // columns only for this design element!
             boolean gaps = false; // we use this to track
             for ( int col = 0; col < numCols; col++ ) {
 

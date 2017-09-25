@@ -18,35 +18,29 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import java.util.Set;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.ObjectArrayList;
+import org.apache.commons.lang3.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.genome.Gene;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.ObjectArrayList;
+
+import java.util.Set;
 
 /**
  * Subclass that computes correlations using ranks.
- * 
+ *
  * @author paul
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class SpearmanMetrics extends PearsonMetrics {
 
     double[][] rankTransformedData = null;
 
-    /**
-     * @param
-     */
     public SpearmanMetrics( ExpressionDataDoubleMatrix dataMatrix ) {
         this( dataMatrix.rows() );
         this.dataMatrix = dataMatrix;
@@ -56,8 +50,8 @@ public class SpearmanMetrics extends PearsonMetrics {
 
     /**
      * @param dataMatrix DenseDoubleMatrix2DNamed
-     * @param tmts Values of the correlation that are deemed too small to store in the matrix. Setting this as high as
-     *        possible can greatly reduce memory requirements, but can slow things down.
+     * @param tmts       Values of the correlation that are deemed too small to store in the matrix. Setting this as high as
+     *                   possible can greatly reduce memory requirements, but can slow things down.
      */
     public SpearmanMetrics( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
         this( dataMatrix );
@@ -69,8 +63,7 @@ public class SpearmanMetrics extends PearsonMetrics {
      */
     protected SpearmanMetrics( int size ) {
         if ( size > 0 ) {
-            results = new CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement>(
-                    size, size );
+            results = new CompressedSparseDoubleMatrix<>( size, size );
         }
         keepers = new ObjectArrayList();
     }
@@ -78,7 +71,6 @@ public class SpearmanMetrics extends PearsonMetrics {
     /**
      * Compute correlations.
      */
-    @SuppressWarnings("null")
     @Override
     public void calculateMetrics() {
 
@@ -109,7 +101,7 @@ public class SpearmanMetrics extends PearsonMetrics {
 
         /* for each vector, compare it to all other vectors */
 
-        ExpressionDataMatrixRowElement itemA = null;
+        ExpressionDataMatrixRowElement itemA;
         double[] vectorA = null;
         int skipped = 0;
         int numComputed = 0;
@@ -129,7 +121,8 @@ public class SpearmanMetrics extends PearsonMetrics {
 
             for ( int j = i + 1; j < numrows; j++ ) { // second vector
                 ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
-                if ( !this.hasGene( itemB ) ) continue;
+                if ( !this.hasGene( itemB ) )
+                    continue;
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
                 if ( !doCalcs || results.get( i, j ) != 0.0 ) {
@@ -154,8 +147,9 @@ public class SpearmanMetrics extends PearsonMetrics {
             ++numComputed;
 
             if ( ( i + 1 ) % 2000 == 0 ) {
-                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
-                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+                log.info(
+                        ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
+                                + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
         log.info( skipped + " rows skipped, due to no BLAT association" );
@@ -163,11 +157,6 @@ public class SpearmanMetrics extends PearsonMetrics {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
-     */
     @Override
     public double correctedPvalue( int i, int j, double correl, int numused ) {
         double p = CorrelationStats.spearmanPvalue( correl, numused );
@@ -178,7 +167,8 @@ public class SpearmanMetrics extends PearsonMetrics {
 
             for ( Gene geneId : clusters ) {
                 int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
-                if ( k < tmpK ) k = tmpK;
+                if ( k < tmpK )
+                    k = tmpK;
                 break;
             }
         }
@@ -187,7 +177,8 @@ public class SpearmanMetrics extends PearsonMetrics {
         if ( clusters != null ) {
             for ( Gene geneId : clusters ) {
                 int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
-                if ( m < tmpM ) m = tmpM;
+                if ( m < tmpM )
+                    m = tmpM;
                 break;
             }
 
@@ -196,11 +187,6 @@ public class SpearmanMetrics extends PearsonMetrics {
         return p * k * m;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
-     */
     @Override
     public QuantitationType getMetricType() {
         QuantitationType m = QuantitationType.Factory.newInstance();
@@ -242,15 +228,6 @@ public class SpearmanMetrics extends PearsonMetrics {
         }
     }
 
-    /**
-     * @param vectorA
-     * @param vectorB
-     * @param usedA
-     * @param usedB
-     * @param i
-     * @param j
-     * @return
-     */
     protected double spearman( double[] vectorA, double[] vectorB, boolean[] usedA, boolean[] usedB, int i, int j ) {
 
         /* because we assume there might be ties, we compute the correlation of the ranks. */
@@ -298,7 +275,7 @@ public class SpearmanMetrics extends PearsonMetrics {
             yjc = Rank.rankTransform( new DoubleArrayList( yjc ) ).elements();
         }
 
-        double correl = 0.0;
+        double correl;
         double sxy = 0.0;
         double sxx = 0.0;
         double syy = 0.0;
@@ -330,7 +307,8 @@ public class SpearmanMetrics extends PearsonMetrics {
         // roundoff protection.
         if ( correl < -1.0 )
             correl = -1.0;
-        else if ( correl > 1.0 ) correl = 1.0;
+        else if ( correl > 1.0 )
+            correl = 1.0;
 
         setCorrel( i, j, correl, numused );
 
@@ -353,55 +331,25 @@ public class SpearmanMetrics extends PearsonMetrics {
          * For each vector, compare it to all other vectors, avoid repeating things; skip items that don't have genes
          * mapped to them.
          */
-        ExpressionDataMatrixRowElement itemA = null;
-        ExpressionDataMatrixRowElement itemB = null;
-        double[] vectorA = null;
+        StopWatch timer = new StopWatch();
+        timer.start();
         int skipped = 0;
         int numComputed = 0;
-        for ( int i = 0; i < numrows; i++ ) {
-            itemA = this.dataMatrix.getRowElement( i );
-            if ( !this.hasGene( itemA ) ) {
-                skipped++;
-                continue;
-            }
-            if ( docalcs ) {
-                vectorA = rankTransformedData[i];
-            }
-
-            for ( int j = i + 1; j < numrows; j++ ) {
-                itemB = this.dataMatrix.getRowElement( j );
-                if ( !this.hasGene( itemB ) ) continue;
-                if ( !docalcs || results.get( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
-                    // if we
-                    // already have it. Just do the requisite checks.
-                    keepCorrel( i, j, results.get( i, j ), numcols );
-                    continue;
-                }
-
-                double[] vectorB = rankTransformedData[j];
-                setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
-                ++numComputed;
-            }
-            if ( ( i + 1 ) % 2000 == 0 ) {
-                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
-                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
-            }
-        }
+        skipped = computeMetrics( numrows, numcols, docalcs, timer, skipped, numComputed, rankTransformedData );
         log.info( skipped + " rows skipped, due to no BLAT association" );
         finishMetrics();
     }
 
     /**
      * @param usedB will be filled in, if not null. This also precomputes the row statistics (row means and sumsq
-     *        deviations)
-     * @return rank-transformed data, breaking ties by averaging ranks, if necessary.
+     *              deviations)
      */
     private void getRankTransformedData( boolean[][] usedB ) {
-        int numrows = this.dataMatrix.rows();
-        int numcols = this.dataMatrix.columns();
-        rankTransformedData = new double[numrows][];
+        int numRows = this.dataMatrix.rows();
+        int numCols = this.dataMatrix.columns();
+        rankTransformedData = new double[numRows][];
 
-        for ( int i = 0; i < numrows; i++ ) {
+        for ( int i = 0; i < numRows; i++ ) {
 
             Double[] row = this.dataMatrix.getRow( i );
 
@@ -421,7 +369,7 @@ public class SpearmanMetrics extends PearsonMetrics {
             rankTransformedData[i] = ri;
 
             if ( usedB != null ) {
-                for ( int j = 0; j < numcols; j++ ) {
+                for ( int j = 0; j < numCols; j++ ) {
                     usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
                     // slightly.
                 }

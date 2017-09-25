@@ -55,7 +55,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Holds a complete copy of the GeneOntology. This gets loaded on startup.
  *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class GeneOntologyServiceImpl implements GeneOntologyService {
@@ -146,7 +145,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
-     * Turn an id like GO:0038128 into a URI.
+     * @return Turn an id like GO:0038128 into a URI.
      */
     private static String toUri( String goId ) {
         String uriTerm = goId.replace( ":", "_" );
@@ -462,14 +461,14 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     @Override
-    public Collection<GeneOntologyTermValueObject> getValueObjects(Gene gene){
+    public Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene ) {
         return gene == null ? null : getValueObjects( getGOTerms( gene ) );
     }
 
     @Override
     public Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms ) {
         Collection<GeneOntologyTermValueObject> vos = new ArrayList<>( terms.size() );
-        for( OntologyTerm term : terms){
+        for ( OntologyTerm term : terms ) {
             vos.add( getValueObject( term ) );
         }
         return vos;
@@ -477,7 +476,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     @Override
     public GeneOntologyTermValueObject getValueObject( OntologyTerm term ) {
-        return new GeneOntologyTermValueObject(asRegularGoId( term ), term);
+        return new GeneOntologyTermValueObject( asRegularGoId( term ), term );
     }
 
     @Override
@@ -621,9 +620,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return ready.get();
     }
 
-    /**
-     *
-     */
     protected synchronized void forceLoadOntology() {
         initializeGeneOntology();
     }
@@ -822,7 +818,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
                 log.info( "Loading Gene Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
-                //
+
                 try {
                     loadTermsInNameSpace( GO_URL );
 
@@ -834,8 +830,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
                     log.info( "Done loading GO" );
                     loadTime.stop();
                 } catch ( Throwable e ) {
-                    if ( log != null )
-                        log.error( e, e );
+                    log.error( e, e );
                     ready.set( false );
                     running.set( false );
                 }

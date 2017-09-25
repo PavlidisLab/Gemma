@@ -18,13 +18,12 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
+
 import java.util.Collection;
 import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * A more heavyweight version of Gene2GeneCoexpressionValueObject; has a bit more information about the genes.
@@ -32,16 +31,18 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * FIXME consider merging or making this a subclass of the Gene2GeneCoexpressionValueObject. this is very similar to
  * Gene2GeneCoexpressionValueObject; we use the NCBI id sometimes, and the gene name (not just the symbol), the node
  * degree info; and we need the sort key; plus this offers some additional methods
+ * </p>
  * <p>
  * Importantly, this does not necessarily reflect the coexpression data in the database: it may have been filtered in
  * accordance to the query settings in terms of the data sets searched and the maximum number of results., this does not
  * necessarily reflect the coexpression data in the database: it may have been filtered in accordance to the query
  * settings in terms of the data sets searched and the maximum number of results.
- * 
+ * </p>
+ *
  * @author luke
- * @version $Id$
  * @see CoexpressionValueObject
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in front end
 public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueObjectExt> {
 
     private Boolean containsMyData = false;
@@ -55,7 +56,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private Integer queryGeneNodeDegree = 0;
     private Double queryGeneNodeDegreeRank = 0.0;
 
-    /*
+    /**
      * Used for client-side sorting. See CoexpressionGrid and CoexpressionGridLight.jsF
      */
     private String sortKey = null;
@@ -67,19 +68,18 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         return this.getSortKey().compareTo( arg0.getSortKey() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         CoexpressionValueObjectExt other = ( CoexpressionValueObjectExt ) obj;
         if ( this.sortKey == null ) {
-            if ( other.sortKey != null ) return false;
+            if ( other.sortKey != null )
+                return false;
         } else if ( !sortKey.equals( other.sortKey ) ) {
             return false;
         } else if ( !this.queryGene.getOfficialSymbol().equals( other.queryGene.getOfficialSymbol() ) ) {
@@ -92,6 +92,10 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         return containsMyData;
     }
 
+    public void setContainsMyData( Boolean containsMyData ) {
+        this.containsMyData = containsMyData;
+    }
+
     /**
      * @return the coexpressed gene.
      */
@@ -99,45 +103,82 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         return foundGene;
     }
 
+    public void setFoundGene( GeneValueObject foundGene ) {
+        this.foundGene = foundGene;
+    }
+
     public Integer getFoundGeneNodeDegree() {
         return foundGeneNodeDegree;
+    }
+
+    public void setFoundGeneNodeDegree( Integer foundGeneNodeDegree ) {
+        this.foundGeneNodeDegree = foundGeneNodeDegree;
     }
 
     public Double getFoundGeneNodeDegreeRank() {
         return foundGeneNodeDegreeRank;
     }
 
+    public void setFoundGeneNodeDegreeRank( Double foundGeneNodeDegreeRank ) {
+        this.foundGeneNodeDegreeRank = foundGeneNodeDegreeRank;
+    }
+
     public Integer getNegSupp() {
         return negSupp;
+    }
+
+    public void setNegSupp( Integer negSupp ) {
+        this.negSupp = negSupp;
     }
 
     public Integer getNumTestedIn() {
         return numTestedIn;
     }
 
+    public void setNumTestedIn( Integer numTestedIn ) {
+        this.numTestedIn = numTestedIn;
+    }
+
     public Integer getPosSupp() {
         return posSupp;
+    }
+
+    public void setPosSupp( Integer posSupp ) {
+        this.posSupp = posSupp;
     }
 
     public GeneValueObject getQueryGene() {
         return queryGene;
     }
 
+    public void setQueryGene( GeneValueObject queryGene ) {
+        this.queryGene = queryGene;
+    }
+
     public Integer getQueryGeneNodeDegree() {
         return queryGeneNodeDegree;
+    }
+
+    public void setQueryGeneNodeDegree( Integer queryGeneNodeDegree ) {
+        this.queryGeneNodeDegree = queryGeneNodeDegree;
     }
 
     public Double getQueryGeneNodeDegreeRank() {
         return queryGeneNodeDegreeRank;
     }
 
+    public void setQueryGeneNodeDegreeRank( Double queryGeneNodeDegreeRank ) {
+        this.queryGeneNodeDegreeRank = queryGeneNodeDegreeRank;
+    }
+
     public String getSortKey() {
         return sortKey;
     }
 
-    /**
-     * @return
-     */
+    public void setSortKey( String sortKey ) {
+        this.sortKey = sortKey;
+    }
+
     public Integer getSupport() {
         return Math.max( posSupp, negSupp );
     }
@@ -146,11 +187,10 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         return supportingExperiments;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
+    public void setSupportingExperiments( Collection<Long> supportingExperiments ) {
+        this.supportingExperiments = supportingExperiments;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -160,7 +200,6 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     }
 
     /**
-     * @param geneId
      * @return true if this involves the gene provided (either as query or found gene)
      */
     public boolean involves( Long geneId ) {
@@ -168,73 +207,16 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     }
 
     /**
-     * @param gene ids
      * @return true if this involves any of the genes provided
      */
     public boolean involvesAny( Set<Long> geneIds ) {
         return geneIds.contains( foundGene.getId() ) || geneIds.contains( queryGene.getId() );
     }
 
-    public void setContainsMyData( Boolean containsMyData ) {
-        this.containsMyData = containsMyData;
-    }
-
-    public void setFoundGene( GeneValueObject foundGene ) {
-        this.foundGene = foundGene;
-    }
-
-    public void setFoundGeneNodeDegree( Integer foundGeneNodeDegree ) {
-        this.foundGeneNodeDegree = foundGeneNodeDegree;
-    }
-
-    public void setFoundGeneNodeDegreeRank( Double foundGeneNodeDegreeRank ) {
-        this.foundGeneNodeDegreeRank = foundGeneNodeDegreeRank;
-    }
-
-    public void setNegSupp( Integer negSupp ) {
-        this.negSupp = negSupp;
-    }
-
-    /**
-     * @param numTestedIn
-     */
-    public void setNumTestedIn( Integer numTestedIn ) {
-        this.numTestedIn = numTestedIn;
-    }
-
-    public void setPosSupp( Integer posSupp ) {
-        this.posSupp = posSupp;
-    }
-
-    public void setQueryGene( GeneValueObject queryGene ) {
-        this.queryGene = queryGene;
-    }
-
-    public void setQueryGeneNodeDegree( Integer queryGeneNodeDegree ) {
-        this.queryGeneNodeDegree = queryGeneNodeDegree;
-    }
-
-    public void setQueryGeneNodeDegreeRank( Double queryGeneNodeDegreeRank ) {
-        this.queryGeneNodeDegreeRank = queryGeneNodeDegreeRank;
-    }
-
     public void setSortKey() {
         this.sortKey = String.format( "%.3f_%s", 1.0 / this.getSupport(), getFoundGene().getOfficialSymbol() );
     }
 
-    public void setSortKey( String sortKey ) {
-        this.sortKey = sortKey;
-    }
-
-    public void setSupportingExperiments( Collection<Long> supportingExperiments ) {
-        this.supportingExperiments = supportingExperiments;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
@@ -242,15 +224,16 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
             buf.append( getSupportRow( getPosSupp(), "+" ) );
         }
         if ( getNegSupp() > 0 ) {
-            if ( buf.length() > 0 ) buf.append( "\n" );
+            if ( buf.length() > 0 )
+                buf.append( "\n" );
             buf.append( getSupportRow( getNegSupp(), "-" ) );
         }
         return buf.toString();
     }
 
     private String getSupportRow( Integer links, String sign ) {
-        String[] fields = new String[] { queryGene.getOfficialSymbol(), foundGene.getOfficialSymbol(),
-                links.toString(), sign };
+        String[] fields = new String[] { queryGene.getOfficialSymbol(), foundGene.getOfficialSymbol(), links.toString(),
+                sign };
         return StringUtils.join( fields, "\t" );
     }
 

@@ -22,21 +22,15 @@ import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValue
 
 /**
  * @author luke
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possibly used in front end
 public class CoexpressionSummaryValueObject {
 
-    // node degree info for this gene, genomewide.
+    // node degree info for this gene, genome wide.
     private GeneCoexpressionNodeDegreeValueObject coexpNodeDegree = null;
     private int datasetsAvailable;
     private int datasetsTested;
     private long geneId;
-
-    // useless
-    // private int linksMetNegativeStringency;
-
-    // useless
-    // private int linksMetPositiveStringency;
 
     private int linksFound;
 
@@ -45,18 +39,36 @@ public class CoexpressionSummaryValueObject {
     }
 
     /**
-     * @returnnode degree info for this gene, genomewide.
+     * @return node degree info for this gene, genome wide.
      */
     public GeneCoexpressionNodeDegreeValueObject getCoexpNodeDegree() {
         return coexpNodeDegree;
+    }
+
+    /**
+     * @param coexpNodeDegree node degree info for this gene, genome wide.
+     */
+    public void setCoexpNodeDegree( GeneCoexpressionNodeDegreeValueObject coexpNodeDegree ) {
+        /*
+         * FIXME this value object is a bit complex for use in the client...
+         */
+        this.coexpNodeDegree = coexpNodeDegree;
     }
 
     public int getDatasetsAvailable() {
         return datasetsAvailable;
     }
 
+    public void setDatasetsAvailable( int datasetsAvailable ) {
+        this.datasetsAvailable = datasetsAvailable;
+    }
+
     public int getDatasetsTested() {
         return datasetsTested;
+    }
+
+    public void setDatasetsTested( int datasetsTested ) {
+        this.datasetsTested = datasetsTested;
     }
 
     public long getGeneId() {
@@ -66,40 +78,6 @@ public class CoexpressionSummaryValueObject {
     public int getLinksFound() {
         return linksFound;
     }
-
-    // public int getLinksMetNegativeStringency() {
-    // return linksMetNegativeStringency;
-    // }
-    //
-    // public int getLinksMetPositiveStringency() {
-    // return linksMetPositiveStringency;
-    // }
-
-    /**
-     * @param coexpNodeDegree node degree info for this gene, genomewide.
-     */
-    public void setCoexpNodeDegree( GeneCoexpressionNodeDegreeValueObject coexpNodeDegree ) {
-        /*
-         * FIXME this value object is a bit complex for use in the client...
-         */
-        this.coexpNodeDegree = coexpNodeDegree;
-    }
-
-    public void setDatasetsAvailable( int datasetsAvailable ) {
-        this.datasetsAvailable = datasetsAvailable;
-    }
-
-    public void setDatasetsTested( int datasetsTested ) {
-        this.datasetsTested = datasetsTested;
-    }
-
-    // public void setLinksMetNegativeStringency( int linksMetNegativeStringency ) {
-    // this.linksMetNegativeStringency = linksMetNegativeStringency;
-    // }
-    //
-    // public void setLinksMetPositiveStringency( int linksMetPositiveStringency ) {
-    // this.linksMetPositiveStringency = linksMetPositiveStringency;
-    // }
 
     public void setLinksFound( int linksFound ) {
         this.linksFound = linksFound;

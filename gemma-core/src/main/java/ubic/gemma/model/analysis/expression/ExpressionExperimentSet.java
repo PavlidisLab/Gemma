@@ -63,17 +63,10 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
         this.taxon = taxon;
     }
 
-    /**
-     * Constructs new instances of {@link ExpressionExperimentSet}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ExpressionExperimentSet}.
-         */
         public static ExpressionExperimentSet newInstance() {
             return new ExpressionExperimentSet();
         }
-
     }
 
 }

@@ -18,44 +18,32 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
+import cern.colt.list.ObjectArrayList;
 import org.apache.commons.lang3.time.StopWatch;
-
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix;
 import ubic.basecode.math.Constants;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import cern.colt.list.ObjectArrayList;
+import ubic.gemma.model.common.quantitationtype.*;
 
 /**
  * A correlation analysis for a given data set, designed for selection of values based on criteria set by the user.
- * <p>
  * On the first pass over the data, a histogram is filled in to hold the distribution of the values found. You can set
  * criteria to have the correlations actually stored in a (sparse) matrix. This can take a lot of memory if you store
  * everything!
- * <p>
  * The correlation is only calculated if it isn't stored in the matrix, and values can be tested against a threshold.
- * <p>
  * This class is used in reality by one pass over the data to fill in the histogram. This is used to help select a
  * threshold. A second pass over the data is used to select correlations that meet the criteria.
- * <p>
  * Probes that do not map to genes are not used.
- * 
+ *
  * @author Paul Pavlidis
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
-    protected double[] rowMeans = null;
-    protected double[] rowSumSquaresSqrt = null;
+    double[] rowMeans = null;
+    double[] rowSumSquaresSqrt = null;
 
-    /**
-     * @param
-     */
     public PearsonMetrics( ExpressionDataDoubleMatrix dataMatrix ) {
         this( dataMatrix.rows() );
         this.dataMatrix = dataMatrix;
@@ -64,15 +52,15 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
     /**
      * @param dataMatrix DenseDoubleMatrix2DNamed
-     * @param tmts Values of the correlation that are deemed too small to store in the matrix. Setting this as high as
-     *        possible can greatly reduce memory requirements, but can slow things down.
+     * @param tmts       Values of the correlation that are deemed too small to store in the matrix. Setting this as high as
+     *                   possible can greatly reduce memory requirements, but can slow things down.
      */
     public PearsonMetrics( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
         this( dataMatrix );
         this.setStorageThresholdValue( tmts );
     }
 
-    protected PearsonMetrics() {
+    PearsonMetrics() {
     }
 
     /**
@@ -80,8 +68,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
      */
     private PearsonMetrics( int size ) {
         if ( size > 0 ) {
-            results = new CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement>(
-                    size, size );
+            results = new CompressedSparseDoubleMatrix<>( size, size );
         }
         keepers = new ObjectArrayList();
     }
@@ -103,9 +90,10 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
         int numcols = this.dataMatrix.columns();
 
         if ( numcols < this.minNumUsed ) {
-            throw new IllegalArgumentException( "Sorry, correlations will not be computed unless there are at least "
-                    + this.minNumUsed + " mutually present data points per vector pair, current data has only "
-                    + numcols + " columns." );
+            throw new IllegalArgumentException(
+                    "Sorry, correlations will not be computed unless there are at least " + this.minNumUsed
+                            + " mutually present data points per vector pair, current data has only " + numcols
+                            + " columns." );
         }
 
         boolean docalcs = this.needToCalculateMetrics();
@@ -127,7 +115,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
         }
 
         /* for each vector, compare it to all other vectors */
-        ExpressionDataMatrixRowElement itemA = null;
+        ExpressionDataMatrixRowElement itemA;
         StopWatch timer = new StopWatch();
         timer.start();
         double[] vectorA = new double[] {};
@@ -148,7 +136,8 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
             for ( int j = i + 1; j < numrows; j++ ) { // second vector
                 ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
-                if ( !this.hasGene( itemB ) ) continue;
+                if ( !this.hasGene( itemB ) )
+                    continue;
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
                 if ( !docalcs || results.get( i, j ) != 0.0 ) {
@@ -201,24 +190,12 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
                 ++numComputed;
 
             }
-            if ( ( i + 1 ) % 2000 == 0 ) {
-                double t = timer.getTime() / 1000.0;
-                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
-                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" )
-                        + String.format( ", time elapsed since last check: %.2f", t ) + "s" );
-                timer.reset();
-                timer.start();
-            }
+            computeRow( timer, itemA, numComputed, i );
         }
         log.info( skipped + " rows skipped, where probe lacks a gene annotation" );
         finishMetrics();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
-     */
     @Override
     public QuantitationType getMetricType() {
         QuantitationType m = QuantitationType.Factory.newInstance();
@@ -237,31 +214,22 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
     }
 
-    /**
-     * @return double
-     * @param n int
-     * @param sxx double
-     * @param sx double
-     * @param syy double
-     * @param sy double
-     */
-    protected double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
+    double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
         return ( sxx - sx * sx / n ) * ( syy - sy * sy / n );
     }
 
     /**
      * Compute a correlation. For Spearman, the values entered must be the ranks.
-     * 
-     * @param ival
-     * @param jval
+     *
      * @param ssi root sum squared deviation
      * @param ssj root sum squared deviation
-     * @param mi row mean of the ranks
-     * @param mj row mean of the ranks
+     * @param mi  row mean of the ranks
+     * @param mj  row mean of the ranks
      * @return correlation, or NaN if the SSD values are too small, etc.
      */
-    protected double correlFast( double[] ival, double[] jval, double ssi, double ssj, double mi, double mj ) {
-        if ( ssi < Constants.SMALL || ssj < Constants.SMALL ) return Double.NaN;
+    double correlFast( double[] ival, double[] jval, double ssi, double ssj, double mi, double mj ) {
+        if ( ssi < Constants.SMALL || ssj < Constants.SMALL )
+            return Double.NaN;
         double sxy = 0.0;
         for ( int k = 0, n = ival.length; k < n; k++ ) {
 
@@ -282,13 +250,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
         return c;
     }
 
-    /**
-     * @param ival double[]
-     * @param jval double[]
-     * @param i int
-     * @param j int
-     * @return double
-     */
+    @Override
     protected double correlFast( double[] ival, double[] jval, int i, int j ) {
         double ssi = rowSumSquaresSqrt[i];
         double ssj = rowSumSquaresSqrt[j];
@@ -325,9 +287,6 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
     /**
      * Calculate a linear correlation matrix for a matrix. Use this if you know there are no missing values, or don't
      * care about NaNs. Rows that are not mapped to genes are skipped.
-     * 
-     * @param duplicates The map containing information about what items are the 'same' as other items; such are
-     *        skipped.
      */
     private void calculateMetricsFast() {
         int numrows = this.dataMatrix.rows();
@@ -353,47 +312,11 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
          */
         StopWatch timer = new StopWatch();
         timer.start();
-        ExpressionDataMatrixRowElement itemA = null;
-        ExpressionDataMatrixRowElement itemB = null;
-        double[] vectorA = null;
         int skipped = 0;
         int numComputed = 0;
-        for ( int i = 0; i < numrows; i++ ) {
-            itemA = this.dataMatrix.getRowElement( i );
-            if ( !this.hasGene( itemA ) ) {
-                skipped++;
-                continue;
-            }
-            if ( docalcs ) {
-                vectorA = data[i];
-            }
-
-            for ( int j = i + 1; j < numrows; j++ ) {
-                itemB = this.dataMatrix.getRowElement( j );
-                if ( !this.hasGene( itemB ) ) continue;
-                if ( !docalcs || results.get( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
-                    // if we
-                    // already have it. Just do the requisite checks.
-                    keepCorrel( i, j, results.get( i, j ), numcols );
-                    continue;
-                }
-
-                double[] vectorB = data[j];
-                setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
-                ++numComputed;
-            }
-            if ( ( i + 1 ) % 2000 == 0 ) {
-                double t = timer.getTime() / 1000.0;
-                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
-                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" )
-                        + String.format( ", time elapsed since last check: %.2f", t ) + "s" );
-                timer.reset();
-                timer.start();
-            }
-        }
+        skipped = computeMetrics( numrows, numcols, docalcs, timer, skipped, numComputed, data );
         log.info( skipped + " rows skipped, due to no gene association" );
         finishMetrics();
-
     }
 
 }

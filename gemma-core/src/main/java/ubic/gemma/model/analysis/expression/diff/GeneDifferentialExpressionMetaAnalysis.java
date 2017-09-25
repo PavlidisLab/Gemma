@@ -73,11 +73,9 @@ public class GeneDifferentialExpressionMetaAnalysis extends ubic.gemma.model.ana
     }
 
     public static final class Factory {
-
         public static GeneDifferentialExpressionMetaAnalysis newInstance() {
             return new GeneDifferentialExpressionMetaAnalysis();
         }
-
     }
 
 }

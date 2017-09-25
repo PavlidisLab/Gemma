@@ -35,6 +35,7 @@ import java.util.List;
 /**
  * @author keshav
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class ExpressionDataWriterUtils {
 
     public static final String DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS = "___";

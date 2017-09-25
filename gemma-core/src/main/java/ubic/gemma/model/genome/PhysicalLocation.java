@@ -37,6 +37,33 @@ public abstract class PhysicalLocation extends ChromosomeLocation {
     public PhysicalLocation() {
     }
 
+    public static int computeOverlap( long starta, long enda, long startb, long endb ) {
+        if ( starta > enda )
+            throw new IllegalArgumentException( "Start " + starta + " must be before end " + enda );
+        if ( startb > endb )
+            throw new IllegalArgumentException( "Start " + startb + " must be before end " + endb );
+
+        long overlap;
+        if ( endb < starta || enda < startb ) {
+            overlap = 0;
+        } else if ( starta <= startb ) {
+            if ( enda < endb ) {
+                overlap = enda - startb; // overhang on the left
+            } else {
+                overlap = endb - startb; // includes entire target
+            }
+        } else if ( enda < endb ) { // entirely contained within target.
+            overlap = enda - starta; // length of our test sequence.
+        } else {
+            overlap = endb - starta; // overhang on the right
+        }
+
+        assert overlap >= 0 : "Negative overlap";
+        assert ( double ) overlap / ( double ) ( enda - starta ) <= 1.0 : "Overlap longer than sequence";
+        // if ( log.isTraceEnabled() ) log.trace( "Overlap=" + overlap );
+        return ( int ) overlap;
+    }
+
     public abstract int computeOverlap( PhysicalLocation other );
 
     /**
@@ -76,35 +103,28 @@ public abstract class PhysicalLocation extends ChromosomeLocation {
         this.strand = strand;
     }
 
-    /**
-     * Constructs new instances of {@link PhysicalLocation}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link PhysicalLocation}.
-         */
+
         public static PhysicalLocation newInstance() {
             return new PhysicalLocationImpl();
         }
 
         /**
-         * Constructs a new instance of {@link PhysicalLocation}, taking all required and/or
+         * @return Constructs a new instance of {@link PhysicalLocation}, taking all required and/or
          * read-only properties as arguments.
          */
-        public static PhysicalLocation newInstance(
-                Chromosome chromosome ) {
+        public static PhysicalLocation newInstance( Chromosome chromosome ) {
             final PhysicalLocation entity = new PhysicalLocationImpl();
             entity.setChromosome( chromosome );
             return entity;
         }
 
         /**
-         * Constructs a new instance of {@link PhysicalLocation}, taking all possible properties
+         * @return Constructs a new instance of {@link PhysicalLocation}, taking all possible properties
          * (except the identifier(s))as arguments.
          */
-        public static PhysicalLocation newInstance(
-                Chromosome chromosome, Long nucleotide, Integer nucleotideLength, String strand,
-                Integer bin ) {
+        public static PhysicalLocation newInstance( Chromosome chromosome, Long nucleotide, Integer nucleotideLength,
+                String strand, Integer bin ) {
             final PhysicalLocation entity = new PhysicalLocationImpl();
             entity.setChromosome( chromosome );
             entity.setNucleotide( nucleotide );

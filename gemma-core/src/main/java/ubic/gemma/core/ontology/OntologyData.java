@@ -25,6 +25,7 @@ import java.io.Serializable;
  * @author klc Used as a Datapack for sending ajax data back via the dwr remote call
  */
 
+@SuppressWarnings("WeakerAccess") // Possibly used in JS
 public class OntologyData implements Serializable {
 
     private static final String NA = "NA";

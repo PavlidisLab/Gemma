@@ -22,44 +22,32 @@ import java.io.Serializable;
 
 /**
  * Holds settings for filtering.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Constants should have same access level
 public class FilterConfig implements Serializable {
 
     public static final double DEFAULT_DISTINCTVALUE_FRACTION = 0.5;
-
     public static final double DEFAULT_HIGHEXPRESSION_CUT = 0.0;
-
     // changed from 0.3, because now we remove the "no-gene" probes by default.
     public static final double DEFAULT_LOWEXPRESSIONCUT = 0.2;
-
     public static final double DEFAULT_LOWVARIANCECUT = 0.05;
-
     public static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
-
     public static final double DEFAULT_TOOSMALLTOKEEP = 0.5;
-
     /**
      * Fewer rows than this, and we bail.
      */
     public static final int MINIMUM_ROWS_TO_BOTHER = 50;
-
     /**
      * How many samples a dataset has to have before we consider analyzing it.
-     * 
-     * @see ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT for a related setting.
+     *
+     * @see ExpressionExperimentFilter#MIN_NUMBER_OF_SAMPLES_PRESENT for a related setting.
      */
     public final static int MINIMUM_SAMPLE = 20;
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
-
     private int afterDistinctValueCut = 0;
-
     private int afterInitialFilter = 0;
     private int afterLowExpressionCut = 0;
     private int afterLowVarianceCut = 0;
@@ -86,6 +74,8 @@ public class FilterConfig implements Serializable {
     private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
     private boolean minPresentFractionIsSet = true;
     private boolean requireSequences = true;
+    private int startingRows = 0;
+    private boolean lowDistinctValueIsSet = false;
 
     public boolean isRequireSequences() {
         return requireSequences;
@@ -93,16 +83,10 @@ public class FilterConfig implements Serializable {
 
     /**
      * Set to true if rows lacking associated BioSequences for the element should be removed.
-     * 
-     * @param requireSequences
      */
     public void setRequireSequences( boolean requireSequences ) {
         this.requireSequences = requireSequences;
     }
-
-    private int startingRows = 0;
-
-    private boolean lowDistinctValueIsSet = false;;
 
     public boolean isLowDistinctValueIsSet() {
         return lowDistinctValueIsSet;
@@ -110,6 +94,10 @@ public class FilterConfig implements Serializable {
 
     public int getAfterDistinctValueCut() {
         return afterDistinctValueCut;
+    }
+
+    public void setAfterDistinctValueCut( int afterDistinctValueCut ) {
+        this.afterDistinctValueCut = afterDistinctValueCut;
     }
 
     /**
@@ -120,10 +108,24 @@ public class FilterConfig implements Serializable {
     }
 
     /**
+     * @param afterInitialFilter the afterInitialFilter to set
+     */
+    public void setAfterInitialFilter( int afterInitialFilter ) {
+        this.afterInitialFilter = afterInitialFilter;
+    }
+
+    /**
      * @return the afterLowExpressionCut
      */
     public int getAfterLowExpressionCut() {
         return afterLowExpressionCut;
+    }
+
+    /**
+     * @param afterLowExpressionCut the afterLowExpressionCut to set
+     */
+    public void setAfterLowExpressionCut( int afterLowExpressionCut ) {
+        this.afterLowExpressionCut = afterLowExpressionCut;
     }
 
     /**
@@ -134,34 +136,76 @@ public class FilterConfig implements Serializable {
     }
 
     /**
+     * @param afterLowVarianceCut the afterLowVarianceCut to set
+     */
+    public void setAfterLowVarianceCut( int afterLowVarianceCut ) {
+        this.afterLowVarianceCut = afterLowVarianceCut;
+    }
+
+    /**
      * @return the afterMinPresentFilter
      */
     public int getAfterMinPresentFilter() {
         return afterMinPresentFilter;
     }
 
+    /**
+     * @param afterMinPresentFilter the afterMinPresentFilter to set
+     */
+    public void setAfterMinPresentFilter( int afterMinPresentFilter ) {
+        this.afterMinPresentFilter = afterMinPresentFilter;
+    }
+
     public int getAfterZeroVarianceCut() {
         return afterZeroVarianceCut;
+    }
+
+    public void setAfterZeroVarianceCut( int afterZeroVarianceCut ) {
+        this.afterZeroVarianceCut = afterZeroVarianceCut;
     }
 
     public double getHighExpressionCut() {
         return highExpressionCut;
     }
 
+    public void setHighExpressionCut( double highExpressionCut ) {
+        this.highExpressionCut = highExpressionCut;
+    }
+
     public double getLowDistinctValueCut() {
         return lowDistinctValueCut;
+    }
+
+    public void setLowDistinctValueCut( double lowDistinctValueCut ) {
+        this.lowDistinctValueCut = lowDistinctValueCut;
+        this.lowDistinctValueIsSet = true;
     }
 
     public double getLowExpressionCut() {
         return lowExpressionCut;
     }
 
+    public void setLowExpressionCut( double lowExpressionCut ) {
+        this.lowExpressionCutIsSet = true;
+        this.lowExpressionCut = lowExpressionCut;
+    }
+
     public double getLowVarianceCut() {
         return lowVarianceCut;
     }
 
+    public void setLowVarianceCut( double lowVarianceCut ) {
+        this.lowVarianceCutIsSet = true;
+        this.lowVarianceCut = lowVarianceCut;
+    }
+
     public double getMinPresentFraction() {
         return minPresentFraction;
+    }
+
+    public void setMinPresentFraction( double minPresentFraction ) {
+        this.minPresentFractionIsSet = true;
+        this.minPresentFraction = minPresentFraction;
     }
 
     /**
@@ -172,14 +216,32 @@ public class FilterConfig implements Serializable {
     }
 
     /**
+     * @param startingRows the startingRows to set
+     */
+    public void setStartingRows( int startingRows ) {
+        this.startingRows = startingRows;
+    }
+
+    /**
      * @return the ignoreMinimumRowThreshold
      */
     public boolean isIgnoreMinimumRowsThreshold() {
         return ignoreMinimumRowsThreshold;
     }
 
+    /**
+     * @param ignoreMinimumRowsThreshold the ignoreMinimumRowThreshold to set
+     */
+    public void setIgnoreMinimumRowsThreshold( boolean ignoreMinimumRowsThreshold ) {
+        this.ignoreMinimumRowsThreshold = ignoreMinimumRowsThreshold;
+    }
+
     public boolean isIgnoreMinimumSampleThreshold() {
         return ignoreMinimumSampleThreshold;
+    }
+
+    public void setIgnoreMinimumSampleThreshold( boolean ignoreMinimumSampleThreshold ) {
+        this.ignoreMinimumSampleThreshold = ignoreMinimumSampleThreshold;
     }
 
     /**
@@ -187,6 +249,13 @@ public class FilterConfig implements Serializable {
      */
     public boolean isLogTransform() {
         return logTransform;
+    }
+
+    /**
+     * @param logTransform the logTransform to set
+     */
+    public void setLogTransform( boolean logTransform ) {
+        this.logTransform = logTransform;
     }
 
     public boolean isLowExpressionCutIsSet() {
@@ -201,107 +270,16 @@ public class FilterConfig implements Serializable {
         return minPresentFractionIsSet;
     }
 
-    public void setAfterDistinctValueCut( int afterDistinctValueCut ) {
-        this.afterDistinctValueCut = afterDistinctValueCut;
-    }
-
-    /**
-     * @param afterInitialFilter the afterInitialFilter to set
-     */
-    public void setAfterInitialFilter( int afterInitialFilter ) {
-        this.afterInitialFilter = afterInitialFilter;
-    }
-
-    /**
-     * @param afterLowExpressionCut the afterLowExpressionCut to set
-     */
-    public void setAfterLowExpressionCut( int afterLowExpressionCut ) {
-        this.afterLowExpressionCut = afterLowExpressionCut;
-    }
-
-    /**
-     * @param afterLowVarianceCut the afterLowVarianceCut to set
-     */
-    public void setAfterLowVarianceCut( int afterLowVarianceCut ) {
-        this.afterLowVarianceCut = afterLowVarianceCut;
-    }
-
-    /**
-     * @param afterMinPresentFilter the afterMinPresentFilter to set
-     */
-    public void setAfterMinPresentFilter( int afterMinPresentFilter ) {
-        this.afterMinPresentFilter = afterMinPresentFilter;
-    }
-
-    public void setAfterZeroVarianceCut( int afterZeroVarianceCut ) {
-        this.afterZeroVarianceCut = afterZeroVarianceCut;
-    }
-
-    public void setHighExpressionCut( double highExpressionCut ) {
-        this.highExpressionCut = highExpressionCut;
-    }
-
-    /**
-     * @param ignoreMinimumRowThreshold the ignoreMinimumRowThreshold to set
-     */
-    public void setIgnoreMinimumRowsThreshold( boolean ignoreMinimumRowsThreshold ) {
-        this.ignoreMinimumRowsThreshold = ignoreMinimumRowsThreshold;
-    }
-
-    public void setIgnoreMinimumSampleThreshold( boolean ignoreMinimumSampleThreshold ) {
-        this.ignoreMinimumSampleThreshold = ignoreMinimumSampleThreshold;
-    }
-
-    /**
-     * @param logTransform the logTransform to set
-     */
-    public void setLogTransform( boolean logTransform ) {
-        this.logTransform = logTransform;
-    }
-
-    public void setLowDistinctValueCut( double lowDistinctValueCut ) {
-        this.lowDistinctValueCut = lowDistinctValueCut;
-        this.lowDistinctValueIsSet = true;
-    }
-
-    public void setLowExpressionCut( double lowExpressionCut ) {
-        this.lowExpressionCutIsSet = true;
-        this.lowExpressionCut = lowExpressionCut;
-    }
-
-    public void setLowVarianceCut( double lowVarianceCut ) {
-        this.lowVarianceCutIsSet = true;
-        this.lowVarianceCut = lowVarianceCut;
-    }
-
-    public void setMinPresentFraction( double minPresentFraction ) {
-        this.minPresentFractionIsSet = true;
-        this.minPresentFraction = minPresentFraction;
-    }
-
-    /**
-     * @param startingRows the startingRows to set
-     */
-    public void setStartingRows( int startingRows ) {
-        this.startingRows = startingRows;
-    }
-
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append( "# highExpressionCut:" + this.getHighExpressionCut() + "\n" );
-        buf.append( "# lowExpressionCut:" + this.getLowExpressionCut() + "\n" );
-        buf.append( "# minPresentFraction:" + this.getMinPresentFraction() + "\n" );
-        buf.append( "# lowVarianceCut:" + this.getLowVarianceCut() + "\n" );
-        buf.append( "# distinctValuecut:" + this.lowDistinctValueCut + "\n" );
-        buf.append( "# startingProbes:" + this.getStartingRows() + "\n" );
-        buf.append( "# afterInitialFilter:" + this.getAfterInitialFilter() + "\n" );
-        buf.append( "# afterMinPresentFilter:" + this.getAfterMinPresentFilter() + "\n" );
-        buf.append( "# afterLowVarianceCut:" + this.getAfterLowVarianceCut() + "\n" );
-        buf.append( "# afterLowExpressionCut:" + this.getAfterLowExpressionCut() + "\n" );
-        buf.append( "# logTransform:" + this.isLogTransform() + "\n" );
-        // buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
-        return buf.toString();
+        return ( "# highExpressionCut:" + this.getHighExpressionCut() + "\n" ) + "# lowExpressionCut:" + this
+                .getLowExpressionCut() + "\n" + "# minPresentFraction:" + this.getMinPresentFraction() + "\n"
+                + "# lowVarianceCut:" + this.getLowVarianceCut() + "\n" + "# distinctValuecut:"
+                + this.lowDistinctValueCut + "\n" + "# startingProbes:" + this.getStartingRows() + "\n"
+                + "# afterInitialFilter:" + this.getAfterInitialFilter() + "\n" + "# afterMinPresentFilter:" + this
+                .getAfterMinPresentFilter() + "\n" + "# afterLowVarianceCut:" + this.getAfterLowVarianceCut() + "\n"
+                + "# afterLowExpressionCut:" + this.getAfterLowExpressionCut() + "\n" + "# logTransform:" + this
+                .isLogTransform() + "\n";
     }
 
     public boolean isDistinctValueThresholdSet() {

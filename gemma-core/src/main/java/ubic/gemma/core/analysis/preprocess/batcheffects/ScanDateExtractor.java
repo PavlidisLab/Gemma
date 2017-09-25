@@ -20,23 +20,13 @@ import java.util.Date;
 
 /**
  * Generic interface for classes that extract scan dates from raw data files.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public interface ScanDateExtractor {
 
-    /**
-     * @param is
-     * @return
-     * @throws IOException
-     */
-    public Date extract( InputStream is ) throws IOException;
+    Date extract( InputStream is ) throws IOException;
 
-    /**
-     * @param fileName
-     * @return
-     */
-    public Date extract( String fileName ) throws IOException;
+    Date extract( String fileName ) throws IOException;
 
 }

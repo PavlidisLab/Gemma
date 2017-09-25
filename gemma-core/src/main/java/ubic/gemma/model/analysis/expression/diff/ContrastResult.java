@@ -28,7 +28,7 @@ public abstract class ContrastResult implements java.io.Serializable {
 
     private static final long serialVersionUID = 7800859456071333232L;
     private Double pvalue;
-    private Double tstat;
+    private Double tStat;
     private Double coefficient;
     private Double logFoldChange;
     private Long id;
@@ -36,7 +36,7 @@ public abstract class ContrastResult implements java.io.Serializable {
     private FactorValue secondFactorValue;
 
     /**
-     * Returns <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
+     * @return <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
      * the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
     @Override
@@ -55,7 +55,7 @@ public abstract class ContrastResult implements java.io.Serializable {
     }
 
     /**
-     * The estimated value from the fit
+     * @return The estimated value from the fit
      */
     public Double getCoefficient() {
         return this.coefficient;
@@ -66,7 +66,7 @@ public abstract class ContrastResult implements java.io.Serializable {
     }
 
     /**
-     * The factorValue for the group of samples that is being compared to baseline. The baseline itself is a property of
+     * @return The factorValue for the group of samples that is being compared to baseline. The baseline itself is a property of
      * the ResultSet. For factors that have continuous values, this will be null.
      */
     public FactorValue getFactorValue() {
@@ -86,7 +86,7 @@ public abstract class ContrastResult implements java.io.Serializable {
     }
 
     /**
-     * The fold change relative to the baseline, based on the fitted values. log2-transformed. This will be the same as
+     * @return The fold change relative to the baseline, based on the fitted values. log2-transformed. This will be the same as
      * the coefficient if the data were log transformed when analyzed. This might be null if it wasn't computed.
      */
     public Double getLogFoldChange() {
@@ -114,18 +114,18 @@ public abstract class ContrastResult implements java.io.Serializable {
     }
 
     /**
-     * Serves as the effect size as well as an indicator of the direction of change relative to the baseline
+     * @return Serves as the effect size as well as an indicator of the direction of change relative to the baseline
      */
     public Double getTstat() {
-        return this.tstat;
+        return this.tStat;
     }
 
     public void setTstat( Double tstat ) {
-        this.tstat = tstat;
+        this.tStat = tstat;
     }
 
     /**
-     * Returns a hash code based on this entity's identifiers.
+     * @return a hash code based on this entity's identifiers.
      */
     @Override
     public int hashCode() {
@@ -135,13 +135,7 @@ public abstract class ContrastResult implements java.io.Serializable {
         return hashCode;
     }
 
-    /**
-     * Constructs new instances of {@link ContrastResult}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ContrastResult}.
-         */
         public static ContrastResult newInstance() {
             return new ContrastResultImpl();
         }

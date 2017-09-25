@@ -61,12 +61,10 @@ public abstract class SequenceSimilaritySearchResult implements Identifiable, Se
             return false;
         }
         final SequenceSimilaritySearchResult that = ( SequenceSimilaritySearchResult ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
