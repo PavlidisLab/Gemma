@@ -966,11 +966,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public File getAnnotationFile( String shortName ){
-        String fileName = shortName.replaceAll( Pattern.quote( "/" ), "_" )
-                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-        return new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+    public File getAnnotationFile( String shortName ) {
+        try {
+            String fileName = shortName.replaceAll( Pattern.quote( "/" ), "_" )
+                    + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
+                    + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
+            return new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
