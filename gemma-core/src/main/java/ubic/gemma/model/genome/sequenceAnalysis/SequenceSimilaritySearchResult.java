@@ -132,9 +132,6 @@ public abstract class SequenceSimilaritySearchResult implements Identifiable, Se
         return hashCode;
     }
 
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult#toString()
-     */
     @Override
     public String toString() {
         return this.getId().toString();
