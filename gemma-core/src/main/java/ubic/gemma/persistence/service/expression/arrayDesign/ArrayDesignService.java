@@ -31,11 +31,15 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    File getAnnotationFile( String shortName );
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );

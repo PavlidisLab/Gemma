@@ -27,6 +27,7 @@ import org.hibernate.collection.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -44,7 +45,9 @@ import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.io.File;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * @author pavlidis
@@ -962,6 +965,19 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .setFirstResult( offset ).setMaxResults( limit ).list();
     }
 
+    @Override
+    public File getAnnotationFile( String shortName ) {
+        try {
+            String fileName = shortName.replaceAll( Pattern.quote( "/" ), "_" )
+                    + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
+                    + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
+            return new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     /**
      * Creates and orderBy parameter.
      *
@@ -1127,6 +1143,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 } else {
                     v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );
                 }
+
+                v.setHasAnnotationFile( getAnnotationFile( v.getShortName() ).exists() );
 
                 //This was causing null results when being retrieved through the original query
                 this.addCurationEvents( v );

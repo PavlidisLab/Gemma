@@ -50,6 +50,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private Boolean isMergee;
     private Boolean isSubsumed;
     private Boolean isSubsumer;
+    private Boolean hasAnnotationFile;
     private java.util.Date lastGeneMapping;
     private java.util.Date lastRepeatMask;
     private java.util.Date lastSequenceAnalysis;
@@ -423,4 +424,11 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return this.getShortName();
     }
 
+    public Boolean getHasAnnotationFile() {
+        return hasAnnotationFile;
+    }
+
+    public void setHasAnnotationFile( Boolean hasAnnotationFile ) {
+        this.hasAnnotationFile = hasAnnotationFile;
+    }
 }

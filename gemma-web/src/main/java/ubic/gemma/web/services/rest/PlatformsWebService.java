@@ -230,10 +230,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
      * @return a Response object containing the annotation file.
      */
     private Response outputAnnotationFile( ArrayDesign arrayDesign ) {
-        String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
-                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-        File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+        File file = arrayDesignService.getAnnotationFile(arrayDesign.getShortName());
         if ( !file.exists() ) {
             WellComposedErrorBody errorBody = new WellComposedErrorBody( Status.NOT_FOUND,
                     String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
