@@ -21,9 +21,8 @@ import java.io.Serializable;
  * DifferentialExpressionAnalysisResults for one gene in one ResultSet (combined for multiple probes), but represents
  * only the "selected" analysisResult. It can represent a 'dummy' (missing value) if the resultSetId and the geneId are
  * populated.
- * 
+ *
  * @author anton, paul
- * @version $Id$
  */
 public class DiffExprGeneSearchResult implements Serializable {
 
@@ -45,19 +44,24 @@ public class DiffExprGeneSearchResult implements Serializable {
 
     @Override
     public String toString() {
-        return "DiffExprGeneSearchResult ["
-                + ( analysisResultId != null ? "analysisResultId=" + analysisResultId + ", " : "" )
-                + ( geneId != null ? "geneId=" + geneId + ", " : "" ) + ( pvalue != null ? "pvalue=" + pvalue : "" )
-                + "]";
+        return "DiffExprGeneSearchResult [" + ( analysisResultId != null ?
+                "analysisResultId=" + analysisResultId + ", " :
+                "" ) + ( geneId != null ? "geneId=" + geneId + ", " : "" ) + ( pvalue != null ?
+                "pvalue=" + pvalue :
+                "" ) + "]";
     }
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         DiffExprGeneSearchResult other = ( DiffExprGeneSearchResult ) obj;
-        if ( analysisResultId == null || other.analysisResultId == null ) return false;
+        if ( analysisResultId == null || other.analysisResultId == null )
+            return false;
         return analysisResultId.equals( other.analysisResultId );
     }
 
@@ -65,16 +69,35 @@ public class DiffExprGeneSearchResult implements Serializable {
         return correctedPvalue;
     }
 
+    /**
+     * @param correctedPvalue the corrected pvalue (i.e., a q-value)
+     */
+    public void setCorrectedPvalue( Double correctedPvalue ) {
+        this.correctedPvalue = correctedPvalue;
+    }
+
     public long getGeneId() {
         return geneId;
+    }
+
+    public void setGeneId( Long geneId ) {
+        this.geneId = geneId;
     }
 
     public int getNumberOfProbes() {
         return numberOfProbes;
     }
 
+    public void setNumberOfProbes( int numberOfProbes ) {
+        this.numberOfProbes = numberOfProbes;
+    }
+
     public int getNumberOfProbesDiffExpressed() {
         return numberOfProbesDiffExpressed;
+    }
+
+    public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
+        this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
     }
 
     public Double getPvalue() {
@@ -82,19 +105,43 @@ public class DiffExprGeneSearchResult implements Serializable {
     }
 
     /**
+     * @param pvalue the <em>uncorrected</em> pvalue.
+     */
+    public void setPvalue( Double pvalue ) {
+        this.pvalue = pvalue;
+    }
+
+    /**
      * @return the id of the underlying DifferentialExpressionAnalysisResult. This will be null if there is no result
-     *         for the resultSet and geneId.
+     * for the resultSet and geneId.
      */
     public Long getResultId() {
         return analysisResultId;
+    }
+
+    /**
+     * Not to be confused with resultSetId.
+     *
+     * @param resultId the ID of the specific result stored.
+     */
+    public void setResultId( long resultId ) {
+        this.analysisResultId = resultId;
     }
 
     public Long getResultSetId() {
         return resultSetId;
     }
 
+    public void setResultSetId( Long resultSetId ) {
+        this.resultSetId = resultSetId;
+    }
+
     public Double getScore() {
         return score;
+    }
+
+    public void setScore( Double score ) {
+        this.score = score;
     }
 
     @Override
@@ -104,52 +151,5 @@ public class DiffExprGeneSearchResult implements Serializable {
         result = prime * result + ( ( analysisResultId == null ) ? 0 : analysisResultId.hashCode() );
 
         return result;
-    }
-
-    /**
-     * Set the corrected pvalue (i.e., a q-value)
-     * 
-     * @param correctedPvalue
-     */
-    public void setCorrectedPvalue( Double correctedPvalue ) {
-        this.correctedPvalue = correctedPvalue;
-    }
-
-    public void setGeneId( Long geneId ) {
-        this.geneId = geneId;
-    }
-
-    public void setNumberOfProbes( int numberOfProbes ) {
-        this.numberOfProbes = numberOfProbes;
-    }
-
-    public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
-        this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
-    }
-
-    /**
-     * Set the <em>uncorrected</em> pvalue.
-     * 
-     * @param pvalue
-     */
-    public void setPvalue( Double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    /**
-     * Not to be confused with resultSetId. This is the ID of the specific result stored.
-     * 
-     * @param resultId
-     */
-    public void setResultId( long resultId ) {
-        this.analysisResultId = resultId;
-    }
-
-    public void setResultSetId( Long resultSetId ) {
-        this.resultSetId = resultSetId;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
     }
 }

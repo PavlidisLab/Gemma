@@ -19,12 +19,13 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.io.Serializable;
 
-/**
- * 
- */
 public abstract class SequenceSimilaritySearchResult implements Identifiable, Serializable {
 
     /**
@@ -33,26 +34,22 @@ public abstract class SequenceSimilaritySearchResult implements Identifiable, Se
     private static final long serialVersionUID = -7196820023599562042L;
 
     private Long id;
-
-    private ubic.gemma.model.genome.biosequence.BioSequence querySequence;
-    private ubic.gemma.model.genome.biosequence.BioSequence targetSequence;
-
-    private ubic.gemma.model.genome.Chromosome targetChromosome;
-
-    private ubic.gemma.model.common.description.ExternalDatabase searchedDatabase;
-
-    private ubic.gemma.model.genome.PhysicalLocation targetAlignedRegion;
+    private BioSequence querySequence;
+    private BioSequence targetSequence;
+    private Chromosome targetChromosome;
+    private ExternalDatabase searchedDatabase;
+    private PhysicalLocation targetAlignedRegion;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public SequenceSimilaritySearchResult() {
     }
 
     /**
-     * Returns <code>true</code> if the argument is an SequenceSimilaritySearchResult instance and all identifiers for
+     * @return <code>true</code> if the argument is an SequenceSimilaritySearchResult instance and all identifiers for
      * this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
     @Override
@@ -70,56 +67,62 @@ public abstract class SequenceSimilaritySearchResult implements Identifiable, Se
         return true;
     }
 
-    /**
-     * 
-     */
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence getQuerySequence() {
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public BioSequence getQuerySequence() {
         return this.querySequence;
     }
 
+    public void setQuerySequence( BioSequence querySequence ) {
+        this.querySequence = querySequence;
+    }
+
     /**
-     * <p>
-     * <p>
-     * The database used for the search. This will be null if the comparison was just between two sequences.
-     * </p>
-     * </p>
+     * @return The database used for the search. This will be null if the comparison was just between two sequences.
      */
-    public ubic.gemma.model.common.description.ExternalDatabase getSearchedDatabase() {
+    public ExternalDatabase getSearchedDatabase() {
         return this.searchedDatabase;
     }
 
+    public void setSearchedDatabase( ExternalDatabase searchedDatabase ) {
+        this.searchedDatabase = searchedDatabase;
+    }
+
     /**
-     * <p>
-     * The region of the target spanned by the alignment.
-     * </p>
+     * @return The region of the target spanned by the alignment.
      */
-    public ubic.gemma.model.genome.PhysicalLocation getTargetAlignedRegion() {
+    public PhysicalLocation getTargetAlignedRegion() {
         return this.targetAlignedRegion;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Chromosome getTargetChromosome() {
+    public void setTargetAlignedRegion( PhysicalLocation targetAlignedRegion ) {
+        this.targetAlignedRegion = targetAlignedRegion;
+    }
+
+    public Chromosome getTargetChromosome() {
         return this.targetChromosome;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence getTargetSequence() {
+    public void setTargetChromosome( Chromosome targetChromosome ) {
+        this.targetChromosome = targetChromosome;
+    }
+
+    public BioSequence getTargetSequence() {
         return this.targetSequence;
     }
 
+    public void setTargetSequence( BioSequence targetSequence ) {
+        this.targetSequence = targetSequence;
+    }
+
     /**
-     * Returns a hash code based on this entity's identifiers.
+     * @return a hash code based on this entity's identifiers.
      */
     @Override
     public int hashCode() {
@@ -127,30 +130,6 @@ public abstract class SequenceSimilaritySearchResult implements Identifiable, Se
         hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
 
         return hashCode;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setQuerySequence( ubic.gemma.model.genome.biosequence.BioSequence querySequence ) {
-        this.querySequence = querySequence;
-    }
-
-    public void setSearchedDatabase( ubic.gemma.model.common.description.ExternalDatabase searchedDatabase ) {
-        this.searchedDatabase = searchedDatabase;
-    }
-
-    public void setTargetAlignedRegion( ubic.gemma.model.genome.PhysicalLocation targetAlignedRegion ) {
-        this.targetAlignedRegion = targetAlignedRegion;
-    }
-
-    public void setTargetChromosome( ubic.gemma.model.genome.Chromosome targetChromosome ) {
-        this.targetChromosome = targetChromosome;
-    }
-
-    public void setTargetSequence( ubic.gemma.model.genome.biosequence.BioSequence targetSequence ) {
-        this.targetSequence = targetSequence;
     }
 
     /**

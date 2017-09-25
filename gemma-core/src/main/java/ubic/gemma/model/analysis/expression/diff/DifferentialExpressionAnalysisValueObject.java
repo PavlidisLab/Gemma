@@ -124,6 +124,8 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     /**
      * If this is a subset analysis
+     *
+     * @param id the source experiment id
      */
     public void setSourceExperiment( Long id ) {
         this.sourceExperiment = id;

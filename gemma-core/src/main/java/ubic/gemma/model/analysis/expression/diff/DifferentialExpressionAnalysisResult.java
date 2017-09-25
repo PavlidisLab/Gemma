@@ -50,8 +50,6 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public DifferentialExpressionAnalysisResult() {
     }
@@ -83,7 +81,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     }
 
     /**
-     * Contrasts for this result. Depending on configuration, this might only be stored if the Result itself is
+     * @return Contrasts for this result. Depending on configuration, this might only be stored if the Result itself is
      * significant at some given threshold (e.g., nominal p-value of 0.05) (but default is to store everything)
      */
     public Collection<ContrastResult> getContrasts() {
@@ -95,7 +93,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     }
 
     /**
-     * A false discovery estimate (qvalue)
+     * @return A false discovery estimate (qvalue)
      */
     public Double getCorrectedPvalue() {
         return this.correctedPvalue;
@@ -106,7 +104,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     }
 
     /**
-     * Gives an indexable parameter for the corrected qvalue, to speed searches.
+     * @return an indexable parameter for the corrected qvalue, to speed searches.
      */
     public Integer getCorrectedPValueBin() {
         return this.correctedPValueBin;
@@ -133,7 +131,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     }
 
     /**
-     * The p-value from the test for rejection of the null hypothesis of no effect
+     * @return The p-value from the test for rejection of the null hypothesis of no effect
      */
     public Double getPvalue() {
         return this.pvalue;
@@ -144,7 +142,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     }
 
     /**
-     * The fractional rank of this result, relative to the others in the ResultSet. Thus the best (lowest p-value) will
+     * @return The fractional rank of this result, relative to the others in the ResultSet. Thus the best (lowest p-value) will
      * have a fractional rank of 0.0, the worst wil lbe 1.0.
      */
     public Double getRank() {
@@ -163,13 +161,8 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
         this.resultSet = resultSet;
     }
 
-    /**
-     * Constructs new instances of {@link DifferentialExpressionAnalysisResult}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link DifferentialExpressionAnalysisResult}.
-         */
+
         public static DifferentialExpressionAnalysisResult newInstance() {
             return new DifferentialExpressionAnalysisResultImpl();
         }

@@ -18,47 +18,20 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.Gene;
 
-/**
- * 
- */
+import java.util.Collection;
+
 public abstract class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4971245573216792849L;
-
-    /**
-     * Constructs new instances of {@link GeneDifferentialExpressionMetaAnalysisResult}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link GeneDifferentialExpressionMetaAnalysisResult}.
-         */
-        public static GeneDifferentialExpressionMetaAnalysisResult newInstance() {
-            return new GeneDifferentialExpressionMetaAnalysisResultImpl();
-        }
-
-    }
-
     private Double metaPvalue;
-
     private Double metaQvalue;
-
     private Double meanLogFoldChange;
-
     private Double metaPvalueRank;
-
     private Boolean upperTail;
-
     private Long id;
-
     private Gene gene;
-
     private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new java.util.HashSet<>();
 
     /**
@@ -80,18 +53,20 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
         return true;
     }
 
-    /**
-     * 
-     */
     public Gene getGene() {
         return this.gene;
     }
 
-    /**
-     * 
-     */
+    public void setGene( Gene gene ) {
+        this.gene = gene;
+    }
+
     public Long getId() {
         return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     /**
@@ -102,44 +77,62 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
         return this.meanLogFoldChange;
     }
 
-    /**
-     * 
-     */
+    public void setMeanLogFoldChange( Double meanLogFoldChange ) {
+        this.meanLogFoldChange = meanLogFoldChange;
+    }
+
     public Double getMetaPvalue() {
         return this.metaPvalue;
     }
 
+    public void setMetaPvalue( Double metaPvalue ) {
+        this.metaPvalue = metaPvalue;
+    }
+
     /**
-     * The rank of the gene in the full set of results.
+     * @return The rank of the gene in the full set of results.
      */
     public Double getMetaPvalueRank() {
         return this.metaPvalueRank;
     }
 
-    /**
-     * 
-     */
+    public void setMetaPvalueRank( Double metaPvalueRank ) {
+        this.metaPvalueRank = metaPvalueRank;
+    }
+
     public Double getMetaQvalue() {
         return this.metaQvalue;
     }
 
+    public void setMetaQvalue( Double metaQvalue ) {
+        this.metaQvalue = metaQvalue;
+    }
+
     /**
-     * The underlying differential expression results that contributed to the meta-analysis result.
+     * @return The underlying differential expression results that contributed to the meta-analysis result.
      */
     public Collection<DifferentialExpressionAnalysisResult> getResultsUsed() {
         return this.resultsUsed;
     }
 
+    public void setResultsUsed( Collection<DifferentialExpressionAnalysisResult> resultsUsed ) {
+        this.resultsUsed = resultsUsed;
+    }
+
     /**
-     * If true, indicates the fold change "looked for" was positive (i.e., pvalue measured using the upper tail of the t
+     * @return If true, indicates the fold change "looked for" was positive (i.e., pvalue measured using the upper tail of the t
      * distribution; the alternative hypothesis is fold change > 0)
      */
     public Boolean getUpperTail() {
         return this.upperTail;
     }
 
+    public void setUpperTail( Boolean upperTail ) {
+        this.upperTail = upperTail;
+    }
+
     /**
-     * Returns a hash code based on this entity's identifiers.
+     * @return a hash code based on this entity's identifiers.
      */
     @Override
     public int hashCode() {
@@ -149,36 +142,11 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
         return hashCode;
     }
 
-    public void setGene( Gene gene ) {
-        this.gene = gene;
-    }
+    public static final class Factory {
+        public static GeneDifferentialExpressionMetaAnalysisResult newInstance() {
+            return new GeneDifferentialExpressionMetaAnalysisResultImpl();
+        }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setMeanLogFoldChange( Double meanLogFoldChange ) {
-        this.meanLogFoldChange = meanLogFoldChange;
-    }
-
-    public void setMetaPvalue( Double metaPvalue ) {
-        this.metaPvalue = metaPvalue;
-    }
-
-    public void setMetaPvalueRank( Double metaPvalueRank ) {
-        this.metaPvalueRank = metaPvalueRank;
-    }
-
-    public void setMetaQvalue( Double metaQvalue ) {
-        this.metaQvalue = metaQvalue;
-    }
-
-    public void setResultsUsed( Collection<DifferentialExpressionAnalysisResult> resultsUsed ) {
-        this.resultsUsed = resultsUsed;
-    }
-
-    public void setUpperTail( Boolean upperTail ) {
-        this.upperTail = upperTail;
     }
 
 }

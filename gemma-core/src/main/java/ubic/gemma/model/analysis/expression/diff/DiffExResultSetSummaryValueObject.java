@@ -18,17 +18,17 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+
 /**
- * Summary of a resultset.
- * 
+ * Summary of a result set.
+ *
  * @author paul
- * @version $Id$
  */
 public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
@@ -62,23 +62,17 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private Long bioAssaySetAnalyzedId;
 
-    public Long getBioAssaySetAnalyzedId() {
-        return bioAssaySetAnalyzedId;
-    }
-
     public DiffExResultSetSummaryValueObject() {
         super();
     }
 
-    // public DiffExResultSetSummaryValueObject( Collection<ExperimentalFactorValueObject> experimentalFactors,
-    // Double qValue, Double threshold, int numberOfDiffExpressedProbes, long resultSetId ) {
-    // this();
-    // this.experimentalFactors = experimentalFactors;
-    // this.qValue = qValue;
-    // this.threshold = threshold;
-    // this.numberOfDiffExpressedProbes = numberOfDiffExpressedProbes;
-    // this.resultSetId = resultSetId;
-    // }
+    public Long getBioAssaySetAnalyzedId() {
+        return bioAssaySetAnalyzedId;
+    }
+
+    public void setBioAssaySetAnalyzedId( Long id ) {
+        this.bioAssaySetAnalyzedId = id;
+    }
 
     @Override
     public boolean equals( Object obj ) {
@@ -92,7 +86,7 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
             return false;
         }
         DiffExResultSetSummaryValueObject other = ( DiffExResultSetSummaryValueObject ) obj;
-        if ( resultSetId != other.resultSetId ) {
+        if ( !Objects.equals( resultSetId, other.resultSetId ) ) {
             return false;
         }
         return true;
@@ -105,16 +99,35 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         return analysisId;
     }
 
+    /**
+     * @param analysisId the analysisId to set
+     */
+    public void setAnalysisId( Long analysisId ) {
+        this.analysisId = analysisId;
+    }
+
     public Collection<Long> getArrayDesignsUsed() {
         return arrayDesignsUsed;
+    }
+
+    public void setArrayDesignsUsed( Collection<Long> arrayDesignsUsed ) {
+        this.arrayDesignsUsed = arrayDesignsUsed;
     }
 
     public FactorValueValueObject getBaselineGroup() {
         return baselineGroup;
     }
 
+    public void setBaselineGroup( FactorValueValueObject baselineGroup ) {
+        this.baselineGroup = baselineGroup;
+    }
+
     public Integer getDownregulatedCount() {
         return downregulatedCount;
+    }
+
+    public void setDownregulatedCount( Integer downregulatedCount ) {
+        this.downregulatedCount = downregulatedCount;
     }
 
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
@@ -128,36 +141,75 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         return factorIds;
     }
 
+    /**
+     * @param factorIds the factorIds to set
+     */
+    public void setFactorIds( Collection<Long> factorIds ) {
+        this.factorIds = factorIds;
+    }
+
     public Integer getNumberOfDiffExpressedProbes() {
         return numberOfDiffExpressedProbes;
+    }
+
+    public void setNumberOfDiffExpressedProbes( Integer numberOfDiffExpressedProbes ) {
+        this.numberOfDiffExpressedProbes = numberOfDiffExpressedProbes;
     }
 
     public Integer getNumberOfGenesAnalyzed() {
         return numberOfGenesAnalyzed;
     }
 
+    public void setNumberOfGenesAnalyzed( Integer numberOfGenesAnalyzed ) {
+        this.numberOfGenesAnalyzed = numberOfGenesAnalyzed;
+    }
+
     public Integer getNumberOfProbesAnalyzed() {
         return numberOfProbesAnalyzed;
+    }
+
+    public void setNumberOfProbesAnalyzed( Integer numberOfProbesAnalyzed ) {
+        this.numberOfProbesAnalyzed = numberOfProbesAnalyzed;
     }
 
     public Double getqValue() {
         return qValue;
     }
 
+    public void setqValue( Double qValue ) {
+        this.qValue = qValue;
+    }
+
     public Double getQValue() {
         return qValue;
+    }
+
+    public void setQValue( Double value ) {
+        qValue = value;
     }
 
     public Long getResultSetId() {
         return resultSetId;
     }
 
+    public void setResultSetId( Long resultSetId ) {
+        this.resultSetId = resultSetId;
+    }
+
     public Double getThreshold() {
         return threshold;
     }
 
+    public void setThreshold( Double threshold ) {
+        this.threshold = threshold;
+    }
+
     public Integer getUpregulatedCount() {
         return upregulatedCount;
+    }
+
+    public void setUpregulatedCount( Integer upregulatedCount ) {
+        this.upregulatedCount = upregulatedCount;
     }
 
     @Override
@@ -168,74 +220,8 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         return result;
     }
 
-    /**
-     * @param analysisId the analysisId to set
-     */
-    public void setAnalysisId( Long analysisId ) {
-        this.analysisId = analysisId;
-    }
-
-    public void setArrayDesignsUsed( Collection<Long> arrayDesignsUsed ) {
-        this.arrayDesignsUsed = arrayDesignsUsed;
-    }
-
-    public void setBaselineGroup( FactorValueValueObject baselineGroup ) {
-        this.baselineGroup = baselineGroup;
-    }
-
-    public void setDownregulatedCount( Integer downregulatedCount ) {
-        this.downregulatedCount = downregulatedCount;
-    }
-
     public void setExperimentalFactorsByValueObject( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
-
         this.experimentalFactors = experimentalFactors;
-    }
-
-    /**
-     * @param factorIds the factorIds to set
-     */
-    public void setFactorIds( Collection<Long> factorIds ) {
-        this.factorIds = factorIds;
-    }
-
-    public void setNumberOfDiffExpressedProbes( Integer numberOfDiffExpressedProbes ) {
-        this.numberOfDiffExpressedProbes = numberOfDiffExpressedProbes;
-    }
-
-    public void setNumberOfGenesAnalyzed( Integer numberOfGenesAnalyzed ) {
-        this.numberOfGenesAnalyzed = numberOfGenesAnalyzed;
-    }
-
-    public void setNumberOfProbesAnalyzed( Integer numberOfProbesAnalyzed ) {
-        this.numberOfProbesAnalyzed = numberOfProbesAnalyzed;
-    }
-
-    public void setqValue( Double qValue ) {
-        this.qValue = qValue;
-    }
-
-    public void setQValue( Double value ) {
-        qValue = value;
-    }
-
-    public void setResultSetId( Long resultSetId ) {
-        this.resultSetId = resultSetId;
-    }
-
-    public void setThreshold( Double threshold ) {
-        this.threshold = threshold;
-    }
-
-    public void setUpregulatedCount( Integer upregulatedCount ) {
-        this.upregulatedCount = upregulatedCount;
-    }
-
-    /**
-     * @param id
-     */
-    public void setBioAssaySetAnalyzedId( Long id ) {
-        this.bioAssaySetAnalyzedId = id;
     }
 
 }

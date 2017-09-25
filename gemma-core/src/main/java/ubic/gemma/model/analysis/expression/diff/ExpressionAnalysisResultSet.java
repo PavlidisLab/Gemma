@@ -51,11 +51,11 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
             int count = 0;
 
             CompositeSequence cs = dear.getProbe();
-            buf.append( cs.getName() + "\t" );
+            buf.append( cs.getName() ).append( "\t" );
             for ( BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
                 Gene g = bs2gp.getGeneProduct().getGene();
                 if ( g instanceof Gene ) {
-                    buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() + "," );
+                    buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() ).append( "," );
                     count++;
                 }
             }
@@ -65,7 +65,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
 
             count = 0;
             for ( ExperimentalFactor ef : this.getExperimentalFactors() ) {
-                buf.append( ef.getName() + "," );
+                buf.append( ef.getName() ).append( "," );
                 count++;
             }
             if ( count != 0 )
@@ -73,7 +73,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
 
             buf.append( "\t" );
 
-            buf.append( dear.getCorrectedPvalue() + "\n" );
+            buf.append( dear.getCorrectedPvalue() ).append( "\n" );
         }
         return buf.toString();
 
@@ -88,7 +88,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     }
 
     /**
-     * The group considered baseline when computing scores and 'upRegulated'. This might be a control group if it could
+     * @return The group considered baseline when computing scores and 'upRegulated'. This might be a control group if it could
      * be recognized. For continuous factors, this would be null. For interaction terms we do not compute this so it
      * will also be null.
      */
@@ -109,7 +109,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     }
 
     /**
-     * How many genes were tested in the result set. This is determined based on the annotations at one point in time,
+     * @return How many genes were tested in the result set. This is determined based on the annotations at one point in time,
      * so might slightly differ if the platform annotations have been updated since.
      */
     public Integer getNumberOfGenesTested() {
@@ -121,7 +121,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     }
 
     /**
-     * How many probes were tested in this result set.
+     * @return How many probes were tested in this result set.
      */
     public Integer getNumberOfProbesTested() {
         return this.numberOfProbesTested;
@@ -148,19 +148,14 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
         this.results = results;
     }
 
-    /**
-     * Constructs new instances of {@link ExpressionAnalysisResultSet}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ExpressionAnalysisResultSet}.
-         */
+
         public static ExpressionAnalysisResultSet newInstance() {
             return new ExpressionAnalysisResultSet();
         }
 
         /**
-         * Constructs a new instance of {@link ExpressionAnalysisResultSet}, taking all possible properties (except the
+         * @return new instance of {@link ExpressionAnalysisResultSet}, taking all possible properties (except the
          * identifier(s))as arguments.
          */
         public static ExpressionAnalysisResultSet newInstance( Collection<ExperimentalFactor> experimentalFactors,
