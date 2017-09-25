@@ -21,13 +21,11 @@ package ubic.gemma.core.job.executor.common;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.tasks.Task;
 
 /**
  * @author anton date: 08/02/13
- * @vesrion $Id$
  */
 @Component
 public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
@@ -47,8 +45,8 @@ public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
          * Get instance of the bean that allows running the task. For remote tasks this is run on the worker, for local
          * tasks in process.
          */
-        @SuppressWarnings("unchecked")
-        Task<?, TaskCommand> task = ( Task<?, TaskCommand> ) applicationContext.getBean( taskClass );
+        @SuppressWarnings("unchecked") Task<?, TaskCommand> task = ( Task<?, TaskCommand> ) applicationContext
+                .getBean( taskClass );
         if ( task == null )
             throw new IllegalArgumentException( "Task bean is not found for " + taskClass.getSimpleName() );
 

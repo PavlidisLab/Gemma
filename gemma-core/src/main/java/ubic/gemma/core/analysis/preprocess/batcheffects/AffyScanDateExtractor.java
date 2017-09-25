@@ -14,52 +14,35 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
-import java.util.Date;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.util.FileTools;
+
+import java.io.*;
+import java.nio.*;
+import java.util.Date;
 
 /**
  * Extract the scan date from Affymetrix CEL files. Handles both version 3 (ASCII) and 4 (binary) files.
- * <p />
- * {@link http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/cel.html} and {@link http
- * ://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html}
+ * <p/>
+ * See <a href='http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/cel.html'>CEL</a> and
+ * <a href='http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html'>GENERIC</a>
  * <p/>
  * Note that the Affymetrix documentation does not mention a date, explicitly, but it's in the "DatHeader"
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
-    private static Log log = LogFactory.getLog( AffyScanDateExtractor.class );
+    private static final Log log = LogFactory.getLog( AffyScanDateExtractor.class );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.batcheffects.ScanDateExtractor#extract(java.io.InputStream)
-     */
     @Override
     public Date extract( InputStream is ) {
 
         try (DataInputStream str = new DataInputStream( is )) {
 
-            BufferedReader reader = null;
+            BufferedReader reader;
             Date date = null;
 
             int magic = readByte( str );
@@ -107,12 +90,12 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                     // this is fixed to 1 according to affy docs.
                     throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                 }
-                @SuppressWarnings("unused")
-                int numDataGroups = readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
-                                                             // contains another header, with different name/value/type
-                                                             // triples.
-                @SuppressWarnings("unused")
-                int filePosOfFirstGroup = readIntBigEndian( str ); // file position of first data group.
+                @SuppressWarnings("unused") int numDataGroups = readIntBigEndian(
+                        str ); // number of data groups, usually = 1. Each data group
+                // contains another header, with different name/value/type
+                // triples.
+                @SuppressWarnings("unused") int filePosOfFirstGroup = readIntBigEndian(
+                        str ); // file position of first data group.
 
                 date = parseGenericCCHeader( str );
 
@@ -136,7 +119,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                  * assume version 3 plain text.
                  */
                 reader = new BufferedReader( new InputStreamReader( is ) );
-                String line = null;
+                String line;
                 int count = 0;
                 while ( ( line = reader.readLine() ) != null ) {
                     // log.info( line );
@@ -163,30 +146,16 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.batcheffects.ScanDateExtractor#extract(java.lang.String)
-     */
     @Override
     public Date extract( String fileName ) {
         try {
             return extract( FileTools.getInputStreamFromPlainOrCompressedFile( fileName ) );
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param str
-     * @param date
-     * @return
-     * @throws IOException
-     * @throws UnsupportedEncodingException
-     */
-    public Date parseGenericCCHeader( DataInputStream str ) throws IOException, UnsupportedEncodingException {
+    public Date parseGenericCCHeader( DataInputStream str ) throws IOException {
         /*
          * FIXME store values in an object. All I need right now is the date, though.
          */
@@ -202,103 +171,94 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
         log.debug( guid );
 
-        @SuppressWarnings("unused")
-        String createDate = readUnicodeString( str ); // blank?
-        @SuppressWarnings("unused")
-        String locale = readUnicodeString( str ); // e.g. en-US
+        @SuppressWarnings("unused") String createDate = readUnicodeString( str ); // blank?
+        @SuppressWarnings("unused") String locale = readUnicodeString( str ); // e.g. en-US
         int numKeyValuePairs = readIntBigEndian( str ); // e.g. 55
         Date result = null;
         for ( int i = 0; i < numKeyValuePairs; i++ ) {
             String name = readUnicodeString( str );
             byte[] value = readBytes( str );
             String type = readUnicodeString( str );
+            Object v;
 
-            Object v = null;
-
-            // log.info( ">>>>" + type + "<<<<<" );
-
-            if ( type.equals( "text/x-calvin-float" ) ) {
-                FloatBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asFloatBuffer();
-                float[] array = new float[intBuf.remaining()];
-                intBuf.get( array );
-                v = array;
-                // System.err.println( name + " " + array[0] + " " + type );
-            } else if ( type.equals( "text/plain" ) || type.equals( "text/ascii" ) ) {
-                // text/ascii is undocumented, but needed.
-                v = new String( value, "US-ASCII" );
-                // System.err.println( name + " " + v + " " + type );
-
-                if ( name.equals( "affymetrix-scan-date" ) ) {
-                    result = parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
-                    log.info( "Scan date = " + result );
+            switch ( type ) {
+                case "text/x-calvin-float": {
+                    FloatBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asFloatBuffer();
+                    float[] array = new float[intBuf.remaining()];
+                    intBuf.get( array );
+                    break;
                 }
+                case "text/plain":
+                case "text/ascii":
+                    // text/ascii is undocumented, but needed.
+                    v = new String( value, "US-ASCII" );
 
-                if ( name.equals( "affymetrix-Hyb-Start-Time" ) ) {
-                    // We don't use this but I'm curious to start looking at it.
-                    log.info( "Hyb start date = " + new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
+                    if ( name.equals( "affymetrix-scan-date" ) ) {
+                        result = parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
+                        log.info( "Scan date = " + result );
+                    }
+
+                    if ( name.equals( "affymetrix-Hyb-Start-Time" ) ) {
+                        // We don't use this but I'm curious to start looking at it.
+                        log.info( "Hyb start date = " + new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
+                    }
+
+                    break;
+                case "text-x-calvin-unsigned-integer-8": {
+                    ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
+                    short[] array = new short[intBuf.remaining()];
+                    intBuf.get( array );
+
+                    break;
                 }
+                case "text/x-calvin-integer-16": {
+                    IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer(); // wrong?
 
-            } else if ( type.equals( "text-x-calvin-unsigned-integer-8" ) ) {
-                ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
-                short[] array = new short[intBuf.remaining()];
-                intBuf.get( array );
-                v = array;
-                // System.err.println( name + " " + array[0] + " " + type );
+                    int[] array = new int[intBuf.remaining()];
+                    intBuf.get( array );
+                    break;
+                }
+                case "text/x-calvin-integer-32": {
+                    IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
+                    int[] array = new int[intBuf.remaining()];
+                    intBuf.get( array );
 
-            } else if ( type.equals( "text/x-calvin-integer-16" ) ) {
-                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer(); // wrong?
-                int[] array = new int[intBuf.remaining()];
-                intBuf.get( array );
-                v = array;
-                // System.err.println( name + " " + array[0] + " " + type );
-            } else if ( type.equals( "text/x-calvin-integer-32" ) ) {
-                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
-                int[] array = new int[intBuf.remaining()];
-                intBuf.get( array );
-                v = array;
-                // System.err.println( name + " " + array[0] + " " + type );
+                    break;
+                }
+                case "text/x-calvin-unsigned-integer-8": {
+                    ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
+                    short[] array = new short[intBuf.remaining()];
+                    intBuf.get( array );
 
-            } else if ( type.equals( "text/x-calvin-unsigned-integer-8" ) ) {
-                ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
-                short[] array = new short[intBuf.remaining()];
-                intBuf.get( array );
-                v = array;
-                // System.err.println( name + " " + array[0] + " " + type );
+                    break;
+                }
+                case "text/x-calvin-unsigned-integer-16": {
+                    IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();// wrong?
 
-            } else if ( type.equals( "text/x-calvin-unsigned-integer-16" ) ) {
-                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();// wrong?
-                int[] array = new int[intBuf.remaining()];
-                intBuf.get( array );
-                v = array;
-                // System.err.println( name + " " + array[0] + " " + type );
+                    int[] array = new int[intBuf.remaining()];
+                    intBuf.get( array );
 
-            } else if ( type.equals( "text/x-calvin-unsigned-integer-32" ) ) {
-                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
-                int[] array = new int[intBuf.remaining()];
-                intBuf.get( array );
-                v = array;
-                // System.err.println( name + " = " + array[0] + " " + type );
+                    break;
+                }
+                case "text/x-calvin-unsigned-integer-32": {
+                    IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
+                    int[] array = new int[intBuf.remaining()];
+                    intBuf.get( array );
 
-            } else {
-                throw new IOException( "Unknown mime type:" + type );
+                    break;
+                }
+                default:
+                    throw new IOException( "Unknown mime type:" + type );
             }
 
         }
 
-        @SuppressWarnings("unused")
-        int numParentHeaders = this.readIntBigEndian( str );
-        // log.info( numParentHeaders + " parent headers" );
-
+        @SuppressWarnings("unused") int numParentHeaders = this.readIntBigEndian( str );
         return result;
-
     }
 
     /**
-     * 8 bit signed integral number
-     * 
-     * @param dis
-     * @return
-     * @throws IOException
+     * @return 8 bit signed integral number
      */
     private int readByte( DataInputStream dis ) throws IOException {
         return dis.readByte();
@@ -306,17 +266,14 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
     /**
      * The data is stored as a int, then the array of bytes.
-     * 
-     * @param str
-     * @return
-     * @throws IOException
      */
     private byte[] readBytes( DataInputStream str ) throws IOException {
         int fieldLength = readIntBigEndian( str );
 
         byte[] result = new byte[fieldLength];
         for ( int i = 0; i < fieldLength; i++ ) {
-            if ( str.available() == 0 ) throw new IOException( "Reached end of file without string end" );
+            if ( str.available() == 0 )
+                throw new IOException( "Reached end of file without string end" );
             result[i] = str.readByte();
         }
 
@@ -334,11 +291,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
     }
 
     /**
-     * 32 bit signed integral number
-     * 
-     * @param dis
-     * @return
-     * @throws IOException
+     * @return 32 bit signed integral number
      */
     private int readIntLittleEndian( DataInputStream dis ) throws IOException {
         return dis.readInt();
@@ -349,33 +302,24 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
     }
 
     /**
-     * A 1 byte character string. A string object is stored as an INT (to store the string length) followed by the CHAR
+     * @return A 1 byte character string. A string object is stored as an INT (to store the string length) followed by the CHAR
      * array (to store the string contents).
-     * 
-     * @param str
-     * @return
-     * @throws IOException
      */
     private String readString( DataInputStream str ) throws IOException {
         int fieldLength = readIntBigEndian( str );
         StringBuilder buf = new StringBuilder();
         for ( int i = 0; i < fieldLength; i++ ) {
-            if ( str.available() == 0 ) throw new IOException( "Reached end of file without string end" );
+            if ( str.available() == 0 )
+                throw new IOException( "Reached end of file without string end" );
             buf.append( new String( new byte[] { str.readByte() } ) );
         }
-        String field = buf.toString();
-        // log.info( "String length=" + fieldLength + " val=" + field );
-        return field;
+        return buf.toString();
     }
 
     /**
-     * A UNICODE string. A string object is stored as an INT (to store the string length) followed by the WCHAR array
+     * @return A UNICODE string. A string object is stored as an INT (to store the string length) followed by the WCHAR array
      * (to store the string contents).
      * (http://media.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html)
-     * 
-     * @param str
-     * @return
-     * @throws IOException
      */
     private String readUnicodeString( DataInputStream str ) throws IOException {
         int fieldLength = readIntBigEndian( str );
@@ -389,8 +333,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
             buf[i] = str.readByte();
         }
 
-        String field = new String( buf, "UTF-16" );
-        return field;
+        return new String( buf, "UTF-16" );
     }
 
     private int readUnsignedByte( DataInputStream dis ) throws IOException {

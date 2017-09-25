@@ -16,11 +16,11 @@ package ubic.gemma.core.ontology.providers;
 
 import org.springframework.beans.factory.InitializingBean;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -36,7 +36,7 @@ public interface GeneOntologyService extends InitializingBean {
     /**
      * <p>
      * Given a query Gene, and a collection of gene ids calculates the go term overlap for each pair of queryGene and
-     * gene in the given collection. Returns a Map<Gene,Collection<OntologyEntries>>. The key is the gene (from the
+     * gene in the given collection. Returns a Map&lt;Gene,Collection&lt;OntologyEntries&gt;&gt;. The key is the gene (from the
      * [queryGene,gene] pair) and the values are a collection of the overlapping ontology entries.
      * </p>
      *
@@ -193,24 +193,27 @@ public interface GeneOntologyService extends InitializingBean {
 
     /**
      * Returns GO Terms VOs for the given Gene.
+     *
      * @param gene the Gene to retrieve GO Terms for and convert them to VOs.
      * @return Gene Ontology VOs representing all GO Terms associated with the given gene.
      */
-    Collection<GeneOntologyTermValueObject> getValueObjects(Gene gene);
+    Collection<GeneOntologyTermValueObject> getValueObjects( Gene gene );
 
     /**
      * Converts the given collection of Ontology Terms to Gene Ontology Value Objects.
+     *
      * @param terms the terms to be converted.
      * @return collection of value objects representing the given terms.
      */
-    Collection<GeneOntologyTermValueObject> getValueObjects(Collection<OntologyTerm> terms);
+    Collection<GeneOntologyTermValueObject> getValueObjects( Collection<OntologyTerm> terms );
 
     /**
      * Converts the given  Ontology Term to a Gene Ontology Value Object.
+     *
      * @param term the term to be converted.
      * @return value object representing the given term.
      */
-    GeneOntologyTermValueObject getValueObject(OntologyTerm term);
+    GeneOntologyTermValueObject getValueObject( OntologyTerm term );
 
     /**
      * Primarily here for testing.

@@ -18,16 +18,15 @@
  */
 package ubic.gemma.core.analysis.preprocess.normalize;
 
-import java.io.IOException;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.util.RCommander;
 
+import java.io.IOException;
+
 /**
  * Perform pairwise LOESS normalization on the columns of a matrix.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  * @deprecated because we don't like to use the R integration
  */
 @Deprecated
@@ -40,8 +39,8 @@ public class PairwiseLoessNormalizer extends RCommander implements Normalizer<St
 
     /**
      * This uses the default settings.
-     * 
-     * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrix)
+     *
+     * @see ubic.gemma.core.analysis.preprocess.normalize.Normalizer#normalize(DoubleMatrix)
      */
     @Override
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> dataMatrix ) {

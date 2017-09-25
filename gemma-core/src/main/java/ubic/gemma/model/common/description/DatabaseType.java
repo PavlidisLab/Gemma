@@ -5,66 +5,27 @@
 // $Id$
 package ubic.gemma.model.common.description;
 
-/**
- * 
- */
 public class DatabaseType implements java.io.Serializable, Comparable<DatabaseType> {
+    public static final DatabaseType ONTOLOGY = new DatabaseType( "ONTOLOGY" );
+    public static final DatabaseType SEQUENCE = new DatabaseType( "SEQUENCE" );
+    public static final DatabaseType LITERATURE = new DatabaseType( "LITERATURE" );
+    public static final DatabaseType EXPRESSION = new DatabaseType( "EXPRESSION" );
+    /**
+     * Represents a genome database such as Golden Path or Ensembl
+     */
+    public static final DatabaseType GENOME = new DatabaseType( "GENOME" );
+    public static final DatabaseType OTHER = new DatabaseType( "OTHER" );
+    public static final DatabaseType PROTEIN = new DatabaseType( "PROTEIN" );
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 3701187744112944950L;
-
-    /**
-     * 
-     */
-    public static final DatabaseType ONTOLOGY = new DatabaseType( "ONTOLOGY" );
-
-    /**
-     * 
-     */
-    public static final DatabaseType SEQUENCE = new DatabaseType( "SEQUENCE" );
-
-    /**
-     * 
-     */
-    public static final DatabaseType LITERATURE = new DatabaseType( "LITERATURE" );
-
-    /**
-     * 
-     */
-    public static final DatabaseType EXPRESSION = new DatabaseType( "EXPRESSION" );
-
-    /**
-     * <p>
-     * <p>
-     * Represents a genome database such as Golden Path or Ensembl
-     * </p>
-     * </p>
-     */
-    public static final DatabaseType GENOME = new DatabaseType( "GENOME" );
-
-    /**
-     * 
-     */
-    public static final DatabaseType OTHER = new DatabaseType( "OTHER" );
-
-    /**
-     * 
-     */
-    public static final DatabaseType PROTEIN = new DatabaseType( "PROTEIN" );
-
     private static final java.util.Map<String, DatabaseType> values = new java.util.LinkedHashMap<String, DatabaseType>(
             7, 1 );
-
     private static java.util.List<String> literals = new java.util.ArrayList<String>( 7 );
-
     private static java.util.List<String> names = new java.util.ArrayList<String>( 7 );
-
     private static java.util.List<DatabaseType> valueList = new java.util.ArrayList<DatabaseType>( 7 );
 
-    /**
-     * Initializes the values.
-     */
     static {
         values.put( ONTOLOGY.value, ONTOLOGY );
         valueList.add( ONTOLOGY );
@@ -99,9 +60,21 @@ public class DatabaseType implements java.io.Serializable, Comparable<DatabaseTy
         names = java.util.Collections.unmodifiableList( names );
     }
 
+    private String value;
+
+    /**
+     * The default constructor allowing super classes to access it.
+     */
+    protected DatabaseType() {
+    }
+
+    private DatabaseType( String value ) {
+        this.value = value;
+    }
+
     /**
      * Creates an instance of DatabaseType from <code>value</code>.
-     * 
+     *
      * @param value the value to create the DatabaseType from.
      */
     public static DatabaseType fromString( String value ) {
@@ -119,7 +92,7 @@ public class DatabaseType implements java.io.Serializable, Comparable<DatabaseTy
 
     /**
      * Returns an unmodifiable list containing the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
     public static java.util.List<String> literals() {
@@ -128,9 +101,9 @@ public class DatabaseType implements java.io.Serializable, Comparable<DatabaseTy
 
     /**
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
     public static java.util.List<String> names() {
         return names;
@@ -138,23 +111,11 @@ public class DatabaseType implements java.io.Serializable, Comparable<DatabaseTy
 
     /**
      * Returns an unmodifiable list containing the actual enumeration instance values.
-     * 
+     *
      * @return A List containing the actual enumeration instance values.
      */
     public static java.util.List<DatabaseType> values() {
         return valueList;
-    }
-
-    private String value;
-
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected DatabaseType() {
-    }
-
-    private DatabaseType( String value ) {
-        this.value = value;
     }
 
     /**
@@ -170,13 +131,13 @@ public class DatabaseType implements java.io.Serializable, Comparable<DatabaseTy
      */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof DatabaseType && ( ( DatabaseType ) object ).getValue().equals( this.getValue() ) );
+        return ( this == object ) || ( object instanceof DatabaseType && ( ( DatabaseType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
      * Gets the underlying value of this type safe enumeration.
-     * 
+     *
      * @return the underlying value.
      */
     public String getValue() {
@@ -202,12 +163,10 @@ public class DatabaseType implements java.io.Serializable, Comparable<DatabaseTy
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
      * will be the singleton for the JVM in which the current thread is running.
-     * <p>
      * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
      * regular deserialized object is always a newly constructed instance and will therefore never be an existing
      * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
      * to return the proper singleton reference.
-     * <p>
      * This method is documented here: <a
      * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>

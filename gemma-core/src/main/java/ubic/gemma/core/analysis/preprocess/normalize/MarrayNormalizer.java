@@ -18,17 +18,16 @@
  */
 package ubic.gemma.core.analysis.preprocess.normalize;
 
-import java.io.IOException;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.util.MArrayRaw;
 import ubic.gemma.core.analysis.util.RCommander;
 
+import java.io.IOException;
+
 /**
  * Normalizer that uses the mArray methods from BioConductor. This is used to build specific types of preprocessors.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  * @deprecated because we don't like to use the R integration
  */
 @Deprecated
@@ -45,22 +44,17 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
     /**
      * Apply a normalization method from the marray BioConductor package. This method yields normalized log ratios, so
      * the summarization step is included as well.
-     * 
-     * @param channelOneSignal
-     * @param channelTwoSignal
-     * @param channelOneBackground
-     * @param channelTwoBackground
-     * @param weights
+     *
      * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
-     * @return
      */
     protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
             DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights, String method ) {
         MArrayRaw mRaw = new MArrayRaw( this.rc );
         mRaw.makeMArrayLayout( channelOneSignal.rows() );
-        String mRawVarName = mRaw.makeMArrayRaw( channelOneSignal, channelTwoSignal, channelOneBackground,
-                channelTwoBackground, weights );
+        String mRawVarName = mRaw
+                .makeMArrayRaw( channelOneSignal, channelTwoSignal, channelOneBackground, channelTwoBackground,
+                        weights );
 
         String normalizedMatrixVarName = "normalized." + channelOneSignal.hashCode();
         rc.voidEval( normalizedMatrixVarName + "<-maM(maNorm(" + mRawVarName + ", norm=\"" + method + "\" ))" );
@@ -78,12 +72,8 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
     /**
      * Apply a normalization method from the marray BioConductor package, disregarding background. This method yields
      * normalized log ratios, so the summarization step is included as well.
-     * 
-     * @param channelOneSignal
-     * @param channelTwoSignal
-     * @param weights
+     *
      * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
-     * @return
      */
     protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, String method ) {

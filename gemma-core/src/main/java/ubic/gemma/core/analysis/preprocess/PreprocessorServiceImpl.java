@@ -23,10 +23,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatc
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -34,8 +31,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -63,11 +63,12 @@ import java.util.LinkedList;
  * <li>(Re)normalization
  * <li>Getting information on batches
  * <li>Outlier detection
- * <li>Batch correction -- shoud be done after the experimental design is done, and after batch info has been obtained,
+ * <li>Batch correction -- should be done after the experimental design is done, and after batch info has been obtained,
  * and after outliers have been removed.
  * <li>Ordering of vectors with respect to the experimental design? [probably not, this isn't a big problem]
  * <li>Populating the experimental design (guesses)?
- * <li>Autotagger .
+ * <li>Autotagger
+ * </ol>
  *
  * @author paul
  */
@@ -104,7 +105,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private OutlierDetectionService outlierDetectionService;
 
     @Override
-    public ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean allowOutliers ) throws PreprocessingException {
+    public ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean allowOutliers )
+            throws PreprocessingException {
 
         /*
          * This leaves the raw data alone; it updates the processed data.
@@ -188,7 +190,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      *
      * @param ee the expression experiment to be checked
      * @return a collection of outlier details that contains all the outliers that the expression experiment is aware
-     *         of.
+     * of.
      */
     private Collection<OutlierDetails> getAlreadyKnownOutliers( ExpressionExperiment ee ) {
         Collection<OutlierDetails> outliers = new LinkedList<>();
