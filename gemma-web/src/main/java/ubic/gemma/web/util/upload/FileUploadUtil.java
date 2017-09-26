@@ -18,44 +18,28 @@
  */
 package ubic.gemma.web.util.upload;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+
 /**
  * Utility methods for uploading files.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class FileUploadUtil {
 
-    private static Log log = LogFactory.getLog( FileUploadUtil.class.getName() );
     private static final int BUF_SIZE = 32768;
+    private static final Log log = LogFactory.getLog( FileUploadUtil.class.getName() );
 
-    /**
-     * @param request
-     * @param key
-     * @return
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    public static File copyUploadedFile( HttpServletRequest request, String key ) throws IOException,
-            FileNotFoundException {
+    public static File copyUploadedFile( HttpServletRequest request, String key ) throws IOException {
         MultipartHttpServletRequest multipartRequest = ( MultipartHttpServletRequest ) request;
         MultipartFile file = multipartRequest.getFile( key );
 
@@ -65,11 +49,7 @@ public class FileUploadUtil {
         return copyUploadedFile( file, request );
     }
 
-    /**
-     * @param multipartFile
-     */
-    public static File copyUploadedFile( MultipartFile multipartFile, HttpServletRequest request ) throws IOException,
-            FileNotFoundException {
+    public static File copyUploadedFile( MultipartFile multipartFile, HttpServletRequest request ) throws IOException {
         log.info( "Copying the file:" + multipartFile );
         String copiedFilePath = getLocalUploadLocation( request, multipartFile );
 
@@ -95,42 +75,28 @@ public class FileUploadUtil {
 
     }
 
-    public static File copyUploadedInputStream( InputStream is ) throws IOException, FileNotFoundException {
+    public static File copyUploadedInputStream( InputStream is ) throws IOException {
         // Create the directory if it doesn't exist
         String uploadDir = Settings.getDownloadPath() + "userUploads";
         File uploadDirFile = FileTools.createDir( uploadDir );
 
-        File copiedFile = new File( uploadDirFile.getAbsolutePath() + File.separatorChar
-                + RandomStringUtils.randomAlphanumeric( 50 ) );
+        File copiedFile = new File(
+                uploadDirFile.getAbsolutePath() + File.separatorChar + RandomStringUtils.randomAlphanumeric( 50 ) );
         copy( copiedFile, is );
         return copiedFile;
     }
 
-    /**
-     * @param request
-     * @return
-     */
     public static String getContextUploadPath() {
         return getUploadPath().replace( File.separatorChar, '/' );
     }
 
-    /**
-     * @param request
-     * @return
-     */
     public static String getUploadPath() {
         return Settings.getDownloadPath() + "userUploads";
     }
 
-    /**
-     * @param copiedFile
-     * @param stream
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    private static void copy( File copiedFile, InputStream stream ) throws FileNotFoundException, IOException {
-        try (OutputStream bos = new FileOutputStream( copiedFile );) {
-            int bytesRead = 0;
+    private static void copy( File copiedFile, InputStream stream ) throws IOException {
+        try (OutputStream bos = new FileOutputStream( copiedFile )) {
+            int bytesRead;
             byte[] buffer = new byte[BUF_SIZE];
             while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
                 bos.write( buffer, 0, bytesRead );
@@ -141,27 +107,15 @@ public class FileUploadUtil {
         }
     }
 
-    /**
-     * @param file
-     * @param copiedFile
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    private static void copyFile( MultipartFile file, File copiedFile ) throws FileNotFoundException, IOException {
+    private static void copyFile( MultipartFile file, File copiedFile ) throws IOException {
         log.info( "Copying file " + file + " (" + file.getSize() + " bytes)" );
         // write the file to the file specified
-        try (InputStream stream = file.getInputStream();) {
+        try (InputStream stream = file.getInputStream()) {
             copy( copiedFile, stream );
             log.info( "Done copying to " + copiedFile );
         }
     }
 
-    /**
-     * @param request
-     * @param fileUpload
-     * @param file
-     * @return
-     */
     private static String getLocalUploadLocation( HttpServletRequest request, MultipartFile file ) {
         // the directory to upload to - put it in a user-specific directory for now.
         String uploadDir = getUploadPath();
@@ -169,12 +123,10 @@ public class FileUploadUtil {
         // Create the directory if it doesn't exist
         File uploadDirFile = FileTools.createDir( uploadDir );
 
-        String copiedFile = uploadDirFile.getAbsolutePath()
-                + File.separatorChar
-                + ( request == null || request.getSession() == null ? RandomStringUtils.randomAlphanumeric( 20 )
-                        : request.getSession().getId() ) + "__" + file.getOriginalFilename();
-
-        return copiedFile;
+        return uploadDirFile.getAbsolutePath() + File.separatorChar + (
+                request == null || request.getSession() == null ?
+                        RandomStringUtils.randomAlphanumeric( 20 ) :
+                        request.getSession().getId() ) + "__" + file.getOriginalFilename();
     }
 
 }

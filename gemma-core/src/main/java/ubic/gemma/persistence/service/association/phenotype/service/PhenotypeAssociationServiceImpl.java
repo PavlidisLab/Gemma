@@ -14,26 +14,11 @@
  */
 package ubic.gemma.persistence.service.association.phenotype.service;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
-import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.persistence.service.association.phenotype.ExperimentalEvidenceDao;
-import ubic.gemma.model.association.phenotype.GenericEvidence;
-import ubic.gemma.persistence.service.association.phenotype.GenericEvidenceDao;
-import ubic.gemma.model.association.phenotype.GenericExperiment;
-import ubic.gemma.persistence.service.association.phenotype.GenericExperimentDao;
-import ubic.gemma.model.association.phenotype.LiteratureEvidence;
-import ubic.gemma.persistence.service.association.phenotype.LiteratureEvidenceDao;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDao;
+import ubic.gemma.model.association.phenotype.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -41,6 +26,11 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
+import ubic.gemma.persistence.service.association.phenotype.*;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Service responsible of low level operations, used by PhenotypeAssociationManagerServiceImpl
@@ -63,7 +53,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Autowired
     private PhenotypeAssociationDao phenotypeAssociationDao;
 
-    /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
+    /*
+     * counts the evidence that from neurocarta that came from a specific MetaAnalysis
+     */
     @Override
     @Transactional(readOnly = true)
     public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis(
@@ -72,7 +64,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
                 .countEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
     }
 
-    /** create a GenericExperiment */
     @Override
     @Transactional
     public GenericExperiment create( GenericExperiment genericExperiment ) {
@@ -85,28 +76,36 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.create( p );
     }
 
-    /** find GenericExperiments by PubMed ID */
+    /*
+     * find GenericExperiments by PubMed ID
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
         return this.genericExperimentDao.findByPubmedID( pubmed );
     }
 
-    /** find mged category term that were used in the database, used to annotated Experiments */
+    /*
+     * find mged category term that were used in the database, used to annotated Experiments
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms() {
         return this.phenotypeAssociationDao.findEvidenceCategoryTerms();
     }
 
-    /** return the list of the owners that have evidence in the system */
+    /*
+     * return the list of the owners that have evidence in the system
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<String> findEvidenceOwners() {
         return this.phenotypeAssociationDao.findEvidenceOwners();
     }
 
-    /** find all evidences from a specific external database */
+    /*
+     * find all evidences from a specific external database
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
@@ -114,7 +113,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName, limit, start );
     }
 
-    /** find all evidence that doesn't come from an external course */
+    /*
+     * find all evidence that doesn't come from an external course
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
@@ -123,8 +124,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /**
      * Gets all External Databases that are used with evidence
-     * 
-     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     *
+     * @return Collection the externalDatabases
      */
     @Override
     @Transactional(readOnly = true)
@@ -132,39 +133,49 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findExternalDatabasesWithEvidence();
     }
 
-    /** find Genes link to a phenotype */
+    /*
+     * find Genes link to a phenotype
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUris, Taxon taxon,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
-        return this.phenotypeAssociationDao.findGenesWithPhenotypes( phenotypesValueUris, taxon, showOnlyEditable,
-                externalDatabaseIds );
+        return this.phenotypeAssociationDao
+                .findGenesWithPhenotypes( phenotypesValueUris, taxon, showOnlyEditable, externalDatabaseIds );
     }
 
-    /** find all PhenotypeAssociation for a specific gene id */
+    /*
+     * find all PhenotypeAssociation for a specific gene id
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneId( geneId );
     }
 
-    /** find all PhenotypeAssociation for a specific gene id and external Databases ids */
+    /*
+     * find all PhenotypeAssociation for a specific gene id and external Databases ids
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
             Collection<Long> externalDatabaseIds ) {
-        return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneIdAndDatabases( geneId,
-                externalDatabaseIds );
+        return this.phenotypeAssociationDao
+                .findPhenotypeAssociationForGeneIdAndDatabases( geneId, externalDatabaseIds );
     }
 
-    /** find all PhenotypeAssociation for a specific NCBI id */
+    /*
+     * find all PhenotypeAssociation for a specific NCBI id
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI );
     }
 
-    /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
+    /*
+     * find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI,
@@ -172,62 +183,79 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI, phenotype );
     }
 
-    /** find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit */
+    /*
+     * find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids ) {
         return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids );
     }
 
+    /*
+     * find PhenotypeAssociations associated with a BibliographicReference
+     */
     @Override
-    /** find PhenotypeAssociations associated with a BibliographicReference */
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedId ) {
         return this.phenotypeAssociationDao.findPhenotypesForBibliographicReference( pubMedId );
     }
 
-    /** find private evidence id that the user can modifiable or own */
+    /*
+     * find private evidence id that the user can modifiable or own
+     */
     @Override
     @Transactional(readOnly = true)
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit ) {
         return this.phenotypeAssociationDao.findPrivateEvidenceId( taxonId, limit );
     }
 
-    /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    /*
+     * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
         // FIXME bug 4349 - userName is not used!
-        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable,
-                externalDatabaseIds, noElectronicAnnotation );
+        return this.phenotypeAssociationDao
+                .findPrivatePhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable, externalDatabaseIds,
+                        noElectronicAnnotation );
     }
 
-    /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    /*
+     * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
         // FIXME bug 4349 - userName is not used!
-        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable,
-                externalDatabaseIds, noElectronicAnnotation );
+        return this.phenotypeAssociationDao
+                .findPublicPhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable, externalDatabaseIds,
+                        noElectronicAnnotation );
     }
 
-    /** load an evidence given an ID */
+    /**
+     * @param id id
+     * @return load an evidence given an ID
+     */
     @Override
     @Transactional(readOnly = true)
     public PhenotypeAssociation load( Long id ) {
         return this.phenotypeAssociationDao.load( id );
     }
 
-    /** find all phenotypes */
+    /**
+     * @return find all phenotypes
+     */
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> loadAll() {
-        return ( Collection<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
+        return this.phenotypeAssociationDao.loadAll();
     }
 
     @Override
@@ -235,14 +263,18 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.loadAllDescription();
     }
 
-    /** find all phenotypes in Neurocarta */
+    /**
+     * @return find all phenotypes in Neurocarta
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
         return this.phenotypeAssociationDao.loadAllNeurocartaPhenotypes();
     }
 
-    /** load all valueURI of Phenotype in the database */
+    /**
+     * @return load all valueURI of Phenotype in the database
+     */
     @Override
     @Transactional(readOnly = true)
     public Set<String> loadAllUsedPhenotypeUris() {
@@ -250,53 +282,74 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /**
-     * returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
+     * @param maxResults                               max results
+     * @param geneDifferentialExpressionMetaAnalysisId id
+     * @return a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
      * (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, Long maxResults ) {
-        return this.phenotypeAssociationDao.loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
-                geneDifferentialExpressionMetaAnalysisId, maxResults );
+        return this.phenotypeAssociationDao
+                .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId,
+                        maxResults );
     }
 
-    /** load an ExperimentalEvidence given an ID */
+    /**
+     * @param id id
+     * @return load an ExperimentalEvidence given an ID
+     */
     @Override
     @Transactional(readOnly = true)
     public ExperimentalEvidence loadExperimentalEvidence( Long id ) {
         return this.experimentalEvidenceDao.load( id );
     }
 
-    /** load an GenericEvidence given an ID */
+    /**
+     * @param id id
+     * @return load an GenericEvidence given an ID
+     */
     @Override
     @Transactional(readOnly = true)
     public GenericEvidence loadGenericEvidence( Long id ) {
         return this.genericEvidenceDao.load( id );
     }
 
-    /** load an LiteratureEvidence given an ID */
+    /**
+     * @param id id
+     * @return load an LiteratureEvidence given an ID
+     */
     @Override
     @Transactional(readOnly = true)
     public LiteratureEvidence loadLiteratureEvidence( Long id ) {
         return this.literatureEvidenceDao.load( id );
     }
 
-    /** find statistics all evidences */
+    /**
+     * @param downloadFile file
+     * @return find statistics all evidences
+     */
     @Override
     @Transactional(readOnly = true)
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile ) {
         return this.phenotypeAssociationDao.loadStatisticsOnAllEvidence( downloadFile );
     }
 
-    /** finds all external databases statistics used in neurocarta */
+    /**
+     * @param downloadPath path
+     * @return finds all external databases statistics used in neurocarta
+     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String downloadPath ) {
         return this.phenotypeAssociationDao.loadStatisticsOnExternalDatabases( downloadPath );
     }
 
-    /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
+    /**
+     * @param downloadFile file
+     * @return find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.)
+     */
     @Override
     @Transactional(readOnly = true)
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String downloadFile ) {
@@ -304,7 +357,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /**
-     * Using an phenotypeAssociation id removes the evidence
+     * @param pa Using an phenotypeAssociation id removes the evidence
      */
     @Override
     @Transactional
@@ -319,20 +372,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         this.phenotypeAssociationDao.removePhenotypePublication( phenotypeAssociationPublicationId );
     }
 
-    /** update an evidence */
     @Override
     @Transactional
     public void update( PhenotypeAssociation evidence ) {
         this.phenotypeAssociationDao.update( evidence );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * PhenotypeAssociationService#findGenesForPhenotype(java.lang.String
-     * , java.lang.Long, boolean)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm phenotype, Long taxonId,

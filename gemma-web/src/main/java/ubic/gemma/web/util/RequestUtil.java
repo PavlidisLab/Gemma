@@ -18,21 +18,19 @@
  */
 package ubic.gemma.web.util;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * RequestUtil utility class
@@ -41,30 +39,27 @@ import org.apache.commons.logging.LogFactory;
  * http://www.javaworld.com/javaworld/jw-02-2002/ssl/utilityclass.txt</a> which is referenced in the following article:
  * <a href="http://www.javaworld.com/javaworld/jw-02-2002/jw-0215-ssl.html">
  * http://www.javaworld.com/javaworld/jw-02-2002/jw-0215-ssl.html</a>
- * <p>
+ * </p>
  * From Appfuse.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class RequestUtil {
     private static final String STOWED_REQUEST_ATTRIBS = "ssl.redirect.attrib.stowed";
-    private transient static Log log = LogFactory.getLog( RequestUtil.class );
+    private final transient static Log log = LogFactory.getLog( RequestUtil.class );
 
     /**
      * Builds a query string from a given map of parameters
-     * 
-     * @param m A map of parameters
-     * @param ampersand String to use for ampersands (e.g. "&" or "&amp;" )
+     *
+     * @param m         A map of parameters
+     * @param ampersand String to use for ampersands (e.g. "&amp;" or "&amp;amp;" )
      * @return query string (with no leading "?")
      */
     public static StringBuffer createQueryStringFromMap( Map<String, Object> m, String ampersand ) {
         StringBuffer aReturn = new StringBuffer( "" );
         Set<Entry<String, Object>> aEntryS = m.entrySet();
-        Iterator<Entry<String, Object>> aEntryI = aEntryS.iterator();
 
-        while ( aEntryI.hasNext() ) {
-            Entry<String, Object> aEntry = aEntryI.next();
+        for ( Entry<String, Object> aEntry : aEntryS ) {
             Object o = aEntry.getValue();
 
             if ( o == null ) {
@@ -74,8 +69,8 @@ public class RequestUtil {
             } else if ( o instanceof String[] ) {
                 String[] aValues = ( String[] ) o;
 
-                for ( int i = 0; i < aValues.length; i++ ) {
-                    append( aEntry.getKey(), aValues[i], aReturn, ampersand );
+                for ( String aValue : aValues ) {
+                    append( aEntry.getKey(), aValue, aReturn, ampersand );
                 }
             } else {
                 append( aEntry.getKey(), o, aReturn, ampersand );
@@ -87,10 +82,10 @@ public class RequestUtil {
 
     /**
      * Convenience method for deleting a cookie by name
-     * 
+     *
      * @param response the current web response
-     * @param cookie the cookie to delete
-     * @param path the path on which the cookie was set (i.e. /appfuse)
+     * @param cookie   the cookie to delete
+     * @param path     the path on which the cookie was set (i.e. /appfuse)
      */
     public static void deleteCookie( HttpServletResponse response, Cookie cookie, String path ) {
         if ( cookie != null ) {
@@ -104,9 +99,12 @@ public class RequestUtil {
     /**
      * Convenience method to get the application's URL based on request variables. NOTE: this is pretty useless if
      * running behind a proxy.
+     *
+     * @param request request
+     * @return app url
      */
     public static String getAppURL( HttpServletRequest request ) {
-        StringBuffer url = new StringBuffer();
+        StringBuilder url = new StringBuilder();
         int port = request.getServerPort();
         if ( port < 0 ) {
             port = 80; // Work around java.net.URL bug
@@ -125,9 +123,9 @@ public class RequestUtil {
 
     /**
      * Convenience method to get a cookie by name
-     * 
+     *
      * @param request the current request
-     * @param name the name of the cookie to find
+     * @param name    the name of the cookie to find
      * @return the cookie (if found), null if not found
      */
     public static Cookie getCookie( HttpServletRequest request, String name ) {
@@ -135,12 +133,10 @@ public class RequestUtil {
         Cookie returnCookie = null;
 
         if ( cookies == null ) {
-            return returnCookie;
+            return null;
         }
 
-        for ( int i = 0; i < cookies.length; i++ ) {
-            Cookie thisCookie = cookies[i];
-
+        for ( Cookie thisCookie : cookies ) {
             if ( thisCookie.getName().equals( name ) ) {
                 // cookies with no value do me no good!
                 if ( !thisCookie.getValue().equals( "" ) ) {
@@ -155,7 +151,8 @@ public class RequestUtil {
     }
 
     /**
-     * Creates query String from request body parameters
+     * @param aRequest request
+     * @return Creates query String from request body parameters
      */
     public static String getRequestParameters( HttpServletRequest aRequest ) {
         // set the ALGORIGTHM as defined for the application
@@ -167,35 +164,24 @@ public class RequestUtil {
 
     /**
      * Returns request attributes from session to request
-     * 
+     *
      * @param aRequest DOCUMENT ME!
      */
     public static void reclaimRequestAttributes( HttpServletRequest aRequest ) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> map = ( Map<String, Object> ) aRequest.getSession().getAttribute( STOWED_REQUEST_ATTRIBS );
+        @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) aRequest.getSession()
+                .getAttribute( STOWED_REQUEST_ATTRIBS );
 
         if ( map == null ) {
             return;
         }
 
-        Iterator<String> itr = map.keySet().iterator();
-
-        while ( itr.hasNext() ) {
-            String name = itr.next();
+        for ( String name : map.keySet() ) {
             aRequest.setAttribute( name, map.get( name ) );
         }
 
         aRequest.getSession().removeAttribute( STOWED_REQUEST_ATTRIBS );
     }
 
-    /**
-     * Convenience method to set a cookie
-     * 
-     * @param response
-     * @param name
-     * @param value
-     * @param path
-     */
     public static void setCookie( HttpServletResponse response, String name, String value, String path ) {
         if ( log.isDebugEnabled() ) {
             log.debug( "Setting cookie '" + name + "' on path '" + path + "'" );
@@ -211,7 +197,7 @@ public class RequestUtil {
 
     /**
      * Stores request attributes in session
-     * 
+     *
      * @param aRequest the current request
      */
     public static void stowRequestAttributes( HttpServletRequest aRequest ) {
@@ -220,7 +206,7 @@ public class RequestUtil {
         }
 
         Enumeration<String> e = aRequest.getAttributeNames();
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
 
         while ( e.hasMoreElements() ) {
             String name = e.nextElement();
@@ -232,11 +218,11 @@ public class RequestUtil {
 
     /**
      * Appends new key and value pair to query string
-     * 
-     * @param key parameter name
-     * @param value value of parameter
+     *
+     * @param key         parameter name
+     * @param value       value of parameter
      * @param queryString existing query string
-     * @param ampersand string to use for ampersand (e.g. "&" or "&amp;")
+     * @param ampersand   string to use for ampersand (e.g. "&" or "&amp;")
      * @return query string (with no leading "?")
      */
     private static StringBuffer append( Object key, Object value, StringBuffer queryString, String ampersand ) {

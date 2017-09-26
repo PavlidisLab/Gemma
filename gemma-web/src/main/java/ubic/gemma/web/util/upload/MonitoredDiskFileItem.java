@@ -23,42 +23,29 @@
  */
 package ubic.gemma.web.util.upload;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+
 /**
  * Commons FileItem that uses a MonitoredOutputStream
- * 
+ *
  * @author Original : plosson
  * @author pavlidis
- * @version $Id$
  */
 public class MonitoredDiskFileItem extends DiskFileItem {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 769886623757245271L;
 
-    private static Log log = LogFactory.getLog( MonitoredDiskFileItem.class.getName() );
+    private static final Log log = LogFactory.getLog( MonitoredDiskFileItem.class.getName() );
 
     transient private MonitoredOutputStream mos = null;
     transient private OutputStreamListener listener;
 
-    /**
-     * @param fieldName
-     * @param contentType
-     * @param isFormField
-     * @param fileName
-     * @param sizeThreshold
-     * @param repositoryc
-     * @param listener
-     */
     public MonitoredDiskFileItem( String fieldName, String contentType, boolean isFormField, String fileName,
             int sizeThreshold, File repository, OutputStreamListener listener ) {
         super( fieldName, contentType, isFormField, fileName, sizeThreshold, repository );

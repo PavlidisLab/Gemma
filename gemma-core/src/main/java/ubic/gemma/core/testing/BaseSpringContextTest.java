@@ -543,7 +543,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     /**
      * Change the number of elements created in collections (basically controls the size of test data sets).
-     * This need not be called unless the test needs larger data sets. FCall {@link this#resetTestCollectionSize}
+     * This need not be called unless the test needs larger data sets. Call resetTestCollectionSize
      * after you are done.
      *
      * @param size size

@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.util.monitor;
 
 import org.apache.commons.logging.Log;
-
 import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -28,54 +27,28 @@ import org.springframework.util.StopWatch;
 
 /**
  * Interceptor for monitoring methods.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Aspect
 public class MonitorAdvice {
 
-    private static Log log = LogFactory.getLog( MonitorAdvice.class );
+    private static final Log log = LogFactory.getLog( MonitorAdvice.class );
 
-    //@Autowired
-    //private SessionFactory sessionFactory;
-
-    /**
-     * Entry point.
-     * 
-     * @param pjp
-     * @param monitored
-     * @return
-     * @throws Throwable
-     */
     @Around("@annotation(ubic.gemma.persistence.util.monitor.Monitored)")
     public Object profile( ProceedingJoinPoint pjp ) throws Throwable {
-        //long cacheHitsBefore = sessionFactory.getStatistics().getQueryCacheHitCount();
 
         StopWatch stopWatch = new StopWatch();
-//        try {
-            stopWatch.start();
-            Object retVal =  pjp.proceed();
-//        } finally {
-            stopWatch.stop();
-            // if ( stopWatch.getTotalTimeMillis() > monitored.minTimeToReport() ) {
-//            long cacheHitsAfter = sessionFactory.getStatistics().getQueryCacheHitCount();
-//            long cacheHits = cacheHitsAfter - cacheHitsBefore;
-//            String chs = "";
-//            if ( cacheHits > 0 ) {
-//                chs = " - query cache hit"; // this hit could have been from another thread...
-//            }
-            log.info( pjp.getSignature().toString()+ " took " + stopWatch.getLastTaskTimeMillis() + "ms." );            
-            // }            
-            return retVal;
-//        }
-    }
 
-    /**
-     * @param sessionFactory the sessionFactory to set
-     */
-//    public void setSessionFactory( SessionFactory sessionFactory ) {
-//        this.sessionFactory = sessionFactory;
-//    }
+        stopWatch.start();
+        Object retVal = pjp.proceed();
+
+        stopWatch.stop();
+
+        log.info( pjp.getSignature().toString() + " took " + stopWatch.getLastTaskTimeMillis() + "ms." );
+
+        return retVal;
+
+    }
 
 }

@@ -309,7 +309,7 @@ public class EntityUtils {
     }
 
     /**
-     * Populates parameters in query created using {@link this#addGroupAndUserNameRestriction(boolean, boolean)}.
+     * Populates parameters in query created using addGroupAndUserNameRestriction(boolean, boolean).
      *
      * @param queryObject    the query object created using the sql query with group and username restrictions.
      * @param sessionFactory session factory from the DAO that is using this method.

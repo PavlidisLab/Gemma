@@ -14,16 +14,15 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 
+import java.util.Collection;
+
 /**
  * @author pavlidis
  * @author keshav
- * @version $Id$
  * @see PersonService
  */
 @Service
@@ -42,13 +41,6 @@ public class PersonServiceImpl extends PersonServiceBase {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * PersonServiceBase#handleCreate(ubic.gemma.model.common.auditAndSecurity
-     * .Person)
-     */
     @Override
     protected Person handleCreate( Person person ) {
         return this.getPersonDao().create( person );
@@ -59,48 +51,22 @@ public class PersonServiceImpl extends PersonServiceBase {
         return this.getPersonDao().findByFullName( name, lastName );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PersonServiceBase#handleExpfindByName(java.lang.String,
-     * java.lang.String, java.lang.String)
-     */
-
-    /**
-     * @see PersonService#findOrCreate(java.lang.String, java.lang.String,
-     *      java.lang.String)
-     */
     @Override
     protected Person handleFindOrCreate( Person person ) {
         return this.getPersonDao().findOrCreate( person );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PersonServiceBase#handleLoadAll()
-     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Person> handleLoadAll() {
         return ( Collection<Person> ) this.getPersonDao().loadAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * PersonServiceBase#handleRemove(ubic.gemma.model.common.auditAndSecurity
-     * .Person)
-     */
     @Override
     protected void handleRemove( Person person ) {
         this.getPersonDao().remove( person );
     }
 
-    /**
-     * @see PersonService#removePerson(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
     protected void handleRemovePerson( ubic.gemma.model.common.auditAndSecurity.Person person ) {
         this.getPersonDao().remove( person );
     }

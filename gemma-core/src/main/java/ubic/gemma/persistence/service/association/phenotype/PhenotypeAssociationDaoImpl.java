@@ -90,7 +90,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms() {
 
-        Collection<CharacteristicValueObject> mgedCategory = new TreeSet<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> mgedCategory = new TreeSet<>();
 
         String queryString = "SELECT DISTINCT CATEGORY_URI, category FROM PHENOTYPE_ASSOCIATION "
                 + "JOIN INVESTIGATION ON PHENOTYPE_ASSOCIATION.EXPERIMENT_FK = INVESTIGATION.ID "
@@ -116,7 +116,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<String> findEvidenceOwners() {
 
-        Set<String> owners = new HashSet<String>();
+        Set<String> owners = new HashSet<>();
 
         // FIXME only shows owner who is a user, not a granted authority. That might be okay.
         String sqlQuery =
@@ -176,7 +176,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             boolean includeIEA ) {
 
         Collection<OntologyTerm> children = term.getChildren( false );
-        Map<String, OntologyTerm> uris = new HashMap<String, OntologyTerm>();
+        Map<String, OntologyTerm> uris = new HashMap<>();
         uris.put( term.getUri(), term );
         for ( OntologyTerm c : children ) {
             uris.put( c.getUri(), c );
@@ -191,7 +191,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Query query = sess.createQuery( q );
 
-        Map<GeneValueObject, OntologyTerm> result = new HashMap<GeneValueObject, OntologyTerm>();
+        Map<GeneValueObject, OntologyTerm> result = new HashMap<>();
         query.setParameterList( "t", uris.keySet() );
         List<?> list = query.list();
 
@@ -241,7 +241,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
 
         if ( phenotypeUris.isEmpty() ) {
-            return new HashSet<GeneEvidenceValueObject>();
+            return new HashSet<>();
         }
 
         // build query.
@@ -297,7 +297,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         String findByExternalDatabase = "";
         boolean excludeManualCuration = false;
         boolean excludeExternalDatabase = false;
-        Collection<PhenotypeAssociation> manualCuration = new HashSet<PhenotypeAssociation>();
+        Collection<PhenotypeAssociation> manualCuration = new HashSet<>();
         Collection<PhenotypeAssociation> evidenceWithSource;
 
         if ( externalDatabaseIds != null && !externalDatabaseIds.isEmpty() ) {
@@ -375,7 +375,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds ) {
 
         if ( paIds == null || paIds.isEmpty() ) {
-            return new HashSet<PhenotypeAssociation>();
+            return new HashSet<>();
         }
 
         //noinspection unchecked
@@ -410,7 +410,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             limitAbs = "limit " + limit;
         }
 
-        Set<Long> ids = new HashSet<Long>();
+        Set<Long> ids = new HashSet<>();
 
         String sqlQuery = "select distinct phen.ID ";
         sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
@@ -559,7 +559,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
 
-        Collection<PhenotypeValueObject> phenotypeValueObjects = new HashSet<PhenotypeValueObject>();
+        Collection<PhenotypeValueObject> phenotypeValueObjects = new HashSet<>();
 
         List<?> res = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct c.valueUri,c.value from PhenotypeAssociation p join p.phenotypes c" )
@@ -588,7 +588,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /**
-     * returns a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
+     * @param geneDifferentialExpressionMetaAnalysisId id
+     * @param maxResults                               max results
+     * @return a Collection for a geneDifferentialExpressionMetaAnalysisId if one exists
      * (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
     @Override
@@ -608,9 +610,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                         + geneDifferentialExpressionMetaAnalysisId + ")" );
     }
 
-    /**
-     * find statistics all evidences
-     */
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile ) {
 
@@ -639,7 +638,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String downloadPath ) {
 
-        HashMap<String, ExternalDatabaseStatisticsValueObject> externalDatabasesStatistics = new HashMap<String, ExternalDatabaseStatisticsValueObject>();
+        HashMap<String, ExternalDatabaseStatisticsValueObject> externalDatabasesStatistics = new HashMap<>();
 
         //noinspection unchecked
         List<Object[]> numEvidence = this.getHibernateTemplate()
@@ -698,7 +697,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /**
-     * find statistics for manual curation (numGene, numPhenotypes, etc.)
+     * @param downloadFile file
+     * @return find statistics for manual curation (numGene, numPhenotypes, etc.)
      */
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String downloadFile ) {
@@ -740,7 +740,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /**
-     * remove a PhenotypeAssociationPublication
+     * @param phenotypeAssociationPublicationId remove a PhenotypeAssociationPublication
      */
     @Override
     public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
@@ -802,7 +802,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /**
      * Add IN clause for contstraint on valueuris.
      *
-     * @param keyWord either 'and' or '' depending on whether this is the first clause...
+     * @param keyWord    either 'and' or '' depending on whether this is the first clause...
+     * @param valuesUris uris
+     * @return complete string
      */
     private String addValuesUriToQuery( String keyWord, Set<String> valuesUris ) {
 
@@ -814,7 +816,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /**
-     * basic sql command to deal with security; adds the where clause; delcare aliases charac, phen and gene; ace, aoi,
+     * @param force force
+     * @return basic sql command to deal with security; adds the where clause; delcare aliases charac, phen and gene; ace, aoi,
      * sid
      */
     private String getPhenotypesGenesAssociationsBeginQuery( boolean force ) {
@@ -841,10 +844,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /**
-     * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
+     * @param queryObject execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --&gt; genes
+     * @return map
      */
     private Map<String, Set<Integer>> populateGenesAssociations( SQLQuery queryObject ) {
-        Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<String, Set<Integer>>();
+        Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
 
@@ -854,7 +858,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             if ( phenotypesGenesAssociations.containsKey( valueUri ) ) {
                 phenotypesGenesAssociations.get( valueUri ).add( geneNcbiId );
             } else {
-                Set<Integer> genesNCBI = new HashSet<Integer>();
+                Set<Integer> genesNCBI = new HashSet<>();
                 genesNCBI.add( geneNcbiId );
                 phenotypesGenesAssociations.put( valueUri, genesNCBI );
             }
@@ -864,14 +868,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /**
-     * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
+     * @param queryObject execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --&gt; genes
+     * @return collection
      */
     private Collection<GeneEvidenceValueObject> populateGenesWithPhenotypes( SQLQuery queryObject ) {
         StopWatch sw = new StopWatch();
         sw.start();
 
         // we accumulate the phenotypes for a gene in one VO
-        Map<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<Long, GeneEvidenceValueObject>();
+        Map<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<>();
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {

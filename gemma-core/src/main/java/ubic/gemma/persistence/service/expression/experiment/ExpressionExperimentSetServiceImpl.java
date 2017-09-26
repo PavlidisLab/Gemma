@@ -188,7 +188,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
 
     /**
      * Instantiate non-persistent experiment set with description = "Automatically generated for ## EEs.". Mostly for
-     * use in Gene2GenePopulationServiceImpl.intializeNewAnalysis(Collection<BioAssaySet>, Taxon, Collection<Gene>,
+     * use in Gene2GenePopulationServiceImpl.intializeNewAnalysis(Collection, Taxon, Collection,
      * String, int). By convention, these sets should not be modifiable.
      */
     @Override

@@ -18,16 +18,14 @@
  */
 package ubic.gemma.web.view;
 
-import java.util.List;
-
 import com.sdicons.json.mapper.JSONMapper;
 import com.sdicons.json.mapper.MapperException;
 import com.sdicons.json.model.JSONValue;
 
+import java.util.List;
+
 /**
- * @spring.bean id="JSONTableRenderer"
  * @author pavlidis
- * @version $Id$
  */
 public class JSONTableRenderer {
 

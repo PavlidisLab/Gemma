@@ -61,7 +61,7 @@ public class BibliographicReference extends AbstractAuditable {
     }
 
     /**
-     * A version of the abstract with inserted markup (e.g., abbreviation expansions, part-of-speech)
+     * @return A version of the abstract with inserted markup (e.g., abbreviation expansions, part-of-speech)
      */
     public String getAnnotatedAbstract() {
         return this.annotatedAbstract;
@@ -96,7 +96,7 @@ public class BibliographicReference extends AbstractAuditable {
     }
 
     /**
-     * The citation as a pre-composed string
+     * @return The citation as a pre-composed string
      */
     public String getCitation() {
         return this.citation;
@@ -123,7 +123,7 @@ public class BibliographicReference extends AbstractAuditable {
     }
 
     /**
-     * URI of the full text on the publisher's web site.
+     * @return URI of the full text on the publisher's web site.
      */
     public String getFullTextUri() {
         return this.fullTextUri;
@@ -221,17 +221,10 @@ public class BibliographicReference extends AbstractAuditable {
         this.volume = volume;
     }
 
-    /**
-     * Constructs new instances of {@link BibliographicReference}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link BibliographicReference}.
-         */
         public static BibliographicReference newInstance() {
             return new BibliographicReference();
         }
-
     }
 
 }

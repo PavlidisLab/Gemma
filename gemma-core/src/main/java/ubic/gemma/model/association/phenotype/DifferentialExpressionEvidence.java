@@ -25,40 +25,12 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  */
 public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidence {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1056186800210320618L;
-
-    /**
-     * Constructs new instances of {@link DifferentialExpressionEvidence}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link DifferentialExpressionEvidence}.
-         */
-        public static DifferentialExpressionEvidence newInstance() {
-            return new DifferentialExpressionEvidenceImpl();
-        }
-
-    }
-
     private Double selectionThreshold;
-
     private GeneDifferentialExpressionMetaAnalysisResult geneDifferentialExpressionMetaAnalysisResult;
 
-    /**
-     * 
-     */
     public GeneDifferentialExpressionMetaAnalysisResult getGeneDifferentialExpressionMetaAnalysisResult() {
         return this.geneDifferentialExpressionMetaAnalysisResult;
-    }
-
-    /**
-     * The q-value threshold that was used to select genes from the meta-analysis.
-     */
-    public Double getSelectionThreshold() {
-        return this.selectionThreshold;
     }
 
     public void setGeneDifferentialExpressionMetaAnalysisResult(
@@ -66,8 +38,21 @@ public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidenc
         this.geneDifferentialExpressionMetaAnalysisResult = geneDifferentialExpressionMetaAnalysisResult;
     }
 
+    /**
+     * @return The q-value threshold that was used to select genes from the meta-analysis.
+     */
+    public Double getSelectionThreshold() {
+        return this.selectionThreshold;
+    }
+
     public void setSelectionThreshold( Double selectionThreshold ) {
         this.selectionThreshold = selectionThreshold;
+    }
+
+    public static final class Factory {
+        public static DifferentialExpressionEvidence newInstance() {
+            return new DifferentialExpressionEvidenceImpl();
+        }
     }
 
 }

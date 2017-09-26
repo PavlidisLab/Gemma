@@ -18,14 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
-/**
- * 
- */
 public abstract class BibRefAnnotation implements java.io.Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2925637697790915030L;
     private Long id;
     private Boolean isMajorTopic;
@@ -51,48 +45,36 @@ public abstract class BibRefAnnotation implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public Long getId() {
         return this.id;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getIsMajorTopic() {
-        return this.isMajorTopic;
-    }
-
-    /**
-     * 
-     */
-    public String getTerm() {
-        return this.term;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
     }
 
     public void setId( Long id ) {
         this.id = id;
     }
 
+    public Boolean getIsMajorTopic() {
+        return this.isMajorTopic;
+    }
+
     public void setIsMajorTopic( Boolean isMajorTopic ) {
         this.isMajorTopic = isMajorTopic;
     }
 
+    public String getTerm() {
+        return this.term;
+    }
+
     public void setTerm( String term ) {
         this.term = term;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
     }
 
 }

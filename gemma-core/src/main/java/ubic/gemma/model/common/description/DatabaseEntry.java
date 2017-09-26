@@ -47,10 +47,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
     public DatabaseEntry() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an DatabaseEntry instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -81,9 +77,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
         return hashCode;
     }
 
-    /**
-     * @see DatabaseEntry#toString()
-     */
     @Override
     public String toString() {
         return ( this.getAccession() + " " ) + ( this.getExternalDatabase() == null ?
@@ -91,9 +84,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
                 this.getExternalDatabase().getName() ) + ( this.getId() == null ? "" : " (Id=" + this.getId() + ")" );
     }
 
-    /**
-     * The id
-     */
     public String getAccession() {
         return this.accession;
     }
@@ -134,21 +124,12 @@ public class DatabaseEntry implements Identifiable, Serializable {
         this.Uri = Uri;
     }
 
-    /**
-     * Constructs new instances of {@link DatabaseEntry}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link DatabaseEntry}.
-         */
+
         public static DatabaseEntry newInstance() {
             return new DatabaseEntry();
         }
 
-        /**
-         * Constructs a new instance of {@link DatabaseEntry}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
         public static DatabaseEntry newInstance( String accession, String accessionVersion, String Uri,
                 ExternalDatabase externalDatabase ) {
             final DatabaseEntry entity = new DatabaseEntry();
@@ -159,10 +140,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
             return entity;
         }
 
-        /**
-         * Constructs a new instance of {@link DatabaseEntry}, taking all required
-         * and/or read-only properties as arguments.
-         */
         public static DatabaseEntry newInstance( ExternalDatabase externalDatabase ) {
             final DatabaseEntry entity = new DatabaseEntry();
             entity.setExternalDatabase( externalDatabase );

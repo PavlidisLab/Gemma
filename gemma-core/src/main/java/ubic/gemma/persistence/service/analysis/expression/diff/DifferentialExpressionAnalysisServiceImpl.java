@@ -32,7 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.AnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -81,18 +80,12 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     }
 
-    /**
-     * @see DifferentialExpressionAnalysisService#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
     @Override
     @Transactional
     public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis ) {
         return this.differentialExpressionAnalysisDao.create( analysis );
     }
 
-    /**
-     * @see AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
-     */
     @Override
     @Transactional
     public void delete( DifferentialExpressionAnalysis toDelete ) {
@@ -197,18 +190,12 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     }
 
-    /**
-     * @see AnalysisService#load(java.lang.Long)
-     */
     @Override
     @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis load( java.lang.Long id ) {
         return this.differentialExpressionAnalysisDao.load( id );
     }
 
-    /**
-     * @see AnalysisService#loadAll()
-     */
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)

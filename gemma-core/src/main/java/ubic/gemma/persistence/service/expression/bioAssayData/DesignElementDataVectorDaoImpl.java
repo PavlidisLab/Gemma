@@ -37,7 +37,6 @@ import java.util.Map;
 
 /**
  * @author pavlidis
- * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
 public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementDataVector>
@@ -265,9 +264,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         this.thaw( session, designElementDataVector );
     }
 
-    /**
-     * Thaw a single vector.
-     */
     void thaw( org.hibernate.Session session, T designElementDataVector ) {
         // thaw the design element.
         BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
@@ -289,11 +285,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         }
     }
 
-    /**
-     * Fetch vectors for a batch of probes.
-     *
-     * @param cs2gene (by ID)
-     */
     private void getVectorsBatch( Map<Long, Collection<Long>> cs2gene, org.hibernate.Query queryObject,
             Map<T, Collection<Long>> dedv2genes, Collection<Long> batch ) {
         queryObject.setParameterList( "cs", batch );

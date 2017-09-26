@@ -24,11 +24,8 @@ import net.jawr.web.resource.bundle.postprocess.ResourceBundlePostProcessor;
 
 /**
  * JAWR postprocessor to remove console.log and debugger breakpoint statements. Configured in jawr.properties
- * <p>
- * See {@link https://jawr.java.net/docs/postprocessors.html}
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class MinifierPostProcessor implements ResourceBundlePostProcessor {
 

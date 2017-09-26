@@ -18,13 +18,12 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <p>
@@ -36,37 +35,28 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * white space around the '='s. The ID column MUST match the names on the BioAssays the design will be attached to. Main
  * section is tab-delimited. Column headings in the main table must match the identifiers given in the header.
  * </p>
- * 
  * <pre>
- *    #$ Age : Category=Age Type=Continuous                
- *    #$ Profile : Category=DiseaseState Type=Categorical              
- *    #$ PMI (h) : Category=EnvironmentalHistory Type=Continuous              
- *    #$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
- *    #ID  Age     Profile     PMI (h)     Lifetime Alcohol    
- *    f-aa     50  Bipolar     48  Moderate present 
- *    f-ab     50  Bipolar     60  Heavy in present 
- *    f-ac     55  Schizophrenia   26  Little or none 
- *    f-ad     35  Bipolar     28  Unknown 
+ *    #$ Age : Category=Age Type=Continuous
+ *    #$ Profile : Category=DiseaseState Type=Categorical
+ *    #$ PMI (h) : Category=EnvironmentalHistory Type=Continuous
+ *    #$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical
+ *    #ID  Age     Profile     PMI (h)     Lifetime Alcohol
+ *    f-aa     50  Bipolar     48  Moderate present
+ *    f-ab     50  Bipolar     60  Heavy in present
+ *    f-ac     55  Schizophrenia   26  Little or none
+ *    f-ad     35  Bipolar     28  Unknown
  *    f-af     60  Bipolar     70  Little or none
  * </pre>
- * <p>
  * Note: Files downloaded from Gemma may have an "ExternalID" column after the first column. This is allowed in the
  * import format.
- * 
+ *
  * @author Paul
  * @see ExperimentalDesignWriter
  */
 public interface ExperimentalDesignImporter {
 
-    /**
-     * see other method.
-     * 
-     * @param experiment
-     * @param is
-     * @throws IOException
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException;
+    void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException;
 
     /**
      * This is the main builder director method of the application: It processes the input file containing information
@@ -89,14 +79,14 @@ public interface ExperimentalDesignImporter {
      * Step 3 on successful validation and object creation the experimental design is persisted following a strict
      * order, expression factors first then biomaterial details.
      * </p>
-     * 
-     * @param Expression experiment the one to add the experimental design
-     * @param is File to process
-     * @param dryRunboolean a bit redundant dry run
+     *
+     * @param experiment the one to add the experimental design
+     * @param is         File to process
+     * @param dryRun     boolean a bit redundant dry run
      * @see ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter
-     *      #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
+     * #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException;
+    void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException;
 
 }

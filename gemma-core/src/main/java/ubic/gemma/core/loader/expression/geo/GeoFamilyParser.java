@@ -18,94 +18,57 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
-import ubic.gemma.core.loader.expression.geo.model.GeoContact;
-import ubic.gemma.core.loader.expression.geo.model.GeoData;
-import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.core.loader.expression.geo.model.GeoReplication;
-import ubic.gemma.core.loader.expression.geo.model.GeoSample;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
-import ubic.gemma.core.loader.expression.geo.model.GeoValues;
-import ubic.gemma.core.loader.expression.geo.model.GeoVariable;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries.SeriesType;
+import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.parser.Parser;
+
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class for parsing GSE and GDS files from NCBI GEO. See
- * {@link http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
+ * <a href="http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html">ncbi geo</a> for format information.
  *
  * @author keshav
  * @author pavlidis
  */
 public class GeoFamilyParser implements Parser<Object> {
-
-    /**
-     *
-     */
     private static final char FIELD_DELIM = '\t';
 
     private static final int MAX_WARNINGS = 100;
 
-    private static Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
+    private static final Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
+    boolean alreadyWarnedAboutClobbering = false;
+    boolean alreadyWarnedAboutInconsistentColumnOrder = false;
+    boolean alreadyWarnedAboutDuplicateColumnName = false;
     private Integer previousNumTokens = null;
-
     /**
      * For each platform, the map of column names to column numbers in the data.
      */
     private Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<>();
-
     /**
      * This is used to put the data in the right place later. We know the actual column is where it is NOW, for this
      * sample, but in our data structure we put it where we EXPECT it to be (where it was the first time we saw it).
      * This is our attempt to fix problems with columns moving around from sample to sample.
      */
     private Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<>();
-
-    boolean alreadyWarnedAboutClobbering = false;
-    boolean alreadyWarnedAboutInconsistentColumnOrder = false;
-    boolean alreadyWarnedAboutDuplicateColumnName = false;
-
     private String currentDatasetAccession;
     private String currentPlatformAccession;
 
     private String currentSampleAccession;
     private String currentSeriesAccession;
     private String currentSubsetAccession;
-
-    private int dataSetDataLines = 0;
 
     private boolean haveReadPlatformHeader = false;
     private boolean haveReadSampleDataHeader = false;
@@ -137,8 +100,6 @@ public class GeoFamilyParser implements Parser<Object> {
 
     private int sampleDataLines = 0;
 
-    private int seriesDataLines = 0;
-
     private boolean processPlatformsOnly;
 
     private int numWarnings = 0;
@@ -148,21 +109,10 @@ public class GeoFamilyParser implements Parser<Object> {
      */
     private Collection<String> processedDesignElements = new HashSet<>();
 
-    /**
-     *
-     */
     private Collection<Integer> wantedQuantitationTypes = new HashSet<>();
 
-    /**
-     *
-     */
     private boolean aggressiveQuantitationTypeRemoval;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.loader.loaderutils.Parser#getResults()
-     */
     @Override
     public Collection<Object> getResults() {
         Collection<Object> r = new HashSet<>();
@@ -170,23 +120,13 @@ public class GeoFamilyParser implements Parser<Object> {
         return r;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.loader.loaderutils.Parser#parse(java.io.File)
-     */
     @Override
     public void parse( File f ) throws IOException {
-        try (InputStream a = new FileInputStream( f );) {
+        try (InputStream a = new FileInputStream( f )) {
             this.parse( a );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.loader.loaderutils.Parser#parse(java.io.InputStream)
-     */
     @Override
     public void parse( InputStream is ) throws IOException {
         if ( is == null ) {
@@ -197,7 +137,7 @@ public class GeoFamilyParser implements Parser<Object> {
             throw new IOException( "No bytes to read from the input stream." );
         }
 
-        try (final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
+        try (final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) )) {
 
             log.debug( "Parsing...." );
 
@@ -255,22 +195,13 @@ public class GeoFamilyParser implements Parser<Object> {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.loader.loaderutils.Parser#parse(java.lang.String)
-     */
     @Override
     public void parse( String fileName ) throws IOException {
-        try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );) {
+        try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName )) {
             parse( is );
         }
     }
 
-    /**
-     * @param accession
-     * @param string
-     */
     public void sampleTypeSet( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );
         if ( string.equalsIgnoreCase( "cDNA" ) ) {
@@ -302,9 +233,6 @@ public class GeoFamilyParser implements Parser<Object> {
 
     }
 
-    /**
-     * @param b
-     */
     public void setProcessPlatformsOnly( boolean b ) {
         this.processPlatformsOnly = b;
     }
@@ -315,7 +243,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * samples in terms of what design elements they have. Important: This has to be called IMMEDIATELY after the data
      * for the sample is read in, so the values get added in the right place.
      *
-     * @param currentSample
+     * @param currentSample current sample
      */
     private void addMissingData( GeoSample currentSample ) {
 
@@ -358,8 +286,9 @@ public class GeoFamilyParser implements Parser<Object> {
                 for ( Object i : qTypeIndexes ) {
                     values.addValue( currentSample, ( Integer ) i, el, " " );
                 }
-                if ( log.isDebugEnabled() ) log.debug( "Added data missing from sample=" + currentSample + " for probe="
-                        + el + " on " + samplePlatform );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Added data missing from sample=" + currentSample + " for probe=" + el + " on "
+                            + samplePlatform );
             }
         }
         if ( countMissing > 0 ) {
@@ -372,18 +301,16 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Add a new sample to the results.
      *
-     * @param sampleAccession
+     * @param sampleAccession sample accession
      */
     private void addNewSample( String sampleAccession ) {
-        if ( log.isDebugEnabled() ) log.debug( "Adding new sample " + sampleAccession );
+        if ( log.isDebugEnabled() )
+            log.debug( "Adding new sample " + sampleAccession );
         GeoSample newSample = new GeoSample();
         newSample.setGeoAccession( sampleAccession );
         results.getSampleMap().put( sampleAccession, newSample );
     }
 
-    /**
-     * @param value
-     */
     private void addSeriesSample( String value ) {
         if ( !results.getSampleMap().containsKey( value ) ) {
             log.debug( "New sample (for series): " + value );
@@ -393,11 +320,6 @@ public class GeoFamilyParser implements Parser<Object> {
         results.getSeriesMap().get( currentSeriesAccession ).addSample( results.getSampleMap().get( value ) );
     }
 
-    /**
-     * @param target
-     * @param property
-     * @param value
-     */
     private void addTo( Object target, String property, Object value ) {
 
         try {
@@ -412,18 +334,10 @@ public class GeoFamilyParser implements Parser<Object> {
             if ( property == null ) {
                 log.warn( "Property is null for value=" + value + " target=" + target );
             }
-            Method adder = target.getClass().getMethod( "addTo" + WordUtils.capitalize( property ),
-                    new Class[] { value.getClass() } );
+            Method adder = target.getClass()
+                    .getMethod( "addTo" + WordUtils.capitalize( property ), new Class[] { value.getClass() } );
             adder.invoke( target, new Object[] { value } );
-        } catch ( SecurityException e ) {
-            throw new RuntimeException( e );
-        } catch ( IllegalArgumentException e ) {
-            throw new RuntimeException( e );
-        } catch ( NoSuchMethodException e ) {
-            throw new RuntimeException( e );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( SecurityException | InvocationTargetException | IllegalAccessException | NoSuchMethodException | IllegalArgumentException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -441,11 +355,6 @@ public class GeoFamilyParser implements Parser<Object> {
         }
     }
 
-    /**
-     * Due to bug 2326, when a sample has no data at all.
-     *
-     * @param sampleMap
-     */
     private void checkForAndFixMissingColumnNames() {
         Map<String, GeoSample> sampleMap = this.results.getSampleMap();
         List<String> representativeColumnNames = null;
@@ -475,27 +384,16 @@ public class GeoFamilyParser implements Parser<Object> {
         }
     }
 
-    /**
-     * @param contact
-     * @param property
-     * @param value
-     */
     private void contactSet( GeoContact contact, String property, Object value ) {
-        if ( contact == null ) throw new IllegalArgumentException();
+        if ( contact == null )
+            throw new IllegalArgumentException();
         try {
             BeanUtils.setProperty( contact, property, value );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param object
-     * @param property
-     * @param value
-     */
     private void contactSet( Object object, String property, Object value ) {
         if ( object instanceof GeoContact ) {
             contactSet( ( GeoContact ) object, property, value );
@@ -521,40 +419,34 @@ public class GeoFamilyParser implements Parser<Object> {
         return this.results.getSeriesMap().get( currentSeriesAccession );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void datasetSet( String accession, String property, Object value ) {
         GeoDataset dataset = results.getDatasetMap().get( accession );
-        if ( dataset == null ) throw new IllegalArgumentException( "Unknown dataset " + accession );
+        if ( dataset == null )
+            throw new IllegalArgumentException( "Unknown dataset " + accession );
 
-        if ( property.equals( "experimentType" ) ) {
-            value = GeoDataset.convertStringToExperimentType( ( String ) value );
-        } else if ( property.equals( "platformType" ) ) {
-            value = GeoDataset.convertStringToPlatformType( ( String ) value );
-        } else if ( property.equals( "sampleType" ) ) {
-            value = GeoDataset.convertStringToSampleType( ( String ) value );
-        } else if ( property.equals( "valueType" ) ) {
-            value = GeoDataset.convertStringToValueType( ( String ) value );
+        switch ( property ) {
+            case "experimentType":
+                value = GeoDataset.convertStringToExperimentType( ( String ) value );
+                break;
+            case "platformType":
+                value = GeoDataset.convertStringToPlatformType( ( String ) value );
+                break;
+            case "sampleType":
+                value = GeoDataset.convertStringToSampleType( ( String ) value );
+                break;
+            case "valueType":
+                value = GeoDataset.convertStringToValueType( ( String ) value );
+                break;
         }
 
         try {
             BeanUtils.setProperty( dataset, property, value );
-        } catch ( IllegalAccessException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             log.error( e, e );
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param dis
-     * @throws IOException
-     */
     private Exception doParse( BufferedReader dis ) {
         if ( dis == null ) {
             throw new RuntimeException( "Null reader" );
@@ -565,7 +457,7 @@ public class GeoFamilyParser implements Parser<Object> {
         alreadyWarnedAboutClobbering = false;
         alreadyWarnedAboutInconsistentColumnOrder = false;
         alreadyWarnedAboutDuplicateColumnName = false;
-        String line = "";
+        String line;
         parsedLines = 0;
         processedDesignElements.clear();
 
@@ -598,23 +490,22 @@ public class GeoFamilyParser implements Parser<Object> {
 
         timer.stop();
         if ( timer.getTime() > 10000 ) { // 10 s
-            log.info( "Parsed total of " + parsedLines + " lines in "
-                    + String.format( "%.2gs", timer.getTime() / 1000.0 ) );
+            log.info( "Parsed total of " + parsedLines + " lines in " + String
+                    .format( "%.2gs", timer.getTime() / 1000.0 ) );
         }
         log.debug( this.platformLines + " platform  lines" );
-        log.debug( this.seriesDataLines + " series data lines" );
-        log.debug( this.dataSetDataLines + " data set data lines" );
+        int seriesDataLines = 0;
+        log.debug( seriesDataLines + " series data lines" );
+        int dataSetDataLines = 0;
+        log.debug( dataSetDataLines + " data set data lines" );
         log.debug( this.sampleDataLines + " sample data lines" );
         return null;
     }
 
-    /**
-     * @param line
-     * @return
-     */
     private int extractChannelNumber( String line ) {
         int chIndex = line.lastIndexOf( "_ch" );
-        if ( chIndex < 0 ) return 1; // that's okay, there is only one channel.
+        if ( chIndex < 0 )
+            return 1; // that's okay, there is only one channel.
         String candidateInt = line.substring( chIndex + 3, chIndex + 4 );
         try {
             return Integer.parseInt( candidateInt );
@@ -626,35 +517,38 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Turns a line in the format #key = value into a column name and description. This is used to handle lines such as
      * (in a platform section of a GSE file):
-     *
      * <pre>
      * #SEQ_LEN = Sequence length
      * </pre>
      *
-     * @param line
+     * @param line        line
      * @param dataToAddTo GeoData object, must not be null.
      */
     private void extractColumnIdentifier( String line, GeoData dataToAddTo ) {
-        if ( dataToAddTo == null ) throw new IllegalArgumentException( "Data cannot be null" );
+        if ( dataToAddTo == null )
+            throw new IllegalArgumentException( "Data cannot be null" );
 
         Map<String, String> res = extractKeyValue( line );
 
-        if ( res == null ) return;
+        if ( res == null )
+            return;
 
         String columnName = res.keySet().iterator().next();
         dataToAddTo.addColumnName( columnName );
         dataToAddTo.getColumnDescriptions().add( res.get( columnName ) );
-        if ( log.isDebugEnabled() ) log.debug( "Adding " + columnName + " to column names for " + dataToAddTo );
+        if ( log.isDebugEnabled() )
+            log.debug( "Adding " + columnName + " to column names for " + dataToAddTo );
     }
 
     /**
      * Extract a key and value pair from a line in the format #key = value.
      *
-     * @param line.
+     * @param line line
      * @return Map containing the String key and String value. Return null if it is misformatted.
      */
     private Map<String, String> extractKeyValue( String line ) {
-        if ( !line.startsWith( "#" ) ) throw new IllegalArgumentException( "Wrong type of line" );
+        if ( !line.startsWith( "#" ) )
+            throw new IllegalArgumentException( "Wrong type of line" );
         Map<String, String> result = new HashMap<>();
         String fixed = line.substring( line.indexOf( '#' ) + 1 );
 
@@ -674,7 +568,7 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Extract a value from a line in the format xxxx=value.
      *
-     * @param line
+     * @param line line
      * @return String following the first occurrence of '=', or null if there is no '=' in the String.
      */
     private String extractValue( String line ) {
@@ -690,9 +584,9 @@ public class GeoFamilyParser implements Parser<Object> {
      * Parse a line to extract an integer <em>n</em> from the a variable description line like "!Series_variable_[n] =
      * age"
      *
-     * @param line
+     * @param line line
      * @return int
-     * @throws Exception if the line doesn't fit the format.
+     * @throws IllegalArgumentException if the line doesn't fit the format.
      */
     private int extractVariableNumber( String line ) {
         Pattern p = Pattern.compile( "_(\\d+)$" );
@@ -710,7 +604,6 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * This is run once for each sample, to try to figure out where the data are for each quantitation type (because it
      * can vary from sample to sample). Each platform in the series gets its own reference.
-     * <p>
      * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0. This
      * initialization is run for each sample.
      */
@@ -747,7 +640,8 @@ public class GeoFamilyParser implements Parser<Object> {
         for ( String columnName : currentSample().getColumnNames() ) {
             boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
 
-            if ( !isWanted ) log.debug( columnName + " will not be included in final data" );
+            if ( !isWanted )
+                log.debug( columnName + " will not be included in final data" );
 
             if ( !currentIndex.containsKey( platformForSample ) ) {
                 currentIndex.put( platformForSample, 0 );
@@ -801,8 +695,8 @@ public class GeoFamilyParser implements Parser<Object> {
                      * NOW, for this sample, but in our data structure we put it where we EXPECT it to be (where it was
                      * the first time we saw it). This is our attempt to fix problems with columns moving around.
                      */
-                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber,
-                            desiredColumnNumber );
+                    quantitationTypeTargetColumn.get( platformForSample )
+                            .put( actualColumnNumber, desiredColumnNumber );
                 }
                 values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
             } else {
@@ -824,8 +718,8 @@ public class GeoFamilyParser implements Parser<Object> {
                         }
                     }
                     desiredColumnNumber = max + 1;
-                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber,
-                            desiredColumnNumber );
+                    quantitationTypeTargetColumn.get( platformForSample )
+                            .put( actualColumnNumber, desiredColumnNumber );
                     if ( !alreadyWarnedAboutClobbering ) {
                         log.warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
                                 + "Current column name " + columnName + " reassigned to index " + desiredColumnNumber
@@ -843,10 +737,10 @@ public class GeoFamilyParser implements Parser<Object> {
              * Some quantitation types are skipped to save space.
              */
             if ( !isWanted ) {
-                if ( log.isDebugEnabled() ) log.debug( "Data column " + columnName + " will be skipped for "
-                        + currentSample() + " - it is an 'unwanted' quantitation type (column number "
-                        + currentIndex.get( platformForSample ) + ", " + desiredColumnNumber
-                        + "the quantitation type.)" );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Data column " + columnName + " will be skipped for " + currentSample()
+                            + " - it is an 'unwanted' quantitation type (column number " + currentIndex
+                            .get( platformForSample ) + ", " + desiredColumnNumber + "the quantitation type.)" );
             } else {
                 wantedQuantitationTypes.add( desiredColumnNumber );
             }
@@ -859,9 +753,6 @@ public class GeoFamilyParser implements Parser<Object> {
 
     }
 
-    /**
-     * @param platformForSample
-     */
     private void initMaps( GeoPlatform platformForSample ) {
         if ( !quantitationTypeKey.containsKey( platformForSample ) ) {
             quantitationTypeKey.put( platformForSample, new HashMap<String, Integer>() );
@@ -876,10 +767,6 @@ public class GeoFamilyParser implements Parser<Object> {
         return wantedQuantitationTypes.contains( index );
     }
 
-    /**
-     * @param series
-     * @param value
-     */
     private void lastUpdateDateSet( Object object, String value ) {
 
         if ( object instanceof GeoPlatform )
@@ -888,34 +775,29 @@ public class GeoFamilyParser implements Parser<Object> {
         else if ( object instanceof GeoSeries )
             ( ( GeoSeries ) object ).setLastUpdateDate( value );
 
-        else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setLastUpdateDate( value );
+        else if ( object instanceof GeoSample )
+            ( ( GeoSample ) object ).setLastUpdateDate( value );
     }
 
     /**
      * Parse the column identifier strings from a GDS or GSE file.
-     * <p>
      * In GSE files, in a 'platform' section, these become column descriptions for the platform descriptors.
-     * <p>
      * For samples in GSE files, they become values for the data in the sample. For example
-     *
      * <pre>
      * #ID_REF = probe id
      * #VALUE = RMA value
      * </pre>
-     * <p>
      * FIXME For subsets, these lines are ignored (do they even occur?). In 'series' sections of GSE files, the data are
      * kept (but does this occur?) .
-     * <p>
      * In GDS files, if we are in a 'dataset' section, these become "titles" for the samples if they aren't already
      * provided. Here is an example.
-     *
      * <pre>
      * #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
      * #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * </pre>
      *
-     * @param line
+     * @param line line
      */
     private void parseColumnIdentifier( String line ) {
         if ( inPlatform ) {
@@ -925,11 +807,13 @@ public class GeoFamilyParser implements Parser<Object> {
                 extractColumnIdentifier( line, currentSample() );
             }
         } else if ( inSeries ) {
-            if ( !processPlatformsOnly ) extractColumnIdentifier( line, currentSeries() );
+            if ( !processPlatformsOnly )
+                extractColumnIdentifier( line, currentSeries() );
         } else if ( inSubset ) {
             // nothing.
         } else if ( inDataset ) {
-            if ( processPlatformsOnly ) return;
+            if ( processPlatformsOnly )
+                return;
 
             /*
              * Datasets give titles to samples that sometimes differ from the ones given in the GSE files. Sometimes
@@ -942,8 +826,8 @@ public class GeoFamilyParser implements Parser<Object> {
             String potentialTitle = res.get( potentialSampleAccession );
 
             // First add the sample if we haven't seen it before.
-            if ( potentialSampleAccession.startsWith( "GSM" )
-                    && !results.getSampleMap().containsKey( potentialSampleAccession ) ) {
+            if ( potentialSampleAccession.startsWith( "GSM" ) && !results.getSampleMap()
+                    .containsKey( potentialSampleAccession ) ) {
                 this.addNewSample( potentialSampleAccession );
             }
 
@@ -961,12 +845,13 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line in a 'dataset' section of a GDS file. This is metadata about the experiment.
      *
-     * @param line
-     * @param value
+     * @param line  line
+     * @param value value
      */
     private void parseDatasetLine( String line, String value ) {
-        if ( this.processPlatformsOnly ) return;
-        /***************************************************************************************************************
+        if ( this.processPlatformsOnly )
+            return;
+        /* *************************************************************************************************************
          * DATASET
          **************************************************************************************************************/
         if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
@@ -1052,11 +937,9 @@ public class GeoFamilyParser implements Parser<Object> {
         }
     }
 
-    /**
-     * @param line
-     */
     private void parseLine( String line ) {
-        if ( StringUtils.isBlank( line ) ) return;
+        if ( StringUtils.isBlank( line ) )
+            return;
         if ( line.startsWith( "^" ) ) {
             if ( startsWithIgnoreCase( line, "^DATABASE" ) ) {
                 inDatabase = true;
@@ -1074,11 +957,13 @@ public class GeoFamilyParser implements Parser<Object> {
                 inDatabase = false;
                 inPlatform = false;
                 inSeries = false;
-                if ( this.processPlatformsOnly ) return;
+                if ( this.processPlatformsOnly )
+                    return;
                 String value = extractValue( line );
                 currentSampleAccession = value;
                 log.debug( "Starting new sample " + value );
-                if ( results.getSampleMap().containsKey( value ) ) return;
+                if ( results.getSampleMap().containsKey( value ) )
+                    return;
                 addNewSample( value );
             } else if ( startsWithIgnoreCase( line, "^PLATFORM" ) ) {
                 inPlatform = true;
@@ -1089,7 +974,8 @@ public class GeoFamilyParser implements Parser<Object> {
                 inSeries = false;
                 String value = extractValue( line );
                 currentPlatformAccession = value;
-                if ( results.getPlatformMap().containsKey( value ) ) return;
+                if ( results.getPlatformMap().containsKey( value ) )
+                    return;
                 GeoPlatform platform = new GeoPlatform();
                 platform.setGeoAccession( value );
                 results.getPlatformMap().put( value, platform );
@@ -1101,10 +987,12 @@ public class GeoFamilyParser implements Parser<Object> {
                 inPlatform = false;
                 inSample = false;
                 inDatabase = false;
-                if ( this.processPlatformsOnly ) return;
+                if ( this.processPlatformsOnly )
+                    return;
                 String value = extractValue( line );
                 currentSeriesAccession = value;
-                if ( results.getSeriesMap().containsKey( value ) ) return;
+                if ( results.getSeriesMap().containsKey( value ) )
+                    return;
                 GeoSeries series = new GeoSeries();
                 series.setGeoAccession( value );
                 results.getSeriesMap().put( value, series );
@@ -1116,10 +1004,12 @@ public class GeoFamilyParser implements Parser<Object> {
                 inPlatform = false;
                 inSample = false;
                 inDatabase = false;
-                if ( this.processPlatformsOnly ) return;
+                if ( this.processPlatformsOnly )
+                    return;
                 String value = extractValue( line );
                 currentDatasetAccession = value;
-                if ( results.getDatasetMap().containsKey( value ) ) return;
+                if ( results.getDatasetMap().containsKey( value ) )
+                    return;
                 GeoDataset ds = new GeoDataset();
                 ds.setGeoAccession( value );
                 results.getDatasetMap().put( value, ds );
@@ -1131,10 +1021,12 @@ public class GeoFamilyParser implements Parser<Object> {
                 inPlatform = false;
                 inSample = false;
                 inDatabase = false;
-                if ( this.processPlatformsOnly ) return;
+                if ( this.processPlatformsOnly )
+                    return;
                 String value = extractValue( line );
                 currentSubsetAccession = value;
-                if ( results.getSubsetMap().containsKey( value ) ) return;
+                if ( results.getSubsetMap().containsKey( value ) )
+                    return;
                 GeoSubset ss = new GeoSubset();
                 ss.setGeoAccession( value );
                 ss.setOwningDataset( results.getDatasetMap().get( this.currentDatasetAccession ) );
@@ -1152,7 +1044,7 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * If a line does not have the same number of fields as the column headings, it is skipped.
      *
-     * @param line
+     * @param line line
      */
     private void parsePlatformLine( String line ) {
 
@@ -1187,12 +1079,10 @@ public class GeoFamilyParser implements Parser<Object> {
             return;
         }
 
-        GeoPlatform platform = currentPlatform;
-
         for ( int i = 0; i < tokens.length; i++ ) {
             String token = tokens[i];
             String columnName = columnNames.get( i );
-            platform.addToColumnData( columnName, token );
+            currentPlatform.addToColumnData( columnName, token );
         }
         platformLines++;
     }
@@ -1200,11 +1090,11 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line in a 'platform' section of a GSE file. This deals with meta-data about the platform.
      *
-     * @param line
-     * @param value
+     * @param line  line
+     * @param value value
      */
     private void parsePlatformLine( String line, String value ) {
-        /***************************************************************************************************************
+        /* *************************************************************************************************************
          * PLATFORM
          **************************************************************************************************************/
         if ( startsWithIgnoreCase( line, "!Platform_title" ) ) {
@@ -1298,7 +1188,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * <li>Starting with anything else, primarily (only?) data tables (expression data or platform probe annotations).
      * </ul>
      *
-     * @param line
+     * @param line line
      */
     private void parseRegularLine( String line ) {
         if ( line.startsWith( "!" ) ) {
@@ -1342,21 +1232,19 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * The data for one sample is all the values for each quantitation type.
-     * <p>
      * Important implementation note: In the sample table sections of GSEXXX_family files, the first column is always
      * ID_REF, according to the kind folks at NCBI. If this changes, this code will BREAK.
-     * <p>
      * Similarly, the column names between the different samples are not necessarily the same, but we trust that they
      * all refer to the same quantitation types in the same order, for a given platform. That is, the nth column for
      * this sample 'means' the same thing as the nth column for another sample in this series (on the same platform). If
      * that isn't true, this will be BROKEN. However, we do try to sort it out if we can.
      *
-     * @param line
-     * @see initializeQuantitationTypes
+     * @param line line
      */
     private void parseSampleDataLine( String line ) {
 
-        if ( StringUtils.isBlank( line ) ) return;
+        if ( StringUtils.isBlank( line ) )
+            return;
 
         if ( !haveReadSampleDataHeader ) {
             haveReadSampleDataHeader = true;
@@ -1392,8 +1280,8 @@ public class GeoFamilyParser implements Parser<Object> {
         }
 
         if ( previousNumTokens != null && tokens.length != previousNumTokens ) {
-            log.warn( "Last line had " + ( previousNumTokens - 1 ) + " quantitation types, this one has "
-                    + ( tokens.length - 1 ) );
+            log.warn( "Last line had " + ( previousNumTokens - 1 ) + " quantitation types, this one has " + (
+                    tokens.length - 1 ) );
         }
 
         previousNumTokens = tokens.length;
@@ -1417,7 +1305,8 @@ public class GeoFamilyParser implements Parser<Object> {
              * This map tells us which column this quantitation type is SUPPOSED to go in.
              */
 
-            if ( map.containsKey( qtIndex ) ) qtIndex = map.get( qtIndex );
+            if ( map.containsKey( qtIndex ) )
+                qtIndex = map.get( qtIndex );
             if ( !isWantedQuantitationType( qtIndex ) ) {
                 continue;
             }
@@ -1436,13 +1325,14 @@ public class GeoFamilyParser implements Parser<Object> {
      * Parse a line from a sample section of a GSE file. These contain details about the samples and the 'raw' data for
      * the sample.
      *
-     * @param line
-     * @param value
+     * @param line  line
+     * @param value value
      */
     private void parseSampleLine( String line, String value ) {
-        if ( this.processPlatformsOnly ) return;
+        if ( this.processPlatformsOnly )
+            return;
 
-        /***************************************************************************************************************
+        /* *************************************************************************************************************
          * SAMPLE
          **************************************************************************************************************/
         if ( startsWithIgnoreCase( line, "!sample_table_begin" ) ) {
@@ -1605,12 +1495,13 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line from the "series" section of a GSE file. This contains annotations about the series.
      *
-     * @param line
-     * @param value
+     * @param line  line
+     * @param value value
      */
     private void parseSeriesLine( String line, String value ) {
-        if ( this.processPlatformsOnly ) return;
-        /***************************************************************************************************************
+        if ( this.processPlatformsOnly )
+            return;
+        /* *************************************************************************************************************
          * SERIES
          **************************************************************************************************************/
         if ( startsWithIgnoreCase( line, "!Series_title" ) ) {
@@ -1640,8 +1531,8 @@ public class GeoFamilyParser implements Parser<Object> {
             if ( value.toLowerCase().startsWith( "this superseries" ) ) {
                 log.info( " ** SuperSeries detected **" );
                 seriesSet( currentSeriesAccession, "isSuperSeries", true );
-            } else if ( value.toLowerCase().startsWith( "gse" )
-                    && results.getSeriesMap().get( currentSeriesAccession ).isSuperSeries() ) {
+            } else if ( value.toLowerCase().startsWith( "gse" ) && results.getSeriesMap().get( currentSeriesAccession )
+                    .isSuperSeries() ) {
                 String[] fields = value.split( ":", 2 );
                 if ( fields.length != 2 ) {
                     throw new IllegalStateException( "Expected a colon in " + value );
@@ -1700,13 +1591,13 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!series_table_end" ) ) {
             inSeriesTable = false;
         } else if ( startsWithIgnoreCase( line, "!Series_variable_description_" ) ) {
-            Integer variableId = new Integer( extractVariableNumber( line ) );
+            Integer variableId = extractVariableNumber( line );
             results.getSeriesMap().get( currentSeriesAccession ).getVariables().get( variableId )
                     .setDescription( value );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_sample_list_" ) ) {
             parseSeriesVariableSampleListLine( line, value );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_" ) ) {
-            Integer variableId = new Integer( extractVariableNumber( line ) );
+            Integer variableId = extractVariableNumber( line );
             results.getSeriesMap().get( currentSeriesAccession ).getReplicates().get( variableId )
                     .setRepeats( GeoReplication.convertStringToRepeatType( value ) );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
@@ -1733,10 +1624,6 @@ public class GeoFamilyParser implements Parser<Object> {
         }
     }
 
-    /**
-     * @param line
-     * @param value
-     */
     private void parseSeriesVariableRepeatsSampleListLine( String line, String value ) {
         Integer variableId = extractVariableNumber( line );
         GeoReplication var = currentSeries().getReplicates().get( variableId );
@@ -1748,10 +1635,6 @@ public class GeoFamilyParser implements Parser<Object> {
         }
     }
 
-    /**
-     * @param line
-     * @param value
-     */
     private void parseSeriesVariableSampleListLine( String line, String value ) {
         Integer variableId = extractVariableNumber( line );
         GeoVariable var = currentSeries().getVariables().get( variableId );
@@ -1767,11 +1650,11 @@ public class GeoFamilyParser implements Parser<Object> {
      * Parse a line from a "subset" section of a GDS file. This section contains information about experimental subsets
      * within a dataset. These usually correspond to different factor values such as "drug-treated" vs. "placebo".
      *
-     * @param line
-     * @param value
+     * @param line  line
+     * @param value value
      */
     private void parseSubsetLine( String line, String value ) {
-        /***************************************************************************************************************
+        /* *************************************************************************************************************
          * SUBSET
          **************************************************************************************************************/
         if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
@@ -1783,9 +1666,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!subset_sample_id" ) ) {
             // This should yield a list of samples we have already seen.
             String[] values = value.split( "," );
-            for ( int i = 0; i < values.length; i++ ) {
-                String sampleAccession = values[i];
-
+            for ( String sampleAccession : values ) {
                 if ( !results.getSampleMap().containsKey( sampleAccession ) ) {
                     addNewSample( sampleAccession );
                 }
@@ -1804,44 +1685,27 @@ public class GeoFamilyParser implements Parser<Object> {
         }
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void platformAddTo( String accession, String property, Object value ) {
         GeoPlatform platform = results.getPlatformMap().get( accession );
-        if ( platform == null ) throw new IllegalArgumentException( "Unknown platform " + accession );
+        if ( platform == null )
+            throw new IllegalArgumentException( "Unknown platform " + accession );
         addTo( platform, property, value );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void platformContactSet( String accession, String property, Object value ) {
         GeoPlatform platform = results.getPlatformMap().get( accession );
         contactSet( platform, property, value );
     }
 
-    /**
-     * @param accession
-     * @param value
-     */
     private void platformLastUpdateDate( String accession, String value ) {
         GeoPlatform platform = results.getPlatformMap().get( accession );
         lastUpdateDateSet( platform, value );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void platformSet( String accession, String property, Object value ) {
         GeoPlatform platform = results.getPlatformMap().get( accession );
-        if ( platform == null ) throw new IllegalArgumentException( "Unknown platform " + accession );
+        if ( platform == null )
+            throw new IllegalArgumentException( "Unknown platform " + accession );
 
         if ( property.equals( "technology" ) ) {
             assert value instanceof String;
@@ -1850,52 +1714,29 @@ public class GeoFamilyParser implements Parser<Object> {
 
         try {
             BeanUtils.setProperty( platform, property, value );
-        } catch ( IllegalAccessException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             log.error( e, e );
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param accession
-     * @param value
-     */
     private void platformSupplementaryFileSet( String accession, String value ) {
         GeoPlatform platform = results.getPlatformMap().get( accession );
         supplementaryFileSet( platform, value );
     }
 
-    /**
-     * @param currentSampleAccession2
-     * @param string
-     * @param value
-     */
     private void sampleAddTo( String accession, String property, Object value ) {
         GeoSample sample = results.getSampleMap().get( accession );
-        if ( sample == null ) throw new IllegalArgumentException( "Unknown sample " + accession );
+        if ( sample == null )
+            throw new IllegalArgumentException( "Unknown sample " + accession );
         addTo( sample, property, value );
     }
 
-    /**
-     * @param currentSampleAccession2
-     * @param string
-     * @param channel
-     * @param value
-     */
     private void sampleChannelAddTo( String sampleAccession, String property, int channel, String value ) {
         GeoSample sample = results.getSampleMap().get( sampleAccession );
         this.addTo( sample.getChannel( channel ), property, value );
     }
 
-    /**
-     * @param currentSampleAccession2
-     * @param string
-     * @param channel
-     * @param value
-     */
     private void sampleChannelSet( String sampleAccession, String property, int channel, Object value ) {
         GeoSample sample = results.getSampleMap().get( sampleAccession );
 
@@ -1905,147 +1746,88 @@ public class GeoFamilyParser implements Parser<Object> {
 
         try {
             BeanUtils.setProperty( sample.getChannel( channel ), property, value );
-        } catch ( IllegalAccessException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             log.error( e, e );
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void sampleContactSet( String accession, String property, Object value ) {
         GeoSample sample = results.getSampleMap().get( accession );
         contactSet( sample, property, value );
     }
 
-    /**
-     * @param accession
-     * @param value
-     */
     private void sampleLastUpdateDate( String accession, String value ) {
         GeoSample sample = results.getSampleMap().get( accession );
         lastUpdateDateSet( sample, value );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void sampleSet( String accession, String property, Object value ) {
         GeoSample sample = results.getSampleMap().get( accession );
-        if ( sample == null ) throw new IllegalArgumentException( "Unknown sample " + accession );
+        if ( sample == null )
+            throw new IllegalArgumentException( "Unknown sample " + accession );
         try {
             BeanUtils.setProperty( sample, property, value );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param accession
-     * @param value
-     */
     private void sampleSupplementaryFileSet( String accession, String value ) {
         GeoSample sample = results.getSampleMap().get( accession );
         supplementaryFileSet( sample, value );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void seriesAddTo( String accession, String property, Object value ) {
         GeoSeries series = results.getSeriesMap().get( accession );
-        if ( series == null ) throw new IllegalArgumentException( "Unknown series " + accession );
+        if ( series == null )
+            throw new IllegalArgumentException( "Unknown series " + accession );
         addTo( series, property, value );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void seriesContactSet( String accession, String property, Object value ) {
         GeoSeries series = results.getSeriesMap().get( accession );
         contactSet( series, property, value );
     }
 
-    /**
-     * @param accession
-     * @param value
-     */
     private void seriesLastUpdateDate( String accession, String value ) {
         GeoSeries series = results.getSeriesMap().get( accession );
         lastUpdateDateSet( series, value );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void seriesSet( String accession, String property, Object value ) {
         GeoSeries series = results.getSeriesMap().get( accession );
-        if ( series == null ) throw new IllegalArgumentException( "Unknown series " + accession );
+        if ( series == null )
+            throw new IllegalArgumentException( "Unknown series " + accession );
         try {
             BeanUtils.setProperty( series, property, value );
-        } catch ( IllegalAccessException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             log.error( e, e );
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param accession
-     * @param value
-     */
     private void seriesSupplementaryFileSet( String accession, String value ) {
         GeoSeries series = results.getSeriesMap().get( accession );
         supplementaryFileSet( series, value );
     }
 
-    /**
-     * @param line
-     * @param string
-     * @return
-     */
     private boolean startsWithIgnoreCase( String string, String pattern ) {
         // it will never be the same string.
         return string.regionMatches( true, 0, pattern, 0, pattern.length() );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void subsetAddTo( String accession, String property, Object value ) {
         GeoSubset subset = results.getSubsetMap().get( accession );
-        if ( subset == null ) throw new IllegalArgumentException( "Unknown subset " + accession );
+        if ( subset == null )
+            throw new IllegalArgumentException( "Unknown subset " + accession );
         addTo( subset, property, value );
     }
 
-    /**
-     * @param accession
-     * @param property
-     * @param value
-     */
     private void subsetSet( String accession, String property, Object value ) {
         GeoSubset subset = results.getSubsetMap().get( accession );
-        if ( subset == null ) throw new IllegalArgumentException( "Unknown subset " + accession );
+        if ( subset == null )
+            throw new IllegalArgumentException( "Unknown subset " + accession );
 
         if ( property.equals( "type" ) ) {
             value = GeoVariable.convertStringToType( ( String ) value );
@@ -2053,19 +1835,12 @@ public class GeoFamilyParser implements Parser<Object> {
 
         try {
             BeanUtils.setProperty( subset, property, value );
-        } catch ( IllegalAccessException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             log.error( e, e );
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @param series
-     * @param value
-     */
     private void supplementaryFileSet( Object object, String value ) {
 
         if ( object instanceof GeoSeries )
@@ -2074,7 +1849,8 @@ public class GeoFamilyParser implements Parser<Object> {
         else if ( object instanceof GeoPlatform )
             ( ( GeoPlatform ) object ).setSupplementaryFile( value );
 
-        else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setSupplementaryFile( value );
+        else if ( object instanceof GeoSample )
+            ( ( GeoSample ) object ).setSupplementaryFile( value );
 
     }
 
@@ -2091,18 +1867,14 @@ public class GeoFamilyParser implements Parser<Object> {
         values.validate();
     }
 
-    /**
-     * @param columnName
-     * @param actualColumnNumber
-     * @param qtMapForPlatform The map of
-     * @return
-     */
     private boolean willClobberOtherQuantitationType( String columnName, int actualColumnNumber,
             Map<String, Integer> qtMapForPlatform ) {
         boolean clobbers = false;
         for ( String name : currentSample().getColumnNames() ) {
-            if ( name.equals( columnName ) ) continue;
-            if ( !qtMapForPlatform.containsKey( name ) ) continue;
+            if ( name.equals( columnName ) )
+                continue;
+            if ( !qtMapForPlatform.containsKey( name ) )
+                continue;
             Integer checkColInd = qtMapForPlatform.get( name );
             if ( checkColInd == actualColumnNumber ) {
                 // log.warn( "Current column name " + columnName

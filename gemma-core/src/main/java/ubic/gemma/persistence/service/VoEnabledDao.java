@@ -75,11 +75,11 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
     /**
      * Creates a CNF restriction clause from the given Filters list.
      *
-     * @param filters A list of filtering properties arrays.<br/>
-     *                Elements in each array will be in a disjunction (OR) with each other.<br/>
-     *                Arrays will then be in a conjunction (AND) with each other.<br/>
-     *                I.e. The filter will be in a conjunctive normal form.<br/>
-     *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code><br/><br/>
+     * @param filters A list of filtering properties arrays.
+     *                Elements in each array will be in a disjunction (OR) with each other.
+     *                Arrays will then be in a conjunction (AND) with each other.
+     *                I.e. The filter will be in a conjunctive normal form.
+     *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
      * @return a string containing the clause, without leading "WHERE" keyword.
      */
     protected static String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {

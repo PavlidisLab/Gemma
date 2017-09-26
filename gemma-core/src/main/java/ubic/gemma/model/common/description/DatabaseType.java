@@ -74,11 +74,6 @@ public class DatabaseType implements java.io.Serializable, Comparable<DatabaseTy
         this.value = value;
     }
 
-    /**
-     * Creates an instance of DatabaseType from <code>value</code>.
-     *
-     * @param value the value to create the DatabaseType from.
-     */
     public static DatabaseType fromString( String value ) {
         final DatabaseType typeValue = values.get( value );
         if ( typeValue == null ) {

@@ -115,7 +115,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * The location of the file on a local server
+     * @return The location of the file on a local server
      */
     public java.net.URL getLocalURL() {
         return this.localURL;
@@ -126,7 +126,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * Source where the file was downloaded from.
+     * @return Source where the file was downloaded from.
      */
     public java.net.URL getRemoteURL() {
         return this.remoteURL;
@@ -145,7 +145,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * Any files which were used to create this file.
+     * @return Any files which were used to create this file.
      */
     public Collection<ubic.gemma.model.common.description.LocalFile> getSourceFiles() {
         return this.sourceFiles;
@@ -156,7 +156,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * The version identifier for the file; this could be as simple as the date of creation
+     * @return The version identifier for the file; this could be as simple as the date of creation
      */
     public String getVersion() {
         return this.version;
@@ -177,13 +177,8 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
         return result;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.LocalFile}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.LocalFile}.
-         */
+
         public static LocalFile newInstance() {
             return new LocalFile();
         }

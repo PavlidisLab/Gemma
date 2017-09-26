@@ -176,7 +176,7 @@ public interface PhenotypeAssociationManagerService {
     Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
     /**
-     * Same as {@link this#loadAllPhenotypesByTree(EvidenceFilter)}, but does not flatten out the tree.
+     * Same as loadAllPhenotypesByTree(EvidenceFilter), but does not flatten out the tree.
      *
      * @param evidenceFilter evidence filter
      * @return a tree set of phenotypes

@@ -18,26 +18,11 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
-import org.hibernate.Query;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.BatchIterator;
@@ -49,13 +34,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
-import ubic.gemma.model.expression.bioAssayData.BooleanVectorValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -65,6 +44,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.*;
 
 /**
  * @author Paul
@@ -201,8 +182,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
         }
 
-        ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
-                .get( ExpressionExperiment.class, ee.getId() );
+        ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) this.getSessionFactory()
+                .getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
 
         assert expressionExperiment != null;
 
@@ -232,9 +213,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     @Override
     public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType ) {
-        final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
-                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                + "and dev.quantitationType = :quantitationType ";
+        final String queryString =
+                "select dev from ProcessedExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
+                        + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
+                        + "and dev.quantitationType = :quantitationType ";
         org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameter( "quantitationType", quantitationType );
         queryObject.setParameter( "adid", arrayDesign.getId() );
@@ -258,7 +240,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev  where  "
                 + "  dev.quantitationType = :quantitationType ";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "quantitationType", quantitationType ).list();
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "quantitationType", quantitationType ).list();
     }
 
     @Override
@@ -350,6 +333,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param limit if non-null and positive, you will get a random set of vectors for the experiment
+     * @param ee    ee
+     * @return processed data vectors
      */
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
@@ -402,8 +387,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Collection<ArrayDesign> arrayDesigns = CommonQueries
                 .getArrayDesignsUsed( EntityUtils.getIds( expressionExperiments ),
-                        this.getSessionFactory().getCurrentSession() )
-                .keySet();
+                        this.getSessionFactory().getCurrentSession() ).keySet();
 
         // this could be further improved by getting probes specific to experiments in batches.
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
@@ -419,9 +403,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         for ( Collection<CompositeSequence> batch : batchIterator ) {
 
-            final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
-                    + "dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                    + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
+            final String queryString =
+                    "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, "
+                            + "dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+                            + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
 
             List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                     .setParameter( "cs", batch ).setParameterList( "ees", expressionExperiments ).list();
@@ -457,8 +442,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return new HashMap<>();
         }
 
-        final String queryString = "select distinct dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment.id = :eeid ";
+        final String queryString =
+                "select distinct dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+                        + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment.id = :eeid ";
 
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "cs", cs2gene.keySet() ).setParameter( "eeid", expressionExperiment.getId() ).list();
@@ -480,8 +466,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     @Override
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
-        final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                + "where dedv.expressionExperiment.id = :ee";
+        final String queryString =
+                "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+                        + "where dedv.expressionExperiment.id = :ee";
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ee", expressionExperiment.getId() ).list();
         Map<CompositeSequence, Double> result = new HashMap<>();
@@ -516,9 +503,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             return new HashMap<>();
         }
 
-        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax "
-                + "from ProcessedExpressionDataVectorImpl dedv " + " inner join dedv.designElement de  "
-                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
+        final String queryString =
+                "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax "
+                        + "from ProcessedExpressionDataVectorImpl dedv " + " inner join dedv.designElement de  "
+                        + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
 
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "cs", EntityUtils.getIds( cs2gene.keySet() ) )
@@ -604,7 +592,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * Always provide full vectors, not subsets.
+     * @param newResults Always provide full vectors, not subsets.
      */
     private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
         /*
@@ -626,10 +614,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * We cache vectors at the experiment level. If we need subsets, we have to slice them out.
      *
-     * @param bioAssaySets that we exactly need the data for.
-     * @param genes that might have cached results
-     * @param results from the cache will be put here
-     * @param needToSearch experiments that need to be searched (not fully cached); this will be populated
+     * @param bioAssaySets  that we exactly need the data for.
+     * @param genes         that might have cached results
+     * @param results       from the cache will be put here
+     * @param needToSearch  experiments that need to be searched (not fully cached); this will be populated
      * @param genesToSearch that still need to be searched (not in cache)
      */
     private void checkCache( Collection<? extends BioAssaySet> bioAssaySets, Collection<Long> genes,
@@ -670,7 +658,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * See if anything is 'ragged' (fewer bioassays per biomaterial than in some other sample)
+     * @param bioAssayDimensions See if anything is 'ragged' (fewer bioassays per biomaterial than in some other sample)
+     * @return bio assay dimension
      */
     private BioAssayDimension checkRagged( Collection<BioAssayDimension> bioAssayDimensions ) {
         int s = -1;
@@ -765,7 +754,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably just have one
+     * @param data data
+     * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably just have one
      * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629 for details.
      */
     private Map<BioAssayDimension, BioAssayDimensionValueObject> getBioAssayDimensionValueObjects(
@@ -797,9 +787,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * Determine the experiments that bioAssaySets refer to.
      *
      * @param bioAssaySets - either ExpressionExperiment or ExpressionExperimentSubSet (which has an associated
-     *        ExpressionExperiment, which is what we're after)
+     *                     ExpressionExperiment, which is what we're after)
      * @return Note that this collection can be smaller than the input, if two bioAssaySets come from (or are) the same
-     *         Experiment
+     * Experiment
      */
     private Collection<ExpressionExperiment> getExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
         Collection<ExpressionExperiment> result = new HashSet<>();
@@ -821,11 +811,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * Retrieve the RAW data for the preferred quantitation type.
+     * @param ee ee
+     * @return Retrieve the RAW data for the preferred quantitation type.
      */
     private Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
-                + " where q.isPreferred = true  and dedv.expressionExperiment.id = :ee";
+        final String queryString =
+                "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
+                        + " where q.isPreferred = true  and dedv.expressionExperiment.id = :ee";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee.getId() )
                 .list();
@@ -834,14 +826,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * Make a quantitation type for attaching to the new processed data.
      *
-     * @param preferredQt
-     * @return
+     * @param preferredQt prefered QT
+     * @return QT
      */
     private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
 
         present.setName( preferredQt.getName() + " - Processed version" );
-        present.setDescription( "Processed data (as per Gemma) for analysis, based on the preferred quantitation type raw data" );
+        present.setDescription(
+                "Processed data (as per Gemma) for analysis, based on the preferred quantitation type raw data" );
 
         present.setGeneralType( preferredQt.getGeneralType() );
         present.setRepresentation( preferredQt.getRepresentation() ); // better be a number!
@@ -853,7 +846,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
 
         present.setIsBatchCorrected( preferredQt.getIsBatchCorrected() );
-        present.setIsRecomputedFromRawData( preferredQt.getIsRecomputedFromRawData() ); // By "RAW" we mean CEL files or Fasq etc.
+        present.setIsRecomputedFromRawData(
+                preferredQt.getIsRecomputedFromRawData() ); // By "RAW" we mean CEL files or Fasq etc.
 
         present.setIsNormalized( preferredQt.getIsNormalized() );
 
@@ -961,6 +955,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param cs2gene Map of probe to genes.
+     * @param ees     ees
      * @return map of vectors to genes.
      */
     private Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectors( Collection<Long> ees,
@@ -968,14 +963,16 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
-            queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
-                    + " where dedv.designElement.id in ( :cs ) ";
+            queryString =
+                    "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
+                            + " where dedv.designElement.id in ( :cs ) ";
             return getVectorsForProbesInExperiments( cs2gene, queryString );
         }
 
         // Do not do in clause for experiments, as it can't use the indices
-        queryString = "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
-                + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id  = :eeid ";
+        queryString =
+                "select dedv, dedv.designElement.id from ProcessedExpressionDataVectorImpl dedv fetch all properties"
+                        + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id  = :eeid ";
         Map<ProcessedExpressionDataVector, Collection<Long>> result = new HashMap<>();
         for ( Long ee : ees ) {
             result.putAll( getVectorsForProbesInExperiments( ee, cs2gene, queryString ) );
@@ -987,6 +984,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * This is an important method for fetching vectors.
      *
+     * @param genes genes
+     * @param ees   ees
      * @return vectors, possibly subsetted.
      */
     private Collection<DoubleVectorValueObject> handleGetProcessedExpressionDataArrays(
@@ -1105,7 +1104,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * Figure out if any platform used by the ee is two-channel
+     * @param expressionExperiment ee
+     * @return true if any platform used by the ee is two-channel
      */
     private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
 
@@ -1196,7 +1196,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * Do not call this on ratiometric or count data.
+     * @param vectors Do not call this on ratiometric or count data.
      */
     private void renormalize( Map<CompositeSequence, DoubleVectorValueObject> vectors ) {
         int cols = vectors.values().iterator().next().getBioAssayDimension().getBioAssays().size();
@@ -1224,7 +1224,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * Given an ExpressionExperimentSubset and vectors from the source experiment, give vectors that include just the
+     * @param ee  ee
+     * @param obs obs
+     * @return Given an ExpressionExperimentSubset and vectors from the source experiment, give vectors that include just the
      * data for the subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
@@ -1265,10 +1267,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @param ees Experiments and/or subsets required
+     * @param ees  Experiments and/or subsets required
      * @param vecs vectors to select from and if necessary slice, obviously from the given ees.
      * @return vectors that are for the requested subset. If an ee is not a subset, vectors will be unchanged. Otherwise
-     *         the data in a vector will be for the subset of samples in the ee subset.
+     * the data in a vector will be for the subset of samples in the ee subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubsets( Collection<? extends BioAssaySet> ees,
             Collection<DoubleVectorValueObject> vecs ) {

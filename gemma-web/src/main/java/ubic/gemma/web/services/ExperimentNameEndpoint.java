@@ -19,35 +19,31 @@
 
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
- * Used for getting the Short Name given an Expression Experiment ID eg: 793 --> GSE10470
- * 
+ * Used for getting the Short Name given an Expression Experiment ID eg: 793 --&gt; GSE10470
+ *
  * @author klc, gavin
- * @version$Id$
  */
 
 public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
-
-    private static Log log = LogFactory.getLog( ExperimentNameEndpoint.class );
-
-    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * The local name of the expected request/response.
      */
     public static final String EXPERIMENT_LOCAL_NAME = "experimentName";
+    private static final Log log = LogFactory.getLog( ExperimentNameEndpoint.class );
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * Sets the "business service" to delegate to.
@@ -58,9 +54,9 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
-     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @param document       a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
     @Override

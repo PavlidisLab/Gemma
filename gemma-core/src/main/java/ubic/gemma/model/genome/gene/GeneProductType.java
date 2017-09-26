@@ -44,12 +44,7 @@ public class GeneProductType implements java.io.Serializable, Comparable<GenePro
     private GeneProductType( String value ) {
         this.value = value;
     }
-
-    /**
-     * Creates an instance of GeneProductType from <code>value</code>.
-     *
-     * @param value the value to create the GeneProductType from.
-     */
+    
     public static GeneProductType fromString( String value ) {
         final GeneProductType typeValue = values.get( value );
         if ( typeValue == null ) {

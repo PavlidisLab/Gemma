@@ -24,69 +24,45 @@ import java.util.List;
 /**
  * Cache for differential expression results. This actually manages two caches; one is for resultset x gene results,
  * requested for the (typically) main visualization and meta-analysis. The second is of the "top hits" for a resultset.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public interface DifferentialExpressionResultCache {
 
-    /**
-     * @param diffExForCache
-     */
-    public abstract void addToCache( DiffExprGeneSearchResult diffExForCache );
+    void addToCache( DiffExprGeneSearchResult diffExForCache );
 
-    public abstract void addToCache( Collection<DiffExprGeneSearchResult> diffExForCache );
+    void addToCache( Collection<DiffExprGeneSearchResult> diffExForCache );
 
-    /**
-     * 
-     */
-    public abstract void clearCache();
+    void clearCache();
 
     /**
      * Remove all elements from the cache for the given result set, if the cache exists.
-     * 
-     * @param e the resultSetId - specific cache to be cleared.
+     *
+     * @param resultSetId - specific cache to be cleared.
      */
-    public abstract void clearCache( Long resultSetId );
+    void clearCache( Long resultSetId );
 
     /**
      * Remove all elements from the top hits cache for the given result set, if the cache exists.
-     * 
-     * @param resultSetId
+     *
+     * @param resultSetId id
      */
-    public abstract void clearTopHitCache( Long resultSetId );
+    void clearTopHitCache( Long resultSetId );
+
+    Collection<DiffExprGeneSearchResult> get( Long resultSet, Collection<Long> genes );
+
+    DiffExprGeneSearchResult get( Long resultSet, Long g );
+
+    Boolean isEnabled();
+
+    void setEnabled( Boolean enabled );
+
+    void addToTopHitsCache( ExpressionAnalysisResultSet resultSet, List<DifferentialExpressionValueObject> items );
 
     /**
-     * @param resultSetId
-     * @param genes
-     * @return
-     */
-    public abstract Collection<DiffExprGeneSearchResult> get( Long resultSet, Collection<Long> genes );
-
-    /**
-     * @param resultSet
-     * @param g
-     * @return
-     */
-    public abstract DiffExprGeneSearchResult get( Long resultSet, Long g );
-
-    /**
-     * @return the enabled
-     */
-    public abstract Boolean isEnabled();
-
-    /**
-     * @param enabled the enabled to set
-     */
-    public abstract void setEnabled( Boolean enabled );
-
-    public abstract void addToTopHitsCache( ExpressionAnalysisResultSet resultSet,
-            List<DifferentialExpressionValueObject> items );
-
-    /**
-     * @param resultSet
+     * @param resultSet result set
      * @return top hits, or null.
      */
-    public abstract List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet );
+    List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet );
 
 }

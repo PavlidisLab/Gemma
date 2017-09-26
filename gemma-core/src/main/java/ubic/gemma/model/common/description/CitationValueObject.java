@@ -105,6 +105,7 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
     }
 
     /**
+     * @param ref ref
      * @return a citation value object constructed from a BibliographicReference or null if the BibliographicReference param
      * was null
      */
@@ -118,6 +119,7 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
     }
 
     /**
+     * @param refs refs
      * @return a collection of citation value objects constructed from a collection of BibliographicReference objects
      * or an empty list if all the BibliographicReference list param was null or empty
      */

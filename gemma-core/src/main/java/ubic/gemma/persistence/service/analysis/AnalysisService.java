@@ -35,19 +35,21 @@ import java.util.Map;
 public interface AnalysisService<T extends Analysis> {
 
     /**
-     * deletes the given analysis from the system
+     * @param toDelete deletes the given analysis from the system
      */
     @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
     void delete( T toDelete );
 
     /**
-     * find all the analyses that involved the given investigation
+     * @param investigation investigation
+     * @return find all the analyses that involved the given investigation
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<T> findByInvestigation( Investigation investigation );
 
     /**
-     *      * Given a collection of investigations returns a Map of Analysis --> collection of Investigations
+     * @param investigations investigations
+     * @return Given a collection of investigations returns a Map of Analysis --&gt; collection of Investigations
      * The collection of investigations returned by the map will include all the investigations for the analysis key iff
      * one of the investigations for that analysis was in the given collection started with
      */
@@ -64,7 +66,8 @@ public interface AnalysisService<T extends Analysis> {
     Collection<T> findByTaxon( Taxon taxon );
 
     /**
-     * An analysis is uniquely determined by its set of investigations. Only returns an analysis if the collection of
+     * @param investigations investigations
+     * @return An analysis is uniquely determined by its set of investigations. Only returns an analysis if the collection of
      * investigations given exacly matches other wise returns null
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -81,24 +84,26 @@ public interface AnalysisService<T extends Analysis> {
     /**
      * Not secured: for internal use only
      *
+     * @param taxon taxon
      * @return ids of bioassaysets from the given taxon that have a coexpression analysis
      */
     Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
     /**
-     * Returns the analysis with the specified ID
+     * @param id id
+     * @return the analysis with the specified ID
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     T load( Long id );
 
     /**
-     * Returns all of the analysis objects
+     * @return all of the analysis objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<T> loadAll();
 
     /**
-     * Returns the {@link Analysis}s for the currently logged in {@link User} - i.e, ones for which the current user has
+     * @return the {@link Analysis}s for the currently logged in {@link User} - i.e, ones for which the current user has
      * specific write permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
      * method will return all analyses if security is not enabled.
      * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
@@ -108,7 +113,7 @@ public interface AnalysisService<T extends Analysis> {
     Collection<T> loadMyAnalyses();
 
     /**
-     * Returns the {@link Analysis}s for the currently logged in {@link User} - i.e, ones for which the current user has
+     * @return the {@link Analysis}s for the currently logged in {@link User} - i.e, ones for which the current user has
      * specific read permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
      * method will return all analyses if security is not enabled.
      * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyPrivateData for

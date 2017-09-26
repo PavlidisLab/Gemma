@@ -94,7 +94,8 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     /**
-     * @param support value
+     * @param support  value
+     * @param positive positive
      * @return how many links have this much support (specifically).
      */
     public Integer getLinksWithExactSupport( Integer support, boolean positive ) {
@@ -106,6 +107,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     /**
+     * @param i support
      * @return total number of links (this is just the total of positive and negative; if some of those are with the
      * same genes it's a double count, sorry)
      */
@@ -114,7 +116,8 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     /**
-     * @param support threshold
+     * @param support  threshold
+     * @param positive positive
      * @return how many links have at least this much support (cumulative)
      */
     public Integer getLinksWithMinimumSupport( Integer support, boolean positive ) {

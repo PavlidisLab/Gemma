@@ -18,46 +18,34 @@
  */
 package ubic.gemma.model.association.coexpression;
 
-import java.util.Collection;
-
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.Gene2GeneIdAssociation;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
+import java.util.Collection;
+
 /**
  * Represents coexpression of a pair of genes.
- * 
- * @version $Id$
+ *
  * @author Paul
  */
-public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation implements Comparable<Gene2GeneCoexpression> {
-    /**
-     * 
-     */
+public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
+        implements Comparable<Gene2GeneCoexpression> {
+
     private static final long serialVersionUID = 6088623734153830393L;
-
-    public SupportDetails supportDetails;
-
-    // we assume 1 in case we don't yet have it populated directly from the db - it has to be at least 1...
-    private Integer numDataSetsSupporting = 1;
-
     /**
      * If true, this represents a positive correlation; false indicates it is negative (sorry, 0 doesn't exist, I guess
      * we could use null).
      */
     final private Boolean positiveCorrelation = null;
+    public SupportDetails supportDetails;
+    // we assume 1 in case we don't yet have it populated directly from the db - it has to be at least 1...
+    private Integer numDataSetsSupporting = 1;
 
-    /**
-     * Compare based on 1) support 2) first gene symbol 2) second gene symbol. Note that this means that compareTo and
-     * equals are a bit different, since equals does not look at the support (because having a collection with the same
-     * link represented twice with different support makes no sense) but does look at the sign of the correlation.
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
     @Override
     public int compareTo( Gene2GeneCoexpression o ) {
-        if ( numDataSetsSupporting != null && o.getNumDatasetsSupporting() != null
-                && numDataSetsSupporting != o.getNumDatasetsSupporting() ) {
+        if ( numDataSetsSupporting != null && o.getNumDatasetsSupporting() != null && numDataSetsSupporting != o
+                .getNumDatasetsSupporting() ) {
             return -this.numDataSetsSupporting.compareTo( o.getNumDatasetsSupporting() );
         }
 
@@ -70,19 +58,12 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation imple
         return 0;
     }
 
-    /*
-     * Modified to use the correlation as an additional criterion.
-     * 
-     * @see ubic.gemma.model.association.Gene2GeneAssociation#equals(java.lang.Object)
-     */
     @Override
     public boolean equals( Object obj ) {
-        if ( !super.equals( obj ) ) return false;
-
-        if ( !this.isPositiveCorrelation().equals( ( ( Gene2GeneCoexpression ) obj ).isPositiveCorrelation() ) )
+        if ( !super.equals( obj ) )
             return false;
 
-        return true;
+        return this.isPositiveCorrelation().equals( ( ( Gene2GeneCoexpression ) obj ).isPositiveCorrelation() );
     }
 
     public Collection<Long> getDataSetsSupporting() {
@@ -94,9 +75,7 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation imple
     }
 
     /**
-     * The value returned comes from the supportDetails if it is non-null.
-     * 
-     * @return
+     * @return The value returned comes from the supportDetails if it is non-null
      */
     public Integer getNumDatasetsSupporting() {
         if ( this.supportDetails != null ) {
@@ -105,18 +84,31 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation imple
         return numDataSetsSupporting;
     }
 
+    /**
+     * Warning: wouldn't normally use this. This is just to make serializing easier.
+     *
+     * @param numDataSets Only used if the supportDetails are null. Otherwise this just calls
+     *                    updateNumDatasetsSupporting().
+     */
+    public void setNumDatasetsSupporting( Integer numDataSets ) {
+        if ( this.supportDetails != null ) {
+            updateNumDatasetsSupporting();
+        }
+        this.numDataSetsSupporting = numDataSets;
+    }
+
     public SupportDetails getSupportDetails() {
         return supportDetails;
     }
 
-    /*
-     * Modified to use the correlation as well.
-     * 
-     * @see ubic.gemma.model.association.Gene2GeneAssociation#hashCode()
-     */
+    public void setSupportDetails( SupportDetails supportDetails ) {
+        this.supportDetails = supportDetails;
+    }
+
     @Override
     public int hashCode() {
-        if ( this.getId() != null ) return this.getId().hashCode();
+        if ( this.getId() != null )
+            return this.getId().hashCode();
 
         final int prime = 31;
         int result = 1;
@@ -126,39 +118,18 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation imple
         return result;
     }
 
-    /**
-     * @return
-     */
     public Boolean isPositiveCorrelation() {
         return positiveCorrelation;
     }
 
-    /**
+    /*
      * TODO optimize.
-     * 
-     * @param bioAssaySet
-     * @return
+     *
+
      */
     public boolean isSupportedBy( BioAssaySet bioAssaySet ) {
         assert this.supportDetails != null;
         return this.supportDetails.isIncluded( bioAssaySet.getId() );
-    }
-
-    /**
-     * Warning: wouldn't normally use this. This is just to make serializing easier.
-     * 
-     * @param numDataSets Only used if the supportDetails are null. Otherwise this just calls
-     *        updateNumDatasetsSupporting().
-     */
-    public void setNumDatasetsSupporting( Integer numDataSets ) {
-        if ( this.supportDetails != null ) {
-            updateNumDatasetsSupporting();
-        }
-        this.numDataSetsSupporting = numDataSets;
-    }
-
-    public void setSupportDetails( SupportDetails supportDetails ) {
-        this.supportDetails = supportDetails;
     }
 
     @Override

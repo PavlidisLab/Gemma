@@ -61,7 +61,7 @@ public abstract class GeneProduct extends ChromosomeFeature {
     }
 
     /**
-     * GI for the gene product (if available)
+     * @return GI for the gene product (if available)
      */
     public String getNcbiGi() {
         return this.ncbiGi;

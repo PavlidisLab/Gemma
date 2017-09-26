@@ -18,24 +18,21 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.coexpression;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
- * @see ubic.gemma.model.analysis.expression.CoexpressionAnalysisService
- * @version $Id$
  * @author paul
  */
 @Service
@@ -61,7 +58,6 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
         analysis.setCoexpCorrelationDistribution( coexpd );
         this.update( analysis );
     }
-
 
     @Override
     @Transactional
@@ -115,7 +111,8 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
             return null;
         }
         Collection<CoexpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
-        if ( found.isEmpty() ) return null;
+        if ( found.isEmpty() )
+            return null;
         return found.iterator().next();
     }
 
@@ -129,24 +126,12 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
         return coexpressionAnalysisDao;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CoexpressionAnalysisService#getExperimentsWithAnalysis(java
-     * .util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
         return this.getCoexpressionAnalysisDao().getExperimentsWithAnalysis( idsToFilter );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CoexpressionAnalysisService#getExperimentsWithAnalysis()
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
@@ -174,7 +159,7 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
     @Override
     @Transactional(readOnly = true)
     public Collection<CoexpressionAnalysis> loadAll() {
-        return ( Collection<CoexpressionAnalysis> ) this.getCoexpressionAnalysisDao().loadAll();
+        return this.getCoexpressionAnalysisDao().loadAll();
     }
 
     @Override

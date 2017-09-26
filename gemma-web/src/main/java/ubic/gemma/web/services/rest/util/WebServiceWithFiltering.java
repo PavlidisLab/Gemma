@@ -20,7 +20,6 @@ public abstract class WebServiceWithFiltering extends WebService {
      * Lists all objects available in gemma.
      *
      * @param filter optional parameter (defaults to empty string) filters the result by given properties.
-     *               <br/>
      *               <p>
      *               Filtering can be done on any* property or nested property that the ExpressionExperiment class has (
      *               and is mapped by hibernate ). E.g: 'curationDetails' or 'curationDetails.lastTroubledEvent.date'
@@ -42,16 +41,17 @@ public abstract class WebServiceWithFiltering extends WebService {
      *               <li> '=>' - larger or equal</li>
      *               <li> 'like' - similar string, effectively means 'contains', translates to the sql 'LIKE' operator (given value will be surrounded by % signs)</li>
      *               </ul>
-     *               Multiple filters can be chained using 'AND' or 'OR' keywords.<br/>
-     *               Leave space between the keywords and the previous/next word! <br/>
-     *               E.g: <code>?filter=property1 < value1 AND property2 like value2</code>
-     *               </p><p>
+     *               </p>
+     *               <p>Multiple filters can be chained using 'AND' or 'OR' keywords.</p>
+     *               <p>Leave space between the keywords and the previous/next word!</p>
+     *               <p>E.g: <code>?filter=property1 < value1 AND property2 like value2</code></p>
+     *               <p>
      *               If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal
      *               form (CNF). Parentheses are not necessary - every AND keyword separates blocks of disjunctions.
      *               </p><p>
-     *               Example:<br/>
-     *               <code>?filter=p1 = v1 OR p1 != v2 AND p2 <= v2 AND p3 > v3 OR p3 < v4</code><br/>
-     *               Above query will translate to: <br/>
+     *               Example:
+     *               <code>?filter=p1 = v1 OR p1 != v2 AND p2 <= v2 AND p3 > v3 OR p3 < v4</code>
+     *               Above query will translate to:
      *               <code>(p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4;)</code>
      *               </p><p>
      *               Breaking the CNF results in an error.
@@ -59,14 +59,13 @@ public abstract class WebServiceWithFiltering extends WebService {
      *               <p>
      *               Filter "curationDetails.troubled" will be ignored if user is not an administrator.
      *               </p>
-     *               <br/>
      * @param offset <p>optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them from the database.</p>
      * @param limit  <p>optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.</p>
-     * @param sort   <p>optional parameter (defaults to +id) sets the ordering property and direction.<br/>
+     * @param sort   <p>optional parameter (defaults to +id) sets the ordering property and direction.
      *               Format is [+,-][property name]. E.g. "-accession" will translate to descending ordering by the
-     *               Accession property.<br/>
-     *               Note that this does not guarantee the order of the returned entities.<br/>
-     *               Nested properties are also supported (recursively). E.g. "+curationDetails.lastTroubledEvent.date".<br/></p>
+     *               Accession property.
+     *               Note that this does not guarantee the order of the returned entities.
+     *               Nested properties are also supported (recursively). E.g. "+curationDetails.lastTroubledEvent.date".</p>
      * @return all objects in the database, skipping the first [{@code offset}], and limiting the amount in the result to
      * the value of the {@code limit} parameter.
      */

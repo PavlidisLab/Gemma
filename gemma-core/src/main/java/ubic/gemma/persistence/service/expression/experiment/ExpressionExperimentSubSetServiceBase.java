@@ -18,16 +18,16 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
+import java.util.Collection;
+
 /**
  * Spring Service base class for <code>ExpressionExperimentSubSetService</code>, provides access to all services and
  * entities referenced by this service.
- * 
+ *
  * @see ExpressionExperimentSubSetService
  */
 public abstract class ExpressionExperimentSubSetServiceBase implements ExpressionExperimentSubSetService {
@@ -35,9 +35,7 @@ public abstract class ExpressionExperimentSubSetServiceBase implements Expressio
     @Autowired
     private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
-    /**
-     * @see ExpressionExperimentSubSetService#create(ExpressionExperimentSubSet)
-     */
+
     @Override
     @Transactional
     public ExpressionExperimentSubSet create( final ExpressionExperimentSubSet expressionExperimentSubSet ) {
@@ -45,9 +43,7 @@ public abstract class ExpressionExperimentSubSetServiceBase implements Expressio
 
     }
 
-    /**
-     * @see ExpressionExperimentSubSetService#load(Long)
-     */
+
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperimentSubSet load( final Long id ) {
@@ -55,9 +51,7 @@ public abstract class ExpressionExperimentSubSetServiceBase implements Expressio
 
     }
 
-    /**
-     * @see ExpressionExperimentSubSetService#loadAll()
-     */
+
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> loadAll() {
@@ -65,33 +59,23 @@ public abstract class ExpressionExperimentSubSetServiceBase implements Expressio
 
     }
 
-    /**
-     * Sets the reference to <code>expressionExperimentSubSet</code>'s DAO.
-     */
-    public void setExpressionExperimentSubSetDao( ExpressionExperimentSubSetDao expressionExperimentSubSetDao ) {
-        this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
-    }
 
-    /**
-     * Gets the reference to <code>expressionExperimentSubSet</code>'s DAO.
-     */
     protected ExpressionExperimentSubSetDao getExpressionExperimentSubSetDao() {
         return this.expressionExperimentSubSetDao;
     }
 
-    /**
-     * Performs the core logic for {@link #create(ExpressionExperimentSubSet)}
-     */
+
+    public void setExpressionExperimentSubSetDao( ExpressionExperimentSubSetDao expressionExperimentSubSetDao ) {
+        this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
+    }
+
+
     protected abstract ExpressionExperimentSubSet handleCreate( ExpressionExperimentSubSet expressionExperimentSubSet );
 
-    /**
-     * Performs the core logic for {@link #load(Long)}
-     */
+
     protected abstract ExpressionExperimentSubSet handleLoad( Long id );
 
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
+
     protected abstract java.util.Collection<ExpressionExperimentSubSet> handleLoadAll();
 
 }

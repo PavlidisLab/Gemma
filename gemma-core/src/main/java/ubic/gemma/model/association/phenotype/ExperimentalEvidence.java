@@ -28,6 +28,7 @@ public class ExperimentalEvidence extends ubic.gemma.model.association.phenotype
      */
     private static final long serialVersionUID = -1310307976449116756L;
     private ubic.gemma.model.analysis.Investigation experiment;
+
     /**
      * No-arg constructor added to satisfy javabean contract
      *
@@ -44,17 +45,10 @@ public class ExperimentalEvidence extends ubic.gemma.model.association.phenotype
         this.experiment = experiment;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.association.phenotype.ExperimentalEvidence}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.phenotype.ExperimentalEvidence}.
-         */
         public static ubic.gemma.model.association.phenotype.ExperimentalEvidence newInstance() {
             return new ubic.gemma.model.association.phenotype.ExperimentalEvidence();
         }
-
     }
 
 }

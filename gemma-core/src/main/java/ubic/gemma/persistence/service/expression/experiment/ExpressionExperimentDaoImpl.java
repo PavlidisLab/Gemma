@@ -352,7 +352,7 @@ public class ExpressionExperimentDaoImpl
      *                be a property of EE itself, or any nested property that hibernate can reach.
      *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
      * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param filter  see {@link this#formRestrictionClause(ArrayList)} filters argument for description.
+     * @param filter  see this.formRestrictionClause(ArrayList) filters argument for description.
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override

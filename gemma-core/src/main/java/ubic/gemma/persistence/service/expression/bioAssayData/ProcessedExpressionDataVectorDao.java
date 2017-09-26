@@ -44,6 +44,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * should already have been computed. If the values already exist, they will be re-written. The data will be
      * quantile normalized (with some exceptions: ratios and count data will not be normalized).
      *
+     * @param expressionExperiment ee
      * @return the updated expressionExperiment.
      */
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
@@ -70,6 +71,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee, Collection<Long> probes );
 
     /**
+     * @param expressionExperiment ee
      * @return Processed data for the given experiment. NOTE the vectors are thawed before returning.
      */
     Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
@@ -88,6 +90,8 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     /**
      * Retrieve expression level information for genes in experiments.
      *
+     * @param genes                 genes
+     * @param expressionExperiments expression experiments
      * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
      */
     Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
@@ -97,6 +101,10 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     /**
      * When the processed data is being computed separately.
+     *
+     * @param ee   ee
+     * @param data data
+     * @return ee
      */
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> data );

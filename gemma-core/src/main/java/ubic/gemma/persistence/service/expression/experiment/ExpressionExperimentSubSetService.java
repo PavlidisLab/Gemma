@@ -18,55 +18,43 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
- * @version $Id$
  */
 public interface ExpressionExperimentSubSetService {
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
+    ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
+    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
 
     @Secured({ "GROUP_USER" })
-    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
+    ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
 
     /**
-     * @param entity
-     * @param factor
+     * @param entity entity
+     * @param factor factor
      * @return the factor values of the given factor that are relevant to the subset.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
+    Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
-    /**
-     * @param subSetId
-     * @param experimentalFactor
-     * @return
-     */
-    public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
+    Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperimentSubSet load( Long id );
+    ExpressionExperimentSubSet load( Long id );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperimentSubSet> loadAll();
+    Collection<ExpressionExperimentSubSet> loadAll();
 
     /**
      * Deletes an experiment subset and all of its associated DifferentialExpressionAnalysis objects. This method is
@@ -74,9 +62,8 @@ public interface ExpressionExperimentSubSetService {
      * ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentServiceImpl.handleDelete(ExpressionExperiment) but
      * it doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting of
      * experiment set members.
-     * 
+     *
      * @param entity the subset to remove
-     * @see ExpressionExperimentServiceImpl.handleDelete( ExpressionExperiment )
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void delete( ExpressionExperimentSubSet entity );

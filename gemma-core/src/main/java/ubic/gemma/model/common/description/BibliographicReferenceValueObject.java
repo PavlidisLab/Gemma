@@ -62,6 +62,8 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
 
     /**
      * does not set related experiments field
+     *
+     * @param ref bib ref
      */
     public BibliographicReferenceValueObject( BibliographicReference ref ) {
         super( ref.getId() );
@@ -109,6 +111,8 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
 
     /**
      * does not set related experiments field
+     *
+     * @param refs bib refs
      */
     public static List<BibliographicReferenceValueObject> convert2ValueObjects(
             Collection<BibliographicReference> refs ) {
