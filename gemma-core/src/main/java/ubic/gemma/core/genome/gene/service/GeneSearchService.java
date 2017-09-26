@@ -40,7 +40,7 @@ public interface GeneSearchService {
      *
      * @param goId    GO id that must be in the format "GO_#######"
      * @param taxonId must not be null and must correspond to a taxon
-     * @return Collection<GeneSetValueObject> empty if goId was blank or taxonId didn't correspond to a taxon
+     * @return empty if goId was blank or taxonId didn't correspond to a taxon
      */
     Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId );
 

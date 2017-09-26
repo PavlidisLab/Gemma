@@ -32,27 +32,29 @@ import ubic.gemma.core.analysis.sequence.ProbeMapper;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.model.genome.sequenceAnalysis.*;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -144,7 +146,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
 
-        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<BACS>( QUEUE_SIZE );
+        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
         AtomicBoolean generatorDone = new AtomicBoolean( false );
         AtomicBoolean loaderDone = new AtomicBoolean( false );
 
@@ -267,7 +269,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 // a probe can have more than one gene associated with it if so they are piped |
-                Collection<Gene> geneListProbe = new HashSet<Gene>();
+                Collection<Gene> geneListProbe = new HashSet<>();
 
                 // indicate multiple genes
                 Gene geneDetails;

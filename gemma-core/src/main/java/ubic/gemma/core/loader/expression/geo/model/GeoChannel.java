@@ -18,58 +18,52 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Represents data for one channel on a microarray in GEO. Corresponds (roughly) to a BioMaterial in Gemma.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class GeoChannel {
 
-    private int channelNumber = -1;
-
-    private String organism = null;
-
-    private ChannelMolecule molecule;
-
-    public enum ChannelMolecule {
-        totalRNA, polyARNA, cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other
-    }
-
-    public static ChannelMolecule convertStringToMolecule( String string ) {
-        if ( string.equals( "total RNA" ) ) {
-            return ChannelMolecule.totalRNA;
-        } else if ( string.equals( "polyA RNA" ) ) {
-            return ChannelMolecule.polyARNA;
-        } else if ( string.equals( "cytoplasmic RNA" ) ) {
-            return ChannelMolecule.cytoplasmicRNA;
-        } else if ( string.equals( "nuclear RNA" ) ) {
-            return ChannelMolecule.nuclearRNA;
-        } else if ( string.equals( "genomic DNA" ) ) {
-            return ChannelMolecule.genomicDNA;
-        } else if ( string.equals( "protein" ) ) {
-            return ChannelMolecule.protein;
-        } else if ( string.equals( "other" ) ) {
-            return ChannelMolecule.other;
-        } else {
-            throw new IllegalArgumentException( "Unknown channel molecule " + string );
-        }
-    }
-
     String sourceName = "";
-    Collection<String> characteristics = new HashSet<String>();
+    Collection<String> characteristics = new HashSet<>();
     String bioMaterialProvider = "";
     String growthProtocol = "";
     String treatmentProtocol = "";
     String extractProtocol = "";
     String label = "";
     String labelProtocol = "";
+    private int channelNumber = -1;
+    private String organism = null;
+    private ChannelMolecule molecule;
+
+    public static ChannelMolecule convertStringToMolecule( String string ) {
+        switch ( string ) {
+            case "total RNA":
+                return ChannelMolecule.totalRNA;
+            case "polyA RNA":
+                return ChannelMolecule.polyARNA;
+            case "cytoplasmic RNA":
+                return ChannelMolecule.cytoplasmicRNA;
+            case "nuclear RNA":
+                return ChannelMolecule.nuclearRNA;
+            case "genomic DNA":
+                return ChannelMolecule.genomicDNA;
+            case "protein":
+                return ChannelMolecule.protein;
+            case "other":
+                return ChannelMolecule.other;
+            default:
+                throw new IllegalArgumentException( "Unknown channel molecule " + string );
+        }
+    }
 
     public void addToExtractProtocol( String s ) {
         this.extractProtocol = this.extractProtocol + " " + s;
@@ -109,7 +103,7 @@ public class GeoChannel {
     }
 
     /**
-     * @param characteristic The characteristic to set.
+     * @param characteristics The characteristics to set.
      */
     public void setCharacteristic( Collection<String> characteristics ) {
         this.characteristics = characteristics;
@@ -165,10 +159,17 @@ public class GeoChannel {
     }
 
     /**
+     * @param molecule The molecule to set.
+     */
+    public void setMolecule( ChannelMolecule molecule ) {
+        this.molecule = molecule;
+    }
+
+    /**
      * Convert the molecule into a MGED Ontology-based MaterialType VocabCharacteristic. If "other" we just return a
      * plain text value.
-     * 
-     * @return
+     *
+     * @return characteristic
      */
     public Characteristic getMoleculeAsCharacteristic() {
 
@@ -210,13 +211,6 @@ public class GeoChannel {
         }
 
         return result;
-    }
-
-    /**
-     * @param molecule The molecule to set.
-     */
-    public void setMolecule( ChannelMolecule molecule ) {
-        this.molecule = molecule;
     }
 
     /**
@@ -295,6 +289,10 @@ public class GeoChannel {
 
     public void setGrowthProtocol( String growthProtocol ) {
         this.growthProtocol = growthProtocol;
+    }
+
+    public enum ChannelMolecule {
+        totalRNA, polyARNA, cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other
     }
 
 }

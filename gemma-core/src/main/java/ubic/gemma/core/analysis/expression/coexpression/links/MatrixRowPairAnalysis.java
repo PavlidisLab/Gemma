@@ -18,62 +18,48 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import java.util.Map;
-import java.util.Set;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.ObjectArrayList;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.ObjectArrayList;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Paul Pavlidis
- * @version $Id$
  */
 public interface MatrixRowPairAnalysis {
-    static final int NUM_BINS = 2048;
+    int NUM_BINS = 2048;
 
-    public void calculateMetrics();
-
-    public DoubleArrayList getHistogramArrayList();
-
-    public ObjectArrayList getKeepers();
-
-    public QuantitationType getMetricType();
-
-    public CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl );
-
-    public double getScoreInBin( int i );
-
-    public int numCached();
-
-    public void setDuplicateMap( Map<CompositeSequence, Set<Gene>> probeToGeneMap );
-
-    public void setLowerTailThreshold( double k );
-
-    public void setMinNumpresent( int minSamplesToKeepCorrelation );
-
-    public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks );
-
-    public void setPValueThreshold( double k );
-
-    public void setUpperTailThreshold( double k );
-
-    public void setUseAbsoluteValue( boolean k );
+    void calculateMetrics();
+    DoubleArrayList getHistogramArrayList();
+    ObjectArrayList getKeepers();
+    QuantitationType getMetricType();
+    CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl );
+    double getScoreInBin( int i );
+    int numCached();
+    void setDuplicateMap( Map<CompositeSequence, Set<Gene>> probeToGeneMap );
+    void setLowerTailThreshold( double k );
+    void setMinNumpresent( int minSamplesToKeepCorrelation );
+    void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks );
+    void setPValueThreshold( double k );
+    void setUpperTailThreshold( double k );
+    void setUseAbsoluteValue( boolean k );
 
     /**
      * Default is true; set to false to disable use of the pvalue threshold, in which case only the upper and lower tail
      * thresholds will be used.
-     * 
-     * @param useIt
+     *
+     * @param useIt new value
      */
-    public void setUsePvalueThreshold( boolean useIt );
+    void setUsePvalueThreshold( boolean useIt );
 
     /**
      * Use after analysis.
-     * 
+     *
      * @return how many pairs were rejected due to cross-hybridization potential
      */
     long getCrossHybridizationRejections();

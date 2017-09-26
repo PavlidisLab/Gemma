@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.persistence.util.CompassUtils;
@@ -37,10 +36,10 @@ import ubic.gemma.persistence.util.MailEngine;
 
 /**
  * NOTE do not set this up to run on a remote worker. The search index directory may not be accessible.
- * 
+ *
  * @author klc
- * @version $Id$
  */
+@SuppressWarnings("unused") // Possible external use
 @Component
 @Scope("prototype")
 public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskCommand> implements IndexerTask {
@@ -208,7 +207,7 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
     }
 
     /**
-     * @param bioSequenceGps the bioSequenceGps to set
+     * @param biosequenceGps the bioSequenceGps to set
      */
     public void setBiosequenceGps( SingleCompassGps biosequenceGps ) {
         this.biosequenceGps = biosequenceGps;
@@ -298,9 +297,6 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
         this.geneSetGps = geneSetGps;
     }
 
-    /**
-     * @param mailEngine
-     */
     public void setMailEngine( MailEngine mailEngine ) {
         this.mailEngine = mailEngine;
     }
@@ -312,19 +308,10 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
         this.probeGps = probeGps;
     }
 
-    /**
-     * @param compass
-     * @return
-     */
     private String getIndexPath( InternalCompass compass ) {
         return compass.getSettings().getSetting( PATH_PROPERTY ).replaceFirst( FILE, "" ) + PATH_SUFFIX;
     }
 
-    /**
-     * @param device
-     * @param whatIndexingMsg
-     * @return
-     */
     private Boolean rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
 
         StopWatch timer = new StopWatch();
@@ -352,8 +339,8 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
 
         // If failed for the second time send an email to administrator.
         if ( !success ) {
-            mailEngine.sendAdminMessage( "Failed to index " + whatIndexingMsg, "Failed to index " + whatIndexingMsg
-                    + ".  See logs for details" );
+            mailEngine.sendAdminMessage( "Failed to index " + whatIndexingMsg,
+                    "Failed to index " + whatIndexingMsg + ".  See logs for details" );
             log.info( "Failed rebuilding index for " + whatIndexingMsg + ".  Took (ms): " + timer.getTime() );
 
         } else {

@@ -18,60 +18,58 @@
  */
 package ubic.gemma.core.loader.protein.string;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.loader.protein.StringProteinInteractionEvidenceCodeEnum;
 import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
 import ubic.gemma.core.loader.util.parser.FileFormatException;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Class that is responsible for parsing the string protein protein interaction file (protein.links.detailed.txt).
  * String has the following line format:
- * <p>
- * protein1 protein2 neighborhood fusion cooccurence coexpression experimental database textmining combined_score.
- * <p>
+ * protein1 protein2 neighborhood fusion co-occurrence coexpression experimental database text-mining combined_score.
  * The first two fields are strings and represent ensembl protein ids, the other 8 fields represent evidence for the
  * interactions. Currently no logic connected to the evidence and any evidence is taken as is. The file is large and
  * contains over 600 taxon as of version 8.2, the file is filtered based on ncbi id which is appended to the start of
  * the protein1 and protein 2. Thus filtering involves only parsing those lines that contain taxon of interest.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class StringProteinProteinInteractionFileParser extends BasicLineParser<StringProteinProteinInteraction> {
 
-    /** String file format which has 10 columns */
-    private int STRING_PROTEINPROTEININTERACTION_FIELDS_PER_ROW = 10;
-
-    /** String uses space as the delimter */
-    private static final char FIELD_DELIM = ' ';
-
+    /**
+     * String uses space as the delimiter
+     */
+    private static final char FIELD_DELIMITER = ' ';
+    /**
+     * String file format which has 10 columns
+     */
+    private static final int STRING_PROTEIN_PROTEIN_INTERACTION_FIELDS_PER_ROW = 10;
     /**
      * The Collection of StringProteinProteinInteraction of taxon that are of interest note
-     * StringProteinProteinInteraction has hashCode method overriden as HashSet uses this method to test for equality
+     * StringProteinProteinInteraction has hashCode method overridden as HashSet uses this method to test for equality
      */
-    Collection<StringProteinProteinInteraction> proteinProteinInteractions = new HashSet<StringProteinProteinInteraction>();
-
-    /** Taxon of interest in the string file */
-    private Collection<Taxon> taxa = new ArrayList<Taxon>();
+    Collection<StringProteinProteinInteraction> proteinProteinInteractions = new HashSet<>();
+    /**
+     * Taxon of interest in the string file
+     */
+    private Collection<Taxon> taxa = new ArrayList<>();
 
     /**
      * Typical line of string file is of the following format:
-     * 
      * <pre>
      * 882.DVU0001 882.DVU0002 707 0 0 0 0 0 172 742
      * </pre>
-     * 
      * 882.DVU0001 and 882.DVU0002 refer to protein 1 and protein2 Note the 882 is the ncbi taxon id, the other part is
      * an external id (ensembl). Method takes the array representing a line of string file and creates a
      * StringProteinProteinInteraction object.
-     * 
+     *
      * @param fields Line split on delimiter
      * @return StringProteinProteinInteraction value object.
      */
@@ -92,8 +90,8 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
 
         // Check that the two proteins taxa match that is the taxon appended to protein name match
         if ( taxonIdProtein1 != taxonIdProtein2 ) {
-            throw new FileFormatException( "Protein 1 " + fields[0] + " protein 2  " + fields[1]
-                    + " do not contain matching taxons" );
+            throw new FileFormatException(
+                    "Protein 1 " + fields[0] + " protein 2  " + fields[1] + " do not contain matching taxons" );
         }
         // taxon not supported skip it
         if ( !( getNcbiValidTaxon() ).contains( taxonIdProtein1 ) ) {
@@ -103,9 +101,9 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
         // always ensure that protein 1 and protein 2 are set same alphabetical order makes matching much easier later
         // hashcode equality method relies on them being in consistent order.
         // use hashcode as mixed alphanumeric code
-        Integer protein1Infile = Integer.valueOf( fields[0].hashCode() );
-        Integer protein2InFile = Integer.valueOf( fields[1].hashCode() );
-        StringProteinProteinInteraction stringProteinProteinInteraction = null;
+        Integer protein1Infile = fields[0].hashCode();
+        Integer protein2InFile = fields[1].hashCode();
+        StringProteinProteinInteraction stringProteinProteinInteraction;
 
         if ( protein1Infile.compareTo( protein2InFile ) < 0 ) {
             stringProteinProteinInteraction = new StringProteinProteinInteraction( fields[0], fields[1] );
@@ -122,16 +120,19 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
             }
         }
 
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
-                StringProteinInteractionEvidenceCodeEnum.NEIGHBORHOOD, Integer.valueOf( fields[2] ) );
+        stringProteinProteinInteraction
+                .addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.NEIGHBORHOOD,
+                        Integer.valueOf( fields[2] ) );
         stringProteinProteinInteraction.addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.GENEFUSION,
                 Integer.valueOf( fields[3] ) );
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
-                StringProteinInteractionEvidenceCodeEnum.COOCCURENCE, Integer.valueOf( fields[4] ) );
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
-                StringProteinInteractionEvidenceCodeEnum.COEXPRESSION, Integer.valueOf( fields[5] ) );
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
-                StringProteinInteractionEvidenceCodeEnum.EXPERIMENTAL, Integer.valueOf( fields[6] ) );
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.COOCCURENCE,
+                Integer.valueOf( fields[4] ) );
+        stringProteinProteinInteraction
+                .addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.COEXPRESSION,
+                        Integer.valueOf( fields[5] ) );
+        stringProteinProteinInteraction
+                .addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.EXPERIMENTAL,
+                        Integer.valueOf( fields[6] ) );
         stringProteinProteinInteraction.addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.DATABASE,
                 Integer.valueOf( fields[7] ) );
         stringProteinProteinInteraction.addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.TEXTMINING,
@@ -148,7 +149,7 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
 
     /**
      * Getter for taxon that are to be selected for in the string file
-     * 
+     *
      * @return taxon to be parsed
      */
     public Collection<Taxon> getTaxa() {
@@ -156,10 +157,19 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
     }
 
     /**
+     * Setter for the taxon that are to be selected for in the string file
+     *
+     * @param taxa to be parsed
+     */
+    public void setTaxa( Collection<Taxon> taxa ) {
+        this.taxa = taxa;
+    }
+
+    /**
      * Parse a string file line into an array representing the components, on successful validation create a
      * StringProteinProteinInteraction value object.
-     * 
-     * @param The line to parse
+     *
+     * @param line The line to parse
      * @return StringProteinProteinInteraction the value object.
      */
     @Override
@@ -170,38 +180,28 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
             return null;
         }
 
-        String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
+        String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIMITER );
 
-        if ( fields.length != STRING_PROTEINPROTEININTERACTION_FIELDS_PER_ROW ) {
+        if ( fields.length != STRING_PROTEIN_PROTEIN_INTERACTION_FIELDS_PER_ROW ) {
             log.info( "check file format" );
-            throw new FileFormatException( "Line + " + line + " is not in the right format: has " + fields.length
-                    + " fields, expected " + STRING_PROTEINPROTEININTERACTION_FIELDS_PER_ROW );
+            throw new FileFormatException(
+                    "Line + " + line + " is not in the right format: has " + fields.length + " fields, expected "
+                            + STRING_PROTEIN_PROTEIN_INTERACTION_FIELDS_PER_ROW );
         }
 
         try {
             return createStringProteinProteinInteraction( fields );
 
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( e );
-        } catch ( FileFormatException e ) {
+        } catch ( NumberFormatException | FileFormatException e ) {
             throw new RuntimeException( e );
         }
 
     }
 
     /**
-     * Setter for the taxon that are to be selected for in the string file
-     * 
-     * @param taxa to be parsed
-     */
-    public void setTaxa( Collection<Taxon> taxa ) {
-        this.taxa = taxa;
-    }
-
-    /**
      * Method to add a StringProteinProteinInteraction the map objects.
-     * 
-     * @param StringProteinProteinInteraction value oobject representing parsed line
+     *
+     * @param obj value object representing parsed line
      */
     @Override
     protected void addResult( StringProteinProteinInteraction obj ) {
@@ -210,17 +210,18 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
 
     /**
      * Method to generate a collection of ncbi ids for the taxon which are to be used.
-     * 
+     *
      * @return Collection of integers representing the ncbis to use.
      */
     private Collection<Integer> getNcbiValidTaxon() {
-        Collection<Integer> taxaNcibi = new HashSet<Integer>();
+        Collection<Integer> taxaNcbi = new HashSet<>();
         for ( Taxon taxon : this.taxa ) {
-            taxaNcibi.add( taxon.getNcbiId() );
+            taxaNcbi.add( taxon.getNcbiId() );
 
-            if ( taxon.getSecondaryNcbiId() != null ) taxaNcibi.add( taxon.getSecondaryNcbiId() );
+            if ( taxon.getSecondaryNcbiId() != null )
+                taxaNcbi.add( taxon.getSecondaryNcbiId() );
         }
-        return taxaNcibi;
+        return taxaNcbi;
     }
 
 }

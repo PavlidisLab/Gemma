@@ -32,9 +32,6 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject<Literatur
         super( id );
     }
 
-    /**
-     * Entity to Value Object
-     */
     public LiteratureEvidenceValueObject( LiteratureEvidence literatureEvidence ) {
         super( literatureEvidence );
     }

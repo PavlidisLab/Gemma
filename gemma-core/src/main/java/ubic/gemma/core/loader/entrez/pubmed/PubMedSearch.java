@@ -18,36 +18,31 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.xml.sax.SAXException;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.util.Settings;
+
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashSet;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.xml.sax.SAXException;
-
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.util.Settings;
-
 /**
  * Search PubMed for terms, retrieve document records.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class PubMedSearch {
-    protected static final Log log = LogFactory.getLog( PubMedSearch.class );
-    private String uri;
+    private static final Log log = LogFactory.getLog( PubMedSearch.class );
     private static final int CHUNK_SIZE = 10; // don't retrive too many at once, it isn't nice.
+    private final String uri;
 
-    /**
-     * 
-     */
     public PubMedSearch() {
         String baseURL = ( String ) Settings.getProperty( "entrez.esearch.baseurl" );
         String db = ( String ) Settings.getProperty( "entrez.efetch.pubmed.db" );
@@ -59,10 +54,10 @@ public class PubMedSearch {
 
     /**
      * Search based on terms
-     * 
-     * @param searchTerms
+     *
+     * @param searchTerms search terms
      * @return BibliographicReference representing the publication
-     * @throws IOException
+     * @throws IOException IO problems
      */
     public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms )
             throws IOException, SAXException, ParserConfigurationException {
@@ -86,13 +81,6 @@ public class PubMedSearch {
         return results;
     }
 
-    /**
-     * For an integer pubmed id
-     * 
-     * @param pubMedId
-     * @return BibliographicReference representing the publication
-     * @throws IOException
-     */
     public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
             throws IOException {
 
@@ -107,15 +95,15 @@ public class PubMedSearch {
 
     /**
      * Gets all the pubmed ID's that would be returned given a list of input terms, using two eUtil calls.
-     * 
-     * @param searchTerms
+     *
+     * @param searchTerms search terms
      * @return The PubMed ids (as strings) for the search results.
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
+     * @throws IOException                  IO problems
+     * @throws SAXException                 SAX exception
+     * @throws ParserConfigurationException config problems
      */
-    public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms ) throws IOException,
-            SAXException, ParserConfigurationException {
+    public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms )
+            throws IOException, SAXException, ParserConfigurationException {
         StringBuilder builder = new StringBuilder();
         for ( String word : searchTerms ) {
             // space them out, then let the overloaded method urlencode them
@@ -127,15 +115,15 @@ public class PubMedSearch {
 
     /**
      * Gets all the pubmed ID's that would be returned from a pubmed search string, using two eUtil calls.
-     * 
+     *
      * @param searchQuery - what would normally be typed into pubmed search box for example "Neural Pathways"[MeSH]
      * @return The PubMed ids (as strings) for the search results.
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
+     * @throws IOException                  IO problems
+     * @throws SAXException                 SAX exception
+     * @throws ParserConfigurationException config problems
      */
-    public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery ) throws IOException, SAXException,
-            ParserConfigurationException {
+    public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery )
+            throws IOException, SAXException, ParserConfigurationException {
         ESearchXMLParser parser = new ESearchXMLParser();
         // encode it
         searchQuery = URLEncoder.encode( searchQuery, "UTF-8" );
@@ -153,15 +141,14 @@ public class PubMedSearch {
         toBeGotten = new URL( URLString );
         log.info( "Fetching " + count + " ID's from:" + toBeGotten );
 
-        Collection<String> ids = parser.parse( toBeGotten.openStream() );
-        return ids;
+        return parser.parse( toBeGotten.openStream() );
     }
 
     private Collection<BibliographicReference> fetchById( Collection<String> ids ) throws IOException {
-        Collection<BibliographicReference> results = new HashSet<BibliographicReference>();
+        Collection<BibliographicReference> results = new HashSet<>();
 
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
-        Collection<Integer> ints = new HashSet<Integer>();
+        Collection<Integer> ints = new HashSet<>();
         int count = 0;
 
         for ( String str : ids ) {
@@ -173,7 +160,7 @@ public class PubMedSearch {
 
             if ( count >= CHUNK_SIZE ) {
                 results.addAll( fetcher.retrieveByHTTP( ints ) );
-                ints = new HashSet<Integer>();
+                ints = new HashSet<>();
                 count = 0;
             }
 

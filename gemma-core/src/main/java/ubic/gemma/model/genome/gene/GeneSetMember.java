@@ -41,10 +41,6 @@ public abstract class GeneSetMember implements Identifiable, Serializable {
     public GeneSetMember() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an GeneSetMember instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -77,10 +73,8 @@ public abstract class GeneSetMember implements Identifiable, Serializable {
     }
 
     /**
-     * <p>
-     * A generic value that can be used to provide additional information about group membership, to provide rankings of
+     * @return A generic value that can be used to provide additional information about group membership, to provide rankings of
      * group members for example.
-     * </p>
      */
     public Double getScore() {
         return this.score;
@@ -90,9 +84,6 @@ public abstract class GeneSetMember implements Identifiable, Serializable {
         this.score = score;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -101,21 +92,12 @@ public abstract class GeneSetMember implements Identifiable, Serializable {
         return hashCode;
     }
 
-    /**
-     * Constructs new instances of {@link GeneSetMember}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link GeneSetMember}.
-         */
+
         public static GeneSetMember newInstance() {
             return new GeneSetMemberImpl();
         }
 
-        /**
-         * Constructs a new instance of {@link GeneSetMember}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
         public static GeneSetMember newInstance( Double score, ubic.gemma.model.genome.Gene gene ) {
             final GeneSetMember entity = new GeneSetMemberImpl();
             entity.setScore( score );

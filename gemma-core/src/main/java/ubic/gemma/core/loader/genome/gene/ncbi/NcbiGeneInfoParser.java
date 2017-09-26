@@ -18,6 +18,13 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo.NomenclatureStatus;
+import ubic.gemma.core.loader.util.QueuingParser;
+import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
+import ubic.gemma.core.loader.util.parser.FileFormatException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -25,34 +32,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo.NomenclatureStatus;
-import ubic.gemma.core.loader.util.QueuingParser;
-import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
-import ubic.gemma.core.loader.util.parser.FileFormatException;
-
 /**
- * Class to parse the gene_info file from NCBI Gene. See {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README} for details
+ * Class to parse the gene_info file from NCBI Gene. See <a href="ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README">readme</a> for details
  * of the format.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo> implements QueuingParser<String> {
 
-    /**
-     * 
-     */
     private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 15;
-
-    private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
-
+    private final Map<String, NCBIGeneInfo> results = new HashMap<>();
     private BlockingQueue<String> resultsKeys;
-
     private boolean filter = true;
-
     private Collection<Integer> ncbiTaxonIds;
 
     @Override
@@ -65,11 +56,6 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
         return results.get( key );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
-     */
     @Override
     public String getKey( NCBIGeneInfo newItem ) {
         return newItem.getGeneId();
@@ -91,11 +77,6 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
         this.parse( inputStream );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
-     */
     @Override
     public NCBIGeneInfo parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
@@ -105,8 +86,9 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                 // backwards compatibility
                 // old format, hopefully okay
             } else {
-                throw new FileFormatException( "Line + " + line + " is not in the right format: has " + fields.length
-                        + " fields, expected " + NCBI_GENEINFO_FIELDS_PER_ROW );
+                throw new FileFormatException(
+                        "Line + " + line + " is not in the right format: has " + fields.length + " fields, expected "
+                                + NCBI_GENEINFO_FIELDS_PER_ROW );
             }
         }
         NCBIGeneInfo geneInfo = new NCBIGeneInfo();
@@ -142,15 +124,15 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             geneInfo.setDefaultSymbol( fields[2] );
             geneInfo.setLocusTag( fields[3] );
             String[] synonyms = StringUtils.splitPreserveAllTokens( fields[4], '|' );
-            for ( int i = 0; i < synonyms.length; i++ ) {
-                if ( synonyms[i].equals( "-" ) ) continue;
-                geneInfo.addToSynonyms( synonyms[i] );
+            for ( String synonym : synonyms ) {
+                if ( synonym.equals( "-" ) )
+                    continue;
+                geneInfo.addToSynonyms( synonym );
             }
 
             if ( !fields[5].equals( "-" ) ) {
                 String[] dbXRefs = StringUtils.splitPreserveAllTokens( fields[5], '|' );
-                for ( int i = 0; i < dbXRefs.length; i++ ) {
-                    String dbXr = dbXRefs[i];
+                for ( String dbXr : dbXRefs ) {
                     String[] dbF = StringUtils.split( dbXr, ':' );
                     if ( dbF.length != 2 ) {
                         /*
@@ -164,8 +146,8 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                             dbF[1] = dbF[1] + ":" + dbF[2];
                         } else {
                             // we're very stringent to avoid data corruption.
-                            throw new FileFormatException( "Expected 2 fields, got " + dbF.length + " from '" + dbXr
-                                    + "'" );
+                            throw new FileFormatException(
+                                    "Expected 2 fields, got " + dbF.length + " from '" + dbXr + "'" );
                         }
                     }
                     geneInfo.addToDbXRefs( dbF[0], dbF[1] );
@@ -176,10 +158,11 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             geneInfo.setMapLocation( fields[7] );
             geneInfo.setDescription( fields[8] );
             geneInfo.setGeneType( NCBIGeneInfo.typeStringToGeneType( fields[9] ) );
-            geneInfo.setSymbolIsFromAuthority( fields[10].equals( "-" ) ? false : true );
-            geneInfo.setNameIsFromAuthority( fields[11].equals( "-" ) ? false : true );
-            geneInfo.setNomenclatureStatus( fields[12].equals( "-" ) ? NomenclatureStatus.UNKNOWN : fields[11]
-                    .equals( "O" ) ? NomenclatureStatus.OFFICIAL : NomenclatureStatus.INTERIM );
+            geneInfo.setSymbolIsFromAuthority( !fields[10].equals( "-" ) );
+            geneInfo.setNameIsFromAuthority( !fields[11].equals( "-" ) );
+            geneInfo.setNomenclatureStatus( fields[12].equals( "-" ) ?
+                    NomenclatureStatus.UNKNOWN :
+                    fields[11].equals( "O" ) ? NomenclatureStatus.OFFICIAL : NomenclatureStatus.INTERIM );
             // ignore 14th field for now - it stores alternate protein names
             // ignore 15th, modification date
         } catch ( NumberFormatException e ) {

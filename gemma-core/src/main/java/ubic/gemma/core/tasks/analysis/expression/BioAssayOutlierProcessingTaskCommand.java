@@ -14,36 +14,21 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
-import java.util.Collection;
-
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
+import java.util.Collection;
+
 /**
  * @author anton
- * @vesrion $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class BioAssayOutlierProcessingTaskCommand extends TaskCommand {
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 3083077516188614790L;
     private boolean revert;
-
-    public boolean isRevert() {
-        return revert;
-    }
-
     private Collection<Long> bioAssayIds;
-
-    public Collection<Long> getBioAssayIds() {
-        return bioAssayIds;
-    }
-
-    public void setBioAssayIds( Collection<Long> bioAssayIds ) {
-        this.bioAssayIds = bioAssayIds;
-    }
 
     public BioAssayOutlierProcessingTaskCommand( Collection<Long> ids ) {
         this.setBioAssayIds( ids );
@@ -52,6 +37,18 @@ public class BioAssayOutlierProcessingTaskCommand extends TaskCommand {
     public BioAssayOutlierProcessingTaskCommand( Collection<Long> ids, boolean revertAsOutlier ) {
         this( ids );
         this.revert = revertAsOutlier;
+    }
+
+    public boolean isRevert() {
+        return revert;
+    }
+
+    public Collection<Long> getBioAssayIds() {
+        return bioAssayIds;
+    }
+
+    public void setBioAssayIds( Collection<Long> bioAssayIds ) {
+        this.bioAssayIds = bioAssayIds;
     }
 
     @Override

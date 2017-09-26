@@ -27,7 +27,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  * interaction data. It also provides functionality to format information relating to string within gemma such as
  * evidence codes.
  * For example the string url can be appended with: &amp;limit=20 which increases the number of links displayed on the string
- * page or &required_score=700 to increase the confidence before displaying the interaction.
+ * page or &amp;required_score=700 to increase the confidence before displaying the interaction.
  *
  * @author ldonnison
  */

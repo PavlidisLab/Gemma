@@ -25,13 +25,17 @@ import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Parent class of all evidence value objects
  *
  * @author nicolas
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in front end
 public class EvidenceValueObject<E extends PhenotypeAssociation> extends IdentifiableValueObject<E>
         implements Comparable<EvidenceValueObject>, Serializable {
 
@@ -62,8 +66,6 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
     private Set<PhenotypeAssPubValueObject> phenotypeAssPubVO = new HashSet<>();
     private ScoreValueObject scoreValueObject = new ScoreValueObject();
 
-
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -88,6 +90,8 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
 
     /**
      * set fields common to all evidence. Entity to Value Object
+     *
+     * @param phenotypeAssociation phenotype association
      */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
         super( phenotypeAssociation.getId() );
@@ -140,8 +144,6 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
                     phenotypeAssociation.getScore(), scoreTypeName );
         }
     }
-
-
 
     @Override
     public int compareTo( EvidenceValueObject evidenceValueObject ) {
@@ -231,8 +233,6 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
                 + isHomologueEvidence + ", containQueryPhenotype=" + containQueryPhenotype + ", scoreValueObject="
                 + scoreValueObject + "]";
     }
-
-
 
     public String getClassName() {
         return this.className;
@@ -424,8 +424,6 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
 
         return null;
     }
-
-
 
     private int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
         if ( this == evidenceValueObject )

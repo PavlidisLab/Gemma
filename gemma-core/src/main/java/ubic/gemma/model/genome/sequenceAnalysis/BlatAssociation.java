@@ -50,14 +50,8 @@ public class BlatAssociation extends BioSequence2GeneProduct {
     public void setBlatResult( BlatResult blatResult ) {
         this.blatResult = blatResult;
     }
-
-    /**
-     * Constructs new instances of {@link BlatAssociation}.
-     */
+    
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link BlatAssociation}.
-         */
         public static BlatAssociation newInstance() {
             return new BlatAssociation();
         }

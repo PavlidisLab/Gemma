@@ -18,22 +18,14 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -42,16 +34,20 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
@@ -101,8 +97,8 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         ad.setPrimaryTaxon( salmon );
 
         metaData.getArrayDesigns().add( ad );
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );) {
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
 
@@ -120,8 +116,8 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     @Test
     public final void testParseLoadDelete() throws Exception {
 
-        try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" );) {
 
             experimentalDesignImporter.importDesign( ee, is, false );
         }
@@ -155,9 +151,6 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         }
     }
 
-    /**
-     * @param bms
-     */
     private void checkResults( Collection<BioMaterial> bms ) {
         // check.
         assertEquals( 25, ee.getExperimentalDesign().getExperimentalFactors().size() );

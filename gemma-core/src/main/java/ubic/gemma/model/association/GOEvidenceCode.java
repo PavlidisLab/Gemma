@@ -57,7 +57,7 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
      */
     public static final GOEvidenceCode IIA = new GOEvidenceCode( "IIA" );
     /**
-     * A type of phylogenetic evidence whereby an aspect of a descendent is inferred through the characterization of an
+     * A type of phylogenetic evidence whereby an aspect of a descendant is inferred through the characterization of an
      * aspect of a ancestral gene.
      */
     public static final GOEvidenceCode IBA = new GOEvidenceCode( "IBA" );
@@ -236,9 +236,8 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
     }
 
     /**
-     * Creates an instance of GOEvidenceCode from <code>value</code>.
-     *
      * @param value the value to create the GOEvidenceCode from.
+     * @return Creates an instance of GOEvidenceCode from <code>value</code>.
      */
     public static GOEvidenceCode fromString( String value ) {
         final GOEvidenceCode typeValue = values.get( value );
@@ -329,9 +328,11 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
      * use the equality operator <code>==</code> for enumerations because a regular deserialized object is always a
      * newly constructed instance and will therefore never be an existing reference; it is this
      * <code>readResolve()</code> method which will intercept the deserialization process in order to return the proper
-     * singleton reference. This method is documented here: <a
-     * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
+     * singleton reference. This method is documented here:
+     * <a href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return GOEvidenceCode.fromString( this.value );

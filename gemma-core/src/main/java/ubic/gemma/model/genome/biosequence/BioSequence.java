@@ -20,6 +20,7 @@ package ubic.gemma.model.genome.biosequence;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
 
@@ -33,6 +34,7 @@ import java.util.Collection;
  * physical item, and not the database entry for the sequence.
  * </p>
  */
+@SuppressWarnings("unused")
 public abstract class BioSequence extends ubic.gemma.model.common.Describable {
 
     /**
@@ -43,11 +45,11 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
     private String sequence;
     private Boolean isApproximateLength;
     private Boolean isCircular;
-    private ubic.gemma.model.genome.biosequence.PolymerType polymerType;
-    private ubic.gemma.model.genome.biosequence.SequenceType type;
+    private PolymerType polymerType;
+    private SequenceType type;
     private Double fractionRepeats;
     private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
-    private ubic.gemma.model.genome.Taxon taxon;
+    private Taxon taxon;
     private Collection<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
 
     /**
@@ -67,9 +69,7 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
     }
 
     /**
-     * <p>
-     * The fraction of the sequences determined to be made up of repeats (e.g., via repeat masker)
-     * </p>
+     * @return The fraction of the sequences determined to be made up of repeats (e.g., via repeat masker)
      */
     public Double getFractionRepeats() {
         return this.fractionRepeats;
@@ -103,11 +103,11 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
         this.length = length;
     }
 
-    public ubic.gemma.model.genome.biosequence.PolymerType getPolymerType() {
+    public PolymerType getPolymerType() {
         return this.polymerType;
     }
 
-    public void setPolymerType( ubic.gemma.model.genome.biosequence.PolymerType polymerType ) {
+    public void setPolymerType( PolymerType polymerType ) {
         this.polymerType = polymerType;
     }
 
@@ -116,7 +116,7 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
     }
 
     /**
-     * The actual nucleotic sequence as in ATGC
+     * @param sequence The actual nucleotic sequence as in ATGC
      */
     public void setSequence( String sequence ) {
         this.sequence = sequence;
@@ -130,40 +130,29 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
         this.sequenceDatabaseEntry = sequenceDatabaseEntry;
     }
 
-    public ubic.gemma.model.genome.Taxon getTaxon() {
+    public Taxon getTaxon() {
         return this.taxon;
     }
 
-    public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
+    public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
     }
 
-    public ubic.gemma.model.genome.biosequence.SequenceType getType() {
+    public SequenceType getType() {
         return this.type;
     }
 
-    public void setType( ubic.gemma.model.genome.biosequence.SequenceType type ) {
+    public void setType( SequenceType type ) {
         this.type = type;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.biosequence.BioSequence}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.biosequence.BioSequence}.
-         */
-        public static ubic.gemma.model.genome.biosequence.BioSequence newInstance() {
-            return new ubic.gemma.model.genome.biosequence.BioSequenceImpl();
+        public static BioSequence newInstance() {
+            return new BioSequenceImpl();
         }
 
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.biosequence.BioSequence}, taking all required
-         * and/or read-only properties as arguments.
-         */
-        public static ubic.gemma.model.genome.biosequence.BioSequence newInstance(
-                ubic.gemma.model.genome.Taxon taxon ) {
-            final ubic.gemma.model.genome.biosequence.BioSequence entity = new ubic.gemma.model.genome.biosequence.BioSequenceImpl();
+        public static BioSequence newInstance( Taxon taxon ) {
+            final BioSequence entity = new BioSequenceImpl();
             entity.setTaxon( taxon );
             return entity;
         }

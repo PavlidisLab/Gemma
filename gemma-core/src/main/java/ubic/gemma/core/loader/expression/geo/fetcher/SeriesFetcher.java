@@ -22,21 +22,11 @@ import ubic.gemma.persistence.util.Settings;
 
 public class SeriesFetcher extends GeoFetcher {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
-     */
     @Override
     protected String formRemoteFilePath( String identifier ) {
         return remoteBaseDir + identifier + "/" + identifier + "_family.soft.gz";
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#initConfig()
-     */
+    
     @Override
     protected void initConfig() {
         this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );

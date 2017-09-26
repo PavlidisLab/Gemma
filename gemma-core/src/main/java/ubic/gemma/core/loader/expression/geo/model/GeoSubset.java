@@ -18,17 +18,17 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
+
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
-
 /**
  * Represents a subset of samples.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("unused") // Possible external use
 public class GeoSubset extends GeoData {
 
     private static final long serialVersionUID = 2392295178038874633L;
@@ -39,7 +39,7 @@ public class GeoSubset extends GeoData {
     private VariableType type;
 
     public GeoSubset() {
-        this.samples = new HashSet<GeoSample>();
+        this.samples = new HashSet<>();
     }
 
     public void addToDescription( String s ) {
@@ -67,9 +67,6 @@ public class GeoSubset extends GeoData {
         return this.samples;
     }
 
-    /**
-     * @param sample The sample to set.
-     */
     public void setSample( Collection<GeoSample> samples ) {
         this.samples = samples;
     }

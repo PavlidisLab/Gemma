@@ -26,24 +26,23 @@ import org.springframework.beans.factory.support.DefaultBeanNameGenerator;
 /**
  * Our \@Service etc. annotations in classes end up generating names with "Impl" on the end, unless we explicitly
  * provide a name. To avoid us having to do that explicit declaration, I wrote this.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class BeanNameGenerator implements org.springframework.beans.factory.support.BeanNameGenerator {
 
-    DefaultBeanNameGenerator gen;
+    private final DefaultBeanNameGenerator gen;
 
     public BeanNameGenerator() {
         this.gen = new DefaultBeanNameGenerator();
-
     }
 
     /**
      * Automatically produce camel-case names for the beans.
-     * 
-     * @see org.springframework.beans.factory.support.BeanNameGenerator#generateBeanName(org.springframework.beans.factory
-     *      .config.BeanDefinition, org.springframework.beans.factory.support.BeanDefinitionRegistry).
+     *
+     * @param definition definition
+     * @param registry   registry
+     * @return camelcase
      */
     @Override
     public String generateBeanName( BeanDefinition definition, BeanDefinitionRegistry registry ) {

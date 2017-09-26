@@ -20,15 +20,15 @@ package ubic.gemma.core.tasks.analysis.expression;
 
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.Task;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Command object for processing data vectors. Has dual purpose for updating the correlation matrices.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -45,9 +45,8 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
     }
 
     /**
-     * @param taskId
-     * @param expressionExperiment
-     * @param restoreMissing if any missing values should be restored (default = TRUE)
+     * @param expressionExperiment EE
+     * @param restoreMissing       if any missing values should be restored (default = TRUE)
      */
     public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment expressionExperiment,
             boolean restoreMissing ) {
@@ -59,6 +58,10 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
         return expressionExperiment;
     }
 
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
     @Override
     public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return ProcessedExpressionDataVectorCreateTask.class;
@@ -68,21 +71,17 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
         return correlationMatrixOnly;
     }
 
-    public boolean isRestoreMissingSamples() {
-        return restoreMissingSamples;
-    }
-
     /**
      * If true, we'll try to just update the correlation matrix, without creating vectors unless they don't exist yet.
-     * 
-     * @param correlationMatrixOnly
+     *
+     * @param correlationMatrixOnly correlation matrix only
      */
     public void setCorrelationMatrixOnly( boolean correlationMatrixOnly ) {
         this.correlationMatrixOnly = correlationMatrixOnly;
     }
 
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
+    public boolean isRestoreMissingSamples() {
+        return restoreMissingSamples;
     }
 
     public void setRestoreMissingSamples( boolean restoreMissingSamples ) {

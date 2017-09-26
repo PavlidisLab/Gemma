@@ -24,10 +24,9 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import java.util.*;
 
 /**
- * TODO Document Me
- *
  * @author Paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possibly used in front end
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     private String _id = "";
@@ -59,10 +58,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         this._id = this.urlId;
     }
 
-    /**
-     * Ontology term to TreeCharacteristicValueObject
-     *
-     */
     public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
@@ -85,12 +80,13 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             }
         }
 
-        return new TreeCharacteristicValueObject( -1L, ontologyTerm.getLabel(),
-                ontologyTerm.getUri(), children );
+        return new TreeCharacteristicValueObject( -1L, ontologyTerm.getLabel(), ontologyTerm.getUri(), children );
     }
 
     /**
      * counts each private occurrence of genes for a phenotype
+     *
+     * @param phenotypesGenesAssociations map
      */
     public void countPrivateGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
@@ -122,6 +118,8 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     /**
      * counts each public occurrence of genes for a phenotype
+     *
+     * @param phenotypesGenesAssociations map
      */
     public void countPublicGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
@@ -159,7 +157,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     /**
-     * return all valueUri of children
+     * @return all valueUri of children
      */
     public Collection<String> getAllChildrenUri() {
 
@@ -251,6 +249,8 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     /**
      * step into the tree and keep tracks of all valueURI
+     *
+     * @param phenotypesToFind phenotypes
      */
     private void findAllChildPhenotypeURI( Collection<String> phenotypesToFind ) {
 

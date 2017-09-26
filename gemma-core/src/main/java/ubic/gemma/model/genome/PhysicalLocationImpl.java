@@ -33,7 +33,9 @@ public class PhysicalLocationImpl extends ubic.gemma.model.genome.PhysicalLocati
     private static final int _binOffsetOldToExtended = 4681;
 
     /**
-     * return bin that this start-end segment is in
+     * @param start start
+     * @param end   end
+     * @return bin that this start-end segment is in
      */
     @SuppressWarnings("unused") // Possible external use
     public int binFromRange( int start, int end ) {

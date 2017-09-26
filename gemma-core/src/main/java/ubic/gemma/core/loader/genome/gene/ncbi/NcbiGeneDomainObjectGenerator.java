@@ -18,6 +18,15 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.genome.Taxon;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,32 +38,20 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.util.FileTools;
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.genome.Taxon;
-
 /**
  * Combines information from the gene2accession and gene_info files from NCBI Gene.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class NcbiGeneDomainObjectGenerator {
 
+    private static final Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
     private static final String GENEINFO_FILE = "gene_info";
     private static final String GENE2ACCESSION_FILE = "gene2accession";
     private static final String GENEHISTORY_FILE = "gene_history";
     private static final String GENEENSEMBL_FILE = "gene2ensembl";
-
-    static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
-    AtomicBoolean producerDone = new AtomicBoolean( false );
-    AtomicBoolean infoProducerDone = new AtomicBoolean( false );
+    private AtomicBoolean producerDone = new AtomicBoolean( false );
     private Map<Integer, Taxon> supportedTaxa = null;
     private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
     private boolean filter = true;
@@ -63,18 +60,10 @@ public class NcbiGeneDomainObjectGenerator {
     private boolean doDownload = true;
     private Integer startingNcbiId = null;
 
-    public boolean isDoDownload() {
-        return doDownload;
-    }
-
-    public void setDoDownload( boolean doDownload ) {
-        this.doDownload = doDownload;
-    }
-
     public NcbiGeneDomainObjectGenerator( Collection<Taxon> taxa ) {
 
         if ( taxa != null ) {
-            this.supportedTaxa = new HashMap<Integer, Taxon>();
+            this.supportedTaxa = new HashMap<>();
             for ( Taxon t : taxa ) {
                 if ( t.getNcbiId() == null ) {
                     log.warn( "Can't support NCBI genes for " + t + ", it lacks an NCBI id" );
@@ -90,9 +79,17 @@ public class NcbiGeneDomainObjectGenerator {
         }
     }
 
+    public boolean isDoDownload() {
+        return doDownload;
+    }
+
+    public void setDoDownload( boolean doDownload ) {
+        this.doDownload = doDownload;
+    }
+
     /**
+     * @param queue queue
      * @return a collection of NCBIGene2Accession
-     * @see ubic.gemma.core.loader.loaderutils.SourceDomainObjectGenerator#generate(java.lang.String)
      */
     public Collection<NCBIGene2Accession> generate( final BlockingQueue<NcbiGeneData> queue ) {
 
@@ -107,13 +104,6 @@ public class NcbiGeneDomainObjectGenerator {
         return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
     }
 
-    /**
-     * Primarily for testing.
-     * 
-     * @param geneInfoFilePath
-     * @param gene2AccesionFilePath
-     * @return
-     */
     public Collection<NCBIGene2Accession> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath,
             String geneHistoryFilePath, String geneEnsemblFilePath, BlockingQueue<NcbiGeneData> queue ) {
 
@@ -125,10 +115,8 @@ public class NcbiGeneDomainObjectGenerator {
             URL geneHistoryUrl = ( new File( geneHistoryFilePath ) ).toURI().toURL();
 
             URL geneEnsemblUrl = null;
-            if ( geneEnsemblFilePath != null ) geneEnsemblUrl = ( new File( geneEnsemblFilePath ) ).toURI().toURL();
-
-            assert geneInfoUrl != null;
-            assert gene2AccesionUrl != null;
+            if ( geneEnsemblFilePath != null )
+                geneEnsemblUrl = ( new File( geneEnsemblFilePath ) ).toURI().toURL();
 
             LocalFile geneInfoFile = LocalFile.Factory.newInstance();
             geneInfoFile.setLocalURL( geneInfoUrl );
@@ -160,15 +148,6 @@ public class NcbiGeneDomainObjectGenerator {
         this.producerDone = flag;
     }
 
-    /**
-     * This is the main entry point
-     * 
-     * @param geneInfoFile
-     * @param gene2AccessionFile
-     * @param geneHistoryFile
-     * @param geneDataQueue
-     * @return
-     */
     private Collection<NCBIGene2Accession> processLocalFiles( final LocalFile geneInfoFile,
             final LocalFile gene2AccessionFile, LocalFile geneHistoryFile, LocalFile geneEnsemblFile,
             final BlockingQueue<NcbiGeneData> geneDataQueue ) {
@@ -200,8 +179,8 @@ public class NcbiGeneDomainObjectGenerator {
 
             //
             log.debug( "Parsing GeneInfo =" + geneInfoFile.asFile().getAbsolutePath() );
-            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile()
-                    .getAbsolutePath() );) {
+            try (InputStream is = FileTools
+                    .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() )) {
                 infoParser.parse( is );
             }
         } catch ( IOException e ) {
@@ -212,8 +191,8 @@ public class NcbiGeneDomainObjectGenerator {
         Collection<NCBIGeneInfo> geneInfoList = infoParser.getResults();
 
         // put into HashMap
-        final Map<String, NCBIGeneInfo> geneInfoMap = new HashMap<String, NCBIGeneInfo>();
-        Map<Integer, Integer> taxaCount = new HashMap<Integer, Integer>();
+        final Map<String, NCBIGeneInfo> geneInfoMap = new HashMap<>();
+        Map<Integer, Integer> taxaCount = new HashMap<>();
 
         for ( NCBIGeneInfo geneInfo : geneInfoList ) {
 
@@ -221,8 +200,8 @@ public class NcbiGeneDomainObjectGenerator {
             geneInfo.setHistory( history );
 
             if ( history == null ) {
-                String discontinuedIdForGene = historyParser.discontinuedIdForSymbol( geneInfo.getDefaultSymbol(),
-                        geneInfo.getTaxId() );
+                String discontinuedIdForGene = historyParser
+                        .discontinuedIdForSymbol( geneInfo.getDefaultSymbol(), geneInfo.getTaxId() );
                 geneInfo.setDiscontinuedId( discontinuedIdForGene );
             }
 
@@ -233,12 +212,12 @@ public class NcbiGeneDomainObjectGenerator {
 
             int taxId = geneInfo.getTaxId();
             if ( !taxaCount.containsKey( taxId ) ) {
-                taxaCount.put( new Integer( taxId ), new Integer( 0 ) );
+                taxaCount.put( taxId, 0 );
             }
             taxaCount.put( taxId, taxaCount.get( taxId ) + 1 );
             geneInfoMap.put( geneInfo.getGeneId(), geneInfo );
         }
-        supportedTaxaWithNCBIGenes = new HashSet<Taxon>();
+        supportedTaxaWithNCBIGenes = new HashSet<>();
         if ( supportedTaxa != null ) {
             for ( Integer taxId : taxaCount.keySet() ) {
 
@@ -291,7 +270,7 @@ public class NcbiGeneDomainObjectGenerator {
 
     /**
      * Those taxa that are supported by GEMMA and have genes in NCBI.
-     * 
+     *
      * @return Collection of taxa that are supported by the GEMMA and have genes held by NCBI.
      */
     public Collection<Taxon> getSupportedTaxaWithNCBIGenes() {

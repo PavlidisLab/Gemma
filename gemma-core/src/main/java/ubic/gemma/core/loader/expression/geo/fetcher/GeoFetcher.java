@@ -18,38 +18,36 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
-import java.io.File;
-
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpFetcher;
+import ubic.gemma.model.common.description.LocalFile;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 abstract public class GeoFetcher extends FtpFetcher {
-    /**
-     * 
-     */
-    protected static final String SOFT_GZ = ".soft.gz";
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
-     */
+    static final String SOFT_GZ = ".soft.gz";
+
     @Override
     public final void setNetDataSourceUtil() {
         this.netDataSourceUtil = new GeoUtil();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
-     */
     @Override
     protected final String formLocalFilePath( String identifier, File newDir ) {
         return newDir.getAbsolutePath() + File.separator + identifier + SOFT_GZ;
+    }
+
+    protected Collection<LocalFile> getFile( String accession, String seekFileName ) {
+        LocalFile file = fetchedFile( seekFileName );
+        log.info( "Found " + seekFileName + " for experiment(set) " + accession + "." );
+        Collection<LocalFile> result = new HashSet<>();
+        result.add( file );
+        return result;
     }
 }

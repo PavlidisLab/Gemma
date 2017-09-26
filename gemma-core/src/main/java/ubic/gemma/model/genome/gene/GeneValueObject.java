@@ -28,10 +28,12 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Objects;
 
 /**
  * @author kelsey
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possibly used in front end
 public class GeneValueObject extends IdentifiableValueObject<Gene> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -77,23 +79,23 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Long taxonId;
     private String taxonScientificName;
 
-
-
     /**
      * Required when using the class as a spring bean.
      */
     public GeneValueObject() {
     }
 
-    public GeneValueObject(Long id) {
-        super(id);
+    public GeneValueObject( Long id ) {
+        super( id );
     }
 
     /**
      * Aliases are not filled in.
+     *
+     * @param gene gene
      */
     public GeneValueObject( Gene gene ) {
-        super(gene.getId());
+        super( gene.getId() );
         this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
@@ -120,7 +122,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     public GeneValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId, String officialSymbol,
             String officialName, String description, Double score, Long taxonId, String taxonScientificName,
             String taxonCommonName ) {
-        super(id);
+        super( id );
         this.name = name;
         this.ncbiId = ncbiId;
         this.officialSymbol = officialSymbol;
@@ -134,7 +136,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     }
 
     public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
-        super(geneId);
+        super( geneId );
         this.officialSymbol = geneSymbol;
         this.officialName = geneOfficialName;
         this.taxonId = taxon.getId();
@@ -160,6 +162,9 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
 
     /**
      * A static method for easily converting GeneSetMembers into GeneValueObjects FIXME does not convert aliases.
+     *
+     * @param setMembers gene set members
+     * @return gene VOs
      */
     public static Collection<GeneValueObject> convertMembers2GeneValueObjects( Collection<GeneSetMember> setMembers ) {
 
@@ -177,8 +182,6 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
 
         return converted;
     }
-
-
 
     private static void addConvertedAliases( Gene gene, GeneValueObject geneValueObject ) {
         LinkedList<String> aliases = new LinkedList<>();
@@ -220,10 +223,10 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         GeneValueObject other = ( GeneValueObject ) obj;
 
         if ( id != null ) {
-            return other.id != null && ( this.id == other.id );
+            return other.id != null && ( Objects.equals( this.id, other.id ) );
         }
         if ( ncbiId != null ) {
-            return other.ncbiId != null && this.ncbiId == other.ncbiId;
+            return other.ncbiId != null && Objects.equals( this.ncbiId, other.ncbiId );
         }
 
         if ( officialSymbol == null ) {
@@ -264,7 +267,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     }
 
     /**
-     * public Long getTaxonId() { return taxonId; } public void setTaxonId( Long taxonId ) { this.taxonId = taxonId; }
+     * @return public Long getTaxonId() { return taxonId; } public void setTaxonId( Long taxonId ) { this.taxonId = taxonId; }
      */
     public String getDescription() {
         return this.description;

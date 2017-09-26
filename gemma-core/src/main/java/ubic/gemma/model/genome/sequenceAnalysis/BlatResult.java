@@ -49,16 +49,16 @@ public class BlatResult extends SequenceSimilaritySearchResult {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + ( this.getId() == null ? " " : " Id:" + this.getId() + " " )
-                + "query=" + this.getQuerySequence().getName() + " " + "target=" + this.getTargetChromosome().getName()
-                + ":" + this.getTargetStart() + "-" + this.getTargetEnd();
+        return this.getClass().getSimpleName() + ( this.getId() == null ? " " : " Id:" + this.getId() + " " ) + "query="
+                + this.getQuerySequence().getName() + " " + "target=" + this.getTargetChromosome().getName() + ":"
+                + this.getTargetStart() + "-" + this.getTargetEnd();
     }
 
     /**
      * Fraction identity computation, as in psl.c. Modified to INCLUDE repeat matches in the match count.
+     * See <a href="http://genome.ucsc.edu/FAQ/FAQblat#blat4">Blat4 at UCSC</a>.
      *
      * @return Value between 0 and 1.
-     * @see <a href="http://genome.ucsc.edu/FAQ/FAQblat#blat4">Blat4 at UCSC</a>.
      */
     public Double identity() {
         int sizeMul = 1; // assuming DNA; use 3 for protein.
@@ -285,17 +285,10 @@ public class BlatResult extends SequenceSimilaritySearchResult {
         this.targetStarts = targetStarts;
     }
 
-    /**
-     * Constructs new instances of {@link BlatResult}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link BlatResult}.
-         */
         public static BlatResult newInstance() {
             return new BlatResult();
         }
-
     }
 
 }

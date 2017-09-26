@@ -38,8 +38,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
     private ExternalDatabase externalDatabase;
     private Taxon parentTaxon;
 
-
-
     /**
      * No-arg constructor added to satisfy javabean contract
      *
@@ -47,8 +45,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
      */
     public Taxon() {
     }
-
-
 
     /**
      * Returns <code>true</code> if the argument is a Taxon instance and all identifiers for this entity equal the
@@ -86,7 +82,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29 * (hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() ));
+        hashCode = 29 * ( hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() ) );
 
         return hashCode;
     }
@@ -115,8 +111,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
         }
         return buf.toString();
     }
-
-
 
     public String getAbbreviation() {
         return this.abbreviation;
@@ -191,7 +185,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
     }
 
     /**
-     * Represents a "secondary" Taxon id that is used for this species. The main example where this is necessary is
+     * @return Represents a "secondary" Taxon id that is used for this species. The main example where this is necessary is
      * budding yeast, which is id 4932 in GEO but genes use the (strain-specific) ID 559292.
      */
     public Integer getSecondaryNcbiId() {
@@ -215,22 +209,12 @@ public class Taxon implements Identifiable, java.io.Serializable {
         return hashCode;
     }
 
-
-
-    /**
-     * Constructs new instances of {@link Taxon}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link Taxon}.
-         */
+
         public static Taxon newInstance() {
             return new Taxon();
         }
 
-        /**
-         * (used in tests)
-         */
         public static Taxon newInstance( String scientificName, String commonName, String abbreviation, Integer ncbiId,
                 Boolean isSpecies, Boolean isGenesUsable ) {
             final Taxon entity = new Taxon();

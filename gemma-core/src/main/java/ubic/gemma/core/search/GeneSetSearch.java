@@ -14,90 +14,92 @@
  */
 package ubic.gemma.core.search;
 
-import java.util.Collection;
-
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface GeneSetSearch {
 
     /**
-     * @param gene
-     * @return
+     * @param gene gene
+     * @return gene sets
      * @see ubic.gemma.core.genome.gene.service.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
-    public abstract Collection<GeneSet> findByGene( Gene gene );
+    Collection<GeneSet> findByGene( Gene gene );
 
     /**
      * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is not persistent.
-     * 
-     * @param goId
-     * @param taxon
+     *
+     * @param goId    go id
+     * @param taxonId taxon id
      * @return a GeneSet or null if nothing is found
      */
-    public abstract GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId );
+    GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId );
 
     /**
      * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is not persistent.
-     * 
-     * @param goId
-     * @param taxon
+     *
+     * @param goId  go id
+     * @param taxon taxon
      * @return a GeneSet or null if nothing is found
      */
-    public abstract GeneSet findByGoId( String goId, Taxon taxon );
+    GeneSet findByGoId( String goId, Taxon taxon );
 
     /**
-     * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity" Note: the gene sets returned are
+     * finds gene sets by go term name eg: "trans-hexaPrenylTransTransferase activity" Note: the gene sets returned are
      * not persistent
-     * 
-     * @param goTermName
-     * @param taxon
+     *
+     * @param goTermName go term name
+     * @param taxon      taxon
      * @return a collection with the hits
      */
-    public abstract Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon );
+    Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon );
 
     /**
-     * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity" Note: the gene sets returned are
+     * finds genesets by go term name eg: "trans-hexaPrenylTransTransferase activity" Note: the gene sets returned are
      * not persistent
-     * 
-     * @param goTermName
-     * @param taxon
-     * @param maxGoTermsProcessed
+     *
+     * @param goTermName          go term name
+     * @param taxon               taxon
+     * @param maxGoTermsProcessed max go terms
      * @return a collection with the hits
      */
-    public abstract Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed, Integer maxGeneSetSize );
+    Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon, Integer maxGoTermsProcessed,
+            Integer maxGeneSetSize );
 
     /**
-     * @param name
-     * @return
+     * @param name name
+     * @return gene sets
      * @see ubic.gemma.core.genome.gene.service.GeneSetService#findByName(java.lang.String)
      */
-    public abstract Collection<GeneSet> findByName( String name );
+    Collection<GeneSet> findByName( String name );
 
     /**
-     * @param name
-     * @param taxon
-     * @return
+     * @param name  name
+     * @param taxon taxon
+     * @return gene sets
      */
-    public abstract Collection<GeneSet> findByName( String name, Taxon taxon );
+    Collection<GeneSet> findByName( String name, Taxon taxon );
 
     /**
      * Similar to method of same name in GeneSetController.java but here: - no taxon needed - GO groups always searched
      * - GeneSet objects returned instead of GeneSetValueObjects
-     * 
-     * @param query string to match to a gene set.
-     * @param taxonId
+     *
+     * @param query   string to match to a gene set.
+     * @param taxonId taxon id
      * @return collection of GeneSet
      */
-    public abstract Collection<GeneSet> findGeneSetsByName( String query, Long taxonId );
+    @SuppressWarnings("unused")
+    // Possible external use
+    Collection<GeneSet> findGeneSetsByName( String query, Long taxonId );
 
-    public abstract Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon );
+    Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon );
 
 }

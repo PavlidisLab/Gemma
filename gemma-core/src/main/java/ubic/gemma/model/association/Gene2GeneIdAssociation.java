@@ -25,21 +25,15 @@ import java.io.Serializable;
  * Entity representing a relationship between two genes identified by ID, rather than by the Gene entity (for efficiency
  * reasons). The designation of "first" and "second" Long is by default completely arbitrary, there is no direction to
  * the association defined by this. However, a direction can be imposed by the implementing subclass.
- * <p>
  * Ideally subclasses are immutable, but this is not always possible. It can be done when the data is never updated but
  * just loaded in anew.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public abstract class Gene2GeneIdAssociation implements Serializable {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 3735868529324395241L;
     final private Long id = null;
     final private Long firstGene = null;
-
     final private Long secondGene = null;
 
     @Override
@@ -50,7 +44,8 @@ public abstract class Gene2GeneIdAssociation implements Serializable {
 
     @Override
     public int hashCode() {
-        if ( this.id != null ) return this.id.hashCode();
+        if ( this.id != null )
+            return this.id.hashCode();
 
         final int prime = 31;
         int result = 1;
@@ -61,41 +56,40 @@ public abstract class Gene2GeneIdAssociation implements Serializable {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
 
         Gene2GeneIdAssociation other = ( Gene2GeneIdAssociation ) obj;
 
-        if ( this.id != null ) return this.id.equals( other.getId() );
+        if ( this.id != null )
+            return this.id.equals( other.getId() );
 
         if ( firstGene == null ) {
-            if ( other.firstGene != null ) return false;
-        } else if ( !firstGene.equals( other.firstGene ) ) return false;
+            if ( other.firstGene != null )
+                return false;
+        } else if ( !firstGene.equals( other.firstGene ) )
+            return false;
 
         if ( secondGene == null ) {
-            if ( other.secondGene != null ) return false;
-        } else if ( !secondGene.equals( other.secondGene ) ) return false;
+            if ( other.secondGene != null )
+                return false;
+        } else if ( !secondGene.equals( other.secondGene ) )
+            return false;
         return true;
     }
 
-    /**
-     * 
-     */
     public Long getFirstGene() {
         return this.firstGene;
     }
 
-    /**
-     * @return
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * 
-     */
     public Long getSecondGene() {
         return this.secondGene;
     }

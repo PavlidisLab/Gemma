@@ -18,80 +18,85 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * A GEO-curated dataset. In many cases this is associated with just one GeoSeries, but for studies that used more than
  * one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("unused") // Possible external use
 public class GeoDataset extends GeoData {
 
-    public enum ExperimentType {
-        geneExpressionArraybased, geneExpressionSAGEbased, geneExpressionMPSSBased, geneExpressionRTPCRbased, proteinExpressionArraybased, proteinExpressionMSBased, arrayCGH, ChIPChip, SNP, Other
-    }
-
-    public enum PlatformType {
-        dualChannel, dualChannelGenomic, SAGE, singleChannel, singleChannelGenomic, spottedDNAOrcDNA, spottedOligonucleotide, inSituOligonucleotide, oligonucleotideBeads, SAGENlaIII, SAGESau3A, SAGERsaI, SARST, RTPCR, MPSS, antibody, MS, other;
-    }
-
-    public enum SampleType {
-        RNA, genomic, protein, mixed, SAGE, MPSS, SARST
-    }
-
-    public enum ValueType {
-        count, logRatio, log2Ratio, log10ratio, logERatio, transformedCount
-    }
-
     private static final long serialVersionUID = 2659028881509672793L;
+    private static final Log log = LogFactory.getLog( GeoDataset.class.getName() );
+    public ExperimentType experimentType;
+    private String completeness;
+    private String datasetType;
+    private String description;
+    private String featureCount;
+    private int numChannels;
+    private int numSamples;
+    private String order;
+    private String organism;
+    private GeoPlatform platform;
+    private PlatformType platformType;
+    private String pubmedId;
+    private SampleType sampleType;
+    private Collection<GeoSeries> series;
+    private Collection<GeoSubset> subsets;
+    private String updateDate;
+    private ValueType valueType;
 
-    private static Log log = LogFactory.getLog( GeoDataset.class.getName() );
+    public GeoDataset() {
+        this.subsets = new HashSet<>();
+        this.series = new HashSet<>();
+    }
 
     /**
      * gene expression array-based, gene expression SAGE-based, gene expression MPSS-based, gene expression
      * RT-PCR-based, protein expression array-based, protein expression MS-based, array CGH, ChIP-chip, SNP
-     * 
-     * @see GeoSeries.convertStringToSeriesType
-     * 
-     * @param string
-     * @return
+     *
+     * @param string experiment type string
+     * @return experiment type object
      */
     public static ExperimentType convertStringToExperimentType( String string ) {
-        if ( string.equals( "Expression profiling by array" ) || string.equals( "gene expression array-based" ) ) {
-            return ExperimentType.geneExpressionArraybased;
-        } else if ( string.equals( "gene expression SAGE-based" ) ) {
-            return ExperimentType.geneExpressionSAGEbased;
-        } else if ( string.equals( "gene expression MPSS-based" ) ) {
-            return ExperimentType.geneExpressionMPSSBased;
-        } else if ( string.equals( "gene expression RT-PCR-based" ) ) {
-            return ExperimentType.geneExpressionRTPCRbased;
-        } else if ( string.equals( "protein expression array-based" ) ) {
-            return ExperimentType.proteinExpressionArraybased;
-        } else if ( string.equals( "protein expression MS-based" ) ) {
-            return ExperimentType.proteinExpressionMSBased;
-        } else if ( string.equals( "array CGH" ) ) {
-            return ExperimentType.arrayCGH;
-        } else if ( string.equals( "ChIP-chip" ) ) {
-            return ExperimentType.ChIPChip;
-        } else if ( string.equals( "SNP" ) ) {
-            return ExperimentType.SNP;
-        } else if ( string.equals( "dual channel" ) ) { // legacy term.
-            log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
-            return ExperimentType.geneExpressionArraybased;
-        } else if ( string.equals( "single channel" ) ) { // legacy term
-            log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
-            return ExperimentType.geneExpressionArraybased;
-        } else if ( string.equals( "Other" ) ) {
-            // 5C experiments, etc.
-            return ExperimentType.Other;
-        } else {
-            throw new IllegalArgumentException( "Unknown experiment type " + string );
+        switch ( string ) {
+            case "Expression profiling by array":
+            case "gene expression array-based":
+                return ExperimentType.geneExpressionArraybased;
+            case "gene expression SAGE-based":
+                return ExperimentType.geneExpressionSAGEbased;
+            case "gene expression MPSS-based":
+                return ExperimentType.geneExpressionMPSSBased;
+            case "gene expression RT-PCR-based":
+                return ExperimentType.geneExpressionRTPCRbased;
+            case "protein expression array-based":
+                return ExperimentType.proteinExpressionArraybased;
+            case "protein expression MS-based":
+                return ExperimentType.proteinExpressionMSBased;
+            case "array CGH":
+                return ExperimentType.arrayCGH;
+            case "ChIP-chip":
+                return ExperimentType.ChIPChip;
+            case "SNP":
+                return ExperimentType.SNP;
+            case "dual channel":  // legacy term.
+                log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+                return ExperimentType.geneExpressionArraybased;
+            case "single channel":  // legacy term
+                log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+                return ExperimentType.geneExpressionArraybased;
+            case "Other":
+                // 5C experiments, etc.
+                return ExperimentType.Other;
+            default:
+                throw new IllegalArgumentException( "Unknown experiment type " + string );
         }
     }
 
@@ -142,92 +147,58 @@ public class GeoDataset extends GeoData {
         }
     }
 
-    /**
-     * @param string
-     * @return
-     */
     public static SampleType convertStringToSampleType( String string ) {
-        if ( string.equals( "cDNA" ) ) {
-            return SampleType.RNA;
-        } else if ( string.equals( "RNA" ) ) {
-            return SampleType.RNA;
-        } else if ( string.equals( "genomic" ) ) {
-            return SampleType.genomic;
-        } else if ( string.equals( "protein" ) ) {
-            return SampleType.protein;
-        } else if ( string.equals( "mixed" ) ) {
-            return SampleType.mixed;
-        } else if ( string.equals( "SAGE" ) ) {
-            return SampleType.SAGE;
-        } else if ( string.equals( "MPSS" ) ) {
-            return SampleType.MPSS;
-        } else if ( string.equals( "SARST" ) ) {
-            return SampleType.SARST;
-        } else {
-            throw new IllegalArgumentException( "Unknown sample type " + string );
+        switch ( string ) {
+            case "cDNA":
+                return SampleType.RNA;
+            case "RNA":
+                return SampleType.RNA;
+            case "genomic":
+                return SampleType.genomic;
+            case "protein":
+                return SampleType.protein;
+            case "mixed":
+                return SampleType.mixed;
+            case "SAGE":
+                return SampleType.SAGE;
+            case "MPSS":
+                return SampleType.MPSS;
+            case "SARST":
+                return SampleType.SARST;
+            default:
+                throw new IllegalArgumentException( "Unknown sample type " + string );
         }
     }
 
     /**
      * count, log ratio, log2 ratio, log10 ratio, logE ratio, log e ratio, transformed count
-     * 
-     * @param string
-     * @return
+     *
+     * @param string value type string
+     * @return value type object
      */
     public static ValueType convertStringToValueType( String string ) {
-        if ( string.equals( "count" ) ) {
-            return ValueType.count;
-        } else if ( string.equals( "log ratio" ) ) {
-            return ValueType.logRatio;
-        } else if ( string.equals( "log2 ratio" ) ) {
-            return ValueType.log2Ratio;
-        } else if ( string.equals( "log10 ratio" ) ) {
-            return ValueType.log10ratio;
-        } else if ( string.equals( "logE ratio" ) ) {
-            return ValueType.logERatio;
-        } else if ( string.equals( "log e ratio" ) ) {
-            return ValueType.logERatio;
-        } else if ( string.equals( "transformed count" ) ) {
-            return ValueType.transformedCount;
-        } else {
-            throw new IllegalArgumentException( "Unknown value type " + string );
+        switch ( string ) {
+            case "count":
+                return ValueType.count;
+            case "log ratio":
+                return ValueType.logRatio;
+            case "log2 ratio":
+                return ValueType.log2Ratio;
+            case "log10 ratio":
+                return ValueType.log10ratio;
+            case "logE ratio":
+                return ValueType.logERatio;
+            case "log e ratio":
+                return ValueType.logERatio;
+            case "transformed count":
+                return ValueType.transformedCount;
+            default:
+                throw new IllegalArgumentException( "Unknown value type " + string );
         }
     }
 
-    public ExperimentType experimentType;
-
-    private String completeness;
-    private String datasetType;
-    private String description;
-    private String featureCount;
-    private int numChannels;
-    private int numSamples;
-    private String order;
-    private String organism;
-
-    private GeoPlatform platform;
-
-    private PlatformType platformType;
-
-    private String pubmedId;
-
-    private SampleType sampleType;
-
-    private Collection<GeoSeries> series;
-
-    private Collection<GeoSubset> subsets;
-
-    private String updateDate;
-
-    private ValueType valueType;
-
-    public GeoDataset() {
-        this.subsets = new HashSet<GeoSubset>();
-        this.series = new HashSet<GeoSeries>();
-    }
-
     /**
-     * @param newSeries
+     * @param newSeries geo series
      */
     public void addSeries( GeoSeries newSeries ) {
         assert this.series != null;
@@ -241,8 +212,8 @@ public class GeoDataset extends GeoData {
 
     /**
      * This is used when we break a series up into two, along organism lines.
-     * 
-     * @param s
+     *
+     * @param s geo series
      */
     public void dissociateFromSeries( GeoSeries s ) {
         if ( !this.series.contains( s ) ) {
@@ -259,122 +230,17 @@ public class GeoDataset extends GeoData {
     }
 
     /**
-     * @return Returns the datasetType.
-     */
-    public String getDatasetType() {
-        return this.datasetType;
-    }
-
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    /**
-     * @return Returns the experimentType.
-     */
-    public GeoDataset.ExperimentType getExperimentType() {
-        return this.experimentType;
-    }
-
-    /**
-     * @return Returns the featureCount.
-     */
-    public String getFeatureCount() {
-        return this.featureCount;
-    }
-
-    /**
-     * @return Returns the numChannels.
-     */
-    public int getNumChannels() {
-        return this.numChannels;
-    }
-
-    /**
-     * @return Returns the numSamples.
-     */
-    public int getNumSamples() {
-        return this.numSamples;
-    }
-
-    /**
-     * @return Returns the order.
-     */
-    public String getOrder() {
-        return this.order;
-    }
-
-    /**
-     * @return Returns the organism.
-     */
-    public String getOrganism() {
-        return this.organism;
-    }
-
-    /**
-     * @return Returns the platform.
-     */
-    public GeoPlatform getPlatform() {
-        return this.platform;
-    }
-
-    /**
-     * @return Returns the probeType.
-     */
-    public PlatformType getPlatformType() {
-        return this.platformType;
-    }
-
-    /**
-     * @return Returns the pubmedId.
-     */
-    public String getPubmedId() {
-        return this.pubmedId;
-    }
-
-    /**
-     * @return Returns the sampleType.
-     */
-    public SampleType getSampleType() {
-        return this.sampleType;
-    }
-
-    /**
-     * @return Returns the series.
-     */
-    public Collection<GeoSeries> getSeries() {
-        return this.series;
-    }
-
-    /**
-     * @return Returns the subsets.
-     */
-    public Collection<GeoSubset> getSubsets() {
-        return this.subsets;
-    }
-
-    /**
-     * @return Returns the updateDate.
-     */
-    public String getUpdateDate() {
-        return this.updateDate;
-    }
-
-    /**
-     * @return Returns the valueType.
-     */
-    public ValueType getValueType() {
-        return this.valueType;
-    }
-
-    /**
      * @param completeness The completeness to set.
      */
     public void setCompleteness( String completeness ) {
         this.completeness = completeness;
+    }
+
+    /**
+     * @return Returns the datasetType.
+     */
+    public String getDatasetType() {
+        return this.datasetType;
     }
 
     /**
@@ -387,10 +253,24 @@ public class GeoDataset extends GeoData {
     }
 
     /**
+     * @return Returns the description.
+     */
+    public String getDescription() {
+        return this.description;
+    }
+
+    /**
      * @param description The description to set.
      */
     public void setDescription( String description ) {
         this.description = description;
+    }
+
+    /**
+     * @return Returns the experimentType.
+     */
+    public GeoDataset.ExperimentType getExperimentType() {
+        return this.experimentType;
     }
 
     /**
@@ -401,10 +281,24 @@ public class GeoDataset extends GeoData {
     }
 
     /**
+     * @return Returns the featureCount.
+     */
+    public String getFeatureCount() {
+        return this.featureCount;
+    }
+
+    /**
      * @param featureCount The featureCount to set.
      */
     public void setFeatureCount( String featureCount ) {
         this.featureCount = featureCount;
+    }
+
+    /**
+     * @return Returns the numChannels.
+     */
+    public int getNumChannels() {
+        return this.numChannels;
     }
 
     /**
@@ -415,10 +309,24 @@ public class GeoDataset extends GeoData {
     }
 
     /**
+     * @return Returns the numSamples.
+     */
+    public int getNumSamples() {
+        return this.numSamples;
+    }
+
+    /**
      * @param numSamples The numSamples to set.
      */
     public void setNumSamples( int numSamples ) {
         this.numSamples = numSamples;
+    }
+
+    /**
+     * @return Returns the order.
+     */
+    public String getOrder() {
+        return this.order;
     }
 
     /**
@@ -429,10 +337,24 @@ public class GeoDataset extends GeoData {
     }
 
     /**
+     * @return Returns the organism.
+     */
+    public String getOrganism() {
+        return this.organism;
+    }
+
+    /**
      * @param organism The organism to set.
      */
     public void setOrganism( String organism ) {
         this.organism = organism;
+    }
+
+    /**
+     * @return Returns the platform.
+     */
+    public GeoPlatform getPlatform() {
+        return this.platform;
     }
 
     /**
@@ -443,10 +365,21 @@ public class GeoDataset extends GeoData {
     }
 
     /**
-     * @param probeType The probeType to set.
+     * @return Returns the probeType.
      */
+    public PlatformType getPlatformType() {
+        return this.platformType;
+    }
+
     public void setPlatformType( PlatformType platformType ) {
         this.platformType = platformType;
+    }
+
+    /**
+     * @return Returns the pubmedId.
+     */
+    public String getPubmedId() {
+        return this.pubmedId;
     }
 
     /**
@@ -457,10 +390,24 @@ public class GeoDataset extends GeoData {
     }
 
     /**
+     * @return Returns the sampleType.
+     */
+    public SampleType getSampleType() {
+        return this.sampleType;
+    }
+
+    /**
      * @param sampleType The sampleType to set.
      */
     public void setSampleType( SampleType sampleType ) {
         this.sampleType = sampleType;
+    }
+
+    /**
+     * @return Returns the series.
+     */
+    public Collection<GeoSeries> getSeries() {
+        return this.series;
     }
 
     /**
@@ -471,10 +418,24 @@ public class GeoDataset extends GeoData {
     }
 
     /**
+     * @return Returns the subsets.
+     */
+    public Collection<GeoSubset> getSubsets() {
+        return this.subsets;
+    }
+
+    /**
      * @param subsets The subsets to set.
      */
     public void setSubsets( Collection<GeoSubset> subsets ) {
         this.subsets = subsets;
+    }
+
+    /**
+     * @return Returns the updateDate.
+     */
+    public String getUpdateDate() {
+        return this.updateDate;
     }
 
     /**
@@ -485,10 +446,33 @@ public class GeoDataset extends GeoData {
     }
 
     /**
+     * @return Returns the valueType.
+     */
+    public ValueType getValueType() {
+        return this.valueType;
+    }
+
+    /**
      * @param valueType The valueType to set.
      */
     public void setValueType( ValueType valueType ) {
         this.valueType = valueType;
+    }
+
+    public enum ExperimentType {
+        geneExpressionArraybased, geneExpressionSAGEbased, geneExpressionMPSSBased, geneExpressionRTPCRbased, proteinExpressionArraybased, proteinExpressionMSBased, arrayCGH, ChIPChip, SNP, Other
+    }
+
+    public enum PlatformType {
+        dualChannel, dualChannelGenomic, SAGE, singleChannel, singleChannelGenomic, spottedDNAOrcDNA, spottedOligonucleotide, inSituOligonucleotide, oligonucleotideBeads, SAGENlaIII, SAGESau3A, SAGERsaI, SARST, RTPCR, MPSS, antibody, MS, other
+    }
+
+    public enum SampleType {
+        RNA, genomic, protein, mixed, SAGE, MPSS, SARST
+    }
+
+    public enum ValueType {
+        count, logRatio, log2Ratio, log10ratio, logERatio, transformedCount
     }
 
 }

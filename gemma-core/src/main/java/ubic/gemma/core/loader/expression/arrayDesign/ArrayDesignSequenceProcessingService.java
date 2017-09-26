@@ -29,6 +29,7 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignSequenceProcessingService {
 
     /**
@@ -73,7 +74,7 @@ public interface ArrayDesignSequenceProcessingService {
      * If the SequenceType is AFFY_PROBE, the sequences will be treated as probes in probe sets, in Affymetrix 'tabbed'
      * format. Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element;
      * there is further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The
-     * FASTA file must use a standard defline format (as described at <a href=http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}>here</a>)
+     * FASTA file must use a standard defline format (as described at <a href="http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers">here</a>)
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
      * one passes:
      * <ol>
@@ -100,7 +101,7 @@ public interface ArrayDesignSequenceProcessingService {
      * compatibility, FASTA is detected but an exception will be thrown).
      * Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element; there is
      * further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The FASTA file
-     * must use a standard defline format (as described at <a href=http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}>here</a>).
+     * must use a standard defline format (as described at <a href="http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers">here</a>).
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
      * one passes:
      * <ol>

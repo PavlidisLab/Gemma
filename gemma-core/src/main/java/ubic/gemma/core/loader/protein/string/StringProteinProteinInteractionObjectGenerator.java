@@ -18,6 +18,13 @@
  */
 package ubic.gemma.core.loader.protein.string;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
+import ubic.gemma.core.loader.util.fetcher.HttpArchiveFetcherInterface;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.genome.Taxon;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,42 +32,33 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
-import ubic.gemma.core.loader.util.fetcher.HttpArchiveFetcherInterface;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.genome.Taxon;
-
 /**
  * Handle fetching and parsing of STRING protein interaction files. These STRING files can be processed either from
  * local or remote files. If the file is remote then the StringProteinProteinInteractionFileFetcher is called. The file
  * path name of the remote file can be provided by the user, or the default used as configured in the properties file of
  * the fetcher.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class StringProteinProteinInteractionObjectGenerator {
 
-    protected HttpArchiveFetcherInterface stringProteinFileFetcher;
-
-    protected StringProteinProteinInteractionFileParser stringProteinInteractionParser;
-
-    /** File to parse on local system */
+    private static final Log log = LogFactory.getLog( StringProteinProteinInteractionObjectGenerator.class );
+    private HttpArchiveFetcherInterface stringProteinFileFetcher;
+    /**
+     * File to parse on local system
+     */
     private File stringProteinInteractionFileLocal = null;
-
-    /** File to retrieve from string remote site */
+    /**
+     * File to retrieve from string remote site
+     */
     private String stringProteinInteractionFileRemote = null;
-
-    private static Log log = LogFactory.getLog( StringProteinProteinInteractionObjectGenerator.class );
 
     /**
      * Constructor that sets the string file to process whether local or remote. Also ensures fetcher set (this is
      * needed even for ). Provide either a local or remote path (?)
-     * 
-     * @param stringProteinInteractionFileLocal Name of local file to process
+     *
+     * @param stringProteinInteractionFileLocal  Name of local file to process
      * @param stringProteinInteractionFileRemote Name of remote file to process
      */
     public StringProteinProteinInteractionObjectGenerator( File stringProteinInteractionFileLocal,
@@ -72,43 +70,41 @@ public class StringProteinProteinInteractionObjectGenerator {
 
     /**
      * Fetches files from remote string site and unpacks the file.
-     * 
-     * @throws Exception
      */
     public void fetchProteinStringFileFromRemoteSiteUnArchived() {
         // the file can be null the fetcher determines that
         Collection<LocalFile> stringProteinInteractionFileArchived = stringProteinFileFetcher
                 .fetch( stringProteinInteractionFileRemote );
         // set the string protein interaction local file
-        this.setStringProteinInteractionFileLocal( stringProteinFileFetcher
-                .unPackFile( stringProteinInteractionFileArchived ) );
+        this.setStringProteinInteractionFileLocal(
+                stringProteinFileFetcher.unPackFile( stringProteinInteractionFileArchived ) );
 
     }
 
     /**
      * Main method to generate StringProteinProteinInteraction objects.
-     * 
+     *
      * @param validTaxa Taxon to generate StringProteinProteinInteraction from string (STRING has many taxon).
      * @return Collection of StringProteinProteinInteraction objects specific for the taxa that were provided, held in a
-     *         may keyed on taxon.
+     * may keyed on taxon.
      */
     public Map<Taxon, Collection<StringProteinProteinInteraction>> generate( Collection<Taxon> validTaxa ) {
 
         log.debug( "Starting to get StringProteinProteinInteraction data" );
-        Collection<StringProteinProteinInteraction> stringProteinProteinInteractions = null;
+        Collection<StringProteinProteinInteraction> stringProteinProteinInteractions;
 
         if ( stringProteinInteractionFileLocal == null ) {
             log.info( "stringProteinInteractionFile is remote file fetching remote site" );
             fetchProteinStringFileFromRemoteSiteUnArchived();
         }
 
-        Map<Taxon, Collection<StringProteinProteinInteraction>> map = new HashMap<Taxon, Collection<StringProteinProteinInteraction>>();
+        Map<Taxon, Collection<StringProteinProteinInteraction>> map = new HashMap<>();
 
         // this is a bit ugly as reads string file for every taxon
         // however when I did it in one big go I got java.lang.OutOfMemoryError: Java heap space
         for ( Taxon taxon : validTaxa ) {
             log.info( "calling taxon " + taxon );
-            Collection<Taxon> taxa = new ArrayList<Taxon>();
+            Collection<Taxon> taxa = new ArrayList<>();
             taxa.add( taxon );
             stringProteinProteinInteractions = this.parseProteinStringFileInteraction( taxa );
             map.put( taxon, stringProteinProteinInteractions );
@@ -126,42 +122,17 @@ public class StringProteinProteinInteractionObjectGenerator {
     }
 
     /**
-     * @return the stringProteinInteractionFileLocal
-     */
-    public File getStringProteinInteractionFileLocal() {
-        return stringProteinInteractionFileLocal;
-    }
-
-    /**
-     * @return the stringProteinInteractionFileRemote
-     */
-    public String getStringProteinInteractionFileRemote() {
-        return stringProteinInteractionFileRemote;
-    }
-
-    /**
-     * Parse the downloaded file, selecting those taxa that are supported in gemma and returning the value objects
-     * StringProteinProteinInteraction
-     * 
-     * @param taxa Taxa to find records for.
-     * @return StringProteinProteinInteraction representing lines in the string file.
-     */
-    public Collection<StringProteinProteinInteraction> parseProteinStringFileInteraction( Collection<Taxon> taxa ) {
-        try {
-            stringProteinInteractionParser = new StringProteinProteinInteractionFileParser();
-            stringProteinInteractionParser.setTaxa( taxa );
-            stringProteinInteractionParser.parse( stringProteinInteractionFileLocal );
-            return stringProteinInteractionParser.getResults();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
      * @param stringProteinFileFetcher the stringProteinFileFetcher to set
      */
     public void setStringProteinFileFetcher( HttpArchiveFetcherInterface stringProteinFileFetcher ) {
         this.stringProteinFileFetcher = stringProteinFileFetcher;
+    }
+
+    /**
+     * @return the stringProteinInteractionFileLocal
+     */
+    public File getStringProteinInteractionFileLocal() {
+        return stringProteinInteractionFileLocal;
     }
 
     /**
@@ -172,10 +143,35 @@ public class StringProteinProteinInteractionObjectGenerator {
     }
 
     /**
+     * @return the stringProteinInteractionFileRemote
+     */
+    public String getStringProteinInteractionFileRemote() {
+        return stringProteinInteractionFileRemote;
+    }
+
+    /**
      * @param stringProteinInteractionFileRemote the stringProteinInteractionFileRemote to set
      */
     public void setStringProteinInteractionFileRemote( String stringProteinInteractionFileRemote ) {
         this.stringProteinInteractionFileRemote = stringProteinInteractionFileRemote;
+    }
+
+    /**
+     * Parse the downloaded file, selecting those taxa that are supported in gemma and returning the value objects
+     * StringProteinProteinInteraction
+     *
+     * @param taxa Taxa to find records for.
+     * @return StringProteinProteinInteraction representing lines in the string file.
+     */
+    public Collection<StringProteinProteinInteraction> parseProteinStringFileInteraction( Collection<Taxon> taxa ) {
+        try {
+            StringProteinProteinInteractionFileParser stringProteinInteractionParser = new StringProteinProteinInteractionFileParser();
+            stringProteinInteractionParser.setTaxa( taxa );
+            stringProteinInteractionParser.parse( stringProteinInteractionFileLocal );
+            return stringProteinInteractionParser.getResults();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 }

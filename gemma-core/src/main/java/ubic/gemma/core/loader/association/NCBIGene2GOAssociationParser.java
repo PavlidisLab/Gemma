@@ -18,19 +18,10 @@
  */
 package ubic.gemma.core.loader.association;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.loader.util.QueuingParser;
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -38,61 +29,47 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
+
 /**
- * This parses GO annotations from NCBI. See {@link ftp://ftp.ncbi.nih.gov/gene/DATA/README}.
- * 
+ * This parses GO annotations from NCBI. See <a href="ftp://ftp.ncbi.nih.gov/gene/DATA/README">readme</a>.
  * <pre>
  * tax_id:
  * the unique identifier provided by NCBI Taxonomy
  * for the species or strain/isolate
- * 
  * GeneID:
  * the unique identifier for a gene
  * --note:  for genomes previously available from LocusLink,
  * the identifiers are equivalent
- * 
  * GO ID:
  * the GO ID, formatted as GO:0000000
- * 
  * Evidence:
  * the evidence code in the gene_association file
- * 
- * Qualifier: 
+ * Qualifier:
  * a qualifier for the relationship between the gene
  * and the GO term
- * 
  * GO term:
  * the term indicated by the GO ID
- * 
  * PubMed:
  * pipe-delimited set of PubMed uids reported as evidence
  * for the association
- * 
  * Category:
  * the GO category (Function, Process, or Component)
  * </pre>
- * 
+ *
  * @author keshav
  * @author pavlidis
- * @version $Id$
  */
-public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation> implements
-        QueuingParser<Gene2GOAssociation> {
+public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation>
+        implements QueuingParser<Gene2GOAssociation> {
 
     private static final String COMMENT_INDICATOR = "#";
-
-    private final int TAX_ID = Settings.getInt( "gene2go.tax_id" );
-
-    private final int EVIDENCE_CODE = Settings.getInt( "gene2go.evidence_code" );
-
-    private final int GENE_ID = Settings.getInt( "gene2go.gene_id" );
-
-    private final int GO_ID = Settings.getInt( "gene2go.go_id" );
-
-    private static Set<String> ignoredEvidenceCodes = new HashSet<String>();
+    private static final Set<String> ignoredEvidenceCodes = new HashSet<>();
 
     static {
         // these are 'NOT association' codes, or (ND) one that means "nothing known", which we don't use. See
@@ -103,14 +80,14 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         ignoredEvidenceCodes.add( "ND" );
     }
 
-    BlockingQueue<Gene2GOAssociation> queue;
+    private final int TAX_ID = Settings.getInt( "gene2go.tax_id" );
+    private final int EVIDENCE_CODE = Settings.getInt( "gene2go.evidence_code" );
+    private final int GENE_ID = Settings.getInt( "gene2go.gene_id" );
+    private final int GO_ID = Settings.getInt( "gene2go.go_id" );
+    private BlockingQueue<Gene2GOAssociation> queue;
 
     private int count = 0;
-    ExternalDatabase goDb;
-
-    int i = 0;
-
-    private ExternalDatabase ncbiGeneDb;
+    private ExternalDatabase goDb;
 
     /**
      * NCBI Ids of available taxa.
@@ -125,10 +102,10 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         goDb.setName( "GO" );
         goDb.setType( DatabaseType.ONTOLOGY );
 
-        ncbiGeneDb = ExternalDatabase.Factory.newInstance();
+        ExternalDatabase ncbiGeneDb = ExternalDatabase.Factory.newInstance();
         ncbiGeneDb.setName( "Entrez Gene" );
 
-        this.taxaNcbiIds = new HashMap<Integer, Taxon>();
+        this.taxaNcbiIds = new HashMap<>();
         for ( Taxon taxon : taxa ) {
             this.taxaNcbiIds.put( taxon.getNcbiId(), taxon );
             if ( taxon.getSecondaryNcbiId() != null ) {
@@ -137,18 +114,10 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         }
     }
 
-    /**
-     * @return
-     */
     public int getCount() {
         return count;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.parser.BasicLineMapParser#getResults()
-     */
     @Override
     public Collection<Gene2GOAssociation> getResults() {
         return null;
@@ -156,20 +125,21 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     /**
      * Note that "-" means a missing value, which in practice only occurs in the "qualifier" and "pubmed" columns.
-     * 
-     * @param line
-     * @param taxa to use
+     *
+     * @param line line
      * @return Object
      */
     public Gene2GOAssociation mapFromGene2GO( String line ) {
 
         String[] values = StringUtils.splitPreserveAllTokens( line, "\t" );
 
-        if ( line.startsWith( COMMENT_INDICATOR ) ) return null;
+        if ( line.startsWith( COMMENT_INDICATOR ) )
+            return null;
 
-        if ( values.length < 8 ) return null;
+        if ( values.length < 8 )
+            return null;
 
-        Integer taxonId = null;
+        Integer taxonId;
         try {
             taxonId = Integer.parseInt( values[TAX_ID] );
         } catch ( NumberFormatException e ) {
@@ -216,7 +186,8 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     @Override
     public void parse( InputStream inputStream, BlockingQueue<Gene2GOAssociation> aqueue ) throws IOException {
-        if ( inputStream == null ) throw new IllegalArgumentException( "InputStream was null" );
+        if ( inputStream == null )
+            throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aqueue;
         super.parse( inputStream );
 

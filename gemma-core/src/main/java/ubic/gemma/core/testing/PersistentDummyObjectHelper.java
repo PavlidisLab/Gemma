@@ -530,7 +530,7 @@ public class PersistentDummyObjectHelper {
 
     /**
      * @param bioSequence bio sequence
-     * @return Collection<BioSequence2GeneProduct>
+     * @return bio sequence to gene products
      */
     public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 

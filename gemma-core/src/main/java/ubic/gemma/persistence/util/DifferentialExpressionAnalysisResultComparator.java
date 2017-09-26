@@ -18,36 +18,16 @@
  */
 package ubic.gemma.persistence.util;
 
-import java.util.Comparator;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 
+import java.util.Comparator;
+
 /**
- * A {@link Comparator} to compare {@link ExpressionAnalysisResult} by p value.
- * 
  * @author keshav
- * @version $Id$
  */
-public class DifferentialExpressionAnalysisResultComparator implements Comparator<DifferentialExpressionAnalysisResult> {
+public class DifferentialExpressionAnalysisResultComparator
+        implements Comparator<DifferentialExpressionAnalysisResult> {
 
-    /**
-     * @author keshav
-     * @version $Id$
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.analysis.ExpressionAnalysisResult}.
-         */
-        public static DifferentialExpressionAnalysisResultComparator newInstance() {
-            return new DifferentialExpressionAnalysisResultComparator();
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-     */
     @Override
     public int compare( DifferentialExpressionAnalysisResult ear1, DifferentialExpressionAnalysisResult ear2 ) {
 
@@ -65,9 +45,16 @@ public class DifferentialExpressionAnalysisResultComparator implements Comparato
 
             return 1;
         }
-        if ( ear2 != null ) return -1;
+        if ( ear2 != null )
+            return -1;
 
         return 0;
 
+    }
+
+    public static final class Factory {
+        public static DifferentialExpressionAnalysisResultComparator newInstance() {
+            return new DifferentialExpressionAnalysisResultComparator();
+        }
     }
 }

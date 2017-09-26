@@ -18,44 +18,45 @@
  */
 package ubic.gemma.core.loader.protein.string;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-
 import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.util.fetcher.HttpArchiveFetcherInterface;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+
 /**
  * Downloads protein interaction Files from from the STRING website. STRING makes available gzipped files of data, which
- * can be downloaded from <a href=" http://string.embl.de/newstring_cgi/show_download_page.pl">the STRING download
+ * can be downloaded from <a href="http://string.embl.de/newstring_cgi/show_download_page.pl">the STRING download
  * page</a>
- * <p>
- * The particular file that contains protein protein interaction data can be downloaded from (for example): <a
- * href="http://string.embl.de/newstring_download/protein.links.detailed.v8.2.txt.gz">Protein Links Detailed file</a>
+ * The particular file that contains protein protein interaction data can be downloaded from (for example):
+ * <a href="http://string.embl.de/newstring_download/protein.links.detailed.v8.2.txt.gz">Protein Links Detailed file</a>
  * Care must be taken to ensure the file name does not change it is version dependent.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class StringProteinFileFetcher extends HttpFetcher implements HttpArchiveFetcherInterface {
 
     public final static String INTERACTION = "protein.string.linksdetailed.remotepath";
 
-    /** Current version of string */
-    public final static String STRINGVERSIONNUMBER = "";
+    /**
+     * Current version of string
+     */
+    public final static String STRING_VERSION_NUMBER = "";
 
-    /** Name of string protein file to download */
+    /**
+     * Name of string protein file to download
+     */
     private String stringProteinFileName = null;
 
     /**
      * If the full path to the string file to download is known then this method is called and will download the given
      * file name. If the file is not provided then the file name is retrieved from the properties file.
-     * 
+     *
      * @param stringProteinFileNameToFetch The full path name to the string file to retrieve
      * @return Collection of local files detailing the files downloaded.
      */
@@ -68,15 +69,14 @@ public class StringProteinFileFetcher extends HttpFetcher implements HttpArchive
         }
 
         log.info( "Starting download of protein STRING File at " + stringProteinFileName );
-        Collection<LocalFile> fileToUnPack = super.fetch( stringProteinFileName );
-        return fileToUnPack;
+        return super.fetch( stringProteinFileName );
     }
 
     /**
      * Sets the paths of the remote files to download as set in the project properties files
-     * 
-     * @throws ConfigurationException one of the file download paths in the properties file was not configured
-     *         correctly.
+     *
+     * @throws RuntimeException (ConfigurationException) one of the file download paths in the properties file was not configured
+     *                          correctly.
      */
     @Override
     public void initConfig() {
@@ -89,21 +89,21 @@ public class StringProteinFileFetcher extends HttpFetcher implements HttpArchive
     /**
      * This is optional a specific file name can be set for download. This is to make the code more robust as not sure
      * how often string updates its file names on its download page.
-     * 
-     * @param stringProteinLinksDetailedFileName The full path of the file to download
+     *
+     * @param stringProteinFileName The full path of the file to download
      */
     public void setStringProteinLinksDetailedFileName( String stringProteinFileName ) {
         this.stringProteinFileName = stringProteinFileName;
     }
 
     /**
-     * Method to unarchive downloaded file.
-     * 
+     * Method to un-archive downloaded file.
+     *
      * @param localFile Collection of File details relating to string download
      */
     @Override
     public File unPackFile( Collection<LocalFile> localFile ) {
-        File stringfiledownloaded = null;
+        File stringFile = null;
         for ( LocalFile file : localFile ) {
             String localFileName = file.getLocalURL().getFile();
             try {
@@ -111,12 +111,12 @@ public class StringProteinFileFetcher extends HttpFetcher implements HttpArchive
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-            stringfiledownloaded = new File( FileTools.chompExtension( localFileName ) );
+            stringFile = new File( FileTools.chompExtension( localFileName ) );
             // test file there
-            if ( !stringfiledownloaded.canRead() ) {
-                throw new RuntimeException( "Problem unpacking file: not readable: " + stringfiledownloaded.getName() );
+            if ( !stringFile.canRead() ) {
+                throw new RuntimeException( "Problem unpacking file: not readable: " + stringFile.getName() );
             }
         }
-        return stringfiledownloaded;
+        return stringFile;
     }
 }

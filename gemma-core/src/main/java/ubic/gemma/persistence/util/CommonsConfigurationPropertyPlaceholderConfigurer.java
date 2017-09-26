@@ -1,22 +1,19 @@
 package ubic.gemma.persistence.util;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Properties;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Properties;
+
 /**
- * A PropertyPlaceholderConfigurer that also can take a Configuration. I got the idea for this from {@link http
- * ://mail-archives
- * .apache.org/mod_mbox/jakarta-commons-dev/200603.mbox/%3Cbug-39068-7685@http.issues.apache.org/bugzilla/%3E}
- * <p>
+ * A PropertyPlaceholderConfigurer that also can take a Configuration. I got the idea for this from
+ * <a href="http://mail-archives.apache.org/mod_mbox/jakarta-commons-dev/200603.mbox/%3Cbug-39068-7685@http.issues.apache.org/bugzilla/%3E">here</a>
  * Currently values in the configuration overrides any in the properties files.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  * @see org.apache.commons.configuration.Configuration
  * @see org.springframework.beans.factory.config.PropertyPlaceholderConfigurer
  */
@@ -24,9 +21,6 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
 
     Configuration configuration;
 
-    /**
-     * @param conf the conf to set
-     */
     public void setConfiguration( PropertiesConfiguration configuration ) {
         this.configuration = configuration;
     }
