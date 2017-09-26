@@ -144,7 +144,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             if ( i >= 10 ) break;
-            Gene g = this.getTestPeristentGene();
+            Gene g = this.getTestPersistentGene();
             g = geneService.thaw( g );
             BlatAssociation blata = BlatAssociation.Factory.newInstance();
             blata.setGeneProduct( g.getProducts().iterator().next() );

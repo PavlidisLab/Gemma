@@ -46,7 +46,7 @@ public interface GeneOntologyService extends InitializingBean {
     Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection<Long> geneIds );
 
     /**
-     * @return Collection<OntologyEntries>
+     * @return Collection&gt;OntologyEntries&lt;
      */
     Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 );
 

@@ -21,10 +21,10 @@ package ubic.gemma.core.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -81,10 +81,10 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
 
     /**
      * may be tab-delimited, only first column used, commented (#) lines are ignored.
-     * 
-     * @param fileName
-     * @return
-     * @throws IOException
+     *
+     * @param fileName the file name
+     * @return list of ee identifiers
+     * @throws IOException in case there is an IO error while reading the file
      */
     protected static List<String> readListFileToStrings( String fileName ) throws IOException {
         List<String> eeNames = new ArrayList<>();
@@ -94,7 +94,8 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
                 if ( line.startsWith( "#" ) ) {
                     continue;
                 }
-                if ( line.isEmpty() ) continue;
+                if ( line.isEmpty() )
+                    continue;
                 String[] split = StringUtils.split( line, "\t" );
                 eeNames.add( split[0] );
             }
@@ -112,7 +113,9 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
     }
 
     /**
-     * @param name of the array design to find.
+     * @param name               of the array design to find.
+     * @param arrayDesignService the arrayDesignService to use for the AD retrieval
+     * @return an array design, if found. Bails otherwise with {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}
      */
     protected ArrayDesign locateArrayDesign( String name, ArrayDesignService arrayDesignService ) {
 

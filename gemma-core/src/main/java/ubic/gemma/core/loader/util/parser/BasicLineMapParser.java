@@ -18,63 +18,40 @@
  */
 package ubic.gemma.core.loader.util.parser;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.util.FileTools;
+
+import java.io.*;
+import java.util.Collection;
 
 /**
  * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys, which
  * is generated from the values. A typical use case of this is when the keys are also known to another class that needs
  * the data provided by the parser; to locate the data it uses the key.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
 
     /**
      * Lines starting with this will be ignored.
      */
-    protected static final String COMMENTMARK = "#";
+    protected static final String COMMENT_MARK = "#";
 
-    protected Log log = LogFactory.getLog( getClass() );
+    protected final Log log = LogFactory.getLog( getClass() );
 
-    /**
-     * @param key
-     * @return
-     * @see Map
-     */
     public abstract boolean containsKey( K key );
 
-    /**
-     * @param key
-     * @return value
-     */
     public abstract T get( K key );
 
     public abstract Collection<K> getKeySet();
 
-    /**
-     * 
-     */
     @Override
     public abstract Collection<T> getResults();
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.LineParser#parse(java.io.File)
-     */
     @Override
     public void parse( File file ) throws IOException {
         if ( file == null ) {
@@ -84,31 +61,27 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
         log.info( "Parsing " + file.getAbsolutePath() );
-        try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
+        try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
             parse( stream );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
-     */
     @Override
     public void parse( InputStream is ) throws IOException {
 
-        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+        if ( is == null )
+            throw new IllegalArgumentException( "InputStream was null" );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
             StopWatch timer = new StopWatch();
             timer.start();
 
             int nullLines = 0;
-            String line = null;
+            String line;
             int linesParsed = 0;
             while ( ( line = br.readLine() ) != null ) {
 
-                if ( line.startsWith( COMMENTMARK ) ) {
+                if ( line.startsWith( COMMENT_MARK ) ) {
                     continue;
                 }
                 T newItem = parseOneLine( line );
@@ -132,17 +105,13 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
                 }
 
             }
-            log.info( "Parsed " + linesParsed + " lines. "
-                    + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
+            log.info( "Parsed " + linesParsed + " lines. " + ( nullLines > 0 ?
+                    nullLines + " yielded no parse result (they may have been filtered)." :
+                    "" ) );
 
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
-     */
     @Override
     public void parse( String filename ) throws IOException {
         if ( StringUtils.isBlank( filename ) ) {
@@ -153,24 +122,11 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
         parse( infile );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
-     */
     @Override
     public abstract T parseOneLine( String line );
 
-    /**
-     * @param newItem
-     * @return
-     */
     protected abstract K getKey( T newItem );
 
-    /**
-     * @param key
-     * @param value
-     */
     protected abstract void put( K key, T value );
 
 }

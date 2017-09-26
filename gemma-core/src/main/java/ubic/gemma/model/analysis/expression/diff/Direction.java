@@ -55,6 +55,7 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
      * Creates an instance of Direction from <code>value</code>.
      *
      * @param value the value to create the Direction from.
+     * @return new instance of Direction
      */
     public static Direction fromString( String value ) {
         final Direction typeValue = values.get( value );

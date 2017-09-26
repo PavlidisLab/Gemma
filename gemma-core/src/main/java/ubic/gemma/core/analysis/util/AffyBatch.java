@@ -24,9 +24,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * Class to create AffyBatch objects for use in BioConductor analyses.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class AffyBatch {
 
@@ -42,6 +41,32 @@ public class AffyBatch {
     }
 
     /**
+     * Create a (minimal) AffyBatch object from a matrix. The object is retained in the R namespace.
+     *
+     * @param celMatrix   Rows represent probes, columns represent samples. The order of rows must be the same as in
+     *                    the native CEL file.
+     * @param arrayDesign An arraydesign object which will be used to determine the CDF file to use, based on the array
+     *                    name. (FIXME This won't work out of the box - the names do not match the CDF in general)
+     * @return the name of the variable in R for the AffyBatch object.
+     */
+    public String makeAffyBatch( DoubleMatrix<String, String> celMatrix, ArrayDesign arrayDesign ) {
+
+        if ( celMatrix == null )
+            throw new IllegalArgumentException( "Null matrix" );
+        String matrixName = rc.assignMatrix( celMatrix );
+        String abName = "AffyBatch." + matrixName;
+
+        rc.assign( "cdfName", arrayDesign.getName() ); // Example "Mouse430_2".
+
+        String affyBatchRCmd = abName + "<-new(\"AffyBatch\", exprs=" + matrixName + ", cdfName=cdfName )";
+
+        rc.voidEval( affyBatchRCmd );
+        // rc.voidEval( "rm(" + matrixName + ")" ); // maybe saves memory...
+
+        return abName;
+    }
+
+    /**
      * Available normalization methods.
      */
     public enum normalizeMethod {
@@ -54,31 +79,6 @@ public class AffyBatch {
 
     public enum expressSummaryStatMethod {
         AVEDIFF, LIWONG, MAS, MEDIANPOLISH, PLAYEROUT
-    }
-
-    /**
-     * Create a (minimal) AffyBatch object from a matrix. The object is retained in the R namespace.
-     * 
-     * @param affyBatchMatrix Rows represent probes, columns represent samples. The order of rows must be the same as in
-     *        the native CEL file.
-     * @param arrayDesign An arraydesign object which will be used to determine the CDF file to use, based on the array
-     *        name. (FIXME This won't work out of the box - the names do not match the CDF in general)
-     * @return the name of the variable in R for the AffyBatch object.
-     */
-    public String makeAffyBatch( DoubleMatrix<String, String> celMatrix, ArrayDesign arrayDesign ) {
-
-        if ( celMatrix == null ) throw new IllegalArgumentException( "Null matrix" );
-        String matrixName = rc.assignMatrix( celMatrix );
-        String abName = "AffyBatch." + matrixName;
-
-        rc.assign( "cdfName", arrayDesign.getName() ); // Example "Mouse430_2".
-
-        String affyBatchRCmd = abName + "<-new(\"AffyBatch\", exprs=" + matrixName + ", cdfName=cdfName )";
-
-        rc.voidEval( affyBatchRCmd );
-        // rc.voidEval( "rm(" + matrixName + ")" ); // maybe saves memory...
-
-        return abName;
     }
 
 }

@@ -25,10 +25,10 @@ import java.util.Date;
 
 /**
  * Extract the scan date from Affymetrix CEL files. Handles both version 3 (ASCII) and 4 (binary) files.
- * <p/>
+ * <p>
  * See <a href='http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/cel.html'>CEL</a> and
  * <a href='http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html'>GENERIC</a>
- * <p/>
+ * </p>
  * Note that the Affymetrix documentation does not mention a date, explicitly, but it's in the "DatHeader"
  *
  * @author paul

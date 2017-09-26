@@ -18,33 +18,25 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import ubic.basecode.util.NetUtils;
+import ubic.gemma.core.util.NetDatasourceUtil;
+import ubic.gemma.model.common.description.LocalFile;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
-
-import ubic.basecode.util.NetUtils;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.core.util.NetDatasourceUtil;
+import java.util.concurrent.*;
 
 /**
  * Download files by FTP.
- * 
+ *
  * @author paul
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public abstract class FtpFetcher extends AbstractFetcher {
 
     protected FTPClient ftpClient;
@@ -53,19 +45,11 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
     protected boolean avoidDownload = false;
 
-    /**
-     * 
-     */
     public FtpFetcher() {
         super();
         setNetDataSourceUtil();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.Fetcher#fetch(java.lang.String)
-     */
     @Override
     public Collection<LocalFile> fetch( String identifier ) {
 
@@ -82,30 +66,20 @@ public abstract class FtpFetcher extends AbstractFetcher {
     }
 
     /**
-     * Set to true to avoid download if possible and simply use existing files if they are available. This skips the
-     * usual checks for the correct file size compared to the remote one. Not all fetchers support setting this to
-     * 'true'.
-     * 
-     * @param avoidDownload
+     * @param avoidDownload Set to true to avoid download if possible and simply use existing files if they are available. This skips the
+     *                      usual checks for the correct file size compared to the remote one. Not all fetchers support setting this to
+     *                      'true'.
      */
     public void setAvoidDownload( boolean avoidDownload ) {
         this.avoidDownload = avoidDownload;
     }
 
-    /**
-     * @param netDataSourceUtil the netDataSourceUtil to set
-     */
     public abstract void setNetDataSourceUtil();
 
-    /**
-     * @param outputFileName
-     * @param seekFile
-     * @return
-     */
     protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
-        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+        return new FutureTask<>( new Callable<Boolean>() {
             @Override
-            public Boolean call() throws FileNotFoundException, IOException {
+            public Boolean call() throws IOException {
                 File existing = new File( outputFileName );
                 if ( existing.exists() && avoidDownload ) {
                     log.info( "A local file exists, skipping download." );
@@ -118,19 +92,11 @@ public abstract class FtpFetcher extends AbstractFetcher {
                 }
                 boolean status = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFileName, force );
                 ftpClient.disconnect();
-                return new Boolean( status );
+                return status;
             }
         } );
-        return future;
     }
 
-    /**
-     * @param future
-     * @param expectedSize
-     * @param outputFileName
-     * @param seekFileName
-     * @return
-     */
     protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
             String outputFileName ) {
 
@@ -147,10 +113,11 @@ public abstract class FtpFetcher extends AbstractFetcher {
                 // cancelled, probably.
                 log.info( "Download failed, was it cancelled?" );
                 return null;
-            } else if ( future.get().booleanValue() ) {
-                if ( log.isInfoEnabled() ) log.info( "Done: local file is " + outputFile );
+            } else if ( future.get() ) {
+                if ( log.isInfoEnabled() )
+                    log.info( "Done: local file is " + outputFile );
                 LocalFile file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
-                Collection<LocalFile> result = new HashSet<LocalFile>();
+                Collection<LocalFile> result = new HashSet<>();
                 result.add( file );
                 return result;
             }
@@ -166,11 +133,6 @@ public abstract class FtpFetcher extends AbstractFetcher {
         throw new RuntimeException( "Couldn't fetch file for " + seekFileName );
     }
 
-    /**
-     * @param identifier
-     * @param seekFile
-     * @return
-     */
     protected Collection<LocalFile> fetch( String identifier, String seekFile ) {
         File existingFile = null;
         try {
@@ -178,9 +140,9 @@ public abstract class FtpFetcher extends AbstractFetcher {
             String outputFileName = formLocalFilePath( identifier, newDir );
 
             existingFile = new File( outputFileName );
-            if ( this.avoidDownload || ( existingFile.canRead() && allowUseExisting ) ) {
-                // log.info( outputFileName + " already exists." );
-            }
+//            if ( this.avoidDownload || ( existingFile.canRead() && allowUseExisting ) ) {
+//                // log.info( outputFileName + " already exists." );
+//            }
 
             if ( ftpClient == null || !ftpClient.isConnected() ) {
                 ftpClient = this.getNetDataSourceUtil().connect( FTP.BINARY_FILE_TYPE );
@@ -190,17 +152,17 @@ public abstract class FtpFetcher extends AbstractFetcher {
             long expectedSize = getExpectedSize( seekFile );
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            Collection<LocalFile> result = this.doTask( future, expectedSize, seekFile, outputFileName );
-            return result;
+            return this.doTask( future, expectedSize, seekFile, outputFileName );
         } catch ( UnknownHostException e ) {
-            if ( force || !allowUseExisting || existingFile == null ) throw new RuntimeException( e );
+            if ( force || !allowUseExisting || existingFile == null )
+                throw new RuntimeException( e );
 
-            if ( !avoidDownload ) throw new RuntimeException( e );
+            if ( !avoidDownload )
+                throw new RuntimeException( e );
 
             log.warn( "Could not connect to " + this.getNetDataSourceUtil().getHost() + " to check size of " + seekFile
                     + ", using existing file" );
-            Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
-            return fallback;
+            return getExistingFile( existingFile, seekFile );
         } catch ( IOException e ) {
 
             /*
@@ -224,25 +186,20 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
             log.warn( "Cancelled, or couldn't fetch " + seekFile + ", make sure the file exists on the remote server.,"
                     + e + ", using existing file" );
-            Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
-            return fallback;
+            return getExistingFile( existingFile, seekFile );
 
         } finally {
             try {
-                if ( ftpClient != null && ftpClient.isConnected() ) ftpClient.disconnect();
+                if ( ftpClient != null && ftpClient.isConnected() )
+                    ftpClient.disconnect();
             } catch ( IOException e ) {
+                //noinspection ThrowFromFinallyBlock
                 throw new RuntimeException( "Could not disconnect: " + e.getMessage() );
             }
         }
     }
 
-    /**
-     * @param seekFile
-     * @return
-     * @throws IOException
-     * @throws SocketException
-     */
-    protected long getExpectedSize( final String seekFile ) throws IOException, SocketException {
+    protected long getExpectedSize( final String seekFile ) throws IOException {
         return NetUtils.ftpFileSize( ftpClient, seekFile );
     }
 }

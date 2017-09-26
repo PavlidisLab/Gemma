@@ -37,27 +37,25 @@
 
 package ubic.gemma.core.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Handles deletions of a factor values. This process includes: 1. Determining if there are any biomaterials that use
  * the factor value 2. If so, remove any differential expression analysis results that use this factor 3. remove the
  * factor value
- * 
+ *
  * @author tvrossum
- * @version $Id$
  */
 @Service
 public class FactorValueDeletionImpl implements FactorValueDeletion {
@@ -71,13 +69,6 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
     @Autowired
     private FactorValueService factorValueService = null;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.expression.experiment.FactorValueDeletion#deleteFactorValue(ubic.gemma.model.expression.experiment
-     * .FactorValue)
-     */
     @Override
     @Transactional
     public void deleteFactorValues( Collection<Long> fvIds ) {

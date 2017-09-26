@@ -264,7 +264,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * Get all genes that are associated with phenotypes that match the query string param. If taxon is not specified
      * (null), genes of all taxa will be returned. FIXME not used?
      *
-     * @param taxon can be null
+     * @param taxon          can be null
+     * @param phenotypeQuery the query
+     * @return collection of genes
      * @deprecated not used
      */
     @Deprecated
@@ -294,12 +296,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return genes;
     }
 
-    /**
-     * Get all genes that belong to GO groups that match the query string param. If taxon is not specified (null), genes
-     * of all taxa will be returned.
-     *
-     * @param taxon can be null
-     */
     @Override
     public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) {
         StopWatch timer = new StopWatch();
@@ -329,14 +325,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return genes;
     }
 
-    /**
-     * get all genes in the given taxon that are annotated with the given go id, including its child terms in the
-     * hierarchy
-     *
-     * @param goId    GO id that must be in the format "GO_#######"
-     * @param taxonId must not be null and must correspond to a taxon
-     * @return Collection<GeneSetValueObject> empty if goId was blank or taxonId didn't correspond to a taxon
-     */
     @Override
     public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
 
@@ -355,12 +343,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     }
 
-    /**
-     * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
-     *
-     * @param query A list of gene names (symbols), one per line.
-     * @return collection of gene value objects
-     */
     @Override
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
 
@@ -381,12 +363,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return geneMap.values();
     }
 
-    /**
-     * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
-     *
-     * @param query A list of gene names (symbols), one per line.
-     * @return map with each gene-query as a key (toLowerCase()) and a collection of the search-results as the value
-     */
     @Override
     public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )
             throws IOException {
@@ -484,6 +460,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     /**
      * updates goSets & srDos with GO results
+     *
+     * @param query query
+     * @param taxon taxon
+     * @return list of search result display objects
      */
     private List<SearchResultDisplayObject> getGOGroupResults( String query, Taxon taxon ) {
         StopWatch timer = new StopWatch();
@@ -596,6 +576,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     /**
      * updates goSets & srDos with GO results
+     *
+     * @param query query
+     * @param taxon taxon
+     * @return list of search result display objects
      */
     private List<SearchResultDisplayObject> getPhenotypeAssociationSearchResults( String query, Taxon taxon ) {
 
@@ -650,6 +634,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     /**
      * Get a list of SearchResultDisplayObjects that summarise all the results found (one per taxon), so at front end
      * user can "select all"
+     *
+     * @param query          query
+     * @param genes          genes
+     * @param geneSets       gene sets
+     * @param phenotypeSrDos phenotype display objects
+     * @param srDos          display objects
+     * @return list of search result display objects
      */
     private List<SearchResultDisplayObject> addEntryForAllResults( String query,
             Collection<SearchResultDisplayObject> genes, Collection<SearchResultDisplayObject> geneSets,

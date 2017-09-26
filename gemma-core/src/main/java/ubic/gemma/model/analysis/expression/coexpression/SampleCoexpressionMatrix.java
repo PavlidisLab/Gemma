@@ -87,6 +87,8 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
         }
 
         /**
+         * @param bioAssayDimension  the BADimension to set on the created matrix
+         * @param coexpressionMatrix the coexp matrix to set on the created matrix
          * @return Constructs a new instance of {@link SampleCoexpressionMatrix}, taking all possible properties (except the
          * identifier(s))as arguments.
          */

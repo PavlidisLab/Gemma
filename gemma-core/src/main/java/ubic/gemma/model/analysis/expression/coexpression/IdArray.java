@@ -93,6 +93,7 @@ public abstract class IdArray implements Serializable {
     }
 
     /**
+     * @param other the other idArray to compare with.
      * @return datasets IDs it has in common with this.
      */
     public Collection<Long> and( IdArray other ) {
@@ -105,6 +106,7 @@ public abstract class IdArray implements Serializable {
     }
 
     /**
+     * @param other the other idArray to compare with.
      * @return datasets IDs it has in common with this, as a set
      */
     public Set<Long> andSet( IdArray other ) {
@@ -164,6 +166,9 @@ public abstract class IdArray implements Serializable {
 
     /**
      * Use 'and' instead if possible. FIXME this might be a bit slow.
+     *
+     * @param g the id to check for
+     * @return true if the given id is in this array
      */
     public boolean isIncluded( Long g ) {
         return data.get( g.intValue() );

@@ -47,7 +47,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     /**
      * This method should be generic for GenePix/GPR/ATR file formats. Has DateType at the top formatted with quotes:
      * "DateTime=2005/11/09 11:36:27". Example GSE15739
-     * For more information see <a href='http ://mdc.custhelp.com/app/answers/detail/a_id/18886'>here</a>.
+     * For more information see <a href='http://mdc.custhelp.com/app/answers/detail/a_id/18886'>here</a>.
      */
     protected Date extractGenePix( BufferedReader reader ) throws IOException, ParseException {
         String line;

@@ -3,11 +3,11 @@ package ubic.gemma.core.util;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Used to generate hyperlinks to various things in Gemma.\
- * 
+ * Used to generate hyperlinks to various things in Gemma.
+ *
  * @author luke
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possibly used in front end
 public class AnchorTagUtil {
 
     public static String getArrayDesignLink( Long adId, String link ) {
@@ -28,18 +28,18 @@ public class AnchorTagUtil {
 
     /**
      * @param eeId Id of the experimental design
-     * @param link
-     * @return
+     * @param link the link
+     * @return experimental design link html
      */
     public static String getExperimentalDesignLink( Long eeId, String link ) {
         return getExperimentalDesignLink( eeId, link, null );
     }
 
     /**
-     * @param eeId Id of the experimental design
-     * @param link
-     * @param hover
-     * @return
+     * @param edId  Id of the experimental design
+     * @param link  the link
+     * @param hover hover tooltip text
+     * @return experimental design link html
      */
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
         return getLink( String.format( "/Gemma/experimentalDesign/showExperimentalDesign.html?edid=%d", edId ),
@@ -59,7 +59,7 @@ public class AnchorTagUtil {
     }
 
     public static String getLink( String url, String link, String hover ) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append( "<a href=\"" );
         buf.append( url );
         buf.append( "\"" );

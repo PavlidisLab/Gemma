@@ -24,51 +24,19 @@ package ubic.gemma.model.analysis.expression.pca;
 public abstract class Eigenvector implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.pca.Eigenvector}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.pca.Eigenvector}.
-         */
-        public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance() {
-            return new ubic.gemma.model.analysis.expression.pca.EigenvectorImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.pca.Eigenvector}, taking all
-         * possible properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance( Integer componentNumber,
-                byte[] vector ) {
-            final ubic.gemma.model.analysis.expression.pca.Eigenvector entity = new ubic.gemma.model.analysis.expression.pca.EigenvectorImpl();
-            entity.setComponentNumber( componentNumber );
-            entity.setVector( vector );
-            return entity;
-        }
-    }
-
-    /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 5122763307995485698L;
     private Integer componentNumber;
-
     private byte[] vector;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public Eigenvector() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an Eigenvector instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -84,25 +52,31 @@ public abstract class Eigenvector implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public Integer getComponentNumber() {
         return this.componentNumber;
     }
 
-    /**
-     * 
-     */
+    public void setComponentNumber( Integer componentNumber ) {
+        this.componentNumber = componentNumber;
+    }
+
     public Long getId() {
         return this.id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     /**
-     * Binary representing array of doubles
+     * @return Binary representing array of doubles
      */
     public byte[] getVector() {
         return this.vector;
+    }
+
+    public void setVector( byte[] vector ) {
+        this.vector = vector;
     }
 
     /**
@@ -116,16 +90,19 @@ public abstract class Eigenvector implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setComponentNumber( Integer componentNumber ) {
-        this.componentNumber = componentNumber;
-    }
+    public static final class Factory {
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+        public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance() {
+            return new ubic.gemma.model.analysis.expression.pca.EigenvectorImpl();
+        }
 
-    public void setVector( byte[] vector ) {
-        this.vector = vector;
+        public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance( Integer componentNumber,
+                byte[] vector ) {
+            final ubic.gemma.model.analysis.expression.pca.Eigenvector entity = new ubic.gemma.model.analysis.expression.pca.EigenvectorImpl();
+            entity.setComponentNumber( componentNumber );
+            entity.setVector( vector );
+            return entity;
+        }
     }
 
 }

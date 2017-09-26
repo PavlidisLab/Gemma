@@ -18,45 +18,35 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.concurrent.*;
+
 /**
  * Fetcher that can fetch archives (e.g., tar.gz) and unpack them.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFetcher {
 
-    private String excludePattern;
     public Expand expander;
     protected boolean doDelete = false;
+    private String excludePattern;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.ArchiveFetcher#deleteAfterUnpack(boolean)
-     */
     @Override
     public void setDeleteAfterUnpack( boolean doDelete ) {
         this.doDelete = doDelete;
@@ -69,19 +59,11 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         this.excludePattern = excludePattern;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.Fetcher#setForce(boolean)
-     */
     @Override
     public void setForce( boolean force ) {
         this.force = force;
     }
 
-    /**
-     * @param outputFileName
-     */
     protected void cleanUp( File outputFile ) {
         if ( this.doDelete ) {
             log.info( "Cleaning up " + outputFile.getName() );
@@ -100,29 +82,33 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             if ( !ok ) {
                 // probably cancelled.
                 return null;
-            } else if ( future.get().booleanValue() ) {
+            } else if ( future.get() ) {
                 log.info( "Unpacking " + outputFile );
                 unPack( outputFile );
                 cleanUp( outputFile );
-                if ( outputFile.isDirectory() ) return listFiles( seekFileName, outputFile, null );
+                if ( outputFile.isDirectory() )
+                    return listFiles( seekFileName, outputFile, null );
 
                 return listFiles( seekFileName, outputFile.getParentFile(), null );
             }
         } catch ( ExecutionException e ) {
             future.cancel( true );
-            throw new RuntimeException( "Couldn't fetch " + seekFileName + " from "
-                    + this.getNetDataSourceUtil().getHost(), e );
+            throw new RuntimeException(
+                    "Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost(), e );
         } catch ( InterruptedException e ) {
             future.cancel( true );
-            throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName + " from "
-                    + this.getNetDataSourceUtil().getHost(), e );
+            throw new RuntimeException(
+                    "Interrupted: Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost(),
+                    e );
         } catch ( IOException e ) {
             future.cancel( true );
-            throw new RuntimeException( "IOException: Couldn't fetch " + seekFileName + " from "
-                    + this.getNetDataSourceUtil().getHost(), e );
+            throw new RuntimeException(
+                    "IOException: Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost(),
+                    e );
         }
         future.cancel( true );
-        throw new RuntimeException( "Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost() );
+        throw new RuntimeException(
+                "Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost() );
     }
 
     /**
@@ -131,41 +117,42 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
     protected void initArchiveHandler( String methodName ) {
 
         if ( methodName != null ) {
-            if ( methodName.equals( "gz" ) ) {
-                expander = null;
-            } else if ( methodName.equals( "tar.gz" ) ) {
-                expander = new Untar();
-                expander.setProject( new Project() );
-                UntarCompressionMethod method = new UntarCompressionMethod();
-                method.setValue( "gzip" );
-                ( ( Untar ) expander ).setCompression( method );
-            } else if ( methodName.equals( "zip" ) ) {
-                expander = null;
-            } else {
-                // tar...
-                expander = new Untar();
-                expander.setProject( new Project() );
-                UntarCompressionMethod method = new UntarCompressionMethod();
-                // method.setValue( methodName );
-                ( ( Untar ) expander ).setCompression( method );
+            switch ( methodName ) {
+                case "gz":
+                    expander = null;
+                    break;
+                case "tar.gz": {
+                    expander = new Untar();
+                    expander.setProject( new Project() );
+                    UntarCompressionMethod method = new UntarCompressionMethod();
+                    method.setValue( "gzip" );
+                    ( ( Untar ) expander ).setCompression( method );
+                    break;
+                }
+                case "zip":
+                    expander = null;
+                    break;
+                default: {
+                    // tar...
+                    expander = new Untar();
+                    expander.setProject( new Project() );
+                    UntarCompressionMethod method = new UntarCompressionMethod();
+                    // method.setValue( methodName );
+                    ( ( Untar ) expander ).setCompression( method );
+                    break;
+                }
             }
         }
     }
 
-    /**
-     * @param identifier
-     * @param newDir
-     * @param excludePattern A string used to filter the listed files (exclusion by file name ending). If null, not
-     *        used. (FIXME: make this more flexible, case here is specific to ArrayExpress).
-     * @return
-     * @throws IOException
-     */
     protected Collection<LocalFile> listFiles( String remoteFile, File newDir, Collection<LocalFile> result )
             throws IOException {
 
-        if ( result == null ) result = new HashSet<LocalFile>();
+        if ( result == null )
+            result = new HashSet<>();
         for ( File file : FileTools.listDirectoryFiles( newDir ) ) {
-            if ( excludePattern != null && file.getPath().endsWith( excludePattern ) ) continue;
+            if ( excludePattern != null && file.getPath().endsWith( excludePattern ) )
+                continue;
             // log.info( "\t" + file.getCanonicalPath() );
             LocalFile newFile = LocalFile.Factory.newInstance();
             newFile.setLocalURL( file.toURI().toURL() );
@@ -181,12 +168,8 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         return result;
     }
 
-    /**
-     * @param newDir
-     * @param seekFile
-     */
     protected void unPack( final File toUnpack ) {
-        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+        FutureTask<Boolean> future = new FutureTask<>( new Callable<Boolean>() {
             @Override
             @SuppressWarnings("synthetic-access")
             public Boolean call() {

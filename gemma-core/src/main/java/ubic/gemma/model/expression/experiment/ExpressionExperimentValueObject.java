@@ -246,8 +246,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      *
      * @param bioAssaySet either EE or EESubSet instance.
      * @return value object that represents the subset, or lite version of this VO for EE.
-     * @see this#ExpressionExperimentValueObject(ExpressionExperimentSubSet)
-     * @see this#ExpressionExperimentValueObject(ExpressionExperiment, boolean)
      */
     public static ExpressionExperimentValueObject createValueObject( BioAssaySet bioAssaySet ) {
         if ( bioAssaySet instanceof ExpressionExperiment ) {

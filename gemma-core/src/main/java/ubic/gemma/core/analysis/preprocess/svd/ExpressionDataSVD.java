@@ -334,7 +334,7 @@ public class ExpressionDataSVD {
      * Implements method described in Skillicorn et al., "Strategies for winnowing microarray data" (also section 3.5.5
      * of his book)
      *
-     * @param thresholdQuantile Enter 0.5 for median. Value must be > 0 and < 1.
+     * @param thresholdQuantile Enter 0.5 for median. Value must be &gt; 0 and &lt; 1.
      * @return a filtered matrix
      */
     public ExpressionDataDoubleMatrix winnow( double thresholdQuantile ) {

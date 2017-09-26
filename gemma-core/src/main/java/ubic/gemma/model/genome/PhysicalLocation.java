@@ -31,8 +31,6 @@ public abstract class PhysicalLocation extends ChromosomeLocation {
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public PhysicalLocation() {
     }
@@ -67,9 +65,7 @@ public abstract class PhysicalLocation extends ChromosomeLocation {
     public abstract int computeOverlap( PhysicalLocation other );
 
     /**
-     * <p>
-     * Index to speed up queries
-     * </p>
+     * @return Index to speed up queries
      */
     public Integer getBin() {
         return this.bin;
@@ -109,20 +105,12 @@ public abstract class PhysicalLocation extends ChromosomeLocation {
             return new PhysicalLocationImpl();
         }
 
-        /**
-         * @return Constructs a new instance of {@link PhysicalLocation}, taking all required and/or
-         * read-only properties as arguments.
-         */
         public static PhysicalLocation newInstance( Chromosome chromosome ) {
             final PhysicalLocation entity = new PhysicalLocationImpl();
             entity.setChromosome( chromosome );
             return entity;
         }
 
-        /**
-         * @return Constructs a new instance of {@link PhysicalLocation}, taking all possible properties
-         * (except the identifier(s))as arguments.
-         */
         public static PhysicalLocation newInstance( Chromosome chromosome, Long nucleotide, Integer nucleotideLength,
                 String strand, Integer bin ) {
             final PhysicalLocation entity = new PhysicalLocationImpl();

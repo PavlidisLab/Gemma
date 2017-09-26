@@ -21,7 +21,9 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
+import java.util.HashSet;
 
+@SuppressWarnings("unused") // Possible external usage
 public abstract class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Serializable {
 
     private static final long serialVersionUID = 4971245573216792849L;
@@ -32,7 +34,7 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
     private Boolean upperTail;
     private Long id;
     private Gene gene;
-    private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new java.util.HashSet<>();
+    private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
 
     /**
      * Returns <code>true</code> if the argument is an GeneDifferentialExpressionMetaAnalysisResult instance and all
@@ -70,7 +72,7 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
     }
 
     /**
-     * Note that this value could be misleading; it is possible for the fold change to be positive but the meta-analysis
+     * @return Note that this value could be misleading; it is possible for the fold change to be positive but the meta-analysis
      * is for down-regulation. Use 'upperTail' to see which direction was inspected.
      */
     public Double getMeanLogFoldChange() {
@@ -121,7 +123,7 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
 
     /**
      * @return If true, indicates the fold change "looked for" was positive (i.e., pvalue measured using the upper tail of the t
-     * distribution; the alternative hypothesis is fold change > 0)
+     * distribution; the alternative hypothesis is fold change &gt; 0)
      */
     public Boolean getUpperTail() {
         return this.upperTail;

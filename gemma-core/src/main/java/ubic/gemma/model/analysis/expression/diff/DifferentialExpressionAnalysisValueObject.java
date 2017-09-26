@@ -44,6 +44,7 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     /**
      * Does not populate the resultSets.
+     * @param analysis the analysis to read the values from
      */
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
         this.id = analysis.getId();

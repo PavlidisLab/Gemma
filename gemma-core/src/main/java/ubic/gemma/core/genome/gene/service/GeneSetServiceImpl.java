@@ -44,7 +44,6 @@ import java.util.LinkedList;
  * Service for managing gene sets
  *
  * @author kelsey
- * @version $Id$
  */
 @Service
 public class GeneSetServiceImpl implements GeneSetService {
@@ -100,7 +99,7 @@ public class GeneSetServiceImpl implements GeneSetService {
                         + " genes fetched" );
             }
 
-            Collection<GeneSetMember> geneMembers = new HashSet<GeneSetMember>();
+            Collection<GeneSetMember> geneMembers = new HashSet<>();
             for ( Gene g : genes ) {
                 GeneSetMember gmember = GeneSetMember.Factory.newInstance();
                 gmember.setGene( g );
@@ -140,13 +139,11 @@ public class GeneSetServiceImpl implements GeneSetService {
             remove( gset );
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.geneSetDao.findByGene( gene );
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -160,12 +157,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         return this.geneSetDao.findByName( name, taxon );
     }
 
-    /**
-     * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
-     *
-     * @param geneId
-     * @return collection of geneSetValueObject
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
@@ -174,22 +165,17 @@ public class GeneSetServiceImpl implements GeneSetService {
 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
 
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
         gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
         return gsvos;
     }
 
-    /**
-     * @param query   string to match to gene sets
-     * @param taxonId
-     * @return collection of GeneSetValueObjects that match name query
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
 
         if ( StringUtils.isBlank( query ) ) {
-            return new HashSet<GeneSetValueObject>();
+            return new HashSet<>();
         }
         Collection<GeneSet> foundGeneSets = null;
         Taxon tax = null;
@@ -226,22 +212,17 @@ public class GeneSetServiceImpl implements GeneSetService {
             }
         }
 
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
         // gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
         gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( foundGeneSets ) );
         return gsvos;
     }
-
 
     @Override
     public Collection<Long> getGeneIdsInGroup( GeneSetValueObject object ) {
         return this.getValueObject( object.getId() ).getGeneIds();
     }
 
-    /**
-     * Get the gene value objects for the members of the group param
-     *
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object ) {
@@ -258,20 +239,12 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public int getSize( GeneSetValueObject object ) {
         return this.geneSetDao.getGeneCount( object.getId() );
     }
 
-    /**
-     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
-     * all the genes
-     *
-     * @param geneSet
-     * @return the taxon or null if the gene set param was null
-     */
     @Override
     @Transactional(readOnly = true)
     public Taxon getTaxon( GeneSet geneSet ) {
@@ -286,12 +259,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         return tmpTax;
     }
 
-    /**
-     * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
-     * all the genes
-     *
-     * @return the taxon or null if the gene set param was null
-     */
     @Override
     @Transactional(readOnly = true)
     public TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO ) {
@@ -314,16 +281,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         return taxonVO;
     }
 
-    /**
-     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
-     * or private
-     *
-     * @param privateOnly      only return private sets owned by the user or private sets shared with the user
-     * @param taxonId          if non-null, restrict the groups by ones which have genes in the given taxon (can be null)
-     * @param sharedPublicOnly if true, the only public sets returned will be those that are owned by the user or have
-     *                         been shared with the user. If param privateOnly is true, this will have no effect.
-
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly ) {
@@ -336,7 +293,7 @@ public class GeneSetServiceImpl implements GeneSetService {
             }
         }
 
-        Collection<GeneSet> geneSets = new LinkedList<GeneSet>();
+        Collection<GeneSet> geneSets = new LinkedList<>();
 
         if ( privateOnly ) {
             // gets all groups user can see (includes: owned by user, shared with user & public)
@@ -360,13 +317,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         return geneSets;
     }
 
-    /**
-     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
-     * or private
-     *
-     * @param taxonId     if non-null, restrict the groups by ones which have genes in the given taxon.
-
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly,
@@ -385,77 +335,47 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Override
     @Transactional(readOnly = true)
     public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> ids ) {
-        Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<DatabaseBackedGeneSetValueObject>();
+        Collection<DatabaseBackedGeneSetValueObject> vos = new ArrayList<>();
         for ( Long id : ids ) {
             vos.add( getValueObject( id ) );
         }
         return vos;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
-     */
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> load( Collection<Long> ids ) {
-        return ( Collection<GeneSet> ) this.geneSetDao.load( ids );
+        return this.geneSetDao.load( ids );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.lang.Long)
-     */
     @Override
     @Transactional(readOnly = true)
     public GeneSet load( Long id ) {
         return this.geneSetDao.load( id );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
-     */
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadAll() {
-        return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
+        return this.geneSetDao.loadAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll(ubic.gemma.model.genome.Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadAll( Taxon tax ) {
         return this.geneSetDao.loadAll( tax );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
-     */
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets() {
-        return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets();
+        return this.geneSetDao.loadMyGeneSets();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
-     */
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
@@ -477,11 +397,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets( tax );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.service.GeneSetService#loadValueObjects(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
@@ -489,33 +404,18 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.service.GeneSetService#loadValueObjectsLite(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
         return this.geneSetDao.loadValueObjectsLite( ids );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
-     */
     @Override
     @Transactional
     public void remove( Collection<GeneSet> sets ) {
         this.geneSetDao.remove( sets );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#remove(ubic.gemma.model.genome.gene.GeneSet)
-     */
     @Override
     @Transactional
     public void remove( GeneSet geneset ) {
@@ -526,11 +426,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao = geneSetDao;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#update(java.util.Collection)
-     */
     @Override
     @Transactional
     public void update( Collection<GeneSet> sets ) {
@@ -538,11 +433,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#update(ubic.gemma.model.genome.gene.GeneSet)
-     */
     @Override
     @Transactional
     public void update( GeneSet geneset ) {
@@ -550,17 +440,12 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    /**
-     * AJAX Updates the database entity (permission permitting) with the fields of the param value object
-     *
-     * @return value objects for the updated entities
-     */
     @Override
     @Transactional
     public Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity(
             Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
 
-        Collection<GeneSet> updated = new HashSet<GeneSet>();
+        Collection<GeneSet> updated = new HashSet<>();
         for ( DatabaseBackedGeneSetValueObject geneSetVo : geneSetVos ) {
 
             Long groupId = geneSetVo.getId();
@@ -568,7 +453,7 @@ public class GeneSetServiceImpl implements GeneSetService {
             if ( gset == null ) {
                 throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
             }
-            Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+            Collection<GeneSetMember> updatedGenelist = new HashSet<>();
 
             Collection<Long> geneIds = geneSetVo.getGeneIds();
 
@@ -622,12 +507,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    /**
-     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
-     * gene to be added to the gene set twice. Cannot update name or description, just members
-     *
-     * @param groupId id of the gene set being updated
-     */
     @Override
     @Transactional
     public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds ) {
@@ -638,7 +517,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         if ( gset == null ) {
             throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
         }
-        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+        Collection<GeneSetMember> updatedGenelist = new HashSet<>();
 
         if ( geneIds.isEmpty() ) {
             throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
@@ -683,12 +562,6 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     }
 
-    /**
-     * AJAX Updates the database entity (permission permitting) with the name and description fields of the param value
-     * object
-     *
-     * @return value objects for the updated entities
-     */
     @Override
     @Transactional
     public DatabaseBackedGeneSetValueObject updateDatabaseEntityNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {

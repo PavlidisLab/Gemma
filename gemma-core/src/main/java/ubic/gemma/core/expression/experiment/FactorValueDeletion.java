@@ -37,26 +37,19 @@
 
 package ubic.gemma.core.expression.experiment;
 
-import java.util.Collection;
-
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+
 /**
- * This interface needed to be extracted for factor value deletions in 
+ * This interface needed to be extracted for factor value deletions in
  * order to be able to make the methods transactional
- * 
- * see bug 2358
- * 
+ *
  * @author tvrossum
- * @version $Id$
  */
 public interface FactorValueDeletion {
 
-    /**
-     * 
-     * @param fv factor value to be deleted
-     */
     @Transactional
-    public void deleteFactorValues( Collection<Long> factorValueIds );
+    void deleteFactorValues( Collection<Long> factorValueIds );
 
 }

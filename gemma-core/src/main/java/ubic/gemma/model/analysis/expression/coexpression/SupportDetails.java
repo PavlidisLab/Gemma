@@ -45,6 +45,10 @@ public abstract class SupportDetails extends IdArray {
     /**
      * Note that the gene information and isPositive is only used for bookkeeping during creation; it is not part of the
      * persistent entity.
+     *
+     * @param firstGene  first gene
+     * @param isPositive value of isPositive
+     * @param secondGene second gene
      */
     public SupportDetails( Gene firstGene, Gene secondGene, Boolean isPositive ) {
         if ( firstGene != null )
@@ -58,6 +62,10 @@ public abstract class SupportDetails extends IdArray {
     /**
      * Note that the gene information and isPositive is only used for bookkeeping during creation; it is not part of the
      * persistent entity. Used by LinkCreator.
+     *
+     * @param firstGene  first gene
+     * @param isPositive value of isPositive
+     * @param secondGene second gene
      */
     public SupportDetails( Long firstGene, Long secondGene, Boolean isPositive ) {
         if ( firstGene != null )

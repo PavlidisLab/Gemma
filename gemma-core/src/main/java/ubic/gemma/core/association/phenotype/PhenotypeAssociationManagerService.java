@@ -65,7 +65,9 @@ public interface PhenotypeAssociationManagerService {
             Set<String> phenotypesValuesUri );
 
     /**
-     * For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds
+     * @param taxon         taxon
+     * @param phenotypeUris URIs
+     * @return For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds
      * genes associated with <em>all</em> the phenotypes together.
      */
     Map<String, Collection<? extends GeneValueObject>> findCandidateGenesForEach( Set<String> phenotypeUris,
@@ -111,7 +113,7 @@ public interface PhenotypeAssociationManagerService {
     Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneNCBI( Integer geneNCBI );
 
     /**
-     * return the list of the owners that have evidence in the system
+     * @return the list of the owners that have evidence in the system
      */
     Collection<String> findEvidenceOwners();
 
@@ -145,7 +147,8 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      *
-     * @param taxonId, can be null to not constrain by taxon
+     * @param taxonId can be null to not constrain by taxon
+     * @param query   query
      * @return Collection<GeneEvidenceValueObject> list of Genes
      */
     Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
@@ -204,7 +207,7 @@ public interface PhenotypeAssociationManagerService {
             Long geneDifferentialExpressionMetaAnalysisId );
 
     /**
-     * find all evidence that doesn't come from an external source
+     * @return find all evidence that doesn't come from an external source
      */
     Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithoutExternalDatabaseName();
 

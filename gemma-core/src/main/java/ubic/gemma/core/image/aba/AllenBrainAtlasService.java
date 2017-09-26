@@ -14,150 +14,135 @@
  */
 package ubic.gemma.core.image.aba;
 
+import org.w3c.dom.Document;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
 import java.util.Collection;
-
-import org.w3c.dom.Document;
 
 /**
  * @author paul
- * @version $Id$
  */
+@SuppressWarnings("unused") // Possible external use
 public interface AllenBrainAtlasService {
 
     /**
      * http://brain-map.org
      */
-    public static final String API_BASE_URL = "http://www.brain-map.org";
+    String API_BASE_URL = "http://www.brain-map.org";
     /**
      * /aba/api/gene/[geneSymbol].xml";
      */
-    public static final String GET_GENE_URL = "/aba/api/gene/@.xml";
+    String GET_GENE_URL = "/aba/api/gene/@.xml";
     /**
      * /aba/api/imageseries/[imageSeriesId].xml
      */
-    public static final String GET_IMAGESERIES_URL = "/aba/api/imageseries/@.xml";
+    String GET_IMAGESERIES_URL = "/aba/api/imageseries/@.xml";
     /**
      * /aba/api/neuroblast/[structure]/[imageseriesid].xml
      */
-    public static final String GET_NEUROBLAST_URL = "/aba/api/neuroblast/@/@.xml";
+    String GET_NEUROBLAST_URL = "/aba/api/neuroblast/@/@.xml";
     /**
      * /aba/api/neuroblast/[structure]/[imageseriesid]/[Sagittal | Coronal].xml
      */
-    public static final String GET_NEUROBLAST_PLANE_URL = "/aba/api/neuroblast/@/@/@.xml";
+    String GET_NEUROBLAST_PLANE_URL = "/aba/api/neuroblast/@/@/@.xml";
     /**
      * /aba/api/expression/[imageSeriesId].sva
      */
-    public static final String GET_EXPRESSION_VOLUME_URL = "/aba/api/expression/@.sva";
+    String GET_EXPRESSION_VOLUME_URL = "/aba/api/expression/@.sva";
     /**
      * /aba/api/expression/imageseries/[imageSeriesId].xml
      */
-    public static final String GET_EXPRESSION_INFO_URL = "/aba/api/expression/imageseries/@.xml";
+    String GET_EXPRESSION_INFO_URL = "/aba/api/expression/imageseries/@.xml";
     /**
      * /aba/api/ara/[Sagittal | Coronal].xml
      */
-    public static final String GET_ATLAS_INFO_URL = "/aba/api/ara/@.xml";
+    String GET_ATLAS_INFO_URL = "/aba/api/ara/@.xml";
     /**
      * /aba/api/atlas/map/[imageseriesid].map
      */
-    public static final String GET_ATLAS_IMAGE_MAP_URL = "/aba/api/atlas/map/@.map";
+    String GET_ATLAS_IMAGE_MAP_URL = "/aba/api/atlas/map/@.map";
     /**
      * /aba/api/image/info?path=[the actual path to the image, as recovered from the imageSeries.xml]
      */
-    public static final String GET_IMAGE_INFO_BYPATH_URL = "/aba/api/image/info?path=@";
+    String GET_IMAGE_INFO_BYPATH_URL = "/aba/api/image/info?path=@";
     /**
      * /aba/api/image/info/[imageId].xml
      */
-    public static final String GET_IMAGE_INFO_BYID_URL = "/aba/api/image/info/@.xml";
+    String GET_IMAGE_INFO_BYID_URL = "/aba/api/image/info/@.xml";
     /**
-     * /aba/api/image?zoom=[image tier; usually 0-6, or -1 for highest tier]&path=[actual path, as above]
+     * /aba/api/image?zoom=[image tier; usually 0-6, or -1 for highest tier]&amp;path=[actual path, as above]
      */
-    public static final String GET_IMAGE_URL = "/aba/api/image?mime=@&zoom=@&path=@";
+    String GET_IMAGE_URL = "/aba/api/image?mime=@&zoom=@&path=@";
     /**
-     * /aba/api/image?zoom=[tier]&top=[unscaled pixel top]&left=[unscaled pixel left]&width=[actual pixel
-     * width]&height=[actual pixel height]&path=[as above]
+     * /aba/api/image?zoom=[tier]&amp;top=[unscaled pixel top]&amp;left=[unscaled pixel left]&amp;width=[actual pixel
+     * width]&amp;height=[actual pixel height]&amp;path=[as above]
      */
-    public static final String GET_IMAGE_ROI_URL = "/aba/api/image?mime=@&zoom=@&top=@&left=@&width=@&height=@&path=@";
+    String GET_IMAGE_ROI_URL = "/aba/api/image?mime=@&zoom=@&top=@&left=@&width=@&height=@&path=@";
     /**
-     * /aba/api/gene/search?term=[some text, which will be used in a contains query for symbol, name & aliases]
+     * /aba/api/gene/search?term=[some text, which will be used in a contains query for symbol, name &amp; aliases]
      */
-    public static final String SEARCH_GENE_URL = "/aba/api/gene/search?term=@";
+    String SEARCH_GENE_URL = "/aba/api/gene/search?term=@";
     /**
      * For showing details about gene information on the allen brain atlas web site
      */
-    public static final String HTML_GENE_DETAILS_URL = "http://mouse.brain-map.org/brain/@.html?ispopup=1";
+    String HTML_GENE_DETAILS_URL = "http://mouse.brain-map.org/brain/@.html?ispopup=1";
     /**
      * requesting an ROI with MIME_IMAGE from a browser will let the image be shown within the browser; using
      * MIME_APPLICATION will cause the user to prompt to download.
      */
-    public static final Integer MIME_IMAGE = 2;
-    public static final Integer MIME_APPLICATION = 1;
+    Integer MIME_IMAGE = 2;
+    Integer MIME_APPLICATION = 1;
 
     /**
-     * Returns a document describing the given ImageSeriesId
-     * 
-     * @param imageseriesId
-     * @return
+     * @param imageseriesId image series ID
+     * @return a document describing the given ImageSeriesId
      */
-    public abstract Document getAtlasImageMap( Integer imageseriesId );
+    Document getAtlasImageMap( Integer imageseriesId );
 
     /**
-     * Finds the associated immage map for the given series id and writes it to the given output stream
-     * 
-     * @param imageseriesid
-     * @param out
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
+     * @param imageseriesid image series id
+     * @param out           output stream
+     * @return the associated immage map for the given series id and writes it to the given output stream
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public abstract boolean getAtlasImageMap( Integer imageseriesid, OutputStream out ) throws MalformedURLException,
-            IOException;
+    boolean getAtlasImageMap( Integer imageseriesid, OutputStream out ) throws IOException;
 
     /**
-     * Use this method to get information like width, height & number of tiers (zoom levels) available for the given
+     * @param plane plane
+     * @param out   output stream
+     * @return information like width, height &amp; number of tiers (zoom levels) available for the given
      * image.
-     * 
-     * @param plane
-     * @param out
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public abstract boolean getAtlasInfo( String plane, OutputStream out ) throws MalformedURLException, IOException;
+    boolean getAtlasInfo( String plane, OutputStream out ) throws IOException;
+
+    String getCacheDir();
+
+    void setCacheDir( String s );
 
     /**
-     * Gets the caching directory
-     * 
-     * @return
+     * @return Is caching on?
      */
-    public abstract String getCacheDir();
+    boolean getCaching();
 
     /**
-     * Is caching on?
-     * 
-     * @return
+     * @param v Turn caching on or off
      */
-    public abstract boolean getCaching();
+    void setCaching( boolean v );
 
     /**
-     * return std error stream
-     * 
-     * @return
+     * @return return std error stream
      */
-    public abstract PrintStream getErrOut();
+    PrintStream getErrOut();
 
     /**
-     * @param imageseriesId
-     * @param out
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
+     * @param out set std error stream
      */
-    public abstract boolean getExpressionInfo( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
-            IOException;
+    void setErrOut( PrintStream out );
+
+    boolean getExpressionInfo( Integer imageseriesId, OutputStream out ) throws IOException;
 
     /**
      * Each of these data files represent the volume of space occupied by a single mouse brain. The volume space is
@@ -170,37 +155,35 @@ public interface AllenBrainAtlasService {
      * gaps to produce an expression value for each voxel that corresponds to brain volume. For more information about
      * how expression is mapped to the atlas, see the Informatics Data Processing white paper. The ImageSeriesID
      * parameter is an integer; find these as part of the return document from the Genes method.
-     * 
-     * @param imageseriesId
-     * @param out
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
+     *
+     * @param imageseriesId image series id
+     * @param out           output stream
+     * @return success
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public abstract boolean getExpressionVolume( Integer imageseriesId, OutputStream out )
-            throws MalformedURLException, IOException;
+    boolean getExpressionVolume( Integer imageseriesId, OutputStream out ) throws IOException;
 
     /**
      * Returns AbaGene object for a gene symbol. If it fails to find a gene using the given string it tries the first
      * letter capitalized string.
-     * 
-     * @param givenGene
+     *
+     * @param givenGene given gene
      * @return AbaGene
-     * @throws IOException
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public abstract AbaGene getGene( String givenGene ) throws IOException;
+    AbaGene getGene( String givenGene ) throws IOException;
 
     /**
      * Given a valid official symbol for a gene (case sensitive) returns an allen brain atals gene details URL
-     * 
-     * @param gene
-     * @return
+     *
+     * @param gene gene symbol
+     * @return an allen brain atlas gene details URL
      */
-    public abstract String getGeneUrl( String gene );
+    String getGeneUrl( String gene );
 
     /**
      * Not all the parameters are required. The simplest url would look like this:
-     * http://www.brain-map.org/aba/api/image?zoom=[zoom]&path=[path]. The different options available are: path
+     * http://www.brain-map.org/aba/api/image?zoom=[zoom]&amp;path=[path]. The different options available are: path
      * Required. The path to the desired image file. The image file path is available as part of the imageSeries XML
      * returned by the ImageSeries API method. The XPath /image-series/images/image/downloadImagePath will return the
      * paths for all of the images in a given image series. zoom Required. The level of resolution desired. The lowest
@@ -218,100 +201,62 @@ public interface AllenBrainAtlasService {
      * regardless of the tier requested. width The actual width in pixels of the desired image. height The actual height
      * in pixels of the desired image. Any malformed URL or other failure in the image fetching process results in an
      * HTTP response code of 500. Example http://www.brain-
-     * map.org/aba/api/image?zoom=5&top=4000&left=8000&width=300&height=30 0&mime=2&path=/production11/Guk1_04-
+     * map.org/aba/api/image?zoom=5&amp;top=4000&amp;left=8000&amp;width=300&amp;height=30 0&amp;mime=2&amp;path=/production11/Guk1_04-
      * 0874_25411/zoomify/primary/0207030123/Guk1_70_0207030123_A.aff
-     * 
-     * @param imagePath
-     * @param zoom
-     * @param top
-     * @param left
-     * @param width
-     * @param height
-     * @param mimeType
-     * @param out
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
+     *
+     * @param imagePath image path
+     * @param zoom      zoom
+     * @param top       top
+     * @param left      left
+     * @param width     width
+     * @param height    height
+     * @param mimeType  mime type
+     * @param out       output stream
+     * @return success
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public abstract boolean getImageROI( String imagePath, Integer zoom, Integer top, Integer left, Integer width,
-            Integer height, Integer mimeType, OutputStream out ) throws MalformedURLException, IOException;
+    boolean getImageROI( String imagePath, Integer zoom, Integer top, Integer left, Integer width, Integer height,
+            Integer mimeType, OutputStream out ) throws IOException;
 
     /**
      * ImageSeriesID is an integer; find these as part of the return document from the Genes method.
-     * 
-     * @param imageseriesId
-     * @return
+     *
+     * @param imageseriesId image series id
+     * @return collection of images
      */
-    public abstract Collection<Image> getImageseries( Integer imageseriesId );
+    Collection<Image> getImageseries( Integer imageseriesId );
 
     /**
      * Returns a collection of images from all the imageSeries given (1 imageSeries can have many images)
-     * 
-     * @param imageSeries
-     * @return
+     *
+     * @param imageSeries image series
+     * @return collection of images
      */
-    public abstract Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries );
+    Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries );
 
     /**
-     * REturns the info logging stream
-     * 
-     * @return
+     * @return the info logging stream
      */
-    public abstract PrintStream getInfoOut();
+    PrintStream getInfoOut();
+
+    void setInfoOut( PrintStream out );
 
     /**
      * Given a Gene, returns all the image series that contain saggital images for the given gene
-     * 
-     * @param gene
-     * @return
-     * @throws IOException
+     *
+     * @param gene gene to look for
+     * @return all the image series that contain saggital images for the given gene
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public abstract Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException;
+    Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException;
 
     /**
-     * Is verbose logging on?
-     * 
-     * @return
+     * @return Is verbose logging on?
      */
-    public abstract boolean getVerbose();
+    boolean getVerbose();
 
-    /**
-     * @param searchTerm
-     * @param out
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
-     */
-    public abstract boolean searchGenes( String searchTerm, OutputStream out ) throws MalformedURLException,
-            IOException;
+    void setVerbose( boolean v );
 
-    /**
-     * Sets the caching directory
-     * 
-     * @param s
-     */
-    public abstract void setCacheDir( String s );
-
-    /**
-     * Turn caching on or off
-     * 
-     * @param v
-     */
-    public abstract void setCaching( boolean v );
-
-    /**
-     * @param out
-     */
-    public abstract void setErrOut( PrintStream out );
-
-    /**
-     * @param out
-     */
-    public abstract void setInfoOut( PrintStream out );
-
-    /**
-     * @param v
-     */
-    public abstract void setVerbose( boolean v );
+    boolean searchGenes( String searchTerm, OutputStream out ) throws IOException;
 
 }

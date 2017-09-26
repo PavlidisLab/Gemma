@@ -154,10 +154,6 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
             return new ExpressionAnalysisResultSet();
         }
 
-        /**
-         * @return new instance of {@link ExpressionAnalysisResultSet}, taking all possible properties (except the
-         * identifier(s))as arguments.
-         */
         public static ExpressionAnalysisResultSet newInstance( Collection<ExperimentalFactor> experimentalFactors,
                 Integer numberOfProbesTested, java.lang.Integer numberOfGenesTested, FactorValue baselineGroup,
                 Collection<DifferentialExpressionAnalysisResult> results, DifferentialExpressionAnalysis analysis,

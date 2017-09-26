@@ -34,31 +34,18 @@ import java.util.HashSet;
 public class DifferentialExpressionValueObject {
 
     private ContrastsValueObject contrasts;
-
     private Double corrP;
-
     private Direction direction;
-
     private Collection<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
-
     private ExpressionExperimentValueObject expressionExperiment;
-
     private Boolean fisherContribution = false;
-
     private GeneValueObject gene;
-
     private Long id;
-
     private Boolean metThreshold = false;
-
     private Double p;
-
     private String probe;
-
     private Long probeId;
-
     private Long resultSetId = null;
-
     private String sortKey;
 
     public DifferentialExpressionValueObject( DifferentialExpressionAnalysisResult o ) {
@@ -84,10 +71,13 @@ public class DifferentialExpressionValueObject {
     /**
      * @param cid                 id of the contrast
      * @param secondFactorValueId null unless this is an interaction
+     * @param pvalue              the p value
+     * @param factorValueId       factor value id
+     * @param logFoldChange       the fold change
      */
-    public void addContrast( Long cid, Long factorValueId, Double pvalue, Double logFoldchange,
+    public void addContrast( Long cid, Long factorValueId, Double pvalue, Double logFoldChange,
             Long secondFactorValueId ) {
-        this.contrasts.addContrast( cid, factorValueId, logFoldchange, pvalue, secondFactorValueId );
+        this.contrasts.addContrast( cid, factorValueId, logFoldChange, pvalue, secondFactorValueId );
     }
 
     @Override

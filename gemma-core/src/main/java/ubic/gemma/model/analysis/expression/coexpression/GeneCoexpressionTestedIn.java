@@ -79,6 +79,8 @@ public class GeneCoexpressionTestedIn extends IdArray {
 
     /**
      * Used for serializing/marshalling only. Do not set this value directly otherwise.
+     *
+     * @param numDatasetsTestedIn the new value
      */
     public void setNumDatasetsTestedIn( int numDatasetsTestedIn ) {
         this.numDatasetsTestedIn = numDatasetsTestedIn;

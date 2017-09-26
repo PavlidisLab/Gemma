@@ -166,7 +166,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             ad = this.arrayDesignService.thaw( ad );
 
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-                Gene g = this.getTestPeristentGene();
+                Gene g = this.getTestPersistentGene();
                 BlatAssociation blata = BlatAssociation.Factory.newInstance();
                 blata.setGeneProduct( g.getProducts().iterator().next() );
                 BlatResult br = BlatResult.Factory.newInstance();

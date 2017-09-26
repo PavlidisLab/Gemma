@@ -24,8 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -34,7 +32,6 @@ import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -50,8 +47,11 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -62,6 +62,7 @@ import java.util.*;
  *
  * @author pavlidis
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 @Component
 public class PersistentDummyObjectHelper {
 
@@ -122,7 +123,9 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * Note that if you want a 'preferred' qt or other special properites you have to set it yourself.
+     * Note that if you want a 'preferred' qt or other special properties you have to set it yourself.
+     *
+     * @return QT
      */
     public static QuantitationType getTestNonPersistentQuantitationType() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
@@ -142,7 +145,9 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * To allow the persister helper to manaage
+     * To allow the persister helper to manage
+     *
+     * @return taxon
      */
     private static Taxon getTestNonPersistentTaxon() {
 
@@ -180,7 +185,8 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * Non-persistent
+     * @param allFactorValues all factor values
+     * @return Non-persistent ED
      */
     public ExperimentalDesign getExperimentalDesign( Collection<FactorValue> allFactorValues ) {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
@@ -206,6 +212,8 @@ public class PersistentDummyObjectHelper {
     /**
      * Override the number of elements made in collections. By default this is quite small, so you can increase it. But
      * please call 'reset' afterwards.
+     *
+     * @param testElementCollectionSize new size
      */
     public void setTestElementCollectionSize( int testElementCollectionSize ) {
         this.testElementCollectionSize = testElementCollectionSize;
@@ -213,15 +221,13 @@ public class PersistentDummyObjectHelper {
 
     /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations.
+     *
+     * @return EE
      */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies() {
         return this.getTestExpressionExperimentWithAllDependencies( true );
     }
 
-    /**
-     * @return another experiment using the same platform (assumed to be generated using
-     *         getTestExpressionExperimentWithAllDependencies(true)
-     */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( ExpressionExperiment prototype ) {
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -252,7 +258,7 @@ public class PersistentDummyObjectHelper {
 
         Collection<QuantitationType> quantitationTypes = addQuantitationTypes( new HashSet<QuantitationType>() );
 
-        prototype = eeService.thaw( prototype );
+        eeService.thaw( prototype );
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = getBioAssays( bioMaterials, ad );
@@ -278,9 +284,10 @@ public class PersistentDummyObjectHelper {
     /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations
      *
-     * @param dosequence Should the array design get all the sequence information filled in? (true = slower)
+     * @param doSequence Should the array design get all the sequence information filled in? (true = slower)
+     * @return EE
      */
-    public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( boolean dosequence ) {
+    public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( boolean doSequence ) {
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
@@ -299,8 +306,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawDataFile( file );
 
-        ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
-        ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
+        ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, doSequence );
+        ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, doSequence );
         Collection<FactorValue> allFactorValues = new HashSet<>();
 
         ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
@@ -367,12 +374,12 @@ public class PersistentDummyObjectHelper {
      * created, they are each associated with a single generated Reporter.
      *
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
-     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
-     * @param dosequence If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
+     * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
+     * @param doSequence            If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
      * @return ArrayDesign
      */
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
-            boolean dosequence ) {
+            boolean doSequence ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "arrayDesign_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
@@ -396,7 +403,7 @@ public class PersistentDummyObjectHelper {
             compositeSequence.setArrayDesign( ad );
             ad.getCompositeSequences().add( compositeSequence );
 
-            if ( dosequence ) {
+            if ( doSequence ) {
                 BioSequence bioSequence = getTestPersistentBioSequence();
                 compositeSequence.setBiologicalCharacteristic( bioSequence );
                 bioSequence.setBioSequence2GeneProduct( this.getTestPersistentBioSequence2GeneProducts( bioSequence ) );
@@ -416,6 +423,7 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
+     * @param arrayDesign AD
      * @return A lighter-weight EE, with no data, and the ADs have no sequences.
      */
     public ExpressionExperiment getTestPersistentBasicExpressionExperiment( ArrayDesign arrayDesign ) {
@@ -485,6 +493,10 @@ public class PersistentDummyObjectHelper {
 
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+     *
+     * @param ad AD
+     * @param bm BM
+     * @return BA
      */
     public BioAssay getTestPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
         if ( ad == null || bm == null ) {
@@ -517,9 +529,9 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
+     * @param bioSequence bio sequence
      * @return Collection<BioSequence2GeneProduct>
      */
-    @SuppressWarnings("unchecked")
     public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<>();
@@ -531,6 +543,7 @@ public class PersistentDummyObjectHelper {
         b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence, null ) );
         b2gCol.add( b2g );
 
+        //noinspection unchecked
         return ( Collection<BioSequence2GeneProduct> ) persisterHelper.persist( b2gCol );
     }
 
@@ -561,6 +574,8 @@ public class PersistentDummyObjectHelper {
 
     /**
      * Convenience method to provide a Contact that can be used to fill non-nullable associations in test objects.
+     *
+     * @return contact
      */
     public Contact getTestPersistentContact() {
         Contact c = Contact.Factory.newInstance();
@@ -573,6 +588,9 @@ public class PersistentDummyObjectHelper {
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession is set to a random string
+     *
+     * @param ed ED
+     * @return db entry
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( ExternalDatabase ed ) {
         return this.getTestPersistentDatabaseEntry( RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ), ed );
@@ -581,6 +599,10 @@ public class PersistentDummyObjectHelper {
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
+     *
+     * @param ed        ED
+     * @param accession accession
+     * @return db entry
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, ExternalDatabase ed ) {
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
@@ -603,6 +625,8 @@ public class PersistentDummyObjectHelper {
 
     /**
      * @param databaseName GEO or PubMed (others could be supported)
+     * @param accession    accession
+     * @return db entry
      */
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, String databaseName ) {
         switch ( databaseName ) {
@@ -621,6 +645,8 @@ public class PersistentDummyObjectHelper {
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
      * objects. This implementation does NOT fill in associations of the created object.
+     *
+     * @return EE
      */
     public ExpressionExperiment getTestPersistentExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -632,6 +658,9 @@ public class PersistentDummyObjectHelper {
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
      * objects. This implementation does NOT fill in associations of the created object.
+     *
+     * @param bioAssays bio assays
+     * @return EE
      */
     public ExpressionExperiment getTestPersistentExpressionExperiment( Collection<BioAssay> bioAssays ) {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -647,6 +676,7 @@ public class PersistentDummyObjectHelper {
      * persistent BioMaterials and BioAssays so that database taxon lookups for this experiment will work.
      *
      * @param taxon the experiment will have this taxon
+     * @return EE
      */
     public ExpressionExperiment getTestPersistentExpressionExperiment( Taxon taxon ) {
         BioAssay ba;
@@ -693,6 +723,8 @@ public class PersistentDummyObjectHelper {
     /**
      * Convenience method to provide a QuantitationType that can be used to fill non-nullable associations in test
      * objects.
+     *
+     * @return QT
      */
     public QuantitationType getTestPersistentQuantitationType() {
         QuantitationType qt = getTestNonPersistentQuantitationType();
@@ -810,7 +842,11 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * These are non-persistent
+     * @param bioAssays         BAs
+     * @param ad                AD
+     * @param ee                EE
+     * @param quantitationTypes QTs
+     * @return These are non-persistent
      */
     private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
             Collection<QuantitationType> quantitationTypes, List<BioAssay> bioAssays, ArrayDesign ad ) {
@@ -886,7 +922,7 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * Slightly misleading, associations are persistent.
+     * @return Slightly misleading, associations are persistent.
      */
     private BioMaterial getTestNonPersistentBioMaterial() {
         BioMaterial bm = BioMaterial.Factory.newInstance();
@@ -901,7 +937,7 @@ public class PersistentDummyObjectHelper {
     }
 
     /**
-     * Slightly misleading, associations are persistent.
+     * @return Slightly misleading, associations are persistent.
      */
     private BioMaterial getTestNonPersistentBioMaterial( Taxon tax ) {
         BioMaterial bm = BioMaterial.Factory.newInstance();

@@ -143,6 +143,13 @@ public abstract class ContrastResult implements java.io.Serializable {
         /**
          * Constructs a new instance of {@link ContrastResult}, taking all possible properties (except the
          * identifier(s))as arguments.
+         *
+         * @param coefficient       value to set on the created instance.
+         * @param factorValue       value to set on the created instance.
+         * @param logFoldChange     value to set on the created instance.
+         * @param pvalue            value to set on the created instance.
+         * @param secondFactorValue value to set on the created instance.
+         * @param tstat             value to set on the created instance.
          */
         public static ContrastResult newInstance( Double pvalue, Double tstat, Double coefficient, Double logFoldChange,
                 FactorValue factorValue, FactorValue secondFactorValue ) {

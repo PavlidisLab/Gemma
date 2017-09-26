@@ -131,12 +131,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
     }
 
-    /**
-     * Find all phenotypes associated to a pubmedID
-     *
-     * @param evidenceId optional, used if we are updating to know current annotation
-     * @return BibliographicReferenceValueObject
-     */
     @Override
     @Transactional(readOnly = true)
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId ) {
@@ -185,15 +179,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return new BibliographicReferenceValueObject( bibliographicReference );
     }
 
-    /**
-     * Set<String> phenotypesValuesUri ) Given a set of phenotypes returns the genes that have <em>all</em> those
-     * phenotypes or children phenotypes
-     *
-     * @param phenotypeValueUris the roots phenotype of the query
-     * @param taxon              the name of the taxon (optinal)
-     * @return A collection of the genes found
-     */
-
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findCandidateGenes( Collection<String> phenotypeValueUris,
@@ -216,13 +201,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return filterGenesWithPhenotypes( geneEvidenceValueObjects, phenotypesWithChildren );
     }
 
-    /**
-     * Given a set of phenotypes returns the genes that have <em>all</em> those phenotypes (children are okay)
-     *
-     * @param phenotypesValuesUri the roots phenotype of the query
-     * @param evidenceFilter      can specify a taxon and to show modifiable evidence (optional)
-     * @return A collection of the genes found
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
@@ -302,15 +280,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     }
 
-    /**
-     * Return evidence satisfying the specified filters. If the current user has not logged in, empty container is
-     * returned.
-     *
-     * @param taxonId  taxon id
-     * @param limit    number of evidence value objects to return
-     * @param userName user name
-     * @return evidence satisfying the specified filters
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId,
@@ -343,12 +312,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return evidenceValueObjects;
     }
 
-    /**
-     * Return all evidence for a specific gene id
-     *
-     * @param geneId The Evidence id
-     * @return The Gene we are interested in
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneId( Long geneId ) {
@@ -359,14 +322,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return this.convert2ValueObjects( phenotypeAssociations );
     }
 
-    /**
-     * Return all evidence for a specific gene id with evidence flagged, indicating more information
-     *
-     * @param geneId              The Evidence id
-     * @param phenotypesValuesUri the chosen phenotypes
-     * @param evidenceFilter      can specify a taxon and to show modifiable evidence (optional)
-     * @return The Gene we are interested in
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneId( Long geneId,
@@ -398,12 +353,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return evidenceValueObjects;
     }
 
-    /**
-     * Return all evidence for a specific gene NCBI
-     *
-     * @param geneNCBI The Evidence id
-     * @return The Gene we are interested in
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneNCBI( Integer geneNCBI ) {
@@ -414,32 +363,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return this.convert2ValueObjects( phenotypeAssociations );
     }
 
-    /**
-     * return the list of the owners that have evidence in the system
-     */
     @Override
     public Collection<String> findEvidenceOwners() {
         return this.phenoAssocService.findEvidenceOwners();
     }
 
-    /**
-     * Find mged category term that were used in the database, used to annotated Experiments
-     *
-     * @return Collection<CharacteristicValueObject> the terms found
-     */
     @Override
     public Collection<CharacteristicValueObject> findExperimentCategory() {
         return this.phenoAssocService.findEvidenceCategoryTerms();
     }
 
-    /**
-     * For a given search string look in the database and Ontology for matches
-     *
-     * @param givenQueryString the search query
-     * @param categoryUri      the mged category (can be null)
-     * @param taxonId          the taxon id (can be null)
-     * @return Collection<CharacteristicValueObject> the terms found
-     */
     @Override
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
@@ -448,11 +381,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, true );
     }
 
-    /**
-     * Gets all External Databases that are used with evidence
-     *
-     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
-     */
     @Override
     public Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence() {
 
@@ -482,12 +410,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return exDatabasesAsList;
     }
 
-    /**
-     * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
-     *
-     * @param taxonId, can be null to not constrain by taxon
-     * @return Collection<GeneEvidenceValueObject> list of Genes
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
@@ -534,12 +456,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return geneValueObjectsFilter;
     }
 
-    /**
-     * Load an evidence
-     *
-     * @param id The Evidence database id
-     * @return evidence, or null if not found (why not throw an exception?)
-     */
     @Override
     @Transactional(readOnly = true)
     public EvidenceValueObject<? extends PhenotypeAssociation> load( Long id ) {
@@ -555,11 +471,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return convert2ValueObjects( phenotypeAssociation );
     }
 
-    /**
-     * load all the valueUri and value of phenotype present in Neurocarta
-     *
-     * @return Collection<String> the valueUri of the phenotypes
-     */
     @Override
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
         return this.phenoAssocService.loadAllNeurocartaPhenotypes();
@@ -624,13 +535,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return this.convert2ValueObjects( phenotypeAssociations );
     }
 
-    /**
-     * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
-     * find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
-     *
-     * @param geneDifferentialExpressionMetaAnalysisId id of the GeneDifferentialExpressionMetaAnalysis
-     * @return DifferentialExpressionEvidence if an differentialExpressionEvidence exists for that id returns it
-     */
     @Override
     public DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId ) {
@@ -646,9 +550,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return null;
     }
 
-    /**
-     * find all evidence that doesn't come from an external source
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithoutExternalDatabaseName() {
@@ -658,11 +559,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return this.convert2ValueObjects( phenotypeAssociations );
     }
 
-    /**
-     * find statistics on evidence used in neurocarta
-     *
-     * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
-     */
     @Override
     public Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics() {
 
@@ -681,13 +577,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return externalDatabaseStatisticsValueObjects;
     }
 
-    /**
-     * creates the DifferentialExpressionEvidences using an DiffExpressionMetaAnalysis
-     *
-     * @param geneDifferentialExpressionMetaAnalysisId id of the DiffExpressionMetaAnalysis
-     * @param phenotypes                               phenotypes chosen
-     * @return ValidateEvidenceValueObject flags of information to show user messages
-     */
     @Override
     public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, SortedSet<CharacteristicValueObject> phenotypes,
@@ -734,12 +623,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return null;
     }
 
-    /**
-     * Links an Evidence to a Gene
-     *
-     * @param evidence The evidence
-     * @return Status of the operation
-     */
     @Override
     @Transactional
     public ValidateEvidenceValueObject makeEvidence( EvidenceValueObject<? extends PhenotypeAssociation> evidence ) {
@@ -793,11 +676,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    /**
-     * Removes an evidence
-     *
-     * @param id The Evidence database id
-     */
     @Override
     @Transactional
     public ValidateEvidenceValueObject remove( Long id ) {
@@ -821,12 +699,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    /**
-     * Removes all the evidence that came from a specific metaAnalysis
-     *
-     * @param geneDifferentialExpressionMetaAnalysisId the geneDifferentialExpressionMetaAnalysis Id
-     * @return ValidateEvidenceValueObject flags of information to show user messages
-     */
     @Override
     public ValidateEvidenceValueObject removeAllEvidenceFromMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId ) {
@@ -850,13 +722,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    /**
-     * For a given search string find all Ontology terms related, and then count their gene occurrence by taxon,
-     * including ontology children terms
-     *
-     * @param searchQuery the query search that was type by the user
-     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurrence
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery ) {
@@ -884,13 +749,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return results;
     }
 
-    /**
-     * Giving a phenotype searchQuery, returns a selection choice to the user
-     *
-     * @param searchQuery query typed by the user
-     * @param geneId      the id of the chosen gene
-     * @return Collection<CharacteristicValueObject> list of choices returned
-     */
     @Override
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) {
         StopWatch timer = new StopWatch();
@@ -1032,11 +890,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return orderedPhenotypesFromOntology;
     }
 
-    /**
-     * Modify an existing evidence
-     *
-     * @return Status of the operation
-     */
     @Override
     @Transactional
     public ValidateEvidenceValueObject update(
@@ -1102,12 +955,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    /**
-     * Validate an Evidence before we create it
-     *
-     * @param evidence The evidence
-     * @return ValidateEvidenceValueObject flags of information to show user messages
-     */
     @Override
     @Transactional(readOnly = true)
     public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject<PhenotypeAssociation> evidence ) {
@@ -1136,10 +983,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return validateEvidenceValueObject;
     }
 
-    /**
-     * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
-     * by Quartz
-     */
     @Override
     @Transactional(readOnly = true)
     public void writeAllEvidenceToFile() throws IOException {
@@ -1443,6 +1286,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /**
      * Recursively take the trees made and put them in the exact way the client wants them
+     *
+     * @param parent                        parent
+     * @param simpleTreeValueObjects        simple tree value object
+     * @param treeCharacteristicValueObject tree characteristic value object
      */
     private void convertToFlatTree( Collection<SimpleTreeValueObject> simpleTreeValueObjects,
             TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
@@ -1467,7 +1314,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Changing the root names and the order to present them
+     * @param ontologyTrees ontology trees
+     * @return Changing the root names and the order to present them
      */
     private Collection<TreeCharacteristicValueObject> customTreeFeatures(
             Collection<TreeCharacteristicValueObject> ontologyTrees ) {
@@ -1490,7 +1338,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Populates the ValidateEvidenceValueObject with the correct flags if necessary
+     * @param evidence evidence
+     * @param pubmed   pub med
+     * @return Populates the ValidateEvidenceValueObject with the correct flags if necessary
      */
     private ValidateEvidenceValueObject determineSameGeneAndPhenotypeAnnotated(
             EvidenceValueObject<PhenotypeAssociation> evidence, String pubmed ) {
@@ -1602,7 +1452,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Checks to see if the evidence is already in the database
+     * @param evidence the evidence
+     * @return Checks to see if the evidence is already in the database
      */
     private EvidenceValueObject evidenceAlreadyInDatabase(
             EvidenceValueObject<? extends PhenotypeAssociation> evidence ) {
@@ -1629,9 +1480,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return null;
     }
 
-    /**
-     * Filter a set of genes if who have the root phenotype or a children of a root phenotype
-     */
     private Collection<GeneEvidenceValueObject> filterGenesWithPhenotypes(
             Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
             Map<String, Set<String>> phenotypesWithChildren ) {
@@ -1672,9 +1520,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return genesVO;
     }
 
-    /**
-     * filter evidence by owned by user or shared write access
-     */
     private Collection<? extends PhenotypeAssociation> filterPhenotypeAssociationsMyAnnotation(
             Collection<? extends PhenotypeAssociation> phenotypeAssociations ) {
 
@@ -1703,6 +1548,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param withParentTerms         if we want to include the parents terms from the Ontology
      * @param isAdmin,                can see everything
      * @param noElectronicAnnotation, if true don't include evidence code IEA
+     * @param evidenceFilter          evidence filter
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
     private Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree( boolean withParentTerms,
@@ -1857,7 +1703,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * add all the keySet together and return a set representing all children for all valueUri given (collapse the map
+     * @param phenotypesWithChildren phenotypes
+     * @return add all the keySet together and return a set representing all children for all valueUri given (collapse the map
      * down to a single set)
      */
     private Set<String> findAllPossibleChildren( Map<String, Set<String>> phenotypesWithChildren ) {
@@ -1876,7 +1723,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * present in the database(all children of phenotype) : Map<String(parent phenotype), Set<String>(all children of
      * phenotype)>
      *
-     * @param usedPhenotypes the URIs of all phenotypes actually used in the database.
+     * @param usedPhenotypes       the URIs of all phenotypes actually used in the database.
+     * @param phenotypesValuesUris URIs
      * @return map of terms to their children. The term itself is included.
      */
     private Map<String, Set<String>> findChildrenForEachPhenotype( Collection<String> phenotypesValuesUris,
@@ -1919,9 +1767,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return parentPheno;
     }
 
-    /**
-     * Determine permissions for an PhenotypeAssociation
-     */
     private void findEvidencePermissions( PhenotypeAssociation p, EvidenceValueObject evidenceValueObject ) {
 
         Boolean currentUserHasWritePermission = false;
@@ -1945,9 +1790,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * find Homologue-linked Evidence for a gene
-     *
-     * @param geneId Gemma's identifier
+     * @param evidenceFilter evidence filter
+     * @param geneId         Gemma's identifier
+     * @return find Homologue-linked Evidence for a gene
      */
     private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findHomologueEvidence( Long geneId,
             EvidenceFilter evidenceFilter ) {
@@ -1989,6 +1834,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /**
      * Recursively build the full trees of the Ontology with the given branches
+     *
+     * @param finalTreesWithRoots  final trees with roots
+     * @param phenotypeFoundInTree phenotypes found in tree
+     * @param tc                   tree characteristic value object
      */
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
@@ -2035,7 +1884,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * For a given Ontology Term, count the occurence of the term + children in the database
+     * @param taxon                      taxon
+     * @param ontologyTermsFound         ontology terms found
+     * @param phenotypesFoundAndChildren phenotypes found and their children
+     * @return For a given Ontology Term, count the occurence of the term + children in the database
      */
     private Collection<CharacteristicValueObject> findPhenotypeCount( Collection<OntologyTerm> ontologyTermsFound,
             Taxon taxon, Set<String> phenotypesFoundAndChildren ) {
@@ -2077,7 +1929,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Given a geneId finds all phenotypes for that gene
+     * @param geneId gene id
+     * @return Given a geneId finds all phenotypes for that gene
      */
     private Set<CharacteristicValueObject> findUniquePhenotypesForGeneId( Long geneId ) {
 
@@ -2093,6 +1946,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /**
      * Add flags to Evidence and CharacteristicValueObjects
+     *
+     * @param evidencesVO         evidence value objects
+     * @param phenotypesValuesUri phenotype value URIs
+     * @param usedPhenotypes      used phenotypes
      */
     private void flagEvidence( Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidencesVO,
             Set<String> phenotypesValuesUri, Collection<String> usedPhenotypes ) {
@@ -2134,6 +1991,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /**
      * Take care of populating new values for the phenotypes in an update
+     *
+     * @param phenotypeAssociation phenotype associations
+     * @param updatedPhenotypes    updated phenotypes
      */
     private void populateModifiedPhenotypes( Set<CharacteristicValueObject> updatedPhenotypes,
             PhenotypeAssociation phenotypeAssociation ) {
@@ -2191,6 +2051,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * used when we add an evidence and search for phenotype to add, other places too adds a wildcard to the search
      *
+     * @param query query
      * @return the string with an added wildcard to it.
      */
     private String prepareOntologyQuery( String query ) {
@@ -2203,9 +2064,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return newSearchQuery;
     }
 
-    /**
-     * file ErmineJ style DOID --> Gene Sets
-     */
     private void writeErmineJFile( String writeFolder, String disclaimer, Taxon taxon, boolean noElectronicAnnotation )
             throws IOException {
 

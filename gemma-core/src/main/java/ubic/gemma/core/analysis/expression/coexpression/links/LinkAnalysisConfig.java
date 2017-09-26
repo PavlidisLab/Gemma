@@ -188,7 +188,7 @@ public class LinkAnalysisConfig implements Serializable {
     }
 
     /**
-     * Probe degree threshold: Probes with more than this number of links are ignored. If set to <= 0, this setting is
+     * Probe degree threshold: Probes with more than this number of links are ignored. If set to &lt;= 0, this setting is
      * ignored.
      *
      * @param probeDegreeThreshold the probeDegreeThreshold to set

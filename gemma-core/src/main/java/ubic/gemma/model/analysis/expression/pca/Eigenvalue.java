@@ -18,48 +18,23 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
-/**
- * 
- */
 public abstract class Eigenvalue implements java.io.Serializable {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.pca.Eigenvalue}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.pca.Eigenvalue}.
-         */
-        public static ubic.gemma.model.analysis.expression.pca.Eigenvalue newInstance() {
-            return new ubic.gemma.model.analysis.expression.pca.EigenvalueImpl();
-        }
-
-    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -6675153115416719020L;
     private Integer componentNumber;
-
     private Double value;
-
     private Double varianceFraction;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public Eigenvalue() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an Eigenvalue instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -75,37 +50,38 @@ public abstract class Eigenvalue implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public Integer getComponentNumber() {
         return this.componentNumber;
     }
 
-    /**
-     * 
-     */
+    public void setComponentNumber( Integer componentNumber ) {
+        this.componentNumber = componentNumber;
+    }
+
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public Double getValue() {
         return this.value;
     }
 
-    /**
-     * 
-     */
+    public void setValue( Double value ) {
+        this.value = value;
+    }
+
     public Double getVarianceFraction() {
         return this.varianceFraction;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
+    public void setVarianceFraction( Double varianceFraction ) {
+        this.varianceFraction = varianceFraction;
+    }
+
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -114,20 +90,12 @@ public abstract class Eigenvalue implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setComponentNumber( Integer componentNumber ) {
-        this.componentNumber = componentNumber;
-    }
+    public static final class Factory {
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+        public static ubic.gemma.model.analysis.expression.pca.Eigenvalue newInstance() {
+            return new ubic.gemma.model.analysis.expression.pca.EigenvalueImpl();
+        }
 
-    public void setValue( Double value ) {
-        this.value = value;
-    }
-
-    public void setVarianceFraction( Double varianceFraction ) {
-        this.varianceFraction = varianceFraction;
     }
 
 }
