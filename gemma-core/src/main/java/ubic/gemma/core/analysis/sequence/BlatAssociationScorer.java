@@ -18,15 +18,9 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -34,43 +28,46 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * Given a set of BlatAssociations that might be redundant, clean them up and score them.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class BlatAssociationScorer {
 
-    private static Log log = LogFactory.getLog( BlatAssociationScorer.class.getName() );
+    private static final Log log = LogFactory.getLog( BlatAssociationScorer.class.getName() );
 
     /**
      * Compute how much the BLAT alignment with the target gene product is as a fraction of the query sequence length.
      * Assumes that the overlap with a transcript has already been computed.
-     * 
-     * @param blatAssociation
-     * @return
+     *
+     * @param blatAssociation blat assoc
+     * @return double
      */
     public static double computeOverlapFraction( BlatAssociation blatAssociation ) {
-        return ( double ) blatAssociation.getOverlap()
-                / ( double ) blatAssociation.getBlatResult().getQuerySequence().getLength();
+        return ( double ) blatAssociation.getOverlap() / ( double ) blatAssociation.getBlatResult().getQuerySequence()
+                .getLength();
     }
 
     /**
      * From a collection of BlatAssociations from a single BioSequence, reduce redundancy, fill in the specificity and
      * score and pick the one with the best scoring statistics.
-     * <p>
      * This is a little complicated because a single sequence can yield many BlatResults to the same gene and/or gene
      * product. We reduce the results down to a single (best) result for any given gene product. We also score
      * specificity by the gene: if a sequence 'hits' multiple genes, then the specificity of the generated associations
      * will be less than 1.
-     * 
+     *
      * @param blatAssociations for a single sequence.
-     * @param config
+     * @param config           config
      * @return the highest-scoring result (if there are ties this will be a random one). Note that this return value is
-     *         not all that useful because it assumes there is a "clear winner". The passed-in blatAssociations will be
-     *         pruned to remove redundant entries, and will have score information filled in as well. It is intended
-     *         that these 'refined' BlatAssociations will be used in further analysis.
+     * not all that useful because it assumes there is a "clear winner". The passed-in blatAssociations will be
+     * pruned to remove redundant entries, and will have score information filled in as well. It is intended
+     * that these 'refined' BlatAssociations will be used in further analysis.
      * @throws IllegalArgumentException if the blatAssociations are from multiple biosequences.
      */
     public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations,
@@ -130,12 +127,11 @@ public class BlatAssociationScorer {
 
     /**
      * Compute a score we use to quantify the quality of a hit to a GeneProduct.
-     * <p>
      * There are two criteria being considered: the quality of the alignment, and the amount of overlap.
-     * 
+     *
      * @param blatScore A value from 0-1 indicating alignment quality.
-     * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
-     * @return
+     * @param overlap   A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
+     * @return int
      */
     protected static int computeScore( double blatScore, double overlap ) {
         return ( int ) ( 1000 * blatScore * overlap );
@@ -143,20 +139,16 @@ public class BlatAssociationScorer {
 
     /**
      * Compute a score to quantify the specificity of a hit to a Gene (not a GeneProduct!). A value between 0 and 1.
-     * <p>
      * The specificity is estimated as the fraction of the signal we expect to come from a given gene. The amount of
      * signal for each gene is estimated using the score for that gene. The total signal is the sum of scores.
-     * <p>
      * FIXME this assumes a linear relationship between score and hybridization signal, which is unrealistic. Because
      * the scores for our hits are already filtered, this method gives results fairly close to 1/N.
-     * <p>
-     * 
      * FIXME This is not actually used to filter BLAT results (and there's no suggestion we need to). The value gets set
      * into BlatAssociation.specificity but this is never read. We should either use it or lose it.
-     * 
+     *
      * @param scores r of all the genes for the hit in question.
-     * @param score
-     * @return
+     * @param score  score
+     * @return double
      */
     protected static Double computeSpecificity( Collection<Double> scores, double score ) {
         if ( scores.size() == 1 ) {
@@ -173,7 +165,7 @@ public class BlatAssociationScorer {
     }
 
     /**
-     * @param associations
+     * @param associations assocs.
      * @return map of physical locations for the alignments, and which genes are found there.
      */
     private static Map<PhysicalLocation, Collection<Gene>> clusterGenes(
@@ -198,8 +190,8 @@ public class BlatAssociationScorer {
         if ( log.isDebugEnabled() ) {
             for ( PhysicalLocation pl : clusters.keySet() ) {
                 if ( clusters.get( pl ).size() > 1 ) {
-                    log.debug( "Cluster at " + pl + " with " + clusters.get( pl ).size() + " members:\n"
-                            + StringUtils.join( clusters.get( pl ).iterator(), "\n" ) );
+                    log.debug( "Cluster at " + pl + " with " + clusters.get( pl ).size() + " members:\n" + StringUtils
+                            .join( clusters.get( pl ).iterator(), "\n" ) );
                 }
             }
         }
@@ -207,10 +199,6 @@ public class BlatAssociationScorer {
         return clusters;
     }
 
-    /**
-     * @param blatAssociation
-     * @return
-     */
     private static double computeScore( BlatAssociation blatAssociation ) {
         BlatResult br = blatAssociation.getBlatResult();
 
@@ -224,10 +212,6 @@ public class BlatAssociationScorer {
         return score;
     }
 
-    /**
-     * @param blatAssociations
-     * @return
-     */
     private static Map<Gene, Collection<BlatAssociation>> organizeBlatAssociationsByGene(
             Collection<BlatAssociation> blatAssociations ) {
         Map<Gene, Collection<BlatAssociation>> genes = new HashMap<>();
@@ -244,10 +228,9 @@ public class BlatAssociationScorer {
     /**
      * Break results down by gene product, and throw out duplicates (only allow one result per gene product), fills in
      * score and initializes specificity
-     * 
-     * @param blatAssociations
-     * @param geneProducts
-     * @return
+     *
+     * @param blatAssociations blat assocs
+     * @return map
      */
     private static Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
             Collection<BlatAssociation> blatAssociations ) {
@@ -280,10 +263,10 @@ public class BlatAssociationScorer {
     /**
      * Compute scores and find the best one, for each gene product, removing all other hits (so there is just one per
      * gene product
-     * 
-     * @param blatAssociations
-     * @param geneProduct2BlatAssociations
-     * @return
+     *
+     * @param blatAssociations             blat assocs.
+     * @param geneProduct2BlatAssociations gene prods 2 blat assocs
+     * @return blat accoc
      */
     private static BlatAssociation removeExtraHitsPerGeneProduct( Collection<BlatAssociation> blatAssociations,
             Map<GeneProduct, Collection<BlatAssociation>> geneProduct2BlatAssociations ) {
@@ -295,7 +278,8 @@ public class BlatAssociationScorer {
         for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
             Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 
-            if ( geneProductBlatAssociations.isEmpty() ) continue;
+            if ( geneProductBlatAssociations.isEmpty() )
+                continue;
 
             BlatAssociation ba = geneProductBlatAssociations.iterator().next();
 

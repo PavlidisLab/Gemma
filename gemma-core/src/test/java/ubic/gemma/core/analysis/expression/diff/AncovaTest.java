@@ -19,17 +19,8 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -42,22 +33,25 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 /**
  * Tests of ANCOVA: using linear models with mixtures of fixed level and continuous parameters. See
  * test/data/stat-tests/README.txt for R code.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
     private DiffExAnalyzer analyzer;
 
-    /**
+    /*
      * With a continuous covariate only
-     * 
-     * @throws Exception
      */
     @Test
     public void testAncovaContinuousCovariate() throws Exception {
@@ -76,8 +70,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
             FactorValue factorValueC = FactorValue.Factory.newInstance();
             factorValueC.setId( 2000L + i );
 
-            factorValueC.setMeasurement( Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i,
-                    PrimitiveType.DOUBLE ) );
+            factorValueC.setMeasurement(
+                    Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i, PrimitiveType.DOUBLE ) );
 
             factorValueC.setExperimentalFactor( experimentalFactorC );
 
@@ -118,10 +112,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         }
     }
 
-    /**
+    /*
      * With a continuous covariate + two categorical
-     * 
-     * @throws Exception
      */
     @Test
     public void testAncovaCovariate() throws Exception {
@@ -140,8 +132,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
             FactorValue factorValueC = FactorValue.Factory.newInstance();
             factorValueC.setId( 2000L + i );
 
-            factorValueC.setMeasurement( Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i,
-                    PrimitiveType.DOUBLE ) );
+            factorValueC.setMeasurement(
+                    Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i, PrimitiveType.DOUBLE ) );
 
             factorValueC.setExperimentalFactor( experimentalFactorC );
 
@@ -215,10 +207,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         }
     }
 
-    /**
+    /*
      * Two fixed-level parameters, one of which has three levels
-     * 
-     * @throws Exception
      */
     @Test
     public void testAncovaTriLevel() throws Exception {
@@ -277,8 +267,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             log.info( resultSet.getBaselineGroup() );
 
-            assertTrue( resultSet.getBaselineGroup().equals( factorValueA2 )
-                    || resultSet.getBaselineGroup().equals( fcbase ) );
+            assertTrue( resultSet.getBaselineGroup().equals( factorValueA2 ) || resultSet.getBaselineGroup()
+                    .equals( fcbase ) );
 
             ExperimentalFactor f = resultSet.getExperimentalFactors().iterator().next();
 
@@ -305,7 +295,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 stat = contrasts.iterator().next().getTstat();
                 assertNotNull( probe );
-                if ( stat == null ) continue;
+                if ( stat == null )
+                    continue;
 
                 // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
 
@@ -338,10 +329,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
     }
 
-    /**
+    /*
      * Two fixed-level parameters
-     * 
-     * @throws Exception
      */
     @Test
     public void testAncovaTwoway() throws Exception {
@@ -410,10 +399,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         }
     }
 
-    /**
+    /*
      * Two factors with interactions.
-     * 
-     * @throws Exception
      */
     @Test
     public void testAncovaWithInteraction() throws Exception {
@@ -505,11 +492,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         assertTrue( foundContrast );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.expression.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
     @Override
     protected void configureMocks() throws Exception {
 

@@ -19,27 +19,25 @@
 
 package ubic.gemma.core.ontology;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertEquals;
 
 /**
  * FIXME Unfortunately this test requires a completely loaded database. Really a 'mini-go' with known properties must be
  * used. Tests disabled.
- * 
+ *
  * @author meeta
- * @version $Id$
  */
 public class GoMetricTest extends BaseSpringContextTest {
 
@@ -52,11 +50,6 @@ public class GoMetricTest extends BaseSpringContextTest {
     private Collection<OntologyTerm> terms = new HashSet<OntologyTerm>();
     private boolean enabled = true;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.testing.BaseSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void onSetUpInTransaction() {
 
@@ -84,9 +77,6 @@ public class GoMetricTest extends BaseSpringContextTest {
         // terms.add( entry );
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testCheckParents() throws Exception {
         if ( !enabled ) {
@@ -113,9 +103,6 @@ public class GoMetricTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testGetChildrenOccurrence() throws Exception {
         if ( !enabled ) {
@@ -132,9 +119,6 @@ public class GoMetricTest extends BaseSpringContextTest {
         assertEquals( expected, count );
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testGetTermOccurrence() throws Exception {
         if ( !enabled ) {
@@ -160,9 +144,6 @@ public class GoMetricTest extends BaseSpringContextTest {
         assertEquals( expected, ( 2 * stringTerms.size() ) );
     }
 
-    /**
-     * @throws Exception
-     */
     // public final void testComputeSimilarity() throws Exception {
     // if ( !enabled ) {
     // log.warn( "GO is not enabled, Test skipped" );

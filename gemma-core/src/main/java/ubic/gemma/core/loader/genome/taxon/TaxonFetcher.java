@@ -18,34 +18,32 @@
  */
 package ubic.gemma.core.loader.genome.taxon;
 
-import java.io.File;
-import java.util.Collection;
-
 import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.gemma.core.loader.genome.gene.ncbi.NCBIUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.File;
+import java.util.Collection;
+
 /**
  * Taxon information from NCBI comes as a tar.gz archive; only the names.dmp file is of interest. From
  * ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class TaxonFetcher extends FtpArchiveFetcher {
-
-    @Override 
-    protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + "taxdump.tar.gz";
-    }
 
     public TaxonFetcher() {
         super();
         this.setExcludePattern( ".gz" );
         initArchiveHandler( "tar.gz" );
+    }
+
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        return remoteBaseDir + "taxdump.tar.gz";
     }
 
     @Override
@@ -61,23 +59,18 @@ public class TaxonFetcher extends FtpArchiveFetcher {
 
     /**
      * Fetch the Taxon bundle from NCBI.
-     * 
-     * @return
+     *
+     * @return local files
      */
     public Collection<LocalFile> fetch() {
         return this.fetch( "taxon" );
     }
 
-    @Override 
+    @Override
     protected String formLocalFilePath( String unused, File newDir ) {
         return newDir + File.separator + "taxdump.tar.gz";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
-     */
     @Override
     public void setNetDataSourceUtil() {
         this.netDataSourceUtil = new NCBIUtil();

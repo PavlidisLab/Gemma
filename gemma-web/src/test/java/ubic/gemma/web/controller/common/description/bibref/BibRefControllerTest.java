@@ -18,50 +18,44 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLParser;
+import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.core.testing.BaseSpringWebTest;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the BibliographicReferenceController
- * 
+ *
  * @author keshav
  * @author pavlidis
- * @version $Id$
  */
 public class BibRefControllerTest extends BaseSpringWebTest {
 
+    boolean ready = false;
     @Autowired
     private BibliographicReferenceController brc;
-
     @Autowired
     private BibliographicReferenceService brs;
-
     private BibliographicReference br = null;
     private MockHttpServletRequest req = null;
 
-    boolean ready = false;
-
-    /**
+    /*
      * Add a bibliographic reference to the database for testing purposes.
      */
     @Before
@@ -98,10 +92,8 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         ready = true;
     }
 
-    /**
+    /*
      * Tests deleting. Asserts that a message is returned from BibRefController confirming successful deletion.
-     * 
-     * @throws Exception
      */
     @Test
     public void testDelete() throws Exception {
@@ -120,10 +112,8 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         assertEquals( "bibRefView", mav.getViewName() );
     }
 
-    /**
+    /*
      * Tests the exception handling of the controller's remove method.
-     * 
-     * @throws Exception
      */
     @Test
     public void testDeleteOfNonExistingEntry() throws Exception {
@@ -146,10 +136,8 @@ public class BibRefControllerTest extends BaseSpringWebTest {
 
     }
 
-    /**
+    /*
      * Tests viewing
-     * 
-     * @throws Exception
      */
     @Test
     public void testShow() throws Exception {
@@ -175,10 +163,9 @@ public class BibRefControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testShowAllForExperiments() {
-        ModelAndView mv = brc.showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ),
-                ( HttpServletResponse ) null );
-        @SuppressWarnings("unchecked")
-        Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
+        ModelAndView mv = brc
+                .showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ), ( HttpServletResponse ) null );
+        @SuppressWarnings("unchecked") Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
                 .getModel().get( "citationToEEs" );
         assertNotNull( citationToEEs );
 

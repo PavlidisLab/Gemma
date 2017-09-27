@@ -18,37 +18,31 @@
  */
 package ubic.gemma.core.externalDb;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-
 import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.description.ExternalDatabase; 
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Settings;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class GoldenPath {
 
     protected static final Log log = LogFactory.getLog( GoldenPath.class );
-
-    private ExternalDatabase searchedDatabase;
-
     protected DriverManagerDataSource dataSource;
-
     protected JdbcTemplate jdbcTemplate;
-
+    private ExternalDatabase searchedDatabase;
     private String databaseName = null;
 
     private Taxon taxon;
@@ -72,13 +66,6 @@ public class GoldenPath {
         readConfig();
     }
 
-    /**
-     * @param databaseName
-     * @param host
-     * @param user
-     * @param password
-     * @throws SQLException
-     */
     public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException {
         this.databaseName = databaseName;
 
@@ -92,33 +79,24 @@ public class GoldenPath {
         init();
     }
 
-    /**
-     * @param databaseName hg18, rn4 etc.
-     * @throws SQLException
-     */
     public GoldenPath( String databaseName ) throws SQLException {
         getTaxonForDbName( databaseName );
         readConfig();
     }
 
-    /**
-     * Get a GoldenPath instance for a given taxon, using configured database settings.
-     * 
-     * @param taxon
-     */
     public GoldenPath( Taxon taxon ) {
         this.taxon = taxon;
         readConfig();
     }
-    /**
-     * @return
-     */
+
     public String getDatabaseName() {
         return databaseName;
     }
+
     public JdbcTemplate getJdbcTemplate() {
         return jdbcTemplate;
     }
+
     public ExternalDatabase getSearchedDatabase() {
         return searchedDatabase;
     }
@@ -127,9 +105,6 @@ public class GoldenPath {
         return taxon;
     }
 
-    /**
-     * @return
-     */
     protected Connection getConnection() {
         try {
             return DriverManager.getConnection( url, user, password );
@@ -156,9 +131,6 @@ public class GoldenPath {
 
     }
 
-    /**
-     * @return
-     */
     private String getDriver() {
         String driver = Settings.getString( "gemma.goldenpath.db.driver" );
         if ( StringUtils.isBlank( driver ) ) {
@@ -183,7 +155,8 @@ public class GoldenPath {
     }
 
     private void readConfig() {
-        if ( taxon == null ) throw new IllegalStateException( "Taxon cannot be null" );
+        if ( taxon == null )
+            throw new IllegalStateException( "Taxon cannot be null" );
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
             databaseName = Settings.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an

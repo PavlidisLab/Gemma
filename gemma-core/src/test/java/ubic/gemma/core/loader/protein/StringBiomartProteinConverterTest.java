@@ -18,20 +18,8 @@
  */
 package ubic.gemma.core.loader.protein;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Test;
-
 import ubic.gemma.core.loader.protein.biomart.BiomartEnsemblNcbiObjectGenerator;
 import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
@@ -39,12 +27,19 @@ import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
+import java.io.File;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+
+import static org.junit.Assert.*;
+
 /**
  * Test of string biomart protein converter, ensuring that if given 3 string interactions they map correctly to biomart
  * file with many to many relationships.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  * @deprecated use the stored ensembl ids instead in Gemma
  */
 @Deprecated
@@ -59,11 +54,6 @@ public class StringBiomartProteinConverterTest {
     StringProteinProteinInteraction stringProteinProteinInteractionThree;
     Collection<StringProteinProteinInteraction> stringProteinProteinInteractions = new ArrayList<StringProteinProteinInteraction>();
 
-    /**
-     * Set up data
-     * 
-     * @throws java.lang.Exception
-     */
     @Before
     public void setUp() throws Exception {
         String fileNameBiomartmouse = "/data/loader/protein/biomart/biomartmmusculusShort.txt";
@@ -102,10 +92,6 @@ public class StringBiomartProteinConverterTest {
 
     }
 
-    /**
-     * The array list is burried in the object. Test method for
-     * {@link ubic.gemma.core.loader.protein.StringProteinProteinInteractionConverter#convert(java.util.Collection)}.
-     */
     @SuppressWarnings("unchecked")
     @Test
     public void testConvertCollectionOfObject() {
@@ -137,7 +123,7 @@ public class StringBiomartProteinConverterTest {
 
     }
 
-    /**
+    /*
      * ENSMUSP00000111623 is mapped to two ncbi ids (100040601 and 245269). ENSMUSP00000100396: is mapped to three ncbi
      * ids 100044026, 100043270, 100043197 Should result in returning a collection of 6 which is 2 *3 =6 Test method for
      * {@link ubic.gemma.core.loader.protein.StringProteinProteinInteractionConverter#convert(ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction)}
@@ -164,7 +150,7 @@ public class StringBiomartProteinConverterTest {
         }
     }
 
-    /**
+    /*
      * Test that if given one ensembl peptide id ENSMUSP00000111623 then get back two ncbi genes
      */
     @Test

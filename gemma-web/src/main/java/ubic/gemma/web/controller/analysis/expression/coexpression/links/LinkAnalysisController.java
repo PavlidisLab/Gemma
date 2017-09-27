@@ -20,20 +20,18 @@ package ubic.gemma.web.controller.analysis.expression.coexpression.links;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.analysis.coexp.LinkAnalysisTaskCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
- * A controller to preprocess expression data vectors.
- * 
+ * A controller to pre-process expression data vectors.
+ *
  * @author keshav
- * @version $Id$
  */
 @Controller
 public class LinkAnalysisController {
@@ -45,12 +43,6 @@ public class LinkAnalysisController {
     @Autowired
     private ExpressionExperimentReportService experimentReportService;
 
-    /**
-     * AJAX entry point.
-     * 
-     * @return
-     * @throws Exception
-     */
     public String run( Long id ) throws Exception {
         /* this 'run' method is exported in the spring-beans.xml */
 

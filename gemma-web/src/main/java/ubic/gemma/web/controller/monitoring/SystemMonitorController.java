@@ -18,30 +18,27 @@
  */
 package ubic.gemma.web.controller.monitoring;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
-
-import javax.jms.JMSException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.analysis.report.TwitterOutbound;
 import ubic.gemma.core.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.persistence.util.monitor.CacheMonitor;
 import ubic.gemma.persistence.util.monitor.HibernateMonitor;
 
+import javax.jms.JMSException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+
 /**
  * Provide statistics about the system: hibernate, caches etc.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Controller
 public class SystemMonitorController {
@@ -67,7 +64,7 @@ public class SystemMonitorController {
 
     /**
      * Flush (clear) a cache.
-     * 
+     *
      * @param name of cache Exposed to AJAX
      */
     public void clearCache( String name ) {
@@ -102,11 +99,6 @@ public class SystemMonitorController {
         Log.info( "Twitter enabled" );
     }
 
-    /**
-     * Expose to AJAX
-     * 
-     * @return
-     */
     public String getHibernateStatus() {
         return this.hibernateMonitor.getStats( false, false, false ) + "<br/>" + this.getSystemStatus();
     }
@@ -116,11 +108,6 @@ public class SystemMonitorController {
         return String.format( "<p>System load average = %.2f</p>", operatingSystemMXBean.getSystemLoadAverage() );
     }
 
-    /**
-     * Expose to AJAX
-     * 
-     * @return
-     */
     public String getJMSBrokerStatus() {
         StringBuilder buf = new StringBuilder();
 
@@ -152,10 +139,10 @@ public class SystemMonitorController {
 
     /**
      * Used for external monitoring (e.g. Nagios)
-     * 
-     * @param request
-     * @param response
-     * @return
+     *
+     * @param request  request
+     * @param response response
+     * @return model and view
      */
     @RequestMapping("/gridStatus.html")
     public ModelAndView gridStatus( HttpServletRequest request, HttpServletResponse response ) {
@@ -163,9 +150,6 @@ public class SystemMonitorController {
         return new ModelAndView( "systemNotices" ).addObject( "status", brokerStatus );
     }
 
-    /**
-     * 
-     */
     public void resetHibernateStatus() {
         this.hibernateMonitor.resetStats();
     }
@@ -190,7 +174,7 @@ public class SystemMonitorController {
     }
 
     /**
-     * manually send out a tweet. Exposed to AJAX
+     * @param message manually send out a tweet. Exposed to AJAX
      */
     public void tweetManually( String message ) {
         twitterOutbound.sendManualTweet( message );

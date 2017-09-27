@@ -18,16 +18,15 @@
  */
 package ubic.gemma.core.loader.protein.biomart;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.core.loader.util.parser.FileFormatException;
 import ubic.gemma.core.loader.util.parser.LineMapParser;
 import ubic.gemma.model.genome.Taxon;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Parser for BioMart file. The taxon and the attributes in the file are essential for construction so that the parser
@@ -35,11 +34,9 @@ import ubic.gemma.model.genome.Taxon;
  * that the file is generated from bioamrt after providing taxon as a query parameter. It is of the gemma type
  * LineMapParser which means that after parsing a Map of BioMartEnsembleNcbi value objects are returned keyed on ensembl
  * peptide id.
- * <p>
  * Parsing is triggered by calling super class method parse which then calls child method parse oneline.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2NcbiValueObject> {
     private static final char FIELD_DELIM = '\t';
@@ -51,8 +48,8 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
     /**
      * Class needs to be initialised with taxon and which attributes have been used in query for biomart and thus what
      * columns are in this file.
-     * 
-     * @param taxon Taxon for the current file being processed
+     *
+     * @param taxon            Taxon for the current file being processed
      * @param attributesInFile The attributes that were queried for in Biomart
      */
     public BiomartEnsembleNcbiParser( Taxon taxon, String[] attributesInFile ) {
@@ -63,7 +60,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
 
     /**
      * Method that returns a particular BioMartEnsembleNcbi based on a peptide id.
-     * 
+     *
      * @return boolean to indicate whether map contains particular peptide key.
      */
     @Override
@@ -76,21 +73,22 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
      * validation. That is if a duplicate record keyed on peptide id is found then that means that it maps to more than
      * one entrez gene id. As such check that the duplicate and currently processed record share the same ensemble gene
      * id as a sanity check. Add the entrez gene to the existing collection of entrez genes.
-     * 
+     *
      * @param fields Parsed line split on delimiter
      * @return BioMartEnsembleNcbi value object
      * @throws NumberFormatException Parsing a number that is not one
-     * @throws FileFormatException Validation than when a duplicate record is found then the peptide id is the same the
-     *         ensemble gene id should be the same.
+     * @throws FileFormatException   Validation than when a duplicate record is found then the peptide id is the same the
+     *                               ensemble gene id should be the same.
      */
-    public Ensembl2NcbiValueObject createBioMartEnsembleNcbi( String[] fields ) throws NumberFormatException,
-            FileFormatException {
+    public Ensembl2NcbiValueObject createBioMartEnsembleNcbi( String[] fields )
+            throws NumberFormatException, FileFormatException {
         Ensembl2NcbiValueObject bioMartEnsembleNcbi = new Ensembl2NcbiValueObject();
         String entrezGene = fields[2].trim();
         String ensemblProteinId = fields[3].trim();
 
         if ( StringUtils.isBlank( ensemblProteinId ) ) {
-            if ( log.isDebugEnabled() ) log.debug( "Blank protein id for line: " + StringUtils.join( fields, " " ) );
+            if ( log.isDebugEnabled() )
+                log.debug( "Blank protein id for line: " + StringUtils.join( fields, " " ) );
             return null;
         }
 
@@ -115,17 +113,20 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
         if ( !containsKey( ensemblProteinId ) ) {
             bioMartEnsembleNcbi.getEntrezgenes().add( entrezGene );
             results.put( ensemblProteinId, bioMartEnsembleNcbi );
-            if ( log.isDebugEnabled() ) log.debug( ensemblProteinId + " has no existing  entrez gene mapping" );
+            if ( log.isDebugEnabled() )
+                log.debug( ensemblProteinId + " has no existing  entrez gene mapping" );
         } else {
             Ensembl2NcbiValueObject bioMartEnsembleNcbiDup = this.get( ensemblProteinId );
             // check that the this duplicate record also is the same for ensembl id
             if ( ensemblGeneID.equals( bioMartEnsembleNcbiDup.getEnsemblGeneId() ) ) {
                 this.get( ensemblProteinId ).getEntrezgenes().add( entrezGene );
-                if ( log.isDebugEnabled() ) log.debug( ensemblProteinId + "added gene to duplicate  " );
+                if ( log.isDebugEnabled() )
+                    log.debug( ensemblProteinId + "added gene to duplicate  " );
             } else {
                 throw new FileFormatException( "A duplicate ensemblProteinId has been found: " + ensemblProteinId
                         + " but it does not match with the exisiting objects gene id " + ensemblGeneID + ", it was "
-                        + bioMartEnsembleNcbiDup.getEnsemblGeneId() + ", line was:\n" + StringUtils.join( fields, " " ) );
+                        + bioMartEnsembleNcbiDup.getEnsemblGeneId() + ", line was:\n" + StringUtils
+                        .join( fields, " " ) );
             }
         }
         return bioMartEnsembleNcbi;
@@ -133,7 +134,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
 
     /**
      * Method that returns a particular BioMartEnsembleNcbi based on a peptide id.
-     * 
+     *
      * @return BioMartEnsembleNcbi associated with that peptide id.
      */
     @Override
@@ -141,18 +142,17 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
         return results.get( key );
     }
 
-    /**
-     * Getter for biomart header file
-     * 
-     * @return
-     */
     public String[] getBioMartFields() {
         return bioMartHeaderFields;
     }
 
+    public void setBioMartFields( String[] bioMartFields ) {
+        this.bioMartHeaderFields = bioMartFields;
+    }
+
     /**
      * Based on what attributes were set on the original file then calculate how many columns should be in file.
-     * 
+     *
      * @return Number of columns in file.
      */
     public int getBioMartFieldsPerRow() {
@@ -167,7 +167,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
 
     /**
      * Getter for values in map that is BioMartEnsembleNcbi value objects associated with the parsing of this file
-     * 
+     *
      * @return Collection of Strings representing the peptide ids in the map
      */
     @Override
@@ -175,18 +175,13 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
         return results.keySet();
     }
 
-    /**
-     * Returns full map of BioMartEnsembleNcbi objects keyed on peptide id.
-     * 
-     * @return
-     */
     public Map<String, Ensembl2NcbiValueObject> getMap() {
         return results;
     }
 
     /**
      * Getter for values in map that is BioMartEnsembleNcbi value objects associated with the parsing of this file
-     * 
+     *
      * @return Collection of BioMartEnsembleNcbi value objects
      */
     @Override
@@ -197,7 +192,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
     /**
      * Method to parse one biomart line, note that there is a many to many relationship between ensemble ids and entrez
      * gene ids.
-     * 
+     *
      * @return BioMartEnsembleNcbi Value object representing the line parsed
      */
     @Override
@@ -229,20 +224,6 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
 
     }
 
-    /**
-     * Setter for the biomart header files
-     * 
-     * @param bioMartFields
-     */
-    public void setBioMartFields( String[] bioMartFields ) {
-        this.bioMartHeaderFields = bioMartFields;
-    }
-
-    /**
-     * Setter for the taxon that this file is for
-     * 
-     * @param taxon
-     */
     public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
     }

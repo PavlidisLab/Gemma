@@ -18,25 +18,21 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.File;
-
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.File;
+
 /**
  * Helper functions for checking existence etc. of QC information.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ExpressionExperimentQCUtils {
 
-    /**
-     * @param ee
-     * @return
-     */
     public static boolean hasNodeDegreeDistFile( ExpressionExperiment ee ) {
-        if ( ee == null ) return false;
+        if ( ee == null )
+            return false;
         // String shortName = ee.getShortName();
         // TODO implement
         // String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
@@ -48,7 +44,8 @@ public class ExpressionExperimentQCUtils {
 
     public static boolean hasPvalueDistFiles( ExpressionExperiment ee ) {
 
-        if ( ee == null ) return false;
+        if ( ee == null )
+            return false;
 
         String shortName = ee.getShortName();
 
@@ -69,10 +66,8 @@ public class ExpressionExperimentQCUtils {
     }
 
     /**
-     * How many factors (including batches) will be displayed in the PCA results?
-     * 
-     * @param expressionExperiment
-     * @return
+     * @param expressionExperiment ee
+     * @return How many factors (including batches) will be displayed in the PCA results?
      */
     public static int numFactors( ExpressionExperiment expressionExperiment ) {
         return 3; // FIXME

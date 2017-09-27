@@ -20,16 +20,11 @@ import ubic.gemma.persistence.service.BaseDao;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface CoexpressionNodeDegreeDao extends BaseDao<GeneCoexpressionNodeDegree> {
 
-    public void deleteFor( Gene gene );
+    void deleteFor( Gene gene );
 
-    /**
-     * @param gene
-     * @return
-     */
-    public GeneCoexpressionNodeDegree findOrCreate( Gene gene );
+    GeneCoexpressionNodeDegree findOrCreate( Gene gene );
 
 }

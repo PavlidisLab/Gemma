@@ -373,9 +373,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     /*
      * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
-     * brain atlas web site @param imageSeries @return
+     * brain atlas web site
      */
-
     @Override
     public void setVerbose( boolean v ) {
         this.verbose = v;

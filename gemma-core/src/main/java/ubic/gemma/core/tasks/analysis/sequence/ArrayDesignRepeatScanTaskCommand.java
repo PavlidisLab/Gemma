@@ -20,14 +20,13 @@ package ubic.gemma.core.tasks.analysis.sequence;
 
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.core.tasks.Task;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * A command object to be used by spaces.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
 
@@ -36,24 +35,10 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
     private ArrayDesign arrayDesign = null;
 
     /**
-     * @return
-     */
-    public ArrayDesign getArrayDesign() {
-        return arrayDesign;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
-    /**
      * NOTE: we can't pass in a we command as they are defined in the web module, which messes up the configuration.
-     * 
-     * @param taskId
-     * @param arrayDesign
+     *
+     * @param taskId      task id
+     * @param arrayDesign ad
      */
     public ArrayDesignRepeatScanTaskCommand( String taskId, ArrayDesign arrayDesign ) {
         super();
@@ -64,6 +49,14 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
     public ArrayDesignRepeatScanTaskCommand( ArrayDesign ad ) {
         super();
         this.arrayDesign = ad;
+    }
+
+    public ArrayDesign getArrayDesign() {
+        return arrayDesign;
+    }
+
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
+        this.arrayDesign = arrayDesign;
     }
 
     @Override

@@ -19,52 +19,42 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import java.util.Collection;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
+
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Lightweight/convenient object for manipulating coexpression for a pair of genes. Importantly, this does not
  * necessarily reflect the coexpression data in the database: it may have been filtered in accordance to the query
  * settings in terms of the data sets searched and the maximum number of results.
- * <p>
  * Note that hashCode and equals do not use the ID of the coexpression; they only use the genes (ignoring which is query
  * vs. found) and the sign, since those are in effect unique in the system.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class CoexpressionValueObject implements Comparable<CoexpressionValueObject> {
 
     private final Long coexGeneId;
-
+    private final boolean positiveCorrelation;
+    private final Long queryGeneId;
     private String coexGeneSymbol;
-
     /**
      * If true, this means the results were trimmed to a subset.
      */
     private boolean eeConstraint = false;
-
     /**
      * True if these data were pulled from the cache, or if they were put in the cache (so future queries will find
      * them); false otherwise.
      */
     private boolean fromCache = false;
-
     // is this a link among two query genes. If there were no specific query genes then this doesn't get used.
     private boolean interQueryLink = false;
-
     /**
      * the max results limit used in the query; 0 means no limit.
      */
     private int maxResults = 0;
-
-    private final boolean positiveCorrelation;
-
-    private final Long queryGeneId;
-
     private String queryGeneSymbol;
 
     /**
@@ -91,8 +81,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     /**
      * Construct a value object. The "tested-in" component is not filled in, it must be done later.
-     * 
-     * @param g2g
+     *
+     * @param g2g g2g
      */
     public CoexpressionValueObject( Gene2GeneCoexpression g2g ) {
         queryGeneId = g2g.getFirstGene();
@@ -112,14 +102,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         // "testedin" is filled in later.
     }
 
-    /**
-     * @param queryGeneId
-     * @param coexGeneId
-     * @param positiveCorrelation
-     * @param support
-     * @param supportDetailsId
-     * @param supportingDatasets
-     */
     protected CoexpressionValueObject( Long queryGeneId, Long coexGeneId, Boolean positiveCorrelation, Integer support,
             Long supportDetailsId, Set<Long> supportingDatasets ) {
         super();
@@ -131,17 +113,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.supportingDatasets = supportingDatasets;
     }
 
-    /**
-     * @param coexGeneId
-     * @param coexGeneSymbol
-     * @param positiveCorrelation
-     * @param queryGeneId
-     * @param queryGeneSymbol
-     * @param support
-     * @param supportDetailsId
-     * @param supportingDatasets
-     * @param testedInDatasets
-     */
     protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
             Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
             Collection<Long> supportingDatasets, Collection<Long> testedInDatasets ) {
@@ -157,17 +128,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.testedInDatasets = ( Set<Long> ) testedInDatasets;
     }
 
-    /**
-     * @param coexGeneId
-     * @param coexGeneSymbol
-     * @param positiveCorrelation
-     * @param queryGeneId
-     * @param queryGeneSymbol
-     * @param support
-     * @param supportDetailsId
-     * @param supportingDatasets
-     * @param testedInDatasets
-     */
     protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
             Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
             Set<Long> supportingDatasets, Set<Long> testedInDatasets ) {
@@ -183,11 +143,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.testedInDatasets = testedInDatasets;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
     @Override
     public int compareTo( CoexpressionValueObject o ) {
         return -new Integer( this.support ).compareTo( o.getNumDatasetsSupporting() );
@@ -195,15 +150,21 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         CoexpressionValueObject other = ( CoexpressionValueObject ) obj;
-        if ( positiveCorrelation != other.positiveCorrelation ) return false;
+        if ( positiveCorrelation != other.positiveCorrelation )
+            return false;
 
         // we don't differentiate between the two genes (the "order")
-        if ( coexGeneId.equals( other.coexGeneId ) && queryGeneId.equals( other.queryGeneId ) ) return true;
-        if ( queryGeneId.equals( other.coexGeneId ) && coexGeneId.equals( other.queryGeneId ) ) return true;
+        if ( coexGeneId.equals( other.coexGeneId ) && queryGeneId.equals( other.queryGeneId ) )
+            return true;
+        if ( queryGeneId.equals( other.coexGeneId ) && coexGeneId.equals( other.queryGeneId ) )
+            return true;
 
         return false;
     }
@@ -216,8 +177,16 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return coexGeneSymbol;
     }
 
+    public void setCoexGeneSymbol( String coexGeneSymbol ) {
+        this.coexGeneSymbol = coexGeneSymbol;
+    }
+
     public int getMaxResults() {
         return maxResults;
+    }
+
+    void setMaxResults( int maxResults ) {
+        this.maxResults = maxResults;
     }
 
     /**
@@ -229,7 +198,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     /**
      * @return number of data sets this link was tested in, of -1 if the information was not retrieved or if the value
-     *         is zero (which is basically an error).
+     * is zero (which is basically an error).
      */
     public Integer getNumDatasetsTestedIn() {
         if ( testedInDatasets == null || testedInDatasets.isEmpty() ) {
@@ -246,8 +215,16 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return queryGeneSymbol;
     }
 
+    public void setQueryGeneSymbol( String queryGeneSymbol ) {
+        this.queryGeneSymbol = queryGeneSymbol;
+    }
+
     public int getQueryStringency() {
         return queryStringency;
+    }
+
+    void setQueryStringency( int queryStringency ) {
+        this.queryStringency = queryStringency;
     }
 
     public Long getSupportDetailsId() {
@@ -262,10 +239,24 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
-     * @return
+     * Normally we only set this if we are constraining the query to a subset of the database.
+     *
+     * @param ids ids
      */
+    void setSupportingDatasets( Set<Long> ids ) {
+        assert ids != null && !ids.isEmpty();
+        this.supportingDatasets = ids;
+    }
+
     public Set<Long> getTestedInDatasets() {
         return testedInDatasets;
+    }
+
+    void setTestedInDatasets( Set<Long> ids ) {
+        assert ids != null && !ids.isEmpty();
+        assert this.testedInDatasets == null || this.testedInDatasets.isEmpty();
+
+        this.testedInDatasets = ids;
     }
 
     @Override
@@ -293,79 +284,42 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return fromCache;
     }
 
-    public boolean isInterQueryLink() {
-        return interQueryLink;
-    }
-
-    public boolean isPositiveCorrelation() {
-        return positiveCorrelation;
-    }
-
-    public void setCoexGeneSymbol( String coexGeneSymbol ) {
-        this.coexGeneSymbol = coexGeneSymbol;
-    }
-
     public void setFromCache( boolean fromCache ) {
         this.fromCache = fromCache;
+    }
+
+    public boolean isInterQueryLink() {
+        return interQueryLink;
     }
 
     public void setInterQueryLink( boolean interQueryLink ) {
         this.interQueryLink = interQueryLink;
     }
 
-    public void setQueryGeneSymbol( String queryGeneSymbol ) {
-        this.queryGeneSymbol = queryGeneSymbol;
+    public boolean isPositiveCorrelation() {
+        return positiveCorrelation;
     }
 
     @Override
     public String toString() {
-        String[] fields = new String[] { queryGeneId.toString(), queryGeneSymbol, coexGeneId.toString(),
-                coexGeneSymbol, support.toString(),
+        String[] fields = new String[] { queryGeneId.toString(), queryGeneSymbol, coexGeneId.toString(), coexGeneSymbol,
+                support.toString(),
                 ( this.testedInDatasets != null ? new Integer( this.testedInDatasets.size() ).toString() : "?" ),
                 positiveCorrelation ? "+" : "-" };
         return StringUtils.join( fields, "\t" );
-    }
-
-    void setMaxResults( int maxResults ) {
-        this.maxResults = maxResults;
-    }
-
-    void setQueryStringency( int queryStringency ) {
-        this.queryStringency = queryStringency;
-    }
-
-    /**
-     * Normally we only set this if we are constraining the query to a subset of the database.
-     * 
-     * @param ids
-     */
-    void setSupportingDatasets( Set<Long> ids ) {
-        assert ids != null && !ids.isEmpty();
-        this.supportingDatasets = ids;
-    }
-
-    /**
-     * @param ids
-     */
-    void setTestedInDatasets( Set<Long> ids ) {
-        assert ids != null && !ids.isEmpty();
-        assert this.testedInDatasets == null || this.testedInDatasets.isEmpty();
-
-        this.testedInDatasets = ids;
     }
 
     /**
      * Constrain the results returned to include only the data sets indicated. The support, supportingDatasets,
      * testedInDatasets and eeConstraint are all potentially altered by this call. This means the support might be end
      * up below the stringency, in which case this returns false.
-     * <p>
      * eeConstraint will only be changed from its current value if the constraint had any effect (so running this twice
      * is okay).
-     * 
-     * @param bas
-     * @param stringency
-     * @param true if this still meets the stringency. If it returns false, we assume that means it will be rejected so
-     *        we don't bother actually trimming.
+     *
+     * @param bas        bas
+     * @param stringency stringency
+     * @return true if this still meets the stringency. If it returns false, we assume that means it will be rejected so
+     * we don't bother actually trimming.
      */
     boolean trimDatasets( Collection<Long> bas, int stringency ) {
 

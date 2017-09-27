@@ -19,40 +19,23 @@
 package ubic.gemma.core.job.executor.worker;
 
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import ubic.gemma.core.util.AbstractSpringAwareCLI;
 import ubic.gemma.persistence.util.SpringContextUtil;
 
 /**
  * Generic tool for starting a remote worker.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class WorkerCLI extends AbstractSpringAwareCLI {
 
-    public class ShutdownHook extends Thread {
-        @Override
-        public void run() {
-            log.info( "Remote task executor is shutting down..." );
-            log.info( "Attempting to cancel all running tasks..." );
-            taskRunningService.shutdown();
-            log.info( "Shutdown sequence completed." );
-        }
-    }
+    private RemoteTaskRunningService taskRunningService;
 
     public static void main( String[] args ) {
         WorkerCLI me = new WorkerCLI();
         me.doWork( args );
     }
 
-    private RemoteTaskRunningService taskRunningService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#getShortDesc()
-     */
     @Override
     public String getShortDesc() {
         return "Start worker application for processing tasks sent by Gemma webapp.";
@@ -75,11 +58,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception commandArgumentErrors = processCommandLine( args );
@@ -102,11 +80,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         return workerSpecificConfigs;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#processOptions()
-     */
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -117,11 +90,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         // }
     }
 
-    /**
-     * Adds a shutdown hook.
-     * 
-     * @throws Exception
-     */
     private void init() throws Exception {
         ShutdownHook shutdownHook = new ShutdownHook();
         Runtime.getRuntime().addShutdownHook( shutdownHook );
@@ -129,13 +97,18 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "startWorker";
+    }
+
+    public class ShutdownHook extends Thread {
+        @Override
+        public void run() {
+            log.info( "Remote task executor is shutting down..." );
+            log.info( "Attempting to cancel all running tasks..." );
+            taskRunningService.shutdown();
+            log.info( "Shutdown sequence completed." );
+        }
     }
 }

@@ -37,10 +37,9 @@ import static org.junit.Assert.assertTrue;
  */
 public class SupportDetailsTest {
 
-    /**
+    /*
      * We store the bitmaps as blobs in the database. This just tests the correctness of these.
      *
-     * @throws Exception exception
      */
     @Test
     public void testSerializeEWAHCompressedBitmap() throws Exception {

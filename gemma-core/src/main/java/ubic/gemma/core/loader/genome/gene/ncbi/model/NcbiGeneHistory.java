@@ -18,17 +18,16 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * Represents the information from the "gene_history" file from NCBI (for one gene's history).
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class NcbiGeneHistory {
 
@@ -39,15 +38,12 @@ public class NcbiGeneHistory {
         history.add( startingId );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals( Object obj ) {
-        if ( obj == null ) return false;
-        if ( obj instanceof NcbiGeneHistory ) return false;
+        if ( obj == null )
+            return false;
+        if ( obj instanceof NcbiGeneHistory )
+            return false;
         return ( ( NcbiGeneHistory ) obj ).getCurrentId().equals( this.getCurrentId() );
     }
 
@@ -57,8 +53,8 @@ public class NcbiGeneHistory {
 
     /**
      * If the id was ever changed, give the <em>previous</em> id from the current. Otherwise return null.
-     * 
-     * @return
+     *
+     * @return string
      */
     public String getPreviousId() {
         if ( history.size() == 1 ) {
@@ -68,18 +64,10 @@ public class NcbiGeneHistory {
 
     }
 
-    /**
-     * @return
-     */
     public List<String> getPreviousIds() {
         return Collections.unmodifiableList( history );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
     @Override
     public int hashCode() {
         return this.getCurrentId().hashCode();
@@ -90,9 +78,6 @@ public class NcbiGeneHistory {
         return StringUtils.join( history, "->" );
     }
 
-    /**
-     * @param newId
-     */
     public void update( String oldId, String newId ) {
         if ( history.contains( newId ) ) {
             throw new IllegalArgumentException( "History already contains " + newId );

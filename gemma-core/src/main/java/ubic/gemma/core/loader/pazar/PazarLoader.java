@@ -20,22 +20,11 @@ import java.io.InputStream;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface PazarLoader {
 
-    /**
-     * @param is
-     * @return
-     * @throws IOException
-     */
-    public abstract int load( InputStream is ) throws IOException;
+    int load( InputStream is ) throws IOException;
 
-    /**
-     * @param file
-     * @return
-     * @throws IOException
-     */
-    public abstract int load( File file ) throws IOException;
+    int load( File file ) throws IOException;
 
 }

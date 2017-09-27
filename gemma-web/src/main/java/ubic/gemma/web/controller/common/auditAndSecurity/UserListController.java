@@ -14,43 +14,35 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
  * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
  * arrays instead.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Controller
 public interface UserListController {
 
-    /**
-     * AJAX entry point.
-     * 
-     * @return
-     */
-    public abstract Collection<UserValueObject> getUsers();
+    Collection<UserValueObject> getUsers();
 
     @RequestMapping(value = "/admin/activeUsers.html", method = RequestMethod.GET)
-    public abstract ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response )
-            throws Exception;
+    ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception;
 
     /**
      * Save or create the user. FIXME this is pretty inflexible - need to be able to reset password.
-     * 
-     * @param user
+     *
+     * @param user user
      */
-    public abstract void saveUser( UserValueObject user );
+    void saveUser( UserValueObject user );
 
 }

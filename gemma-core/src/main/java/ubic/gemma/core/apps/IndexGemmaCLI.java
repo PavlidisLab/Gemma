@@ -23,22 +23,26 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
-
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.persistence.util.CompassUtils;
 
 /**
  * Simple command line to index the gemma db. Can index gene's, Expression experiments or array Designs
- * 
+ *
  * @author klc
- * @version $Id$
  */
 public class IndexGemmaCLI extends AbstractCLIContextCLI {
 
-    /**
-     * @param args
-     */
+    private boolean indexAD = false;
+    private boolean indexB = false;
+    private boolean indexEE = false;
+    private boolean indexG = false;
+    private boolean indexP = false;
+    private boolean indexQ = false;
+    private boolean indexX = false;
+    private boolean indexY = false;
+
     public static void main( String[] args ) {
         IndexGemmaCLI p = new IndexGemmaCLI();
         StopWatch watch = new StopWatch();
@@ -54,26 +58,12 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.SYSTEM;
     }
-    private boolean indexAD = false;
-    private boolean indexB = false;
-    private boolean indexEE = false;
-    private boolean indexG = false;
-    private boolean indexP = false;
 
-    private boolean indexQ = false;
-
-    private boolean indexX = false;
-    private boolean indexY = false;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "searchIndex";
@@ -84,11 +74,6 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
         return "Create or update the searchable indexes for a Gemma production system";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -119,11 +104,6 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
         addOption( OptionBuilder.withDescription( "Index gene sets" ).withLongOpt( "genesets" ).create( 'y' ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
@@ -170,35 +150,33 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#processOptions()
-     */
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'e' ) ) indexEE = true;
+        if ( hasOption( 'e' ) )
+            indexEE = true;
 
-        if ( hasOption( 'a' ) ) indexAD = true;
+        if ( hasOption( 'a' ) )
+            indexAD = true;
 
-        if ( hasOption( 'g' ) ) indexG = true;
+        if ( hasOption( 'g' ) )
+            indexG = true;
 
-        if ( hasOption( 'b' ) ) indexB = true;
+        if ( hasOption( 'b' ) )
+            indexB = true;
 
-        if ( hasOption( 's' ) ) indexP = true;
+        if ( hasOption( 's' ) )
+            indexP = true;
 
-        if ( hasOption( 'q' ) ) indexQ = true;
-        if ( hasOption( 'x' ) ) indexX = true;
-        if ( hasOption( 'y' ) ) indexY = true;
+        if ( hasOption( 'q' ) )
+            indexQ = true;
+        if ( hasOption( 'x' ) )
+            indexX = true;
+        if ( hasOption( 'y' ) )
+            indexY = true;
 
     }
 
-    /**
-     * @param device
-     * @param whatIndexingMsg
-     * @throws Exception
-     */
     protected void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) throws Exception {
 
         long time = System.currentTimeMillis();

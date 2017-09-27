@@ -14,31 +14,29 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test fetching and loading the batch information from raw files. Test takes around 10-15 minutes if the files are not
  * downloaded first.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServiceTest {
 
@@ -71,10 +69,8 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
 
     }
 
-    /**
+    /*
      * Another Affymetrix format - GCOS
-     * 
-     * @throws Exception
      */
     @Test
     public void testLoadCommandConsoleFormat() throws Exception {

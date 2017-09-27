@@ -18,38 +18,36 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
-import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * A controller to run differential expression analysis either locally or in a space.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 @Controller
 public class DifferentialExpressionAnalysisController {
-    protected static Log log = LogFactory.getLog( DifferentialExpressionAnalysisController.class.getName() );
+    protected static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisController.class.getName() );
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -65,6 +63,8 @@ public class DifferentialExpressionAnalysisController {
     /**
      * Ajax method. Pick the analysis type when we want it to be completely automated.
      *
+     * @param id id
+     * @return analysis info
      */
     public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -74,11 +74,11 @@ public class DifferentialExpressionAnalysisController {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils.factorsWithoutBatch( ee
-                .getExperimentalDesign().getExperimentalFactors() );
+        Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils
+                .factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() );
 
-        AnalysisType analyzer = this.analysisSelectionAndExecutionService.determineAnalysis( ee, factorsWithoutBatch,
-                null, true );
+        AnalysisType analyzer = this.analysisSelectionAndExecutionService
+                .determineAnalysis( ee, factorsWithoutBatch, null, true );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 
@@ -103,11 +103,11 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point to redo an analysis.
-     * 
-     * @param eeId
-     * @param id
-     * @return
-     * @throws Exception
+     *
+     * @param eeId ee id
+     * @param id   id
+     * @return string
+     * @throws Exception exception
      */
     public String redo( Long eeId, Long id ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -124,12 +124,6 @@ public class DifferentialExpressionAnalysisController {
         return taskRunningService.submitRemoteTask( cmd );
     }
 
-    /**
-     * @param eeId
-     * @param id
-     * @return
-     * @throws Exception
-     */
     public String refreshStats( Long eeId, Long id ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
@@ -147,10 +141,10 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point to remove an analysis given by the ID
-     * 
-     * @param id
-     * @return
-     * @throws Exception
+     *
+     * @param id id
+     * @return string
+     * @throws Exception exception
      */
     public String remove( Long eeId, Long id ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -171,6 +165,8 @@ public class DifferentialExpressionAnalysisController {
     /**
      * AJAX entry point when running completely automatically.
      *
+     * @param id id
+     * @return string
      */
     public String run( Long id ) throws Exception {
 
@@ -184,17 +180,13 @@ public class DifferentialExpressionAnalysisController {
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
         cmd.setUseWeights( rnaSeq );
-        cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
-                .getExperimentalFactors() ) );
+        cmd.setFactors(
+                ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() ) );
         cmd.setIncludeInteractions( true ); // if possible, might get dropped.
 
         return taskRunningService.submitRemoteTask( cmd );
     }
 
-    /**
-     * AJAX entry point for 'customized' analysis.
-     *
-     */
     public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId )
             throws Exception {
 
@@ -236,7 +228,8 @@ public class DifferentialExpressionAnalysisController {
             }
 
             if ( factors.contains( subsetFactor ) ) {
-                throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
+                throw new IllegalArgumentException(
+                        "Subset factor must not be one of the factors used in the analysis" );
             }
         }
 

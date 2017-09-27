@@ -18,15 +18,11 @@
  */
 package ubic.gemma.core.ontology.providers;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.model.ObjectPropertyImpl;
 import ubic.basecode.ontology.model.OntologyClassRestriction;
@@ -36,30 +32,31 @@ import ubic.basecode.ontology.search.OntologySearch;
 import ubic.basecode.ontology.search.SearchIndex;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.RDFNode;
+import java.util.*;
 
 /**
  * Methods to help deal with MESH (Medical Subject Heading) terms. These are provided in PubMed entries as text, but
  * represented in our system as a formal Ontology.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class MeshService {
 
-    private static Log log = LogFactory.getLog( MeshService.class.getName() );
+    // private final static String MESH_ONT_URL = "http://bike.snu.ac.kr/sites/default/files/meshonto.owl";
+    private final static String MESH_ONT_URL = "http://onto.eva.mpg.de/obo/mesh.owl";
 
     // This one is gone.
     // private final static String MESH_ONT_URL = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
-
-    // private final static String MESH_ONT_URL = "http://bike.snu.ac.kr/sites/default/files/meshonto.owl";
-    private final static String MESH_ONT_URL = "http://onto.eva.mpg.de/obo/mesh.owl";
     private static final String MESH_INDEX_NAME = "mesh";
+    private static Log log = LogFactory.getLog( MeshService.class.getName() );
     private static OntModel model;
     private static SearchIndex index;
     private static ExternalDatabase meshdb;
+    /**
+     * Cache of mesh -> parent terms
+     */
+    private static Map<String, Collection<OntologyTerm>> parentsCache = Collections
+            .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
     static {
         model = OntologyLoader.loadMemoryModel( MESH_ONT_URL ); // no force.
@@ -70,18 +67,12 @@ public class MeshService {
     }
 
     /**
-     * Cache of mesh -> parent terms
-     */
-    private static Map<String, Collection<OntologyTerm>> parentsCache = Collections
-            .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
-
-    /**
      * Locate OntologyTerm for given plain text; obsolete terms are filtered out.
-     * 
+     *
      * @param plainText such as "Microsatellite Repeats"
      * @return term that exactly matches the given text, or null if nothing is found that matches exactly. If multiple
-     *         terms match exactly, only the first one found in the search is returned (consistent ordering not
-     *         guaranteed!)
+     * terms match exactly, only the first one found in the search is returned (consistent ordering not
+     * guaranteed!)
      */
     public static OntologyTerm find( String plainText ) {
         String munged = munge( plainText );
@@ -99,10 +90,6 @@ public class MeshService {
         return getAncestors( entry );
     }
 
-    /**
-     * @param entry
-     * @return
-     */
     public static Collection<OntologyTerm> getParents( OntologyTerm entry ) {
         Collection<OntologyTerm> parents = entry.getParents( true );
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
@@ -145,11 +132,6 @@ public class MeshService {
                 node.as( com.hp.hpl.jena.ontology.DatatypeProperty.class ) );
     }
 
-    /**
-     * @param entry
-     * @param includePartOf
-     * @return
-     */
     private static Collection<OntologyTerm> getAncestors( OntologyTerm entry ) {
 
         Collection<OntologyTerm> ancestors = parentsCache.get( entry.getUri() );
@@ -176,8 +158,8 @@ public class MeshService {
             return plainText.toLowerCase().trim().replaceAll( " ", "_" );
         } else if ( fields.length == 2 ) {
             // swap them around
-            return fields[1].toLowerCase().trim().replaceAll( " ", "_" ) + "_"
-                    + fields[0].toLowerCase().trim().replaceAll( " ", "_" );
+            return fields[1].toLowerCase().trim().replaceAll( " ", "_" ) + "_" + fields[0].toLowerCase().trim()
+                    .replaceAll( " ", "_" );
         } else {
             return plainText.toLowerCase().trim().replaceAll( "[, ]", "_" );
         }

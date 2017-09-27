@@ -25,18 +25,15 @@ import java.lang.annotation.Target;
 
 /**
  * Used to flag methods that should be timed or otherwise monitored.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Monitored {
 
     /**
-     * Minimum run duration before timing is reported.
-     * 
-     * @return
+     * @return Minimum run duration before timing is reported.
      */
     int minTimeToReport() default 1000;
 

@@ -18,34 +18,33 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionSearchCommand;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * @author luke
@@ -55,64 +54,33 @@ import ubic.gemma.persistence.util.Settings;
 @Controller
 public class CoexpressionSearchController {
 
-    /**
-     * Inner class used for doing a long running coex search
-     */
-    class CoexpressionSearchTask extends AbstractTask<TaskResult, TaskCommand> {
-
-        public CoexpressionSearchTask( CoexSearchTaskCommand command ) {
-            super( command );
-        }
-
-        @Override
-        public TaskResult execute() {
-
-            CoexSearchTaskCommand coexCommand = ( CoexSearchTaskCommand ) taskCommand;
-
-            CoexpressionMetaValueObject results = doSearch( coexCommand.getSearchOptions() );
-
-            return new TaskResult( taskCommand, results );
-
-        }
-    }
-
     private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY = 500;
-
     private static final int DEFAULT_MAX_RESULTS = 200;
-
-    private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
-
     private static final int MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY = Settings
             .getInt( "gemma.coexpressionSearch.maxGenesForQueryGenesOnly", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY );
-
-    private static final int MAX_RESULTS_PER_GENE = Settings.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene",
-            DEFAULT_MAX_RESULTS );
-
+    private static final int MAX_RESULTS_PER_GENE = Settings
+            .getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene", DEFAULT_MAX_RESULTS );
     /**
-     * 
+     *
      */
     private static final String NOTHING_FOUND_MESSAGE = "No coexpression found with those settings";
-
+    private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
-
     @Autowired
     private GeneCoexpressionSearchService geneCoexpressionService;
-
     @Autowired
     private GeneSetService geneSetService;
-
     @Autowired
     private TaskRunningService taskRunningService;
 
     /**
      * Used by CoexpressionSearchData.js - the main home page coexpression search.
-     * 
-     * @param searchOptions
-     * @return
+     *
+     * @param searchOptions search options
+     * @return string
      */
     public String doBackgroundCoexSearch( CoexpressionSearchCommand searchOptions ) {
         CoexSearchTaskCommand options = new CoexSearchTaskCommand( searchOptions );
@@ -122,9 +90,9 @@ public class CoexpressionSearchController {
 
     /**
      * Important entry point - called by the CoexpressionSearchTask
-     * 
-     * @param searchOptions
-     * @return
+     *
+     * @param searchOptions search options
+     * @return coexp. meta VO
      */
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
 
@@ -145,8 +113,9 @@ public class CoexpressionSearchController {
         }
 
         if ( searchOptions.getGeneIds().size() > MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY ) {
-            result.setErrorState( "Too many genes selected, please limit searches to "
-                    + MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY + " genes" );
+            result.setErrorState(
+                    "Too many genes selected, please limit searches to " + MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY
+                            + " genes" );
             return result;
         }
 
@@ -162,7 +131,8 @@ public class CoexpressionSearchController {
 
         Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
 
-        if ( StringUtils.isNotBlank( result.getErrorState() ) ) return result;
+        if ( StringUtils.isNotBlank( result.getErrorState() ) )
+            return result;
 
         if ( myEE != null && !myEE.isEmpty() ) {
             eeIds.addAll( EntityUtils.getIds( myEE ) );
@@ -198,10 +168,10 @@ public class CoexpressionSearchController {
 
     /**
      * Do a search that fills in the edges among the genes already found. Maps to doSearchQuickComplete in javascript.
-     * 
-     * @param searchOptions
-     * @param queryGeneIds the genes which were used originally to start the search
-     * @return
+     *
+     * @param searchOptions search options
+     * @param queryGeneIds  the genes which were used originally to start the search
+     * @return coexp meta VO
      */
     public CoexpressionMetaValueObject doSearchQuickComplete( CoexpressionSearchCommand searchOptions,
             Collection<Long> queryGeneIds ) {
@@ -229,7 +199,8 @@ public class CoexpressionSearchController {
 
         Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
 
-        if ( StringUtils.isNotBlank( result.getErrorState() ) ) return result;
+        if ( StringUtils.isNotBlank( result.getErrorState() ) )
+            return result;
 
         if ( myEE != null && !myEE.isEmpty() ) {
             eeIds.addAll( EntityUtils.getIds( myEE ) );
@@ -246,9 +217,10 @@ public class CoexpressionSearchController {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        log.info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes, stringency="
-                + searchOptions.getStringency()
-                + ( searchOptions.getEeIds() != null ? ( " ees=" + searchOptions.getEeIds().size() ) : " All ees" ) );
+        log.info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes, stringency=" + searchOptions
+                .getStringency() + ( searchOptions.getEeIds() != null ?
+                ( " ees=" + searchOptions.getEeIds().size() ) :
+                " All ees" ) );
 
         result = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(), searchOptions.getGeneIds(),
                 searchOptions.getStringency(), -1 /* no limit in this situation anyway */, true );
@@ -266,6 +238,43 @@ public class CoexpressionSearchController {
         }
 
         return result;
+    }
+
+    /**
+     * Convert the search options to a set of experiment IDs (security-filtered)
+     *
+     * @param searchOptions search options
+     * @param result        only used to set error state
+     * @return ids
+     */
+    private Collection<Long> chooseExperimentsToQuery( CoexpressionSearchCommand searchOptions,
+            CoexpressionMetaValueObject result ) {
+
+        Long eeSetId = null;
+        if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
+            // security filter.
+            return EntityUtils.getIds( expressionExperimentService.load( searchOptions.getEeIds() ) );
+        }
+
+        if ( searchOptions.getEeSetId() != null ) {
+            eeSetId = searchOptions.getEeSetId();
+        } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
+            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService
+                    .findByName( searchOptions.getEeSetName() );
+            if ( eeSets.size() == 1 ) {
+                eeSetId = eeSets.iterator().next().getId();
+            } else {
+                result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
+                return new HashSet<>();
+            }
+        }
+
+        if ( eeSetId == null )
+            return new HashSet<>();
+
+        // security filter
+        return EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
+
     }
 
     //
@@ -294,39 +303,24 @@ public class CoexpressionSearchController {
     // }
 
     /**
-     * Convert the search options to a set of experiment IDs (security-filtered)
-     * 
-     * @param searchOptions
-     * @param result only used to set error state
-     * @return
+     * Inner class used for doing a long running coex search
      */
-    private Collection<Long> chooseExperimentsToQuery( CoexpressionSearchCommand searchOptions,
-            CoexpressionMetaValueObject result ) {
+    class CoexpressionSearchTask extends AbstractTask<TaskResult, TaskCommand> {
 
-        Long eeSetId = null;
-        if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
-            // security filter.
-            return EntityUtils.getIds( expressionExperimentService.load( searchOptions.getEeIds() ) );
+        public CoexpressionSearchTask( CoexSearchTaskCommand command ) {
+            super( command );
         }
 
-        if ( searchOptions.getEeSetId() != null ) {
-            eeSetId = searchOptions.getEeSetId();
-        } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
-            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService
-                    .findByName( searchOptions.getEeSetName() );
-            if ( eeSets.size() == 1 ) {
-                eeSetId = eeSets.iterator().next().getId();
-            } else {
-                result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
-                return new HashSet<>();
-            }
+        @Override
+        public TaskResult execute() {
+
+            CoexSearchTaskCommand coexCommand = ( CoexSearchTaskCommand ) taskCommand;
+
+            CoexpressionMetaValueObject results = doSearch( coexCommand.getSearchOptions() );
+
+            return new TaskResult( taskCommand, results );
+
         }
-
-        if ( eeSetId == null ) return new HashSet<>();
-
-        // security filter
-        return EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
-
     }
 
 }

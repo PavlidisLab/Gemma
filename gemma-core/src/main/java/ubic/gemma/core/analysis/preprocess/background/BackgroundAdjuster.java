@@ -22,14 +22,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public interface BackgroundAdjuster<R, C> {
 
-    /**
-     * @param signal
-     * @param background
-     * @return
-     */
-    public DoubleMatrix<R, C> adjust( DoubleMatrix<R, C> signal, DoubleMatrix<R, C> background );
+    DoubleMatrix<R, C> adjust( DoubleMatrix<R, C> signal, DoubleMatrix<R, C> background );
 }

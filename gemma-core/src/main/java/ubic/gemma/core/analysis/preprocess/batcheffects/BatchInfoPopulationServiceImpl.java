@@ -14,27 +14,15 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
@@ -45,15 +33,19 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.*;
 
 /**
  * Retrieve batch information from the data source, if possible, and populate it into experiments.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationService {
@@ -64,9 +56,19 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     private static final boolean CLEAN_UP = true;
 
     private static Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
+    @Autowired
+    private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService = null;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService = null;
+    @Autowired
+    private AuditTrailService auditTrailService;
+    @Autowired
+    private AuditEventService auditEventService;
 
     /**
-     * @param ef
+     * @param ef ef
      * @return true if the factor seems to be a 'batch' factor.
      */
     public static boolean isBatchFactor( ExperimentalFactor ef ) {
@@ -78,7 +80,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         if ( c != null && c instanceof VocabCharacteristic ) {
             VocabCharacteristic v = ( VocabCharacteristic ) c;
-            if ( v.getCategory() != null && v.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
+            if ( v.getCategory() != null && v.getCategory()
+                    .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
                 isBatchFactor = true;
             }
         } else if ( looksLikeBatch ) {
@@ -88,47 +91,19 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         return isBatchFactor;
     }
 
-    @Autowired
-    private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
-
-    @Autowired
-    private ExperimentalFactorService experimentalFactorService = null;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
-    private AuditEventService auditEventService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService#fillBatchInformation(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment)
-     */
     @Override
     public boolean fillBatchInformation( ExpressionExperiment ee ) {
         return this.fillBatchInformation( ee, false );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService#fillBatchInformation(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment, boolean)
-     */
     @Override
     public boolean fillBatchInformation( ExpressionExperiment ee, boolean force ) {
 
         boolean needed = force || needToRun( ee );
 
         if ( !needed ) {
-            log.info( "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
+            log.info(
+                    "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
             return false;
         }
 
@@ -137,8 +112,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             files = fetchRawDataFiles( ee );
 
             if ( files == null || files.isEmpty() ) {
-                this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationMissingEvent.class,
-                        "No files were found", "" );
+                this.auditTrailService
+                        .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found", "" );
                 return false;
             }
 
@@ -164,9 +139,9 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * Currently only supports GEO
-     * 
-     * @param ee
-     * @return
+     *
+     * @param ee ee
+     * @return local file
      */
     private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
         RawDataFetcher fetcher = new RawDataFetcher();
@@ -180,6 +155,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
+     * @param ee    ee
+     * @return boolean
      */
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
@@ -198,8 +175,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
         if ( !dates.isEmpty() ) {
-            int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues()
-                    .size();
+            int numberOfBatches =
+                    factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
 
             List<Date> allDates = new ArrayList<Date>();
             allDates.addAll( dates.values() );
@@ -207,9 +184,9 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             String datesString = StringUtils.join( allDates, "\n" );
 
             log.info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches + " batches." );
-            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, batchInfoParser
-                    .getScanDateExtractor().getClass().getSimpleName()
-                    + "; " + numberOfBatches + " batches.", "Dates of sample runs: " + datesString );
+            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
+                    batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
+                            + " batches.", "Dates of sample runs: " + datesString );
             return true;
         }
 
@@ -217,7 +194,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param ee
+     * @param ee ee
      * @return true if it needs processing
      */
     private boolean needToRun( ExpressionExperiment ee ) {
@@ -238,9 +215,11 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         }
 
         AuditEvent e = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
-        if ( e == null ) return true;
+        if ( e == null )
+            return true;
 
-        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) ) return true; // worth trying
+        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) )
+            return true; // worth trying
         // again perhaps
 
         // on occasions the files appear or were missed the first time ...? GSE20842
@@ -255,8 +234,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
     /**
      * Remove an existing batch factor, if it exists. This is really only relevant in a 'force' situation.
-     * 
-     * @param ee
+     *
+     * @param ee ee
      */
     private void removeExistingBatchFactor( ExpressionExperiment ee ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();

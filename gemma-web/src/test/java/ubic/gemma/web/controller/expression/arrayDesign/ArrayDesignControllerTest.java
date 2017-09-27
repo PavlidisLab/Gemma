@@ -18,23 +18,20 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.testing.BaseSpringWebTest;
+
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author keshav
- * @version $Id$
  */
 public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
@@ -43,9 +40,6 @@ public class ArrayDesignControllerTest extends BaseSpringWebTest {
     @Autowired
     private ArrayDesignController arrayDesignController;
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testShowAllArrayDesigns() throws Exception {
         request = newPost( "Gemma/arrayDesign/showAllArrayDesigns.html" );

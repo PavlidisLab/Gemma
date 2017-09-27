@@ -18,6 +18,14 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,18 +35,8 @@ import java.net.URLConnection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class ExpressionExperimentBibRefFinder {
 
@@ -48,13 +46,10 @@ public class ExpressionExperimentBibRefFinder {
 
     private static String PUBMEDREF_REGEX = "class=\"pubmed_id\" id=\"(\\d+)";
 
-    /**
-     * @param ee
-     * @return
-     */
     public BibliographicReference locatePrimaryReference( ExpressionExperiment ee ) {
 
-        if ( ee.getPrimaryPublication() != null ) return ee.getPrimaryPublication();
+        if ( ee.getPrimaryPublication() != null )
+            return ee.getPrimaryPublication();
 
         DatabaseEntry accession = ee.getAccession();
 
@@ -69,16 +64,13 @@ public class ExpressionExperimentBibRefFinder {
 
         int pubMedId = this.locatePubMedId( geoId );
 
-        if ( pubMedId < 0 ) return null;
+        if ( pubMedId < 0 )
+            return null;
 
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         return fetcher.retrieveByHTTP( pubMedId );
     }
 
-    /**
-     * @param geoSeries
-     * @return
-     */
     private int locatePubMedId( String geoSeries ) {
         if ( !geoSeries.matches( "GSE\\d+" ) ) {
             log.warn( geoSeries + " is not a GEO Series Accession" );
@@ -107,7 +99,8 @@ public class ExpressionExperimentBibRefFinder {
                 log.debug( line );
                 if ( mat.find() ) {
                     String capturedAccession = mat.group( 1 );
-                    if ( StringUtils.isBlank( capturedAccession ) ) return -1;
+                    if ( StringUtils.isBlank( capturedAccession ) )
+                        return -1;
                     return Integer.parseInt( capturedAccession );
                 }
             }

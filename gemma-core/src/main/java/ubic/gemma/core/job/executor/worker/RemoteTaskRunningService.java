@@ -24,16 +24,12 @@ public interface RemoteTaskRunningService {
     /**
      * Submit task represented by TaskCommand for execution. The task may be queued for some time since the number of
      * concurrently running tasks is limited.
-     * 
-     * @param taskCommand
+     *
+     * @param taskCommand task command
      */
-    public void submit( TaskCommand taskCommand );
+    void submit( TaskCommand taskCommand );
 
-    /**
-     * @param taskId
-     * @return
-     */
-    public SubmittedTaskRemote getSubmittedTask( String taskId );
+    SubmittedTaskRemote getSubmittedTask( String taskId );
 
     /**
      * Attempts to stop all actively executing tasks and halts the processing of waiting tasks. There are no guarantees

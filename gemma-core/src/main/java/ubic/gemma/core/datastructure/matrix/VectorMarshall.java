@@ -18,17 +18,16 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class VectorMarshall {
 
@@ -38,9 +37,9 @@ public class VectorMarshall {
     /**
      * Convert the data in a DataVector into a List of Objects of the appropriate type for the representation
      * (Boolean,Double,String,Integer,Long,Character);
-     * 
+     *
      * @param vector
-     * @return
+     * @return objects
      */
     public static List<Object> marshall( DataVector vector ) {
 

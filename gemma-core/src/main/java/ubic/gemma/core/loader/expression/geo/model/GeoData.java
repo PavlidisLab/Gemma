@@ -24,15 +24,11 @@ import java.util.List;
 
 /**
  * Abstract class from which other GEO objects are descended.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class GeoData implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -859220901359581113L;
 
     protected GeoContact contact = new GeoContact();
@@ -45,9 +41,6 @@ public abstract class GeoData implements Serializable {
 
     private String title = "";
 
-    /**
-     * @param columnName
-     */
     public void addColumnName( String columnName ) {
         assert columnName != null;
         this.columnNames.add( columnName );
@@ -71,16 +64,13 @@ public abstract class GeoData implements Serializable {
     /**
      * The column names mean different things in different subclasses. For samples, the column names are the
      * "quantitation types". For platforms, they are descriptor names.
-     * 
+     *
      * @return Returns the columnNames.
      */
     public List<String> getColumnNames() {
         return this.columnNames;
     }
 
-    /**
-     * @return
-     */
     public GeoContact getContact() {
         return this.contact;
     }
@@ -93,20 +83,6 @@ public abstract class GeoData implements Serializable {
     }
 
     /**
-     * @return Returns the title.
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( getGeoAccession() == null ? 0 : getGeoAccession().hashCode() );
-        return hashCode;
-    }
-
-    /**
      * @param geoAccesssion The geoAccesssion to set.
      */
     public void setGeoAccession( String geoAccesssion ) {
@@ -114,10 +90,24 @@ public abstract class GeoData implements Serializable {
     }
 
     /**
+     * @return Returns the title.
+     */
+    public String getTitle() {
+        return this.title;
+    }
+
+    /**
      * @param title The title to set.
      */
     public void setTitle( String title ) {
         this.title = title;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( getGeoAccession() == null ? 0 : getGeoAccession().hashCode() );
+        return hashCode;
     }
 
     @Override

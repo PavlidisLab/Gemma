@@ -22,9 +22,8 @@ import java.util.Collection;
 
 /**
  * Represents a group of samples that were replicated.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class GeoReplication {
     private ReplicationType type;
@@ -36,7 +35,25 @@ public class GeoReplication {
     private Collection<GeoSample> samples;
 
     /**
-     * @param d
+     * Convert a string e.g. "biological Replicate" into the corresponding ReplicationType.
+     *
+     * @param string string
+     * @return replication type
+     */
+    public static ReplicationType convertStringToRepeatType( String string ) {
+        if ( string.equals( "biological Replicate" ) ) {
+            return ReplicationType.biologicalReplicate;
+        } else if ( string.equals( "technical replicate - extract" ) ) {
+            return ReplicationType.technicalReplicateExtract;
+        } else if ( string.equals( "technical replicate - labeled extract" ) ) {
+            return ReplicationType.technicalReplicateLabeledExtract;
+        } else {
+            throw new IllegalArgumentException( "Unknown replication type " + string );
+        }
+    }
+
+    /**
+     * @param d d
      */
     public void addToDescription( String d ) {
         this.description += d;
@@ -70,36 +87,8 @@ public class GeoReplication {
         this.samples = repeatsSampleList;
     }
 
-    /**
-     * @param sample
-     */
     public void addToRepeatsSampleList( GeoSample sample ) {
         this.samples.add( sample );
-    }
-
-    /**
-     * Permitted types of replication.
-     */
-    public enum ReplicationType {
-        biologicalReplicate, technicalReplicateExtract, technicalReplicateLabeledExtract
-    }
-
-    /**
-     * Convert a string e.g. "biological Replicate" into the corresponding ReplicationType.
-     * 
-     * @param string
-     * @return
-     */
-    public static ReplicationType convertStringToRepeatType( String string ) {
-        if ( string.equals( "biological Replicate" ) ) {
-            return ReplicationType.biologicalReplicate;
-        } else if ( string.equals( "technical replicate - extract" ) ) {
-            return ReplicationType.technicalReplicateExtract;
-        } else if ( string.equals( "technical replicate - labeled extract" ) ) {
-            return ReplicationType.technicalReplicateLabeledExtract;
-        } else {
-            throw new IllegalArgumentException( "Unknown replication type " + string );
-        }
     }
 
     /**
@@ -119,5 +108,12 @@ public class GeoReplication {
     @Override
     public String toString() {
         return this.type.toString() + " " + this.getDescription();
+    }
+
+    /**
+     * Permitted types of replication.
+     */
+    public enum ReplicationType {
+        biologicalReplicate, technicalReplicateExtract, technicalReplicateLabeledExtract
     }
 }

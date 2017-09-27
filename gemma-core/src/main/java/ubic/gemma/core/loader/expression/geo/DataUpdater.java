@@ -14,17 +14,8 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.ArrayUtils;
@@ -33,9 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix1D;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -54,11 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -75,6 +59,10 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
@@ -117,15 +105,21 @@ public class DataUpdater {
 
     @Autowired
     private QuantitationTypeService qtService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     /**
      * For 3' arrays. This only works for single-platform experiments.
+     *
+     * @param ee                  ee
+     * @param pathToAptOutputFile file
      */
     public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform when passing APT output file." );
+            throw new IllegalArgumentException(
+                    "Can't handle experiments with more than one platform when passing APT output file." );
         }
 
         ArrayDesign ad = ads.iterator().next();
@@ -159,6 +153,9 @@ public class DataUpdater {
 
     /**
      * Replaces any existing "preferred" data. Must be a single-platform study
+     *
+     * @param ee ee
+     * @param ad ad
      */
     public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
 
@@ -203,12 +200,16 @@ public class DataUpdater {
     /**
      * Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have them and we ran
      * apt-probeset-summarize ourselves. Must be single-platform
+     *
+     * @param ee                  ee
+     * @param pathToAptOutputFile file
      */
     public void addAffyExonArrayData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform when passing APT output file" );
+            throw new IllegalArgumentException(
+                    "Can't handle experiments with more than one platform when passing APT output file" );
         }
 
         ArrayDesign ad = ads.iterator().next();
@@ -246,11 +247,11 @@ public class DataUpdater {
      * Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation type we
      * use internally. Counts and FPKM (if provided) are stored in addition.
      *
-     * @param ee
-     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms. The data set will be
-     *        switched to use it.
-     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
-     * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
+     * @param ee                  ee
+     * @param targetArrayDesign   - this should be one of the "Generic" gene-based platforms. The data set will be
+     *                            switched to use it.
+     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
+     * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
@@ -278,7 +279,8 @@ public class DataUpdater {
 
         QuantitationType log2cpmQt = makelog2cpmQt();
         DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
-        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats.convertToLog2Cpm( properCountMatrix, librarySize );
+        DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
+                .convertToLog2Cpm( properCountMatrix, librarySize );
 
         ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
 
@@ -310,10 +312,11 @@ public class DataUpdater {
      * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
      *
-     * @param ee
+     * @param ee             ee
      * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use this
-     *        for a multi-platform dataset)
-     * @param data to slot in
+     *                       for a multi-platform dataset)
+     * @param data           to slot in
+     * @return ee
      */
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -377,8 +380,8 @@ public class DataUpdater {
      * For backfilling log2cpm when only counts are available. This wouldn't be used routinely, because new experiments
      * get log2cpm computed when loaded.
      *
-     * @param ee
-     * @param qt
+     * @param ee ee
+     * @param qt qt
      */
     public void log2cpmFromCounts( ExpressionExperiment ee, QuantitationType qt ) {
         ee = experimentService.thawLite( ee );
@@ -386,7 +389,8 @@ public class DataUpdater {
         /*
          * Get the count data; Make sure it is currently preferred (so we don't do this twice by accident)
          */
-        Collection<DesignElementDataVector> counts = experimentService.getDesignElementDataVectors( Collections.singleton( qt ) );
+        Collection<DesignElementDataVector> counts = experimentService
+                .getDesignElementDataVectors( Collections.singleton( qt ) );
         ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( counts );
 
         // We need to do this from the Raw data, not the data that has been normalized etc.
@@ -402,7 +406,8 @@ public class DataUpdater {
 
             QuantitationType log2cpmQt = makelog2cpmQt();
             DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
-            DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats.convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
+            DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
+                    .convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
 
             ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
 
@@ -410,7 +415,8 @@ public class DataUpdater {
 
             Collection<ArrayDesign> platforms = experimentService.getArrayDesignsUsed( ee );
 
-            if ( platforms.size() > 1 ) throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
+            if ( platforms.size() > 1 )
+                throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
 
             ee = addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
         } catch ( Exception e ) {
@@ -428,9 +434,10 @@ public class DataUpdater {
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param ee the experiment to be modified
+     * @param ee             the experiment to be modified
      * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets)
-     * @param data the data to be used
+     * @param data           the data to be used
+     * @return ee
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -501,35 +508,30 @@ public class DataUpdater {
      * quantitation type. Note that this replaces the "raw" data. Similar to
      * AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
-     * 
-     * <p>
      * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
      * sample- and element-matching to happen here.
-     * 
-     * @param ee
+     *
+     * @param ee             ee
      * @param targetPlatform (this only works for a single-platform data set)
-     * @param qt
-     * @param data
-     * @return
+     * @param qt             qt
+     * @param data           data
+     * @return ee
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data ) {
         targetPlatform = this.arrayDesignService.thaw( targetPlatform );
         ee = this.experimentService.thawLite( ee );
 
-        DoubleMatrix<CompositeSequence, BioMaterial> rdata = matchElementsToRowNames( targetPlatform,
-                data );
+        DoubleMatrix<CompositeSequence, BioMaterial> rdata = matchElementsToRowNames( targetPlatform, data );
         matchBioMaterialsToColNames( ee, data, rdata );
         ExpressionDataDoubleMatrix eematrix = new ExpressionDataDoubleMatrix( ee, qt, rdata );
 
         return this.replaceData( ee, targetPlatform, eematrix );
     }
 
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
-
     /**
-     * This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
+     * @param ee ee
+     * @return This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
      */
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee ) {
 
@@ -567,7 +569,8 @@ public class DataUpdater {
         }
 
         ee = experimentService.replaceVectors( ee, vectors );
-        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils.join( arrayDesignsUsed, "; " ), true );
+        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils
+                .join( arrayDesignsUsed, "; " ), true );
 
         if ( arrayDesignsUsed.size() == 1 ) {
             postprocess( ee );
@@ -578,13 +581,6 @@ public class DataUpdater {
         return ee;
     }
 
-    /**
-     * 
-     * @param ee
-     * @param countEEMatrix
-     * @param readLength
-     * @param isPairedReads
-     */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             Integer readLength, Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -604,6 +600,8 @@ public class DataUpdater {
 
     /**
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
+     * @param ee      ee
+     * @param note    note
      */
     private void audit( ExpressionExperiment ee, String note, boolean replace ) {
         AuditEventType eventType;
@@ -709,6 +707,7 @@ public class DataUpdater {
     }
 
     /**
+     * @param ee ee
      * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
      */
     private Map<String, BioMaterial> makeBioMaterialNameMap( ExpressionExperiment ee ) {
@@ -758,9 +757,6 @@ public class DataUpdater {
         return countqt;
     }
 
-    /**
-     * @return
-     */
     private QuantitationType makelog2cpmQt() {
         QuantitationType qt = makeQt( true );
         qt.setName( "log2cpm" );
@@ -867,6 +863,8 @@ public class DataUpdater {
     }
 
     /**
+     * @param rawMatrix         matrix
+     * @param targetArrayDesign ad
      * @return matrix with row names fixed up. ColumnNames still need to be done.
      */
     private DoubleMatrix<CompositeSequence, BioMaterial> matchElementsToRowNames( ArrayDesign targetArrayDesign,
@@ -937,6 +935,9 @@ public class DataUpdater {
 
     /**
      * determine the target array design. We use filtered versions of these platforms from GEO.
+     *
+     * @param primaryTaxon taxon
+     * @return ad
      */
     private ArrayDesign prepareTargetPlatformForExonArrays( Taxon primaryTaxon ) {
 

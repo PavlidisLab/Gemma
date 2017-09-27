@@ -18,6 +18,24 @@
  */
 package ubic.gemma.core.loader.protein;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.loader.protein.biomart.BiomartEnsemblNcbiObjectGenerator;
+import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
+import ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionObjectGenerator;
+import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
+import ubic.gemma.model.association.Gene2GeneProteinAssociation;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -26,46 +44,23 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.loader.protein.biomart.BiomartEnsemblNcbiObjectGenerator;
-import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
-import ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionObjectGenerator;
-import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
-import ubic.gemma.model.association.Gene2GeneProteinAssociation;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.Persister;
-
 /**
  * Loader class for loading protein protein interactions into Gemma from STRING. Either use local files or retrieve
  * files using fetchers , those files are from String and biomart sites. Once these files are located parse them and
  * generate value objects, and load them into the database.
- * <p>
  * We use BioMart to get the mappings from Ensembl to NCBI. For biomart these value objects(EnsembleNcbiValueObject) are
  * grouped into a map keyed on ensembl peptide id. For string these value objects StringProteinProteinInteraction are
  * grouped into arrays held in a map keyed on taxon. Then one taxon at a time StringBiomartProteinConverter converts
  * them into gemma objects using the BioMartEnsembleNcbi map to find the perptide ids corresponding to the ncbi gene.
  * The generated gemma objects Gene2GeneProteinAssociation are then loaded. It is done taxon by taxon due to the risk of
  * GC memory errors.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class StringProteinInteractionLoader {
 
+    private static final int QUEUE_SIZE = 1000;
     private static Log log = LogFactory.getLog( StringProteinInteractionLoader.class );
-
-    private int loadedGeneCount = 0;
-
     protected Persister persisterHelper;
 
     protected GeneService geneService;
@@ -73,9 +68,7 @@ public class StringProteinInteractionLoader {
     protected ExternalDatabaseService externalDatabaseService;
 
     protected TaxonService taxonService;
-
-    private static final int QUEUE_SIZE = 1000;
-
+    private int loadedGeneCount = 0;
     private AtomicBoolean converterDone;
     private AtomicBoolean loaderDone;
 
@@ -92,20 +85,20 @@ public class StringProteinInteractionLoader {
      * remote download. After files have been located/fetched the files are parsed and converted into value objects.
      * These value objects are then converted into GEMMA Gene2GeneProteinInteractions. Which are then loaded into the
      * database. Can be run on all eligable TAXA in gemma or on a supplied taxon.
-     * 
-     * @param stringProteinFileNameLocal The name of the string file on the local system
-     * @param stringProteinFileNameRemote The name of the string file on the remote system (just in case the string name
-     *        proves to be too variable) - can be null
+     *
+     * @param stringProteinFileNameLocal     The name of the string file on the local system
+     * @param stringProteinFileNameRemote    The name of the string file on the remote system (just in case the string name
+     *                                       proves to be too variable) - can be null
      * @param localEnsembl2EntrezMappingFile The name of the local biomart file - can be null?
-     * @param taxa taxa to load data for. List of taxon to process
-     * @throws IOException
+     * @param taxa                           taxa to load data for. List of taxon to process
+     * @throws IOException io problems
      */
     public void load( File stringProteinFileNameLocal, String stringProteinFileNameRemote,
             File localEnsembl2EntrezMappingFile, Collection<Taxon> taxa ) throws IOException {
 
         // very basic validation before any processing done
-        validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote,
-                localEnsembl2EntrezMappingFile, taxa );
+        validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote, localEnsembl2EntrezMappingFile,
+                taxa );
 
         // retrieve STRING protein protein interactions
         StringProteinProteinInteractionObjectGenerator stringProteinProteinInteractionObjectGenerator = new StringProteinProteinInteractionObjectGenerator(
@@ -130,10 +123,10 @@ public class StringProteinInteractionLoader {
     }
 
     /**
-     * @param ensembl2entrezMappingFile
-     * @param taxa
+     * @param ensembl2entrezMappingFile mapping file
+     * @param taxa                      taxa
      * @return map between Ensembl peptide IDs and NCBI gene ids understood by Gemma.
-     * @throws IOException
+     * @throws IOException io problems
      */
     private Map<String, Ensembl2NcbiValueObject> getIdMappings( File ensembl2entrezMappingFile, Collection<Taxon> taxa )
             throws IOException {
@@ -148,8 +141,8 @@ public class StringProteinInteractionLoader {
 
     /**
      * Method to generate and load Gene2GeneProteinAssociation one taxon at a time
-     * 
-     * @param ensembl2ncbi Map of peptide ids to NCBI gene ids
+     *
+     * @param ensembl2ncbi                Map of peptide ids to NCBI gene ids
      * @param proteinInteractionsOneTaxon The protein interactions representing one taxon
      */
     public void loadOneTaxonAtATime( Map<String, Ensembl2NcbiValueObject> ensembl2ncbi,
@@ -159,7 +152,8 @@ public class StringProteinInteractionLoader {
         loaderDone.set( false );
         loadedGeneCount = 0;
         // generate gemma objects
-        StringProteinProteinInteractionConverter converter = new StringProteinProteinInteractionConverter( ensembl2ncbi );
+        StringProteinProteinInteractionConverter converter = new StringProteinProteinInteractionConverter(
+                ensembl2ncbi );
         converter.setStringExternalDatabase( this.getExternalDatabaseForString() );
 
         // create queue for String objects to be converted
@@ -178,12 +172,12 @@ public class StringProteinInteractionLoader {
     /**
      * Validate input parameters before processing with parsing and fetching. Should have been done already but should
      * not rely on calling class. Ensure that there are some valid taxa and that all files are ready to be processed.
-     * 
-     * @param stringProteinFileNameLocal The name of the string file on the local system
+     *
+     * @param stringProteinFileNameLocal  The name of the string file on the local system
      * @param stringProteinFileNameRemote The name of the string file on the remote system (just in case the string name
-     *        proves to be too variable)
-     * @param stringBiomartFile The name of the local biomart file FIXME this is actual the ensemble mapping?
-     * @param taxa taxa to load data for. List of taxon to process
+     *                                    proves to be too variable)
+     * @param stringBiomartFile           The name of the local biomart file FIXME this is actual the ensemble mapping?
+     * @param taxa                        taxa to load data for. List of taxon to process
      */
     private void validateLoadParameters( File stringProteinFileNameLocal, String stringProteinFileNameRemote,
             File stringBiomartFile, Collection<Taxon> taxa ) {
@@ -208,9 +202,9 @@ public class StringProteinInteractionLoader {
     }
 
     /**
-     * Thead to handle loading Gene2GeneProteinAssociation into db.
-     * 
-     * @param geneQueue a blocking queue of genes to be loaded into the database loads genes into the database
+     * Thread to handle loading Gene2GeneProteinAssociation into db.
+     *
+     * @param gene2GeneProteinAssociationQueue a blocking queue of genes to be loaded into the database loads genes into the database
      */
     private void load( final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue ) {
         final SecurityContext context = SecurityContextHolder.getContext();
@@ -238,8 +232,8 @@ public class StringProteinInteractionLoader {
     /**
      * Poll the queue to see if any Gene2GeneProteinAssociation to load into database. If so firstly check to see if the
      * genes are in the gemma db as these identifiers came from biomart If both genes found load.
-     * 
-     * @param geneQueue queue of Gene2GeneProteinAssociation to load
+     *
+     * @param gene2GeneProteinAssociationQueue queue of Gene2GeneProteinAssociation to load
      */
     void doLoad( final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue ) {
         log.info( "starting processing " );
@@ -285,11 +279,6 @@ public class StringProteinInteractionLoader {
         loaderDone.set( true );
     }
 
-    /**
-     * External database entry representing the string db
-     * 
-     * @return
-     */
     public ExternalDatabase getExternalDatabaseForString() {
         ExternalDatabase externalDatabase = externalDatabaseService.find( "STRING" );
         return externalDatabase;
@@ -309,7 +298,7 @@ public class StringProteinInteractionLoader {
 
     /**
      * PersisterHelper bean.
-     * 
+     *
      * @param persisterHelper the persisterHelper to set
      */
     public void setPersisterHelper( Persister persisterHelper ) {
@@ -318,7 +307,7 @@ public class StringProteinInteractionLoader {
 
     /**
      * Number of genes successfully loaded.
-     * 
+     *
      * @return the loadedGeneCount
      */
     public int getLoadedGeneCount() {

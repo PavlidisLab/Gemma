@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -30,14 +29,15 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 
 /**
  * Provides convenience methods to provide ExternalDatabases and DatabaseEntries for common cases, such as Genbank.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class ExternalDatabaseUtils {
 
     private static Log log = LogFactory.getLog( ExternalDatabaseUtils.class.getName() );
+    @Autowired
+    private ExternalDatabaseDao externalDatabaseDao;
 
     /**
      * @return a transient instance of the Genbank database referece.
@@ -51,7 +51,7 @@ public class ExternalDatabaseUtils {
 
     /**
      * @param accession in the form XXXXXX or XXXXX.N where N is a version number. The first part becomes the accession,
-     *        the second the version
+     *                  the second the version
      * @return a DatabaseEntry representing the genbank accession.
      */
     public static DatabaseEntry getGenbankAccession( String accession ) {
@@ -61,20 +61,18 @@ public class ExternalDatabaseUtils {
 
         dbEntry.setAccession( split[0] );
 
-        if ( split.length == 2 ) dbEntry.setAccessionVersion( split[1] );
+        if ( split.length == 2 )
+            dbEntry.setAccessionVersion( split[1] );
 
         dbEntry.setExternalDatabase( getGenbank() );
 
         return dbEntry;
     }
 
-    @Autowired
-    private ExternalDatabaseDao externalDatabaseDao;
-
     /**
      * @param seekPersistent if true, searches the database for an existing persistent copy. If false, just returns a
-     *        transient instance.
-     * @return
+     *                       transient instance.
+     * @return ext db
      */
     public ExternalDatabase getGenbank( boolean seekPersistent ) {
         if ( seekPersistent ) {

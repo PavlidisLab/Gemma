@@ -18,16 +18,8 @@
  */
 package ubic.gemma.core.externalDb;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Collection;
-
-import javax.sql.DataSource;
-
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.object.MappingSqlQuery;
-
 import ubic.basecode.util.SQLUtils;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.model.genome.Chromosome;
@@ -35,15 +27,20 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Collection;
+
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class GoldenPathQuery extends GoldenPath {
 
+    BlatResultParser parser = new BlatResultParser();
     private EstQuery estQuery;
     private MrnaQuery mrnaQuery;
-    BlatResultParser parser = new BlatResultParser();
 
     public GoldenPathQuery() {
         super();
@@ -61,11 +58,10 @@ public class GoldenPathQuery extends GoldenPath {
 
     /**
      * Locate the alignment for the given sequence, if it exists in the goldenpath database.
-     * <p>
      * Implementation note: This queries the est and mrna tables only.
-     * 
+     *
      * @param accession The genbank accession of the sequence.
-     * @return
+     * @return blat results
      */
     public Collection<BlatResult> findAlignments( String accession ) {
         Collection<BlatResult> results = estQuery.execute( accession );
@@ -74,22 +70,6 @@ public class GoldenPathQuery extends GoldenPath {
         }
 
         return mrnaQuery.execute( accession );
-    }
-
-    private class EstQuery extends MappingSqlQuery<BlatResult> {
-
-        public EstQuery( DataSource dataSource ) {
-            super( dataSource, "SELECT * FROM all_est where qName = ?" );
-            super.declareParameter( new SqlParameter( "accession", Types.VARCHAR ) );
-            compile();
-        }
-
-        @Override
-        protected BlatResult mapRow( ResultSet rs, int rowNum ) throws SQLException {
-            return convertResult( rs );
-
-        }
-
     }
 
     private BlatResult convertResult( ResultSet rs ) throws SQLException {
@@ -131,8 +111,8 @@ public class GoldenPathQuery extends GoldenPath {
             }
         }
 
-        result.setTargetChromosome( Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(),
-                getTaxon() ) );
+        result.setTargetChromosome(
+                Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(), getTaxon() ) );
         result.getTargetChromosome().getSequence().setName( chrom );
         result.getTargetChromosome().getSequence().setLength( rs.getLong( "tSize" ) );
         result.getTargetChromosome().getSequence().setTaxon( getTaxon() );
@@ -141,10 +121,33 @@ public class GoldenPathQuery extends GoldenPath {
         return result;
     }
 
+    @Override
+    protected void init() {
+        super.init();
+        estQuery = new EstQuery( this.jdbcTemplate.getDataSource() );
+        mrnaQuery = new MrnaQuery( this.jdbcTemplate.getDataSource() );
+    }
+
+    private class EstQuery extends MappingSqlQuery<BlatResult> {
+
+        public EstQuery( DataSource dataSource ) {
+            super( dataSource, "SELECT * FROM all_est WHERE qName = ?" );
+            super.declareParameter( new SqlParameter( "accession", Types.VARCHAR ) );
+            compile();
+        }
+
+        @Override
+        protected BlatResult mapRow( ResultSet rs, int rowNum ) throws SQLException {
+            return convertResult( rs );
+
+        }
+
+    }
+
     private class MrnaQuery extends MappingSqlQuery<BlatResult> {
 
         public MrnaQuery( DataSource dataSource ) {
-            super( dataSource, "SELECT * FROM all_mrna where qName = ?" );
+            super( dataSource, "SELECT * FROM all_mrna WHERE qName = ?" );
             super.declareParameter( new SqlParameter( "accession", Types.VARCHAR ) );
             compile();
         }
@@ -154,13 +157,6 @@ public class GoldenPathQuery extends GoldenPath {
             return convertResult( rs );
         }
 
-    }
-
-    @Override
-    protected void init() {
-        super.init();
-        estQuery = new EstQuery( this.jdbcTemplate.getDataSource() );
-        mrnaQuery = new MrnaQuery( this.jdbcTemplate.getDataSource() );
     }
 
 }

@@ -18,17 +18,10 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.ObjectArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.dataStructure.matrix.MatrixUtil;
 import ubic.basecode.io.ByteArrayConverter;
@@ -43,16 +36,16 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.ObjectArrayList;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
 
 /**
  * Handles the actual coexpression analysis, once handed data that has been prepared. Results are made available at the
  * end. See LinkAnalysisCli for more instructions. This should be created for each analysis - it's not reusable.
- * 
- * @author xiangwan
- * @author paul (refactoring)
- * @version $Id$
+ *
+ * @author xiangwan, paul (refactoring)
  */
 public class LinkAnalysis {
 
@@ -77,12 +70,10 @@ public class LinkAnalysis {
 
     private Taxon taxon = null;
 
-    /**
-     * @param config
-     */
     public LinkAnalysis( LinkAnalysisConfig config ) {
         this.form = NumberFormat.getInstance();
-        if ( form instanceof DecimalFormat ) ( ( DecimalFormat ) form ).applyPattern( "0.###E0" );
+        if ( form instanceof DecimalFormat )
+            ( ( DecimalFormat ) form ).applyPattern( "0.###E0" );
         this.config = config;
     }
 
@@ -153,6 +144,10 @@ public class LinkAnalysis {
         return analysis;
     }
 
+    public void setAnalysisObj( CoexpressionAnalysis analysis ) {
+        this.analysis = analysis;
+    }
+
     public LinkAnalysisConfig getConfig() {
         return config;
     }
@@ -173,15 +168,23 @@ public class LinkAnalysis {
         return dataMatrix;
     }
 
+    public void setDataMatrix( ExpressionDataDoubleMatrix paraDataMatrix ) {
+        this.dataMatrix = paraDataMatrix;
+    }
+
     public BioAssaySet getExpressionExperiment() {
         return this.expressionExperiment;
+    }
+
+    public void setExpressionExperiment( BioAssaySet expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**
      * Gene the genes that were tested, according to the rows that are currently in the dataMatrix (so call this after
      * filtering!)
-     * 
-     * @return
+     *
+     * @return set
      */
     public Set<Gene> getGenesTested() {
         Set<Gene> genes = new HashSet<>();
@@ -223,7 +226,7 @@ public class LinkAnalysis {
     /**
      * @param index row number in the metrixMatirx
      * @return how many Links that probe appears in, or null if the probeDegree has not been populated for that index
-     *         (that is, either to early to check, or it was zero).
+     * (that is, either to early to check, or it was zero).
      */
     public Integer getProbeDegree( int index ) {
         return this.probeDegreeMap.get( index );
@@ -234,31 +237,16 @@ public class LinkAnalysis {
     }
 
     /**
-     * @return
-     */
-    public Taxon getTaxon() {
-        return this.taxon;
-    }
-
-    public void setAnalysisObj( CoexpressionAnalysis analysis ) {
-        this.analysis = analysis;
-    }
-
-    public void setDataMatrix( ExpressionDataDoubleMatrix paraDataMatrix ) {
-        this.dataMatrix = paraDataMatrix;
-    }
-
-    public void setExpressionExperiment( BioAssaySet expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    /**
      * Once set, is unmodifiable.
-     * 
-     * @param probeToGeneMap
+     *
+     * @param probeToGeneMap map
      */
     public void setProbeToGeneMap( Map<CompositeSequence, Set<Gene>> probeToGeneMap ) {
         this.probeToGeneMap = Collections.unmodifiableMap( probeToGeneMap );
+    }
+
+    public Taxon getTaxon() {
+        return this.taxon;
     }
 
     public void setTaxon( Taxon taxon ) {
@@ -435,15 +423,12 @@ public class LinkAnalysis {
         computeProbeDegrees();
     }
 
-    /**
-     * 
-     *
-     */
     private void init() {
         // estimate the correlation needed to reach significance.
         double scoreP = CorrelationStats.correlationForPvalue( config.getFwe() / this.metricMatrix.getNumUniqueGenes(),
                 this.dataMatrix.columns() ) - 0.001; // magic number.
-        if ( scoreP > config.getCorrelationCacheThreshold() ) config.setCorrelationCacheThreshold( scoreP );
+        if ( scoreP > config.getCorrelationCacheThreshold() )
+            config.setCorrelationCacheThreshold( scoreP );
     }
 
 }

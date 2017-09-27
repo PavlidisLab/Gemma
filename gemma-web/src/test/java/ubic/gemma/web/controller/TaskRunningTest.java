@@ -18,16 +18,8 @@
  */
 package ubic.gemma.web.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
@@ -36,11 +28,14 @@ import ubic.gemma.core.job.progress.ProgressStatusService;
 import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
 
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 /**
  * Test of long job control.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class TaskRunningTest extends BaseSpringWebTest {
 
@@ -53,9 +48,6 @@ public class TaskRunningTest extends BaseSpringWebTest {
     @Autowired
     private MockLongJobController mockLongJobController;
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testCancelledRun() throws Exception {
 
@@ -74,9 +66,6 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertEquals( SubmittedTask.Status.CANCELLING, task.getStatus() );
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testFailedRun() throws Exception {
 
@@ -91,7 +80,8 @@ public class TaskRunningTest extends BaseSpringWebTest {
         ProgressData lastResult = null;
         long timeout = 5000;
         long startTime = System.currentTimeMillis();
-        wait: while ( true ) {
+        wait:
+        while ( true ) {
             Thread.sleep( 500 );
             List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
             if ( result.size() > 0 ) {
@@ -101,21 +91,20 @@ public class TaskRunningTest extends BaseSpringWebTest {
                     if ( lr.isFailed() ) {
                         return; // yay
                     }
-                    if ( lr.isDone() ) break wait;
+                    if ( lr.isDone() )
+                        break wait;
                 }
             }
             log.info( "Waiting .." );
 
-            if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
+            if ( System.currentTimeMillis() - startTime > timeout )
+                fail( "Test timed out" );
         }
 
         assertNotNull( lastResult );
         assertTrue( lastResult.isFailed() );
     }
-
-    /**
-     * @throws Exception
-     */
+    
     @Test
     public final void testSuccessfulRun() throws Exception {
 
@@ -126,18 +115,21 @@ public class TaskRunningTest extends BaseSpringWebTest {
         long timeout = 5000;
         ProgressData lastResult = null;
         long startTime = System.currentTimeMillis();
-        wait: while ( true ) {
+        wait:
+        while ( true ) {
             Thread.sleep( 500 );
             List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
             if ( result.size() > 0 ) {
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
-                    if ( lr.isDone() ) break wait;
+                    if ( lr.isDone() )
+                        break wait;
                 }
             }
             log.info( "Waiting .." );
 
-            if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
+            if ( System.currentTimeMillis() - startTime > timeout )
+                fail( "Test timed out" );
         }
         assertNotNull( lastResult );
         assertTrue( !lastResult.isFailed() );

@@ -14,22 +14,16 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface TwoChannelMissingValueHelperService {
 
-    /**
-     * @param source
-     * @param results
-     * @return
-     */
-    public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
+    Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
             Collection<RawExpressionDataVector> results );
 }

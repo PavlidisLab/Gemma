@@ -14,17 +14,16 @@
  */
 package ubic.gemma.core.job.progress;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * These methods are exposed to front-end.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 // TODO: rename it controller or AJAXService or something else. We need some clear way to mark things as exposed to
 // TODO: to the front end
@@ -34,36 +33,32 @@ public interface ProgressStatusService {
 
     /**
      * Set up an email alert for this job; an email will be sent when it has finished (or failed).
-     * 
-     * @param taskId
+     *
+     * @param taskId task id
      */
-    public void addEmailAlert( String taskId );
+    void addEmailAlert( String taskId );
 
     /**
      * Attempt to cancel the job.
-     * 
-     * @param taskId
+     *
+     * @param taskId tak id
      * @return true if cancelling was error-free, false otherwise.
      */
-    public boolean cancelJob( String taskId );
+    boolean cancelJob( String taskId );
 
-    public Object checkResult( String taskId ) throws Exception;
+    Object checkResult( String taskId ) throws Exception;
 
     /**
      * Get the latest information about how a job is doing.
-     * 
-     * @param taskId
-     * @return
+     *
+     * @param taskId id
+     * @return progress data
      */
-    public List<ProgressData> getProgressStatus( String taskId );
+    List<ProgressData> getProgressStatus( String taskId );
 
-    public SubmittedTaskValueObject getSubmittedTask( String taskId );
+    SubmittedTaskValueObject getSubmittedTask( String taskId );
 
-    /**
-     * @return
-     * @see ubic.gemma.core.job.executor.webapp.TaskRunningServiceImpl#getSubmittedTasks()
-     */
     @Secured({ "GROUP_ADMIN" })
-    public Collection<SubmittedTaskValueObject> getSubmittedTasks();
+    Collection<SubmittedTaskValueObject> getSubmittedTasks();
 
 }

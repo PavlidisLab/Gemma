@@ -18,9 +18,16 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Keyword;
+import ubic.gemma.model.common.description.MedicalSubjectHeading;
+import ubic.gemma.model.common.description.PublicationType;
+import ubic.gemma.model.expression.biomaterial.Compound;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -28,21 +35,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Keyword;
-import ubic.gemma.model.common.description.MedicalSubjectHeading;
-import ubic.gemma.model.common.description.PublicationType;
-import ubic.gemma.model.expression.biomaterial.Compound;
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class PubMedXMLParserTest {
 
@@ -116,8 +112,8 @@ public class PubMedXMLParserTest {
             assertNotNull( publicationDate );
             assertEquals( "2010", f.format( publicationDate ) );
 
-            assertTrue( br.getAbstractText().startsWith(
-                    "This Institute of Medicine (IOM) study grew out of discussions" ) );
+            assertTrue( br.getAbstractText()
+                    .startsWith( "This Institute of Medicine (IOM) study grew out of discussions" ) );
             assertTrue( br.getAbstractText().endsWith( "interested general public." ) );
 
         } catch ( RuntimeException e ) {
@@ -133,10 +129,8 @@ public class PubMedXMLParserTest {
         }
     }
 
-    /**
-     * Test uses 20301315
-     * 
-     * @throws Exception
+    /*
+     * Test uses 2030131
      */
     @Test
     public void testParseBookArticle() throws Exception {
@@ -158,8 +152,8 @@ public class PubMedXMLParserTest {
             assertNotNull( publicationDate );
             assertEquals( "2003", f.format( publicationDate ) );
 
-            assertTrue( br.getAbstractText().startsWith(
-                    "Giant axonal neuropathy (GAN) is characterized by a severe early-onset" ) );
+            assertTrue( br.getAbstractText()
+                    .startsWith( "Giant axonal neuropathy (GAN) is characterized by a severe early-onset" ) );
             assertTrue( br.getAbstractText().endsWith(
                     "offering custom prenatal testing if the disease-causing mutations in a family are known." ) );
 
@@ -203,10 +197,8 @@ public class PubMedXMLParserTest {
         }
     }
 
-    /**
+    /*
      * This uses a medline-format file, instead of the pubmed xml files we get from the eutils.
-     * 
-     * @throws Exception
      */
     @Test
     public void testParseMulti() throws Exception {
@@ -263,8 +255,8 @@ public class PubMedXMLParserTest {
             assertTrue( br.getAbstractText().contains(
                     "METHODS: RGCs of Brown Norway rats were retrogradely labeled bilaterally with the "
                             + "fluorescent dye 4-(4-(dihexadecylamino)styryl)-N" ) );
-            assertTrue( br.getAbstractText()
-                    .contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
+            assertTrue(
+                    br.getAbstractText().contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
             log.info( br.getAbstractText() );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
@@ -279,10 +271,8 @@ public class PubMedXMLParserTest {
         }
     }
 
-    /**
+    /*
      * PMID 7914452 is an example of a retracted article.
-     * 
-     * @throws Exception
      */
     @Test
     public void testParseRetracted() throws Exception {

@@ -21,18 +21,16 @@ package ubic.gemma.web.controller.analysis.preprocess;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.analysis.expression.BatchInfoFetchTaskCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * For populating "batch" information about experiments.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Controller
 public class BatchInfoFetchController {
@@ -44,17 +42,13 @@ public class BatchInfoFetchController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    /**
-     * AJAX entry point.
-     * 
-     * @return
-     * @throws Exception
-     */
     public String run( Long id ) throws Exception {
-        if ( id == null ) throw new IllegalArgumentException( "ID cannot be null" );
+        if ( id == null )
+            throw new IllegalArgumentException( "ID cannot be null" );
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+        if ( ee == null )
+            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
         ee = expressionExperimentService.thawLite( ee );
 
         /*

@@ -23,9 +23,8 @@ import java.util.HashSet;
 
 /**
  * Constants used to help decipher GEO data files.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class GeoConstants {
 
@@ -66,29 +65,21 @@ public class GeoConstants {
 
         sequenceColumnNames = new HashSet<String>();
         sequenceColumnNames.add( "SEQUENCE" ); // agilent.
-        
+
         //LMD 24/07/09 Bug 1647
         probeOrganismColumnNames = new HashSet<String>();
-        probeOrganismColumnNames.add( "ORGANISM" ); 
-        probeOrganismColumnNames.add( "Species" );  
-        probeOrganismColumnNames.add( "org" ); 
+        probeOrganismColumnNames.add( "ORGANISM" );
+        probeOrganismColumnNames.add( "Species" );
+        probeOrganismColumnNames.add( "org" );
         probeOrganismColumnNames.add( "Species Scientific name" );//agilent?
         probeOrganismColumnNames.add( "Taxon" );
-        
+
     }
 
-    /**
-     * @param tag
-     * @return
-     */
     public static boolean likelyId( String tag ) {
         return idNames.contains( tag );
     }
 
-    /**
-     * @param id
-     * @return
-     */
     public static boolean likelyExternalReference( String id ) {
         return extRefNames.contains( id );
     }
@@ -96,16 +87,11 @@ public class GeoConstants {
     public static boolean likelySequence( String id ) {
         return sequenceColumnNames.contains( id );
     }
-    
-    
+
     public static boolean likelyProbeOrganism( String id ) {
         return probeOrganismColumnNames.contains( id );
     }
 
-    /**
-     * @param id
-     * @return
-     */
     public static boolean likelyProbeDescription( String id ) {
         return descriptionNames.contains( id );
     }

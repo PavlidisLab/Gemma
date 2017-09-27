@@ -18,87 +18,56 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.Collection;
+import java.util.Map;
+
 /**
  * @author kelsey
- * @version $Id$
  */
 public interface Gene2GOAssociationService {
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_ADMIN" })
-    public Gene2GOAssociation create( Gene2GOAssociation gene2GOAssociation );
+    Gene2GOAssociation create( Gene2GOAssociation gene2GOAssociation );
 
-    /**
-     * 
-     */
-    public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
+    Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
 
-    /**
-     * Returns all the Gene2GoAssociations for the given Gene
-     */
-    public Collection<Gene2GOAssociation> findAssociationByGene( ubic.gemma.model.genome.Gene gene );
+    Collection<Gene2GOAssociation> findAssociationByGene( ubic.gemma.model.genome.Gene gene );
 
-    /**
-     * 
-     */
-    public Collection<VocabCharacteristic> findByGene( ubic.gemma.model.genome.Gene gene );
+    Collection<VocabCharacteristic> findByGene( ubic.gemma.model.genome.Gene gene );
 
-    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes );
+    Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes );
 
-    public Collection<Gene> findByGOTerm( java.lang.String goID );
+    Collection<Gene> findByGOTerm( java.lang.String goID );
 
-    /**
-     * Returns all the genes that have the given GoTerms or any of the given goterms children.
-     */
-    public Collection<Gene> findByGOTerm( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon );
+    Collection<Gene> findByGOTerm( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_ADMIN" })
-    public Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
+    Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
 
-    /**
-     * Delete all Gene2GO associations from the system (done prior to an update)
-     */
     @Secured({ "GROUP_ADMIN" })
-    public void removeAll();
+    void removeAll();
 
-    /**
-     * @param uris
-     * @return
-     */
     Map<String, Collection<Gene>> getSets( Collection<String> uris );
 
     /**
-     * @param termsToFetch
+     * @param termsToFetch terms
      * @return all the genes that match any of the terms. Used to fetch genes associated with a term + children.
      */
-    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch );
+    Collection<Gene> findByGOTerms( Collection<String> termsToFetch );
 
     /**
-     * @param termsToFetch
-     * @param taxon constraint
+     * @param termsToFetch terms
+     * @param taxon        constraint
      * @return all the genes that match any of the terms. Used to fetch genes associated with a term + children.
      */
-    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon );
+    Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon );
 
-    /**
-     * @param termsToFetch
-     * @return
-     */
-    public Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
+    Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
 
 }

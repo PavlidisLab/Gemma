@@ -15,29 +15,27 @@
 
 package ubic.gemma.core.loader.genome.gene;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 
 import java.io.IOException;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.basecode.util.FileTools;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test that Gemma can load genes from an external gene file with format : #GeneSymbol GeneName Uniprot ZYX ZYXIN Q15942
  * ZXDC ZXD FAMILY ZINC FINGER C Q8C8V1
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
 
@@ -59,18 +57,21 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         geneFile = FileTools.resourceToPath( "/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
         try {
             Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYXMMMM" );
-            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+            if ( !zyx.isEmpty() )
+                geneService.remove( zyx );
             zyx = geneService.findByOfficialSymbol( "ZXDCMMMM" );
-            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+            if ( !zyx.isEmpty() )
+                geneService.remove( zyx );
             zyx = geneService.findByOfficialSymbol( "ZYXIN" );
-            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+            if ( !zyx.isEmpty() )
+                geneService.remove( zyx );
         } catch ( Exception e ) {
             log.warn( e );
             // this test may fail if we don't start with an empty database.
         }
     }
 
-    /**
+    /*
      * Tests that if the file is not in the correct format of 3 tab delimited fields exception thrown.
      */
     @Test
@@ -85,7 +86,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Test method for
      * {@link ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderServiceImpl#load(java.lang.String, java.lang.String)}.
      * Tests that 2 genes are loaded sucessfully into Gemma.
@@ -132,7 +133,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Tests that if file can not be found file not found exception thrown.
      */
     @Test
@@ -144,7 +145,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Tests that if taxon not stored in system IllegalArgumentExceptionThrown
      */
     @Test

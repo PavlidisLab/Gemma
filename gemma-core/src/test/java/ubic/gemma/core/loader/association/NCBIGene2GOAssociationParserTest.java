@@ -18,23 +18,21 @@
  */
 package ubic.gemma.core.loader.association;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests multiple both parsing and loading.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
 
@@ -43,7 +41,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
-    /**
+    /*
      * Configure parser and loader. Injecting the parser and loader with their dependencies.
      */
     @Before
@@ -54,7 +52,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
         gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
     }
 
-    /**
+    /*
      * Tests both the parser and the loader. This is more of an integration test, but since its dependencies are
      * localized to the Gemma project it has been added to the test suite.
      */

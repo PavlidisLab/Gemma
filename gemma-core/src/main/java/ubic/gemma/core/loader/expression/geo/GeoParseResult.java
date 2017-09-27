@@ -18,14 +18,10 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
+import ubic.gemma.core.loader.expression.geo.model.*;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.core.loader.expression.geo.model.GeoSample;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
 
 /**
  * This simply holds the results obtained from parsing.
@@ -58,9 +54,6 @@ public class GeoParseResult {
         return this.datasetMap;
     }
 
-    /**
-     * @return
-     */
     public Map<String, GeoDataset> getDatasets() {
         return this.datasetMap;
     }
@@ -72,9 +65,6 @@ public class GeoParseResult {
         return this.platformMap;
     }
 
-    /**
-     * @return
-     */
     public Map<String, GeoPlatform> getPlatforms() {
         return this.platformMap;
     }
@@ -86,16 +76,10 @@ public class GeoParseResult {
         return this.sampleMap;
     }
 
-    /**
-     * @return
-     */
     public Map<String, GeoSample> getSamples() {
         return this.sampleMap;
     }
 
-    /**
-     * @return
-     */
     public Map<String, GeoSeries> getSeries() {
         return this.seriesMap;
     }

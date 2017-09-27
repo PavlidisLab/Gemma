@@ -18,28 +18,25 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.Calendar;
-import java.util.Date;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.web.controller.WebConstants;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Controller to provide information on "what's new" in the system
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Controller
 @RequestMapping("/whatsnew")
@@ -48,11 +45,6 @@ public class WhatsNewController {
     @Autowired
     private WhatsNewService whatsNewService;
 
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
     @RequestMapping("/daily.html")
     public ModelAndView daily( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "wnDay" );
@@ -65,11 +57,6 @@ public class WhatsNewController {
         return mav;
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
     @RequestMapping("/generateCache.html")
     public ModelAndView generateCache( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( new RedirectView( WebConstants.HOME_URL ) );
@@ -83,18 +70,10 @@ public class WhatsNewController {
         return mav;
     }
 
-    /**
-     * @param whatsNewService the whatsNewService to set
-     */
     public void setWhatsNewService( WhatsNewService whatsNewService ) {
         this.whatsNewService = whatsNewService;
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
     @RequestMapping("/weekly.html")
     public ModelAndView weekly( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "wnWeek" );

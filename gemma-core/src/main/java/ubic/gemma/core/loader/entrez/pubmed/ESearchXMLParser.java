@@ -18,15 +18,6 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -35,33 +26,26 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class ESearchXMLParser {
 
     protected static final Log log = LogFactory.getLog( ESearchXMLParser.class );
 
-    /**
-     * @param is
-     * @return collection of identifiers retrieved.
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
-     */
     public Collection<String> parse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
         Document document = openAndParse( is );
         return extractIds( document );
     }
 
-    /**
-     * @param is
-     * @return
-     * @throws IOException
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     */
     private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
         //        if ( is.available() == 0 ) {
         //            throw new IOException( "XML stream contains no data." );
@@ -85,10 +69,6 @@ public class ESearchXMLParser {
         return Integer.parseInt( value );
     }
 
-    /**
-     * @param document
-     * @return
-     */
     private Collection<String> extractIds( Document doc ) {
         Collection<String> result = new HashSet<String>();
         NodeList idList = doc.getElementsByTagName( "Id" );

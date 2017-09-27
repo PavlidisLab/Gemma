@@ -62,7 +62,6 @@ import com.google.common.util.concurrent.MoreExecutors;
  * Handles the execution of tasks in threads that can be checked by clients later.
  * 
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class TaskRunningServiceImpl implements TaskRunningService {
@@ -200,11 +199,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         checkNotNull( taskCommand.getSecurityContext().getAuthentication(), "Must have Authentication." );
     }
 
-    /**
-     * @param taskCommand
-     * @param taskId
-     * @return
-     */
     private SubmittedTask<TaskResult> constructSubmittedTaskProxy( TaskCommand taskCommand, String taskId ) {
         String resultQueueName = Settings.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
         String statusQueueName = Settings.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;

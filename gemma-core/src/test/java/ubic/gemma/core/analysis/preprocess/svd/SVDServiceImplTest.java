@@ -14,47 +14,40 @@
  */
 package ubic.gemma.core.analysis.preprocess.svd;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
     @Autowired
+    ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
+    @Autowired
     private AnalysisUtilService analysisUtilService;
-
     @Autowired
     private SVDService svdService;
-
     @Autowired
     private GeoService geoService;
-
     @Autowired
     private ExpressionExperimentService eeService;
-
     private ExpressionExperiment ee;
-
-    @Autowired
-    ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
 
     @Test
     public void testsvd() throws Exception {
@@ -88,16 +81,14 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
     }
 
-    /**
+    /*
      * See bug 2139; two different sets of bioassays in the data.
-     * 
-     * @throws Exception
      */
     @Test
     public void testsvdGapped() throws Exception {
 
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse482short" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse482short" ) ) );
         // also used in the GeoDatasetServiceIntegrationTest.
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE482", false, true, false, false );

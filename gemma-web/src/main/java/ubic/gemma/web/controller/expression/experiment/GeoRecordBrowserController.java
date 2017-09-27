@@ -18,20 +18,18 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.Collection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.Collection;
+
 /**
- * @version $Id$
  * @author pavlidis
  */
 @Component
@@ -44,14 +42,15 @@ public class GeoRecordBrowserController {
 
     /**
      * AJAX
-     * 
+     *
      * @param start starting record number
      * @param count how many records to retrieve "per page"
      * @return GEO series records fetch from GEO.
-     * @throws IOException
-     * @throws ParseException
+     * @throws IOException    IO problems
+     * @throws ParseException parse problems
      */
-    public Collection<GeoRecord> browse( int start, int count, String searchString ) throws IOException, ParseException {
+    public Collection<GeoRecord> browse( int start, int count, String searchString )
+            throws IOException, ParseException {
         Collection<GeoRecord> geoRecords;
 
         if ( count == 0 ) {
@@ -75,15 +74,11 @@ public class GeoRecordBrowserController {
             log.info( "searchGeoRecords fired from Controller.browse" );
         }
 
-        log./* debug */info( "Returning " + geoRecords.size() + " records on page=" + startPage + ", search term="
-                + searchString );
+        log./* debug */info(
+                "Returning " + geoRecords.size() + " records on page=" + startPage + ", search term=" + searchString );
         return geoRecords;
     }
 
-    /**
-     * @param accession
-     * @return
-     */
     public String getDetails( String accession ) {
         try {
             return geoBrowserService.getDetails( accession );
@@ -92,10 +87,6 @@ public class GeoRecordBrowserController {
         }
     }
 
-    /**
-     * @param accession
-     * @return
-     */
     public boolean toggleUsability( String accession ) {
         return geoBrowserService.toggleUsability( accession );
     }

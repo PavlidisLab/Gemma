@@ -14,12 +14,8 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -28,9 +24,11 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * @author pavlidis
- * @version $Id$
  * @see DesignElementDataVectorService
  */
 @Service
@@ -76,7 +74,8 @@ public class DesignElementDataVectorServiceImpl extends DesignElementDataVectorS
     }
 
     @Override
-    protected Collection<? extends DesignElementDataVector> handleFind( Collection<QuantitationType> quantitationTypes ) {
+    protected Collection<? extends DesignElementDataVector> handleFind(
+            Collection<QuantitationType> quantitationTypes ) {
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
         results.addAll( this.getRawExpressionDataVectorDao().find( quantitationTypes ) );
         results.addAll( this.getProcessedExpressionDataVectorDao().find( quantitationTypes ) );
@@ -123,26 +122,11 @@ public class DesignElementDataVectorServiceImpl extends DesignElementDataVectorS
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleRemoveDataForCompositeSequence
-     * (ubic.gemma.model.expression.designElement.CompositeSequence)
-     */
     @Override
     protected void handleRemoveDataForCompositeSequence( CompositeSequence compositeSequence ) {
         this.getRawExpressionDataVectorDao().removeDataForCompositeSequence( compositeSequence );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleRemoveDataForQuantitationType
-     * (ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     * ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
     @Override
     protected void handleRemoveDataForQuantitationType( QuantitationType quantitationType ) {
         this.getRawExpressionDataVectorDao().removeDataForQuantitationType( quantitationType );
@@ -191,10 +175,6 @@ public class DesignElementDataVectorServiceImpl extends DesignElementDataVectorS
         }
     }
 
-    /**
-     * @param vectors
-     * @return
-     */
     private Class<? extends DesignElementDataVector> getVectorClass(
             Collection<? extends DesignElementDataVector> vectors ) {
         Class<? extends DesignElementDataVector> vectorClass = null;

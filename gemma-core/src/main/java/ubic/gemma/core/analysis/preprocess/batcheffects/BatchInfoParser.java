@@ -14,22 +14,9 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -38,11 +25,18 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Parse information on batch from raw data files. This will typically correspond to "scan date" for an array.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class BatchInfoParser {
 
@@ -50,11 +44,6 @@ public class BatchInfoParser {
 
     private ScanDateExtractor scanDateExtractor = null;
 
-    /**
-     * @param ee
-     * @param files
-     * @return
-     */
     public Map<BioMaterial, Date> getBatchInfo( ExpressionExperiment ee, Collection<LocalFile> files ) {
 
         Map<String, BioAssay> assayAccessions = getAccessionToBioAssayMap( ee );
@@ -83,8 +72,9 @@ public class BatchInfoParser {
                 }
             }
 
-            throw new IllegalStateException( "Did not get enough raw files :got " + bioAssays2Files.size()
-                    + ", expected " + assayAccessions.size() + " while processing " + ee.getShortName() );
+            throw new IllegalStateException(
+                    "Did not get enough raw files :got " + bioAssays2Files.size() + ", expected " + assayAccessions
+                            .size() + " while processing " + ee.getShortName() );
         }
 
         Map<BioMaterial, Date> result = getBatchInformationFromFiles( bioAssays2Files );
@@ -94,18 +84,12 @@ public class BatchInfoParser {
 
     /**
      * @return the extractor used. The class of the value can tell you what type of file was detected, or if it was
-     *         generic.
+     * generic.
      */
     public ScanDateExtractor getScanDateExtractor() {
         return scanDateExtractor;
     }
 
-    /**
-     * Bookkeeping
-     * 
-     * @param ee
-     * @return
-     */
     private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
         Map<String, BioAssay> assayAccessions = new HashMap<String, BioAssay>();
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -115,8 +99,8 @@ public class BatchInfoParser {
 
             if ( StringUtils.isBlank( accession.getAccession() ) ) {
                 throw new IllegalStateException(
-                        "Must have accession for each bioassay to get batch information from source for "
-                                + ee.getShortName() );
+                        "Must have accession for each bioassay to get batch information from source for " + ee
+                                .getShortName() );
             }
 
             assayAccessions.put( accession.getAccession(), ba );
@@ -126,14 +110,13 @@ public class BatchInfoParser {
 
     /**
      * Now we can parse the file to get the batch information.
-     * <p>
      * We allow ourselves to add dates to _some_ of the bioassays. It turns out to be common for there to be a single
      * corrupted date in CEL files, for example. However, downstream code has to be careful, and the batch factor could
      * be a problem too.
-     * 
-     * @param bioAssays2Files
+     *
+     * @param bioAssays2Files BA 2 files
      * @return map of biomaterials to dates. Biomaterials which did not have associated dates are not included in the
-     *         map.
+     * map.
      */
     private Map<BioMaterial, Date> getBatchInformationFromFiles( Map<BioAssay, File> bioAssays2Files ) {
 
@@ -186,23 +169,17 @@ public class BatchInfoParser {
         return result;
     }
 
-    /**
-     * @param arrayDesignUsed
-     * @param ba
-     * @param f
-     */
     private void locateExtractor( ArrayDesign arrayDesignUsed, BioAssay ba, File f ) {
-        String providerName = arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed.getDesignProvider()
-                .getName();
-        if ( providerName.equalsIgnoreCase( "affymetrix" )
-                || arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) {
+        String providerName =
+                arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed.getDesignProvider().getName();
+        if ( providerName.equalsIgnoreCase( "affymetrix" ) || arrayDesignUsed.getName().toLowerCase()
+                .contains( "affymetrix" ) ) {
             scanDateExtractor = new AffyScanDateExtractor();
-        } else if ( providerName.equalsIgnoreCase( "agilent" )
-                || arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) {
+        } else if ( providerName.equalsIgnoreCase( "agilent" ) || arrayDesignUsed.getName().toLowerCase()
+                .contains( "agilent" ) ) {
             scanDateExtractor = new AgilentScanDateExtractor();
-        } else if ( providerName.equalsIgnoreCase( "illumina" )
-                || arrayDesignUsed.getName().toLowerCase().contains( "illumina" )
-                || arrayDesignUsed.getName().toLowerCase().contains( "sentrix" ) ) {
+        } else if ( providerName.equalsIgnoreCase( "illumina" ) || arrayDesignUsed.getName().toLowerCase()
+                .contains( "illumina" ) || arrayDesignUsed.getName().toLowerCase().contains( "sentrix" ) ) {
 
             /*
              * Not all illumina arrays are beadarrays - e.g. GPL6799.
@@ -218,9 +195,9 @@ public class BatchInfoParser {
                  * We can attempt to use the slide number as the key, if the data is in the beadarray file format.s
                  */
 
-                throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
-                        + " not matched to a supported platform type for scan date extraction for " + ba
-                        + "(Illumina files do not contain dates)" );
+                throw new UnsupportedRawdataFileFormatException(
+                        arrayDesignUsed + " not matched to a supported platform type for scan date extraction for " + ba
+                                + "(Illumina files do not contain dates)" );
             }
         } else {
             log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
@@ -231,10 +208,10 @@ public class BatchInfoParser {
     /**
      * From the file names, match to the bioassays. GEO names things consistently (??) so this should work but not
      * ideal.
-     * 
-     * @param files
-     * @param assayAccessions
-     * @return
+     *
+     * @param files           files
+     * @param assayAccessions accessions
+     * @return map
      */
     private Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files,
             Map<String, BioAssay> assayAccessions ) {
@@ -254,9 +231,8 @@ public class BatchInfoParser {
                 continue;
             }
 
-            if ( n.toUpperCase().contains( ".CHP" ) || n.toUpperCase().contains( ".DAT" )
-                    || n.toUpperCase().contains( ".EXP" ) || n.toUpperCase().contains( ".RPT" )
-                    || n.toUpperCase().contains( ".TIF" ) ) {
+            if ( n.toUpperCase().contains( ".CHP" ) || n.toUpperCase().contains( ".DAT" ) || n.toUpperCase()
+                    .contains( ".EXP" ) || n.toUpperCase().contains( ".RPT" ) || n.toUpperCase().contains( ".TIF" ) ) {
                 continue;
             }
 

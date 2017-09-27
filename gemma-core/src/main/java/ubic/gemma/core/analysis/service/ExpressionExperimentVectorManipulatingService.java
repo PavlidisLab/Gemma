@@ -18,11 +18,7 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -31,9 +27,11 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @author pavlidis
- * @version $Id$
  */
 public abstract class ExpressionExperimentVectorManipulatingService {
 
@@ -47,9 +45,9 @@ public abstract class ExpressionExperimentVectorManipulatingService {
     protected ByteArrayConverter converter = new ByteArrayConverter();
 
     /**
-     * @param data where data will be stored, starts out empty
+     * @param data           where data will be stored, starts out empty
      * @param representation of the quantitation type for the vector
-     * @param oldV vector to be converted
+     * @param oldV           vector to be converted
      */
     protected void convertFromBytes( List<Object> data, PrimitiveType representation, DesignElementDataVector oldV ) {
         byte[] rawDat = oldV.getData();
@@ -89,16 +87,11 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         }
     }
 
-    /**
-     * @param arrayDesign
-     * @param type
-     * @return
-     */
     protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
             QuantitationType type ) {
 
-        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( arrayDesign,
-                type );
+        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService
+                .find( arrayDesign, type );
 
         if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
             return null;

@@ -28,10 +28,9 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  */
 public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
-    /**
+    /*
      * Disabled; this test was failing all of a sudden.
      *
-     * @throws Exception exception
      */
     @Test
     public void testConcurrentLoading() throws Exception {

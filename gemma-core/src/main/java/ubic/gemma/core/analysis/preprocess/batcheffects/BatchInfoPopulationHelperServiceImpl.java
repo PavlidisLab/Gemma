@@ -14,18 +14,6 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -33,24 +21,21 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.text.DateFormat;
+import java.util.*;
 
 /**
  * @author paul
- * @version $Id$
  */
 @Service
 public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulationHelperService {
@@ -76,11 +61,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     @Autowired
     private ExpressionExperimentService experimentService;
 
-    /**
-     * @param ee
-     * @param dates
-     * @return
-     */
     @Override
     @Transactional
     public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
@@ -139,9 +119,9 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * Apply some heuristics to condense the dates down to batches. For example, we might assume dates very close
      * together (for example, in the same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH, and we avoid singleton
      * batches) are to be treated as the same batch (see implementation for details).
-     * 
-     * @param allDates
-     * @return
+     *
+     * @param allDates all dates
+     * @return map
      */
     protected Map<String, Collection<Date>> convertDatesToBatches( Collection<Date> allDates ) {
         List<Date> lDates = new ArrayList<Date>( allDates );
@@ -202,10 +182,10 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                      * We're at the last sample, and it's a singleton. We fall through and allow adding it to the end of
                      * the last batch.
                      */
-                    log.warn( "Singleton at the end of the series, combining with the last batch: gap is "
-                            + String.format( "%.2f", ( currentDate.getTime() - lastDate.getTime() )
-                                    / ( double ) ( 1000 * 60 * 60 * 24 ) )
-                            + " hours." );
+                    log.warn( "Singleton at the end of the series, combining with the last batch: gap is " + String
+                            .format( "%.2f",
+                                    ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60
+                                            * 24 ) ) + " hours." );
                     mergedAnySingletons = true;
                 } else if ( gapIsLarge( currentDate, nextDate ) ) {
                     /*
@@ -260,10 +240,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     }
 
-    /**
-     * @param ee
-     * @return
-     */
     protected ExperimentalFactor makeFactorForBatch( ExpressionExperiment ee ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
@@ -278,11 +254,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         return ef;
     }
 
-    /**
-     * @param ee
-     * @param factor
-     * @return
-     */
     protected ExperimentalFactor persistFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
         ExperimentalDesign ed = experimentalDesignService.load( ee.getExperimentalDesign().getId() );
 
@@ -294,34 +265,25 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
     }
 
-    /**
-     * @param batchNum
-     * @param df
-     * @param d
-     * @return
-     */
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
         String batchDateString;
-        batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX
-                + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
-                + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
+        batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils
+                .leftPad( Integer.toString( batchNum ), 2, "0" ) + "_" + df
+                .format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
 
     /**
-     * @param earlierDate
-     * @param date
+     * @param earlierDate earlier date
+     * @param date        data
      * @return false if 'date' is considered to be in the same batch as 'earlierDate', true if we should treat it as a
-     *         separate batch.
+     * separate batch.
      */
     private boolean gapIsLarge( Date earlierDate, Date date ) {
-        return !DateUtils.isSameDay( date, earlierDate )
-                && DateUtils.addHours( earlierDate, MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH ).before( date );
+        return !DateUtils.isSameDay( date, earlierDate ) && DateUtils
+                .addHours( earlierDate, MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH ).before( date );
     }
 
-    /**
-     * @return
-     */
     private VocabCharacteristic getBatchFactorCategory() {
         VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
         c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );

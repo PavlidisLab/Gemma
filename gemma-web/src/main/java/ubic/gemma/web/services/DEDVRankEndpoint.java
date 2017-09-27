@@ -18,23 +18,22 @@
  */
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Given a collection of gene IDs, a collection of experiment IDs, and the method, the service will return a list of
@@ -42,14 +41,13 @@ import ubic.gemma.model.genome.Gene;
  * list of experiments returned in the field, "ee_ids". The output can be pictured as a matrix where the rows are the
  * genes and the columns are the experiments. (Ranks are per-array based.) Method can be one of the following: MEAN or
  * MAX
- * 
+ *
  * @author gavin
- * @version$Id$
  * @see ProcessedExpressionDataVectorDao.RankMethod
  */
 public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( DEDVRankEndpoint.class );
+    private static final Log log = LogFactory.getLog( DEDVRankEndpoint.class );
 
     /**
      * The local name of the expected request/response.
@@ -83,9 +81,9 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
-     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @param document       a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
     @Override
@@ -122,14 +120,15 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         for ( String type : methodIn )
             methodString = type;
         RankMethod method = getMethod( methodString );
-        if ( method == null ) return buildBadResponse( document, "Incorrect method input" );
+        if ( method == null )
+            return buildBadResponse( document, "Incorrect method input" );
 
         log.info( "XML input read: " + eeInput.size() + " experiment ids & " + geneInput.size() + " gene ids"
                 + " and method: " + methodString );
 
         // main call to expressionDataMatrixService to obtain rank results
-        DoubleMatrix<Gene, ExpressionExperiment> rankMatrix = expressionDataMatrixService.getRankMatrix( geneInput,
-                eeInput, method );
+        DoubleMatrix<Gene, ExpressionExperiment> rankMatrix = expressionDataMatrixService
+                .getRankMatrix( geneInput, eeInput, method );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
@@ -137,7 +136,8 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
-        if ( rankMatrix == null ) return buildBadResponse( document, "No ranking result" );
+        if ( rankMatrix == null )
+            return buildBadResponse( document, "No ranking result" );
 
         // -build single-row Collections to use for ExpressionDataMatrixBuilder
         // -need to do this so that we can use the .getPrefferedData()
@@ -172,7 +172,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
     }
 
     /**
-     * @param data
+     * @param data data
      * @return a string delimited representation of the double array passed in.
      */
     private String encode( double[] data ) {
@@ -191,14 +191,15 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Return the corresponding DedvRankService constant for max and mean options
-     * 
-     * @param methodString
-     * @return
+     *
+     * @param methodString method string
+     * @return rank method
      */
     private RankMethod getMethod( String methodString ) {
         if ( methodString.equalsIgnoreCase( "max" ) )
             return RankMethod.max;
-        else if ( methodString.equalsIgnoreCase( "mean" ) ) return RankMethod.mean;
+        else if ( methodString.equalsIgnoreCase( "mean" ) )
+            return RankMethod.mean;
 
         return null;
     }

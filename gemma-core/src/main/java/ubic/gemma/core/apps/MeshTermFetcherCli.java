@@ -18,6 +18,14 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.MedicalSubjectHeading;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -26,26 +34,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.MedicalSubjectHeading;
-import ubic.gemma.core.util.AbstractCLI;
-
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class MeshTermFetcherCli extends AbstractCLI {
 
     private static final int CHUNK_SIZE = 10;
+    private String file;
+    private boolean majorTopicsOnly = false;
 
-    /**
-     * @param args
-     */
     public static void main( String[] args ) {
         MeshTermFetcherCli p = new MeshTermFetcherCli();
         Exception exception = p.doWork( args );
@@ -54,14 +51,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
         }
     }
 
-    private String file;
-    private boolean majorTopicsOnly = false;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "fetchMeshTerms";
@@ -123,11 +112,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
         }
     }
 
-    /**
-     * @param inFile
-     * @return
-     * @throws IOException
-     */
     protected Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
         log.info( "Reading " + inFile );
 
@@ -135,7 +119,8 @@ public class MeshTermFetcherCli extends AbstractCLI {
         try (BufferedReader in = new BufferedReader( new FileReader( file ) );) {
             String line;
             while ( ( line = in.readLine() ) != null ) {
-                if ( line.startsWith( "#" ) ) continue;
+                if ( line.startsWith( "#" ) )
+                    continue;
 
                 ids.add( Integer.parseInt( line ) );
 
@@ -154,7 +139,8 @@ public class MeshTermFetcherCli extends AbstractCLI {
             List<String> t = new ArrayList<String>();
             for ( MedicalSubjectHeading mesh : meshTerms ) {
                 String term = mesh.getTerm();
-                if ( majorTopicsOnly && !mesh.getIsMajorTopic() ) continue;
+                if ( majorTopicsOnly && !mesh.getIsMajorTopic() )
+                    continue;
                 t.add( term );
             }
 

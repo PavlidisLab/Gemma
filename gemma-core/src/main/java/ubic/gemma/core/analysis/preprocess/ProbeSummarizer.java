@@ -22,15 +22,10 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 
 /**
  * Represents probe-level summary methods for Affymetrix microarrays.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public interface ProbeSummarizer {
 
-    /**
-     * @param dataMatrix
-     * @return
-     */
-    public DoubleMatrix<String, String> summarize( DoubleMatrix<String, String> dataMatrix );
+    DoubleMatrix<String, String> summarize( DoubleMatrix<String, String> dataMatrix );
 }

@@ -14,22 +14,20 @@
  */
 package ubic.gemma.persistence.util;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-
 /**
  * Used to hold information for matching to a new experiment, during persisting.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ArrayDesignsForExperimentCache {
     private static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
@@ -47,10 +45,6 @@ public class ArrayDesignsForExperimentCache {
 
     }
 
-    /**
-     * @param arrayDesign
-     * @param sequences
-     */
     public void add( ArrayDesign arrayDesign, Map<CompositeSequence, BioSequence> sequences ) {
         for ( CompositeSequence cs : sequences.keySet() ) {
             addToCache( cs );
@@ -63,9 +57,6 @@ public class ArrayDesignsForExperimentCache {
         this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
     }
 
-    /**
-     * @param cs
-     */
     public void addToCache( CompositeSequence cs ) {
 
         String key = makeKey( cs );
@@ -87,10 +78,6 @@ public class ArrayDesignsForExperimentCache {
         return arrayDesignCache;
     }
 
-    /**
-     * @param cs
-     * @return
-     */
     public CompositeSequence getFromCache( CompositeSequence cs ) {
 
         String key = makeKey( cs );
@@ -113,30 +100,21 @@ public class ArrayDesignsForExperimentCache {
 
     /**
      * Cache array design design elements (used for associating with ExpressionExperiments)
-     * <p>
      * Note that reporters are ignored, as we are not persisting them.
-     * 
+     *
      * @param arrayDesign To add to the cache, must be thawed already.
-     * @param c cache
      */
     private void addToDesignElementCache( final ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
         addToDesignElementCache( compositeSequences );
     }
 
-    /**
-     * @param seqs
-     */
     private void addToDesignElementCache( Collection<CompositeSequence> seqs ) {
         for ( CompositeSequence cs : seqs ) {
             addToCache( cs );
         }
     }
 
-    /**
-     * @param cs
-     * @return
-     */
     private String makeKey( CompositeSequence cs ) {
         ArrayDesign arrayDesign = cs.getArrayDesign();
         assert arrayDesign != null : cs + " does not have a platform";

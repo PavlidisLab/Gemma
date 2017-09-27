@@ -63,10 +63,9 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Going the opposite way as the other test.
      *
-     * @throws Exception exception
      */
     @Test
     public void testPersistGeneProduct() throws Exception {

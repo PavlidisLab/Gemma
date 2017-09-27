@@ -18,72 +18,20 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
+import junit.framework.TestCase;
+import org.apache.commons.lang3.RandomStringUtils;
+import ubic.gemma.model.common.description.LocalFile;
+
 import java.io.File;
 import java.util.Collection;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.lang3.RandomStringUtils;
-
-import ubic.gemma.model.common.description.LocalFile;
-
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class AbstractFetcherTest extends TestCase {
 
-    static class TestFetcher extends AbstractFetcher {
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see ubic.gemma.core.loader.util.fetcher.Fetcher#fetch(java.lang.String)
-         */
-        @Override
-        public Collection<LocalFile> fetch( String identifier ) {
-            return null;
-        }
-
-        public void setLocalDataPath( String localDataPath ) {
-            this.localBasePath = localDataPath;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
-         */
-        @Override
-        protected String formLocalFilePath( String identifier, File newDir ) {
-            return null;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
-         */
-        @Override
-        protected String formRemoteFilePath( String identifier ) {
-            return null;
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#initConfig()
-         */
-        @Override
-        protected void initConfig() {
-        }
-    }
-
     File f;
 
-    /**
-     * Test method for {@link ubic.gemma.core.loader.util.fetcher.AbstractFetcher#mkdir(java.lang.String)}.
-     */
     public final void testMkdirAlreadyExists() throws Exception {
         TestFetcher tf = new TestFetcher();
         String name = RandomStringUtils.randomAlphabetic( 4 );
@@ -97,9 +45,6 @@ public class AbstractFetcherTest extends TestCase {
         assertTrue( f.canRead() );
     }
 
-    /**
-     * Test method for {@link ubic.gemma.core.loader.util.fetcher.AbstractFetcher#mkdir(java.lang.String)}.
-     */
     public final void testMkdirMakeSubdirs() throws Exception {
         TestFetcher tf = new TestFetcher();
         String usertempdir = System.getProperty( "java.io.tmpdir" );
@@ -109,9 +54,6 @@ public class AbstractFetcherTest extends TestCase {
         assertTrue( f.canRead() );
     }
 
-    /**
-     * Test method for {@link ubic.gemma.core.loader.util.fetcher.AbstractFetcher#mkdir(java.lang.String)}.
-     */
     public final void testMkdirMakeTemp() throws Exception {
         TestFetcher tf = new TestFetcher();
         tf.setLocalDataPath( null );
@@ -119,17 +61,38 @@ public class AbstractFetcherTest extends TestCase {
         assertTrue( f.canRead() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#tearDown()
-     */
     @Override
     protected void tearDown() throws Exception {
 
         super.tearDown();
         if ( f != null && f.canRead() ) {
             f.delete();
+        }
+    }
+
+    static class TestFetcher extends AbstractFetcher {
+
+        @Override
+        public Collection<LocalFile> fetch( String identifier ) {
+            return null;
+        }
+
+        public void setLocalDataPath( String localDataPath ) {
+            this.localBasePath = localDataPath;
+        }
+
+        @Override
+        protected String formLocalFilePath( String identifier, File newDir ) {
+            return null;
+        }
+
+        @Override
+        protected String formRemoteFilePath( String identifier ) {
+            return null;
+        }
+
+        @Override
+        protected void initConfig() {
         }
     }
 

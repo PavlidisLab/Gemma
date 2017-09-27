@@ -37,9 +37,8 @@ import java.util.List;
 /**
  * Methods to create Spring contexts for Gemma. This is not used for webapps except under Test environments. It is
  * normally used for CLIs only.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class SpringContextUtil {
     private static Log log = LogFactory.getLog( SpringContextUtil.class.getName() );
@@ -47,8 +46,8 @@ public class SpringContextUtil {
     private static BeanFactory ctx = null;
 
     /**
-     * @param testing If true, it will get a test configured-BeanFactory
-     * @param isWebApp If true, configuration specific to the web application will be included.
+     * @param testing                           If true, it will get a test configured-BeanFactory
+     * @param isWebApp                          If true, configuration specific to the web application will be included.
      * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
      * @return BeanFactory or null if no context could be created.
      */
@@ -74,11 +73,6 @@ public class SpringContextUtil {
         return ctx;
     }
 
-    /**
-     * @param additionalConfigurationLocations
-     * @param paths
-     * @return
-     */
     private static String[] addPaths( String[] additionalConfigurationLocations, String[] paths ) {
         Object[] allPaths = ArrayUtils.addAll( paths, additionalConfigurationLocations );
         paths = new String[allPaths.length];
@@ -118,7 +112,7 @@ public class SpringContextUtil {
     // /**
     // * Find the configuration file locations. The files must be in your class path for this to work.
     // *
-    // * @return
+    // * @return string[]
     // */
     // public static String[] getConfigLocations() {
     // return getConfigLocations( false, true );
@@ -126,10 +120,10 @@ public class SpringContextUtil {
 
     /**
      * Find the configuration file locations. The files must be in your class path for this to work.
-     * 
-     * @param testing - if true, it will use the test configuration.
-     * @return
-     * @see getApplicationContext
+     *
+     * @param testing  - if true, it will use the test configuration.
+     * @param isWebapp is webapp
+     * @return string[]
      */
     public static String[] getConfigLocations( boolean testing, boolean isWebapp ) {
         if ( testing ) {
@@ -139,9 +133,6 @@ public class SpringContextUtil {
 
     }
 
-    /**
-     * @return
-     */
     private static String getGemmaHomeProperty() {
         String gemmaHome = Settings.getString( "gemma.home" );
         if ( gemmaHome == null ) {
@@ -150,10 +141,6 @@ public class SpringContextUtil {
         return gemmaHome;
     }
 
-    /**
-     * @param isWebapp
-     * @param paths
-     */
     private static void addCommonConfig( boolean isWebapp, List<String> paths ) {
 
         /*
@@ -183,11 +170,6 @@ public class SpringContextUtil {
         }
     }
 
-    /**
-     * @param compassOn
-     * @param isWebapp
-     * @return
-     */
     private static String[] getStandardConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/dataSource.xml" );
@@ -198,11 +180,6 @@ public class SpringContextUtil {
         return paths.toArray( new String[] {} );
     }
 
-    /**
-     * @param compassOn
-     * @param isWebapp
-     * @return
-     */
     private static String[] getTestConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/testDataSource.xml" );
@@ -215,12 +192,13 @@ public class SpringContextUtil {
 
     /**
      * Adds the resource to the application context and sets the parentContext as the parent of the resource
-     * 
-     * @param parentContext
-     * @param resource
-     * @return {@link ApplicationContext}
+     *
+     * @param parentContext parent context
+     * @param resource      resource
+     * @return ApplicationContext
      */
-    public static ApplicationContext addResourceToContext( ApplicationContext parentContext, ClassPathResource resource ) {
+    public static ApplicationContext addResourceToContext( ApplicationContext parentContext,
+            ClassPathResource resource ) {
         GenericWebApplicationContext spacesBeans = new GenericWebApplicationContext();
         XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( spacesBeans );
         xmlReader.loadBeanDefinitions( resource );

@@ -18,28 +18,22 @@
  */
 package ubic.gemma.core.ontology;
 
-import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.description.ExternalDatabase;
-
 import com.hp.hpl.jena.ontology.Ontology;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 
 /**
  * Service to load an OWL-formatted ontology into the system. The first time the ontology is accessed it is persisted
  * into the local system (can be slow) and this version is used for future accesses.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class OntologyUtils {
 
-    /**
-     * @param ontology
-     * @param ont
-     */
     protected static void jenaOntToExternalDatabase( ExternalDatabase ontology, Ontology ont ) {
         StmtIterator iterator = ont.listProperties();
         ontology.setType( DatabaseType.ONTOLOGY );
@@ -60,9 +54,9 @@ public class OntologyUtils {
 
     /**
      * Ontology must be in the persistent store for this to work.
-     * 
-     * @param url
-     * @return
+     *
+     * @param url url
+     * @return external db
      */
     protected static ExternalDatabase ontologyAsExternalDatabase( String url ) {
         ExternalDatabase ontology = ExternalDatabase.Factory.newInstance();

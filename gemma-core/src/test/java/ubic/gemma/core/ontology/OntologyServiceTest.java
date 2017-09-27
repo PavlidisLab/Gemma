@@ -18,38 +18,33 @@
  */
 package ubic.gemma.core.ontology;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.Collection;
 
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test will likely fail if the full disease ontology is configured to load; instead we want to load a small 'fake'
  * one.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class OntologyServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private OntologyService os;
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void test() throws Exception {
 
-        os.getDiseaseOntologyService().loadTermsInNameSpace(
-                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
+        os.getDiseaseOntologyService()
+                .loadTermsInNameSpace( this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
         Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null );
 
