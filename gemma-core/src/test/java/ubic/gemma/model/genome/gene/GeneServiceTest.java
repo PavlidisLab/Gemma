@@ -18,31 +18,27 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 /**
  * @author jsantos
- * @version $Id$
  */
 public class GeneServiceTest extends BaseSpringContextTest {
 
@@ -150,9 +146,6 @@ public class GeneServiceTest extends BaseSpringContextTest {
         geneDao.remove( gene );
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testFindEvenThoughHaveSameSymbol() throws Exception {
         Gene gene = Gene.Factory.newInstance();

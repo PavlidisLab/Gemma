@@ -99,7 +99,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkDeletedAcl( g );
     }
 
-    /**
+    /*
      * Create Array design, check ACLs are put on correctly and removed when the design is removed. Array Designs are
      * _simple_ compared to EEs!
      */
@@ -235,7 +235,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Test of EE ACLs and also SecurityNotInherited on EE set.
      */
     @Test
@@ -333,7 +333,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Test that when a new associated object is persisted by a cascade, it gets the correct permissions of the parent
      * object
      */

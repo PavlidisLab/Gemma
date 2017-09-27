@@ -19,31 +19,28 @@
 
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.DataInput;
-
+import com.google.common.io.ByteStreams;
+import com.googlecode.javaewah.EWAHCompressedBitmap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
-
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.model.genome.Gene;
 
-import com.google.common.io.ByteStreams;
-import com.googlecode.javaewah.EWAHCompressedBitmap;
+import java.io.DataInput;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public class SupportDetailsTest {
 
     /**
      * We store the bitmaps as blobs in the database. This just tests the correctness of these.
-     * 
-     * @throws Exception
+     *
+     * @throws Exception exception
      */
     @Test
     public void testSerializeEWAHCompressedBitmap() throws Exception {
@@ -65,16 +62,16 @@ public class SupportDetailsTest {
         ff.deserialize( c );
         assertTrue( ff.getPositions().isEmpty() );
 
-        Byte[] or2 = new Byte[] { 0, 0, 4, 22, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 32, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0 };
+        Byte[] or2 = new Byte[] { 0, 0, 4, 22, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 32, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0,
+                0 };
         DataInput di = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or2 ) );
         EWAHCompressedBitmap f = new EWAHCompressedBitmap();
         f.deserialize( di );
         RegressionTesting.closeEnough( new Integer[] { 1045 }, f.getPositions().toArray( new Integer[] {} ) );
 
         Byte[] or3 = new Byte[] { 0x00, 0x00, 0x19, 0x78, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00,
-                0x00, 0x3E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, ( byte ) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00,
-                0x00, 0x00, ( byte ) 0x8A, 0x00, ( byte ) 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x02 };
+                0x00, 0x3E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, ( byte ) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00,
+                0x00, ( byte ) 0x8A, 0x00, ( byte ) 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 };
         di = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or3 ) );
         f = new EWAHCompressedBitmap();
         f.deserialize( di );

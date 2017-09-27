@@ -18,27 +18,25 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.Collection;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
-import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author keshav
- * @version $Id$
  */
 public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
@@ -52,18 +50,13 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
     private String shortName = "GSE1611";
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.testing.BaseSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() throws Exception {
         ee = eeService.findByShortName( shortName );
 
         if ( ee == null ) {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gds994Medium" ) ) );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gds994Medium" ) ) );
             Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         }
@@ -77,9 +70,6 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
         }
     }
 
-    /**
-     * Tests writing out the experimental design
-     */
     @Test
     public void testWrite() throws Exception {
         if ( ee == null ) {

@@ -27,11 +27,12 @@ import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.*;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -39,7 +40,9 @@ import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -159,9 +162,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
-     * Test of simple case.
-     */
     @Test
     public void testCascadingCreateWithAssociatedAuditable() throws Exception {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
@@ -188,9 +188,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * FIXME this test occasionally fails on bamboo.
-     */
     @Test
     public void testSimpleAuditCreateUpdateUser() throws Exception {
 
@@ -257,7 +254,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
     }
 
-    /**
+    /*
      * Torture test. Passes fine with a single thread.
      */
     @Test

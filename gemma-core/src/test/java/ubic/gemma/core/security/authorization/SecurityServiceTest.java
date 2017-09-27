@@ -103,7 +103,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Tests that the same ACE can not be added twice to a securable object.
      */
     @Test
@@ -235,7 +235,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Tests changing object level security on the ArrayDesign from public to private WITHOUT the correct permission
      * (You need to be administrator).
      */
@@ -254,7 +254,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Tests an unlikely scenario?? but if there is an acl that was duplicated with same principal, permission and
      * object then both acls can be deleted.
      */
@@ -333,7 +333,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Test to ensure that on creation of principal using a username that does not exist in system exception is thrown.
      * Principal ids are created in these method calls on SecurityService.
      */

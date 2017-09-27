@@ -99,7 +99,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Tests getting composite sequences (target objects) with correct privileges on domain object (array design).
      */
     @Test
@@ -132,11 +132,10 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         assertTrue( securityService.isPrivate( arrayDesign ) );
     }
 
-    /**
+    /*
      * Test modifying an arrayDesign with the correct authorization privileges. The security interceptor should be
      * called on this method, as should the AclInterceptor.
      *
-     * @throws Exception
      */
     @Test
     public void testEditArrayDesignDisallowed() throws Exception {

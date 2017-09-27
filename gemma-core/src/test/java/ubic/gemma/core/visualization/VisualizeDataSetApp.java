@@ -18,18 +18,6 @@
  */
 package ubic.gemma.core.visualization;
 
-import java.awt.Font;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.UIManager;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
@@ -43,22 +31,28 @@ import org.jfree.data.xy.MatrixSeries;
 import org.jfree.data.xy.MatrixSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * @author keshav
- * @version $Id$
  */
 public class VisualizeDataSetApp {
-    private static Log log = LogFactory.getLog( VisualizeDataSetApp.class );
+    private static final Log log = LogFactory.getLog( VisualizeDataSetApp.class );
+    private static final int DEFAULT_MAX_SIZE = 3;
+    private String filePath = "aov.results-2-monocyte-data-bytime.bypat.data.sort";
 
-    /**
-     * @param args
-     */
     public static void main( String[] args ) {
 
         VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
@@ -87,16 +81,6 @@ public class VisualizeDataSetApp {
 
     }
 
-    private String filePath = "aov.results-2-monocyte-data-bytime.bypat.data.sort";
-
-    private static final int DEFAULT_MAX_SIZE = 3;
-
-    /**
-     * Add basic gui components.
-     * 
-     * @param title
-     * @return JFrame
-     */
     private static JFrame createGui( String title ) {
 
         try {
@@ -114,10 +98,6 @@ public class VisualizeDataSetApp {
         return frame;
     }
 
-    /**
-     * @param title
-     * @param matrixDisplay
-     */
     public void showDataMatrix( String title, MatrixDisplay<String, String> matrixDisplay ) {
 
         JFrame frame = createGui( title );
@@ -128,17 +108,14 @@ public class VisualizeDataSetApp {
         frame.setVisible( true );
     }
 
-    /**
-     * @param title
-     * @param dataCol
-     * @param numProfiles
-     */
     public void showProfilesBubbleChartView( String title, double[][] dataMatrix, int numProfiles ) {
 
-        if ( dataMatrix == null ) throw new RuntimeException( "dataMatrix cannot be " + null );
+        if ( dataMatrix == null )
+            throw new RuntimeException( "dataMatrix cannot be " + null );
 
-        JFreeChart chart = ChartFactory.createXYLineChart( title, "Platform", "Expression Value", null,
-                PlotOrientation.VERTICAL, false, false, false );
+        JFreeChart chart = ChartFactory
+                .createXYLineChart( title, "Platform", "Expression Value", null, PlotOrientation.VERTICAL, false, false,
+                        false );
 
         MatrixSeries series = new MatrixSeries( title, dataMatrix[0].length, dataMatrix.length );
         XYPlot plot = chart.getXYPlot();
@@ -149,14 +126,10 @@ public class VisualizeDataSetApp {
         showWindow( frame );
     }
 
-    /**
-     * @param title
-     * @param dataCol
-     * @param numProfiles
-     */
     public void showProfilesLineChartView( String title, Collection<double[]> dataCol, int numProfiles ) {
 
-        if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
+        if ( dataCol == null )
+            throw new RuntimeException( "dataCol cannot be " + null );
 
         if ( dataCol.size() < numProfiles ) {
             log.info( "Collection smaller than number of elements.  Will display first " + DEFAULT_MAX_SIZE
@@ -171,8 +144,9 @@ public class VisualizeDataSetApp {
             xySeriesCollection.addSeries( series );
         }
 
-        JFreeChart chart = ChartFactory.createXYLineChart( title, "Platform", "Expression Value", xySeriesCollection,
-                PlotOrientation.VERTICAL, false, false, false );
+        JFreeChart chart = ChartFactory
+                .createXYLineChart( title, "Platform", "Expression Value", xySeriesCollection, PlotOrientation.VERTICAL,
+                        false, false, false );
         chart.addSubtitle( new TextTitle( "(Raw data values)", new Font( "SansSerif", Font.BOLD, 14 ) ) );
 
         // XYPlot plot = chart.getXYPlot();
@@ -182,14 +156,10 @@ public class VisualizeDataSetApp {
         showWindow( frame );
     }
 
-    /**
-     * @param title
-     * @param dataCol
-     * @param numProfiles
-     */
     public void showProfilesPolarView( String title, Collection<double[]> dataCol, int numProfiles ) {
 
-        if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
+        if ( dataCol == null )
+            throw new RuntimeException( "dataCol cannot be " + null );
 
         JFreeChart chart = ChartFactory.createPolarChart( title, null, false, false, false );
 
@@ -210,10 +180,6 @@ public class VisualizeDataSetApp {
         showWindow( frame );
     }
 
-    /**
-     * @param iter
-     * @return
-     */
     private XYSeries getSeries( Comparable<Integer> key, double[] data ) {
         XYSeries series = new XYSeries( key, true, true );
         for ( int i = 0; i < data.length; i++ ) {
@@ -222,22 +188,15 @@ public class VisualizeDataSetApp {
         return series;
     }
 
-    /**
-     * @param headerExists
-     * @return
-     * @throws IOException
-     */
     private DoubleMatrix<String, String> parseData( boolean headerExists ) throws IOException {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );) {
-            if ( is == null ) throw new RuntimeException( "could not load data" );
+            if ( is == null )
+                throw new RuntimeException( "could not load data" );
             DoubleMatrixReader reader = new DoubleMatrixReader();
             return reader.read( is );
         }
     }
 
-    /**
-     * @param frame
-     */
     private void showWindow( ChartFrame frame ) {
         // Display the window.
         frame.setLocationRelativeTo( null );

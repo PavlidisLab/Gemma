@@ -19,14 +19,8 @@
 
 package ubic.gemma.core.loader.expression;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
@@ -34,13 +28,17 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Uses the Affy Power Tools, and full-sized data sets.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
 
@@ -63,9 +61,6 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         }
     }
 
-    /**
-     * Test method for .
-     */
     @Test
     public void testAddAffyExonArrayDataExpressionExperiment() throws Exception {
 
@@ -91,9 +86,6 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         ee = experimentService.load( ee.getId() );
     }
 
-    /**
-     * 
-     */
     @Test
     public void testAddAffyExonHuman() {
         if ( !hasApt ) {
@@ -112,9 +104,6 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         ee = experimentService.load( ee.getId() );
     }
 
-    /**
-     * 
-     */
     @Test
     public void testAddAffyExonRat() {
         if ( !hasApt ) {

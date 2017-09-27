@@ -363,9 +363,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         assertNotNull( num );
     }
 
-    /**
-     * Test for bug 1939 - dirty collection error after thaw.
-     */
     @Test
     public void testThaw() throws Exception {
         ad = super.getTestPersistentArrayDesign( 5, true );

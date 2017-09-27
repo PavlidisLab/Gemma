@@ -18,33 +18,24 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
+
 /**
- * Tests the {@link differentialExpressionAnalysisHelperService}.
- * 
  * @author keshav
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyzerConfigurationTest {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
     @Override
     @Before
     public void configureMocks() throws Exception {
         configureMockAnalysisServiceHelper( 1 );
     }
 
-    /**
+    /*
      * Tests the AnalyzerHelper.checkBiologicalReplicates method.
-     * <p>
      * Expected result: null exception
      */
     @Test

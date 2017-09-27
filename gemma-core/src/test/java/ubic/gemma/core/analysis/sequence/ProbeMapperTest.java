@@ -18,17 +18,9 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.model.genome.Taxon;
@@ -38,15 +30,20 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Unaware of the database.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ProbeMapperTest extends TestCase {
 
-    private static Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
+    private static final Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
     private Collection<BlatResult> blatres;
     private String databaseHost;
     private String databaseUser;
@@ -79,28 +76,28 @@ public class ProbeMapperTest extends TestCase {
         assertEquals( expected, actual, 0.0001 );
     }
 
-    /**
+    /*
      * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 2/2011 for hg19.
-     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
+     * <a href="http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929">here</a>
      * 73,461,405-73,480,144)
      */
     public void testLocateGene() {
 
-        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", new Long( 73461505 ), new Long(
-                73462405 ), "+" );
+        Collection<GeneProduct> products = humangp
+                .findRefGenesByLocation( "2", new Long( 73461505 ), new Long( 73462405 ), "+" );
         assertEquals( 6, products.size() );
         GeneProduct gprod = products.iterator().next();
         assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
     }
 
-    /**
+    /*
      * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the
      * strand works.
      */
     public void testLocateGeneOnWrongStrand() {
 
-        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long(
-                32918445 ), null );
+        Collection<GeneProduct> products = humangp
+                .findRefGenesByLocation( "6", new Long( 32916471 ), new Long( 32918445 ), null );
         assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
         assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
@@ -132,8 +129,9 @@ public class ProbeMapperTest extends TestCase {
     public void testIntronIssues() {
 
         ProbeMapperConfig config = new ProbeMapperConfig();
-        Collection<BlatAssociation> results = humangp.findAssociations( "chr1", 145517370L, 145518088L,
-                "145517370,145518070", "18,18", null, ThreePrimeDistanceMethod.RIGHT, config );
+        Collection<BlatAssociation> results = humangp
+                .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,
+                        ThreePrimeDistanceMethod.RIGHT, config );
 
         assertTrue( !results.isEmpty() );
         for ( BlatAssociation blatAssociation : results ) {
@@ -168,11 +166,11 @@ public class ProbeMapperTest extends TestCase {
         databaseUser = Settings.getString( "gemma.testdb.user" );
         databasePassword = Settings.getString( "gemma.testdb.password" );
 
-        mousegp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.mouse" ),
-                databaseHost, databaseUser, databasePassword );
+        mousegp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.mouse" ), databaseHost,
+                databaseUser, databasePassword );
 
-        humangp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.human" ),
-                databaseHost, databaseUser, databasePassword );
+        humangp = new GoldenPathSequenceAnalysis( 3306, Settings.getString( "gemma.goldenpath.db.human" ), databaseHost,
+                databaseUser, databasePassword );
 
     }
 

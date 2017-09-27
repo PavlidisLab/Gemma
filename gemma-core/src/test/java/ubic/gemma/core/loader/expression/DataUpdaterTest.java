@@ -19,20 +19,9 @@
 
 package ubic.gemma.core.loader.expression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -44,11 +33,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -60,9 +45,15 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 /**
  * @author paul
- * @version $Id$
  */
 public class DataUpdaterTest extends AbstractGeoServiceTest {
 
@@ -103,12 +94,10 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             experimentService.remove( e3 );
         }
 
-        if ( targetArrayDesign != null ) arrayDesignService.remove( targetArrayDesign );
+        if ( targetArrayDesign != null )
+            arrayDesignService.remove( targetArrayDesign );
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testAddData() throws Exception {
 
@@ -215,10 +204,10 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         dataUpdater.deleteData( ee, qt );
     }
 
-    /**
+    /*
      * More realistic test of RNA seq. GSE19166
      * 
-     * @throws Exception
+
      */
     @Test
     public void testLoadRNASeqData() throws Exception {
@@ -238,8 +227,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        try (InputStream countData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE19166_expression_count.test.txt" );
+        try (InputStream countData = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/flatfileload/GSE19166_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
                         "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" );) {
@@ -310,10 +299,9 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
     }
 
-    /**
+    /*
      * Test case where some samples cannot be used.
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void testLoadRNASeqDataWithMissingSamples() throws Exception {
@@ -338,8 +326,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        try (InputStream countData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
+        try (InputStream countData = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
                         "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );) {

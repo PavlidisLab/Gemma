@@ -18,13 +18,6 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -33,12 +26,14 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.support.SimpleSessionStatus;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.testing.BaseSpringWebTest;
+
+import java.io.IOException;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class PubMedQueryControllerTest extends BaseSpringWebTest {
 
@@ -50,11 +45,6 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
         assertEquals( "bibRefSearch", controller.getView() );
     }
 
-    /**
-     * Test method for
-     * {@link ubic.gemma.web.controller.common.description.bibref.PubMedQueryControllerImpl#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)}
-     * .
-     */
     @Test
     public final void testOnSubmit() throws Exception {
         MockHttpServletRequest request = newPost( "/pubMedSearch.html" );

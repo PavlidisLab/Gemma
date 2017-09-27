@@ -19,9 +19,18 @@
 
 package ubic.gemma.core.loader.protein;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.core.testing.PersistentDummyObjectHelper;
+import ubic.gemma.model.association.Gene2GeneProteinAssociation;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.service.association.Gene2GeneProteinAssociationService;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,19 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.association.Gene2GeneProteinAssociation;
-import ubic.gemma.persistence.service.association.Gene2GeneProteinAssociationService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.core.testing.BaseSpringContextTest;
-import ubic.gemma.core.testing.PersistentDummyObjectHelper;
+import static org.junit.Assert.*;
 
 /**
  * Tests the loader for string protein interactions: Test 3 out of the 4 scenarios for loading protein protein
@@ -56,9 +53,8 @@ import ubic.gemma.core.testing.PersistentDummyObjectHelper;
  * The only scenario not tested is downloading from string website simply too long recommended usage is to use local
  * file. As is downloads a file from biomart any changes in biomart interface will be picked up. Should add some more
  * error scenarios.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTest {
 
@@ -84,7 +80,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     /**
      * Set up and save some taxa.
-     * 
+     *
      * @return taxa
      */
     public Collection<Taxon> getTaxonToProcess() {
@@ -110,8 +106,6 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         return taxa;
     }
 
-    /**
-      */
     public void getTestPeristentGenesRat() {
 
         genesRat = new ArrayList<Gene>();
@@ -201,7 +195,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     }
 
-    /**
+    /*
      * tests that given a local biomart and local string file data is processed
      */
     @Test
@@ -243,7 +237,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     }
 
-    /**
+    /*
      * Tests that two taxons can be processed at same time.
      */
     @Test
@@ -258,8 +252,9 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         int counterAssociationsSavedRat = 0;
 
         try {
-            stringBiomartGene2GeneProteinAssociationLoader.load( new File( testPPisURL.getFile() ), null, new File(
-                    biomartTestfileURL.getFile() ), getTaxonToProcess() );
+            stringBiomartGene2GeneProteinAssociationLoader
+                    .load( new File( testPPisURL.getFile() ), null, new File( biomartTestfileURL.getFile() ),
+                            getTaxonToProcess() );
         } catch ( ConnectException e ) {
             log.warn( "Connection error, skipping test" );
         } catch ( IOException e ) {
@@ -292,7 +287,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     }
 
-    /**
+    /*
      * Test given a local string file and remote biomart file for one taxon can be processed
      */
     @Test
@@ -308,8 +303,8 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         Collection<Gene2GeneProteinAssociation> associationsBefore = gene2GeneProteinAssociationService.loadAll();
         assertEquals( 0, associationsBefore.size() );
         try {
-            stringBiomartGene2GeneProteinAssociationLoader.load( new File( fileNameStringZebraFishURL.getFile() ),
-                    null, null, taxaZebraFish );
+            stringBiomartGene2GeneProteinAssociationLoader
+                    .load( new File( fileNameStringZebraFishURL.getFile() ), null, null, taxaZebraFish );
         } catch ( ConnectException e ) {
             log.warn( "Connection error, skipping test" );
             return;

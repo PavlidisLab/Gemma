@@ -18,27 +18,25 @@
  */
 package ubic.gemma.core.loader.protein.biomart;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.model.genome.Taxon;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests that biomart fetcher works correctly. That is firstly that a file can be downloaded it calls the biomart
  * service safety net so if the url changes test will fail. Secondly that taxons and biomart queries can be correctly
  * formated.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class BioMartEnsemblNcbiFetcherTest {
 
@@ -50,10 +48,8 @@ public class BioMartEnsemblNcbiFetcherTest {
         biomartEnsemblNcbiFetcher = new BiomartEnsemblNcbiFetcher();
     }
 
-    /**
+    /*
      * Tests that given a taxon returns the correct attributes
-     * 
-     * @throws Exception
      */
     @Test
     public void testAttributesToRetrieveFromBioMart() throws Exception {
@@ -64,11 +60,8 @@ public class BioMartEnsemblNcbiFetcherTest {
         assertNotNull( attributes[4] );
     }
 
-    /**
+    /*
      * Tests that given a scientific named taxon taxon name is formatted correctly for biomart
-     * {@link ubic.gemma.core.loader.protein.biomart.BiomartEnsemblNcbiFetcher#getBioMartTaxonName()}.
-     * 
-     * @throws Exception
      */
     @Test
     public void testGetBioMartTaxonName() throws Exception {
@@ -81,9 +74,8 @@ public class BioMartEnsemblNcbiFetcherTest {
 
     }
 
-    /**
+    /*
      * Tests that a file can be downloaded from biomart in this case a rat file as it is quite small Test method for
-     * {@link ubic.gemma.core.loader.protein.biomart.BiomartEnsemblNcbiFetcher#getEnsemblNcibidata()}.
      */
     @Test
     public void testGetEnsemblNcibidata() {

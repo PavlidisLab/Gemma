@@ -18,48 +18,33 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.util.RegressionTesting;
+import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataTestMatrix;
+import ubic.gemma.core.loader.expression.geo.*;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.util.RegressionTesting;
-import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataTestMatrix;
-import ubic.gemma.core.loader.expression.geo.DatasetCombiner;
-import ubic.gemma.core.loader.expression.geo.GeoConverter;
-import ubic.gemma.core.loader.expression.geo.GeoConverterImpl;
-import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
-import ubic.gemma.core.loader.expression.geo.GeoParseResult;
-import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import static org.junit.Assert.*;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class ExpressionDataSVDTest {
 
     ExpressionDataDoubleMatrix testData = null;
     ExpressionDataSVD svd = null;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#setUp()
-     */
     @Before
     public void setUp() throws Exception {
 
@@ -68,9 +53,6 @@ public class ExpressionDataSVDTest {
 
     }
 
-    /**
-     * Test method for {@link ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD#getS()}.
-     */
     @Test
     public void testGetS() {
         DoubleMatrix<Integer, Integer> s = svd.getS();
@@ -81,18 +63,12 @@ public class ExpressionDataSVDTest {
         }
     }
 
-    /**
-     * Test method for {@link ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD#getU()}.
-     */
     @Test
     public void testGetU() {
         DoubleMatrix<CompositeSequence, Integer> u = svd.getU();
         assertNotNull( u );
     }
 
-    /**
-     * Test method for {@link ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD#svdNormalize()}.
-     */
     @Test
     public void testMatrixReconstruct() {
         ExpressionDataDoubleMatrix svdNormalize = svd.removeHighestComponents( 0 );
@@ -100,7 +76,7 @@ public class ExpressionDataSVDTest {
         RegressionTesting.closeEnough( testData.getMatrix(), svdNormalize.getMatrix(), 0.001 );
     }
 
-    /**
+    /*
      * <pre>
      * testdata<-read.table("C:/users/paul/dev/eclipseworkspace/Gemma/gemma-core/src/test/resources/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort",
      *          header=T, row.names=1)
@@ -150,7 +126,7 @@ public class ExpressionDataSVDTest {
         assertTrue( RegressionTesting.closeEnough( actualEigenValues, eigenvalues, 0.01 ) );
     }
 
-    /**
+    /*
      * See testEigenvalues
      * 
      * <pre>
@@ -172,10 +148,8 @@ public class ExpressionDataSVDTest {
         assertTrue( RegressionTesting.closeEnough( actualVarFractions, actualVarFractions, 0.01 ) );
     }
 
-    /**
+    /*
      * Test on full-sized data set.
-     * 
-     * @throws Exception
      */
     @Test
     public void testMatrixReconstructB() throws Exception {
@@ -188,8 +162,8 @@ public class ExpressionDataSVDTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) gc.convert( series );
+        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) gc
+                .convert( series );
         assertNotNull( result );
         assertEquals( 1, result.size() );
         ExpressionExperiment ee = result.iterator().next();

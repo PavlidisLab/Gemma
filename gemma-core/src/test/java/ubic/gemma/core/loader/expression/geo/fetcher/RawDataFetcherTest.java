@@ -18,24 +18,21 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.model.common.description.LocalFile;
+
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.common.description.LocalFile;
-
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class RawDataFetcherTest extends TestCase {
-    private static Log log = LogFactory.getLog( RawDataFetcherTest.class.getName() );
+    private static final Log log = LogFactory.getLog( RawDataFetcherTest.class.getName() );
 
-    /**
+    /*
      * Test method for 'ubic.gemma.core.loader.expression.geo.RawDataFetcher.fetch(String)'. This is kind of a slow test
      * because the file is big.
      */
@@ -60,10 +57,7 @@ public class RawDataFetcherTest extends TestCase {
         }
 
     }
-
-    /*
-     * Test method for 'ubic.gemma.core.loader.expression.geo.RawDataFetcher.fetch(String)'
-     */
+    
     public void testFetchNothingThere() throws Exception {
         RawDataFetcher rdf = new RawDataFetcher();
 
@@ -82,17 +76,11 @@ public class RawDataFetcherTest extends TestCase {
         }
     }
 
-    /*
-     * @see TestCase#setUp()
-     */
     @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
-    /*
-     * @see TestCase#tearDown()
-     */
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
