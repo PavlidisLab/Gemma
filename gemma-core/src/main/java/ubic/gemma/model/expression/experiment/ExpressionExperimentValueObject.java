@@ -110,6 +110,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     /**
      * Constructor using this VO for EESubSets - does not populate most of VO properties, only source experiment and the isSubset property.
+     *
+     * @param ee ee
      */
     public ExpressionExperimentValueObject( ExpressionExperimentSubSet ee ) {
         super( ee.getId() );

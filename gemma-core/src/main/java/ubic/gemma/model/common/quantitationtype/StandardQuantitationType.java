@@ -99,6 +99,7 @@ public class StandardQuantitationType implements java.io.Serializable, Comparabl
      * Creates an instance of StandardQuantitationType from <code>value</code>.
      *
      * @param value the value to create the StandardQuantitationType from.
+     * @return standard QT
      */
     public static StandardQuantitationType fromString( String value ) {
         final StandardQuantitationType typeValue = values.get( value );

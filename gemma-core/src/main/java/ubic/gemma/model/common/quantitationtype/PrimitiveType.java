@@ -109,6 +109,7 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      * Creates an instance of PrimitiveType from <code>value</code>.
      *
      * @param value the value to create the PrimitiveType from.
+     * @return primitive type
      */
     public static PrimitiveType fromString( String value ) {
         final PrimitiveType typeValue = values.get( value );
@@ -171,12 +172,10 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
         return this.value;
     }
 
-
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
     }
-
 
     @Override
     public String toString() {

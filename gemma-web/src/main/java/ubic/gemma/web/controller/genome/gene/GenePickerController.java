@@ -66,12 +66,12 @@ public class GenePickerController {
     /**
      * AJAX
      *
-     * @param geneIds geneIds
+     * @param geneIds gene ids
      * @return collection of gene entity objects; duplicates will be resolved.
      */
     public Collection<GeneValueObject> getGenes( Collection<Long> geneIds ) {
         if ( geneIds == null || geneIds.isEmpty() ) {
-            return new HashSet<GeneValueObject>();
+            return new HashSet<>();
         }
 
         return geneService.loadValueObjectsByIds( new HashSet<>( geneIds ) );
@@ -83,7 +83,7 @@ public class GenePickerController {
      *
      * @param goId    GO id that must be in the format "GO_#######"
      * @param taxonId must not be null and must correspond to a taxon
-     * @return Collection<GeneSet> empty if goId was blank or taxonId didn't correspond to a taxon
+     * @return Collection empty if goId was blank or taxonId didn't correspond to a taxon
      */
     public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
 
@@ -92,7 +92,7 @@ public class GenePickerController {
             return geneSearchService.getGenesByGOId( goId, taxonId );
         }
 
-        return new HashSet<GeneValueObject>();
+        return new HashSet<>();
     }
 
     /**
@@ -199,9 +199,9 @@ public class GenePickerController {
         // create SearchResultDisplayObjects
         if ( sessionResult != null && sessionResult.size() > 0 ) {
             for ( SessionBoundGeneSetValueObject gvo : sessionResult ) {
-                SearchResultDisplayObject srdo = new SearchResultDisplayObject( gvo );
-                srdo.setUserOwned( true );
-                sessionSets.add( srdo );
+                SearchResultDisplayObject srDo = new SearchResultDisplayObject( gvo );
+                srDo.setUserOwned( true );
+                sessionSets.add( srDo );
             }
         }
 
@@ -230,7 +230,7 @@ public class GenePickerController {
 
         Collection<GeneValueObject> geneValueObjects = this.geneCoreService.searchGenes( query, taxonId );
 
-        Collection<GeneValueObject> geneValueObjectWithNCBIId = new HashSet<GeneValueObject>();
+        Collection<GeneValueObject> geneValueObjectWithNCBIId = new HashSet<>();
 
         for ( GeneValueObject geneValueObject : geneValueObjects ) {
             if ( geneValueObject.getNcbiId() != null ) {
@@ -247,7 +247,7 @@ public class GenePickerController {
      * @param query   A list of gene names (symbols), one per line.
      * @param taxonId taxon id
      * @return collection of gene value objects
-     * @throws IOException
+     * @throws IOException IO problems
      */
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
         return geneSearchService.searchMultipleGenes( query, taxonId );
@@ -259,7 +259,7 @@ public class GenePickerController {
      * @param query   A list of gene names (symbols), one per line.
      * @param taxonId taxon id
      * @return map with each gene-query as a key and a collection of the search-results as the value
-     * @throws IOException
+     * @throws IOException IO problems
      */
     public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )
             throws IOException {

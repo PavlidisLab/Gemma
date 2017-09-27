@@ -108,7 +108,7 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
     }
 
     /**
-     * @return Used to hint the security system about who 'owns' this,
+     * @param securityOwner Used to hint the security system about who 'owns' this,
      */
     public void setSecurityOwner( ExpressionExperiment securityOwner ) {
         this.securityOwner = securityOwner;

@@ -119,6 +119,7 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      * Creates an instance of ScaleType from <code>value</code>.
      *
      * @param value the value to create the ScaleType from.
+     * @return scale type
      */
     public static ScaleType fromString( String value ) {
         final ScaleType typeValue = values.get( value );

@@ -163,7 +163,7 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     }
 
     /**
-     * Set a string which describes (in summary) the factor values
+     * @param factorValues Set a string which describes (in summary) the factor values
      */
     public void setFactorValues( String factorValues ) {
         this.factorValues = factorValues;

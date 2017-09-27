@@ -34,7 +34,7 @@ public class ExperimentalDesign extends AbstractAuditable implements gemma.gsec.
     private Collection<Characteristic> types = new java.util.HashSet<>();
 
     /**
-     * The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
+     * @return The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
      */
     public Collection<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;

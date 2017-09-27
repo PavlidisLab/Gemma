@@ -67,6 +67,7 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      * Creates an instance of GeneralType from <code>value</code>.
      *
      * @param value the value to create the GeneralType from.
+     * @return general type
      */
     public static GeneralType fromString( String value ) {
         final GeneralType typeValue = values.get( value );

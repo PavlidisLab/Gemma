@@ -45,7 +45,7 @@ interface RecaptchaTester {
 }
 
 /**
- * Controller to signup new users. See also the {@see UserListController}.
+ * Controller to signup new users. See also the UserListController.
  *
  * @author pavlidis
  * @author keshav

@@ -56,6 +56,8 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
 
     /**
      * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
+     *
+     * @param id id
      */
     public BioAssayDimensionValueObject( Long id ) {
         super( id );
@@ -144,7 +146,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     }
 
     /**
-     * Represents the original source. If this is reordered or a subset, the return value will <em>not</em> be.
+     * @return the original source. If this is reordered or a subset, the return value will <em>not</em> be.
      */
     public BioAssayDimensionValueObject getSourceBioAssayDimension() {
         return sourceBioAssayDimension;

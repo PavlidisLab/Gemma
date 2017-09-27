@@ -34,8 +34,8 @@ public abstract class WebServiceWithFiltering extends WebService {
      *               <ul>
      *               <li> '=' - equality</li>
      *               <li> '!=' - non-equality</li>
-     *               <li> '<' - smaller than</li>
-     *               <li> '>' - larger than</li>
+     *               <li> '&lt;' - smaller than</li>
+     *               <li> '&gt;' - larger than</li>
      *               <li> '&lt;=' - smaller or equal</li>
      *               <li> '=&gt;' - larger or equal</li>
      *               <li> 'like' - similar string, effectively means 'contains', translates to the sql 'LIKE' operator (given value will be surrounded by % signs)</li>

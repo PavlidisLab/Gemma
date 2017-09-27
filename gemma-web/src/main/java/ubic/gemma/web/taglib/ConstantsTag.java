@@ -35,18 +35,14 @@ import java.util.Map;
  * This class is designed to put all the public variables in a class to a specified scope - designed for exposing a
  * Constants class to Tag Libraries.
  * </p>
- * <p>
  * It is designed to be used as follows:
  * <pre>
  * &lt;tag:constants /&gt;
  * </pre>
- * </p>
  * <p>
  * Optional values are "className" (fully qualified) and "scope".
  * </p>
- * <p>
  * <a href="BaseAction.java.html"><i>View Source</i></a>
- * </p>
  *
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>, originally.
  * @author pavlidis modified

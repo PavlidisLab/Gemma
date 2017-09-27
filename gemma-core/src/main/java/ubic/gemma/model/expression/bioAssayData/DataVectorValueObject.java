@@ -112,7 +112,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
      * Represents the order of the bioassays for this. It might not be a real (persistent) BioAssayDimension: it might
      * be a subset, or a "padded" one.
      *
-     * @return
+     * @return BA dimension VO
      */
     public BioAssayDimensionValueObject getBioAssayDimension() {
         return this.bioAssayDimension;
