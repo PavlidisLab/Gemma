@@ -18,18 +18,16 @@
  */
 package ubic.gemma.web.taglib.arrayDesign;
 
-import java.util.Collection;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
-
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import java.util.Collection;
 
 /**
  * For display of information about array designs that subsume or are subsumed.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignGroupingTag extends TagSupport {
 
@@ -60,7 +58,7 @@ public class ArrayDesignGroupingTag extends TagSupport {
                 if ( m.size() > 0 ) {
                     for ( ArrayDesign ms : m ) {
                         buf.append( " &#187; subsumes " + arrayDesignShortLink( ms ) ); // FIXME, recurse to go down
-                                                                                        // even further.
+                        // even further.
                     }
                 }
                 buf.append( "<br />" );
@@ -75,16 +73,10 @@ public class ArrayDesignGroupingTag extends TagSupport {
         return SKIP_BODY;
     }
 
-    /**
-     * @param subsumeees
-     */
     public void setSubsumees( Collection<ArrayDesign> subsumees ) {
         this.subsumees = subsumees;
     }
 
-    /**
-     * @param subsumer
-     */
     public void setSubsumer( ArrayDesign subsumer ) {
         this.subsumer = subsumer;
     }

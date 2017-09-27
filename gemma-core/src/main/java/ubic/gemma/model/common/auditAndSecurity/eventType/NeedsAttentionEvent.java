@@ -21,8 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 
-import java.util.Date;
-
 /**
  * <p>
  * Indicates that previous validation is being invalidated
@@ -49,13 +47,8 @@ public class NeedsAttentionEvent extends CurationDetailsEvent {
         curatable.getCurationDetails().setLastNeedsAttentionEvent( auditEvent );
     }
 
-    /**
-     * Constructs new instances of {@link NeedsAttentionEvent}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link NeedsAttentionEvent}.
-         */
+
         public static NeedsAttentionEvent newInstance() {
             return new NeedsAttentionEvent();
         }

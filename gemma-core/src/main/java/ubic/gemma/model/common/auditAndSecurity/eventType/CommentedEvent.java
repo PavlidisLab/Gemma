@@ -27,29 +27,24 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 public class CommentedEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent();
-        }
-
-    }
-
-    /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -9053488530090657730L;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public CommentedEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent();
+        }
+
     }
 
 }

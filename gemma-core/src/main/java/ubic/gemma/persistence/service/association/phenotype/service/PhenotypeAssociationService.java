@@ -42,7 +42,7 @@ public interface PhenotypeAssociationService {
 
     @Secured({ "GROUP_USER" })
     PhenotypeAssociation create( PhenotypeAssociation p );
-    
+
     Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
@@ -133,7 +133,7 @@ public interface PhenotypeAssociationService {
     /**
      * @param geneDifferentialExpressionMetaAnalysisId id
      * @param maxResults                               max results
-     * @return a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
+     * @return a Collection for a geneDifferentialExpressionMetaAnalysisId if one exists
      * (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
     Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
@@ -146,7 +146,7 @@ public interface PhenotypeAssociationService {
     /**
      * Gets all External Databases that are used with evidence
      *
-     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     * @return Collection the externalDatabases
      */
     Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
 

@@ -23,23 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that the "Vector merging" has been done on the associated experiment.
  * </p>
  */
-public class ExpressionExperimentVectorMergeEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent();
-        }
-
-    }
+public class ExpressionExperimentVectorMergeEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -48,10 +33,18 @@ public class ExpressionExperimentVectorMergeEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ExpressionExperimentVectorMergeEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent();
+        }
+
     }
 
 }

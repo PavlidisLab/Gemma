@@ -19,86 +19,30 @@
 package ubic.gemma.model.common.quantitationtype;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
-/**
- *
- */
 public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
+    public static final PrimitiveType DOUBLE = new PrimitiveType( "DOUBLE" );
+    public static final PrimitiveType INT = new PrimitiveType( "INT" );
+    public static final PrimitiveType LONG = new PrimitiveType( "LONG" );
+    public static final PrimitiveType CHAR = new PrimitiveType( "CHAR" );
+    public static final PrimitiveType BOOLEAN = new PrimitiveType( "BOOLEAN" );
+    public static final PrimitiveType STRING = new PrimitiveType( "STRING" );
+    public static final PrimitiveType INTARRAY = new PrimitiveType( "INTARRAY" );
+    public static final PrimitiveType DOUBLEARRAY = new PrimitiveType( "DOUBLEARRAY" );
+    public static final PrimitiveType CHARARRAY = new PrimitiveType( "CHARARRAY" );
+    public static final PrimitiveType BOOLEANARRAY = new PrimitiveType( "BOOLEANARRAY" );
+    public static final PrimitiveType STRINGARRAY = new PrimitiveType( "STRINGARRAY" );
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 8068644810546069278L;
+    private static final Map<String, PrimitiveType> values = new LinkedHashMap<>( 11, 1 );
 
-    /**
-     *
-     */
-    public static final PrimitiveType DOUBLE = new PrimitiveType( "DOUBLE" );
+    private static List<String> literals = new ArrayList<>( 11 );
+    private static List<String> names = new ArrayList<>( 11 );
+    private static List<PrimitiveType> valueList = new ArrayList<>( 11 );
 
-    /**
-     *
-     */
-    public static final PrimitiveType INT = new PrimitiveType( "INT" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType LONG = new PrimitiveType( "LONG" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType CHAR = new PrimitiveType( "CHAR" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType BOOLEAN = new PrimitiveType( "BOOLEAN" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType STRING = new PrimitiveType( "STRING" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType INTARRAY = new PrimitiveType( "INTARRAY" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType DOUBLEARRAY = new PrimitiveType( "DOUBLEARRAY" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType CHARARRAY = new PrimitiveType( "CHARARRAY" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType BOOLEANARRAY = new PrimitiveType( "BOOLEANARRAY" );
-
-    /**
-     *
-     */
-    public static final PrimitiveType STRINGARRAY = new PrimitiveType( "STRINGARRAY" );
-
-    private static final Map<String, PrimitiveType> values = new LinkedHashMap<>(
-            11, 1 );
-
-    private static java.util.List<String> literals = new ArrayList<>( 11 );
-
-    private static java.util.List<String> names = new ArrayList<>( 11 );
-
-    private static java.util.List<PrimitiveType> valueList = new java.util.ArrayList<>( 11 );
-
-    /**
-     * Initializes the values.
-     */
     static {
         values.put( DOUBLE.value, DOUBLE );
         valueList.add( DOUBLE );
@@ -144,9 +88,21 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
         valueList.add( STRINGARRAY );
         literals.add( STRINGARRAY.value );
         names.add( "STRINGARRAY" );
-        valueList = java.util.Collections.unmodifiableList( valueList );
-        literals = java.util.Collections.unmodifiableList( literals );
-        names = java.util.Collections.unmodifiableList( names );
+        valueList = Collections.unmodifiableList( valueList );
+        literals = Collections.unmodifiableList( literals );
+        names = Collections.unmodifiableList( names );
+    }
+
+    private String value;
+
+    /**
+     * The default constructor allowing super classes to access it.
+     */
+    protected PrimitiveType() {
+    }
+
+    private PrimitiveType( String value ) {
+        this.value = value;
     }
 
     /**
@@ -172,7 +128,7 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
-    public static java.util.List<String> literals() {
+    public static List<String> literals() {
         return literals;
     }
 
@@ -180,9 +136,9 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
      *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
-    public static java.util.List<String> names() {
+    public static List<String> names() {
         return names;
     }
 
@@ -191,38 +147,19 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      *
      * @return A List containing the actual enumeration instance values.
      */
-    public static java.util.List<PrimitiveType> values() {
+    public static List<PrimitiveType> values() {
         return valueList;
     }
 
-    private String value;
-
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected PrimitiveType() {
-    }
-
-    private PrimitiveType( String value ) {
-        this.value = value;
-    }
-
-    /**
-     * @see Comparable#compareTo(Object)
-     */
     @Override
     public int compareTo( PrimitiveType that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
     }
 
-    /**
-     * @see Object#equals(Object)
-     */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof PrimitiveType && ( ( PrimitiveType ) object ).getValue()
-                        .equals( this.getValue() ) );
+        return ( this == object ) || ( object instanceof PrimitiveType && ( ( PrimitiveType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
@@ -234,17 +171,13 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
         return this.value;
     }
 
-    /**
-     * @see Object#hashCode()
-     */
+
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
     }
 
-    /**
-     * @see Object#toString()
-     */
+
     @Override
     public String toString() {
         return String.valueOf( value );
@@ -253,15 +186,15 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
      * will be the singleton for the JVM in which the current thread is running.
-     * <p>
      * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
      * regular deserialized object is always a newly constructed instance and will therefore never be an existing
      * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
      * to return the proper singleton reference.
-     * <p>
      * This method is documented here: <a
      * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return PrimitiveType.fromString( this.value );

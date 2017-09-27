@@ -36,7 +36,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * given a query gene id & collection of target gene ids will determine the overlapping Go terms (intersection) between
+ * given a query gene id &amp; collection of target gene ids will determine the overlapping Go terms (intersection) between
  * each pair of Query Gene and Target Gene. The actual overlapping go terms will be returned as a single string
  * delimited by white space.
  *

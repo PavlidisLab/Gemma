@@ -31,6 +31,7 @@ import java.util.*;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possibly used in front end
 public class BibliographicReferenceValueObject extends IdentifiableValueObject<BibliographicReference> {
 
     private String abstractText;
@@ -113,6 +114,7 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
      * does not set related experiments field
      *
      * @param refs bib refs
+     * @return bib ref VOs
      */
     public static List<BibliographicReferenceValueObject> convert2ValueObjects(
             Collection<BibliographicReference> refs ) {

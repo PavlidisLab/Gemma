@@ -14,33 +14,30 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import static org.junit.Assert.*;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import ubic.gemma.core.testing.BaseSpringWebTest;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.testing.BaseSpringWebTest;
+import static org.junit.Assert.fail;
 
 /**
  * Tortures the signup system by starting many threads and signing up many users, while at the same time creating a lot
  * of expression experiments.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class SignupControllerTest extends BaseSpringWebTest {
 
@@ -127,7 +124,8 @@ public class SignupControllerTest extends BaseSpringWebTest {
             log.info( "Waiting ... C=" + +c.get() );
             if ( ++waits > maxWaits ) {
                 for ( Thread t : threads ) {
-                    if ( t.isAlive() ) t.interrupt();
+                    if ( t.isAlive() )
+                        t.interrupt();
                 }
                 fail( "Multithreaded failure: timed out." );
             }
@@ -136,7 +134,8 @@ public class SignupControllerTest extends BaseSpringWebTest {
         log.debug( " &&&&& DONE &&&&&" );
 
         for ( Thread thread : threads ) {
-            if ( thread.isAlive() ) thread.interrupt();
+            if ( thread.isAlive() )
+                thread.interrupt();
         }
 
         if ( failed.get() || c.get() != expectedEventCount ) {

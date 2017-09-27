@@ -18,25 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-/**
- * 
- */
-public class FailedProcessedVectorComputationEvent extends NeedsAttentionEvent{
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent();
-        }
-
-    }
+public class FailedProcessedVectorComputationEvent extends NeedsAttentionEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -45,10 +27,18 @@ public class FailedProcessedVectorComputationEvent extends NeedsAttentionEvent{
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public FailedProcessedVectorComputationEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent();
+        }
+
     }
 
 }

@@ -81,13 +81,8 @@ public class ExperimentalDesign extends AbstractAuditable implements gemma.gsec.
         this.types = types;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
-         */
+
         public static ExperimentalDesign newInstance() {
             return new ExperimentalDesign();
         }

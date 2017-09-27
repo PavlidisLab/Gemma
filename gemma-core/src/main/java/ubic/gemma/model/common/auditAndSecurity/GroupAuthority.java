@@ -24,47 +24,20 @@ package ubic.gemma.model.common.auditAndSecurity;
 public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.GroupAuthority}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.GroupAuthority}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.GroupAuthority newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.GroupAuthority}, taking all
-         * possible properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.GroupAuthority newInstance( String authority ) {
-            final ubic.gemma.model.common.auditAndSecurity.GroupAuthority entity = new ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl();
-            entity.setAuthority( authority );
-            return entity;
-        }
-    }
-
-    /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 6376142653264312139L;
     private String authority;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public GroupAuthority() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an GroupAuthority instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -80,33 +53,9 @@ public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority 
         return true;
     }
 
-    /**
-     * <p>
-     * Authority granted to the group
-     * </p>
-     */
     @Override
     public String getAuthority() {
         return this.authority;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
     }
 
     @Override
@@ -115,8 +64,34 @@ public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority 
     }
 
     @Override
+    public Long getId() {
+        return this.id;
+    }
+
+    @Override
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.GroupAuthority newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl();
+        }
+
+        public static ubic.gemma.model.common.auditAndSecurity.GroupAuthority newInstance( String authority ) {
+            final ubic.gemma.model.common.auditAndSecurity.GroupAuthority entity = new ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl();
+            entity.setAuthority( authority );
+            return entity;
+        }
     }
 
 }

@@ -41,10 +41,6 @@ public class AuditEvent implements Identifiable, Serializable {
     private String note = null;
     private User performer = null;
 
-    /**
-     * Returns <code>true</code> if the argument is an AuditEvent instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -58,9 +54,6 @@ public class AuditEvent implements Identifiable, Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -97,21 +90,12 @@ public class AuditEvent implements Identifiable, Serializable {
         return this.performer;
     }
 
-    /**
-     * Constructs new instances of {@link AuditEvent}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link AuditEvent}.
-         */
+
         public static AuditEvent newInstance() {
             return new AuditEvent();
         }
 
-        /**
-         * Constructs a new instance of {@link AuditEvent}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
         public static AuditEvent newInstance( Date date, AuditAction action, String note, String detail, User performer,
                 AuditEventType eventType ) {
             final AuditEvent entity = new AuditEvent();

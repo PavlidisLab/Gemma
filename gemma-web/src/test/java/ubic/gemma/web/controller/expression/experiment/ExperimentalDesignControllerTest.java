@@ -18,35 +18,25 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collection;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.core.testing.BaseSpringWebTest;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
+
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Kiran Keshav
- * @version $Id$
  */
 public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
@@ -58,7 +48,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
-
 
     @Test
     public void testShowExperimentalDesign() throws Exception {
@@ -102,9 +91,8 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ee = this.eeService.thawLite( ee );
 
-        Collection<FactorValueValueObject> fvs = experimentalDesignController
-                .getFactorValuesWithCharacteristics( new EntityDelegator( ee.getExperimentalDesign()
-                        .getExperimentalFactors().iterator().next() ) );
+        Collection<FactorValueValueObject> fvs = experimentalDesignController.getFactorValuesWithCharacteristics(
+                new EntityDelegator( ee.getExperimentalDesign().getExperimentalFactors().iterator().next() ) );
         assertTrue( !fvs.isEmpty() );
     }
 
@@ -115,9 +103,10 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ee = this.eeService.thawLite( ee );
 
-        ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject(-1L);
+        ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject( -1L );
         evvo.setCategory( "foo" );
-        experimentalDesignController.createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
+        experimentalDesignController
+                .createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
 
     }
 

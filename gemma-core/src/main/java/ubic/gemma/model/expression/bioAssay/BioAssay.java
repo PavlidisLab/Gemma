@@ -103,7 +103,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * Files containing derived data, from our own or someone else's analysis.
+     * @return Files containing derived data, from our own or someone else's analysis.
      */
     public Collection<LocalFile> getDerivedDataFiles() {
         return this.derivedDataFiles;
@@ -114,7 +114,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the entity tracks
+     * @return Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the entity tracks
      * when this was done.
      */
     public Boolean getIsOutlier() {
@@ -126,7 +126,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * Indicates the date that the assay was processed in the original study. This would correspond to "batch"
+     * @return Indicates the date that the assay was processed in the original study. This would correspond to "batch"
      * information and will often be a "scan date" or similar information extracted from the raw data files.
      */
     public Date getProcessingDate() {
@@ -138,7 +138,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * The data 'as we got it', such as CEL files or raw files from the SMD site, or GEO soft files.
+     * @return The data 'as we got it', such as CEL files or raw files from the SMD site, or GEO soft files.
      */
     public LocalFile getRawDataFile() {
         return this.rawDataFile;
@@ -162,7 +162,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * For sequence-based data, this should be set to true if the sequencing was paired-end reads and false otherwise.
+     * @return For sequence-based data, this should be set to true if the sequencing was paired-end reads and false otherwise.
      * It should be left as null if it isn't known.
      */
     public Boolean getSequencePairedReads() {
@@ -174,7 +174,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * For sequence-read based data, the total number of reads in the sample, computed from the data as the total of the
+     * @return For sequence-read based data, the total number of reads in the sample, computed from the data as the total of the
      * values for the elements assayed.
      */
     public Integer getSequenceReadCount() {
@@ -186,7 +186,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
     }
 
     /**
-     * For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the length
+     * @return For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the length
      * for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
      * representing the mean read length.
      */
@@ -206,13 +206,8 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
         this.metadata = metadata;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
-         */
+
         public static BioAssay newInstance() {
             return new BioAssay();
         }

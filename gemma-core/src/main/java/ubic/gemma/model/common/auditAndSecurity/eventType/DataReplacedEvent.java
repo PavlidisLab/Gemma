@@ -24,21 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * system. This is always 'raw' data.
  * </p>
  */
-public class DataReplacedEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent();
-        }
-
-    }
+public class DataReplacedEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -47,10 +34,18 @@ public class DataReplacedEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public DataReplacedEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent();
+        }
+
     }
 
 }

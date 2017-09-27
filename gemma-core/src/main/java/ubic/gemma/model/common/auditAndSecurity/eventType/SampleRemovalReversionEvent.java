@@ -23,23 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that samples that were previously removed have been "put back", e.g. un-marked as an outlier.
  * </p>
  */
-public class SampleRemovalReversionEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent();
-        }
-
-    }
+public class SampleRemovalReversionEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -48,10 +33,18 @@ public class SampleRemovalReversionEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public SampleRemovalReversionEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent();
+        }
+
     }
 
 }

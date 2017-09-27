@@ -37,15 +37,8 @@ public class ArrayDesignGeneMappingEvent
     public ArrayDesignGeneMappingEvent() {
     }
 
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent}.
-         */
+
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent newInstance() {
             return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent();
         }

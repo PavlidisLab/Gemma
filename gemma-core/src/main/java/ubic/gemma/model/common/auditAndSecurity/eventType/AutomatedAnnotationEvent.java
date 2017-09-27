@@ -24,8 +24,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * occure.
  */
 @Deprecated
-public class AutomatedAnnotationEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
+public class AutomatedAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -40,17 +39,9 @@ public class AutomatedAnnotationEvent
     public AutomatedAnnotationEvent() {
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent}.
-     *
-     * @deprecated new events of this type should not be created.
-     */
     @Deprecated
     public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent}.
-         */
+
         public static ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent newInstance() {
             return new ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent();
         }

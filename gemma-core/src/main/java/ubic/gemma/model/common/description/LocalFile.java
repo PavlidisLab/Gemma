@@ -39,6 +39,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     /**
      * Attempt to create a java.io.File from the local URI. If it doesn't look like a URI, it is just treated as a path.
      *
+     * @return instance of File
      * @see ubic.gemma.model.common.description.LocalFile#asFile()
      */
     public java.io.File asFile() {
@@ -55,16 +56,10 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
 
     }
 
-    /**
-     * @see ubic.gemma.model.common.description.LocalFile#canRead()
-     */
     public Boolean canRead() {
         return this.asFile().canRead();
     }
 
-    /**
-     * @see ubic.gemma.model.common.description.LocalFile#canWrite()
-     */
     public Boolean canWrite() {
         return this.asFile().canWrite();
     }
@@ -147,7 +142,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     /**
      * @return Any files which were used to create this file.
      */
-    public Collection<ubic.gemma.model.common.description.LocalFile> getSourceFiles() {
+    public Collection<LocalFile> getSourceFiles() {
         return this.sourceFiles;
     }
 

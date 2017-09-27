@@ -21,8 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 
-import java.util.Date;
-
 /**
  * <p>
  * Indicates that previous validation is being invalidated
@@ -55,13 +53,8 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
         curatable.getCurationDetails().setLastNoteUpdateEvent( auditEvent );
     }
 
-    /**
-     * Constructs new instances of {@link CurationNoteUpdateEvent}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link CurationNoteUpdateEvent}.
-         */
+
         public static CurationNoteUpdateEvent newInstance() {
             return new CurationNoteUpdateEvent();
         }

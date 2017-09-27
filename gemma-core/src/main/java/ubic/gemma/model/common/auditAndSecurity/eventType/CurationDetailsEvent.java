@@ -22,8 +22,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 
-import java.util.Date;
-
 /**
  * Event types that can change CurationDetails of Curatable objects.
  * Anytime a new extension of this event type is implemented, add a new handler to the
@@ -58,7 +56,7 @@ public abstract class CurationDetailsEvent extends AuditEventType {
      */
     public static final class Factory {
         /**
-         * Throws an UnsupportedOperationException
+         * @return Throws an UnsupportedOperationException
          * {@link CurationDetailsEvent}.
          */
         public static CurationDetailsEvent newInstance() {

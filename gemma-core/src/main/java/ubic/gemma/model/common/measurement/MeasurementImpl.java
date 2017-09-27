@@ -27,53 +27,60 @@ public class MeasurementImpl extends ubic.gemma.model.common.measurement.Measure
      */
     private static final long serialVersionUID = -5572865478492871637L;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Object#equals(Object)
-     */
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
 
         Measurement other = ( Measurement ) obj;
         if ( super.getId() == null ) {
-            if ( other.getId() != null ) return false;
-        } else if ( !getId().equals( other.getId() ) ) return false;
+            if ( other.getId() != null )
+                return false;
+        } else if ( !getId().equals( other.getId() ) )
+            return false;
 
         if ( getValue() == null ) {
-            if ( other.getValue() != null ) return false;
-        } else if ( !getValue().equals( other.getValue() ) ) return false;
+            if ( other.getValue() != null )
+                return false;
+        } else if ( !getValue().equals( other.getValue() ) )
+            return false;
 
         if ( getUnit() == null ) {
-            if ( other.getUnit() != null ) return false;
-        } else if ( !getUnit().equals( other.getUnit() ) ) return false;
+            if ( other.getUnit() != null )
+                return false;
+        } else if ( !getUnit().equals( other.getUnit() ) )
+            return false;
 
         if ( getType() == null ) {
-            if ( other.getType() != null ) return false;
-        } else if ( !getType().equals( other.getType() ) ) return false;
+            if ( other.getType() != null )
+                return false;
+        } else if ( !getType().equals( other.getType() ) )
+            return false;
 
         if ( getKindCV() == null ) {
-            if ( other.getKindCV() != null ) return false;
-        } else if ( !getKindCV().equals( other.getKindCV() ) ) return false;
+            if ( other.getKindCV() != null )
+                return false;
+        } else if ( !getKindCV().equals( other.getKindCV() ) )
+            return false;
 
         if ( getOtherKind() == null ) {
-            if ( other.getOtherKind() != null ) return false;
-        } else if ( !getOtherKind().equals( other.getOtherKind() ) ) return false;
+            if ( other.getOtherKind() != null )
+                return false;
+        } else if ( !getOtherKind().equals( other.getOtherKind() ) )
+            return false;
         if ( getRepresentation() == null ) {
-            if ( other.getRepresentation() != null ) return false;
-        } else if ( !getRepresentation().equals( other.getRepresentation() ) ) return false;
+            if ( other.getRepresentation() != null )
+                return false;
+        } else if ( !getRepresentation().equals( other.getRepresentation() ) )
+            return false;
 
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Object#hashCode()
-     */
     @Override
     public int hashCode() {
         final int prime = 31;

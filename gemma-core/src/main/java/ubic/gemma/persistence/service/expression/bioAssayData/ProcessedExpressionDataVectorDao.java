@@ -92,7 +92,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      *
      * @param genes                 genes
      * @param expressionExperiments expression experiments
-     * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
+     * @return A map of experiment -&gt; gene -&gt; probe -&gt; array of doubles holding the 1) mean and 2) max expression rank.
      */
     Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );

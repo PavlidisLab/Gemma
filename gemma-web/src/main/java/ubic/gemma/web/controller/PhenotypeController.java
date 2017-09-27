@@ -46,7 +46,7 @@ import java.util.*;
 @Controller
 public class PhenotypeController extends BaseController {
 
-    private static Log logNeurocarta = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
+    private static final Log logNeurocarta = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
@@ -79,7 +79,11 @@ public class PhenotypeController extends BaseController {
     }
 
     /**
-     * Returns all genes that have given phenotypes.
+     * @param showOnlyEditable show only editable
+     * @param taxonId          taxon id
+     * @param databaseIds      db ids
+     * @param phenotypes       phenotypes
+     * @return all genes that have given phenotypes.
      */
     public Collection<GeneEvidenceValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, String[] phenotypes ) {
@@ -88,7 +92,8 @@ public class PhenotypeController extends BaseController {
                         new HashSet<>( Arrays.asList( phenotypes ) ) );
     }
 
-    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId,
+            Integer limit, String userName ) {
         return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }
 
@@ -112,7 +117,7 @@ public class PhenotypeController extends BaseController {
     /**
      * Returns available efo category terms.
      *
-     * @return Collection<CharacteristicValueObject>
+     * @return Collection
      */
     public Collection<CharacteristicValueObject> findExperimentCategory() {
         return this.phenotypeAssociationManagerService.findExperimentCategory();
@@ -129,7 +134,10 @@ public class PhenotypeController extends BaseController {
     }
 
     /**
-     * Important method, returns the big 'tree' data structure shown in phenocarta's page.
+     * @param showOnlyEditable show only editable
+     * @param taxonId          taxon id
+     * @param databaseIds      db ids
+     * @return the big 'tree' data structure shown in phenocarta's page.
      */
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds ) {

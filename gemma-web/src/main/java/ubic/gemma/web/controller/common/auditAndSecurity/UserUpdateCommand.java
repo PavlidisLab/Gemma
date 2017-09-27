@@ -18,20 +18,19 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.Collection;
-
-import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
+import java.util.Collection;
+
 /**
  * Just like a regular user; but has 'new password' and 'confirm password' fields. It can be constructed from a user. To
  * convert to a user object, use the asUser() method.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("unused") // Used in front end
 public class UserUpdateCommand {
 
     private String oldPassword = null;
@@ -46,27 +45,24 @@ public class UserUpdateCommand {
         this.user = User.Factory.newInstance();
     }
 
-    /**
-     * @return
-     */
     public User asUser() {
         return user;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         UserUpdateCommand other = ( UserUpdateCommand ) obj;
         if ( user == null ) {
-            if ( other.user != null ) return false;
-        } else if ( !user.equals( other.user ) ) return false;
+            if ( other.user != null )
+                return false;
+        } else if ( !user.equals( other.user ) )
+            return false;
         return true;
     }
 
@@ -74,12 +70,16 @@ public class UserUpdateCommand {
         return this.adminUser;
     }
 
-    /**
-     * @return
-     * @see Auditable#getAuditTrail()
-     */
+    public void setAdminUser( Boolean adminUser ) {
+        this.adminUser = adminUser;
+    }
+
     public AuditTrail getAuditTrail() {
         return this.user.getAuditTrail();
+    }
+
+    public void setAuditTrail( AuditTrail auditTrail ) {
+        this.user.setAuditTrail( auditTrail );
     }
 
     /**
@@ -90,67 +90,70 @@ public class UserUpdateCommand {
     }
 
     /**
-     * @return
-     * @see ubic.gemma.model.common.Describable#getDescription()
+     * @param confirmNewPassword the confirmNewPassword to set
      */
+    public void setConfirmNewPassword( String confirmNewPassword ) {
+        this.confirmNewPassword = confirmNewPassword;
+    }
+
     public String getDescription() {
         return this.user.getDescription();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#getEmail()
-     */
+    public void setDescription( String description ) {
+        this.user.setDescription( description );
+    }
+
     public String getEmail() {
         return this.user.getEmail();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#getEnabled()
-     */
+    public void setEmail( String email ) {
+        this.user.setEmail( email );
+    }
+
     public Boolean getEnabled() {
         return this.user.getEnabled();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#getFullName()
-     */
+    public void setEnabled( Boolean enabled ) {
+        this.user.setEnabled( enabled );
+    }
+
     public String getFullName() {
         return this.user.getFullName();
     }
 
-    /**
-     * @return
-     * @see gemma.gsec.model.Securable#getId()
-     */
     public Long getId() {
         return this.user.getId();
     }
 
-    /**
-     * @return
-     * @see User#getJobs()
-     */
+    public void setId( Long id ) {
+        this.user.setId( id );
+    }
+
     public Collection<JobInfo> getJobs() {
         return this.user.getJobs();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#getLastName()
-     */
+    public void setJobs( Collection<JobInfo> jobs ) {
+        this.user.setJobs( jobs );
+    }
+
     public String getLastName() {
         return this.user.getLastName();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.Describable#getName()
-     */
+    public void setLastName( String lastName ) {
+        this.user.setLastName( lastName );
+    }
+
     public String getName() {
         return this.user.getName();
+    }
+
+    public void setName( String name ) {
+        this.user.setName( name );
     }
 
     /**
@@ -160,6 +163,10 @@ public class UserUpdateCommand {
         return this.newPassword;
     }
 
+    public void setNewPassword( String newPassword ) {
+        this.newPassword = newPassword;
+    }
+
     /**
      * @return the oldPassword
      */
@@ -167,35 +174,34 @@ public class UserUpdateCommand {
         return this.oldPassword;
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#getPassword()
-     */
+    public void setOldPassword( String oldPassword ) {
+        this.oldPassword = oldPassword;
+    }
+
     public String getPassword() {
         return this.user.getPassword();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#getPasswordHint()
-     */
+    public void setPassword( String password ) {
+        this.user.setPassword( password );
+    }
+
     public String getPasswordHint() {
         return this.user.getPasswordHint();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#getUserName()
-     */
+    public void setPasswordHint( String passwordHint ) {
+        this.user.setPasswordHint( passwordHint );
+    }
+
     public String getUserName() {
         return this.user.getUserName();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
+    public void setUserName( String userName ) {
+        this.user.setUserName( userName );
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -204,146 +210,9 @@ public class UserUpdateCommand {
         return result;
     }
 
-    public void setAdminUser( Boolean adminUser ) {
-        this.adminUser = adminUser;
-    }
-
-    /**
-     * @param auditTrail
-     * @see Auditable#setAuditTrail(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public void setAuditTrail( AuditTrail auditTrail ) {
-        this.user.setAuditTrail( auditTrail );
-    }
-
-    /**
-     * @param confirmNewPassword the confirmNewPassword to set
-     */
-    public void setConfirmNewPassword( String confirmNewPassword ) {
-        this.confirmNewPassword = confirmNewPassword;
-    }
-
-    /**
-     * @param description
-     * @see ubic.gemma.model.common.Describable#setDescription(java.lang.String)
-     */
-    public void setDescription( String description ) {
-        this.user.setDescription( description );
-    }
-
-    /**
-     * @param email
-     * @see ubic.gemma.model.common.auditAndSecurity.Contact#setEmail(java.lang.String)
-     */
-    public void setEmail( String email ) {
-        this.user.setEmail( email );
-    }
-
-    /**
-     * @param enabled
-     * @see ubic.gemma.model.common.auditAndSecurity.User#setEnabled(java.lang.Boolean)
-     */
-    public void setEnabled( Boolean enabled ) {
-        this.user.setEnabled( enabled );
-    }
-
-    /**
-     * @param id
-     * @see gemma.gsec.model.Securable#setId(java.lang.Long)
-     */
-    public void setId( Long id ) {
-        this.user.setId( id );
-    }
-
-    /**
-     * @param job
-     * @see ubic.gemma.model.common.auditAndSecurity.User#setJob(java.util.Collection)
-     */
-    public void setJobs( Collection<JobInfo> jobs ) {
-        this.user.setJobs( jobs );
-    }
-
-    /**
-     * @param lastName
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#setLastName(java.lang.String)
-     */
-    public void setLastName( String lastName ) {
-        this.user.setLastName( lastName );
-    }
-
-    /**
-     * @param name
-     * @see ubic.gemma.model.common.Describable#setName(java.lang.String)
-     */
-    public void setName( String name ) {
-        this.user.setName( name );
-    }
-
-    /**
-     * @param newPassword the newPassword to set
-     */
-    public void setNewPassword( String newPassword ) {
-        this.newPassword = newPassword;
-    }
-
-    /**
-     * @param oldPassword the oldPassword to set
-     */
-    public void setOldPassword( String oldPassword ) {
-        this.oldPassword = oldPassword;
-    }
-
-    /**
-     * @param password
-     * @see ubic.gemma.model.common.auditAndSecurity.User#setPassword(java.lang.String)
-     */
-    public void setPassword( String password ) {
-        this.user.setPassword( password );
-    }
-
-    /**
-     * @param passwordHint
-     * @see ubic.gemma.model.common.auditAndSecurity.User#setPasswordHint(java.lang.String)
-     */
-    public void setPasswordHint( String passwordHint ) {
-        this.user.setPasswordHint( passwordHint );
-    }
-
-    /**
-     * @param userName
-     * @see ubic.gemma.model.common.auditAndSecurity.User#setUserName(java.lang.String)
-     */
-    public void setUserName( String userName ) {
-        this.user.setUserName( userName );
-    }
-
-    /**
-     * @return
-     * @see ubic.gemma.model.common.DescribableImpl#toString()
-     */
     @Override
     public String toString() {
         return this.user.toString();
     }
 
-    // /**
-    // * @param user
-    // */
-    // private void fromUser( User newUser ) {
-    // this.user = newUser;
-    //
-    // this.setUserName( user.getUserName() );
-    // this.setPassword( user.getPassword() );
-    // this.setPasswordHint( user.getPasswordHint() );
-    // this.setEnabled( user.getEnabled() );
-    // this.setLastName( user.getLastName() );
-    // this.setName( user.getName() );
-    // this.setEmail( user.getEmail() );
-    // this.setName( user.getName() );
-    // this.setDescription( user.getDescription() );
-    // this.setJobs( user.getJobs() );
-    // this.setAuditTrail( user.getAuditTrail() );
-    //
-    // this.setId( user.getId() );
-    // }
 }

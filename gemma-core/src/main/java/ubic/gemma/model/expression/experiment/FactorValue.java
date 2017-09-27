@@ -46,8 +46,6 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     private Measurement measurement;
     private Collection<Characteristic> characteristics = new java.util.HashSet<>();
 
-
-
     /**
      * No-arg constructor added to satisfy javabean contract
      *
@@ -55,8 +53,6 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
      */
     public FactorValue() {
     }
-
-
 
     @Override
     public boolean equals( Object object ) {
@@ -100,9 +96,6 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         return builder.toHashCode();
     }
 
-    /**
-     * @see ubic.gemma.model.expression.experiment.FactorValue#toString()
-     */
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
@@ -124,8 +117,6 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         }
         return buf.toString();
     }
-
-
 
     @Override
     public Long getId() {
@@ -162,10 +153,8 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     }
 
     /**
-     * <p>
-     * True if this is to be considered the baseline condition. This is ignored if the factor is numeric
+     * @return True if this is to be considered the baseline condition. This is ignored if the factor is numeric
      * (non-categorical).
-     * </p>
      */
     public Boolean getIsBaseline() {
         return this.isBaseline;
@@ -207,8 +196,6 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
 
         return "absent ";
     }
-
-
 
     private boolean checkGuts( FactorValue that ) {
 
@@ -258,23 +245,12 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         return true;
     }
 
-
-
-    /**
-     * Constructs new instances of {@link FactorValue}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link FactorValue}.
-         */
+
         public static FactorValue newInstance() {
             return new FactorValue();
         }
 
-        /**
-         * Constructs a new instance of {@link FactorValue}, taking all required and/or read-only properties as
-         * arguments.
-         */
         public static FactorValue newInstance( ExperimentalFactor experimentalFactor ) {
             final FactorValue entity = new FactorValue();
             entity.setExperimentalFactor( experimentalFactor );

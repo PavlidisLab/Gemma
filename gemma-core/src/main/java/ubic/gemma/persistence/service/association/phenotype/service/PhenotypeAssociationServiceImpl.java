@@ -53,8 +53,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Autowired
     private PhenotypeAssociationDao phenotypeAssociationDao;
 
-    /*
-     * counts the evidence that from neurocarta that came from a specific MetaAnalysis
+    /**
+     * @param geneDifferentialExpressionMetaAnalysisId analysis id
+     * @return counts the evidence that from neurocarta that came from a specific MetaAnalysis
      */
     @Override
     @Transactional(readOnly = true)
@@ -76,8 +77,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.create( p );
     }
 
-    /*
-     * find GenericExperiments by PubMed ID
+    /**
+     * @param pubmed pubmed
+     * @return find GenericExperiments by PubMed ID
      */
     @Override
     @Transactional(readOnly = true)
@@ -85,8 +87,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.genericExperimentDao.findByPubmedID( pubmed );
     }
 
-    /*
-     * find mged category term that were used in the database, used to annotated Experiments
+    /**
+     * @return find mged category term that were used in the database, used to annotated Experiments
      */
     @Override
     @Transactional(readOnly = true)
@@ -94,8 +96,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidenceCategoryTerms();
     }
 
-    /*
-     * return the list of the owners that have evidence in the system
+    /**
+     * @return the list of the owners that have evidence in the system
      */
     @Override
     @Transactional(readOnly = true)
@@ -103,8 +105,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidenceOwners();
     }
 
-    /*
-     * find all evidences from a specific external database
+    /**
+     * @param externalDatabaseName external db name
+     * @param limit                limit
+     * @param start                start
+     * @return find all evidences from a specific external database
      */
     @Override
     @Transactional(readOnly = true)
@@ -113,8 +118,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findEvidencesWithExternalDatabaseName( externalDatabaseName, limit, start );
     }
 
-    /*
-     * find all evidence that doesn't come from an external course
+    /**
+     * @return find all evidence that doesn't come from an external course
      */
     @Override
     @Transactional(readOnly = true)
@@ -133,8 +138,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findExternalDatabasesWithEvidence();
     }
 
-    /*
-     * find Genes link to a phenotype
+    /**
+     * @param taxon               taxon
+     * @param externalDatabaseIds external db ids
+     * @param phenotypesValueUris phenotype value uris
+     * @param showOnlyEditable    show only editable
+     * @return find Genes link to a phenotype
      */
     @Override
     @Transactional(readOnly = true)
@@ -144,8 +153,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
                 .findGenesWithPhenotypes( phenotypesValueUris, taxon, showOnlyEditable, externalDatabaseIds );
     }
 
-    /*
-     * find all PhenotypeAssociation for a specific gene id
+    /**
+     * @param geneId gene id
+     * @return find all PhenotypeAssociation for a specific gene id
      */
     @Override
     @Transactional(readOnly = true)
@@ -153,8 +163,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneId( geneId );
     }
 
-    /*
-     * find all PhenotypeAssociation for a specific gene id and external Databases ids
+    /**
+     * @param externalDatabaseIds external db ids
+     * @param geneId              gene id
+     * @return find all PhenotypeAssociation for a specific gene id and external Databases ids
      */
     @Override
     @Transactional(readOnly = true)
@@ -164,8 +176,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
                 .findPhenotypeAssociationForGeneIdAndDatabases( geneId, externalDatabaseIds );
     }
 
-    /*
-     * find all PhenotypeAssociation for a specific NCBI id
+    /**
+     * @param geneNCBI gene ncbi id
+     * @return find all PhenotypeAssociation for a specific NCBI id
      */
     @Override
     @Transactional(readOnly = true)
@@ -173,8 +186,10 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI );
     }
 
-    /*
-     * find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
+    /**
+     * @param geneNCBI  gene necbi id
+     * @param phenotype phenotype
+     * @return find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
      */
     @Override
     @Transactional(readOnly = true)
@@ -183,8 +198,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI, phenotype );
     }
 
-    /*
-     * find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit
+    /**
+     * @param ids ids
+     * @return find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit
      */
     @Override
     @Transactional(readOnly = true)
@@ -192,8 +208,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPhenotypeAssociationWithIds( ids );
     }
 
-    /*
-     * find PhenotypeAssociations associated with a BibliographicReference
+    /**
+     * @param pubMedId pub med id
+     * @return find PhenotypeAssociations associated with a BibliographicReference
      */
     @Override
     @Transactional(readOnly = true)
@@ -201,8 +218,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPhenotypesForBibliographicReference( pubMedId );
     }
 
-    /*
-     * find private evidence id that the user can modifiable or own
+    /**
+     * @param limit    limit
+     * @param groups   groups
+     * @param taxonId  taxon id
+     * @param userName user name
+     * @return find private evidence id that the user can modifiable or own
      */
     @Override
     @Transactional(readOnly = true)
@@ -210,8 +231,15 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.findPrivateEvidenceId( taxonId, limit );
     }
 
-    /*
-     * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
+    /**
+     * @param groups                 groups
+     * @param externalDatabaseIds    external db ids
+     * @param taxon                  taxon
+     * @param noElectronicAnnotation no electronic annotation
+     * @param showOnlyEditable       show only editable
+     * @param userName               user name
+     * @param valuesUri              values uri
+     * @return find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
     @Override
     @Transactional(readOnly = true)
@@ -224,8 +252,15 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
                         noElectronicAnnotation );
     }
 
-    /*
-     * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
+    /**
+     * @param groups                 groups
+     * @param externalDatabaseIds    external db ids
+     * @param taxon                  taxon
+     * @param noElectronicAnnotation no electronic annotation
+     * @param showOnlyEditable       show only editable
+     * @param userName               user name
+     * @param valuesUri              values uri
+     * @return find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
      */
     @Override
     @Transactional(readOnly = true)
@@ -284,7 +319,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /**
      * @param maxResults                               max results
      * @param geneDifferentialExpressionMetaAnalysisId id
-     * @return a Collection<DifferentialExpressionEvidence> for a geneDifferentialExpressionMetaAnalysisId if one exists
+     * @return a Collection for a geneDifferentialExpressionMetaAnalysisId if one exists
      * (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
     @Override

@@ -19,7 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * 
+ *
  */
 public abstract class AnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
@@ -30,7 +30,7 @@ public abstract class AnnotationEvent extends ubic.gemma.model.common.auditAndSe
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public AnnotationEvent() {

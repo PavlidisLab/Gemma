@@ -27,7 +27,7 @@ import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import  org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -88,7 +88,7 @@ public class SignupController extends BaseController {
 
     }
 
-    /**
+    /*
      * This is hit when a user clicks on the confirmation link they received by email.
      */
     @RequestMapping("/confirmRegistration.html")
@@ -147,7 +147,7 @@ public class SignupController extends BaseController {
         this.userManager = userManager;
     }
 
-    /**
+    /*
      * Used when a user signs themselves up.
      */
     @RequestMapping(value = "/signup.html", method = RequestMethod.POST)
@@ -229,24 +229,24 @@ public class SignupController extends BaseController {
         return "register";
     }
 
-    /**
+    /*
      * Send an email to request signup confirmation.
      */
     private void sendSignupConfirmationEmail( HttpServletRequest request, UserDetailsImpl u ) {
         String email = u.getEmail();
 
-            Map<String, Object> model = new HashMap<>();
-            model.put( "siteurl", Settings.getBaseUrl() );
+        Map<String, Object> model = new HashMap<>();
+        model.put( "siteurl", Settings.getBaseUrl() );
 
-            this.sendConfirmationEmail( request, u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
+        this.sendConfirmationEmail( request, u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
 
-            // See if this comes from AjaxRegister.js, if it does don't save confirmation message
-            String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
+        // See if this comes from AjaxRegister.js, if it does don't save confirmation message
+        String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
 
-            if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
-                this.saveMessage( request, "signup.email.sent", email,
-                        "A confirmation email was sent. Please check your mail and click the link it contains" );
-            }
+        if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
+            this.saveMessage( request, "signup.email.sent", email,
+                    "A confirmation email was sent. Please check your mail and click the link it contains" );
+        }
     }
 
     public void setRecaptchaTester( RecaptchaTester recaptchaTester ) {

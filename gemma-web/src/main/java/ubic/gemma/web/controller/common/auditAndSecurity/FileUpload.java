@@ -22,37 +22,27 @@ import java.io.Serializable;
 
 /**
  * Command class to handle uploading of a file
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class FileUpload implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 537156568346654834L;
 
     private byte[] file;
 
     private String localPath;
 
-    /**
-     * @return
-     */
     public byte[] getFile() {
         return file;
     }
 
-    public String getLocalPath() {
-        return localPath;
-    }
-
-    /**
-     * @param name The name to set.
-     */
     public void setFile( byte[] file ) {
         this.file = file;
+    }
+
+    public String getLocalPath() {
+        return localPath;
     }
 
     public void setLocalPath( String file ) {

@@ -33,13 +33,7 @@ public class MedicalSubjectHeading extends BibRefAnnotationImpl {
         this.qualifiers = qualifiers;
     }
 
-    /**
-     * Constructs new instances of {@link MedicalSubjectHeading}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link MedicalSubjectHeading}.
-         */
         public static MedicalSubjectHeading newInstance() {
             return new MedicalSubjectHeading();
         }

@@ -26,9 +26,6 @@ public class AuditTrailImpl extends AuditTrail {
 
     private static final long serialVersionUID = 5316032533526337630L;
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#addEvent(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
     @Override
     public void addEvent( AuditEvent event ) {
         if ( event == null )
@@ -37,9 +34,6 @@ public class AuditTrailImpl extends AuditTrail {
         this.getEvents().add( event );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#getCreationEvent()
-     */
     @Override
     public AuditEvent getCreationEvent() {
         assert this.getEvents() != null;
@@ -53,9 +47,6 @@ public class AuditTrailImpl extends AuditTrail {
         return auditEvent;
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#getLast()
-     */
     @Override
     public AuditEvent getLast() {
         assert this.getEvents() != null;
@@ -89,25 +80,16 @@ public class AuditTrailImpl extends AuditTrail {
 
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#start()
-     */
     @Override
     public void start() {
         this.start( null );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#start(String)
-     */
     @Override
     public void start( String note ) {
         this.start( note, null );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#start(String, User)
-     */
     @Override
     public void start( String note, User actor ) {
         this.initialize(); // ensure that this is the first event.
@@ -116,25 +98,16 @@ public class AuditTrailImpl extends AuditTrail {
         this.addEvent( newEvent );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#update()
-     */
     @Override
     public void update() {
         this.update( null );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#update(String)
-     */
     @Override
     public void update( String note ) {
         this.update( note, null );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#update(String, User)
-     */
     @Override
     public void update( String note, User actor ) {
         assert this.getEvents() != null;

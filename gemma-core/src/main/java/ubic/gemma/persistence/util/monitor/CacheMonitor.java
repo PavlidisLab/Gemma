@@ -16,31 +16,25 @@ package ubic.gemma.persistence.util.monitor;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface CacheMonitor {
 
     /**
      * Remove all items from all caches.
-     * 
-     * @param cacheName
      */
-    public abstract void clearAllCaches();
+    void clearAllCaches();
 
     /**
      * Remove all items from the cache given
-     * 
-     * @param cacheName
+     *
+     * @param cacheName cache
      */
-    public abstract void clearCache( String cacheName );
+    void clearCache( String cacheName );
 
-    public void disableStatistics();
+    void disableStatistics();
 
-    public void enableStatistics();
+    void enableStatistics();
 
-    /**
-     * @return
-     */
-    public abstract String getStats();
+    String getStats();
 
 }

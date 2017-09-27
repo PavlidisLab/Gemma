@@ -36,10 +36,6 @@ public abstract class AuditEventType implements Serializable {
     public AuditEventType() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an AuditEventType instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -68,9 +64,6 @@ public abstract class AuditEventType implements Serializable {
         curatable.getCurationDetails().setLastUpdated( new Date() );
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;

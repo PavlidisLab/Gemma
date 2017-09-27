@@ -41,21 +41,12 @@ public abstract class BioAssayDimension extends Describable {
         this.bioAssays = bioAssays;
     }
 
-    /**
-     * Constructs new instances of {@link BioAssayDimension}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link BioAssayDimension}.
-         */
+
         public static BioAssayDimension newInstance() {
             return new BioAssayDimensionImpl();
         }
 
-        /**
-         * Constructs a new instance of {@link BioAssayDimension}, taking all possible properties (except the
-         * identifier(s))as arguments.
-         */
         public static BioAssayDimension newInstance( String name, String description, List<BioAssay> bioAssays ) {
             final BioAssayDimension entity = new BioAssayDimensionImpl();
             entity.setName( name );

@@ -69,13 +69,9 @@ public class UserGroup extends AbstractAuditable implements gemma.gsec.model.Use
     public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
         this.groupMembers = ( Collection<User> ) groupMembers;
     }
-    /**
-     * Constructs new instances of {@link UserGroup}.
-     */
+
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link UserGroup}.
-         */
+
         public static UserGroup newInstance() {
             return new UserGroup();
         }

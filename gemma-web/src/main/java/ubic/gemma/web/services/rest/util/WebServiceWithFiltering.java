@@ -23,37 +23,35 @@ public abstract class WebServiceWithFiltering extends WebService {
      *               <p>
      *               Filtering can be done on any* property or nested property that the ExpressionExperiment class has (
      *               and is mapped by hibernate ). E.g: 'curationDetails' or 'curationDetails.lastTroubledEvent.date'
-     *               </p><p>
+     *               </p>
      *               * Any property of a supported type. Currently supported types are:
      *               <ul>
      *               <li>String - property of String type, required value can be any String.</li>
      *               <li>Number - any Number implementation. Required value must be a string parseable to the specific Number type.</li>
      *               <li>Boolean - required value will be parsed to true only if the string matches 'true', ignoring case.</li>
      *               </ul>
-     *               </p><p>
      *               Accepted operator keywords are:
      *               <ul>
      *               <li> '=' - equality</li>
      *               <li> '!=' - non-equality</li>
      *               <li> '<' - smaller than</li>
      *               <li> '>' - larger than</li>
-     *               <li> '<=' - smaller or equal</li>
-     *               <li> '=>' - larger or equal</li>
+     *               <li> '&lt;=' - smaller or equal</li>
+     *               <li> '=&gt;' - larger or equal</li>
      *               <li> 'like' - similar string, effectively means 'contains', translates to the sql 'LIKE' operator (given value will be surrounded by % signs)</li>
      *               </ul>
-     *               </p>
      *               <p>Multiple filters can be chained using 'AND' or 'OR' keywords.</p>
      *               <p>Leave space between the keywords and the previous/next word!</p>
-     *               <p>E.g: <code>?filter=property1 < value1 AND property2 like value2</code></p>
+     *               <p>E.g: <code>?filter=property1 &lt; value1 AND property2 like value2</code></p>
      *               <p>
      *               If chained filters are mixed conjunctions and disjunctions, the query must be in conjunctive normal
      *               form (CNF). Parentheses are not necessary - every AND keyword separates blocks of disjunctions.
-     *               </p><p>
+     *               </p>
      *               Example:
-     *               <code>?filter=p1 = v1 OR p1 != v2 AND p2 <= v2 AND p3 > v3 OR p3 < v4</code>
+     *               <code>?filter=p1 = v1 OR p1 != v2 AND p2 &lt;=v2 AND p3 &gt; v3 OR p3 &lt; v4</code>
      *               Above query will translate to:
-     *               <code>(p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4;)</code>
-     *               </p><p>
+     *               <code>(p1 = v1 OR p1 != v2) AND (p2 &lt;=v2) AND (p3 &gt; v3 OR p3 &lt; v4;)</code>
+     *               <p>
      *               Breaking the CNF results in an error.
      *               </p>
      *               <p>

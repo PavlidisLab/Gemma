@@ -47,6 +47,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     }
 
     /**
+     * @param ee           ee
      * @param cs2gene      Map of probes to genes.
      * @param queryString, which must have parameter list placeholder "cs" and may have parameter list "ees".
      * @return map of vectors to gene ids.

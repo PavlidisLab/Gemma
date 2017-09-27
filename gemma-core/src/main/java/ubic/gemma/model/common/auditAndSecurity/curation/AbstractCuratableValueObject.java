@@ -123,6 +123,7 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
      * Experiment are described. If you also need to include the Array Design trouble info, use
      * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject}
      */
+    @SuppressWarnings("unused") // Used in front end
     public String getTroubleDetails() {
         return this.getTroubleDetails( true );
     }

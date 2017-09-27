@@ -18,40 +18,32 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.genome.gene.GOGroupValueObject;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.persistence.SessionListManager;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * For 'live searches' from the web interface.
- * 
+ *
  * @author luke
- * @version $Id$
  */
+@SuppressWarnings("unused") // Used in front end
 @Controller
 public class GenePickerController {
-
-    // private static Log log = LogFactory.getLog( GenePickerController.class );
 
     @Autowired
     private GeneCoreService geneCoreService;
@@ -73,8 +65,8 @@ public class GenePickerController {
 
     /**
      * AJAX
-     * 
-     * @param geneIds of <long> geneIds
+     *
+     * @param geneIds geneIds
      * @return collection of gene entity objects; duplicates will be resolved.
      */
     public Collection<GeneValueObject> getGenes( Collection<Long> geneIds ) {
@@ -88,8 +80,8 @@ public class GenePickerController {
     /**
      * for AJAX get all genes in the given taxon that are annotated with the given go id, including its child terms in
      * the hierarchy
-     * 
-     * @param goId GO id that must be in the format "GO_#######"
+     *
+     * @param goId    GO id that must be in the format "GO_#######"
      * @param taxonId must not be null and must correspond to a taxon
      * @return Collection<GeneSet> empty if goId was blank or taxonId didn't correspond to a taxon
      */
@@ -106,8 +98,8 @@ public class GenePickerController {
     /**
      * for AJAX get a gene set with all genes in the given taxon that are annotated with the given go id, including its
      * child terms in the hierarchy
-     * 
-     * @param goId GO id that must be in the format "GO_#######"
+     *
+     * @param goId    GO id that must be in the format "GO_#######"
      * @param taxonId must not be null and must correspond to a taxon
      * @return GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
      */
@@ -119,7 +111,7 @@ public class GenePickerController {
 
     /**
      * AJAX
-     * 
+     *
      * @return a collection of the taxa in gemma (whether usable or not)
      */
     public Collection<TaxonValueObject> getTaxa() {
@@ -129,7 +121,7 @@ public class GenePickerController {
 
     /**
      * AJAX
-     * 
+     *
      * @return Taxon that are species. (only returns usable taxa)
      */
     public Collection<TaxonValueObject> getTaxaSpecies() {
@@ -139,7 +131,7 @@ public class GenePickerController {
 
     /**
      * AJAX
-     * 
+     *
      * @return List of taxa with array designs in gemma
      */
     public Collection<TaxonValueObject> getTaxaWithArrays() {
@@ -149,7 +141,7 @@ public class GenePickerController {
 
     /**
      * AJAX
-     * 
+     *
      * @return collection of taxa that have expression experiments available.
      */
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
@@ -159,7 +151,7 @@ public class GenePickerController {
 
     /**
      * AJAX
-     * 
+     *
      * @return Taxon that are on Phenocarta evidence
      */
     public Collection<TaxonValueObject> getTaxaWithEvidence() {
@@ -169,7 +161,7 @@ public class GenePickerController {
 
     /**
      * AJAX
-     * 
+     *
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<TaxonValueObject> getTaxaWithGenes() {
@@ -178,9 +170,9 @@ public class GenePickerController {
 
     /**
      * AJAX (used by GeneCombo.js)
-     * 
-     * @param query
-     * @param taxonId
+     *
+     * @param query   query
+     * @param taxonId taxon id
      * @return Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
@@ -189,8 +181,8 @@ public class GenePickerController {
 
     /**
      * AJAX (used by GeneAndGeneGroupCombo.js)
-     * 
-     * @param query
+     *
+     * @param query   query
      * @param taxonId can be null
      * @return Collection of SearchResultDisplayObject
      */
@@ -198,8 +190,9 @@ public class GenePickerController {
 
         // get any session-bound groups
 
-        Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxonId != null ) ? sessionListManager
-                .getModifiedGeneSets( taxonId ) : sessionListManager.getModifiedGeneSets();
+        Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxonId != null ) ?
+                sessionListManager.getModifiedGeneSets( taxonId ) :
+                sessionListManager.getModifiedGeneSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
@@ -228,9 +221,9 @@ public class GenePickerController {
 
     /**
      * AJAX (used by Phenocarta)
-     * 
-     * @param query
-     * @param taxonId
+     *
+     * @param query   query
+     * @param taxonId taxon id
      * @return Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenesWithNCBIId( String query, Long taxonId ) {
@@ -250,9 +243,9 @@ public class GenePickerController {
 
     /**
      * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
-     * 
-     * @param query A list of gene names (symbols), one per line.
-     * @param taxonId
+     *
+     * @param query   A list of gene names (symbols), one per line.
+     * @param taxonId taxon id
      * @return collection of gene value objects
      * @throws IOException
      */
@@ -262,9 +255,9 @@ public class GenePickerController {
 
     /**
      * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
-     * 
-     * @param query A list of gene names (symbols), one per line.
-     * @param taxonId
+     *
+     * @param query   A list of gene names (symbols), one per line.
+     * @param taxonId taxon id
      * @return map with each gene-query as a key and a collection of the search-results as the value
      * @throws IOException
      */

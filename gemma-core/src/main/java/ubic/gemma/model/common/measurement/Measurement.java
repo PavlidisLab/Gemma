@@ -37,10 +37,6 @@ public abstract class Measurement implements Identifiable, Serializable {
     private Long id;
     private Unit unit;
 
-    /**
-     * Returns <code>true</code> if the argument is an Measurement instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -53,9 +49,6 @@ public abstract class Measurement implements Identifiable, Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -64,6 +57,7 @@ public abstract class Measurement implements Identifiable, Serializable {
         return hashCode;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
@@ -120,21 +114,12 @@ public abstract class Measurement implements Identifiable, Serializable {
         this.value = value;
     }
 
-    /**
-     * Constructs new instances of {@link Measurement}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link Measurement}.
-         */
+
         public static Measurement newInstance() {
             return new MeasurementImpl();
         }
 
-        /**
-         * Constructs a new instance of {@link Measurement}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
         public static Measurement newInstance( MeasurementType type, String value, MeasurementKind kindCV,
                 String otherKind, PrimitiveType representation, Unit unit ) {
             final Measurement entity = new MeasurementImpl();
@@ -147,10 +132,6 @@ public abstract class Measurement implements Identifiable, Serializable {
             return entity;
         }
 
-        /**
-         * Constructs a new instance of {@link Measurement}, taking all required
-         * and/or read-only properties as arguments.
-         */
         public static Measurement newInstance( MeasurementType type, String value, PrimitiveType representation ) {
             final Measurement entity = new MeasurementImpl();
             entity.setType( type );

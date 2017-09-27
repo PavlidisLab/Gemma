@@ -23,16 +23,13 @@
 // $Id$
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.hibernate.HibernateException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
-
-/**
- * 
- */
 public final class AuditActionEnum extends AuditAction implements org.hibernate.usertype.EnhancedUserType {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -49,80 +46,53 @@ public final class AuditActionEnum extends AuditAction implements org.hibernate.
         super();
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#assemble(java.io.Serializable cached, Object owner)
-     */
     @Override
     public Object assemble( java.io.Serializable cached, Object owner ) {
         return cached;
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#deepCopy(Object)
-     */
     @Override
     public Object deepCopy( Object value ) throws HibernateException {
         // Enums are immutable - nothing to be done to deeply clone it
         return value;
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#disassemble(Object value)
-     */
     @Override
     public java.io.Serializable disassemble( Object value ) {
         return ( java.io.Serializable ) value;
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#equals(Object, Object)
-     */
     @Override
     public boolean equals( Object x, Object y ) throws HibernateException {
         return ( x == y ) || ( x != null && y != null && y.equals( x ) );
     }
 
-    /**
-     * @see org.hibernate.usertype.EnhancedUserType#fromXMLString(String string)
-     */
     @Override
     public Object fromXMLString( String string ) {
         return ubic.gemma.model.common.auditAndSecurity.AuditAction.fromString( String.valueOf( string ) );
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#hashCode(Object value)
-     */
     @Override
     public int hashCode( Object value ) {
         return value.hashCode();
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#isMutable()
-     */
     @Override
     public boolean isMutable() {
         // Enums are immutable
         return false;
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], Object)
-     */
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner ) throws HibernateException,
-            SQLException {
+    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner )
+            throws HibernateException, SQLException {
         final String value = ( String ) resultSet.getObject( values[0] );
         return resultSet.wasNull() ? null : fromString( value );
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int)
-     */
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object value, int index ) throws HibernateException,
-            SQLException {
+    public void nullSafeSet( PreparedStatement statement, Object value, int index )
+            throws HibernateException, SQLException {
         if ( value == null ) {
             statement.setNull( index, Types.VARCHAR );
         } else {
@@ -130,41 +100,26 @@ public final class AuditActionEnum extends AuditAction implements org.hibernate.
         }
     }
 
-    /**
-     * @see org.hibernate.usertype.EnhancedUserType#objectToSQLString(Object object)
-     */
     @Override
     public String objectToSQLString( Object object ) {
         return String.valueOf( ( ( ubic.gemma.model.common.auditAndSecurity.AuditAction ) object ).getValue() );
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#replace(Object original, Object target, Object owner)
-     */
     @Override
     public Object replace( Object original, Object target, Object owner ) {
         return original;
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#returnedClass()
-     */
     @Override
     public Class<?> returnedClass() {
         return AuditAction.class;
     }
 
-    /**
-     * @see org.hibernate.usertype.UserType#sqlTypes()
-     */
     @Override
     public int[] sqlTypes() {
         return SQL_TYPES;
     }
 
-    /**
-     * @see org.hibernate.usertype.EnhancedUserType#toXMLString(Object object)
-     */
     @Override
     public String toXMLString( Object object ) {
         return String.valueOf( ( ( ubic.gemma.model.common.auditAndSecurity.AuditAction ) object ).getValue() );

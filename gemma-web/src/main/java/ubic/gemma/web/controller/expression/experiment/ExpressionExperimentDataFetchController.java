@@ -73,7 +73,8 @@ public class ExpressionExperimentDataFetchController {
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
      * DATA_DIR.
      *
-     * @return
+     * @param response response
+     * @param request  request
      */
     @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {

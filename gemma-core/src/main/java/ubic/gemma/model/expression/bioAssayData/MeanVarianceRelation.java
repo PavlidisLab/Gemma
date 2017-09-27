@@ -44,10 +44,6 @@ public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.mo
     public MeanVarianceRelation() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an MeanVarianceRelation instance and all identifiers for this entity
-     * equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -77,9 +73,6 @@ public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.mo
         this.means = means;
     }
 
-    /**
-     * @see MeanVarianceRelation#getSecurityOwner()
-     */
     @Override
     public Securable getSecurityOwner() {
         return this.securityOwner;
@@ -97,9 +90,6 @@ public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.mo
         this.variances = variances;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -108,13 +98,8 @@ public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.mo
         return hashCode;
     }
 
-    /**
-     * Constructs new instances of {@link MeanVarianceRelation}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link MeanVarianceRelation}.
-         */
+
         public static MeanVarianceRelation newInstance() {
             return new MeanVarianceRelation();
         }

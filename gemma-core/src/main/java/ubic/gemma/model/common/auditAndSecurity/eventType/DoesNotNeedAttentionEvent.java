@@ -21,8 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 
-import java.util.Date;
-
 /**
  * An event that occurs when a curator has validated the entity and indicated that it is "approved". This could be used
  * to indicate that all preprocessing is finished, for example.
@@ -48,13 +46,8 @@ public class DoesNotNeedAttentionEvent extends CurationDetailsEvent {
         curatable.getCurationDetails().setLastNeedsAttentionEvent( auditEvent );
     }
 
-    /**
-     * Constructs new instances of {@link DoesNotNeedAttentionEvent}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link DoesNotNeedAttentionEvent}.
-         */
+
         public static DoesNotNeedAttentionEvent newInstance() {
             return new DoesNotNeedAttentionEvent();
         }

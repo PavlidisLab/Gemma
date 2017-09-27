@@ -24,23 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * look again. Do not use to indicate other types of failure such as an unsupported raw data type.
  * </p>
  */
-public class FailedBatchInformationMissingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent();
-        }
-
-    }
+public class FailedBatchInformationMissingEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -49,10 +34,18 @@ public class FailedBatchInformationMissingEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public FailedBatchInformationMissingEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent();
+        }
+
     }
 
 }

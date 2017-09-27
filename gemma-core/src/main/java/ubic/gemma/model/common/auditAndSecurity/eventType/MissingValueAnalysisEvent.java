@@ -23,22 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Computing missing values for an expression experiment
  * </p>
  */
-public class MissingValueAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent();
-        }
-
-    }
+public class MissingValueAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -47,10 +33,18 @@ public class MissingValueAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public MissingValueAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent();
+        }
+
     }
 
 }

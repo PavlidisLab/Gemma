@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * An event involving an ExpressionExperiment
  * </p>
  */
-public abstract class ExpressionExperimentAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
+public abstract class ExpressionExperimentAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -33,7 +33,7 @@ public abstract class ExpressionExperimentAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ExpressionExperimentAnalysisEvent() {

@@ -131,7 +131,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     /**
-     * The number of ProcessedExpressionDataVectors associated with this.
+     * @return The number of ProcessedExpressionDataVectors associated with this.
      */
     public Integer getNumberOfDataVectors() {
         return this.numberOfDataVectors;
@@ -175,7 +175,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     /**
-     * A brief unique (but optional) human-readable name for the expression experiment. For example in the past we often
+     * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past we often
      * used names like "alizadeh-lymphoma".
      */
     public String getShortName() {
@@ -187,7 +187,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     /**
-     * Represents the site where the data was downloaded from.
+     * @return Represents the site where the data was downloaded from.
      */
     public String getSource() {
         return this.source;
@@ -231,13 +231,8 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.batchEffect = batchEffect;
     }
 
-    /**
-     * Constructs new instances of {@link ExpressionExperiment}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ExpressionExperiment}.
-         */
+
         public static ExpressionExperiment newInstance() {
             return new ExpressionExperiment();
         }

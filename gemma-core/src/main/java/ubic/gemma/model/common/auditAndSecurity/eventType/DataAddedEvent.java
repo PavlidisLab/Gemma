@@ -23,21 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that a data type (for a specific QuantitationType, possibly new) was added. This is always 'raw' data.
  * </p>
  */
-public class DataAddedEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent();
-        }
-
-    }
+public class DataAddedEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,10 +33,18 @@ public class DataAddedEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public DataAddedEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent();
+        }
+
     }
 
 }

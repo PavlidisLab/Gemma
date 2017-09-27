@@ -42,7 +42,7 @@ public abstract class ProcessedExpressionDataVector extends DesignElementDataVec
     }
 
     /**
-     * The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
+     * @return The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
      * about the expession level without referring to any absolute baseline other than the minimum in the entire
      * dataset, based on the maximum expression measurement for the probe (so the probe with the lowest expression is
      * the one with the lowest maximum value). For two-color data sets, this is computed using the intensity values for
@@ -58,7 +58,7 @@ public abstract class ProcessedExpressionDataVector extends DesignElementDataVec
     }
 
     /**
-     * The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
+     * @return The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
      * about the expession level without referring to any absolute baseline other than the minimum in the entire
      * dataset, based on the mean expression measurement for the probe. For two-color data sets, this is computed using
      * the intensity values for the probe in the two channels, not from the ratios stored in this vector. For one-color
@@ -72,13 +72,8 @@ public abstract class ProcessedExpressionDataVector extends DesignElementDataVec
         this.rankByMean = rankByMean;
     }
 
-    /**
-     * Constructs new instances of {@link ProcessedExpressionDataVector}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ProcessedExpressionDataVector}.
-         */
+
         public static ProcessedExpressionDataVector newInstance() {
             return new ProcessedExpressionDataVectorImpl();
         }

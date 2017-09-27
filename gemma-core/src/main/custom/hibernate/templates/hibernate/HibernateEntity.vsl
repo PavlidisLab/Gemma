@@ -197,14 +197,10 @@ $operation.getDocumentation("     * ")
 
 #end
 #if (!$entity.abstract)
-    /**
-     * Constructs new instances of {@link ${entity.fullyQualifiedName}}.
-     */
+
     public static final class Factory
     {
-        /**
-         * Constructs a new instance of {@link ${entity.fullyQualifiedName}}.
-         */
+
         public static $entity.fullyQualifiedName newInstance()
         {
             return new ${entity.fullyQualifiedEntityImplementationName}();

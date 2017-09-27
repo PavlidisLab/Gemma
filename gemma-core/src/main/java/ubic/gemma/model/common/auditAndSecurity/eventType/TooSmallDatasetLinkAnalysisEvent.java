@@ -21,23 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * Indicates that the data set had too few samples or probes to be analyzed (after filtering), and was skipped
  */
-public class TooSmallDatasetLinkAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent();
-        }
-
-    }
+public class TooSmallDatasetLinkAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,10 +31,18 @@ public class TooSmallDatasetLinkAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public TooSmallDatasetLinkAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent();
+        }
+
     }
 
 }

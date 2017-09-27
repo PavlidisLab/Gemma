@@ -19,53 +19,35 @@
 
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import java.util.Collection;
-import java.util.Set;
-import java.util.TreeSet;
-
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.Collection;
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  * Extended value object to carry more data to client.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 218696698777199533L;
-
     private Set<String> additionalTaxa;
-
     private String allParentsAnnotationLink;
-
     private Collection<String> alternateNames;
-
     private String bioProcessAnnotationLink;
-
     private String colorString;
-
     private Collection<DatabaseEntryValueObject> externalReferences;
-
     private Collection<ArrayDesignValueObject> mergees;
-
     private ArrayDesignValueObject merger;
-
     private String noParentsAnnotationLink;
-
     private Collection<ArrayDesignValueObject> subsumees;
-
     private ArrayDesignValueObject subsumer;
 
-    /**
-     * @param vo
-     */
     public ArrayDesignValueObjectExt( ArrayDesignValueObject vo ) {
         super( vo );
         addAnnotationFileLinks();
@@ -78,45 +60,89 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
         return allParentsAnnotationLink;
     }
 
+    public void setAllParentsAnnotationLink( String allParentsAnnotationLink ) {
+        this.allParentsAnnotationLink = allParentsAnnotationLink;
+    }
+
     public Collection<String> getAlternateNames() {
         return alternateNames;
+    }
+
+    public void setAlternateNames( Collection<String> alternateNames ) {
+        this.alternateNames = alternateNames;
     }
 
     public String getBioProcessAnnotationLink() {
         return bioProcessAnnotationLink;
     }
 
+    public void setBioProcessAnnotationLink( String bioProcessAnnotationLink ) {
+        this.bioProcessAnnotationLink = bioProcessAnnotationLink;
+    }
+
     public String getColorString() {
         return colorString;
+    }
+
+    public void setColorString( String colorString ) {
+        this.colorString = colorString;
     }
 
     public Collection<DatabaseEntryValueObject> getExternalReferences() {
         return externalReferences;
     }
 
+    public void setExternalReferences( Collection<DatabaseEntryValueObject> externalReferences ) {
+        this.externalReferences = externalReferences;
+    }
+
     public Collection<ArrayDesignValueObject> getMergees() {
         return mergees;
+    }
+
+    public void setMergees( Collection<ArrayDesignValueObject> mergees ) {
+        this.mergees = mergees;
+        this.setIsMerged( !mergees.isEmpty() );
     }
 
     public ArrayDesignValueObject getMerger() {
         return merger;
     }
 
+    public void setMerger( ArrayDesignValueObject arrayDesignValueObject ) {
+        this.merger = arrayDesignValueObject;
+        this.setIsMergee( arrayDesignValueObject != null );
+    }
+
     public String getNoParentsAnnotationLink() {
         return noParentsAnnotationLink;
+    }
+
+    public void setNoParentsAnnotationLink( String noParentsAnnotationLink ) {
+        this.noParentsAnnotationLink = noParentsAnnotationLink;
     }
 
     public Collection<ArrayDesignValueObject> getSubsumees() {
         return subsumees;
     }
 
+    public void setSubsumees( Collection<ArrayDesignValueObject> subsumees ) {
+        this.subsumees = subsumees;
+        this.setIsSubsumer( !subsumees.isEmpty() );
+    }
+
     public ArrayDesignValueObject getSubsumer() {
         return subsumer;
     }
 
+    public void setSubsumer( ArrayDesignValueObject arrayDesignValueObject ) {
+        this.subsumer = arrayDesignValueObject;
+        this.setIsSubsumed( arrayDesignValueObject != null );
+    }
+
     /**
      * Method to format taxon list for display.
-     * 
+     *
      * @param t Collection of taxon used to create array/platform
      */
     public void setAdditionalTaxa( Collection<Taxon> t ) {
@@ -129,65 +155,6 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
 
     }
 
-    public void setAllParentsAnnotationLink( String allParentsAnnotationLink ) {
-        this.allParentsAnnotationLink = allParentsAnnotationLink;
-    }
-
-    public void setAlternateNames( Collection<String> alternateNames ) {
-        this.alternateNames = alternateNames;
-    }
-
-    public void setBioProcessAnnotationLink( String bioProcessAnnotationLink ) {
-        this.bioProcessAnnotationLink = bioProcessAnnotationLink;
-    }
-
-    public void setColorString( String colorString ) {
-        this.colorString = colorString;
-    }
-
-    /**
-     * @param externalReferences
-     */
-    public void setExternalReferences( Collection<DatabaseEntryValueObject> externalReferences ) {
-        this.externalReferences = externalReferences;
-    }
-
-    /**
-     * @param mergees
-     */
-    public void setMergees( Collection<ArrayDesignValueObject> mergees ) {
-        this.mergees = mergees;
-        this.setIsMerged( !mergees.isEmpty() );
-    }
-
-    /**
-     * @param arrayDesignValueObject
-     */
-    public void setMerger( ArrayDesignValueObject arrayDesignValueObject ) {
-        this.merger = arrayDesignValueObject;
-        this.setIsMergee( arrayDesignValueObject != null );
-    }
-
-    public void setNoParentsAnnotationLink( String noParentsAnnotationLink ) {
-        this.noParentsAnnotationLink = noParentsAnnotationLink;
-    }
-
-    /**
-     * @param create
-     */
-    public void setSubsumees( Collection<ArrayDesignValueObject> subsumees ) {
-        this.subsumees = subsumees;
-        this.setIsSubsumer( !subsumees.isEmpty() );
-    }
-
-    /**
-     * @param arrayDesignValueObject
-     */
-    public void setSubsumer( ArrayDesignValueObject arrayDesignValueObject ) {
-        this.subsumer = arrayDesignValueObject;
-        this.setIsSubsumed( arrayDesignValueObject != null );
-    }
-
     private void addAnnotationFileLinks() {
 
         this.noParentsAnnotationLink = "downloadAnnotationFile.html?id=" + getId() + "&fileType=noParents";
@@ -198,10 +165,6 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
 
     }
 
-    /**
-     * @param arrayDesign
-     * @return
-     */
     private void formatTechnologyType() {
 
         this.colorString = "Not specified";
