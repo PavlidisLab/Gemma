@@ -124,7 +124,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
             tbar: [{
                 xtype: 'button',
                 icon: "/Gemma/images/icons/add.png",
-                tooltip: 'Add a comment event',
+                tooltip: 'Add&nbsp;a&nbsp;comment',
                 handler: this.showAddEventDialog,
                 scope: this
             }, {
@@ -191,7 +191,7 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
         forceFit: true
     },
 
-    title: "Add an audit event",
+    title: this.comment ? "Add a comment" : "Change troubled status",
 
     /**
      * @memberOf Gemma.AddAuditEventDialog
@@ -210,6 +210,8 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
                 : [['TroubledStatusFlagEvent', 'Mark as troubled', 'exclamation-triangle'],
                   ['NotTroubledStatusFlagEvent', 'Mark as NOT troubled', 'check-circle']]
         });
+
+        var self = this;
 
         this.auditEventTypeCombo = new Ext.form.ComboBox({
             fieldLabel: 'Event type',
@@ -231,8 +233,10 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
             listeners: {
                 afterrender: function(combo) {
                     var recordSelected = combo.getStore().getAt(0);
-                    console.log(recordSelected.data);
                     combo.setValue(recordSelected.data.type);
+                    if(self.comment){
+                        combo.hide();
+                    }
                 }
             }
         });
