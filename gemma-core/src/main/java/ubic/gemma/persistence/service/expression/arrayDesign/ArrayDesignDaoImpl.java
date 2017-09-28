@@ -1073,10 +1073,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "s.troubled, "  //7
                 + "s.needsAttention, " //8
                 + "s.curationNote, "  //9
-                + "t.commonName " //10
+                + "t.commonName, " //10
+                + "eNote, "  //11
+                + "eAttn, " //12
+                + "eTrbl " //13
                 + "from ArrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " join " + ObjectFilter.DAO_AD_ALIAS
                 + ".curationDetails s join " + ObjectFilter.DAO_AD_ALIAS + ".primaryTaxon t left join "
-                + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m ";
+                + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m left join s.lastNeedsAttentionEvent as eAttn "
+                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
 
         queryString += formAclSelectClause( ObjectFilter.DAO_AD_ALIAS,
                 "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
@@ -1128,8 +1132,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );
                 }
 
-                //This was causing null results when being retrieved through the original query
-                this.addCurationEvents( v );
+                // Curation events
+                this.addCurationEvents( v, ( AuditEvent ) list.get( 11 ), ( AuditEvent ) list.get( 12 ),
+                        ( AuditEvent ) list.get( 13 ) );
 
                 result.add( v );
             }

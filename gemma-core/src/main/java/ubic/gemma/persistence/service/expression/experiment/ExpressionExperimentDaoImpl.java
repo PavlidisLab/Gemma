@@ -1778,15 +1778,19 @@ public class ExpressionExperimentDaoImpl
                 + "sid, " // 23
                 + "qts, " // 24
                 + ObjectFilter.DAO_EE_ALIAS + ".batchEffect, " // 25
-                + ObjectFilter.DAO_EE_ALIAS + ".batchConfound " // 26
-                + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " inner join "
+                + ObjectFilter.DAO_EE_ALIAS + ".batchConfound, " // 26
+                + "eNote, "  //27
+                + "eAttn, " //28
+                + "eTrbl " //29
+                + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
                 + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
                 + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "
                 + ObjectFilter.DAO_AD_ALIAS + " left join SU.sourceTaxon as taxon left join "
                 + ObjectFilter.DAO_EE_ALIAS + ".accession acc "
                 + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax " + "left join "
-                + ObjectFilter.DAO_EE_ALIAS + ".experimentalDesign as EDES join " + ObjectFilter.DAO_EE_ALIAS
-                + ".curationDetails as s ";
+                + ObjectFilter.DAO_EE_ALIAS + ".experimentalDesign as EDES " + "join " + ObjectFilter.DAO_EE_ALIAS
+                + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn "
+                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
 
         queryString += formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
@@ -1887,8 +1891,8 @@ public class ExpressionExperimentDaoImpl
         vo.setBatchEffect( ( String ) row[25] );
         vo.setBatchConfound( ( String ) row[26] );
 
-        // This was causing null results when being retrieved through the original query
-        this.addCurationEvents( vo );
+        // Curation events
+        this.addCurationEvents( vo, ( AuditEvent ) row[27], ( AuditEvent ) row[28], ( AuditEvent ) row[29] );
     }
 
     /**

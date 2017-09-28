@@ -1001,8 +1001,9 @@ public class ExpressionExperimentController {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        if ( limit == null )
+        if ( limit == null ) {
             limit = 50;
+        }
         vos = getEEVOsForManager( taxonId, ids, limit, filter, showPublic );
 
         if ( vos.isEmpty() ) {
@@ -1012,10 +1013,6 @@ public class ExpressionExperimentController {
         if ( timer.getTime() > 1000 ) {
             log.info( "Fetching basic data took: " + timer.getTime() + "ms" );
         }
-
-        /*
-         * Phase I is pretty fast - even over a tunnel, about 10 seconds for 1500 data sets.
-         */
 
         timer.reset();
         timer.start();

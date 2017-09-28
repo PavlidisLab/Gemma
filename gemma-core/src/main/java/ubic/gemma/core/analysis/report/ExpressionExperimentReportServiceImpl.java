@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CacheUtils;
@@ -56,6 +57,8 @@ import java.util.*;
 @Component
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
 
+    private static final String NOTE_UPDATED_CONFOUND = "Updated batch confound";
+    private static final String NOTE_UPDATED_EFFECT = "Updated batch effect";
     private static final String EESTATS_CACHE_NAME = "ExpressionExperimentReportsCache";
     private final Log log = LogFactory.getLog( this.getClass() );
     /**
@@ -66,6 +69,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
             DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class,
             BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
+
+    @Autowired
+    private AuditTrailService auditTrailService;
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
@@ -377,7 +383,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         calendar.add( Calendar.HOUR_OF_DAY, -24 ); // All EEs updated in the last day
 
         Collection<ExpressionExperiment> ees = this.expressionExperimentService.findUpdatedAfter( calendar.getTime() );
-        log.info( "Will be checking " + ees.size() + " experiments." );
+        log.info( "Will be checking " + ees.size() + " experiments" );
         for ( ExpressionExperiment ee : ees ) {
             String confound = expressionExperimentService.getBatchConfound( ee );
             String effect = expressionExperimentService.getBatchEffectDescription( ee );
@@ -385,10 +391,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
                 ee.setBatchConfound( confound );
+                auditTrailService
+                        .addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(), NOTE_UPDATED_CONFOUND,
+                                confound );
                 update = true;
             }
 
             if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
+                auditTrailService
+                        .addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(), NOTE_UPDATED_EFFECT,
+                                effect );
                 ee.setBatchEffect( effect );
                 update = true;
             }
