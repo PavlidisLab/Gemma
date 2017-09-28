@@ -597,7 +597,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
          readMethod : DEDVController.getDEDVForPcaVisualization,
          title : "Top loaded probes for PC" + component,
          showLegend : false,
-         downloadLink : String.format( "/Gemma/dedv/downloadDEDV.html?ee={0}&component={1}&thresh={2}&pca=1", eeid,
+         downloadLink : String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&component={1}&thresh={2}&pca=1", eeid,
             component, count )
       } );
       this.vispcaWindow.show( {
@@ -1121,7 +1121,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
 
       this.on( 'deleted', function( redirectHome ) {
          if ( redirectHome ) {
-            window.location = '/Gemma/home.html';
+            window.location = ctxBasePath + '/home.html';
 
          } else {
             /* after deletion, clear bottom details pane */

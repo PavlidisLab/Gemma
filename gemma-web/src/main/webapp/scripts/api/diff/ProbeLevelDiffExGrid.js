@@ -207,7 +207,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
                Ext.DomHelper.applyStyles( "diffExpression-msg", "height: 2.2em" );
                Ext.DomHelper.overwrite( "diffExpression-msg", [ {
                   tag : 'img',
-                  src : '/Gemma/images/icons/information.png'
+                  src : ctxBasePath + '/images/icons/information.png'
                }, {
                   tag : 'span',
                   html : "&nbsp;&nbsp;" + errorMessage
@@ -267,7 +267,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
          },
 
          visStyler : function( value, metadata, record, row, col, ds ) {
-            return "<span style='cursor:pointer' ><img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' /></span>";
+            return "<span style='cursor:pointer' ><img src='" + ctxBasePath + "/images/icons/chart_curve.png' ext:qtip='Visualize the data' /></span>";
          },
 
          rowClickHandler : function( grid, rowIndex, columnIndex, e ) {
@@ -300,7 +300,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
                   cascadeOnFirstShow : true,
                   title : title,
                   thumbnails : false,
-                  downloadLink : String.format( '/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', ee.id, geneId ),
+                  downloadLink : String.format( ctxBasePath + '/dedv/downloadDEDV.html?ee={0}&g={1}', ee.id, geneId ),
                   readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment
                } );
                visDifWindow.show( {
@@ -320,7 +320,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
 Gemma.ProbeLevelDiffExGrid.getEEStyler = function() {
    if ( Gemma.ProbeLevelDiffExGrid.eeNameStyler === undefined ) {
       Gemma.ProbeLevelDiffExGrid.eeNameTemplate = new Ext.XTemplate(
-         '<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+         '<tpl for="."><a target="_blank" title="{name}" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=',
          '{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
          ' ext:qtip="{name}">{[values.sourceExperiment ? "Subset of " + values.sourceExperiment : values.shortName]}</a></tpl>' );
       Gemma.ProbeLevelDiffExGrid.eeNameStyler = function( value, metadata, record, row, col, ds ) {

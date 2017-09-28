@@ -150,7 +150,7 @@ Gemma.PhenotypeGridPanelCommonConfig = Ext.extend(Object, {
                               phenotypes : gridPanel.currentPhenotypes
                            });
                      },
-                     icon : "/Gemma/images/icons/add.png",
+                     icon : ctxBasePath + "/images/icons/add.png",
                      tooltip : "Add new phenotype association"
                   };
                }

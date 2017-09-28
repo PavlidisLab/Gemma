@@ -167,7 +167,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 sortable: true,
                 width: 0.5, // viewConfig.forceFit resizes based on relative widths,
                 renderer: function (value, metaData, record, rowIndex, colIndex, store) {
-                    return (value && record) ? '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id='
+                    return (value && record) ? '<a href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id='
                         + record.id + '" title="' + value + '">' + value + '</a>' : '';
                 }
             },
@@ -225,7 +225,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 width: 0.1,
                 tooltip: "View bioassays",
                 renderer: function (value, metaData, record, rowIndex, colIndex, store) {
-                    return (value && record) ? '<a title="View bioassays" href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
+                    return (value && record) ? '<a title="View bioassays" href="' + ctxBasePath + '/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
                         + record.id + '">' + value + '</a>'
                         : '';
                 }
@@ -550,7 +550,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 text: 'Dataset manager',
                 cls: 'x-toolbar-standardbutton',
                 handler: function () {
-                    window.location = "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html";
+                    window.location = ctxBasePath + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html";
                 },
                 hidden: true
             });
@@ -567,7 +567,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 text: 'Show All Experiments',
                 cls: 'x-toolbar-standardbutton',
                 handler: function () {
-                    window.location = "/Gemma/expressionExperiment/showAllExpressionExperiments.html";
+                    window.location = ctxBasePath + "/expressionExperiment/showAllExpressionExperiments.html";
                 },
                 hidden: this.showAll
             });
@@ -576,13 +576,13 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 text: 'Experiment QC',
                 cls: 'x-toolbar-standardbutton',
                 handler: function () {
-                    window.location = "/Gemma/expressionExperimentsWithQC.html";
+                    window.location = ctxBasePath + "/expressionExperimentsWithQC.html";
                 }
             });
 
             // Button for downloading the shortNames of all or selected experiments as text
             var asTextButton = new Ext.Button({
-                icon: '/Gemma/images/icons/disk.png',
+                icon: ctxBasePath + '/images/icons/disk.png',
                 handler: function () {
                     this.showAsText();
                 }.createDelegate(this),

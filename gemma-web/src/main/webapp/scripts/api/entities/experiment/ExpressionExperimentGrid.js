@@ -267,7 +267,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
     formatAnalysisInfo: function (value, metadata, record, row, col, ds) {
         if (value)
             return '<i id="aliasHelp" class="fa fa-check fa-fw" style="font-size:smaller;color:green"></i>';
-        //   return "<img src='/Gemma/images/icons/ok.png' height='16' width='16' ext:qtip='Has analysis' />";
+        //   return "<img src='" + ctxBasePath + "/images/icons/ok.png' height='16' width='16' ext:qtip='Has analysis' />";
 
         return '';
     },
@@ -277,15 +277,15 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
         // return String
         // .format(
         // "{0}&nbsp;<a target='_blank'
-        // href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img
-        // src='/Gemma/images/magnifier.png' height='10' width='10'/></a>",
+        // href=ctxBasePath + '/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img
+        // src=ctxBasePath + '/images/magnifier.png' height='10' width='10'/></a>",
         // record.data.bioAssayCount, record.data.id);
     },
 
     formatEE: function (value, metadata, record, row, col, ds) {
         // fixme: this is duplicated code.
         var eeTemplate = new Ext.XTemplate(
-            '<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+            '<tpl for="."><a target="_blank" title="{name}" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=',
             '{id}"', ' ext:qtip="{name}">{shortName}</a></tpl>');
         return this.experimentNameAsLink ? eeTemplate.apply(record.data) : value;
     },

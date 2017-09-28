@@ -44,7 +44,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
             width: 75,
             sortable: true,
             renderer: function (value, metadata, record, row, col, ds) {
-                return String.format("<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a> ",
+                return String.format("<a target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={0}'>{1}</a> ",
                     record.data.id, record.data.officialSymbol);
             }
         }, {
@@ -468,7 +468,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
         });
 
         this.addButton = new Ext.Toolbar.Button({
-            icon: "/Gemma/images/icons/add.png",
+            icon: ctxBasePath + "images/icons/add.png",
             cls: "x-btn-icon",
             tooltip: "Add a gene to the list",
             disabled: true,
@@ -480,7 +480,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
         });
 
         this.removeButton = new Ext.Toolbar.Button({
-            icon: "/Gemma/images/icons/subtract.png",
+            icon: ctxBasePath + "images/icons/subtract.png",
             cls: "x-btn-icon",
             tooltip: "Remove the selected gene from the list",
             disabled: true,
@@ -500,7 +500,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
         });
 
         this.multiButton = new Ext.Toolbar.Button({
-            icon: "/Gemma/images/icons/page_white_put.png",
+            icon: ctxBasePath + "images/icons/page_white_put.png",
             cls: "x-btn-icon",
             tooltip: "Import multiple genes",
             disabled: false,

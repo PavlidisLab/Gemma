@@ -15,7 +15,7 @@ function reportFeedback( type, text, e ) {
       if ( messagesDiv ) {
          Ext.DomHelper.overwrite( "messages", {
             tag : 'img',
-            src : '/Gemma/images/icons/warning.png'
+            src : ctxBasePath + '/images/icons/warning.png'
          } );
          Ext.DomHelper.append( "messages", {
             tag : 'span',
@@ -34,7 +34,7 @@ function reportFeedback( type, text, e ) {
       if ( messagesDiv ) {
          Ext.DomHelper.overwrite( "messages", {
             tag : 'img',
-            src : '/Gemma/images/default/tree/loading.gif'
+            src : ctxBasePath + '/images/default/tree/loading.gif'
          } );
       }
    } else if ( type === "success" ) {

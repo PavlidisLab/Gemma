@@ -57,7 +57,7 @@ Gemma.MetaAnalysisResultPanel = Ext
 
             var downloadButton = this.showDownloadButton ? new Ext.Button( {
                text : '<b>Download</b>',
-               icon : '/Gemma/images/download.gif',
+               icon : ctxBasePath + '/images/download.gif',
                handler : function() {
                   var downloadData = [ [ GENE_SYMBOL_COLUMN_TITLE, GENE_NAME_COLUMN_TITLE, P_VALUE_COLUMN_TITLE,
                                         Q_VALUE_COLUMN_TITLE, DIRECTION_COLUMN_TITLE ] ];

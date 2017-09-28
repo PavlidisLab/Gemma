@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 /**
  * @author keshav
@@ -55,7 +55,7 @@ Ext.onReady( function() {
 
    new Ext.FormPanel( {
       labelWidth : 140, // label settings here cascade unless overridden
-      url : '/Gemma/signup.html',
+      url : ctxBasePath + '/signup.html',
       renderTo : 'signup',
       frame : true,
       monitorValid : true, // use with formBind in Button for client side validation

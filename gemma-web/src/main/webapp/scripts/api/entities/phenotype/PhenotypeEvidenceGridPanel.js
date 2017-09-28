@@ -116,7 +116,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                var anchor = '';
                if ( pudmedId != null ) {
 
-                  var imageSrc = '/Gemma/images/icons/magnifier.png';
+                  var imageSrc = ctxBasePath + '/images/icons/magnifier.png';
                   var size = 12;
 
                   if ( Gemma.isRunningOutsideOfGemma() ) {
@@ -124,7 +124,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                         'View Bibliographic Reference', size, size );
                   } else {
                      var description = 'Go to Bibliographic Reference (in new window)';
-                     anchor += '<a target="_blank" href="/Gemma/bibRef/searchBibRefs.html?pubmedID=' + pudmedId
+                     anchor += '<a target="_blank" href="' + ctxBasePath + '/bibRef/searchBibRefs.html?pubmedID=' + pudmedId
                         + '"><img src="' + imageSrc + '" alt="' + description + '" ext:qtip="' + description
                         + '" width="' + size + '" height="' + size + '" /></a>';
                   }
@@ -137,7 +137,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
             var convertToExternalDatabaseAnchor = function( databaseName, url, useDatabaseIcon ) {
                var html = '<a target="_blank" href="' + url + '">';
                if ( useDatabaseIcon ) {
-                  html += '<img ext:qtip="Go to ' + databaseName + ' (in new window)" ' + 'src="/Gemma/images/logo/'
+                  html += '<img ext:qtip="Go to ' + databaseName + ' (in new window)" ' + 'src="' + ctxBasePath + '/images/logo/'
                      + databaseName + '.gif" alt="' + databaseName + '" />';
                } else {
                   html += url;
@@ -171,7 +171,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                   } );
                },
                scope : this,
-               icon : "/Gemma/images/icons/add.png",
+               icon : ctxBasePath + "/images/icons/add.png",
                tooltip : "Add new phenotype association"
             } );
 
@@ -224,12 +224,12 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                         if ( value[i].child || value[i].root ) {
                            phenotypesHtml += String
                               .format(
-                                 '<a style="color:red; font-weight: bold;" target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>',
+                                 '<a style="color:red; font-weight: bold;" target="_blank" href="' + ctxBasePath + '/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>',
                                  value[i].urlId, value[i].value, record.data.geneId );
                         } else {
                            phenotypesHtml += String
                               .format(
-                                 '<a target="_blank" href="/Gemma/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>',
+                                 '<a target="_blank" href="' + ctxBasePath + '/phenotypes.html?phenotypeUrlId={0}&geneId={2}" ext:qtip="Go to Phenotype Page (in new window)">{1}</a>',
                                  value[i].urlId, value[i].value, record.data.geneId );
                         }
 
@@ -454,7 +454,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                                        + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.name
                                                        + '\\\', '
                                                        + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numGenesAnalyzed
-                                                       + ' ])\');', '/Gemma/images/icons/magnifier.png',
+                                                       + ' ])\');', ctxBasePath + '/images/icons/magnifier.png',
                                                     'View included result sets and results', 10, 10 )
                                                  + ' ('
                                                  + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.numResultSetsIncluded
@@ -477,7 +477,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                                        + record.id
                                                        + ', '
                                                        + record.geneDifferentialExpressionMetaAnalysisSummaryValueObject.id
-                                                       + ' ])\');', '/Gemma/images/icons/magnifier.png',
+                                                       + ' ])\');', ctxBasePath + '/images/icons/magnifier.png',
                                                     'View Phenocarta evidence', 10, 10 ) + ')<br />';
 
                                               descriptionHtml += '<b>p-value</b>: '
@@ -582,7 +582,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
 
                                         if ( record.homologueEvidence ) {
                                            var geneLink = getGeneLink ? getGeneLink( record.geneId )
-                                              : '/Gemma/gene/showGene.html?id=' + record.geneId;
+                                              : ctxBasePath + '/gene/showGene.html?id=' + record.geneId;
 
                                            descriptionHtml += String
                                               .format(
@@ -590,7 +590,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                                     + "<a target='_blank' href='"
                                                     + geneLink
                                                     + "' ext:qtip='Go to {1} Details (in new window)'>"
-                                                    + "<img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/>"
+                                                    + "<img src='" + ctxBasePath + "/images/icons/magnifier.png' height='10' width='10'/>"
                                                     + "</a></p>", record.taxonCommonName, record.geneOfficialSymbol );
                                         }
 
@@ -658,12 +658,12 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                  }
                               },
 
-                              star1 : '<img style="vertical-align: bottom;" src="/Gemma/images/icons/1star.png" ext:qtip="Weak evidence">',
-                              star2 : '<img style="vertical-align: bottom;" src="/Gemma/images/icons/2star.png" ext:qtip="Nominal evidence">',
-                              star3 : '<img style="vertical-align: bottom;" src="/Gemma/images/icons/3star.png" ext:qtip="Good evidence">',
-                              star4 : '<img style="vertical-align: bottom;" src="/Gemma/images/icons/4star.png" ext:qtip="Strong evidence">',
-                              star5 : '<img style="vertical-align: bottom;" src="/Gemma/images/icons/5star.png" ext:qtip="High-confidence evidence">',
-                              negativeStar : '<img style="vertical-align: bottom;" src="/Gemma/images/icons/negativeStar.png" ext:qtip="Negative star">',
+                              star1 : '<img style="vertical-align: bottom;" src="' + ctxBasePath + '/images/icons/1star.png" ext:qtip="Weak evidence">',
+                              star2 : '<img style="vertical-align: bottom;" src="' + ctxBasePath + '/images/icons/2star.png" ext:qtip="Nominal evidence">',
+                              star3 : '<img style="vertical-align: bottom;" src="' + ctxBasePath + '/images/icons/3star.png" ext:qtip="Good evidence">',
+                              star4 : '<img style="vertical-align: bottom;" src="' + ctxBasePath + '/images/icons/4star.png" ext:qtip="Strong evidence">',
+                              star5 : '<img style="vertical-align: bottom;" src="' + ctxBasePath + '/images/icons/5star.png" ext:qtip="High-confidence evidence">',
+                              negativeStar : '<img style="vertical-align: bottom;" src="' + ctxBasePath + '/images/icons/negativeStar.png" ext:qtip="Negative star">',
 
                               sortable : true
                            },
@@ -760,7 +760,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
 
                                  typeColumnHtml = (record.data.isNegativeEvidence ? "<img ext:qwidth='200' ext:qtip='"
                                     + Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativeEvidenceTT
-                                    + "' src='/Gemma/images/icons/thumbsdown.png' height='12'/> " : "")
+                                    + "' src='" + ctxBasePath + "/images/icons/thumbsdown.png' height='12'/> " : "")
                                     + typeColumnHtml;
 
                                  return '<span style="white-space: normal;">' + typeColumnHtml + '</span>';
@@ -905,13 +905,13 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                        && record.data.evidenceSource == null ) {
                                        adminLinks += ' '
                                           + generateLink( 'showCreateWindow(' + record.data.id + ');',
-                                             '/Gemma/images/icons/add.png', 'Clone evidence' )
+                                             ctxBasePath + '/images/icons/add.png', 'Clone evidence' )
                                           + ' '
                                           + generateLink( 'showEditWindow(' + record.data.id + ');',
-                                             '/Gemma/images/icons/pencil.png', 'Edit evidence' )
+                                             ctxBasePath + '/images/icons/pencil.png', 'Edit evidence' )
                                           + ' '
                                           + generateLink( 'removeEvidence(' + record.data.id + ');',
-                                             '/Gemma/images/icons/cross.png', 'Remove evidence' );
+                                             ctxBasePath + '/images/icons/cross.png', 'Remove evidence' );
                                     }
                                  }
 

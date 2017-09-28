@@ -4,7 +4,7 @@
  */
 Ext.namespace( 'Gemma' );
 Gemma.SEARCH_FORM_WIDTH = 900;
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 Ext
    .onReady( function() {
@@ -40,7 +40,7 @@ Ext
       /**
        * Check if the page was reached using a URL like:
        * 
-       * http://chibi.ubc.ca/Gemma/home.html?taxon=1&geneList=ARHGAP42P5,TRAV8-5,OR11H12,RNU6-1239P,OR4K1,POTEG,OR11H13P,DUXAP10,POTEM,
+       * /home.html?taxon=1&geneList=ARHGAP42P5,TRAV8-5,OR11H12,RNU6-1239P,OR4K1,POTEG,OR11H13P,DUXAP10,POTEM,
        */
       searchForm.checkUrlParams();
 

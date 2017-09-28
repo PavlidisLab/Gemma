@@ -57,7 +57,7 @@ function submitForm() {
    // this should return quickly, with the task id.
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/loading.gif'
+      src : ctxBasePath + '/images/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Submitting job..." );
 
@@ -89,7 +89,7 @@ function submitForm() {
 function handleFailure( data ) {
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/icons/warning.png'
+      src : ctxBasePath + '/images/icons/warning.png'
    } );
    Ext.DomHelper.append( "messages", {
       tag : 'span',

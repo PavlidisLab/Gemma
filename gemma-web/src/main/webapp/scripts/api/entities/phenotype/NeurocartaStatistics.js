@@ -4,7 +4,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
    title: 'Phenocarta Statistics',  
    tbar : [
             '->',
-            '<a target="_blank" alt="Archived Files" href="http://www.chibi.ubc.ca/Gemma/phenocarta/ArchivedEvidenceExport"><b>Archives</b></a> ',
+            '<a target="_blank" alt="Archived Files" href="' + ctxBasePath + '/phenocarta/ArchivedEvidenceExport"><b>Archives</b></a> ',
             { xtype: 'tbspacer', width: 40 }, 
           ],
    loadMask : true,
@@ -57,7 +57,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
             return val;
          }
 
-         var imageSrc = '/Gemma/images/icons/externallink.png';
+         var imageSrc = ctxBasePath + '/images/icons/externallink.png';
          
          return val+ ' <A HREF=\'' + record.data.webUri + '\' TARGET="_blank"><img src="' + imageSrc + '" /></A>';
       };
@@ -78,13 +78,13 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
       function renderDownload(val, metaData, record, row, col, store,
             gridView) {
          
-         var imageSrc = '/Gemma/images/download.gif';
-         var imageSrcErmineJ = '/Gemma/images/logo/ermineJ.png';
+         var imageSrc = ctxBasePath + '/images/download.gif';
+         var imageSrcErmineJ = ctxBasePath + '/images/logo/ermineJ.png';
          
          if( record.data.name.indexOf("Total") != -1){
             // add ermineJ files
             return '<A HREF=\'' + val + '\' TARGET="_blank"><img src="' + imageSrc + '" ext:qtip="Download '+ record.data.name +' file" /></A> '+
-            '<A href="http://www.chibi.ubc.ca/Gemma/phenocarta/LatestEvidenceExport/ErmineJ" TARGET="_blank"><img src="' + imageSrcErmineJ + '" ext:qtip="Download ErmineJ files" /></A> ';
+            '<A href="' + ctxBasePath + '/phenocarta/LatestEvidenceExport/ErmineJ" TARGET="_blank"><img src="' + imageSrcErmineJ + '" ext:qtip="Download ErmineJ files" /></A> ';
          }
          
          if(record.data.name.indexOf("OMIM") != -1)

@@ -150,7 +150,7 @@ Gemma.prepareProfiles = function( data, showPValues ) {
          }
       } else {
          // FIXME this is an old-style page, we should make it a pop-up or improve it
-         orderedGeneLinksArr.push( "<a href='/Gemma/compositeSequence/show.html?id=" + probeId
+         orderedGeneLinksArr.push( "<a href='" + ctxBasePath + "/compositeSequence/show.html?id=" + probeId
             + "' target='_blank' ext:qtip= '" + qtip + "'>Unmapped</a>" );
          orderedGeneNamesArr.push( "" );
       }
@@ -425,7 +425,7 @@ Gemma.VisualizationZoomPanel = Ext
 
             if ( eevo ) {
 
-               var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+               var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id="
                   + (eevo.sourceExperiment ? eevo.sourceExperiment : eevo.id)
                   + " '>"
                   + eevo.shortName
@@ -998,7 +998,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
                xtype : 'button',
                ref : 'downloadDataBtn',
                // border : true,
-               icon : '/Gemma/images/download.gif',
+               icon : ctxBasePath + '/images/download.gif',
                // iconCls : 'fa fa-download fa-lg', // uses extension.
                // glyph : 'xf0192FontAwesome', // ext 4
                cls : 'x-btn-text-icon',

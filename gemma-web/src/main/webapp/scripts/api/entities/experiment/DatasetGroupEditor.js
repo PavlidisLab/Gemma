@@ -19,10 +19,10 @@ Gemma.DatasetGroupEditor = Ext.extend( Ext.Panel, {
    id : 'dataset-chooser',
    name : 'datasetchooser',
    layout : 'border',
-   title : "Dataset Group Editor <a href=\"javascript:void()\" style=\"float:right\" title=\""
-      + Gemma.HelpText.WidgetDefaults.DatasetGroupEditor.widgetTT + "\" " + "onClick=\"window.open('"
-      + Gemma.HelpText.WidgetDefaults.DatasetGroupEditor.helpURL + "', 'DataSetChooserHelp');\">"
-      + "<img src=\"/Gemma/images/icons/question_blue.png\"></a>",
+   title : "Dataset Group Editor <a href='javascript:void()' style='float:right' title=''"
+      + Gemma.HelpText.WidgetDefaults.DatasetGroupEditor.widgetTT + "' " + "onClick='window.open('"
+      + Gemma.HelpText.WidgetDefaults.DatasetGroupEditor.helpURL + "', 'DataSetChooserHelp');'>"
+      + "<img src='" + ctxBasePath + "/images/icons/question_blue.png'></a>",
    isLoggedIn : false,
 
    /**
@@ -53,7 +53,7 @@ Gemma.DatasetGroupEditor = Ext.extend( Ext.Panel, {
          },
          tbar : [ '->', {
             text : "Delete selected",
-            icon : "/Gemma/images/icons/cross.png",
+            icon : ctxBasePath + "/images/icons/cross.png",
             handler : this.removeSelectedFromdatasetGroupMembersGrid,
             scope : this
          } ],
@@ -195,7 +195,7 @@ Gemma.DatasetGroupEditor = Ext.extend( Ext.Panel, {
       ExpressionExperimentController.getDescription( record.id, {
          callback : function( data ) {
             Ext.DomHelper.overwrite( this.dataSetDetailsPanel.body,
-               '<h1><a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + record.id + '">'
+               '<h1><a href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=' + record.id + '">'
                   + record.get( 'shortName' ) + "</a></h1><h2>" + record.get( 'name' ) + "</h2><p>" + data + "</p>" );
             this.detailsmask.hide();
          }.createDelegate( this )

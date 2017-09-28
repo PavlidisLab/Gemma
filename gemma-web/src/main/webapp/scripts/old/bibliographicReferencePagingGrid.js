@@ -53,7 +53,7 @@ Gemma.BibliographicReference.PagingGrid = Ext
                                     for ( var i = 0; i < value.length; i++) {
                                        result = result + '&nbsp<a target="_blank" ext:qtip="View details of '
                                              + value[i].shortName + ' (' + value[i].name
-                                             + ')" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id='
+                                             + ')" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id='
                                              + value[i].id + '">' + value[i].shortName + '</a>';
                                     }
                                     return result;
@@ -68,7 +68,7 @@ Gemma.BibliographicReference.PagingGrid = Ext
                                     if ( value && value.pubmedURL ) {
                                        return '<a target="_blank" href="'
                                              + value.pubmedURL
-                                             + '"><img ext:qtip="View at NCBI PubMed"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
+                                             + '"><img ext:qtip="View at NCBI PubMed"  src="' + ctxBasePath + '/images/pubmed.gif" width="47" height="15" /></a>';
                                     }
                                     return '';
                                  }, sortable : false } ] }),

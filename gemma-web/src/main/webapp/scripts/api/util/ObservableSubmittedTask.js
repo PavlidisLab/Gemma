@@ -77,7 +77,7 @@ Gemma.ObservableSubmittedTask = Ext.extend( Ext.util.Observable, {
        */
       var id = Ext.id();
       Ext.DomHelper
-         .append( element, '<span id="' + id + '"><img src="/Gemma/images/default/tree/loading.gif"/></span>' );
+         .append( element, '<span id="' + id + '"><img src="' + ctxBasePath + '/images/default/tree/loading.gif"/></span>' );
 
       this.on( 'task-completed', function() {
          Ext.DomHelper.overwrite( id, "" );

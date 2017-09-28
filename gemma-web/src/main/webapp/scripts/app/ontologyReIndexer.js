@@ -2,7 +2,7 @@ function handleFailure( data, e ) {
    Ext.DomHelper.overwrite( "taskId", "" );
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/icons/warning.png'
+      src : ctxBasePath + '/images/icons/warning.png'
    } );
    Ext.DomHelper.append( "messages", {
       tag : 'span',
@@ -41,7 +41,7 @@ function reinitializeOntologyIndices( event ) {
    // this should return quickly, with the task id.
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/default/tree/loading.gif'
+      src : ctxBasePath + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Submitting job..." );
    AnnotationController.reinitializeOntologyIndices.apply( this, callParams );

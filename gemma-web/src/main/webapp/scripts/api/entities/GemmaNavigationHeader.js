@@ -21,7 +21,7 @@ Gemma.GemmaNavigationHeader = Ext
          },
          doSearchQuery : function() {
             if ( this.inMenuSearchField.getValue().length > 1 ) {
-               location.href = '/Gemma/searcher.html?query=' + this.inMenuSearchField.getValue(); // +
+               location.href = ctxBasePath + '/searcher.html?query=' + this.inMenuSearchField.getValue(); // +
                // '&scope=EG'
             }
          },
@@ -42,12 +42,12 @@ Gemma.GemmaNavigationHeader = Ext
                         + 'sharing of genomics data, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands '
                         + 'of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential'
                         + ' expression results. For more information, see the '
-                        + '<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/" target="_blank">help and documentation.&nbsp;<img src="/Gemma/images/icons/link_external_icon_tight.gif"/></a>'
+                        + '<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/" target="_blank">help and documentation.&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
                         + '</p><p>Gemma was developed by the Pavlidis group at UBC '
-                        + '(<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/credits/" target="_blank">credits&nbsp;<img src="/Gemma/images/icons/link_external_icon_tight.gif"/></a>). '
+                        + '(<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/credits/" target="_blank">credits&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>). '
                         + '</p><p>To cite Gemma, please use: <br>'
                         + 'Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. <em>Bioinformatics</em>, 2012.'
-                        + ' <a href="http://dx.doi.org/doi:10.1093/bioinformatics/bts430" target="_blank">link&nbsp;<img src="/Gemma/images/icons/link_external_icon_tight.gif"/></a>'
+                        + ' <a href="http://dx.doi.org/doi:10.1093/bioinformatics/bts430" target="_blank">link&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
                         + '</p></div>'
                   } ],
                   buttons : [ {
@@ -114,24 +114,24 @@ Gemma.GemmaNavigationHeader = Ext
                      } ]
                   },
                   /*
-                   * { text : 'Search Analyses', href : "/Gemma/analysesResultsSearch.html", tooltip : "Search for
+                   * { text : 'Search Analyses', href : ctxBasePath + "/analysesResultsSearch.html", tooltip : "Search for
                    * differential and coexpression patterns" }, '-',
                    */
                   {
                      text : 'Browse Datasets',
-                     href : "/Gemma/expressionExperiment/showAllExpressionExperiments.html",
+                     href : ctxBasePath + "/expressionExperiment/showAllExpressionExperiments.html",
                      tooltip : "View the list of Gemma's expression data sets"
                   }, {
                      text : 'Browse Phenotype Associations',
-                     href : "/Gemma/phenotypes.html",
+                     href : ctxBasePath + "/phenotypes.html",
                      tooltip : "View the list of Gemma's phenotype-gene associations"
                   }, {
                      text : 'Browse Platforms',
-                     href : "/Gemma/arrays/showAllArrayDesigns.html",
+                     href : ctxBasePath + "/arrays/showAllArrayDesigns.html",
                      tooltip : "View the list of Gemma's platforms"
                   }, {
                      text : 'Search Annotated Papers',
-                     href : "/Gemma/bibRef/searchBibRefs.html",
+                     href : ctxBasePath + "/bibRef/searchBibRefs.html",
                      tooltip : "Search for papers the Gemma curators have annotated"
                   } ],
                   listeners : {
@@ -166,31 +166,31 @@ Gemma.GemmaNavigationHeader = Ext
                   // clicked:
                   {
                      text : 'Load Data',
-                     href : "/Gemma/expressionExperiment/upload.html",
+                     href : ctxBasePath + "/expressionExperiment/upload.html",
                      tooltip : "Upload your expression data"
                   }, {
                      text : 'Dataset manager',
-                     href : "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html",
+                     href : ctxBasePath + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html",
                      tooltip : "Curate your data"
                   }, {
                      text : 'My Phenotype Associations',
-                     href : "/Gemma/phenotypeAssociationManager.html",
+                     href : ctxBasePath + "/phenotypeAssociationManager.html",
                      tooltip : "Modify your phenotype-gene associations"
                   }, '-', {
                      text : 'User Groups',
-                     href : "/Gemma/manageGroups.html",
+                     href : ctxBasePath + "/manageGroups.html",
                      tooltip : "Manage your user groups"
                   }, {
                      text : 'Gene Groups',
-                     href : "/Gemma/geneGroupManager.html",
+                     href : ctxBasePath + "/geneGroupManager.html",
                      tooltip : "Manage your gene groups"
                   }, {
                      text : 'Experiment Groups',
-                     href : "/Gemma/expressionExperimentSetManager.html",
+                     href : ctxBasePath + "/expressionExperimentSetManager.html",
                      tooltip : "Manage your dataset / expression experiment groups"
                   }, '-', {
                      text : 'Edit Profile',
-                     href : "/Gemma/userProfile.html",
+                     href : ctxBasePath + "/userProfile.html",
                      tooltip : "Edit your profile"
                   } ],
                   listeners : {
@@ -226,16 +226,16 @@ Gemma.GemmaNavigationHeader = Ext
                      },
                      scope : this
                   }, {
-                     text : 'Help and Documentation&nbsp;<img src="/Gemma/images/icons/link_external_icon.gif"/>',
+                     text : 'Help and Documentation&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon.gif"/>',
                      href : "http://gemma-chibi-doc.sites.olt.ubc.ca/",
                      tooltip : "Gemma overview and general help",
                      hrefTarget : "_blank"
                   }, {
                      text : 'Dataset citations',
-                     href : "/Gemma/bibRef/showAllEeBibRefs.html"
+                     href : ctxBasePath + "/bibRef/showAllEeBibRefs.html"
                   }, {
                      text : 'QC updates',
-                     href : "/Gemma/expressionExperimentsWithQC.html"
+                     href : ctxBasePath + "/expressionExperimentsWithQC.html"
                   } ],
                   listeners : {
                      mouseover : function() {
@@ -270,11 +270,11 @@ Gemma.GemmaNavigationHeader = Ext
                      tooltip : "Gemma wiki"
                   }, {
                      text : 'For Developers',
-                     href : "http://www.chibi.ubc.ca/Gemma/resources/",
+                     href : ctxBasePath + "/resources/",
                      tooltip : "About the Gemma framework"
                   }, {
                      text : 'Contact Us',
-                     href : "/Gemma/contactUs.html",
+                     href : ctxBasePath + "/contactUs.html",
                      tooltip : "Contact Us"
                   } ],
                   listeners : {
@@ -308,39 +308,39 @@ Gemma.GemmaNavigationHeader = Ext
                   items : [// these items will render as dropdown menu items when the arrow is clicked:
                   {
                      text : 'Add Data',
-                     href : "/Gemma/admin/loadExpressionExperiment.html",
+                     href : ctxBasePath + "/admin/loadExpressionExperiment.html",
                      tooltip : "Import from GEO or ArrayExpress"
                   }, {
                      text : 'Browse GEO',
-                     href : "/Gemma/admin/geoRecordBrowser.html",
+                     href : ctxBasePath + "/admin/geoRecordBrowser.html",
                      tooltip : "Browse data sets in GEO"
                   }, {
                      text : 'Search Annotations',
-                     href : "/Gemma/characteristicBrowser.html",
+                     href : ctxBasePath + "/characteristicBrowser.html",
                      tooltip : "Search annotations"
                   }, '-', {
                      text : 'Manage Users',
-                     href : "/Gemma/admin/userManager.html",
+                     href : ctxBasePath + "/admin/userManager.html",
                      tooltip : "Manage users"
                   }, {
                      text : 'View Active Sessions',
-                     href : "/Gemma/admin/activeUsers.html",
+                     href : ctxBasePath + "/admin/activeUsers.html",
                      tooltip : "View active users"
                   }, {
                      text : 'System Monitoring',
-                     href : "/Gemma/admin/systemStats.html"
+                     href : ctxBasePath + "/admin/systemStats.html"
                   }, {
                      text : 'Manage Search Indexes',
-                     href : "/Gemma/admin/indexer.html"
+                     href : ctxBasePath + "/admin/indexer.html"
                   }, {
                      text : 'Manage Maintenance Mode',
-                     href : "/Gemma/admin/maintenanceMode.html"
+                     href : ctxBasePath + "/admin/maintenanceMode.html"
                   }, {
                      text : 'Update "What\'s New"',
-                     href : "/Gemma/whatsnew/generateCache.html"
+                     href : ctxBasePath + "/whatsnew/generateCache.html"
                   }, {
                      text : 'Widget Test Page',
-                     href : "/Gemma/admin/widgetTest.html"
+                     href : ctxBasePath + "/admin/widgetTest.html"
                   } ],
                   listeners : {
                      mouseover : function() {
@@ -376,7 +376,7 @@ Gemma.GemmaNavigationHeader = Ext
                   style : 'background:white',
                   items : [ {
                      text : 'Edit your profile',
-                     href : "/Gemma/userProfile.html",
+                     href : ctxBasePath + "/userProfile.html",
                      tooltip : "Change your password"
                   }, {
                      text : 'Log out',
@@ -452,7 +452,7 @@ Gemma.GemmaNavigationHeader = Ext
             }, this );
 
             /*
-             * this.userText = new Ext.Panel({ tpl:'Welcome <a href="/Gemma/userProfile.html">{userName}</a>', hidden:
+             * this.userText = new Ext.Panel({ tpl:'Welcome <a href="' + ctxBasePath + '/userProfile.html">{userName}</a>', hidden:
              * !userLoggedIn, data: {userName: loggedInAs}, border:false, style:'font-size:11px' });
              */
 
@@ -478,22 +478,22 @@ Gemma.GemmaNavigationHeader = Ext
                          xtype : 'box',
                          autoEl : {
                             tag : 'a',
-                            href : '/Gemma/home.html',
-                            cn : '<img src="/Gemma/images/logo/gemma-headerlogo.png" style="padding-left:10px;padding-bottom:3px"/>'
+                            href : ctxBasePath + '/home.html',
+                            cn : '<img src="' + ctxBasePath + '/images/logo/gemma-headerlogo.png" style="padding-left:10px;padding-bottom:3px"/>'
                          }
                       },
                       {
                          xtype : 'box',
                          autoEl : {
                             tag : 'img',
-                            src : '/Gemma/images/logo/phenocarta-45p.png',
+                            src : ctxBasePath + '/images/logo/phenocarta-45p.png',
                             style : 'padding-left:10px',
                             title : 'Previously known as Neurocarta',
                             alt : 'Phenocarta'
                          },
-                         hidden : window.location.pathname.indexOf( '/Gemma/phenotypes.html' ) < 0
-                            && window.location.pathname.indexOf( '/Gemma/phenotypeAssociationManager.html' ) < 0
-                            && window.location.pathname.indexOf( '/Gemma/neurocartaStatistics.html' ) < 0
+                         hidden : window.location.pathname.indexOf( ctxBasePath + '/phenotypes.html' ) < 0
+                            && window.location.pathname.indexOf( ctxBasePath + '/phenotypeAssociationManager.html' ) < 0
+                            && window.location.pathname.indexOf( ctxBasePath + '/neurocartaStatistics.html' ) < 0
                       }, '->', {
                          ref : 'navToolbar',
                          xtype : 'toolbar',
@@ -528,7 +528,7 @@ Gemma.GemmaNavigationHeader = Ext
                          autoEl : {
                             tag : 'a',
                             href : 'http://www.ubc.ca/',
-                            cn : '<img src="/Gemma/images/logo/ubcgrey_logo_40.png"/>',
+                            cn : '<img src="' + ctxBasePath + '/images/logo/ubcgrey_logo_40.png"/>',
                             style : 'padding-left:15px; padding-right:10px'
                          }
                       } ] );

@@ -137,20 +137,20 @@ Gemma.CoexpressionDatasetGrid = Ext.extend( Gemma.GemmaGridPanel, {
 
    assayCountStyler : function( value, metadata, record, row, col, ds ) {
       return String.format(
-         "{0}&nbsp;<a href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'>"
-            + "<img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/></a>", record.data.bioAssayCount,
+         "{0}&nbsp;<a href='" + ctxBasePath + "/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'>"
+            + "<img src='" + ctxBasePath + "/images/icons/magnifier.png' height='10' width='10'/></a>", record.data.bioAssayCount,
          record.data.id );
    },
 
    booleanStyler : function( value, metadata, record, row, col, ds ) {
       if ( value ) {
-         return "<img src='/Gemma/images/icons/ok.png' height='10' width='10' />";
+         return "<img src='" + ctxBasePath + "/images/icons/ok.png' height='10' width='10' />";
       }
       return "";
    },
 
    eeTemplate : new Ext.Template( "<a target='_blank' "
-      + "href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a>" ),
+      + "href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a>" ),
 
    eeStyler : function( value, metadata, record, row, col, ds ) {
       this.eeTemplate.apply( record.data );

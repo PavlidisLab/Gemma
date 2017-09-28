@@ -103,7 +103,7 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel( {
                     for (var i = 0; i < value.length; i++) {
                        result = result + '&nbsp<a target="_blank" ext:qtip="View details of ' + value[i].shortName
                           + ' (' + value[i].name
-                          + ')" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + value[i].id
+                          + ')" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=' + value[i].id
                           + '">' + value[i].shortName + '</a>';
                     }
                     return result;

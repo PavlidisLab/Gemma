@@ -36,7 +36,7 @@ Gemma.PhenotypeGeneGridPanel = Ext
             var downloadButton = new Ext.Button( {
                text : '<b>Download</b>',
                disabled : true,
-               icon : '/Gemma/images/download.gif',
+               icon : ctxBasePath + '/images/download.gif',
                handler : function() {
                   var columnConfig = [ {
                      header : 'NCBI ID',
@@ -114,7 +114,7 @@ Gemma.PhenotypeGeneGridPanel = Ext
                   } );
                },
                scope : this,
-               icon : "/Gemma/images/icons/add.png",
+               icon : ctxBasePath + "/images/icons/add.png",
                tooltip : "Add new phenotype association"
             } );
 
@@ -205,13 +205,13 @@ Gemma.PhenotypeGeneGridPanel = Ext
                                    width : 65,
                                    renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
                                       var geneLink = this.getGeneLink ? this.getGeneLink( record.data.id )
-                                         : '/Gemma/gene/showGene.html?id=' + record.data.id;
+                                         : ctxBasePath + '/gene/showGene.html?id=' + record.data.id;
 
                                       return String
                                          .format(
                                             "{0} <a target='_blank' href='"
                                                + geneLink
-                                               + "' ext:qtip='Go to {0} Details (in new window)'><img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/></a> ",
+                                               + "' ext:qtip='Go to {0} Details (in new window)'><img src='" + ctxBasePath + "/images/icons/magnifier.png' height='10' width='10'/></a> ",
                                             record.data.officialSymbol );
 
                                    },

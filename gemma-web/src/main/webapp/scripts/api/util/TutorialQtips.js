@@ -71,7 +71,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
             xtype : 'button',
             cls : 'transparent-btn',
             tooltip : 'Close this tutorial',
-            icon : '/Gemma/images/icons/cross.png',
+            icon : ctxBasePath + '/images/icons/cross.png',
             handler : this.hideTutorial,
             scope : this,
             flex : 0
@@ -118,13 +118,13 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
          this.controlBtns.insert( index + 1, {
             xtype : 'button',
             ref : 'progBtn' + index,
-            icon : '/Gemma/images/icons/bullet_black.png',
+            icon : ctxBasePath + '/images/icons/bullet_black.png',
             cls : 'transparent-btn',
             toggleHandler : function( button, state ) {
                if ( state ) {
-                  button.setIcon( '/Gemma/images/icons/bullet_blue.png' );
+                  button.setIcon( ctxBasePath + '/images/icons/bullet_blue.png' );
                } else {
-                  button.setIcon( '/Gemma/images/icons/bullet_black.png' );
+                  button.setIcon( ctxBasePath + '/images/icons/bullet_black.png' );
                }
             },
             enableToggle : true,

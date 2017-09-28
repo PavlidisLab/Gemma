@@ -226,7 +226,7 @@ Gemma.GeneSessionSaveForm = Ext.extend( Ext.Panel, {
       // console.log(e); // this contains the full stack.
       Ext.DomHelper.overwrite( "coexpression-messages", {
          tag : 'img',
-         src : '/Gemma/images/icons/warning.png'
+         src : ctxBasePath + '/images/icons/warning.png'
       } );
       Ext.DomHelper.append( "coexpression-messages", {
          tag : 'span',
