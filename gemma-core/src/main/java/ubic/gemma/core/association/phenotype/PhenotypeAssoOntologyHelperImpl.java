@@ -90,7 +90,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         }
 
         if ( !this.ontologyService.getHumanPhenotypeOntologyService().isEnabled() ) {
-            log.warn( "HPO" );
+            log.warn( "HPO is not enabled" );
             return false;
         }
 
