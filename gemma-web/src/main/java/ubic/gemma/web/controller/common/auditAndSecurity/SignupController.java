@@ -105,10 +105,10 @@ public class SignupController extends BaseController {
 
         if ( ok ) {
             super.saveMessage( request, "Your account is now enabled. Log in to continue" );
-            response.sendRedirect( response.encodeRedirectURL( "/Gemma/home.html" ) );
+            response.sendRedirect( response.encodeRedirectURL( request.getContextPath() + "/home.html" ) );
         } else {
             super.saveMessage( request, "Sorry, your registration could not be validated. Please register again." );
-            response.sendRedirect( response.encodeRedirectURL( "/Gemma/signup.html" ) );
+            response.sendRedirect( response.encodeRedirectURL( request.getContextPath() + "/signup.html" ) );
         }
 
     }

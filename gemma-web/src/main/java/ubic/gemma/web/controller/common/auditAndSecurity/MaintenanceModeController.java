@@ -70,7 +70,7 @@ public class MaintenanceModeController {
         } else if ( StringUtils.isNotBlank( start ) ) {
             config.put( "maintenanceMode", true );
         }
-        return new ModelAndView( new RedirectView( WebConstants.HOME_URL ) );
+        return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
 
     }
 }
