@@ -353,6 +353,9 @@ public class Settings {
      */
     public static String getRootContext() {
         String ctx = getString( "gemma.rootcontext", "/Gemma" );
+        if (ctx.isEmpty() || ctx.equals( "/" ) ) {
+            return "";
+        }
         if ( !ctx.startsWith( "/" ) ) {
             ctx = "/" + ctx;
         }
