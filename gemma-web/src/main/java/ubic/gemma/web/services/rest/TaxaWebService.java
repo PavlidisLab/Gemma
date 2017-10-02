@@ -210,7 +210,11 @@ public class TaxaWebService extends WebService {
      *
      * @param taxonArg     the taxon to list the phenotypes for.
      * @param editableOnly whether to only list editable phenotypes.
-     * @return a list of Simple Tree value objects allowing a reconstruction of a tree.
+     * @param tree         whether the returned structure should be an actual tree (nested JSON objects). Default is
+     *                     false - the tree is flattened and the edges of the tree are stored in
+     *                     the values of the value object.
+     * @return a list of Simple Tree value objects allowing a reconstruction of a tree, or an actual tree structure of
+     * TreeCharacteristicValueObjects, if the
      */
     @GET
     @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}/phenotypes")
@@ -219,11 +223,16 @@ public class TaxaWebService extends WebService {
     public ResponseDataObject taxonPhenotypes( // Params:
             @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
             @QueryParam("editableOnly") @DefaultValue("false") BoolArg editableOnly, // Optional, default false
+            @QueryParam("tree") @DefaultValue("false") BoolArg tree, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting
     ) {
         Taxon taxon = taxonArg.getPersistentObject( taxonService );
+        if ( tree.getValue() ) {
+            return Responder.autoCode( phenotypeAssociationManagerService
+                    .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ), sr );
+        }
         return Responder.autoCode( phenotypeAssociationManagerService
-                .loadAllPhenotypesAsTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ), sr );
+                .loadAllPhenotypesByTree( new EvidenceFilter( taxon.getId(), editableOnly.getValue() ) ), sr );
     }
 
     /**
