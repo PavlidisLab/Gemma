@@ -2,7 +2,9 @@ package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -16,4 +18,7 @@ public interface BaseVoEnabledDao<O extends Identifiable, VO extends Identifiabl
     Collection<VO> loadValueObjects( Collection<O> entities );
 
     Collection<VO> loadAllValueObjects();
+
+    Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter );
 }

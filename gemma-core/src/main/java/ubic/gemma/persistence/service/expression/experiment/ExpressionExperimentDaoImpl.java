@@ -352,7 +352,7 @@ public class ExpressionExperimentDaoImpl
      *                be a property of EE itself, or any nested property that hibernate can reach.
      *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
      * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param filter  see this.formRestrictionClause(ArrayList) filters argument for description.
+     * @param filter  see this#formRestrictionClause(ArrayList) filters argument for description.
      * @return list of value objects representing the EEs that matched the criteria.
      */
     @Override
@@ -1737,13 +1737,11 @@ public class ExpressionExperimentDaoImpl
 
         // Restrict to non-troubled EEs for non-administrators
         if ( !SecurityUtil.isUserAdmin() ) {
-
             if ( filters == null ) {
                 filters = new ArrayList<>( NON_ADMIN_QUERY_FILTER_COUNT );
             } else {
                 filters.ensureCapacity( filters.size() + NON_ADMIN_QUERY_FILTER_COUNT );
             }
-
             // Both restrictions have to be met (AND) therefore they have to be added as separate arrays.
             filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
                     ObjectFilter.DAO_EE_ALIAS ) } );

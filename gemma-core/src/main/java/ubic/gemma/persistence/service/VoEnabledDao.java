@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.NotYetImplementedException;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -80,7 +81,7 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
      *                Arrays will then be in a conjunction (AND) with each other.
      *                I.e. The filter will be in a conjunctive normal form.
      *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
-     * @return a string containing the clause, without leading "WHERE" keyword.
+     * @return a string containing the clause, without the leading "WHERE" keyword.
      */
     protected static String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {
         String queryString = formAclRestrictionClause();
@@ -177,5 +178,18 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
     @Override
     public Collection<VO> loadAllValueObjects() {
         return loadValueObjects( loadAll() );
+    }
+
+    /**
+     * Should be overridden for any entity that is expected to have pre-filtered VOs available
+     *
+     * @param filter see {@link this#formRestrictionClause(ArrayList)}
+     * @return a collection of VOs that are guaranteed to be filtered and ordered by the input parameters without the need to
+     * further be checked by ACLs.
+     */
+    @Override
+    public Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter ) {
+        throw new NotYetImplementedException( "This entity does not have pre-filtered VO retrieval implemented yet" );
     }
 }

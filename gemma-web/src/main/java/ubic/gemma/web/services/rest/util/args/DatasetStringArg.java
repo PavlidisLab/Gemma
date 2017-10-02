@@ -20,4 +20,9 @@ public class DatasetStringArg extends DatasetArg<String> {
         return check( this.value == null ? null : service.findByShortName( this.value ) );
     }
 
+    @Override
+    public String getPropertyName( ExpressionExperimentService service ) {
+        return "shortName";
+    }
+
 }

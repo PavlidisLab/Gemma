@@ -22,4 +22,9 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
         return check( this.value == null ? null : service.findByName( arrayDesign, this.value ) );
     }
 
+    @Override
+    public String getPropertyName( CompositeSequenceService service ) {
+        return "name";
+    }
+
 }

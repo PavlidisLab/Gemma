@@ -26,6 +26,11 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
     }
 
     @Override
+    public String getPropertyName( GeneService service ) {
+        return "ensemblId";
+    }
+
+    @Override
     String getIdentifierName() {
         return ID_NAME;
     }

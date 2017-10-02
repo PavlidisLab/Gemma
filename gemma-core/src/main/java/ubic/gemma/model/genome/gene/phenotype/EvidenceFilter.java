@@ -16,7 +16,9 @@ package ubic.gemma.model.genome.gene.phenotype;
 
 import java.util.Collection;
 
-/** Used to filter values received depending on taxon and privacy chosen */
+/**
+ * Used to filter values received depending on taxon and privacy chosen
+ */
 public class EvidenceFilter {
 
     private Long taxonId = 0L;
@@ -44,24 +46,24 @@ public class EvidenceFilter {
         return externalDatabaseIds;
     }
 
+    public void setExternalDatabaseIds( Collection<Long> externalDatabaseIds ) {
+        this.externalDatabaseIds = externalDatabaseIds;
+    }
+
     public Long getTaxonId() {
         return this.taxonId;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 
     public boolean isShowOnlyEditable() {
         return this.showOnlyEditable;
     }
 
-    public void setExternalDatabaseIds( Collection<Long> externalDatabaseIds ) {
-        this.externalDatabaseIds = externalDatabaseIds;
-    }
-
     public void setShowOnlyEditable( boolean showOnlyEditable ) {
         this.showOnlyEditable = showOnlyEditable;
-    }
-
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
     }
 
 }

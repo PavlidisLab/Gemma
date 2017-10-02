@@ -22,4 +22,10 @@ public class PlatformIdArg extends PlatformArg<Long> {
     public ArrayDesign getPersistentObject( ArrayDesignService service ) {
         return check( service.load( this.value ) );
     }
+
+    @Override
+    public String getPropertyName( ArrayDesignService service ) {
+        return "id";
+    }
+
 }

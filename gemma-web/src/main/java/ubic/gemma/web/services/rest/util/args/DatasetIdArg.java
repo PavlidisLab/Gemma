@@ -22,4 +22,9 @@ public class DatasetIdArg extends DatasetArg<Long> {
     public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
         return check( service.load( this.value ) );
     }
+
+    @Override
+    public String getPropertyName( ExpressionExperimentService service ) {
+        return "id";
+    }
 }

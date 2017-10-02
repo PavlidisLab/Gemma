@@ -18,4 +18,9 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
         return check( this.value == null ? null : service.load( this.value ) );
     }
 
+    @Override
+    public String getPropertyName( CompositeSequenceService service ) {
+        return "id";
+    }
+
 }

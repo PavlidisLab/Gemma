@@ -38,6 +38,11 @@ public class GeneSymbolArg extends GeneArg<String> {
     }
 
     @Override
+    public String getPropertyName( GeneService service ) {
+        return "officialSymbol";
+    }
+
+    @Override
     public Collection<GeneValueObject> getValueObjects( GeneService service ) {
         return service.loadValueObjects( service.findByOfficialSymbol( this.value ) );
     }

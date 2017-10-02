@@ -259,7 +259,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             }
             sqlQuery += EntityUtils.addGroupAndUserNameRestriction( showOnlyEditable, true );
         }
-        sqlQuery += addTaxonToQuery( taxon );
+        sqlQuery += addTaxonToQuery( taxon, !showOnlyEditable );
         sqlQuery += addExternalDatabaseQuery( externalDatabaseIds );
 
         // create query and set parameters.
@@ -792,9 +792,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     private String addTaxonToQuery( Taxon taxon ) {
+        return this.addTaxonToQuery( taxon, true );
+    }
+
+    private String addTaxonToQuery( Taxon taxon, boolean useAnd ) {
         String taxonSqlQuery = "";
         if ( taxon != null && taxon.getId() != null && !taxon.getId().equals( 0L ) ) {
-            taxonSqlQuery = "and" + " tax.ID = :taxonId ";
+            taxonSqlQuery = ( useAnd ? "and" : "" ) + " tax.ID = :taxonId ";
         }
         return taxonSqlQuery;
     }

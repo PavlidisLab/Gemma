@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -71,7 +72,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -84,7 +85,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         // Uses this.loadVOsPreFilter(...)
-        return super.all( filter, offset, limit, sort, sr );
+        return super.all( filter, offset, limit, sort, sr, arrayDesignService );
     }
 
     /**
@@ -213,14 +214,6 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return outputAnnotationFile( platformArg.getPersistentObject( arrayDesignService ) );
-    }
-
-    @Override
-    protected ResponseDataObject loadVOsPreFilter( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
-            HttpServletResponse sr ) throws ParseException {
-        return Responder.autoCode( arrayDesignService
-                .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
-                        filter.getObjectFilters() ), sr );
     }
 
     /**

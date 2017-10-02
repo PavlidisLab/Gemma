@@ -19,4 +19,9 @@ public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
     public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
         return check( service.load( value ) );
     }
+
+    @Override
+    public String getPropertyName( DatabaseEntryService service ) {
+        return "id";
+    }
 }

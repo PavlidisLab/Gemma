@@ -81,6 +81,7 @@ import java.util.Map.Entry;
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
     private static final int MAX_PHENOTYPES_FROM_ONTOLOGY = 100;
+    private static final String ERROR_MSG_ONTOLOGIES_NOT_LOADED = "Ontologies are not fully loaded yet, try again soon";
     private static final Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class );
     @Autowired
     private PhenotypeAssociationService phenoAssocService;
@@ -1674,8 +1675,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                                             + valueUri );
                     } else {
                         throw new RuntimeException(
-                                "Ontologies are not fully loaded yet, try again soon (" + entityNotFoundException
-                                        .getMessage() + ")" );
+                                ERROR_MSG_ONTOLOGIES_NOT_LOADED + " ( " + entityNotFoundException.getMessage() + " )" );
                     }
                 }
             }
@@ -1746,10 +1746,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 if ( ontologyTermFound == null )
                     continue;
             } catch ( EntityNotFoundException e ) {
-                // that's okay keep it. Ontologies might not be loaded.
-                parentPheno.put( phenoRoot, new HashSet<String>() );
-                parentPheno.get( phenoRoot ).add( phenoRoot );
-                continue;
+                if ( !ontologyHelper.areOntologiesAllLoaded() ) {
+                    throw new RuntimeException( ERROR_MSG_ONTOLOGIES_NOT_LOADED + " ( " + e.getMessage() + " )" );
+                } else {
+                    throw e;
+                }
             }
             Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
 

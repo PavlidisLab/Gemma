@@ -87,21 +87,28 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         if ( !this.ontologyService.getDiseaseOntologyService().isEnabled() ) {
             log.warn( "DO is not enabled" );
             return false;
+        } else if ( !this.ontologyService.getDiseaseOntologyService().isOntologyLoaded() ) {
+            log.warn( "DO not loaded" );
+            return false;
         }
 
         if ( !this.ontologyService.getHumanPhenotypeOntologyService().isEnabled() ) {
             log.warn( "HPO is not enabled" );
+            return false;
+        } else if ( !this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() ) {
+            log.warn( "HPO not loaded" );
             return false;
         }
 
         if ( !this.ontologyService.getMammalianPhenotypeOntologyService().isEnabled() ) {
             log.warn( "MPO is not enabled" );
             return false;
+        } else if ( !this.ontologyService.getMammalianPhenotypeOntologyService().isOntologyLoaded() ) {
+            log.warn( "MPO not loaded" );
+            return false;
         }
 
-        return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded() && this.ontologyService
-                .getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
-                .getMammalianPhenotypeOntologyService().isOntologyLoaded() );
+        return true;
     }
 
     @Override
@@ -158,7 +165,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         if ( valueUri.isEmpty() ) {
             throw new IllegalArgumentException( "URI to load was blank." );
         }
-        System.out.println(valueUri);
+
         OntologyTerm ontologyTerm;
         for ( AbstractOntologyService ontology : this.ontologies ) {
             ontologyTerm = ontology.getTerm( valueUri );
@@ -166,7 +173,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
                 return ontologyTerm;
         }
 
-        throw new EntityNotFoundException( valueUri );
+        throw new EntityNotFoundException( valueUri + " - term not found" );
     }
 
     @Override
@@ -214,6 +221,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
             myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
             return myPhenotype;
         } catch ( EntityNotFoundException e ) {
+            e.printStackTrace();
             return null;
         }
 

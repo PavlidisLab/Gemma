@@ -66,5 +66,4 @@ public abstract class DatasetArg<T>
         ExpressionExperiment ee = this.getPersistentObject( service );
         return service.getAnnotations( ee.getId() );
     }
-
 }

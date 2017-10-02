@@ -19,4 +19,9 @@ public class DatabaseEntryStringArg extends DatabaseEntryArg<String> {
     public DatabaseEntry getPersistentObject( DatabaseEntryService service ) {
         return check( this.value == null ? null : service.load( this.value ) );
     }
+
+    @Override
+    public String getPropertyName( DatabaseEntryService service ) {
+        return "accession";
+    }
 }

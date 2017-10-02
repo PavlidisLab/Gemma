@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -34,7 +34,6 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.ParseException;
 
 /**
  * RESTful interface for datasets.
@@ -76,7 +75,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -88,8 +87,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        // Uses this.loadVOsPreFilter(...)
-        return super.all( filter, offset, limit, sort, sr );
+        return super.all( filter, offset, limit, sort, sr, expressionExperimentService );
     }
 
     /**
@@ -107,6 +105,35 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
+    }
+
+    /**
+     * Retrieves all datasets matching the given identifiers.
+     *
+     * @param datasetsArg a list of identifiers, separated by commas (','). Identifiers can either be the
+     *                    ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                    is more efficient.
+     *                    <p>
+     *                    Only datasets that user has access to will be available.
+     *                    </p>
+     *                    <p>
+     *                    Do not combine different identifiers in one query.
+     *                    </p>
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
+     */
+    @GET
+    @Path("/{datasetsArg: .+}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasets( // Params:
+            @PathParam("datasetsArg") ArrayDatasetArg datasetsArg, // Required
+            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return super.some( datasetsArg, filter, offset, limit, sort, sr, expressionExperimentService );
     }
 
     /**
@@ -220,14 +247,6 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
         return outputDesignFile( ee );
-    }
-
-    @Override
-    protected ResponseDataObject loadVOsPreFilter( FilterArg filter, IntArg offset, IntArg limit, SortArg sort,
-            HttpServletResponse sr ) throws ParseException {
-        return Responder.autoCode( expressionExperimentService
-                .loadValueObjectsPreFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
-                        filter.getObjectFilters() ), sr );
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
