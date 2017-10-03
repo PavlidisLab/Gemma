@@ -33,15 +33,13 @@ import javax.ws.rs.core.MediaType;
 /**
  * RESTful interface for phenotypes.
  * Does not have an 'all' endpoint (no use-cases). To list all phenotypes on a specific taxon,
- * see {@link TaxaWebService#taxonPhenotypes(TaxonArg, BoolArg, HttpServletResponse)}.
+ * see {@link TaxaWebService#taxonPhenotypes(TaxonArg, BoolArg, BoolArg, HttpServletResponse)}.
  *
  * @author tesarst
  */
 @Component
 @Path("/phenotypes")
 public class PhenotypeWebService extends WebService {
-
-    private static final String ERROR_MSG_DB_NAME_EMPTY = "Required argument 'database' not found.";
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     /**

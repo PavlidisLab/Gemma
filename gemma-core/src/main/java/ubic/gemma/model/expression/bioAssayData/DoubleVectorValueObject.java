@@ -257,6 +257,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     /**
+     * @param ee                      required
      * @param cs                      required
      * @param updatedQuantitationType required because this might be changed.
      * @return design element data vector

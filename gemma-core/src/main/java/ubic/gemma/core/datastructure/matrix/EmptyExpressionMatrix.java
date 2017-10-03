@@ -18,31 +18,25 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import java.util.Collection;
-import java.util.List;
-
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Used to make a 'dummy matrix' that has the column information populated. This is useful for processing where we want
  * the sample information organized,but not the data. Data access operations are not supported.
- * 
+ *
  * @author paul
  */
 public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     private int numCols;
 
-    /**
-     * @param ba
-     */
     public EmptyExpressionMatrix( BioAssayDimension ba ) {
         super();
         super.init();
@@ -119,11 +113,6 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         throw new UnsupportedOperationException();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
-     */
     @Override
     public boolean hasMissingValues() {
         return false;

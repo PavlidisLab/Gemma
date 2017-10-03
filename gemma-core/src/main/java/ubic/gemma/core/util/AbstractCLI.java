@@ -40,6 +40,7 @@ import java.util.*;
  *
  * @author pavlidis
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class AbstractCLI {
 
     public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2015 University of British Columbia.";
@@ -66,11 +67,11 @@ public abstract class AbstractCLI {
      */
     protected boolean autoSeek = false;
     /**
-     * The event type to look for the lack of, when using autoseek.
+     * The event type to look for the lack of, when using auto-seek.
      */
     protected Class<? extends AuditEventType> autoSeekEventType = null;
     /**
-     * Date used to identify which endities to run the tool on (e.g., those which were run less recently than mDate). To
+     * Date used to identify which entities to run the tool on (e.g., those which were run less recently than mDate). To
      * enable call addDateOption.
      */
     protected String mDate = null;
@@ -89,28 +90,36 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
+     * @param opt option
+     * @return see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
      */
     public final Options addOption( Option opt ) {
         return this.options.addOption( opt );
     }
 
     /**
-     * @see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
+     * @param opt         option
+     * @param description description
+     * @param hasArg      has arg
+     * @return see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
      */
     public final Options addOption( String opt, boolean hasArg, String description ) {
         return this.options.addOption( opt, hasArg, description );
     }
 
     /**
-     * @see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
+     * @param opt         option
+     * @param description description
+     * @param hasArg      has arg
+     * @param longOpt     long option
+     * @return see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
      */
     public final Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
         return this.options.addOption( opt, longOpt, hasArg, description );
     }
 
     /**
-     * @see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
+     * @return see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
      */
     public final Options addOptionGroup( OptionGroup group ) {
         return this.options.addOptionGroup( group );
@@ -132,14 +141,15 @@ public abstract class AbstractCLI {
     public abstract String getCommandName();
 
     /**
-     * @see org.apache.commons.cli.Options#getOption(java.lang.String)
+     * @return see org.apache.commons.cli.Options#getOption(java.lang.String)
      */
     public final Option getOption( String opt ) {
         return this.options.getOption( opt );
     }
 
     /**
-     * @see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
+     * @param opt option
+     * @return see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
      */
     public final OptionGroup getOptionGroup( Option opt ) {
         return this.options.getOptionGroup( opt );
@@ -150,7 +160,7 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @see org.apache.commons.cli.Options#getOptions()
+     * @return see org.apache.commons.cli.Options#getOptions()
      */
     public final Collection<?> getOptions() {
         return this.options.getOptions();
@@ -181,7 +191,7 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @see org.apache.commons.cli.Options#getRequiredOptions()
+     * @return see org.apache.commons.cli.Options#getRequiredOptions()
      */
     public final List<?> getRequiredOptions() {
         return this.options.getRequiredOptions();
@@ -265,6 +275,8 @@ public abstract class AbstractCLI {
     /**
      * Convenience method to add a standard pair of (required) options to intake a user name and password, optionally
      * required
+     *
+     * @param required required
      */
     @SuppressWarnings("static-access")
     protected void addUserNameAndPasswordOptions( boolean required ) {
@@ -284,7 +296,9 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Stop exeucting the CLI.
+     * Stop executing the CLI.
+     *
+     * @param errorCode error code
      */
     protected void bail( ErrorCode errorCode ) {
         // do something, but not System.exit.
@@ -400,6 +414,7 @@ public abstract class AbstractCLI {
      * This must be called in your main method. It triggers parsing of the command line and processing of the options.
      * Check the error code to decide whether execution of your program should proceed.
      *
+     * @param args args
      * @return Exception; null if nothing went wrong.
      */
     protected final Exception processCommandLine( String[] args ) {
@@ -485,7 +500,8 @@ public abstract class AbstractCLI {
     protected void summarizeProcessing() {
         if ( successObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\nSuccessfully processed " + successObjects.size() + "objects:\n" );
+            buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
+                    .append( "objects:\n" );
             for ( Object object : successObjects ) {
                 buf.append( "Success" ).append( object ).append( "\n" );
             }
@@ -498,9 +514,10 @@ public abstract class AbstractCLI {
 
         if ( errorObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\nErrors occurred during the processing of " + errorObjects.size() + " objects:\n" );
+            buf.append( "\n---------------------\nErrors occurred during the processing of " )
+                    .append( errorObjects.size() ).append( " objects:\n" );
             for ( Object object : errorObjects ) {
-                buf.append("Failed\t").append( object ).append( "\n" );
+                buf.append( "Failed\t" ).append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
             log.error( buf );
@@ -508,7 +525,7 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Wait for completion.
+     * @param threads Wait for completion.
      */
     protected void waitForThreadPoolCompletion( Collection<Thread> threads ) {
 

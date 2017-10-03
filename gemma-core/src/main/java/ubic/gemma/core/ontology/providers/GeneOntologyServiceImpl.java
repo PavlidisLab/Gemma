@@ -56,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author pavlidis
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 @Component
 public class GeneOntologyServiceImpl implements GeneOntologyService {
 
@@ -103,6 +104,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
+     * @param term ontology term
      * @return Usual formatted GO id, e.g., GO:0039392
      */
     public static String asRegularGoId( OntologyTerm term ) {
@@ -132,6 +134,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     }
 
     /**
+     * @param uri uri
      * @return null if not found
      */
     public static OntologyTerm getTermForURI( String uri ) {
@@ -414,6 +417,11 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
 
     /**
      * FIXME it might be better to avoid the fetch.
+     *
+     * @param gene          gene
+     * @param goAspect      go aspect
+     * @param includePartOf include part of
+     * @return collection of ontology terms
      */
     public Collection<OntologyTerm> getGOTerms( Long gene, boolean includePartOf, GOAspect goAspect ) {
         return this.getGOTerms( geneService.load( gene ), includePartOf, goAspect );

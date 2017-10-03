@@ -71,7 +71,8 @@ public class SearchSettingsImpl extends SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param query query
+     * @param query       query
+     * @param arrayDesign the array design to limit the search to
      * @return search settings
      */
     public static SearchSettings compositeSequenceSearch( String query, ArrayDesign arrayDesign ) {
@@ -113,6 +114,7 @@ public class SearchSettingsImpl extends SearchSettings {
      * Convenience method to get pre-configured settings.
      *
      * @param query query
+     * @param taxon the taxon to limit the search to
      * @return search settings
      */
     public static SearchSettings geneSearch( String query, Taxon taxon ) {

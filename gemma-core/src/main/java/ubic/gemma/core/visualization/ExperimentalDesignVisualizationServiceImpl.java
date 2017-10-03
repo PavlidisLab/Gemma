@@ -237,6 +237,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     /**
      * Test method for now, shows how this can be used.
+     * @param e ee
      */
     @SuppressWarnings("unused") // Test method for now, shows how this can be used.
     protected void plotExperimentalDesign( ExpressionExperiment e ) {

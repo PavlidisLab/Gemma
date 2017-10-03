@@ -19,11 +19,9 @@ import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
 /**
- * TODO Document Me
  * 
  * @author anton
- * @version $Id$
  */
 public interface TaskCommandToTaskMatcher {
-    public Task<? extends TaskResult, ? extends TaskCommand> match( TaskCommand taskCommand );
+    Task<? extends TaskResult, ? extends TaskCommand> match( TaskCommand taskCommand );
 }

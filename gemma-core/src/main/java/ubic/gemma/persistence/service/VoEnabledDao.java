@@ -183,7 +183,11 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
     /**
      * Should be overridden for any entity that is expected to have pre-filtered VOs available
      *
-     * @param filter see {@link this#formRestrictionClause(ArrayList)}
+     * @param filter  see this#formRestrictionClause(ArrayList)
+     * @param limit   limit
+     * @param asc     ordering asc? false for desc
+     * @param offset  offset
+     * @param orderBy order by property
      * @return a collection of VOs that are guaranteed to be filtered and ordered by the input parameters without the need to
      * further be checked by ACLs.
      */

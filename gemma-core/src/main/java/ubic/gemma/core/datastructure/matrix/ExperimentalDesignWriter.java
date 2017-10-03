@@ -43,6 +43,9 @@ public class ExperimentalDesignWriter {
     /**
      * @param sortByDesign whether the design should be arranged in the order defined by
      *                     ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @param writer       writer
+     * @param ee           ee
+     * @param writeHeader  writer header
      */
     public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader, boolean sortByDesign )
             throws IOException {
@@ -56,6 +59,9 @@ public class ExperimentalDesignWriter {
      * @param writeHeader     column names
      * @param sortByDesign    whether the design should be arranged in the order defined by
      *                        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @param ee              ee
+     * @param bioAssays       bas
+     * @param writer          writer
      */
     public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader,
             boolean writeHeader, boolean sortByDesign ) throws IOException {

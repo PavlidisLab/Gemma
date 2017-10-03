@@ -22,16 +22,16 @@ import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CompassUtils;
 import ubic.gemma.persistence.util.SpringContextUtil;
 
@@ -89,6 +89,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * Override this method in your subclass to provide additional Spring configuration files that will be merged with
      * the Gemma spring context. See SpringContextUtil; an example path is
      * "classpath*:/myproject/applicationContext-mine.xml".
+     *
+     * @return string[]
      */
     protected String[] getAdditionalSpringConfigLocations() {
         return null;
@@ -96,6 +98,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * Convenience method to obtain instance of any bean by name.
+     *
+     * @param <T>  the bean class type
+     * @param clz  class
+     * @param name name
+     * @return bean
      */
     protected <T> T getBean( String name, Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
@@ -116,7 +123,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
+     * @param auditable  auditable
      * @param eventClass can be null
+     * @return boolean
      */
     protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
@@ -183,6 +192,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
+     * @param fileName file name
      * @return Given a file name returns a collection of strings. Each string represents one line of the file
      */
     protected Collection<String> processFile( String fileName ) {

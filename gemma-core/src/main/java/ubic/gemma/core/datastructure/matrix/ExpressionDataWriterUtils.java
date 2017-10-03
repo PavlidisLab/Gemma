@@ -43,6 +43,10 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Appends base header information (about the experiment) to a file.
+     *
+     * @param buf         buffer
+     * @param experiment  ee
+     * @param fileTypeStr file type str
      */
     public static void appendBaseHeader( ExpressionExperiment experiment, String fileTypeStr, StringBuffer buf ) {
 
@@ -61,6 +65,10 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Appends base header information (about the experiment) to a file.
+     *
+     * @param buf        buffer
+     * @param design     design
+     * @param experiment ee
      */
     public static void appendBaseHeader( ExpressionExperiment experiment, boolean design, StringBuffer buf ) {
         String fileType = "data";
@@ -83,7 +91,9 @@ public class ExpressionDataWriterUtils {
     /**
      * Constructs a bioassay name. This is useful when writing out data to a file.
      *
+     * @param matrix           matrix
      * @param assayColumnIndex The column index in the matrix.
+     * @return BA name
      */
     public static String constructBioAssayName( ExpressionDataMatrix<?> matrix, int assayColumnIndex ) {
 
@@ -96,6 +106,9 @@ public class ExpressionDataWriterUtils {
 
     /**
      * Replaces spaces and hyphens with underscores.
+     *
+     * @param factorValue FV
+     * @return replaced string
      */
     public static String constructFactorValueName( FactorValue factorValue ) {
 
@@ -122,7 +135,9 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
-     * String representing the external identifier of the biomaterial. This will usually be a GEO or ArrayExpression
+     * @param bioAssays   BAs
+     * @param bioMaterial BM
+     * @return String representing the external identifier of the biomaterial. This will usually be a GEO or ArrayExpression
      * accession id, or else blank.
      */
     public static String getExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {

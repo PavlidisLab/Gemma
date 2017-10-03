@@ -214,7 +214,7 @@ public interface GeneOntologyService extends InitializingBean {
     boolean isBiologicalProcess( OntologyTerm term );
 
     /**
-     * Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
+     * @return Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
      * getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
      */
     boolean isGeneOntologyLoaded();

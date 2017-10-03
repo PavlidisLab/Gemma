@@ -44,6 +44,8 @@ public interface TaskRunningService {
      *
      * @param taskCommand The command to run. The submissionTime of the task is set after this call. This does not mean
      *                    that the job has started - it might be queued.
+     * @param <C>         task command implementation
+     * @return string
      * @throws ubic.gemma.core.job.ConflictingTaskException if the task is disallowed due to another conflicting task (e.g.,
      *                                                      two tasks of the same type by the same user).
      */
@@ -55,6 +57,7 @@ public interface TaskRunningService {
      * Run task remotely if possible, otherwise run locally.
      *
      * @param taskCommand task command
+     * @param <C>         task command implementation
      * @return string
      * @throws ConflictingTaskException conflicting task problem
      */
