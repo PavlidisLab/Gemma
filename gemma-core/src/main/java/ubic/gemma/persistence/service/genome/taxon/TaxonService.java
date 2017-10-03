@@ -36,6 +36,8 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
 
     Taxon findByScientificName( String scientificName );
 
+    Taxon findByNcbiId( Long ncbiId );
+
     Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
     @Override

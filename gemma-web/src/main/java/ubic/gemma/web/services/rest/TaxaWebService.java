@@ -181,7 +181,7 @@ public class TaxaWebService extends WebService {
     /**
      * Retrieves datasets for the given taxon. Filtering allowed exactly like in {@link DatasetsWebService#all(DatasetFilterArg, IntArg, IntArg, SortArg, HttpServletResponse)}
      *
-     * @param taxonArg can either be Taxon ID or one of its string identifiers:
+     * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
      * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService) for details about the
      * filter, offset, limit and sort arguments.

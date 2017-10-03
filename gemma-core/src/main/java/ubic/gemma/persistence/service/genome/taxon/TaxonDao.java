@@ -55,4 +55,5 @@ public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
 
     void thaw( Taxon taxon );
 
+    Taxon findByNcbiId( Long ncbiId );
 }

@@ -26,6 +26,11 @@ import java.util.Collection;
 public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, TaxonValueObject> {
 
     /**
+     * Minimum value to be considered an NCBI ID, lower values will be considered a regular gemma Taxon ID.
+     */
+    private static final Long MIN_NCBI_ID = 999L;
+
+    /**
      * Used by RS to parse value of request parameters.
      *
      * @param s the request taxon argument
@@ -34,7 +39,8 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, Tax
     @SuppressWarnings("unused")
     public static TaxonArg valueOf( final String s ) {
         try {
-            return new TaxonIdArg( Long.parseLong( s.trim() ) );
+            Long id = Long.parseLong( s.trim() );
+            return id < MIN_NCBI_ID ? new TaxonIdArg( id ) : new TaxonNcbiIdArg( id );
         } catch ( NumberFormatException e ) {
             return new TaxonStringArg( s );
         }

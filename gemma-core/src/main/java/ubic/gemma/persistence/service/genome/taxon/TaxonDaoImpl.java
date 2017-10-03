@@ -101,6 +101,11 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     }
 
     @Override
+    public Taxon findByNcbiId( Long ncbiId ) {
+        return ( Taxon ) this.findByProperty( "ncbiId", ncbiId );
+    }
+
+    @Override
     public Collection<Taxon> findTaxonUsedInEvidence() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
