@@ -66,10 +66,11 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     }
 
     /**
-     * @param c - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
-     *          FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
-     *          confuses things.
-     *          If c is null, the plain "value" is used.
+     * @param c     - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
+     *              FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
+     *              confuses things.
+     *              If c is null, the plain "value" is used.
+     * @param value value
      * @deprecated FIXME this makes no sense and we _do_ pass in the EF category in several places.s
      */
     @Deprecated

@@ -14,37 +14,22 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.util.Collection;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 
+import java.util.Collection;
+
 /**
  * Service methods to do database-related work for differential expression analysis
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public interface DifferentialExpressionAnalysisHelperService {
 
-    /**
-     * @param entity
-     * @param resultSets
-     */
-    public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets );
+    void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets );
 
-    /**
-     * Create a result set. The expectation is this would be a stub.S
-     * 
-     * @param rs
-     * @return
-     */
-    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs );
+    ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs );
 
-    /**
-     * @param entity
-     * @return
-     */
-    public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity );
+    DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity );
 
 }

@@ -18,65 +18,50 @@
  */
 package ubic.gemma.core.tasks.visualization;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
-
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.model.analysis.expression.diff.ContrastVO;
-import ubic.gemma.model.analysis.expression.diff.ContrastsValueObject;
-import ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject;
-import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.persistence.service.analysis.expression.diff.MissingResult;
-import ubic.gemma.persistence.service.analysis.expression.diff.NonRetainedResult;
+import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject.Condition;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.core.tasks.AbstractTask;
-import ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject.Condition;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.MissingResult;
+import ubic.gemma.persistence.service.analysis.expression.diff.NonRetainedResult;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Encapsulates the search for differential expression results, for a set of genes and experiments (which can be
  * grouped)
- * 
+ *
  * @author anton
- * @version $Id$
  */
 @Component
 @Scope("prototype")
-public class DifferentialExpressionSearchTaskImpl extends
-        AbstractTask<TaskResult, DifferentialExpressionSearchTaskCommand> implements DifferentialExpressionSearchTask {
-
-    protected static Log log = LogFactory.getLog( DifferentialExpressionSearchTaskImpl.class );
+public class DifferentialExpressionSearchTaskImpl
+        extends AbstractTask<TaskResult, DifferentialExpressionSearchTaskCommand>
+        implements DifferentialExpressionSearchTask {
 
     private static final Double PVALUE_CONTRAST_SELECT_THRESHOLD = 0.05;
-
     /**
      * Pvalues smaller than this (e.g., 0 are set to this value instead.
      */
     private static final double TINY_PVALUE = 1e-16;
-
     private static final double TINY_QVALUE = 1e-10;
-
+    protected static Log log = LogFactory.getLog( DifferentialExpressionSearchTaskImpl.class );
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
@@ -94,11 +79,6 @@ public class DifferentialExpressionSearchTaskImpl extends
 
     private Collection<GeneValueObject> geneGroup;
 
-    /*
-     * Does all the actual work of the query. (non-Javadoc)
-     * 
-     * @see java.util.concurrent.Callable#call()
-     */
     @Override
     public TaskResult execute() {
 
@@ -116,11 +96,6 @@ public class DifferentialExpressionSearchTaskImpl extends
         return new TaskResult( this.taskCommand, searchResult );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.tasks.AbstractTask#setTaskCommand(ubic.gemma.core.job.TaskCommand)
-     */
     @Override
     public void setTaskCommand( DifferentialExpressionSearchTaskCommand taskCommand ) {
         super.setTaskCommand( taskCommand );
@@ -136,9 +111,9 @@ public class DifferentialExpressionSearchTaskImpl extends
      * uses the database to get metadata/summaries about the analyses that will be used. Initializes the searchResult
      * value object. Later, values which are non-missing will be replaced with either 'non-significant' or 'significant'
      * results.
-     * 
+     *
      * @param searchResult to be initialized
-     * @return lsit of the resultSets that should be queried.
+     * @return list of the resultSets that should be queried.
      */
     private List<DiffExResultSetSummaryValueObject> addConditionsToSearchResultValueObject(
             DifferentialExpressionGenesConditionsValueObject searchResult ) {
@@ -155,7 +130,8 @@ public class DifferentialExpressionSearchTaskImpl extends
         Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( EntityUtils.getIds( experimentGroup ) );
 
-        experiment: for ( ExpressionExperimentValueObject bas : analyses.keySet() ) {
+        experiment:
+        for ( ExpressionExperimentValueObject bas : analyses.keySet() ) {
 
             Collection<DifferentialExpressionAnalysisValueObject> analysesForExperiment = filterAnalyses(
                     analyses.get( bas ) );
@@ -206,8 +182,8 @@ public class DifferentialExpressionSearchTaskImpl extends
                          * SANITY CHECKS these fields should be filled in. If not, we are going to skip the results.
                          */
                         if ( condition.getNumberDiffExpressedProbes() == -1 ) {
-                            log.warn( bas + ": Error: No hit list sizes for resultSet with ID="
-                                    + resultSet.getResultSetId() );
+                            log.warn( bas + ": Error: No hit list sizes for resultSet with ID=" + resultSet
+                                    .getResultSetId() );
                             continue;
                         }
                         if ( condition.getNumberOfProbesOnArray() == null
@@ -241,7 +217,7 @@ public class DifferentialExpressionSearchTaskImpl extends
 
     /**
      * No database calls here, just organization.
-     * 
+     *
      * @param searchResult
      */
     private void addGenesToSearchResultValueObject( DifferentialExpressionGenesConditionsValueObject searchResult ) {
@@ -259,9 +235,9 @@ public class DifferentialExpressionSearchTaskImpl extends
     /**
      * Gets all the diff ex results, flattening out the relation with resultset and gene (the objs still have this
      * information in them)
-     * 
-     * @param resultSetToGeneResults
-     * @return
+     *
+     * @param resultSetToGeneResults map
+     * @return search results
      */
     private Collection<DiffExprGeneSearchResult> aggregateAcrossResultSets(
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults ) {
@@ -277,9 +253,9 @@ public class DifferentialExpressionSearchTaskImpl extends
 
     /**
      * Main processing: fetch diff ex results.
-     * 
-     * @param resultSets to be searched
-     * @param geneIds to be searched
+     *
+     * @param resultSets   to be searched
+     * @param geneIds      to be searched
      * @param searchResult holds the results
      */
     private void fetchDifferentialExpressionResults( List<DiffExResultSetSummaryValueObject> resultSets,
@@ -307,7 +283,7 @@ public class DifferentialExpressionSearchTaskImpl extends
     /**
      * If there are multiple analyses for an experiment, pick the one(s) that "don't overlap" (see implementation for
      * details, evolving). No database hits.
-     * 
+     *
      * @param analyses, all from a single experiment
      * @return a collection with either 0 or a small number of non-conflicting analyses.
      */
@@ -315,7 +291,8 @@ public class DifferentialExpressionSearchTaskImpl extends
             Collection<DifferentialExpressionAnalysisValueObject> analyses ) {
 
         // easy case.
-        if ( analyses.size() == 1 ) return analyses;
+        if ( analyses.size() == 1 )
+            return analyses;
 
         Collection<DifferentialExpressionAnalysisValueObject> filtered = new HashSet<>();
 
@@ -342,14 +319,17 @@ public class DifferentialExpressionSearchTaskImpl extends
                 Collection<ExperimentalFactorValueObject> factorsUsed = new HashSet<>();
 
                 for ( DiffExResultSetSummaryValueObject rs : resultSets ) {
-                    if ( isBatch( rs ) ) continue;
+                    if ( isBatch( rs ) )
+                        continue;
                     Collection<ExperimentalFactorValueObject> facts = rs.getExperimentalFactors();
                     for ( ExperimentalFactorValueObject f : facts ) {
-                        if ( ExperimentalDesignUtils.isBatch( f ) ) continue;
+                        if ( ExperimentalDesignUtils.isBatch( f ) )
+                            continue;
                         factorsUsed.add( f );
                     }
                 }
-                if ( factorsUsed.isEmpty() ) continue;
+                if ( factorsUsed.isEmpty() )
+                    continue;
                 analysisFactorsUsed.put( analysis, factorsUsed );
             }
         }
@@ -358,8 +338,8 @@ public class DifferentialExpressionSearchTaskImpl extends
          * If we got a subsetted group of analyses, just use them
          */
         if ( !filtered.isEmpty() ) {
-            log.info( "Using subsetted analyses for " + analyses.iterator().next().getBioAssaySetId() + "("
-                    + analyses.size() + " analyses)" );
+            log.info( "Using subsetted analyses for " + analyses.iterator().next().getBioAssaySetId() + "(" + analyses
+                    .size() + " analyses)" );
             return filtered;
         }
 
@@ -376,8 +356,8 @@ public class DifferentialExpressionSearchTaskImpl extends
         assert !analysisFactorsUsed.isEmpty();
         DifferentialExpressionAnalysisValueObject best = null;
         for ( DifferentialExpressionAnalysisValueObject candidate : analysisFactorsUsed.keySet() ) {
-            if ( best == null
-                    || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate ).size() ) {
+            if ( best == null || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate )
+                    .size() ) {
                 best = candidate;
             }
         }
@@ -392,10 +372,10 @@ public class DifferentialExpressionSearchTaskImpl extends
     }
 
     /**
-     * @param analysis
-     * @param factorValues for a factor used for a particular resultset
-     * @param baselineFactorValueId
-     * @return
+     * @param analysis              anaysis
+     * @param factorValues          for a factor used for a particular resultset
+     * @param baselineFactorValueId id
+     * @return fv vos
      */
     private List<FactorValueValueObject> filterFactorValues( DifferentialExpressionAnalysisValueObject analysis,
             Collection<FactorValueValueObject> factorValues, long baselineFactorValueId ) {
@@ -405,10 +385,12 @@ public class DifferentialExpressionSearchTaskImpl extends
                 factorValues.iterator().next().getFactorId() );
 
         for ( FactorValueValueObject factorValue : factorValues ) {
-            if ( factorValue.getId().equals( baselineFactorValueId ) ) continue; // Skip baseline
+            if ( factorValue.getId().equals( baselineFactorValueId ) )
+                continue; // Skip baseline
 
             // skip fvs not used in the subset, if it is a subset
-            if ( keepForSubSet != null && !keepForSubSet.contains( factorValue ) ) continue;
+            if ( keepForSubSet != null && !keepForSubSet.contains( factorValue ) )
+                continue;
 
             filteredFactorValues.add( factorValue );
         }
@@ -419,9 +401,9 @@ public class DifferentialExpressionSearchTaskImpl extends
     /**
      * Remove resultSets that are not usable for one reason or another (e.g., intearctions, batch effects); no database
      * hits.
-     * 
-     * @param resultSets
-     * @return
+     *
+     * @param analysis analysis
+     * @return summary vos
      */
     private List<DiffExResultSetSummaryValueObject> filterResultSets(
             DifferentialExpressionAnalysisValueObject analysis ) {
@@ -430,10 +412,12 @@ public class DifferentialExpressionSearchTaskImpl extends
         for ( DiffExResultSetSummaryValueObject resultSet : analysis.getResultSets() ) {
 
             // Skip interactions.
-            if ( resultSet.getExperimentalFactors().size() != 1 ) continue;
+            if ( resultSet.getExperimentalFactors().size() != 1 )
+                continue;
 
             // Skip batch effect ones.
-            if ( isBatch( resultSet ) ) continue;
+            if ( isBatch( resultSet ) )
+                continue;
 
             // Skip if baseline is not specified.
             if ( resultSet.getBaselineGroup() == null ) {
@@ -458,9 +442,9 @@ public class DifferentialExpressionSearchTaskImpl extends
     /**
      * Retrieve the details (contrasts) for results which meet the criterion. (PVALUE_CONTRAST_SELECT_THRESHOLD).
      * Requires a database hit.
-     * 
-     * @param geneToProbeResult
-     * @return
+     *
+     * @param diffExResults results
+     * @return map
      */
     private Map<Long, ContrastsValueObject> getDetailsForContrasts(
             Collection<DiffExprGeneSearchResult> diffExResults ) {
@@ -502,10 +486,6 @@ public class DifferentialExpressionSearchTaskImpl extends
         return detailedResults;
     }
 
-    /**
-     * @param g
-     * @return
-     */
     private List<Long> getGeneIds( Collection<DifferentialExpressionGenesConditionsValueObject.DiffExGene> g ) {
         List<Long> ids = new LinkedList<Long>();
         for ( DifferentialExpressionGenesConditionsValueObject.DiffExGene gene : g ) {
@@ -514,10 +494,6 @@ public class DifferentialExpressionSearchTaskImpl extends
         return ids;
     }
 
-    /**
-     * @param resultSet
-     * @return
-     */
     private boolean isBatch( DiffExResultSetSummaryValueObject resultSet ) {
         for ( ExperimentalFactorValueObject factor : resultSet.getExperimentalFactors() ) {
             if ( ExperimentalDesignUtils.isBatch( factor ) ) {
@@ -527,15 +503,6 @@ public class DifferentialExpressionSearchTaskImpl extends
         return false;
     }
 
-    /**
-     * @param resultSet
-     * @param geneId
-     * @param searchResult
-     * @param correctedPvalue should not be null.
-     * @param pValue should not be null.
-     * @param numProbes
-     * @param numProbesDiffExpressed
-     */
     private void markCellsBlack( DiffExResultSetSummaryValueObject resultSet, Long geneId,
             DifferentialExpressionGenesConditionsValueObject searchResult, Double correctedPvalue, Double pValue,
             int numProbes, int numProbesDiffExpressed ) {
@@ -550,17 +517,17 @@ public class DifferentialExpressionSearchTaskImpl extends
         for ( FactorValueValueObject factorValue : factorValues ) {
             String conditionId = DifferentialExpressionGenesConditionsValueObject
                     .constructConditionId( resultSet.getResultSetId(), factorValue.getId() );
-            searchResult.addBlackCell( geneId, conditionId, correctedPvalue, pValue, numProbes,
-                    numProbesDiffExpressed );
+            searchResult
+                    .addBlackCell( geneId, conditionId, correctedPvalue, pValue, numProbes, numProbesDiffExpressed );
         }
     }
 
     /**
      * we have to skip factorvalues that are not part of the subset -- if it is a subset. Hits the database.
-     * 
-     * @param analysis
-     * @param experimentalFactor
-     * @return
+     *
+     * @param analysis           analysis
+     * @param experimentalFactor ef
+     * @return ef vos
      */
     private Collection<FactorValueValueObject> maybeGetSubSetFactorValuesToKeep(
             DifferentialExpressionAnalysisValueObject analysis, Long experimentalFactor ) {
@@ -577,20 +544,14 @@ public class DifferentialExpressionSearchTaskImpl extends
         return keepForSubSet;
     }
 
-    /**
-     * @param searchResult
-     * @param resultSetToGeneResults
-     * @param resultSetMap
-     * @param detailedResults
-     */
     private void processHits( DifferentialExpressionGenesConditionsValueObject searchResult,
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults,
             Collection<DiffExResultSetSummaryValueObject> resultSets,
             Map<Long, ContrastsValueObject> detailedResults ) {
 
         int i = 0;
-        Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = EntityUtils.getIdMap( resultSets,
-                "getResultSetId" );
+        Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = EntityUtils
+                .getIdMap( resultSets, "getResultSetId" );
 
         for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
 
@@ -608,18 +569,13 @@ public class DifferentialExpressionSearchTaskImpl extends
 
     }
 
-    /**
-     * @param searchResult
-     * @param detailedResults
-     * @param geneToProbeResult
-     * @param resultSet
-     */
     private void processHitsForResultSet( DifferentialExpressionGenesConditionsValueObject searchResult,
             Map<Long, ContrastsValueObject> detailedResults, Map<Long, DiffExprGeneSearchResult> geneToProbeResult,
             DiffExResultSetSummaryValueObject resultSet ) {
 
         // No database calls.
-        if ( log.isDebugEnabled() ) log.debug( "Start processing hits for result sets." );
+        if ( log.isDebugEnabled() )
+            log.debug( "Start processing hits for result sets." );
         try {
             boolean warned = false; // avoid too many warnings ...
             for ( Long geneId : geneToProbeResult.keySet() ) {
@@ -696,6 +652,7 @@ public class DifferentialExpressionSearchTaskImpl extends
         } catch ( Exception e ) {
             log.error( e.getMessage(), e );
         }
-        if ( log.isDebugEnabled() ) log.debug( "Done processing hits for result sets." );
+        if ( log.isDebugEnabled() )
+            log.debug( "Done processing hits for result sets." );
     }
 }

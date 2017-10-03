@@ -123,7 +123,7 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
     }
 
     /**
-     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
+     * @return Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
      * support.
      */
     public byte[] getRelativeLinkRanksNegative() {
@@ -135,7 +135,7 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
     }
 
     /**
-     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
+     * @return Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
      * support.
      */
     public byte[] getRelativeLinkRanksPositive() {

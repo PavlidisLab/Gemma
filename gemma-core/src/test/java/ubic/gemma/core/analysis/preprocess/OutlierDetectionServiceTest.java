@@ -19,28 +19,26 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-
-import java.net.URISyntaxException;
-import java.util.Collection;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.net.URISyntaxException;
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for {@link OutlierDetectionService}
- * 
+ *
  * @author ptan
- * @version $Id$
  */
 public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
 
@@ -59,13 +57,6 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private OutlierDetectionService outlierDetectionService;
 
-    /**
-     * Test method for
-     * {@link ubic.gemma.core.analysis.preprocess.OutlierDetectionService#hasOutliers(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
-     * .
-     * 
-     * @throws URISyntaxException
-     */
     @Test
     public void testIdentifyOutliers() throws URISyntaxException {
         ExpressionExperiment ee = eeService.findByShortName( "GSE2982" );

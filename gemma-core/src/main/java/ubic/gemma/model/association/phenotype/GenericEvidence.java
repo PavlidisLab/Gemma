@@ -26,17 +26,10 @@ public class GenericEvidence extends PhenotypeAssociation {
 
     private static final long serialVersionUID = 9049824856704318367L;
 
-    /**
-     * Constructs new instances of {@link GenericEvidence}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link GenericEvidence}.
-         */
         public static GenericEvidence newInstance() {
             return new GenericEvidence();
         }
-
     }
 
 }

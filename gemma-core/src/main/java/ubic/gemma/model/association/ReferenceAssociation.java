@@ -36,13 +36,8 @@ public abstract class ReferenceAssociation extends BioSequence2GeneProduct {
         this.referencedDatabaseEntry = referencedDatabaseEntry;
     }
 
-    /**
-     * Constructs new instances of {@link ReferenceAssociation}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ReferenceAssociation}.
-         */
+
         public static ReferenceAssociation newInstance() {
             return new ReferenceAssociationImpl();
         }

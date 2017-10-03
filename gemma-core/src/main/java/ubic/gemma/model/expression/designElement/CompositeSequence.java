@@ -83,7 +83,7 @@ public class CompositeSequence extends ubic.gemma.model.common.Describable {
     }
 
     /**
-     * The sequence for this composite sequence.
+     * @return The sequence for this composite sequence.
      */
     public BioSequence getBiologicalCharacteristic() {
         return this.biologicalCharacteristic;
@@ -93,13 +93,8 @@ public class CompositeSequence extends ubic.gemma.model.common.Describable {
         this.biologicalCharacteristic = biologicalCharacteristic;
     }
 
-    /**
-     * Constructs new instances of {@link CompositeSequence}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link CompositeSequence}.
-         */
+
         public static CompositeSequence newInstance() {
             return new CompositeSequence();
         }

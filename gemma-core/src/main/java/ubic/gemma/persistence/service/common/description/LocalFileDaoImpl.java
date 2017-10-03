@@ -52,8 +52,9 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
             results = t.findByNamedParam( "from LocalFile where localURL is null and remoteURL=:r", "r",
                     localFile.getRemoteURL() );
         } else {
-            results = t.findByNamedParam( "from LocalFile where localURL=:u and remoteURL=:r",
-                    new String[] { "u", "r" }, new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
+            results = t
+                    .findByNamedParam( "from LocalFile where localURL=:u and remoteURL=:r", new String[] { "u", "r" },
+                            new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
         }
 
         Object result = null;
@@ -71,9 +72,6 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
 
     }
 
-    /**
-     * @see LocalFileDao#findByLocalURL(int, java.lang.String, URL, java.lang.Long)
-     */
     public LocalFile findByLocalURL( final String queryString, final URL url, final java.lang.Long size ) {
 
         List<?> results = this.getHibernateTemplate()
@@ -89,18 +87,11 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
         return ( LocalFile ) result;
     }
 
-    /**
-     * @see LocalFileDao#findByLocalURL(int, URL, java.lang.Long)
-     */
     @Override
     public LocalFile findByLocalURL( final URL url, final java.lang.Long size ) {
-        return this.findByLocalURL(
-                "from LocalFile as localFile where localFile.url = :url and localFile.size = :size", url, size );
+        return this.findByLocalURL( "from LocalFile as localFile where localFile.url = :url and localFile.size = :size",
+                url, size );
     }
-
-    /**
-     * @see LocalFileDao#findByRemoteURL(int, java.lang.String, URL, java.lang.Long)
-     */
 
     public LocalFile findByRemoteURL( final java.lang.String queryString, final URL url, final java.lang.Long size ) {
 
@@ -120,8 +111,7 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
     @Override
     public LocalFile findByRemoteURL( final URL url, final java.lang.Long size ) {
         return this.findByRemoteURL(
-                "from LocalFile as localFile " + "where localFile.url = :url and localFile.size = :size", url,
-                size );
+                "from LocalFile as localFile " + "where localFile.url = :url and localFile.size = :size", url, size );
     }
 
     @Override

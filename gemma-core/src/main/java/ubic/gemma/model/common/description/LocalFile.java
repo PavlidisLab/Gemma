@@ -39,6 +39,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     /**
      * Attempt to create a java.io.File from the local URI. If it doesn't look like a URI, it is just treated as a path.
      *
+     * @return instance of File
      * @see ubic.gemma.model.common.description.LocalFile#asFile()
      */
     public java.io.File asFile() {
@@ -55,16 +56,10 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
 
     }
 
-    /**
-     * @see ubic.gemma.model.common.description.LocalFile#canRead()
-     */
     public Boolean canRead() {
         return this.asFile().canRead();
     }
 
-    /**
-     * @see ubic.gemma.model.common.description.LocalFile#canWrite()
-     */
     public Boolean canWrite() {
         return this.asFile().canWrite();
     }
@@ -115,7 +110,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * The location of the file on a local server
+     * @return The location of the file on a local server
      */
     public java.net.URL getLocalURL() {
         return this.localURL;
@@ -126,7 +121,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * Source where the file was downloaded from.
+     * @return Source where the file was downloaded from.
      */
     public java.net.URL getRemoteURL() {
         return this.remoteURL;
@@ -145,9 +140,9 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * Any files which were used to create this file.
+     * @return Any files which were used to create this file.
      */
-    public Collection<ubic.gemma.model.common.description.LocalFile> getSourceFiles() {
+    public Collection<LocalFile> getSourceFiles() {
         return this.sourceFiles;
     }
 
@@ -156,7 +151,7 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
     }
 
     /**
-     * The version identifier for the file; this could be as simple as the date of creation
+     * @return The version identifier for the file; this could be as simple as the date of creation
      */
     public String getVersion() {
         return this.version;
@@ -177,13 +172,8 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
         return result;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.LocalFile}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.LocalFile}.
-         */
+
         public static LocalFile newInstance() {
             return new LocalFile();
         }

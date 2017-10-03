@@ -19,17 +19,8 @@
 
 package ubic.gemma.core.genome.gene;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
@@ -38,12 +29,13 @@ import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import java.util.*;
+
 /**
  * This class will handle population of GeneSetValueObjects. Services need to be accessed in order to define values for
  * size, geneIds, and public/private fields.
- * 
+ *
  * @author tvrossum
- * @version $Id$
  */
 @Component
 public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
@@ -51,12 +43,6 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
     @Autowired
     private GeneSetService geneSetService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.GeneSetValueObjectHelper#convertToGOValueObject(ubic.gemma.model.genome.gene.GeneSet,
-     * java.lang.String, java.lang.String)
-     */
     @Override
     public GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm ) {
 
@@ -69,12 +55,6 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         return ggvo;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.genome.gene.GeneSetValueObjectHelper#convertToLightValueObject(ubic.gemma.model.genome.gene.GeneSet)
-     */
     @Override
     public DatabaseBackedGeneSetValueObject convertToLightValueObject( GeneSet gs ) {
         if ( gs == null ) {
@@ -86,51 +66,32 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.GeneSetValueObjectHelper#convertToLightValueObjects(java.util.Collection, boolean)
-     */
     @Override
-    public List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> genesets,
+    public List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> geneSets,
             boolean includeOnesWithoutGenes ) {
-        return convertToLightValueObjects( genesets, includeOnesWithoutGenes, true );
+        return convertToLightValueObjects( geneSets, includeOnesWithoutGenes, true );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.GeneSetValueObjectHelper#convertToValueObject(ubic.gemma.model.genome.gene.GeneSet)
-     */
     @Override
     public DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs ) {
-        if ( gs == null ) return null;
+        if ( gs == null )
+            return null;
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
 
-        Collection<Long> ids = EntityUtils.getIds( this.geneSetService.getGenesInGroup( new GeneSetValueObject( gs
-                .getId() ) ) );
+        Collection<Long> ids = EntityUtils
+                .getIds( this.geneSetService.getGenesInGroup( new GeneSetValueObject( gs.getId() ) ) );
         dbgsvo.getGeneIds().addAll( ids );
         dbgsvo.setSize( ids.size() );
 
         return dbgsvo;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.GeneSetValueObjectHelper#convertToValueObjects(java.util.Collection)
-     */
     @Override
     public List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets ) {
         return convertToValueObjects( sets, false );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.genome.gene.GeneSetValueObjectHelper#convertToValueObjects(java.util.Collection, boolean)
-     */
     @Override
     public List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> genesets,
             boolean includeOnesWithoutGenes ) {
@@ -139,15 +100,15 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
     }
 
     /**
-     * @param genesets
+     * @param geneSets                gene sets
      * @param includeOnesWithoutGenes should empty sets get removed?
-     * @param light Don't fill in the gene ids. Should be faster
-     * @return
+     * @param light                   Don't fill in the gene ids. Should be faster
+     * @return list of gene set value objects
      */
-    private List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> genesets,
+    private List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> geneSets,
             boolean includeOnesWithoutGenes, boolean light ) {
 
-        Collection<Long> genesetIds = EntityUtils.getIds( genesets );
+        Collection<Long> genesetIds = EntityUtils.getIds( geneSets );
 
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<>();
 
@@ -175,10 +136,6 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         return results;
     }
 
-    /**
-     * @param sbgsvo
-     * @param gs
-     */
     private void fillSessionBoundValueObject( SessionBoundGeneSetValueObject sbgsvo, GeneSet gs ) {
 
         sbgsvo.setName( gs.getName() );
@@ -187,7 +144,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
         if ( gs.getId() == null ) {
             sbgsvo.setSize( gs.getMembers() != null ? gs.getMembers().size() : 0 );
         } else {// this case may never happen as this is only called from convertToGoValueObject() leaving here in case
-                // this method is ever called from somewhere else
+            // this method is ever called from somewhere else
             sbgsvo.setSize( this.geneSetService.getSize( new GeneSetValueObject( gs.getId() ) ) );
         }
 

@@ -29,19 +29,19 @@ import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -52,7 +52,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 /**
- * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
+ * A SimpleFormController providing search functionality of genes or design elements (probe sets). The
  * success view returns either a visual representation of the result set or a downloadable data file.
  * viewSampling sets whether or not just some randomly selected vectors will be shown, and species sets
  * the type of species to search. keywords restrict the search.
@@ -60,6 +60,7 @@ import java.util.*;
  *
  * @author keshav
  */
+@SuppressWarnings("unused") // Used in front end
 @Deprecated
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
 
@@ -309,6 +310,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     /**
      * Populates drop downs.
+     *
+     * @param request request
+     * @return map
      */
     @Override
     protected Map<String, List<?>> referenceData( HttpServletRequest request ) {
@@ -372,7 +376,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
-     * A cookie to store the user preferences.
+     * @param request request
+     * @param eevc    eevc to add the cookie to
+     * @return given eevc with a cookie to store the user preferences.
      */
     private ExpressionExperimentVisualizationCommand loadCookie( HttpServletRequest request,
             ExpressionExperimentVisualizationCommand eevc ) {

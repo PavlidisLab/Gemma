@@ -26,55 +26,26 @@ package ubic.gemma.model.analysis.expression.diff;
 public abstract class HitListSize implements java.io.Serializable {
 
     /**
-     * Constructs new instances of {@link HitListSize}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link HitListSize}.
-         */
-        public static HitListSize newInstance() {
-            return new HitListSizeImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.diff.HitListSize}, taking all
-         * possible properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.analysis.expression.diff.HitListSize newInstance( Double thresholdQvalue,
-                Integer numberOfProbes, Direction direction, Integer numberOfGenes ) {
-            final ubic.gemma.model.analysis.expression.diff.HitListSize entity = new ubic.gemma.model.analysis.expression.diff.HitListSizeImpl();
-            entity.setThresholdQvalue( thresholdQvalue );
-            entity.setNumberOfProbes( numberOfProbes );
-            entity.setDirection( direction );
-            entity.setNumberOfGenes( numberOfGenes );
-            return entity;
-        }
-    }
-
-    /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -6398621486105806034L;
     private Double thresholdQvalue;
-
     private Integer numberOfProbes;
-
     private Direction direction;
-
     private Integer numberOfGenes;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public HitListSize() {
     }
 
     /**
-     * Returns <code>true</code> if the argument is an HitListSize instance and all identifiers for this entity equal
+     * @param object the object to compare with
+     * @return <code>true</code> if the argument is an HitListSize instance and all identifiers for this entity equal
      * the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
     @Override
@@ -92,41 +63,47 @@ public abstract class HitListSize implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public Direction getDirection() {
         return this.direction;
     }
 
-    /**
-     * 
-     */
+    public void setDirection( Direction direction ) {
+        this.direction = direction;
+    }
+
     public Long getId() {
         return this.id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     /**
-     * <p>
-     * Number of genes meeting the threshold.
-     * </p>
+     * @return Number of genes meeting the threshold.
      */
     public Integer getNumberOfGenes() {
         return this.numberOfGenes;
     }
 
-    /**
-     * 
-     */
+    public void setNumberOfGenes( Integer numberOfGenes ) {
+        this.numberOfGenes = numberOfGenes;
+    }
+
     public Integer getNumberOfProbes() {
         return this.numberOfProbes;
     }
 
-    /**
-     * 
-     */
+    public void setNumberOfProbes( Integer numberOfProbes ) {
+        this.numberOfProbes = numberOfProbes;
+    }
+
     public Double getThresholdQvalue() {
         return this.thresholdQvalue;
+    }
+
+    public void setThresholdQvalue( Double thresholdQvalue ) {
+        this.thresholdQvalue = thresholdQvalue;
     }
 
     /**
@@ -140,24 +117,21 @@ public abstract class HitListSize implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setDirection( Direction direction ) {
-        this.direction = direction;
-    }
+    public static final class Factory {
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+        public static HitListSize newInstance() {
+            return new HitListSizeImpl();
+        }
 
-    public void setNumberOfGenes( Integer numberOfGenes ) {
-        this.numberOfGenes = numberOfGenes;
-    }
-
-    public void setNumberOfProbes( Integer numberOfProbes ) {
-        this.numberOfProbes = numberOfProbes;
-    }
-
-    public void setThresholdQvalue( Double thresholdQvalue ) {
-        this.thresholdQvalue = thresholdQvalue;
+        public static ubic.gemma.model.analysis.expression.diff.HitListSize newInstance( Double thresholdQvalue,
+                Integer numberOfProbes, Direction direction, Integer numberOfGenes ) {
+            final ubic.gemma.model.analysis.expression.diff.HitListSize entity = new ubic.gemma.model.analysis.expression.diff.HitListSizeImpl();
+            entity.setThresholdQvalue( thresholdQvalue );
+            entity.setNumberOfProbes( numberOfProbes );
+            entity.setDirection( direction );
+            entity.setNumberOfGenes( numberOfGenes );
+            return entity;
+        }
     }
 
 }

@@ -19,7 +19,6 @@
 package ubic.gemma.core.analysis.preprocess.normalize;
 
 import org.apache.commons.lang3.ArrayUtils;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -27,14 +26,11 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public class ExpressionDataQuantileNormalizer {
 
     /**
      * Quantile normalize the matrix (in place)
-     * 
-     * @param matrix
      */
     public static void normalize( ExpressionDataDoubleMatrix matrix ) {
 

@@ -9,7 +9,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import org.apache.commons.beanutils.PropertyUtils;
 
 /**
- * 
+ *
  */
 public class UserExistsException extends Exception {
 
@@ -17,6 +17,40 @@ public class UserExistsException extends Exception {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -6191531408977402526L;
+
+    /**
+     * The default constructor.
+     */
+    public UserExistsException() {
+    }
+
+    /**
+     * Constructs a new instance of UserExistsException
+     *
+     * @param message the throwable message.
+     */
+    public UserExistsException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of UserExistsException
+     *
+     * @param message   the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public UserExistsException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of UserExistsException
+     *
+     * @param throwable the parent Throwable
+     */
+    public UserExistsException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
+    }
 
     /**
      * Finds the root cause of the parent exception by traveling up the exception tree
@@ -52,39 +86,5 @@ public class UserExistsException extends Exception {
             }
         }
         return th;
-    }
-
-    /**
-     * The default constructor.
-     */
-    public UserExistsException() {
-    }
-
-    /**
-     * Constructs a new instance of UserExistsException
-     * 
-     * @param message the throwable message.
-     */
-    public UserExistsException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of UserExistsException
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public UserExistsException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of UserExistsException
-     * 
-     * @param throwable the parent Throwable
-     */
-    public UserExistsException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
     }
 }

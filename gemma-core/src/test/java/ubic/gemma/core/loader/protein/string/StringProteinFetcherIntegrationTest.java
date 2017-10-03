@@ -18,25 +18,21 @@
  */
 package ubic.gemma.core.loader.protein.string;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.model.common.description.LocalFile;
+import static org.junit.Assert.*;
 
 /**
  * Test to check that files can be fetched from STRING website. These files are big and take a few hours to download. So
  * for testing purpose chose to test downloading small file: species.mappings.v8.2.txt.gz Current version tested with is
  * 8.2 for string.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class StringProteinFetcherIntegrationTest {
 
@@ -45,10 +41,8 @@ public class StringProteinFetcherIntegrationTest {
     String testFileName = "http://string82.embl.de/newstring_download/species.mappings.v8.2.txt.gz";
     String archiveMethod = "gz";
 
-    /**
+    /*
      * Set up the fetcher passing in the file to test
-     * 
-     * @throws java.lang.Exception
      */
     @Before
     public void setUp() throws Exception {
@@ -57,7 +51,7 @@ public class StringProteinFetcherIntegrationTest {
 
     }
 
-    /**
+    /*
      * Test fetching a small file from string in this case a taxon file.
      */
     @Test

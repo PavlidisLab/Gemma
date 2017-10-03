@@ -14,22 +14,20 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+
+import java.util.Collection;
 
 /**
  * @author pavlidis
- * @version $Id$
  * @see ExpressionExperimentSubSetService
  */
 @Service
@@ -64,12 +62,6 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
         return this.getExpressionExperimentSubSetDao().getFactorValuesUsed( entity, factor );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ExpressionExperimentSubSetService#getFactorValuesUsed(java.lang.Long,
-     * java.lang.Long)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
@@ -77,8 +69,6 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
 
     }
 
-    /**
-      */
     @Override
     protected ExpressionExperimentSubSet handleCreate(
             ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet ) {
@@ -88,9 +78,8 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
     /**
      * doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting
      * experiment set members
-     * 
-     * @param subset
-     * @throws Exception
+     *
+     * @param subset subset
      */
     protected void handleDelete( ExpressionExperimentSubSet subset ) {
 
@@ -115,7 +104,8 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
 
     /**
      * Loads one subset, given an id
-     * 
+     *
+     * @param id id
      * @return ExpressionExperimentSubSet
      */
     @Override
@@ -123,9 +113,6 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
         return this.getExpressionExperimentSubSetDao().load( id );
     }
 
-    /**
-     * @see ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
-     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperimentSubSet> handleLoadAll() {

@@ -18,18 +18,17 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import java.io.IOException;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.util.AffyBatch;
 import ubic.gemma.core.analysis.util.RCommander;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.io.IOException;
+
 /**
- * Perform Robust Multiarray Average probe-level summarization of Affymetrix microarray data.
- * 
+ * Perform Robust MultiArray Average probe-level summarization of Affymetrix microarray data.
+ *
  * @author pavlidis
- * @version $Id$
  * @deprecated because it uses R, which we are trying to avoid (brittle); and we are not currently using this.
  */
 @Deprecated
@@ -37,35 +36,30 @@ public class RMA extends RCommander implements ProbeSummarizer {
 
     private ArrayDesign arrayDesign = null;
     private AffyBatch ab;
-
-    public enum pmCorrectMethod {
-        MAS, PMONLY, SUBTRACTMM
-    }
+    private pmCorrectMethod pmMethod = pmCorrectMethod.PMONLY;
 
     public RMA() throws IOException {
         super();
         ab = new AffyBatch( this.rc );
     }
 
-    private pmCorrectMethod pmMethod = pmCorrectMethod.PMONLY;
-
     /**
      * You must call setArrayDesign() before calling this method. You may also optionally set the PM correction method
      * ("pmonly" is the default). Note that this only performs the median polish summarization step of RMA, not the
      * entire analysis. The CEL matrix should be background corrected and normalized first, if desired.
-     * <p>
      * With the defaults this method is equivalent to using the affy package call
      * <code>exprs(expresso(affybatch, bg.correct=FALSE, normalize=FALSE, pmcorrect.method="pmonly", summary.method="medianpolish"))</code>
-     * 
+     *
      * @param dataMatrix The CEL value matrix
      * @return RMA-processed matrix.
-     * @see ubic.gemma.model.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrix)
+     * @see ubic.gemma.core.analysis.preprocess.ProbeSummarizer#summarize(DoubleMatrix)
      */
     @Override
     public DoubleMatrix<String, String> summarize( DoubleMatrix<String, String> dataMatrix ) {
         log.debug( "Summarizing..." );
 
-        if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
+        if ( arrayDesign == null )
+            throw new IllegalStateException( "Must set arrayDesign first" );
         String abName = ab.makeAffyBatch( dataMatrix, arrayDesign );
         String varname = "m";
 
@@ -82,11 +76,9 @@ public class RMA extends RCommander implements ProbeSummarizer {
         return resultObject;
     }
 
-    /**
-     * @param arrayDesign2
-     */
     public void setArrayDesign( ArrayDesign arrayDesign2 ) {
-        if ( arrayDesign2 == null ) throw new IllegalArgumentException( "arrayDesign must not be null" );
+        if ( arrayDesign2 == null )
+            throw new IllegalArgumentException( "arrayDesign must not be null" );
         this.arrayDesign = arrayDesign2;
     }
 
@@ -102,6 +94,10 @@ public class RMA extends RCommander implements ProbeSummarizer {
      */
     public void setPmMethod( pmCorrectMethod pmMethod ) {
         this.pmMethod = pmMethod;
+    }
+
+    public enum pmCorrectMethod {
+        MAS, PMONLY, SUBTRACTMM
     }
 
 }

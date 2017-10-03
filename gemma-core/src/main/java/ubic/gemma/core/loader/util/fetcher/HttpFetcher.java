@@ -18,13 +18,11 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.util.Settings;
+
+import java.io.*;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -35,33 +33,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.util.Settings;
-
 /**
  * A generic class for fetching files via HTTP and writing them to a local file system.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class HttpFetcher extends AbstractFetcher {
 
-    /**
-     * @pram url
-     * @see ubic.gemma.core.loader.loaderutils.Fetcher#fetch(java.lang.String)
-     */
     @Override
     public Collection<LocalFile> fetch( String url ) {
         return fetch( url, null );
     }
 
-    /**
-     * @param url
-     * @param outputFileName
-     * @return
-     */
     public Collection<LocalFile> fetch( String url, String outputFileName ) {
         log.info( "Seeking " + url );
 
@@ -105,24 +89,19 @@ public class HttpFetcher extends AbstractFetcher {
         }
     }
 
-    /**
-     * @param outputFileName
-     * @param seekFile
-     * @return
-     */
     protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
-        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+        return new FutureTask<>( new Callable<Boolean>() {
             @Override
             @SuppressWarnings("synthetic-access")
-            public Boolean call() throws FileNotFoundException, IOException {
+            public Boolean call() throws IOException {
                 log.info( "Fetching " + seekFile );
                 URL urlPattern = new URL( seekFile );
 
                 InputStream inputStream = new BufferedInputStream( urlPattern.openStream() );
-                try (OutputStream outputStream = new FileOutputStream( new File( outputFileName ) );) {
+                try (OutputStream outputStream = new FileOutputStream( new File( outputFileName ) )) {
 
                     final byte[] buffer = new byte[65536];
-                    int read = -1;
+                    int read;
 
                     while ( ( read = inputStream.read( buffer ) ) > -1 ) {
                         outputStream.write( buffer, 0, read );
@@ -132,15 +111,8 @@ public class HttpFetcher extends AbstractFetcher {
                 }
             }
         } );
-        return future;
     }
 
-    /**
-     * @param future
-     * @param seekFile
-     * @param outputFileName
-     * @return
-     */
     protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String seekFile, String outputFileName ) {
         Executors.newSingleThreadExecutor().execute( future );
         try {
@@ -148,62 +120,38 @@ public class HttpFetcher extends AbstractFetcher {
             while ( !future.isDone() ) {
                 try {
                     Thread.sleep( INFO_UPDATE_INTERVAL );
-                } catch ( InterruptedException ie ) {
+                } catch ( InterruptedException ignored ) {
 
                 }
                 log.info( ( new File( outputFileName ).length() + " bytes read" ) );
             }
-            if ( future.get().booleanValue() ) {
+            if ( future.get() ) {
                 return listFiles( seekFile, outputFileName );
             }
-        } catch ( ExecutionException e ) {
+        } catch ( ExecutionException | IOException e ) {
             throw new RuntimeException( "Couldn't fetch file for " + seekFile, e );
         } catch ( InterruptedException e ) {
             throw new RuntimeException( "Interrupted: Couldn't fetch file for " + seekFile, e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( "Couldn't fetch file for " + seekFile, e );
         }
         throw new RuntimeException( "Couldn't fetch file for " + seekFile );
     }
 
-    /**
-     * @param identifier
-     * @param newDir
-     * @return
-     */
     @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
-     */
     @Override
     protected String formRemoteFilePath( String identifier ) {
         return identifier;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#initConfig()
-     */
     @Override
     protected void initConfig() {
-        return;
     }
 
-    /**
-     * @param seekFile
-     * @param outputFileName
-     * @return
-     * @throws IOException
-     */
     protected Collection<LocalFile> listFiles( String seekFile, String outputFileName ) throws IOException {
-        Collection<LocalFile> result = new HashSet<LocalFile>();
+        Collection<LocalFile> result = new HashSet<>();
         File file = new File( outputFileName );
         log.info( "Downloaded: " + file );
         LocalFile newFile = LocalFile.Factory.newInstance();

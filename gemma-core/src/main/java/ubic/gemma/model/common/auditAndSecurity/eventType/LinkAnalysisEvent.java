@@ -23,21 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Computing coexpression links for an expression experiment
  * </p>
  */
-public class LinkAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent();
-        }
-
-    }
+public class LinkAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,10 +33,18 @@ public class LinkAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public LinkAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent();
+        }
+
     }
 
 }

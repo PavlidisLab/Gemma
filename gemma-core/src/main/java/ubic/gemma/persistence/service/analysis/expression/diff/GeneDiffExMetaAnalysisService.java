@@ -19,77 +19,47 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
-import ubic.gemma.persistence.service.analysis.AnalysisService;
 import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.AnalysisService;
+
+import java.util.Collection;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
- * @version $Id$
  */
 public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDifferentialExpressionMetaAnalysis> {
 
     @Secured({ "GROUP_USER" })
-    public GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis );
+    GeneDifferentialExpressionMetaAnalysis create( GeneDifferentialExpressionMetaAnalysis analysis );
 
     @Secured({ "GROUP_USER" })
-    public BaseValueObject delete( Long id );
+    BaseValueObject delete( Long id );
 
-    /**
-     * 
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
+    Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
 
-    /**
-     * 
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
+    Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 
-    /**
-     * @param analysisId
-     * @return
-     */
-    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
+    Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
             long analysisId );
 
-    /**
-     * @param metaAnalysisIds
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
+    Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
             Collection<Long> metaAnalysisIds );
 
-    /**
-     * @param analysisId
-     * @return
-     */
-    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
+    Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
 
-    /**
-     * @param idResult
-     * @return
-     */
-    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
+    GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
 
-    /**
-     * @param idResult
-     * @return
-     */
-    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
+    GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( GeneDifferentialExpressionMetaAnalysis analysis );
+    void update( GeneDifferentialExpressionMetaAnalysis analysis );
 
 }

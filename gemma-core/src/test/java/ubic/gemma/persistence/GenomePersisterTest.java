@@ -18,17 +18,16 @@
  */
 package ubic.gemma.persistence;
 
-import static org.junit.Assert.assertNotNull;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Test;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneProduct;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
-
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author pavlidis
@@ -64,10 +63,9 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Going the opposite way as the other test.
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void testPersistGeneProduct() throws Exception {

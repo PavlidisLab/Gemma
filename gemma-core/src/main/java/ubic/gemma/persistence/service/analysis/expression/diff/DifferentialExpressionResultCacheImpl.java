@@ -19,37 +19,31 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.config.*;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.stereotype.Component;
-
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.NonstopConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
-import net.sf.ehcache.config.TerracottaConfiguration;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
 /**
  * Cache for data from differential expression result queries.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 @Component
 public class DifferentialExpressionResultCacheImpl implements DifferentialExpressionResultCache, InitializingBean {
@@ -72,13 +66,6 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
 
     private Cache topHitsCache;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * DifferentialExpressionResultCache#addToCache(ubic.gemma.model.analysis
-     * .expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult)
-     */
     @Override
     public void addToCache( DiffExprGeneSearchResult diffExForCache ) {
         Long r = diffExForCache.getResultSetId();
@@ -95,11 +82,6 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
     @Override
     public void afterPropertiesSet() throws Exception {
         CacheManager cacheManager = cacheManagerFactory.getObject();
@@ -159,22 +141,12 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see DifferentialExpressionResultCache#clearCache()
-     */
     @Override
     public void clearCache() {
         cache.removeAll();
         topHitsCache.removeAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see DifferentialExpressionResultCache#clearCache(java.lang.Long)
-     */
     @Override
     public void clearCache( Long resultSetId ) {
         for ( Object o : cache.getKeys() ) {
@@ -185,17 +157,12 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see DifferentialExpressionResultCache#get(ubic.gemma.model.analysis.
-     * expression .diff.ExpressionAnalysisResultSet, ubic.gemma.model.genome.Gene)
-     */
     @Override
     public DiffExprGeneSearchResult get( Long resultSet, Long g ) {
         assert cache != null;
         Element element = cache.get( new CacheKey( resultSet, g ) );
-        if ( element == null ) return null;
+        if ( element == null )
+            return null;
         return ( DiffExprGeneSearchResult ) element.getObjectValue();
     }
 
@@ -212,21 +179,11 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see DifferentialExpressionResultCache#isEnabled()
-     */
     @Override
     public Boolean isEnabled() {
         return enabled;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see DifferentialExpressionResultCache#setEnabled(java.lang.Boolean)
-     */
     @Override
     public void setEnabled( Boolean enabled ) {
         this.enabled = enabled;
@@ -244,18 +201,12 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * DifferentialExpressionResultCache#getTopHits(ubic.gemma.model.analysis
-     * .expression.diff.ExpressionAnalysisResultSet)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet ) {
         Element element = this.topHitsCache.get( resultSet );
-        if ( element == null ) return null;
+        if ( element == null )
+            return null;
         return ( List<DifferentialExpressionValueObject> ) element.getObjectValue();
     }
 
@@ -274,16 +225,23 @@ class CacheKey implements Serializable {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         CacheKey other = ( CacheKey ) obj;
         if ( resultSetId == null ) {
-            if ( other.resultSetId != null ) return false;
-        } else if ( !resultSetId.equals( other.resultSetId ) ) return false;
+            if ( other.resultSetId != null )
+                return false;
+        } else if ( !resultSetId.equals( other.resultSetId ) )
+            return false;
         if ( geneId == null ) {
-            if ( other.geneId != null ) return false;
-        } else if ( !geneId.equals( other.geneId ) ) return false;
+            if ( other.geneId != null )
+                return false;
+        } else if ( !geneId.equals( other.geneId ) )
+            return false;
         return true;
     }
 

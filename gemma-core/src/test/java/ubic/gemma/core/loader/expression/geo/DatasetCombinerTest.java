@@ -18,8 +18,11 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
+import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -28,16 +31,11 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
-
-import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class DatasetCombinerTest {
 
@@ -45,9 +43,6 @@ public class DatasetCombinerTest {
     Collection<GeoDataset> gds;
     private boolean skipSlowTests = true;
 
-    /*
-     * Test method for 'ubic.gemma.core.loader.expression.geo.DatsetCombiner.findGDSGrouping(String)'
-     */
     @Test
     public void testFindGDSGrouping() throws Exception {
         try {
@@ -67,26 +62,24 @@ public class DatasetCombinerTest {
         }
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testFindGSE13() throws Exception {
-        if ( this.skipSlowTests ) return;
+        if ( this.skipSlowTests )
+            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE13Short/GDS44.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE13Short/GDS44.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE13Short/GSE13_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE13Short/GSE13_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE13Short/GDS52.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE13Short/GDS52.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -119,19 +112,18 @@ public class DatasetCombinerTest {
         assertEquals( 0, result.size() );
     }
 
-    /**
-     * Has multiple platforms, but no GES's are defined.
-     * 
-     * @throws Exception
+    /*
+     * Has multiple platforms, but no GES's are defined
      */
     @Test
     public void testFindGSE3193() throws Exception {
-        if ( this.skipSlowTests ) return;
+        if ( this.skipSlowTests )
+            return;
 
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE3193Short/GSE3193_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE3193Short/GSE3193_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -156,25 +148,23 @@ public class DatasetCombinerTest {
 
     // todo: add test of findGSECorrespondence( GeoSeries series ) when there is no dataset.
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testFindGSE469() throws Exception {
-        if ( this.skipSlowTests ) return;
+        if ( this.skipSlowTests )
+            return;
         GeoFamilyParser parser = new GeoFamilyParser();
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE469Short/GDS233.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE469Short/GDS233.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE469Short/GSE469_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE469Short/GSE469_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE469Short/GDS234.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE469Short/GDS234.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -201,21 +191,22 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGSE493() throws Exception {
-        if ( this.skipSlowTests ) return;
+        if ( this.skipSlowTests )
+            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE493Short/GDS215.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE493Short/GDS215.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE493Short/GSE493_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE493Short/GSE493_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE493Short/GDS258.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE493Short/GDS258.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -241,32 +232,30 @@ public class DatasetCombinerTest {
         assertEquals( 1, result.getCorrespondingSamples( "GSM4371" ).size() );
     }
 
-    /**
+    /*
      * Fairly hard case; twelve samples, 3 array design each sample run on each array design
-     * 
-     * @throws Exception
      */
     @Test
     public void testFindGSE611() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GDS428.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE611Short/GDS428.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GSE611_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE611Short/GSE611_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GDS429.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE611Short/GDS429.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GDS430.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE611Short/GDS430.soft.gz" ) );) {
             parser.parse( is );
         }
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -292,13 +281,13 @@ public class DatasetCombinerTest {
     public void testFindGSE88() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE88Short/GDS184.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE88Short/GDS184.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE88Short/GSE88_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE88Short/GSE88_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -325,26 +314,24 @@ public class DatasetCombinerTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testFindGSE91() throws Exception {
-        if ( this.skipSlowTests ) return;
+        if ( this.skipSlowTests )
+            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE91Short/GDS168.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE91Short/GDS168.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE91Short/GSE91_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE91Short/GSE91_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE91Short/GDS169.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE91Short/GDS169.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -371,23 +358,20 @@ public class DatasetCombinerTest {
 
     }
 
-    /*
-     * Test method for 'ubic.gemma.core.loader.expression.geo.DatsetCombiner.findGSECorrespondence(Collection<GeoDataset>)'
-     */
     @Test
     public void testFindGSECorrespondence() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/twoDatasets/GDS472.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/twoDatasets/GDS472.soft.gz" ) );) {
             parser.parse( is );
         }
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/twoDatasets/GSE674_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/twoDatasets/GSE674_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/twoDatasets/GDS473.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/twoDatasets/GDS473.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -410,29 +394,27 @@ public class DatasetCombinerTest {
 
         for ( int i = 0; i < keys.length; i++ ) {
             String string = keys[i];
-            assertEquals( "Wrong result for " + keys[i] + ", expected 2", 2, result.getCorrespondingSamples( string )
-                    .size() );
+            assertEquals( "Wrong result for " + keys[i] + ", expected 2", 2,
+                    result.getCorrespondingSamples( string ).size() );
         }
         assertTrue( result.getCorrespondingSamples( "GSM10354" ).contains( "GSM10374" ) );
         assertTrue( result.getCorrespondingSamples( "GSM10374" ).contains( "GSM10354" ) );
     }
 
-    /**
+    /*
      * This has just a single data set but results in a "no platform assigned" error.
-     * 
-     * @throws Exception
      */
     @Test
     public void testGDS186() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse106Short/GDS186.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/gse106Short/GDS186.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse106Short/GSE106.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/gse106Short/GSE106.soft.gz" ) );) {
             parser.parse( is );
         }
 
@@ -458,48 +440,47 @@ public class DatasetCombinerTest {
         assertEquals( 11, numBioMaterials );
     }
 
-    /**
+    /*
      * A difficult case, lots of singletons.
-     * 
-     * @throws Exception
      */
     @Test
     public void testGSE465() throws Exception {
-        if ( this.skipSlowTests ) return;
+        if ( this.skipSlowTests )
+            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE465Short/GDS214.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE465Short/GDS214.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE465Short/GSE465_family.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE465Short/GSE465_family.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE465Short/GDS262.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE465Short/GDS262.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE465Short/GDS263.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE465Short/GDS263.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE465Short/GDS264.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE465Short/GDS264.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE465Short/GDS265.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE465Short/GDS265.soft.gz" ) );) {
             parser.parse( is );
         }
 
-        try (InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE465Short/GDS270.soft.gz" ) );) {
+        try (InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE465Short/GDS270.soft.gz" ) );) {
             parser.parse( is );
         }
 

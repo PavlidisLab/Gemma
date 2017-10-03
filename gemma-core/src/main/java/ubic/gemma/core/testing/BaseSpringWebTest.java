@@ -25,11 +25,11 @@ import org.springframework.test.context.ContextConfiguration;
  * Class to extend for tests of controllers et al. that need a spring context. Provides convenience methods for dealing
  * with mock requests and responses. Also provides a safe port to send email on for testing (for example, using
  * dumbster)
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
-@ContextConfiguration(loader = WebContextLoader.class, locations = { "classpath*:WEB-INF/gemma-servlet.xml" }, inheritLocations = true)
+@ContextConfiguration(loader = WebContextLoader.class, locations = {
+        "classpath*:WEB-INF/gemma-servlet.xml" }, inheritLocations = true)
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     protected static final int MAIL_PORT = 2527;

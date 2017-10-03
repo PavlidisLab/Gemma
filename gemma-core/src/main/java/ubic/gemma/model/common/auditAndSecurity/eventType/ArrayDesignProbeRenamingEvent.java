@@ -24,23 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * had very generic identifiers (such as consecutive integers).
  * </p>
  */
-public class ArrayDesignProbeRenamingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent();
-        }
-
-    }
+public class ArrayDesignProbeRenamingEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -49,10 +34,18 @@ public class ArrayDesignProbeRenamingEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ArrayDesignProbeRenamingEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent();
+        }
+
     }
 
 }

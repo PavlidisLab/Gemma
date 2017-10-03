@@ -18,66 +18,23 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.GregorianCalendar;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.*;
 
 /**
  * Represents a BibliographicReference as a citation string (which is really super light value object). This object has
  * four fields and is meant to be very simple, before adding anything consider using BibliographicReferenceValueObject.
  * This can't be an inner class of BibliographicReferenceValueObject because it needs dummy constructor for dwr to work
  * with it.
- * 
- * @see ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceValueObject
- *      BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
- * @version
+ *
+ * @see BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
  */
 public class CitationValueObject implements Comparable<CitationValueObject> {
 
     // for constructing pubmedURLs
+    @SuppressWarnings("WeakerAccess") // Might be accessed in the front end
     final static String PUBMED_URL_ROOT = "https://www.ncbi.nlm.nih.gov/pubmed/";
-
-    /**
-     * construct a citation value object from a BibliographicReference returns null if the BibliographicReference param
-     * was null
-     * 
-     * @param ref
-     * @return
-     */
-    public static CitationValueObject convert2CitationValueObject( BibliographicReference ref ) {
-
-        if ( ref == null ) {
-            return null;
-        }
-
-        return new CitationValueObject( ref );
-    }
-
-    /**
-     * construct a collection of citation value objects from a collection of BibliographicReference objects returns an
-     * empty list if all the BibliographicReference list param was null or empty
-     * 
-     * @param ref
-     * @return
-     */
-    public static List<CitationValueObject> convert2CitationValueObjects( Collection<BibliographicReference> refs ) {
-
-        List<CitationValueObject> results = new ArrayList<CitationValueObject>();
-
-        if ( refs != null ) {
-
-            for ( BibliographicReference ref : refs ) {
-                results.add( new CitationValueObject( ref ) );
-            }
-        }
-
-        return results;
-    }
-
     private String citation;
     /**
      * the DB id of the BibliographicReference being represented
@@ -85,7 +42,6 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
     private Long id;
     private String pubmedAccession;
     private String pubmedURL;
-
     private boolean retracted = false;
 
     /* needed for java bean contract */
@@ -101,9 +57,9 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
             String[] authors = StringUtils.split( ref.getAuthorList(), ";" );
             // if there are multiple authors, only display the first author
             if ( authors.length == 1 ) {
-                buf.append( authors[0] + " " );
+                buf.append( authors[0] ).append( " " );
             } else if ( authors.length > 0 ) {
-                buf.append( authors[0] + " et al. " );
+                buf.append( authors[0] ).append( " et al. " );
             }
         } else {
             buf.append( "[Unknown authors]" );
@@ -112,7 +68,7 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         if ( ref.getPublicationDate() != null ) {
             Calendar pubDate = new GregorianCalendar();
             pubDate.setTime( ref.getPublicationDate() );
-            buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
+            buf.append( "(" ).append( pubDate.get( Calendar.YEAR ) ).append( ") " );
         } else {
             buf.append( "[Unknown date]" );
         }
@@ -128,7 +84,8 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
             pages = "[no pages]";
         }
 
-        buf.append( ref.getTitle() + "; " + ref.getPublication() + ", " + volume + ": " + pages );
+        buf.append( ref.getTitle() ).append( "; " ).append( ref.getPublication() ).append( ", " ).append( volume )
+                .append( ": " ).append( pages );
 
         this.setCitation( buf.toString() );
         this.setPubmedAccession( ref.getPubAccession().getAccession() );
@@ -137,15 +94,47 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         if ( ref.getPublicationTypes() != null ) {
 
             for ( PublicationType pt : ref.getPublicationTypes() ) {
-                if ( pt.getType() != null
-                        && ( pt.getType().indexOf( "Retraction of Publication" ) != -1 || pt.getType().indexOf(
-                                "Retracted Publication" ) != -1 ) ) {
+                if ( pt.getType() != null && ( pt.getType().contains( "Retraction of Publication" ) || pt.getType()
+                        .contains( "Retracted Publication" ) ) ) {
                     retracted = true;
                 }
 
             }
         }
 
+    }
+
+    /**
+     * @param ref ref
+     * @return a citation value object constructed from a BibliographicReference or null if the BibliographicReference param
+     * was null
+     */
+    public static CitationValueObject convert2CitationValueObject( BibliographicReference ref ) {
+
+        if ( ref == null ) {
+            return null;
+        }
+
+        return new CitationValueObject( ref );
+    }
+
+    /**
+     * @param refs refs
+     * @return a collection of citation value objects constructed from a collection of BibliographicReference objects
+     * or an empty list if all the BibliographicReference list param was null or empty
+     */
+    public static List<CitationValueObject> convert2CitationValueObjects( Collection<BibliographicReference> refs ) {
+
+        List<CitationValueObject> results = new ArrayList<>();
+
+        if ( refs != null ) {
+
+            for ( BibliographicReference ref : refs ) {
+                results.add( new CitationValueObject( ref ) );
+            }
+        }
+
+        return results;
     }
 
     @Override
@@ -158,42 +147,51 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         CitationValueObject other = ( CitationValueObject ) obj;
         if ( pubmedAccession == null ) {
-            if ( other.pubmedAccession != null ) return false;
-        } else if ( !pubmedAccession.equals( other.pubmedAccession ) ) return false;
+            if ( other.pubmedAccession != null )
+                return false;
+        } else if ( !pubmedAccession.equals( other.pubmedAccession ) )
+            return false;
         return true;
     }
 
-    /**
-     * @return the citation
-     */
     public String getCitation() {
         return citation;
     }
 
-    /**
-     * @return the id
-     */
+    public void setCitation( String citation ) {
+        this.citation = citation;
+    }
+
     public Long getId() {
         return id;
     }
 
-    /**
-     * @return the pubmedID
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public String getPubmedAccession() {
         return pubmedAccession;
     }
 
-    /**
-     * @return the pubmedURL
-     */
+    public void setPubmedAccession( String pubmedID ) {
+        this.pubmedAccession = pubmedID;
+    }
+
     public String getPubmedURL() {
         return pubmedURL;
+    }
+
+    public void setPubmedURL( String pubmedURL ) {
+        this.pubmedURL = pubmedURL;
     }
 
     @Override
@@ -202,34 +200,6 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         int result = 1;
         result = prime * result + ( ( pubmedAccession == null ) ? 0 : pubmedAccession.hashCode() );
         return result;
-    }
-
-    /**
-     * @param citation the citation to set
-     */
-    public void setCitation( String citation ) {
-        this.citation = citation;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    /**
-     * @param pubmedID the pubmedID to set
-     */
-    public void setPubmedAccession( String pubmedID ) {
-        this.pubmedAccession = pubmedID;
-    }
-
-    /**
-     * @param pubmedURL the pubmedURL to set
-     */
-    public void setPubmedURL( String pubmedURL ) {
-        this.pubmedURL = pubmedURL;
     }
 
     public boolean isRetracted() {

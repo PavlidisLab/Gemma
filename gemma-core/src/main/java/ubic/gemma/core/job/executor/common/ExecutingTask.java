@@ -14,40 +14,26 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import java.util.concurrent.Callable;
-
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
+import java.util.concurrent.Callable;
+
 /**
  * Task Lifecycle Hooks ProgressUpdateAppender -
- * 
+ *
  * @author anton
- * @version $Id$
  */
 public class ExecutingTask<T extends TaskResult> implements Callable<T> {
-
-    // These hooks are used to update status of the running task.
-    public interface TaskLifecycleHandler {
-        public void onFailure( Throwable e );
-
-        public void onFinish();
-
-        public void onStart();
-    }
 
     private Task<T, ?> task;
     // Does not survive serialization.
     private transient TaskLifecycleHandler statusCallback;
-
     private transient ProgressUpdateAppender progressAppender;
     private String taskId;
-
     private TaskCommand taskCommand;
-
     private Throwable taskExecutionException;
 
     public ExecutingTask( Task<T, ?> task, TaskCommand taskCommand ) {
@@ -103,6 +89,15 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
         progressAppender.initialize();
 
         SecurityContextHolder.setContext( taskCommand.getSecurityContext() ); // TODO: one idea is to have
-                                                                              // SecurityContextAwareExecutorClass.
+        // SecurityContextAwareExecutorClass.
+    }
+
+    // These hooks are used to update status of the running task.
+    public interface TaskLifecycleHandler {
+        public void onFailure( Throwable e );
+
+        public void onFinish();
+
+        public void onStart();
     }
 }

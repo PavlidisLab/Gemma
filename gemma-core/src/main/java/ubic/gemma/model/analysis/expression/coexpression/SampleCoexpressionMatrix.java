@@ -25,39 +25,9 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
  */
 public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4340621792397336563L;
-
-    /**
-     * Constructs new instances of {@link SampleCoexpressionMatrix}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link SampleCoexpressionMatrix}.
-         */
-        public static SampleCoexpressionMatrix newInstance() {
-            return new SampleCoexpressionMatrixImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link SampleCoexpressionMatrix}, taking all possible properties (except the
-         * identifier(s))as arguments.
-         */
-        public static SampleCoexpressionMatrix newInstance( byte[] coexpressionMatrix,
-                BioAssayDimension bioAssayDimension ) {
-            final SampleCoexpressionMatrix entity = new SampleCoexpressionMatrixImpl();
-            entity.setCoexpressionMatrix( coexpressionMatrix );
-            entity.setBioAssayDimension( bioAssayDimension );
-            return entity;
-        }
-    }
-
     private BioAssayDimension bioAssayDimension;
-
     private byte[] coexpressionMatrix;
-
     private Long id;
 
     /**
@@ -73,31 +43,31 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
             return false;
         }
         final SampleCoexpressionMatrix that = ( SampleCoexpressionMatrix ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
-    /**
-     * 
-     */
     public BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
     }
 
-    /**
-     * 
-     */
+    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+        this.bioAssayDimension = bioAssayDimension;
+    }
+
     public byte[] getCoexpressionMatrix() {
         return this.coexpressionMatrix;
     }
 
-    /**
-     * 
-     */
+    public void setCoexpressionMatrix( byte[] coexpressionMatrix ) {
+        this.coexpressionMatrix = coexpressionMatrix;
+    }
+
     public Long getId() {
         return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     /**
@@ -111,16 +81,24 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
-        this.bioAssayDimension = bioAssayDimension;
-    }
+    public static final class Factory {
+        public static SampleCoexpressionMatrix newInstance() {
+            return new SampleCoexpressionMatrixImpl();
+        }
 
-    public void setCoexpressionMatrix( byte[] coexpressionMatrix ) {
-        this.coexpressionMatrix = coexpressionMatrix;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
+        /**
+         * @param bioAssayDimension  the BADimension to set on the created matrix
+         * @param coexpressionMatrix the coexp matrix to set on the created matrix
+         * @return Constructs a new instance of {@link SampleCoexpressionMatrix}, taking all possible properties (except the
+         * identifier(s))as arguments.
+         */
+        public static SampleCoexpressionMatrix newInstance( byte[] coexpressionMatrix,
+                BioAssayDimension bioAssayDimension ) {
+            final SampleCoexpressionMatrix entity = new SampleCoexpressionMatrixImpl();
+            entity.setCoexpressionMatrix( coexpressionMatrix );
+            entity.setBioAssayDimension( bioAssayDimension );
+            return entity;
+        }
     }
 
 }

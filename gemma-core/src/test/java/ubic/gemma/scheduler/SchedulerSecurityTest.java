@@ -19,23 +19,20 @@
 package ubic.gemma.scheduler;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
-
-import java.lang.reflect.InvocationTargetException;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Tests security of methods run by Quartz.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class SchedulerSecurityTest extends BaseSpringContextTest {
 
@@ -48,10 +45,9 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
     @Autowired
     private ManualAuthenticationService manualAuthenticationService;
 
-    /**
+    /*
      * Tests whether we can run a secured method that has been granted to GROUP_AGENT
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void runSecuredMethodOnSchedule() throws Exception {
@@ -70,10 +66,9 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Tests whether we can run a secured method that has been granted to both GROUP_AGENT _and_ GROUP_USER.
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void runSecuredMethodOnScheduleMultiGroup() throws Exception {
@@ -93,10 +88,9 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Confirm that we can't run methods that GROUP_AGENT doesn't have access to, namely deleting experiments.
-     * 
-     * @throws Exception
+     *
      */
     @Test(expected = InvocationTargetException.class)
     public void runUnauthorizedMethodOnSchedule() throws Exception {

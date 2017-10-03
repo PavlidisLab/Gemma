@@ -28,12 +28,9 @@ import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionCache;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -42,7 +39,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.TableMaintenanceUtil;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionCache;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.sql.ResultSet;
@@ -56,6 +56,9 @@ import static org.junit.Assert.*;
  */
 public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
+    private final FilterConfig filterConfig = new FilterConfig();
+    private final LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
+
     @Autowired
     private BasicDataSource dataSource;
 
@@ -63,8 +66,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private ExpressionExperimentService eeService;
-
-    private FilterConfig filterConfig = new FilterConfig();
 
     @Autowired
     private CoexpressionCache gene2GeneCoexpressionCache;
@@ -74,8 +75,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private GeneService geneService;
-
-    private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
     @Autowired
     private LinkAnalysisPersister linkAnalysisPersisterService;
@@ -152,6 +151,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         filterConfig.setIgnoreMinimumSampleThreshold( true );
 
         // first time.
+        //noinspection UnusedAssignment // we still want to do this for the testing sake
         LinkAnalysis la = linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
         // test remove is clean; to check this properly requires checking the db.
@@ -282,7 +282,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
             GeneCoexpressionNodeDegreeValueObject nodeDegree = geneCoexpressionService.getNodeDegree( gene );
 
-            if ( links.size() != nodeDegree.getLinksWithMinimumSupport( 1 ).intValue() ) {
+            if ( links.size() != nodeDegree.getLinksWithMinimumSupport( 1 ) ) {
                 log.info( nodeDegree );
                 assertEquals( "Node degree check failed for gene " + gene, links.size(),
                         nodeDegree.getLinksWithMinimumSupport( 1 ).intValue() );

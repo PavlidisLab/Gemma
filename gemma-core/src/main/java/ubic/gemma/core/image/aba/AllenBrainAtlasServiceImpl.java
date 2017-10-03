@@ -18,24 +18,6 @@
  */
 package ubic.gemma.core.image.aba;
 
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Collection;
-import java.util.HashSet;
-
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,24 +27,32 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import ubic.gemma.core.loader.entrez.pubmed.XMLUtils;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Acts as a convenient front end to the Allen Brain Atlas REST (web) services Used the ABAapi.java as the original
- * template for this Service (found in ABA demo code). For the most current API regarding these methods go to:
- * http://community.brain-map.org/confluence/display/DataAPI/Home NO AJAX Methods directly exposed by this service.
- * 
+ * template for this Service (found in ABA demo code). For the most current API regarding these methods go to
+ * <a href="http://community.brain-map.org/confluence/display/DataAPI/Home">brain map DATA API web page</a>
+ * NO AJAX Methods directly exposed by this service.
+ *
  * @author kelsey
- * @version $Id$
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 @Component
 public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     private static final String ABA_CACHE = "/abaCache/";
 
-    private static Log log = LogFactory.getLog( AllenBrainAtlasServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( AllenBrainAtlasServiceImpl.class.getName() );
 
     protected PrintStream infoOut;
     protected PrintStream errOut;
@@ -74,30 +64,19 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         initDefaults();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getAtlasImageMap(java.lang.Integer)
-     */
     @Override
     public Document getAtlasImageMap( Integer imageseriesId ) {
         File outputFile = getFile( "atlasImageMap" + imageseriesId.toString() );
         Document atlasImageMapDoc = null;
         FileInputStream in = null;
 
-        try (FileOutputStream out = new FileOutputStream( outputFile );) {
+        try (FileOutputStream out = new FileOutputStream( outputFile )) {
             this.getAtlasImageMap( imageseriesId, out );
 
             in = new FileInputStream( outputFile );
             atlasImageMapDoc = XMLUtils.openAndParse( in );
-        } catch ( ParserConfigurationException pce ) {
+        } catch ( ParserConfigurationException | SAXException | IOException pce ) {
             log.error( pce );
-        } catch ( SAXException se ) {
-            log.error( se );
-        } catch ( FileNotFoundException fnfe ) {
-            log.error( fnfe );
-        } catch ( IOException io ) {
-
         } finally {
             if ( in != null ) {
                 try {
@@ -112,14 +91,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getAtlasImageMap(java.lang.Integer, java.io.OutputStream)
-     */
     @Override
-    public boolean getAtlasImageMap( Integer imageseriesid, OutputStream out )
-            throws MalformedURLException, IOException {
+    public boolean getAtlasImageMap( Integer imageseriesid, OutputStream out ) throws IOException {
 
         String args[] = { imageseriesid.toString() };
         String getImageMapUrl = buildUrlString( GET_ATLAS_IMAGE_MAP_URL, args );
@@ -127,13 +100,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getImageMapUrl, out ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getAtlasInfo(java.lang.String, java.io.OutputStream)
-     */
     @Override
-    public boolean getAtlasInfo( String plane, OutputStream out ) throws MalformedURLException, IOException {
+    public boolean getAtlasInfo( String plane, OutputStream out ) throws IOException {
 
         String args[] = { plane };
         String getAtlasInfoUrl = buildUrlString( GET_ATLAS_INFO_URL, args );
@@ -141,44 +109,38 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getAtlasInfoUrl, out ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getCacheDir()
-     */
     @Override
     public String getCacheDir() {
         return ( this.cacheDir );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getCaching()
-     */
+    @Override
+    public void setCacheDir( String s ) {
+        this.cacheDir = s;
+    }
+
     @Override
     public boolean getCaching() {
         return ( this.useFileCache );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getErrOut()
-     */
+    @Override
+    public void setCaching( boolean v ) {
+        this.useFileCache = v;
+    }
+
     @Override
     public PrintStream getErrOut() {
         return ( this.errOut );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getExpressionInfo(java.lang.Integer, java.io.OutputStream)
-     */
     @Override
-    public boolean getExpressionInfo( Integer imageseriesId, OutputStream out )
-            throws MalformedURLException, IOException {
+    public void setErrOut( PrintStream out ) {
+        this.errOut = out;
+    }
+
+    @Override
+    public boolean getExpressionInfo( Integer imageseriesId, OutputStream out ) throws IOException {
 
         String args[] = { imageseriesId.toString() };
         String getExpressionInfoUrl = buildUrlString( GET_EXPRESSION_INFO_URL, args );
@@ -186,14 +148,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getExpressionInfoUrl, out ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getExpressionVolume(java.lang.Integer, java.io.OutputStream)
-     */
     @Override
-    public boolean getExpressionVolume( Integer imageseriesId, OutputStream out )
-            throws MalformedURLException, IOException {
+    public boolean getExpressionVolume( Integer imageseriesId, OutputStream out ) throws IOException {
 
         String args[] = { imageseriesId.toString() };
         String getVolumeUrl = buildUrlString( GET_EXPRESSION_VOLUME_URL, args );
@@ -201,11 +157,6 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getVolumeUrl, out ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getGene(java.lang.String)
-     */
     @Override
     public AbaGene getGene( String givenGene ) throws IOException {
         AbaGene result = getGene( givenGene, false );
@@ -218,26 +169,14 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getGeneUrl(java.lang.String)
-     */
     @Override
     public String getGeneUrl( String gene ) {
         return HTML_GENE_DETAILS_URL.replaceFirst( "@", this.correctCase( gene ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getImageROI(java.lang.String, java.lang.Integer,
-     * java.lang.Integer, java.lang.Integer, java.lang.Integer, java.lang.Integer, java.lang.Integer,
-     * java.io.OutputStream)
-     */
     @Override
     public boolean getImageROI( String imagePath, Integer zoom, Integer top, Integer left, Integer width,
-            Integer height, Integer mimeType, OutputStream out ) throws MalformedURLException, IOException {
+            Integer height, Integer mimeType, OutputStream out ) throws IOException {
 
         String args[] = { mimeType.toString(), zoom.toString(), top.toString(), left.toString(), width.toString(),
                 height.toString(), imagePath };
@@ -246,25 +185,20 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getImageUrl, out ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getImageseries(java.lang.Integer)
-     */
     @Override
     public Collection<Image> getImageseries( Integer imageseriesId ) {
 
         File outputFile = getFile( "ImageseriesId_" + imageseriesId.toString() );
-        Document imageSeriesDoc = null;
+        Document imageSeriesDoc;
 
-        try (FileOutputStream out = new FileOutputStream( outputFile );) {
+        try (FileOutputStream out = new FileOutputStream( outputFile )) {
             this.getImageseries( imageseriesId, out );
         } catch ( Exception e ) {
             log.error( e.getMessage(), e.getCause() );
             return null;
         }
 
-        try (FileInputStream input = new FileInputStream( outputFile );) {
+        try (FileInputStream input = new FileInputStream( outputFile )) {
             imageSeriesDoc = XMLUtils.openAndParse( input );
         } catch ( Exception e ) {
             log.error( e.getMessage(), e.getCause() );
@@ -272,12 +206,13 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         }
 
         NodeList idList = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes();
-        Collection<Image> results = new HashSet<Image>();
+        Collection<Image> results = new HashSet<>();
 
         for ( int i = 0; i < idList.getLength(); i++ ) {
             Node item = idList.item( i );
 
-            if ( !item.getNodeName().equals( "images" ) ) continue;
+            if ( !item.getNodeName().equals( "images" ) )
+                continue;
 
             NodeList imageList = item.getChildNodes();
 
@@ -285,7 +220,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
                 Node image = imageList.item( j );
 
-                if ( !image.getNodeName().equals( "image" ) ) continue;
+                if ( !image.getNodeName().equals( "image" ) )
+                    continue;
 
                 NodeList childNodes = image.getChildNodes();
 
@@ -306,28 +242,37 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
                     // log.info( c.getNodeName() );
                     String n = c.getNodeName();
                     try {
-                        if ( n.equals( "#text" ) ) {
-                            continue; // added to make faster as half of comparisions are empty nodes of this type!
-                        } else if ( n.equals( "imageid" ) ) {
-                            imageId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        } else if ( n.equals( "imagedisplayname" ) ) {
-                            displayName = XMLUtils.getTextValue( ( Element ) c );
-                        } else if ( n.equals( "position" ) ) {
-                            position = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        } else if ( n.equals( "referenceatlasindex" ) ) {
-                            referenceAtlasIndex = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        } else if ( n.equals( "thumbnailurl" ) ) {
-                            thumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
-                        } else if ( n.equals( "zoomifiednisslurl" ) ) {
-                            zoomifiedNisslUrl = XMLUtils.getTextValue( ( Element ) c );
-                        } else if ( n.equals( "expressthumbnailurl" ) ) {
-                            expressionThumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
-                        } else if ( n.equals( "downloadImagePath" ) ) {
-                            downloadImagePath = XMLUtils.getTextValue( ( Element ) c );
-                        } else if ( n.equals( "downloadExpressionPath" ) ) {
-                            downloadExpressionPath = XMLUtils.getTextValue( ( Element ) c );
-                        } else {
-                            continue;
+                        switch ( n ) {
+                            case "#text":
+                                continue; // added to make faster as half of comparisions are empty nodes of this type!
+                            case "imageid":
+                                imageId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                                break;
+                            case "imagedisplayname":
+                                displayName = XMLUtils.getTextValue( ( Element ) c );
+                                break;
+                            case "position":
+                                position = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                                break;
+                            case "referenceatlasindex":
+                                referenceAtlasIndex = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                                break;
+                            case "thumbnailurl":
+                                thumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
+                                break;
+                            case "zoomifiednisslurl":
+                                zoomifiedNisslUrl = XMLUtils.getTextValue( ( Element ) c );
+                                break;
+                            case "expressthumbnailurl":
+                                expressionThumbnailUrl = XMLUtils.getTextValue( ( Element ) c );
+                                break;
+                            case "downloadImagePath":
+                                downloadImagePath = XMLUtils.getTextValue( ( Element ) c );
+                                break;
+                            case "downloadExpressionPath":
+                                downloadExpressionPath = XMLUtils.getTextValue( ( Element ) c );
+                                break;
+                            default:
                         }
                     } catch ( IOException ioe ) {
                         log.warn( ioe );
@@ -351,19 +296,15 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getImagesFromImageSeries(java.util.Collection)
-     */
     @Override
     public Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries ) {
 
-        Collection<Image> representativeImages = new HashSet<Image>();
+        Collection<Image> representativeImages = new HashSet<>();
 
         if ( imageSeries != null ) {
             for ( ImageSeries is : imageSeries ) {
-                if ( is.getImages() == null ) continue;
+                if ( is.getImages() == null )
+                    continue;
 
                 for ( Image img : is.getImages() ) {
                     // Convert the urls into fully qualified ones for ez displaying
@@ -380,34 +321,30 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getInfoOut()
-     */
     @Override
     public PrintStream getInfoOut() {
         return ( this.infoOut );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getRepresentativeSaggitalImages(java.lang.String)
-     */
+    @Override
+    public void setInfoOut( PrintStream out ) {
+        this.infoOut = out;
+    }
+
     @Override
     public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException {
 
         AbaGene grin1 = this.getGene( gene );
-        if ( grin1 == null ) return null;
+        if ( grin1 == null )
+            return null;
 
-        Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
+        Collection<ImageSeries> representativeSaggitalImages = new HashSet<>();
 
         for ( ImageSeries is : grin1.getImageSeries() ) {
             if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
 
                 Collection<Image> images = this.getImageseries( is.getImageSeriesId() );
-                Collection<Image> representativeImages = new HashSet<Image>();
+                Collection<Image> representativeImages = new HashSet<>();
 
                 for ( Image img : images ) {
                     if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
@@ -415,7 +352,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
                     }
                 }
 
-                if ( representativeImages.isEmpty() ) continue;
+                if ( representativeImages.isEmpty() )
+                    continue;
 
                 // Only add if there is something to add
                 is.setImages( representativeImages );
@@ -428,23 +366,22 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#getVerbose()
-     */
     @Override
     public boolean getVerbose() {
         return ( this.verbose );
     }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#searchGenes(java.lang.String, java.io.OutputStream)
+     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
+     * brain atlas web site
      */
     @Override
-    public boolean searchGenes( String searchTerm, OutputStream out ) throws MalformedURLException, IOException {
+    public void setVerbose( boolean v ) {
+        this.verbose = v;
+    }
+
+    @Override
+    public boolean searchGenes( String searchTerm, OutputStream out ) throws IOException {
 
         String args[] = { searchTerm };
         String searchGenesUrl = buildUrlString( SEARCH_GENE_URL, args );
@@ -452,82 +389,27 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( searchGenesUrl, out ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#setCacheDir(java.lang.String)
-     */
-    @Override
-    public void setCacheDir( String s ) {
-        this.cacheDir = s;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#setCaching(boolean)
-     */
-    @Override
-    public void setCaching( boolean v ) {
-        this.useFileCache = v;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#setErrOut(java.io.PrintStream)
-     */
-    @Override
-    public void setErrOut( PrintStream out ) {
-        this.errOut = out;
-    }
-
-    /*
-     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
-     * brain atlas web site @param imageSeries @return
-     */
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#setInfoOut(java.io.PrintStream)
-     */
-    @Override
-    public void setInfoOut( PrintStream out ) {
-        this.infoOut = out;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.image.aba.AllenBrainAtlasService#setVerbose(boolean)
-     */
-    @Override
-    public void setVerbose( boolean v ) {
-        this.verbose = v;
-    }
-
     /**
      * Given a predefined URL (one of the constants declared in the AllenBrainAtlasService) and a list of arguments will
      * return the correct REST URL for the desired method call
-     * 
-     * @param urlPattern
-     * @param args
-     * @return
+     *
+     * @param urlPattern url pattern
+     * @param args       arguments
+     * @return full url
      */
     protected String buildUrlString( String urlPattern, String args[] ) {
 
-        for ( int i = 0; i < args.length; i++ )
-            urlPattern = urlPattern.replaceFirst( "@", args[i] );
+        for ( String arg : args )
+            urlPattern = urlPattern.replaceFirst( "@", arg );
 
         return ( API_BASE_URL + urlPattern );
     }
 
     /**
-     * Given a gene too look for for will return the coressponding abaGene (useful for finding images)
-     * 
+     * Given a gene too look for for will return the corresponding abaGene (useful for finding images)
+     *
      * @param givenGene symbol of gene that will be used to search ABA.
-     * @return
+     * @return ABA gene
      */
     protected AbaGene getGene( String givenGene, boolean correctCase ) throws IOException {
         String gene = givenGene;
@@ -539,7 +421,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         File outputFile = getFile( gene );
         Document geneDoc = null;
 
-        try (FileOutputStream out = new FileOutputStream( outputFile );) {
+        try (FileOutputStream out = new FileOutputStream( outputFile )) {
             this.getGene( gene, out );
         }
 
@@ -575,7 +457,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
         String geneUrl = ( geneSymbol == null ) ? null : this.getGeneUrl( geneSymbol );
 
-        if ( geneId == null && geneSymbol == null ) return null;
+        if ( geneId == null && geneSymbol == null )
+            return null;
 
         AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, geneUrl,
                 null );
@@ -587,7 +470,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         for ( int i = 0; i < idList.getLength(); i++ ) {
             Node item = idList.item( i );
 
-            if ( !item.getNodeName().equals( "image-series" ) ) continue;
+            if ( !item.getNodeName().equals( "image-series" ) )
+                continue;
 
             NodeList imageSeriesList = item.getChildNodes();
 
@@ -606,12 +490,15 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
                     // log.info( c.getNodeName() );
                     String n = c.getNodeName();
                     try {
-                        if ( n.equals( "imageseriesid" ) ) {
-                            imageSeriesId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
-                        } else if ( n.equals( "plane" ) ) {
-                            plane = XMLUtils.getTextValue( ( Element ) c );
-                        } else {
-                            // Just skip and check the next one.
+                        switch ( n ) {
+                            case "imageseriesid":
+                                imageSeriesId = Integer.parseInt( XMLUtils.getTextValue( ( Element ) c ) );
+                                break;
+                            case "plane":
+                                plane = XMLUtils.getTextValue( ( Element ) c );
+                                break;
+                            default:
+                                // Just skip and check the next one.
                         }
                     } catch ( IOException ioe ) {
                         log.warn( ioe );
@@ -634,7 +521,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     }
 
-    protected boolean getGene( String gene, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getGene( String gene, OutputStream out ) throws IOException {
 
         String args[] = { gene };
         String getGeneUrl = buildUrlString( GET_GENE_URL, args );
@@ -642,24 +529,15 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getGeneUrl, out ) );
     }
 
-    /**
-     * @param imagePath
-     * @param zoom
-     * @param mimeType
-     * @param out
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
-     */
     protected boolean getImage( String imagePath, Integer zoom, Integer mimeType, OutputStream out )
-            throws MalformedURLException, IOException {
+            throws IOException {
         String args[] = { mimeType.toString(), zoom.toString(), imagePath };
         String getImageUrl = buildUrlString( GET_IMAGE_URL, args );
 
         return ( doPageDownload( getImageUrl, out ) );
     }
 
-    protected boolean getImageInfo( Integer imageId, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getImageInfo( Integer imageId, OutputStream out ) throws IOException {
 
         String args[] = { imageId.toString() };
         String getImageInfoUrl = buildUrlString( GET_IMAGE_INFO_BYID_URL, args );
@@ -667,7 +545,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getImageInfoUrl, out ) );
     }
 
-    protected boolean getImageInfo( String imagePath, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getImageInfo( String imagePath, OutputStream out ) throws IOException {
 
         String args[] = { imagePath };
         String getImageInfoUrl = buildUrlString( GET_IMAGE_INFO_BYPATH_URL, args );
@@ -675,8 +553,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getImageInfoUrl, out ) );
     }
 
-    protected boolean getImageseries( Integer imageseriesId, OutputStream out )
-            throws MalformedURLException, IOException {
+    protected boolean getImageseries( Integer imageseriesId, OutputStream out ) throws IOException {
 
         String args[] = { imageseriesId.toString() };
         String getImageseriesUrl = buildUrlString( GET_IMAGESERIES_URL, args );
@@ -685,7 +562,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     protected boolean getNeuroblast( Integer imageseriesId, String structure, String plane, OutputStream out )
-            throws MalformedURLException, IOException {
+            throws IOException {
 
         String getNeuroblastUrl;
 
@@ -701,21 +578,20 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     /**
-     * The allen brain atlas website 1st letter of gene symbol is capatalized, rest are not (webservice is case
+     * @param geneName gene name
+     * @return The allen brain atlas website 1st letter of gene symbol is capatalized, rest are not (webservice is case
      * sensitive)
-     * 
-     * @param geneName
-     * @return
      */
     private String correctCase( String geneName ) {
         return StringUtils.capitalize( StringUtils.lowerCase( geneName ) );
     }
 
-    private boolean doPageDownload( String urlString, OutputStream out ) throws MalformedURLException, IOException {
+    private boolean doPageDownload( String urlString, OutputStream out ) throws IOException {
 
         URL url = new URL( urlString );
-        try (DataInputStream in = getInput( url );) {
-            if ( in == null ) return ( false );
+        try (DataInputStream in = getInput( url )) {
+            if ( in == null )
+                return ( false );
 
             transferData( in, out );
 
@@ -724,8 +600,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     }
 
     private DataInputStream getCachedFile( String cachedName ) throws FileNotFoundException {
-        DataInputStream fs = new DataInputStream( new FileInputStream( cachedName ) );
-        return ( fs );
+        return ( new DataInputStream( new FileInputStream( cachedName ) ) );
     }
 
     private File getFile( String fileName ) {
@@ -757,7 +632,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
             String cachedName = this.cacheDir + "/" + url.toString().replace( "/", "_" );
             File f = new File( cachedName );
             if ( f.exists() ) {
-                if ( this.verbose ) this.infoOut.println( "Using cached file '" + cachedName + "'" );
+                if ( this.verbose )
+                    this.infoOut.println( "Using cached file '" + cachedName + "'" );
 
                 return ( getCachedFile( cachedName ) );
             }
@@ -772,11 +648,12 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
             return ( null );
         }
 
-        if ( this.verbose ) showHeader( conn );
+        if ( this.verbose )
+            showHeader( conn );
 
         if ( this.useFileCache ) {
             String cachedName = this.cacheDir + "/" + url.toString().replace( "/", "_" );
-            try (FileOutputStream out = new FileOutputStream( new File( cachedName ) );) {
+            try (FileOutputStream out = new FileOutputStream( new File( cachedName ) )) {
                 transferData( in, out );
                 return ( getCachedFile( cachedName ) );
             }

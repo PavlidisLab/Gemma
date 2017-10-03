@@ -23,52 +23,46 @@ import ubic.gemma.model.genome.Taxon;
 
 /**
  * A utility class for taxon.
- * 
+ *
  * @author klc
- * @version $Id$
  */
 public class TaxonUtility {
 
-    /**
-     * @param Taxon
-     * @return boolean
-     */
     public static boolean isHuman( Taxon tax ) {
         assert tax != null;
-        if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 9606 ) ) return true;
+        if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 9606 ) )
+            return true;
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "homo sapiens" ) ) )
             return true;
-        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "human" ) ) ) return true;
+        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "human" ) ) )
+            return true;
 
         return false;
     }
 
-    /**
-     * @param Taxon
-     * @return boolean
-     */
     public static boolean isMouse( Taxon tax ) {
         assert tax != null;
 
-        if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 10090 ) ) return true;
+        if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 10090 ) )
+            return true;
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "mus musculus" ) ) )
             return true;
-        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "mouse" ) ) ) return true;
+        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "mouse" ) ) )
+            return true;
 
         return false;
     }
 
-    /**
-     * @param Taxon
-     * @return boolean
-     */
     public static boolean isRat( Taxon tax ) {
         assert tax != null;
 
-        if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 10116 ) ) return true;
-        if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "Rattus norvegicus" ) ) )
+        if ( ( tax.getNcbiId() != null ) && ( tax.getNcbiId() == 10116 ) )
             return true;
-        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "rat" ) ) ) return true;
+        if ( ( tax.getScientificName() != null ) && ( tax.getScientificName()
+                .equalsIgnoreCase( "Rattus norvegicus" ) ) )
+            return true;
+        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "rat" ) ) )
+            return true;
 
         return false;
 

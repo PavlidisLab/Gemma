@@ -18,9 +18,9 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.UnknownLogScaleException;
@@ -30,19 +30,14 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import cern.colt.matrix.DoubleMatrix1D;
 
 /**
  * Perform various computations on ExpressionDataMatrices (usually in-place).
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ExpressionDataDoubleMatrixUtil {
 
-    /**
-     * 
-     */
     private static final int LARGEST_EXPECTED_LOGGED_VALUE = 20;
 
     private static final double LOGARITHM_BASE = 2.0;
@@ -52,9 +47,10 @@ public class ExpressionDataDoubleMatrixUtil {
     /**
      * Log2 transform if necessary, do any required filtering prior to analysis. Count data is converted to log2CPM (but
      * we store log2cpm as the processed data, so that is what would generally be used).
-     * 
-     * @param quantitationType
-     * @param dmatrix
+     *
+     * @param quantitationType QT
+     * @param dmatrix          matrix
+     * @return ee data double matrix
      */
     public static ExpressionDataDoubleMatrix filterAndLog2Transform( QuantitationType quantitationType,
             ExpressionDataDoubleMatrix dmatrix ) {
@@ -78,7 +74,8 @@ public class ExpressionDataDoubleMatrixUtil {
              */
             log.info( " **** Converting from count to log2 counts per million **** " );
             DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
-            DoubleMatrix<CompositeSequence, BioMaterial> log2cpm = MatrixStats.convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
+            DoubleMatrix<CompositeSequence, BioMaterial> log2cpm = MatrixStats
+                    .convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
             dmatrix = new ExpressionDataDoubleMatrix( dmatrix, log2cpm );
         } else {
             throw new UnknownLogScaleException( "Can't figure out what scale the data are on" );
@@ -112,8 +109,8 @@ public class ExpressionDataDoubleMatrixUtil {
     }
 
     /**
-     * @param quantitationType
-     * @param namedMatrix
+     * @param quantitationType QT
+     * @param namedMatrix      named matrix
      * @return ScaleType
      * @see ExpressionExperimentFilter for a related implementation.
      */
@@ -152,7 +149,8 @@ public class ExpressionDataDoubleMatrixUtil {
             }
         }
 
-        throw new UnknownLogScaleException( "Data look log tranformed, not sure about base (" + quantitationType + ")" );
+        throw new UnknownLogScaleException(
+                "Data look log tranformed, not sure about base (" + quantitationType + ")" );
 
     }
 
@@ -161,12 +159,12 @@ public class ExpressionDataDoubleMatrixUtil {
      * missing for some quantitation types), this method attempts to handle it anyway (see below). The rows and columns
      * do not have to be in the same order, but they do have to have the same column keys and row keys (with the
      * exception of missing rows). The result is stored in a. (a - b).
-     * <p>
      * If the number of rows are not the same, and/or the rows have different keys in the two matrices, some rows will
      * simply not get subtracted and a warning will be issued.
-     * 
-     * @param a
-     * @param b throws IllegalArgumentException if the matrices are not column-conformant.
+     *
+     * @param a matrix a
+     * @param b matrix b
+     * @throws IllegalArgumentException if the matrices are not column-conformant.
      */
     public static void subtractMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
         // checkConformant( a, b );
@@ -195,8 +193,8 @@ public class ExpressionDataDoubleMatrixUtil {
     /**
      * Log-transform the values in the matrix (base 2). Non-positive values (which have no logarithm defined) are
      * entered as NaN.
-     * 
-     * @param matrix
+     *
+     * @param matrix matrix
      */
     public static void logTransformMatrix( ExpressionDataDoubleMatrix matrix ) {
         int columns = matrix.columns();
@@ -221,12 +219,12 @@ public class ExpressionDataDoubleMatrixUtil {
      * for some quantitation types), this method attempts to handle it anyway (see below). The rows and columns do not
      * have to be in the same order, but they do have to have the same column keys and row keys (with the exception of
      * missing rows). The result is stored in a.
-     * <p>
      * If the number of rows are not the same, and/or the rows have different keys in the two matrices, some rows will
      * simply not get added and a warning will be issued.
-     * 
-     * @param a
-     * @param b throws IllegalArgumentException if the matrices are not column-conformant.
+     *
+     * @param a matrix a
+     * @param b matrix b
+     * @throws IllegalArgumentException if the matrices are not column-conformant.
      */
     public static void addMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
         // checkConformant( a, b );
@@ -251,13 +249,14 @@ public class ExpressionDataDoubleMatrixUtil {
 
     /**
      * Divide all values by the dividend
-     * 
-     * @param matrix
-     * @param dividend
+     *
+     * @param matrix   matrix
+     * @param dividend dividend
      * @throws IllegalArgumentException if dividend == 0.
      */
     public static void scalarDivideMatrix( ExpressionDataDoubleMatrix matrix, double dividend ) {
-        if ( dividend == 0 ) throw new IllegalArgumentException( "Can't divide by zero" );
+        if ( dividend == 0 )
+            throw new IllegalArgumentException( "Can't divide by zero" );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
@@ -275,15 +274,17 @@ public class ExpressionDataDoubleMatrixUtil {
      * are not (as some rows are sometimes missing for some quantitation types), this method attempts to handle it
      * anyway (see below). The rows and columns do not have to be in the same order, but they do have to have the same
      * column keys and row keys (with the exception of missing rows). The result is stored in matrix.
-     * 
-     * @param matrix
-     * @param mask if null, masking is not attempted.
+     *
+     * @param matrix matrix
+     * @param mask   if null, masking is not attempted.
      */
     public static void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
-        if ( mask == null ) return;
+        if ( mask == null )
+            return;
         // checkConformant( a, b );
         if ( matrix.columns() != mask.columns() )
-            throw new IllegalArgumentException( "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
+            throw new IllegalArgumentException(
+                    "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();

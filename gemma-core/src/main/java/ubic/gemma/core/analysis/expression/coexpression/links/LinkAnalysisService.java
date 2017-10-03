@@ -14,41 +14,35 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import java.util.Collection;
-
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface LinkAnalysisService {
 
     /**
      * Run a link analysis on an experiment, and persist the results if the configuration says to.
-     * 
-     * @param ee Experiment to be processed
-     * @param filterConfig Configuration for filtering of the input data.
+     *
+     * @param ee                 Experiment to be processed
+     * @param filterConfig       Configuration for filtering of the input data.
      * @param linkAnalysisConfig Configuration for the link analysis.
-     * @throws Exception
      */
-    public abstract LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
-            LinkAnalysisConfig linkAnalysisConfig );
+    LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
 
     /**
      * Used when the input is data vectors from another source, instead of from a DB-bound expressionExperiment. Example
      * would be vectors read from a file. Output is always 'text', and DB is not used. Intensity-level-based filtering
      * is not available, so the data should be pre-filtered if you need that.
-     * 
-     * @param t
-     * @param dataVectors
-     * @param filterConfig
+     *
      * @param linkAnalysisConfig - must include the array name.
      */
-    public abstract LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
+    LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
 
 }

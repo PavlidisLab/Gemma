@@ -19,34 +19,30 @@
 
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
- * Given a gene ID, will return the matching gene official symbol eg) 938103--> Grin1
- * 
+ * Given a gene ID, will return the matching gene official symbol eg) 938103--&gt; Grin1
+ *
  * @author klc, gavin
- * @version$Id$
  */
 public class GeneNameEndpoint extends AbstractGemmaEndpoint {
-
-    private static Log log = LogFactory.getLog( GeneNameEndpoint.class );
-
-    private GeneService geneService;
 
     /**
      * The local name of the expected Request/Response.
      */
     public static final String LOCAL_NAME = "geneName";
+    private static final Log log = LogFactory.getLog( GeneNameEndpoint.class );
+    private GeneService geneService;
 
     /**
      * Sets the "business service" to delegate to.
@@ -57,9 +53,9 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
-     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @param document       a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
     @Override

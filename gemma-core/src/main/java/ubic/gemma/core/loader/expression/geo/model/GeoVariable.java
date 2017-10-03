@@ -30,17 +30,23 @@ import java.util.Collection;
  * <p>
  * These map to ExperimentalFactors in Gemma.
  * </p>
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class GeoVariable {
 
+    VariableType type;
+    String description = "";
+    /**
+     * The samples to which this variable applies.
+     */
+    Collection<GeoSample> samples;
+
     /**
      * Convert a string e.g., "age" to the corresponding enumerated type.
-     * 
-     * @param string
-     * @return
+     *
+     * @param string string
+     * @return variable type
      */
     public static VariableType convertStringToType( String string ) {
         if ( string.toLowerCase().equals( "age" ) ) {
@@ -97,18 +103,6 @@ public class GeoVariable {
 
     }
 
-    VariableType type;
-
-    String description = "";
-
-    /**
-     * The samples to which this variable applies.
-     */
-    Collection<GeoSample> samples;
-
-    /**
-     * @param d
-     */
     public void addToDescription( String d ) {
         this.description += d;
     }
@@ -117,23 +111,25 @@ public class GeoVariable {
         this.samples.add( sample );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         final GeoVariable other = ( GeoVariable ) obj;
         if ( description == null ) {
-            if ( other.description != null ) return false;
-        } else if ( !description.equals( other.description ) ) return false;
+            if ( other.description != null )
+                return false;
+        } else if ( !description.equals( other.description ) )
+            return false;
         if ( type == null ) {
-            if ( other.type != null ) return false;
-        } else if ( !type.equals( other.type ) ) return false;
+            if ( other.type != null )
+                return false;
+        } else if ( !type.equals( other.type ) )
+            return false;
         return true;
     }
 
@@ -145,38 +141,17 @@ public class GeoVariable {
     }
 
     /**
-     * @return Returns the variableSampleList.
-     */
-    public Collection<GeoSample> getSamples() {
-        return this.samples;
-    }
-
-    /**
-     * @return Returns the name.
-     */
-    public VariableType getType() {
-        return this.type;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
-        result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
-        return result;
-    }
-
-    /**
      * @param description The description to set.
      */
     public void setDescription( String description ) {
         this.description = description;
+    }
+
+    /**
+     * @return Returns the variableSampleList.
+     */
+    public Collection<GeoSample> getSamples() {
+        return this.samples;
     }
 
     /**
@@ -187,10 +162,26 @@ public class GeoVariable {
     }
 
     /**
+     * @return Returns the name.
+     */
+    public VariableType getType() {
+        return this.type;
+    }
+
+    /**
      * @param name The name to set.
      */
     public void setType( VariableType name ) {
         this.type = name;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
+        result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
+        return result;
     }
 
     @Override

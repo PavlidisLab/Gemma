@@ -14,20 +14,17 @@
  */
 package ubic.gemma.core.association.phenotype;
 
-import java.util.Collection;
-import java.util.Set;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import java.util.Collection;
+import java.util.Set;
+
 /**
- * TODO Document Me
- * 
  * @author nicolas
- * @version $Id$
  */
 public interface PhenotypeAssoOntologyHelper {
 
@@ -58,7 +55,7 @@ public interface PhenotypeAssoOntologyHelper {
 
     /**
      * search the disease, hp and mp ontology for OntologyTerm
-     * 
+     *
      * @param searchQuery free text query?
      */
     Collection<OntologyTerm> findValueUriInOntology( String searchQuery );

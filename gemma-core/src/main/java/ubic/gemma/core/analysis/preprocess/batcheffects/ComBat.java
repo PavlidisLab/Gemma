@@ -39,12 +39,15 @@ import ubic.basecode.dataStructure.matrix.MatrixUtil;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
-import ubic.basecode.math.distribution.Histogram;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,7 +103,6 @@ public class ComBat<R, C> {
      */
     private DoubleMatrix2D x = null;
 
-
     public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, ?> sampleInfo ) {
 
         if ( data.columns() < 4 ) {
@@ -126,6 +128,8 @@ public class ComBat<R, C> {
      * TODO: save somewhere more reasonable than in the tmp directory.
      * FIXME: As in the original ComBat, this only graphs the first batch's statistics. In principle we can (and perhaps
      * should) examine these plots for all the batches.
+     *
+     * @param filePrefix file prefix
      */
     public void plot( String filePrefix ) {
 
@@ -187,11 +191,6 @@ public class ComBat<R, C> {
 
     }
 
-    /**
-     * @param os
-     * @param empirical
-     * @param theory
-     */
     private void writePlot( OutputStream os, XYSeries empirical, XYSeries theory ) {
         // ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
@@ -216,7 +215,7 @@ public class ComBat<R, C> {
 
     /**
      * @return data corrected using parametric prior estimator
-     * @throws ComBatException
+     * @throws ComBatException combat problems
      */
     public DoubleMatrix2D run() throws ComBatException {
         return this.run( true );
@@ -225,7 +224,7 @@ public class ComBat<R, C> {
     /**
      * @param parametric if false, use the non-parametric (slower) method for estimating the priors.
      * @return corrected data
-     * @throws ComBatException
+     * @throws ComBatException combat problems
      */
     public DoubleMatrix2D run( boolean parametric ) throws ComBatException {
 
@@ -293,11 +292,6 @@ public class ComBat<R, C> {
         return result;
     }
 
-    /**
-     * @param sdata
-     * @param gammastar
-     * @param deltastar
-     */
     private void runParametric( final DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
         int batchIndex = 0;
         for ( String batchId : batches.keySet() ) {
@@ -320,13 +314,6 @@ public class ComBat<R, C> {
         }
     }
 
-    /**
-     * Multithreaded
-     *
-     * @param sdata
-     * @param gammastar
-     * @param deltastar
-     */
     private void runNonParametric( final DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
         final ConcurrentHashMap<String, DoubleMatrix1D[]> results = new ConcurrentHashMap<>();
         int numThreads = Math.min( batches.size(), Runtime.getRuntime().availableProcessors() );
@@ -388,10 +375,6 @@ public class ComBat<R, C> {
         }
     }
 
-    /**
-     * @param d
-     * @return
-     */
     private DoubleArrayList aPrior( DoubleMatrix2D d ) {
         DoubleArrayList result = new DoubleArrayList();
         for ( int i = 0; i < d.rows(); i++ ) {
@@ -404,10 +387,6 @@ public class ComBat<R, C> {
         return result;
     }
 
-    /**
-     * @param d
-     * @return
-     */
     private DoubleArrayList bPrior( DoubleMatrix2D d ) {
         DoubleArrayList result = new DoubleArrayList();
         for ( int i = 0; i < d.rows(); i++ ) {
@@ -423,8 +402,8 @@ public class ComBat<R, C> {
     /**
      * Check sdata for problems. If the design is not of full rank, we get NaN in standardized data.
      *
-     * @param sdata
-     * @throws ComBatException
+     * @param sdata sdata
+     * @throws ComBatException combat problem
      */
     private void checkForProblems( DoubleMatrix2D sdata ) throws ComBatException {
         int numMissing = 0;
@@ -453,8 +432,7 @@ public class ComBat<R, C> {
      * ComBat parameterizes the model without an intercept, instead using all possible columns for batch (what the heck
      * do you call this parameterization?) This is important. Each batch has its own parameter.
      *
-     * @param sampleInfo
-     * @return
+     * @return double matrix 2d
      */
     private DoubleMatrix2D computeDesignMatrix() {
         DoubleMatrix2D design = null;
@@ -484,10 +462,6 @@ public class ComBat<R, C> {
         return design;
     }
 
-    /**
-     * @param sdata
-     * @return
-     */
     private void gammaHat( DoubleMatrix2D sdata ) {
         DoubleMatrix2D Xb = x.viewPart( 0, 0, x.rows(), numBatches );
         gammaHat = new LeastSquaresFit( Xb, sdata ).getCoefficients();
@@ -514,10 +488,6 @@ public class ComBat<R, C> {
         return result;
     }
 
-    /**
-     * @param batchId
-     * @return
-     */
     private DoubleMatrix2D getBatchDesign( String batchId ) {
         Collection<C> sampleNames = batches.get( batchId );
 
@@ -536,10 +506,6 @@ public class ComBat<R, C> {
         return result;
     }
 
-    /**
-     * @param batchFactorColumnIndex
-     * @return
-     */
     private ObjectMatrix<String, String, Object> getSampleInfoWithoutBatchFactor( int batchFactorColumnIndex ) {
         ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = new ObjectMatrixImpl<>( sampleInfo.rows(),
                 sampleInfo.columns() - 1 );
@@ -560,9 +526,6 @@ public class ComBat<R, C> {
         return sampleInfoWithoutBatchFactor;
     }
 
-    /**
-     *
-     */
     private void initPartA() {
         numSamples = sampleInfo.rows();
 
@@ -609,17 +572,6 @@ public class ComBat<R, C> {
         numProbes = y.rows();
     }
 
-    /**
-     * @param matrix
-     * @param gHat
-     * @param dHat
-     * @param gbar
-     * @param t2b
-     * @param a
-     * @param b
-     * @return
-     * @thrwos ComBatException if convergence fails.
-     */
     private DoubleMatrix1D[] itSol( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat, double gbar,
             double t2b, double a, double b ) throws ComBatException {
 
@@ -671,14 +623,6 @@ public class ComBat<R, C> {
         return new DoubleMatrix1D[] { gold, dold };
     }
 
-    /**
-     * Estimation of parameters for one batch.
-     *
-     * @param matrix
-     * @param gHat
-     * @param dHat
-     * @return
-     */
     private DoubleMatrix1D[] nonParametricFit( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat ) {
         DoubleMatrix1D gstar = new DenseDoubleMatrix1D( matrix.rows() );
         DoubleMatrix1D dstar = new DenseDoubleMatrix1D( matrix.rows() );
@@ -742,14 +686,6 @@ public class ComBat<R, C> {
         return new DoubleMatrix1D[] { gstar, dstar };
     }
 
-    /**
-     * @param ghat
-     * @param gbar
-     * @param n
-     * @param dstar
-     * @param t2b
-     * @return
-     */
     private DoubleMatrix1D postMean( DoubleMatrix1D ghat, double gbar, DoubleMatrix1D n, DoubleMatrix1D dstar,
             double t2b ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( ghat.size() );
@@ -760,13 +696,6 @@ public class ComBat<R, C> {
         return result;
     }
 
-    /**
-     * @param sum2
-     * @param n
-     * @param a
-     * @param b
-     * @return
-     */
     private DoubleMatrix1D postVar( DoubleMatrix1D sum2, DoubleMatrix1D n, double a, double b ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( sum2.size() );
         for ( int i = 0; i < sum2.size(); i++ ) {
@@ -775,12 +704,6 @@ public class ComBat<R, C> {
         return result;
     }
 
-    /**
-     * @param sdata
-     * @param gammastar
-     * @param deltastar
-     * @return
-     */
     private DoubleMatrix2D rawAdjust( DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
         int batchIndex;
         int batchNum = 0;
@@ -822,10 +745,6 @@ public class ComBat<R, C> {
         return adjustedData;
     }
 
-    /**
-     * @param adjustedData
-     * @return
-     */
     private DoubleMatrix2D restoreScale( DoubleMatrix2D adjustedData ) {
         DoubleMatrix2D ones = new DenseDoubleMatrix2D( 1, numSamples );
         ones.assign( 1.0 );
@@ -835,10 +754,6 @@ public class ComBat<R, C> {
         return varRestore.assign( standMean, Functions.plus );
     }
 
-    /**
-     * @param matrix
-     * @return
-     */
     private DoubleMatrix1D rowNonMissingCounts( DoubleMatrix2D matrix ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( matrix.rows() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
@@ -848,11 +763,6 @@ public class ComBat<R, C> {
         return result;
     }
 
-    /**
-     * @param matrix
-     * @param gnew
-     * @return
-     */
     private DoubleMatrix1D stepSum( DoubleMatrix2D matrix, DoubleMatrix1D gnew ) {
 
         Algebra s = new Algebra();
@@ -880,9 +790,6 @@ public class ComBat<R, C> {
         return sumsq;
     }
 
-    /**
-     * @param sdata
-     */
     private void deltaHat( DoubleMatrix2D sdata ) {
         int batchIndex;
         deltaHat = new DenseDoubleMatrix2D( numBatches, numProbes );
@@ -901,9 +808,9 @@ public class ComBat<R, C> {
     /**
      * Special standardization: partial regression of covariates
      *
-     * @param b
-     * @param A
-     * @return
+     * @param b b
+     * @param A A
+     * @return double matrix 2d
      */
     protected DoubleMatrix2D standardize( DoubleMatrix2D b, DoubleMatrix2D A ) {
 

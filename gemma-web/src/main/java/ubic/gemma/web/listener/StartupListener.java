@@ -18,13 +18,6 @@
  */
 package ubic.gemma.web.listener;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -34,12 +27,17 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
-
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.persistence.util.CompassUtils;
 import ubic.gemma.core.util.QuartzUtils;
+import ubic.gemma.persistence.util.CompassUtils;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.Constants;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters
@@ -50,11 +48,10 @@ import ubic.gemma.web.util.Constants;
  * <li>Ontologies that need to be preloaded.
  * <li>Google analytics tracking
  * </ul>
- * 
+ *
  * @author keshav
  * @author pavlidis
  * @author Matt Raible (original version)
- * @version $Id$
  */
 public class StartupListener extends ContextLoaderListener {
 
@@ -65,11 +62,6 @@ public class StartupListener extends ContextLoaderListener {
 
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.context.ContextLoaderListener#contextInitialized(javax.servlet.ServletContextEvent)
-     */
     @Override
     public void contextInitialized( ServletContextEvent event ) {
         log.info( "Initializing Gemma web context ..." );
@@ -108,9 +100,6 @@ public class StartupListener extends ContextLoaderListener {
         log.info( "Initialization of Gemma Spring web context in " + time + " s " );
     }
 
-    /**
-     * @param ctx
-     */
     private void configureScheduler( ApplicationContext ctx ) {
         if ( !Settings.isSchedulerEnabled() ) {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
@@ -121,15 +110,11 @@ public class StartupListener extends ContextLoaderListener {
 
     }
 
-    /**
-     * @param context
-     * @return
-     */
     private Map<String, Object> initializeConfiguration( ServletContext context ) {
         // Check if the config
         // object already exists
-        @SuppressWarnings("unchecked")
-        Map<String, Object> config = ( Map<String, Object> ) context.getAttribute( Constants.CONFIG );
+        @SuppressWarnings("unchecked") Map<String, Object> config = ( Map<String, Object> ) context
+                .getAttribute( Constants.CONFIG );
 
         if ( config == null ) {
             config = new HashMap<String, Object>();
@@ -143,9 +128,6 @@ public class StartupListener extends ContextLoaderListener {
         return config;
     }
 
-    /**
-     * @param ctx
-     */
     private void initializeHomologene( ApplicationContext ctx ) {
         HomologeneService ho = ( HomologeneService ) ctx.getBean( "homologeneService" );
         ho.init( false );
@@ -154,9 +136,9 @@ public class StartupListener extends ContextLoaderListener {
 
     /**
      * Load the style theme for the site.
-     * 
-     * @param context
-     * @param config
+     *
+     * @param context context
+     * @param config  config
      */
     private void loadTheme( ServletContext context, Map<String, Object> config ) {
         if ( context.getInitParameter( "theme" ) != null ) {
@@ -170,8 +152,8 @@ public class StartupListener extends ContextLoaderListener {
 
     /**
      * For google analytics
-     * 
-     * @param config
+     *
+     * @param config config
      */
     private void loadTrackerInformation( Map<String, Object> config ) {
         String gaTrackerKey = Settings.getAnalyticsKey();
@@ -192,9 +174,6 @@ public class StartupListener extends ContextLoaderListener {
 
     }
 
-    /**
-     * @param config
-     */
     private void loadVersionInformation( Map<String, Object> config ) {
         log.debug( "Version is " + Settings.getAppVersion() );
         config.put( "version", Settings.getAppVersion() );

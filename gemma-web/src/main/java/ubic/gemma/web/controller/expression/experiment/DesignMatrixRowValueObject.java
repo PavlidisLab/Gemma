@@ -18,16 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.model.common.description.Characteristic;
@@ -38,75 +29,28 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.util.FactorValueVector;
 
+import java.io.Serializable;
+import java.util.*;
+
 /**
  * For the display of a summary table about experimental design.
- * 
+ *
  * @author luke
  * @author paul fixed to handle incomplete designs
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Used in front end
 public class DesignMatrixRowValueObject implements Serializable {
 
-    /**
-     * @author paul
-     * @version $Id$
-     */
-    public static final class Factory {
-
-        /**
-         * @param expressionExperiment
-         * @param removeBatchFactor if true, any factor(s) that look like "batch information" will be ignored.
-         * @return
-         */
-        public static Collection<DesignMatrixRowValueObject> getDesignMatrix(
-                ExpressionExperiment expressionExperiment, boolean removeBatchFactor ) {
-
-            Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
-                    .getExperimentalFactors();
-
-            for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
-                ExperimentalFactor experimentalFactor = iterator.next();
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
-                    iterator.remove();
-                }
-            }
-
-            CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
-            for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
-                BioMaterial sample = assay.getSampleUsed();
-                assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
-
-            }
-
-            Collection<DesignMatrixRowValueObject> matrix = new ArrayList<DesignMatrixRowValueObject>();
-            List<FactorValueVector> keys = assayCount.sortedKeyList( true );
-            for ( FactorValueVector key : keys ) {
-                matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
-            }
-            return matrix;
-
-        }
-
-    }
-
     private static final long serialVersionUID = 1;
-
     private int count;
-
     private List<String> factors;
-
     private List<String> factorTypes;
-
     private Map<String, String> factorValueMap;
 
-    /**
-     * @param factorValues
-     * @param n
-     */
     public DesignMatrixRowValueObject( FactorValueVector factorValues, int n ) {
-        factors = new ArrayList<String>();
-        factorTypes = new ArrayList<String>();
-        factorValueMap = new HashMap<String, String>();
+        factors = new ArrayList<>();
+        factorTypes = new ArrayList<>();
+        factorValueMap = new HashMap<>();
         for ( ExperimentalFactor factor : factorValues.getFactors() ) {
             factors.add( getFactorString( factor ) );
             factorTypes.add( factor.getType().toString().toUpperCase() );
@@ -126,10 +70,24 @@ public class DesignMatrixRowValueObject implements Serializable {
     }
 
     /**
+     * @param count the count to set
+     */
+    public void setCount( int count ) {
+        this.count = count;
+    }
+
+    /**
      * @return the factors
      */
     public List<String> getFactors() {
         return factors;
+    }
+
+    /**
+     * @param factors the factors to set
+     */
+    public void setFactors( List<String> factors ) {
+        this.factors = factors;
     }
 
     public List<String> getFactorTypes() {
@@ -143,29 +101,12 @@ public class DesignMatrixRowValueObject implements Serializable {
         return factorValueMap;
     }
 
-    /**
-     * @param count the count to set
-     */
-    public void setCount( int count ) {
-        this.count = count;
-    }
-
-    /**
-     * @param factors the factors to set
-     */
-    public void setFactors( List<String> factors ) {
-        this.factors = factors;
-    }
-
-    /**
-     * @param factorValues the factorValues to set
-     */
     public void setFactorValueMap( Map<String, String> factorValueMap ) {
         this.factorValueMap = factorValueMap;
     }
 
     /**
-     * @param factor
+     * @param factor factor
      * @return A unique string for the factor, but hopefully human-readable.
      */
     private String getFactorString( ExperimentalFactor factor ) {
@@ -174,8 +115,9 @@ public class DesignMatrixRowValueObject implements Serializable {
         }
         // Note: the use of stringUtils.abbreviate here can cause json parsing problems for DWR, due to the '...', and
         // no means of escaping seems to fix this.
-        String result = factor.getName() + " ("
-                + StringUtils.abbreviate( factor.getDescription(), 25 ).replace( "...", "" ) + ")";
+        String result =
+                factor.getName() + " (" + StringUtils.abbreviate( factor.getDescription(), 25 ).replace( "...", "" )
+                        + ")";
 
         if ( factorValueMap.containsKey( result ) ) {
             result = result + " [" + factor.getId() + "]";
@@ -184,30 +126,24 @@ public class DesignMatrixRowValueObject implements Serializable {
 
     }
 
-    /**
-     * @param factorValues
-     * @return
-     */
     private String getFactorValueString( Collection<FactorValue> factorValues ) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
             FactorValue fv = i.next();
             buf.append( getFactorValueString( fv ) );
-            if ( i.hasNext() ) buf.append( ", " );
+            if ( i.hasNext() )
+                buf.append( ", " );
         }
         return buf.toString();
     }
 
-    /**
-     * @param factorValue
-     * @return
-     */
     private String getFactorValueString( FactorValue factorValue ) {
 
         // missing data.
-        if ( factorValue == null ) return "";
+        if ( factorValue == null )
+            return "";
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         if ( !factorValue.getCharacteristics().isEmpty() ) {
             for ( Iterator<Characteristic> i = factorValue.getCharacteristics().iterator(); i.hasNext(); ) {
                 Characteristic characteristic = i.next();
@@ -216,7 +152,8 @@ public class DesignMatrixRowValueObject implements Serializable {
                  * Note we don't use toString here because it includes the category, uri, etc.
                  */
                 buf.append( characteristic.getValue() );
-                if ( i.hasNext() ) buf.append( " " );
+                if ( i.hasNext() )
+                    buf.append( " " );
             }
         } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
             buf.append( factorValue.getValue() );
@@ -224,6 +161,43 @@ public class DesignMatrixRowValueObject implements Serializable {
             buf.append( factorValue.getMeasurement().getValue() );
         }
         return buf.toString();
+    }
+
+    public static final class Factory {
+
+        /**
+         * @param expressionExperiment ee
+         * @param removeBatchFactor    if true, any factor(s) that look like "batch information" will be ignored.
+         * @return collection
+         */
+        public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment,
+                boolean removeBatchFactor ) {
+
+            Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
+                    .getExperimentalFactors();
+
+            for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
+                ExperimentalFactor experimentalFactor = iterator.next();
+                if ( BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                    iterator.remove();
+                }
+            }
+
+            CountingMap<FactorValueVector> assayCount = new CountingMap<>();
+            for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
+                BioMaterial sample = assay.getSampleUsed();
+                assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
+            }
+
+            Collection<DesignMatrixRowValueObject> matrix = new ArrayList<>();
+            List<FactorValueVector> keys = assayCount.sortedKeyList( true );
+            for ( FactorValueVector key : keys ) {
+                matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
+            }
+            return matrix;
+
+        }
+
     }
 
 }

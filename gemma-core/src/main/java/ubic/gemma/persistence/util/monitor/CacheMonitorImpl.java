@@ -18,50 +18,38 @@
  */
 package ubic.gemma.persistence.util.monitor;
 
-import java.util.Arrays;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Statistics;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaClientConfiguration;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+
 /**
  * Get statistics about and manage caches.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class CacheMonitorImpl implements CacheMonitor {
 
-    private static Log log = LogFactory.getLog( CacheMonitorImpl.class );
+    private static final Log log = LogFactory.getLog( CacheMonitorImpl.class );
 
     @Autowired
     private CacheManager cacheManager;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CacheMonitor#clearAllCaches()
-     */
     @Override
     public void clearAllCaches() {
         log.info( "Clearing all caches" );
         cacheManager.clearAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CacheMonitor#clearCache(java.lang.String)
-     */
     @Override
     public void clearCache( String cacheName ) {
         Cache cache = this.cacheManager.getCache( cacheName );
@@ -86,11 +74,6 @@ public class CacheMonitorImpl implements CacheMonitor {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CacheMonitor#getStats()
-     */
     @Override
     public String getStats() {
 
@@ -103,15 +86,19 @@ public class CacheMonitorImpl implements CacheMonitor {
         buf.append( "Distributed caching is " );
         buf.append( terracottaConfig != null ? "enabled" : "disabled" );
         buf.append( " in the configuration file" );
-        buf.append( terracottaConfig != null ? ". The cache server's configuration URL is at ["
-                + terracottaConfig.getUrl() + "]" : "" );
+        buf.append( terracottaConfig != null ?
+                ". The cache server's configuration URL is at [" + terracottaConfig.getUrl() + "]" :
+                "" );
         buf.append( ".<br/>" );
 
-        buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
+        buf.append( cacheNames.length ).append( " caches; only non-empty caches listed below." );
         // FIXME make these sortable.
-        buf.append( "<br/>&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
-        buf.append( "<br/>&nbsp;To start statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
-        buf.append( "<br/>&nbsp;To stop statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
+        buf.append(
+                "<br/>&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
+        buf.append(
+                "<br/>&nbsp;To start statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
+        buf.append(
+                "<br/>&nbsp;To stop statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
 
         buf.append( "<table style='font-size:small'  ><tr>" );
         String header = "<th>Name</th><th>HitRate</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
@@ -132,7 +119,7 @@ public class CacheMonitorImpl implements CacheMonitor {
             // a little shorter...
             String cacheName = rawCacheName.replaceFirst( "ubic.gemma.model.", "u.g.m." );
 
-            buf.append( "<tr><td>" + getClearCacheHtml( rawCacheName ) + cacheName + "</td>" );
+            buf.append( "<tr><td>" ).append( getClearCacheHtml( rawCacheName ) ).append( cacheName ).append( "</td>" );
             long hits = statistics.getCacheHits();
             long misses = statistics.getCacheMisses();
             long inMemoryHits = statistics.getInMemoryHits();
@@ -158,27 +145,29 @@ public class CacheMonitorImpl implements CacheMonitor {
 
             CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
             boolean eternal = cacheConfiguration.isEternal();
-            buf.append( "<td>" + ( eternal ? "&bull;" : "" ) + "</td>" );
+            buf.append( "<td>" ).append( eternal ? "&bull;" : "" ).append( "</td>" );
 
-            Strategy strategy = null;
-            strategy = cacheConfiguration.getPersistenceConfiguration() == null ? null : cacheConfiguration
-                    .getPersistenceConfiguration().getStrategy();
+            Strategy strategy;
+            strategy = cacheConfiguration.getPersistenceConfiguration() == null ?
+                    null :
+                    cacheConfiguration.getPersistenceConfiguration().getStrategy();
 
-            buf.append( "<td>" + ( strategy == null || strategy.equals( Strategy.NONE ) ? "" : "&bull;" ) + "</td>" );
-            buf.append( "<td>" + cacheConfiguration.getMaxEntriesLocalHeap() + "</td>" );
+            buf.append( "<td>" ).append( strategy == null || strategy.equals( Strategy.NONE ) ? "" : "&bull;" )
+                    .append( "</td>" );
+            buf.append( "<td>" ).append( cacheConfiguration.getMaxEntriesLocalHeap() ).append( "</td>" );
 
             if ( eternal ) {
                 // timeouts are irrelevant.
                 buf.append( "<td>-</td>" );
                 buf.append( "<td>-</td>" );
             } else {
-                buf.append( "<td>" + cacheConfiguration.getTimeToIdleSeconds() + "</td>" );
-                buf.append( "<td>" + cacheConfiguration.getTimeToLiveSeconds() + "</td>" );
+                buf.append( "<td>" ).append( cacheConfiguration.getTimeToIdleSeconds() ).append( "</td>" );
+                buf.append( "<td>" ).append( cacheConfiguration.getTimeToLiveSeconds() ).append( "</td>" );
             }
             buf.append( "</tr>" );
 
             if ( ++count % 25 == 0 ) {
-                buf.append( "<tr>" + header + "</tr>" );
+                buf.append( "<tr>" ).append( header ).append( "</tr>" );
             }
         }
         buf.append( "</table>" );
@@ -191,10 +180,6 @@ public class CacheMonitorImpl implements CacheMonitor {
                 + "')\" alt='Clear cache' title='Clear cache' />&nbsp;&nbsp;";
     }
 
-    /**
-     * @param hits
-     * @return
-     */
     private String makeTableCellForStat( long hits ) {
         return "<td>" + ( hits > 0 ? hits : "" ) + "</td>";
     }

@@ -18,11 +18,24 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.analysis.sequence.SequenceManipulation;
+import ubic.gemma.core.analysis.sequence.SequenceWriter;
+import ubic.gemma.core.loader.genome.BlatResultParser;
+import ubic.gemma.core.util.TimeUtil;
+import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.util.Settings;
+
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
@@ -36,116 +49,41 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.core.analysis.sequence.SequenceManipulation;
-import ubic.gemma.core.analysis.sequence.SequenceWriter;
-import ubic.gemma.core.loader.genome.BlatResultParser;
-import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.Settings;
-import ubic.gemma.core.util.TimeUtil;
-import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
-
 /**
  * Class to manage the gfServer and run BLAT searches. Delegates to the command-line shell to run blat.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings("unused") // Possible external use
 public class ShellDelegatingBlat implements Blat {
 
-    public static enum BlattableGenome {
-        HUMAN, MOUSE, RAT
-    }
-
     private static final int BLAT_UPDATE_INTERVAL_MS = 1000 * 30;
-
     private static final Log log = LogFactory.getLog( ShellDelegatingBlat.class );
-
     /**
      * Minimum alignment length for retention.
      */
     private static final int MIN_SCORE = 16;
-
-    private static String os = System.getProperty( "os.name" ).toLowerCase();
-
     /**
      * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off prior to analysis.
      */
     private static final int POLY_AT_THRESHOLD = 5;
-
-    /**
-     * @param taxon
-     * @return
-     */
-    public static ExternalDatabase getSearchedGenome( Taxon taxon ) {
-        BlattableGenome genome = inferBlatDatabase( taxon );
-        ExternalDatabase searchedDatabase = ExternalDatabase.Factory.newInstance();
-        searchedDatabase.setType( DatabaseType.SEQUENCE );
-        searchedDatabase.setName( genome.toString().toLowerCase() );
-        return searchedDatabase;
-    }
-
-    /**
-     * @param taxon
-     * @return
-     */
-    private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
-        assert taxon != null;
-
-        BlattableGenome bg = BlattableGenome.MOUSE;
-
-        if ( taxon.getNcbiId() == 10090 || taxon.getCommonName().equals( "mouse" ) ) {
-            bg = BlattableGenome.MOUSE;
-        } else if ( taxon.getNcbiId() == 10116 || taxon.getCommonName().equals( "rat" ) ) {
-            bg = BlattableGenome.RAT;
-        } else if ( taxon.getNcbiId() == 9606 || taxon.getCommonName().equals( "human" ) ) {
-            bg = BlattableGenome.HUMAN;
-        } else {
-            throw new UnsupportedOperationException( "Cannot determine which database to search for " + taxon );
-        }
-        return bg;
-    }
-
+    private static final String os = System.getProperty( "os.name" ).toLowerCase();
     private double blatScoreThreshold = DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean doShutdown = true;
-
     // typical values.
     private String gfClientExe = "/cygdrive/c/cygwin/usr/local/bin/gfClient.exe";
     private String gfServerExe = "/cygdrive/c/cygwin/usr/local/bin/gfServer.exe";
     private String host = "localhost";
     private int humanSensitiveServerPort;
-
     private String humanSeqFiles;
     private int humanServerPort;
     private int mouseSensitiveServerPort;
-
     private String mouseSeqFiles;
-
     private int mouseServerPort;
-
     private int ratSensitiveServerPort;
-
     private String ratSeqFiles;
-
     private int ratServerPort;
-
     private String seqDir = "/";
-
-    // private String humanServerHost;
-    //
-    // private String mouseServerHost;
-    //
-    // private String ratServerHost;
-
     private Process serverProcess;
 
     /**
@@ -159,11 +97,6 @@ public class ShellDelegatingBlat implements Blat {
         }
     }
 
-    /**
-     * @param host
-     * @param port
-     * @param seqDir
-     */
     public ShellDelegatingBlat( String host, int humanServerPort, String seqDir ) {
 
         if ( host == null || humanServerPort <= 0 || seqDir == null )
@@ -173,11 +106,31 @@ public class ShellDelegatingBlat implements Blat {
         this.seqDir = seqDir;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#blatQuery(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
+    public static ExternalDatabase getSearchedGenome( Taxon taxon ) {
+        BlattableGenome genome = inferBlatDatabase( taxon );
+        ExternalDatabase searchedDatabase = ExternalDatabase.Factory.newInstance();
+        searchedDatabase.setType( DatabaseType.SEQUENCE );
+        searchedDatabase.setName( genome.toString().toLowerCase() );
+        return searchedDatabase;
+    }
+
+    private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
+        assert taxon != null;
+
+        BlattableGenome bg;
+
+        if ( taxon.getNcbiId() == 10090 || taxon.getCommonName().equals( "mouse" ) ) {
+            bg = BlattableGenome.MOUSE;
+        } else if ( taxon.getNcbiId() == 10116 || taxon.getCommonName().equals( "rat" ) ) {
+            bg = BlattableGenome.RAT;
+        } else if ( taxon.getNcbiId() == 9606 || taxon.getCommonName().equals( "human" ) ) {
+            bg = BlattableGenome.HUMAN;
+        } else {
+            throw new UnsupportedOperationException( "Cannot determine which database to search for " + taxon );
+        }
+        return bg;
+    }
+
     @Override
     public Collection<BlatResult> blatQuery( BioSequence b ) throws IOException {
         Taxon t = b.getTaxon();
@@ -188,12 +141,6 @@ public class ShellDelegatingBlat implements Blat {
         return blatQuery( b, t, false );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#blatQuery(ubic.gemma.model.genome.biosequence.BioSequence,
-     * ubic.gemma.model.genome.Taxon, boolean)
-     */
     @Override
     public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon, boolean sensitive ) throws IOException {
         assert seqDir != null;
@@ -201,7 +148,7 @@ public class ShellDelegatingBlat implements Blat {
         String seqName = b.getName().replaceAll( " ", "_" );
         File querySequenceFile = File.createTempFile( seqName, ".fa" );
 
-        try (BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );) {
+        try (BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) )) {
             String trimmed = SequenceManipulation.stripPolyAorT( b.getSequence(), POLY_AT_THRESHOLD );
             out.write( ">" + seqName + "\n" + trimmed );
             log.info( "Wrote sequence to " + querySequenceFile.getPath() );
@@ -221,11 +168,6 @@ public class ShellDelegatingBlat implements Blat {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#blatQuery(java.util.Collection, boolean, ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
             Taxon taxon ) throws IOException {
@@ -243,17 +185,18 @@ public class ShellDelegatingBlat implements Blat {
         Integer port = choosePortForQuery( taxon, sensitive );
 
         if ( port == null ) {
-            throw new IllegalStateException( "Could not locate port for BLAT with settings taxon=" + taxon
-                    + ", sensitive=" + sensitive + ", check your configuration." );
+            throw new IllegalStateException(
+                    "Could not locate port for BLAT with settings taxon=" + taxon + ", sensitive=" + sensitive
+                            + ", check your configuration." );
         }
 
-        Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, port );
+        Collection<BlatResult> rawResults = gfClient( querySequenceFile, outputPath, port );
 
-        log.info( "Got " + rawresults.size() + " raw blat results" );
+        log.info( "Got " + rawResults.size() + " raw blat results" );
 
         ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
 
-        for ( BlatResult blatResult : rawresults ) {
+        for ( BlatResult blatResult : rawResults ) {
             blatResult.setSearchedDatabase( searchedDatabase );
 
             BioSequence query = blatResult.getQuerySequence();
@@ -268,102 +211,57 @@ public class ShellDelegatingBlat implements Blat {
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#blatQuery(java.util.Collection, ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
             throws IOException {
         return blatQuery( sequences, false, taxon );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getBlatScoreThreshold()
-     */
     @Override
     public double getBlatScoreThreshold() {
         return this.blatScoreThreshold;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getGfClientExe()
-     */
+    @Override
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+        this.blatScoreThreshold = blatScoreThreshold;
+    }
+
     @Override
     public String getGfClientExe() {
         return this.gfClientExe;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getGfServerExe()
-     */
     @Override
     public String getGfServerExe() {
         return this.gfServerExe;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getHost()
-     */
     @Override
     public String getHost() {
         return this.host;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getHumanServerPort()
-     */
     @Override
     public int getHumanServerPort() {
         return this.humanServerPort;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getMouseServerPort()
-     */
     @Override
     public int getMouseServerPort() {
         return this.mouseServerPort;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getRatServerPort()
-     */
     @Override
     public int getRatServerPort() {
         return this.ratServerPort;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getSeqDir()
-     */
     @Override
     public String getSeqDir() {
         return this.seqDir;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#getSeqFiles(ShellDelegatingBlat.BlattableGenome)
-     */
     @Override
     public String getSeqFiles( BlattableGenome genome ) {
         switch ( genome ) {
@@ -379,11 +277,6 @@ public class ShellDelegatingBlat implements Blat {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#processPsl(java.io.InputStream, ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
 
@@ -401,21 +294,6 @@ public class ShellDelegatingBlat implements Blat {
         return brp.getResults();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#setBlatScoreThreshold(double)
-     */
-    @Override
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-        this.blatScoreThreshold = blatScoreThreshold;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#startServer(ShellDelegatingBlat.BlattableGenome, int)
-     */
     @Override
     public void startServer( BlattableGenome genome, int port ) throws IOException {
         Socket socket = null;
@@ -426,8 +304,9 @@ public class ShellDelegatingBlat implements Blat {
         } catch ( UnknownHostException e ) {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
-            String cmd = this.getGfServerExe() + " -canStop -stepSize=" + STEPSIZE + " start " + this.getHost() + " "
-                    + port + " " + this.getSeqFiles( genome );
+            String cmd =
+                    this.getGfServerExe() + " -canStop -stepSize=" + STEPSIZE + " start " + this.getHost() + " " + port
+                            + " " + this.getSeqFiles( genome );
             log.info( "Starting gfServer with command " + cmd );
             this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
 
@@ -437,10 +316,8 @@ public class ShellDelegatingBlat implements Blat {
                 if ( exit != 0 ) {
                     throw new IOException( "Could not start server" );
                 }
-            } catch ( IllegalThreadStateException e1 ) {
+            } catch ( IllegalThreadStateException | InterruptedException e1 ) {
                 log.info( "Server seems to have started" );
-            } catch ( InterruptedException e1 ) {
-
             }
 
         } finally {
@@ -450,11 +327,6 @@ public class ShellDelegatingBlat implements Blat {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#stopServer(int)
-     */
     @Override
     public void stopServer( int port ) {
         if ( !doShutdown ) {
@@ -462,7 +334,8 @@ public class ShellDelegatingBlat implements Blat {
         }
         log.info( "Shutting down gfServer" );
 
-        if ( serverProcess == null ) return;
+        if ( serverProcess == null )
+            return;
         // serverProcess.destroy();
         try {
             // this doesn't work unless the server was invoked with the option "-canStop"
@@ -471,50 +344,26 @@ public class ShellDelegatingBlat implements Blat {
             server.waitFor();
             int exit = server.exitValue();
             log.info( "Server on port " + port + " shut down with exit value " + exit );
-        } catch ( InterruptedException e ) {
-            log.error( e, e );
-        } catch ( IOException e ) {
+        } catch ( InterruptedException | IOException e ) {
             log.error( e, e );
         }
 
     }
 
-    /**
-     * @param genome
-     * @return
-     */
     private Integer choosePortForQuery( Taxon taxon, boolean sensitive ) {
         BlattableGenome genome = inferBlatDatabase( taxon );
-        if ( sensitive ) {
-            switch ( genome ) {
-                case HUMAN:
-                    return humanSensitiveServerPort;
-                case MOUSE:
-                    return mouseSensitiveServerPort;
-                case RAT:
-                    return ratSensitiveServerPort;
-                default:
-                    return humanSensitiveServerPort;
-
-            }
-        }
         switch ( genome ) {
-            case HUMAN:
-                return humanServerPort;
             case MOUSE:
-                return mouseServerPort;
+                return sensitive ? mouseSensitiveServerPort : mouseServerPort;
             case RAT:
-                return ratServerPort;
+                return sensitive ? ratSensitiveServerPort : ratServerPort;
+            case HUMAN:
             default:
-                return humanServerPort;
+                return sensitive ? humanSensitiveServerPort : humanServerPort;
 
         }
     }
 
-    /**
-     * @param querySequenceFile
-     * @param outputPath
-     */
     private void cleanUpTmpFiles( File querySequenceFile, String outputPath ) {
         if ( !querySequenceFile.delete() || !( new File( outputPath ) ).delete() ) {
             log.warn( "Could not clean up temporary files." );
@@ -523,15 +372,16 @@ public class ShellDelegatingBlat implements Blat {
 
     /**
      * Run a gfClient query, using a call to exec().
-     * 
-     * @param querySequenceFile
-     * @param outputPath
-     * @return
+     *
+     * @param querySequenceFile query sequence file
+     * @param outputPath        output path
+     * @return collection of blat results
      */
     private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
-        final String cmd = gfClientExe + " -nohead -minScore=" + MIN_SCORE + " " + host + " " + portToUse + " " + seqDir
-                + " " + querySequenceFile.getAbsolutePath() + " " + outputPath;
+        final String cmd =
+                gfClientExe + " -nohead -minScore=" + MIN_SCORE + " " + host + " " + portToUse + " " + seqDir + " "
+                        + querySequenceFile.getAbsolutePath() + " " + outputPath;
         log.info( cmd );
 
         final Process run = Runtime.getRuntime().exec( cmd );
@@ -559,15 +409,7 @@ public class ShellDelegatingBlat implements Blat {
                 }
                 Thread.sleep( BLAT_UPDATE_INTERVAL_MS );
                 // I hope this is okay...
-                synchronized ( outputPath ) {
-                    File outputFile = new File( outputPath );
-                    Long size = outputFile.length();
-                    NumberFormat nf = new DecimalFormat();
-                    nf.setMaximumFractionDigits( 2 );
-                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                    log.info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes
-                            + " minutes elapsed)" );
-                }
+                this.outputFile( outputPath, overallWatch );
             }
 
             overallWatch.stop();
@@ -587,22 +429,22 @@ public class ShellDelegatingBlat implements Blat {
 
     /**
      * Get a temporary file name.
-     * 
-     * @throws IOException
+     *
+     * @throws IOException if there is an IO problem while accessing the file
      */
     private String getTmpPslFilePath( String base ) throws IOException {
-        File tmpdir = new File( Settings.getDownloadPath() );
+        File tmpDir = new File( Settings.getDownloadPath() );
         if ( StringUtils.isBlank( base ) ) {
-            return File.createTempFile( "blat-output", ".psl", tmpdir ).getPath();
+            return File.createTempFile( "blat-output", ".psl", tmpDir ).getPath();
         }
-        return File.createTempFile( base, ".psl", tmpdir ).getPath();
+        return File.createTempFile( base, ".psl", tmpDir ).getPath();
     }
 
     /**
-     * @param querySequenceFile
-     * @param outputPath
+     * @param querySequenceFile query sequence file
+     * @param outputPath        output path
      * @return processed results.
-     * @throws IOException
+     * @throws IOException if there is an IO problem while accessing the file
      */
     private Collection<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
@@ -611,18 +453,8 @@ public class ShellDelegatingBlat implements Blat {
         return execGfClient( querySequenceFile, outputPath, portToUse );
     }
 
-    /**
-     * @param host
-     * @param port
-     * @param seqDir
-     * @param inputFile
-     * @param outputFile
-     */
     private native void GfClientCall( String h, String p, String dir, String input, String output );
 
-    /**
-     * @throws ConfigurationException
-     */
     private void init() throws ConfigurationException {
 
         log.debug( "Reading global config" );
@@ -658,8 +490,8 @@ public class ShellDelegatingBlat implements Blat {
     }
 
     /**
-     * @param querySequenceFile
-     * @param outputPath
+     * @param querySequenceFile query sequence file
+     * @param outputPath        output path
      * @return processed results.
      */
     private Collection<BlatResult> jniGfClientCall( final File querySequenceFile, final String outputPath,
@@ -667,7 +499,7 @@ public class ShellDelegatingBlat implements Blat {
         try {
             log.debug( "Starting blat run" );
 
-            FutureTask<Boolean> blatThread = new FutureTask<Boolean>( new Callable<Boolean>() {
+            FutureTask<Boolean> blatThread = new FutureTask<>( new Callable<Boolean>() {
                 @Override
                 public Boolean call() {
                     GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(),
@@ -690,17 +522,7 @@ public class ShellDelegatingBlat implements Blat {
                 } catch ( InterruptedException ie ) {
                     throw new RuntimeException( ie );
                 }
-
-                synchronized ( outputPath ) {
-                    File outputFile = new File( outputPath );
-                    Long size = outputFile.length();
-                    NumberFormat nf = new DecimalFormat();
-                    nf.setMaximumFractionDigits( 2 );
-                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                    log.info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes
-                            + " minutes elapsed)" );
-                }
-
+                this.outputFile( outputPath, overallWatch );
             }
 
             overallWatch.stop();
@@ -715,8 +537,19 @@ public class ShellDelegatingBlat implements Blat {
         return this.processPsl( outputPath, null );
     }
 
+    private synchronized void outputFile( final String outputPath, StopWatch overallWatch ) {
+        File outputFile = new File( outputPath );
+        Long size = outputFile.length();
+        NumberFormat nf = new DecimalFormat();
+        nf.setMaximumFractionDigits( 2 );
+        String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+        log.info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes + " minutes elapsed)" );
+
+    }
+
     /**
      * @param filePath to the Blat output file in psl format
+     * @param taxon    taxon (optional, can be null)
      * @return processed results.
      */
     private Collection<BlatResult> processPsl( String filePath, Taxon taxon ) throws IOException {
@@ -726,6 +559,10 @@ public class ShellDelegatingBlat implements Blat {
         brp.setScoreThreshold( this.blatScoreThreshold );
         brp.parse( filePath );
         return brp.getResults();
+    }
+
+    public enum BlattableGenome {
+        HUMAN, MOUSE, RAT
     }
 
 }

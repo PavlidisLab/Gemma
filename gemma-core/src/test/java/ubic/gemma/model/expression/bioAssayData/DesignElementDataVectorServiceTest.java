@@ -18,20 +18,11 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -39,32 +30,35 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author joseph
- * @version $Id$
  */
 public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
-
-    ExpressionExperiment newee = null;
-
-    DesignElementDataVector dedv;
-
-    @Autowired
     protected GeoService geoService;
-
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
+    ExpressionExperiment newee = null;
+    DesignElementDataVector dedv;
     @Autowired
     ArrayDesignService arrayDesignService;
 
@@ -96,8 +90,8 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
         try {
 
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gse432Short" ) ) );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse432Short" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE432", false, true, false, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
 
@@ -133,8 +127,8 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
     /**
      * Fill in some fake genes associated with the test ee's array design.
-     * 
-     * @return
+     *
+     * @return genes
      */
     protected Collection<Gene> getGeneAssociatedWithEe() {
         int i = 0;
@@ -143,8 +137,9 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         ad = this.arrayDesignService.thawLite( ad );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            if ( i >= 10 ) break;
-            Gene g = this.getTestPeristentGene();
+            if ( i >= 10 )
+                break;
+            Gene g = this.getTestPersistentGene();
             g = geneService.thaw( g );
             BlatAssociation blata = BlatAssociation.Factory.newInstance();
             blata.setGeneProduct( g.getProducts().iterator().next() );

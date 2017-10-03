@@ -25,18 +25,10 @@ import java.util.Comparator;
  * A simple JavaBean to represent label-value pairs. This is most commonly used when constructing user interface
  * elements which have a label to be displayed to the user, and a corresponding value to be returned to the server. One
  * example is the <code>&lt;html:options&gt;</code> tag.
- * <p/>
- * <p/>
  * Note: this class has a natural ordering that is inconsistent with equals.
- * 
- * @see org.apache.struts.util.LabelValueBean
  */
 public class LabelValue implements Comparable<LabelValue>, Serializable {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 3485837885293359602L;
     /**
      * Comparator that can be used for a case insensitive sort of <code>LabelValue</code> objects.
      */
@@ -48,9 +40,7 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
             return label1.compareToIgnoreCase( label2 );
         }
     };
-
-    // ----------------------------------------------------------- Constructors
-
+    private static final long serialVersionUID = 3485837885293359602L;
     /**
      * The property which supplies the option label visible to the end user.
      */
@@ -61,8 +51,6 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
      */
     private String value = null;
 
-    // ------------------------------------------------------------- Properties
-
     /**
      * Default constructor.
      */
@@ -72,20 +60,15 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
 
     /**
      * Construct an instance with the supplied property values.
-     * 
-     * @param label The label to be displayed to the user.
-     * @param value The value to be returned to the server.
+     *
+     * @param label The label to be displayed to the user
+     * @param value The value to be returned to the server
      */
     public LabelValue( String label, String value ) {
         this.label = label;
         this.value = value;
     }
 
-    /**
-     * Compare LabelValueBeans based on the label, because that's the human viewable part of the object.
-     * 
-     * @see Comparable
-     */
     @Override
     public int compareTo( LabelValue o ) {
         // Implicitly tests for the correct type, throwing
@@ -95,11 +78,6 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
         return this.getLabel().compareTo( otherLabel );
     }
 
-    /**
-     * LabelValueBeans are equal if their values are both null or equal.
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals( Object obj ) {
         if ( obj == this ) {
@@ -114,13 +92,7 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
         int nil = ( this.getValue() == null ) ? 1 : 0;
         nil += ( bean.getValue() == null ) ? 1 : 0;
 
-        if ( nil == 2 ) {
-            return true;
-        } else if ( nil == 1 ) {
-            return false;
-        } else {
-            return this.getValue().equals( bean.getValue() );
-        }
+        return nil == 2 || nil != 1 && this.getValue().equals( bean.getValue() );
 
     }
 
@@ -128,40 +100,25 @@ public class LabelValue implements Comparable<LabelValue>, Serializable {
         return this.label;
     }
 
-    public String getValue() {
-        return this.value;
-    }
-
-    // --------------------------------------------------------- Public Methods
-
-    /**
-     * The hash code is based on the object's value.
-     * 
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        return ( this.getValue() == null ) ? 17 : this.getValue().hashCode();
-    }
-
     public void setLabel( String label ) {
         this.label = label;
+    }
+
+    public String getValue() {
+        return this.value;
     }
 
     public void setValue( String value ) {
         this.value = value;
     }
 
-    /**
-     * Return a string representation of this object.
-     */
+    @Override
+    public int hashCode() {
+        return ( this.getValue() == null ) ? 17 : this.getValue().hashCode();
+    }
+
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer( "LabelValue[" );
-        sb.append( this.label );
-        sb.append( ", " );
-        sb.append( this.value );
-        sb.append( "]" );
-        return ( sb.toString() );
+        return ( "LabelValue[" + this.label + ", " + this.value + "]" );
     }
 }

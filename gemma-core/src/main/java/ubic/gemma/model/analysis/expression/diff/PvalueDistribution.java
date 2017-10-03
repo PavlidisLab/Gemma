@@ -18,39 +18,13 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-/**
- * 
- */
 public abstract class PvalueDistribution implements java.io.Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -4783507721422402289L;
-
-    /**
-     * Constructs new instances of {@link PvalueDistribution}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link PvalueDistribution}.
-         */
-        public static PvalueDistribution newInstance() {
-            return new PvalueDistributionImpl();
-        }
-
-    }
-
     private Integer numBins;
-
     private byte[] binCounts;
-
     private Long id;
-
-    /**
-     * Returns <code>true</code> if the argument is an PvalueDistribution instance and all identifiers for this entity
-     * equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
+    
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -66,29 +40,32 @@ public abstract class PvalueDistribution implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public byte[] getBinCounts() {
         return this.binCounts;
     }
 
-    /**
-     * 
-     */
+    public void setBinCounts( byte[] binCounts ) {
+        this.binCounts = binCounts;
+    }
+
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public Integer getNumBins() {
         return this.numBins;
     }
 
+    public void setNumBins( Integer numBins ) {
+        this.numBins = numBins;
+    }
+
     /**
-     * Returns a hash code based on this entity's identifiers.
+     * @return a hash code based on this entity's identifiers.
      */
     @Override
     public int hashCode() {
@@ -98,16 +75,10 @@ public abstract class PvalueDistribution implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setBinCounts( byte[] binCounts ) {
-        this.binCounts = binCounts;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setNumBins( Integer numBins ) {
-        this.numBins = numBins;
+    public static final class Factory {
+        public static PvalueDistribution newInstance() {
+            return new PvalueDistributionImpl();
+        }
     }
 
 }

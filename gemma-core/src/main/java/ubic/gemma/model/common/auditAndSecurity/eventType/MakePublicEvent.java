@@ -20,16 +20,10 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * TODO Document Me
- * 
  * @author paul
- * @version $Id$
  */
 public class MakePublicEvent extends PermissionChangeEvent {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2250506177437626685L;
 
 }

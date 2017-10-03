@@ -18,29 +18,26 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.basecode.util.FileTools;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.util.Settings;
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class SimpleFastaCmdTest {
 
     private static final String TESTBLASTDB = "testblastdb";
+    private String testBlastDbPath;
 
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
     @Test
@@ -142,16 +139,10 @@ public class SimpleFastaCmdTest {
         assertNull( bs );
     }
 
-    /**
-     * @return
-     * @throws URISyntaxException
-     */
     @Before
     public void setup() throws URISyntaxException {
         testBlastDbPath = FileTools.resourceToPath( "/data/loader/genome/blast" );
     }
-
-    private String testBlastDbPath;
 
     private boolean fastaCmdExecutableExists() {
 

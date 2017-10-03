@@ -45,7 +45,7 @@ public class CoexpressionAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * The number of links which were stored for this analysis.
+     * @return The number of links which were stored for this analysis.
      */
     public Integer getNumberOfLinks() {
         return this.numberOfLinks;
@@ -58,13 +58,7 @@ public class CoexpressionAnalysis extends SingleExperimentAnalysis {
         this.numberOfLinks = numberOfLinks;
     }
 
-    /**
-     * Constructs new instances of {@link CoexpressionAnalysis}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link CoexpressionAnalysis}.
-         */
         public static CoexpressionAnalysis newInstance() {
             return new CoexpressionAnalysis();
         }

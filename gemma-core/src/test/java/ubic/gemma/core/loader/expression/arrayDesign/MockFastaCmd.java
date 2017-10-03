@@ -1,16 +1,15 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang.RandomStringUtils;
-
 import ubic.gemma.core.loader.genome.FastaCmd;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 class MockFastaCmd implements FastaCmd {
 
@@ -63,10 +62,6 @@ class MockFastaCmd implements FastaCmd {
         return results;
     }
 
-    /**
-     * @param object
-     * @return
-     */
     private BioSequence makeSequence( Object object ) {
         BioSequence result = BioSequence.Factory.newInstance( taxon );
         result.setName( object.toString() );
@@ -87,7 +82,8 @@ class MockFastaCmd implements FastaCmd {
     }
 
     @Override
-    public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database, String blastHome ) {
+    public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database,
+            String blastHome ) {
         return getMultiple( accessions, database, blastHome );
     }
 

@@ -57,7 +57,7 @@ public abstract class Treatment extends AbstractAuditable {
     }
 
     /**
-     * The order in which this treatment was applied to the biomaterial, relative to the other treatments.
+     * @return The order in which this treatment was applied to the biomaterial, relative to the other treatments.
      */
     public Integer getOrderApplied() {
         return this.orderApplied;
@@ -67,13 +67,8 @@ public abstract class Treatment extends AbstractAuditable {
         this.orderApplied = orderApplied;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.biomaterial.Treatment}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.biomaterial.Treatment}.
-         */
+
         public static ubic.gemma.model.expression.biomaterial.Treatment newInstance() {
             return new ubic.gemma.model.expression.biomaterial.TreatmentImpl();
         }

@@ -5,104 +5,48 @@
 // $Id$
 package ubic.gemma.model.genome.biosequence;
 
-/**
- * 
- */
+import java.util.*;
+
 public class SequenceType implements java.io.Serializable, Comparable<SequenceType> {
+    /**
+     * Represents the target sequence provided by the manufacturer.
+     */
+    public static final SequenceType AFFY_TARGET = new SequenceType( "AFFY_TARGET" );
+    /**
+     * Represents a single probe sequence for Affymetrix reporters
+     */
+    public static final SequenceType AFFY_PROBE = new SequenceType( "AFFY_PROBE" );
+    public static final SequenceType EST = new SequenceType( "EST" );
+    public static final SequenceType mRNA = new SequenceType( "mRNA" );
+    public static final SequenceType REFSEQ = new SequenceType( "REFSEQ" );
+    public static final SequenceType BAC = new SequenceType( "BAC" );
+    public static final SequenceType WHOLE_GENOME = new SequenceType( "WHOLE_GENOME" );
+    public static final SequenceType WHOLE_CHROMOSOME = new SequenceType( "WHOLE_CHROMOSOME" );
+    /**
+     * Generic DNA sequence of any other type not representable by another value
+     */
+    public static final SequenceType DNA = new SequenceType( "DNA" );
+
+    public static final SequenceType OTHER = new SequenceType( "OTHER" );
+
+    public static final SequenceType ORF = new SequenceType( "ORF" );
+    /**
+     * Represents Affymetrix probe sequences that have been "collapsed" or combined into a single sequence.
+     */
+    public static final SequenceType AFFY_COLLAPSED = new SequenceType( "AFFY_COLLAPSED" );
+    /**
+     * Represents a (synthetic) oligonucleotide.
+     */
+    public static final SequenceType OLIGO = new SequenceType( "OLIGO" );
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -514928613005922741L;
+    private static final Map<String, SequenceType> values = new LinkedHashMap<String, SequenceType>( 13, 1 );
+    private static List<String> literals = new ArrayList<String>( 13 );
+    private static List<String> names = new ArrayList<String>( 13 );
+    private static List<SequenceType> valueList = new ArrayList<SequenceType>( 13 );
 
-    /**
-     * <p>
-     * Represents the target sequence provided by the manufacturer.
-     * </p>
-     */
-    public static final SequenceType AFFY_TARGET = new SequenceType( "AFFY_TARGET" );
-
-    /**
-     * <p>
-     * Represents a single probe sequence for Affymetrix reporters
-     * </p>
-     */
-    public static final SequenceType AFFY_PROBE = new SequenceType( "AFFY_PROBE" );
-
-    /**
-     * 
-     */
-    public static final SequenceType EST = new SequenceType( "EST" );
-
-    /**
-     * 
-     */
-    public static final SequenceType mRNA = new SequenceType( "mRNA" );
-
-    /**
-     * 
-     */
-    public static final SequenceType REFSEQ = new SequenceType( "REFSEQ" );
-
-    /**
-     * 
-     */
-    public static final SequenceType BAC = new SequenceType( "BAC" );
-
-    /**
-     * 
-     */
-    public static final SequenceType WHOLE_GENOME = new SequenceType( "WHOLE_GENOME" );
-
-    /**
-     * 
-     */
-    public static final SequenceType WHOLE_CHROMOSOME = new SequenceType( "WHOLE_CHROMOSOME" );
-
-    /**
-     * <p>
-     * Generic DNA sequence of any other type not representable by another value
-     * </p>
-     */
-    public static final SequenceType DNA = new SequenceType( "DNA" );
-
-    /**
-     * 
-     */
-    public static final SequenceType OTHER = new SequenceType( "OTHER" );
-
-    /**
-     * 
-     */
-    public static final SequenceType ORF = new SequenceType( "ORF" );
-
-    /**
-     * <p>
-     * Represents Affymetrix probe sequences that have been "collapsed" or combined into a single sequence.
-     * </p>
-     */
-    public static final SequenceType AFFY_COLLAPSED = new SequenceType( "AFFY_COLLAPSED" );
-
-    /**
-     * <p>
-     * Represents a (synthetic) oligonucleotide.
-     * </p>
-     */
-    public static final SequenceType OLIGO = new SequenceType( "OLIGO" );
-
-    private String value;
-
-    private static final java.util.Map<String, SequenceType> values = new java.util.LinkedHashMap<String, SequenceType>(
-            13, 1 );
-
-    private static java.util.List<String> literals = new java.util.ArrayList<String>( 13 );
-
-    private static java.util.List<String> names = new java.util.ArrayList<String>( 13 );
-
-    private static java.util.List<SequenceType> valueList = new java.util.ArrayList<SequenceType>( 13 );
-
-    /**
-     * Initializes the values.
-     */
     static {
         values.put( AFFY_TARGET.value, AFFY_TARGET );
         valueList.add( AFFY_TARGET );
@@ -156,15 +100,26 @@ public class SequenceType implements java.io.Serializable, Comparable<SequenceTy
         valueList.add( OLIGO );
         literals.add( OLIGO.value );
         names.add( "OLIGO" );
-        valueList = java.util.Collections.unmodifiableList( valueList );
-        literals = java.util.Collections.unmodifiableList( literals );
-        names = java.util.Collections.unmodifiableList( names );
+        valueList = Collections.unmodifiableList( valueList );
+        literals = Collections.unmodifiableList( literals );
+        names = Collections.unmodifiableList( names );
+    }
+
+    private String value;
+
+    /**
+     * The default constructor allowing super classes to access it.
+     */
+    protected SequenceType() {
+    }
+
+    private SequenceType( String value ) {
+        this.value = value;
     }
 
     /**
-     * Creates an instance of SequenceType from <code>value</code>.
-     * 
      * @param value the value to create the SequenceType from.
+     * @return Creates an instance of SequenceType from <code>value</code>.
      */
     public static SequenceType fromString( String value ) {
         final SequenceType typeValue = values.get( value );
@@ -181,79 +136,57 @@ public class SequenceType implements java.io.Serializable, Comparable<SequenceTy
 
     /**
      * Returns an unmodifiable list containing the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
-    public static java.util.List<String> literals() {
+    public static List<String> literals() {
         return literals;
     }
 
     /**
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
-    public static java.util.List<String> names() {
+    public static List<String> names() {
         return names;
     }
 
     /**
      * Returns an unmodifiable list containing the actual enumeration instance values.
-     * 
+     *
      * @return A List containing the actual enumeration instance values.
      */
-    public static java.util.List<SequenceType> values() {
+    public static List<SequenceType> values() {
         return valueList;
     }
 
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected SequenceType() {
-    }
-
-    private SequenceType( String value ) {
-        this.value = value;
-    }
-
-    /**
-     * @see Comparable#compareTo(Object)
-     */
     @Override
     public int compareTo( SequenceType that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
     }
 
-    /**
-     * @see Object#equals(Object)
-     */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof SequenceType && ( ( SequenceType ) object ).getValue().equals( this.getValue() ) );
+        return ( this == object ) || ( object instanceof SequenceType && ( ( SequenceType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
      * Gets the underlying value of this type safe enumeration.
-     * 
+     *
      * @return the underlying value.
      */
     public String getValue() {
         return this.value;
     }
 
-    /**
-     * @see Object#hashCode()
-     */
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
     }
 
-    /**
-     * @see Object#toString()
-     */
     @Override
     public String toString() {
         return String.valueOf( value );
@@ -262,15 +195,15 @@ public class SequenceType implements java.io.Serializable, Comparable<SequenceTy
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
      * will be the singleton for the JVM in which the current thread is running.
-     * <p>
      * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
      * regular deserialized object is always a newly constructed instance and will therefore never be an existing
      * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
      * to return the proper singleton reference.
-     * <p>
-     * This method is documented here: <a
-     * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
-     * Specification</a>
+     * This method is documented here:
+     * <a href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">
+     * Java Object Serialization Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return SequenceType.fromString( this.value );

@@ -18,20 +18,13 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-
 import junit.framework.TestCase;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.arrayDesign.Reporter;
+import ubic.gemma.core.testing.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -40,26 +33,26 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.core.testing.PersistentDummyObjectHelper;
+
+import java.util.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class MatrixConversionTest extends TestCase {
 
-    private static Log log = LogFactory.getLog( MatrixConversionTest.class.getName() );
     private static final int NUM_BIOMATERIALS = 40;
     private static final int NUM_CS = 200;
+    private static Log log = LogFactory.getLog( MatrixConversionTest.class.getName() );
 
     /**
      * Creates an ugly (but not unusual) situation where there are two bioassay dimensions with different sizes,
      * referring to the same set of biomaterials.
-     * 
-     * @return
+     *
+     * @return design element data vectors
      */
     public Collection<DesignElementDataVector> getDesignElementDataVectors( Collection<QuantitationType> quantTypes ) {
-        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> vectors = new HashSet<>();
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "junk" );
@@ -140,7 +133,7 @@ public class MatrixConversionTest extends TestCase {
     }
 
     public final void testColumnMapping() {
-        Collection<QuantitationType> quantTypes = new HashSet<QuantitationType>();
+        Collection<QuantitationType> quantTypes = new HashSet<>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < 2; ) {
             QuantitationType quantType = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
             quantType.setId( ( long ) quantitationTypeNum );
@@ -174,7 +167,7 @@ public class MatrixConversionTest extends TestCase {
     }
 
     private List<BioMaterial> getBioMaterials() {
-        List<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
+        List<BioMaterial> bioMaterials = new ArrayList<>();
         for ( long i = 0; i < NUM_BIOMATERIALS; i++ ) {
             BioMaterial bm = BioMaterial.Factory.newInstance();
             bm.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbiomaterial" );
@@ -185,7 +178,7 @@ public class MatrixConversionTest extends TestCase {
     }
 
     private List<CompositeSequence> getCompositeSequences( ArrayDesign ad ) {
-        List<CompositeSequence> sequences = new ArrayList<CompositeSequence>();
+        List<CompositeSequence> sequences = new ArrayList<>();
         for ( long i = 0; i < NUM_CS; i++ ) {
 
             Reporter reporter = Reporter.Factory.newInstance();

@@ -45,11 +45,12 @@ public class ExpressionDataMatrixColumnSort {
 
     private static final Log log = LogFactory.getLog( ExpressionDataMatrixColumnSort.class.getName() );
 
-
-
     /**
      * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
      * heuristically, and if all else fails we choose arbitrarily.
+     *
+     * @param factors factors
+     * @return map
      */
     public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors ) {
         return getBaselineLevels( null, factors );
@@ -62,6 +63,7 @@ public class ExpressionDataMatrixColumnSort {
      *
      * @param samplesUsed These are used to make sure we don't bother using factor values as baselines if they are not
      *                    used by any of the samples. This is important for subsets. If null, this is ignored.
+     * @param factors     factors
      * @return map of factors to the baseline factorvalue for that factor.
      */
     public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( List<BioMaterial> samplesUsed,
@@ -188,7 +190,8 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * @return sorted by experimental design, if possible, or by name if no design exists.
+     * @param mat matrix
+     * @return bio materials
      */
     public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix<?> mat ) {
         List<BioMaterial> start = getBms( mat );
@@ -205,6 +208,8 @@ public class ExpressionDataMatrixColumnSort {
 
     /**
      * @param factors, can be null
+     * @param start    start
+     * @return bio materials
      */
     public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start,
             Collection<ExperimentalFactor> factors ) {
@@ -234,8 +239,6 @@ public class ExpressionDataMatrixColumnSort {
         // sort biomaterials using sorted factors
         return orderBiomaterialsBySortedFactors( start, sortedFactors );
     }
-
-
 
     private static void orderByName( List<BioMaterial> start ) {
         Collections.sort( start, new Comparator<BioMaterial>() {

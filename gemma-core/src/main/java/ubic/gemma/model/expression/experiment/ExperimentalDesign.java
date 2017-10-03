@@ -34,7 +34,7 @@ public class ExperimentalDesign extends AbstractAuditable implements gemma.gsec.
     private Collection<Characteristic> types = new java.util.HashSet<>();
 
     /**
-     * The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
+     * @return The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
      */
     public Collection<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
@@ -81,13 +81,8 @@ public class ExperimentalDesign extends AbstractAuditable implements gemma.gsec.
         this.types = types;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
-         */
+
         public static ExperimentalDesign newInstance() {
             return new ExperimentalDesign();
         }

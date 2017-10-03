@@ -18,40 +18,25 @@
  */
 package ubic.gemma.core.apps;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
-
 import ubic.gemma.core.util.AbstractCLI;
+
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
  * when given no arguments.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class GemmaCLI {
 
-    // order here is significant.
-    public static enum CommandGroup {
-        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, PHENOTYPES, SYSTEM, MISC, DEPRECATED
-    };
-
-    /**
-     * @param args
-     */
     public static void main( String[] args ) {
 
         /*
@@ -72,8 +57,7 @@ public class GemmaCLI {
 
             for ( BeanDefinition bean : classes ) {
                 try {
-                    @SuppressWarnings("unchecked")
-                    Class<? extends AbstractCLI> aclazz = ( Class<? extends AbstractCLI> ) Class
+                    @SuppressWarnings("unchecked") Class<? extends AbstractCLI> aclazz = ( Class<? extends AbstractCLI> ) Class
                             .forName( bean.getBeanClassName() );
 
                     Object cliinstance = aclazz.newInstance();
@@ -107,8 +91,8 @@ public class GemmaCLI {
             System.exit( 1 );
         }
 
-        if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) || args[0].equalsIgnoreCase( "-help" )
-                || args[0].equalsIgnoreCase( "help" ) ) {
+        if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) || args[0].equalsIgnoreCase( "-help" ) || args[0]
+                .equalsIgnoreCase( "help" ) ) {
             printHelp( commands );
         } else {
             LinkedList<String> f = new LinkedList<String>( Arrays.asList( args ) );
@@ -139,10 +123,8 @@ public class GemmaCLI {
         }
     }
 
-    /**
-     * @param argsToPass
-     * @return
-     */
+    ;
+
     public static String getOptStringForLogging( Object[] argsToPass ) {
         // try to mask the password...
         // return StringUtils.join( argsToPass, " " ).replaceAll( "(-(-)?p(assword)?)\\s+(.+?)\\s", "\1 XXXXXX " );
@@ -151,9 +133,6 @@ public class GemmaCLI {
                 .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX " );
     }
 
-    /**
-     * @param commands
-     */
     public static void printHelp( Map<CommandGroup, Map<String, String>> commands ) {
         System.err.println( "============ Gemma command line tools ============" );
 
@@ -163,18 +142,27 @@ public class GemmaCLI {
                 + "Here is a list of available commands, grouped by category:\n" );
 
         for ( CommandGroup cmdg : CommandGroup.values() ) {
-            if ( cmdg.equals( CommandGroup.DEPRECATED ) ) continue;
-            if ( !commands.containsKey( cmdg ) ) continue;
+            if ( cmdg.equals( CommandGroup.DEPRECATED ) )
+                continue;
+            if ( !commands.containsKey( cmdg ) )
+                continue;
             Map<String, String> commandsInGroup = commands.get( cmdg );
-            if ( commandsInGroup.isEmpty() ) continue;
+            if ( commandsInGroup.isEmpty() )
+                continue;
 
             System.err.println( "\n---- " + cmdg.toString() + " ----" );
             for ( String cmd : commandsInGroup.keySet() ) {
-                if ( cmd == null ) continue; // just in case... but no command name means "skip";
+                if ( cmd == null )
+                    continue; // just in case... but no command name means "skip";
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
             }
         }
         System.err.println( "\nTo get help for a specific tool, use \n\ngemmaCli.sh <commandName> --help" );
         System.err.print( "\n" + AbstractCLI.FOOTER + "\n=========================================\n" );
+    }
+
+    // order here is significant.
+    public static enum CommandGroup {
+        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, PHENOTYPES, SYSTEM, MISC, DEPRECATED
     }
 }

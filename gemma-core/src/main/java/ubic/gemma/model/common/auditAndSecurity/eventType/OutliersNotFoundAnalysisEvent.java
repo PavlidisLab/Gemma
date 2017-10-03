@@ -18,26 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-/**
- * 
- */
-public class OutliersNotFoundAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.OutlierAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent();
-        }
-
-    }
+public class OutliersNotFoundAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.OutlierAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,10 +28,18 @@ public class OutliersNotFoundAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public OutliersNotFoundAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent();
+        }
+
     }
 
 }

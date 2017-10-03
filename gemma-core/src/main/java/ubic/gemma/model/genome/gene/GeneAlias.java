@@ -39,10 +39,6 @@ public class GeneAlias implements Identifiable, Serializable {
     public GeneAlias() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an GeneAlias instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -58,9 +54,6 @@ public class GeneAlias implements Identifiable, Serializable {
         return true;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -85,21 +78,11 @@ public class GeneAlias implements Identifiable, Serializable {
         this.id = id;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.gene.GeneAlias}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneAlias}.
-         */
         public static ubic.gemma.model.genome.gene.GeneAlias newInstance() {
             return new ubic.gemma.model.genome.gene.GeneAlias();
         }
 
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneAlias}, taking all possible properties
-         * (except the identifier(s))as arguments.
-         */
         public static ubic.gemma.model.genome.gene.GeneAlias newInstance( String alias ) {
             final ubic.gemma.model.genome.gene.GeneAlias entity = new ubic.gemma.model.genome.gene.GeneAlias();
             entity.setAlias( alias );

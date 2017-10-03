@@ -18,81 +18,46 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-import java.util.Map;
-
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+import java.util.Map;
+
 /**
  * @see Gene2GOAssociation
  */
 public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
-    /**
-     * 
-     */
-    public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
+    @Override
+    Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
 
-    /**
-     * Returns the Gene2GoAssociations associated with the given Gene
-     */
-    public Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
+    Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
-    /**
-     * 
-     */
-    public Collection<VocabCharacteristic> findByGene( Gene gene );
+    Collection<VocabCharacteristic> findByGene( Gene gene );
 
-    public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind );
+    Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind );
 
-    public Collection<Gene> findByGoTerm( java.lang.String goId );
+    Collection<Gene> findByGoTerm( java.lang.String goId );
 
-    /**
-     * <p>
-     * Return all genes for the given taxon that have the given GO id associated.
-     * </p>
-     */
-    public Collection<Gene> findByGoTerm( java.lang.String goId, Taxon taxon );
+    Collection<Gene> findByGoTerm( java.lang.String goId, Taxon taxon );
 
-    /**
-     * <p>
-     * Given a collection of GO Objects returns a collection of genes that have any of the given goterms
-     * </p>
-     */
-    public Collection<Gene> findByGOTerm( Collection<String> goTerms, Taxon taxon );
+    Collection<Gene> findByGOTerm( Collection<String> goTerms, Taxon taxon );
 
-    /**
-     * @param termsToFetch
-     * @return
-     */
-    public Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch );
+    Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch );
 
-    /**
-     * 
-     */
-    public Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
+    @Override
+    Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
 
-    /**
-     * @param ids
-     * @return
-     */
-    public Collection<Gene> getGenes( Collection<String> ids );
+    Collection<Gene> getGenes( Collection<String> ids );
 
-    public Collection<Gene> getGenes( Collection<String> ids, Taxon taxon );
+    Collection<Gene> getGenes( Collection<String> ids, Taxon taxon );
 
-    /**
-     * @param uris
-     * @return
-     */
-    public Map<String, Collection<Gene>> getSets( Collection<String> uris );
+    Map<String, Collection<Gene>> getSets( Collection<String> uris );
 
-    /**
-     * Delete all {@link Gene2GOAssociation}s
-     */
-    public void removeAll();
+    void removeAll();
 
 }

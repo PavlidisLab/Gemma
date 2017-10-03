@@ -21,23 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * To signify the array design was mapped from an external source, not by our own sequence analysis.
  */
-public class AnnotationBasedGeneMappingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent();
-        }
-
-    }
+public class AnnotationBasedGeneMappingEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,10 +31,18 @@ public class AnnotationBasedGeneMappingEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public AnnotationBasedGeneMappingEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent();
+        }
+
     }
 
 }

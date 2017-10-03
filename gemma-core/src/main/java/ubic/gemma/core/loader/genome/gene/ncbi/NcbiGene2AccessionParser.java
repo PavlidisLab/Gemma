@@ -18,6 +18,12 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.core.loader.util.QueuingParser;
+import ubic.gemma.core.loader.util.parser.BasicLineParser;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,22 +32,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.core.loader.util.QueuingParser;
-import ubic.gemma.core.loader.util.parser.BasicLineParser;
-
 /**
  * Class to parse the NCBI gene2accession files. Results are stored in a "Source domain object", not a Gemma Gene.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  * @see NCBIGene2Accession
  */
-public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession> implements
-        QueuingParser<NcbiGeneData> {
+public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession>
+        implements QueuingParser<NcbiGeneData> {
 
     /**
      * They keep changing this...this is now a minimum value.
@@ -64,9 +62,11 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
 
     @Override
     public void parse( InputStream is, BlockingQueue<NcbiGeneData> aQueue ) throws IOException {
-        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
+        if ( is == null )
+            throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aQueue;
-        if ( startingNcbiId == null ) hasStarted = true;
+        if ( startingNcbiId == null )
+            hasStarted = true;
         super.parse( is );
     }
 
@@ -74,23 +74,20 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             throws IOException {
         this.queue = queue1;
         this.geneInfo = geneInfo1;
-        if ( startingNcbiId == null ) hasStarted = true;
+        if ( startingNcbiId == null )
+            hasStarted = true;
 
         super.parse( f );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
-     */
     @Override
     public NCBIGene2Accession parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length < NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
-            throw new IllegalArgumentException( "Line is not in the right format: has " + fields.length
-                    + " fields, expected " + NCBI_GENE2ACCESSION_FIELDS_PER_ROW );
+            throw new IllegalArgumentException(
+                    "Line is not in the right format: has " + fields.length + " fields, expected "
+                            + NCBI_GENE2ACCESSION_FIELDS_PER_ROW );
         }
 
         NCBIGene2Accession currentAccession = processFields( fields );
@@ -119,7 +116,8 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             }
             // clear the gene set
             geneData = new NcbiGeneData();
-            if ( geneInfo != null ) geneInfo.remove( lastGeneId );
+            if ( geneInfo != null )
+                geneInfo.remove( lastGeneId );
         }
 
         assert currentAccession.getGeneId() != null;
@@ -133,10 +131,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         return currentAccession;
     }
 
-    /**
-     * @param fields
-     * @return
-     */
     private NCBIGene2Accession processFields( String[] fields ) {
         NCBIGene2Accession newGene = new NCBIGene2Accession();
         try {
@@ -261,7 +255,8 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
      */
     @Override
     public void parse( InputStream is ) throws IOException {
-        if ( startingNcbiId == null ) hasStarted = true;
+        if ( startingNcbiId == null )
+            hasStarted = true;
         super.parse( is );
 
         // add last gene with an accession
@@ -299,9 +294,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         return results;
     }
 
-    /**
-     * @return
-     */
     public int getCount() {
         return count;
     }

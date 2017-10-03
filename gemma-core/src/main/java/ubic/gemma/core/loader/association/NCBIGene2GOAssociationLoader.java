@@ -18,6 +18,16 @@
  */
 package ubic.gemma.core.loader.association;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.persister.Persister;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -26,21 +36,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import ubic.basecode.util.FileTools;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.persister.Persister;
-
 /**
  * @author keshav
  * @author pavlidis
- * @version $Id$
  */
 public class NCBIGene2GOAssociationLoader {
 
@@ -60,6 +58,10 @@ public class NCBIGene2GOAssociationLoader {
         return count;
     }
 
+    private void setCount( int count ) {
+        this.count = count;
+    }
+
     public boolean isConsumerDone() {
         return consumerDone.get();
     }
@@ -68,9 +70,6 @@ public class NCBIGene2GOAssociationLoader {
         return producerDone.get();
     }
 
-    /**
-     * @param inputStream
-     */
     public void load( final InputStream inputStream ) {
         final BlockingQueue<Gene2GOAssociation> queue = new ArrayBlockingQueue<Gene2GOAssociation>( QUEUE_SIZE );
         final SecurityContext context = SecurityContextHolder.getContext();
@@ -115,13 +114,10 @@ public class NCBIGene2GOAssociationLoader {
         }
     }
 
-    /**
-     * @param ncbiFile
-     */
     public void load( LocalFile ncbiFile ) {
 
-        try (InputStream inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile()
-                .getAbsolutePath() );) {
+        try (InputStream inputStream = FileTools
+                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() );) {
             load( inputStream );
 
         } catch ( IOException e ) {
@@ -135,16 +131,10 @@ public class NCBIGene2GOAssociationLoader {
         this.parser = parser;
     }
 
-    /**
-     * @param persisterHelper The persisterHelper to set.
-     */
     public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
-    /**
-     * @param queue
-     */
     protected void load( BlockingQueue<Gene2GOAssociation> queue ) {
 
         log.debug( "Entering 'load' " );
@@ -208,17 +198,9 @@ public class NCBIGene2GOAssociationLoader {
         return count;
     }
 
-    /**
-     * @param entity
-     * @return
-     */
     protected Gene2GOAssociation load( Gene2GOAssociation entity ) {
         assert entity.getGene() != null;
         assert entity.getOntologyEntry() != null;
         return ( Gene2GOAssociation ) persisterHelper.persist( entity );
-    }
-
-    private void setCount( int count ) {
-        this.count = count;
     }
 }

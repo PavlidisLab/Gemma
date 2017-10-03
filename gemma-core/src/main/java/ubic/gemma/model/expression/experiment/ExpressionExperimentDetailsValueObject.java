@@ -117,10 +117,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
-     * <p>
-     * Identifer in a second database, if available. For example, if the data are in GEO and in ArrayExpress, this might
+     * @return Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress, this might
      * be a link to the ArrayExpress version.
-     * </p>
      */
     public String getSecondaryAccession() {
         return this.secondaryAccession;

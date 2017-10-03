@@ -76,7 +76,7 @@ public abstract class Describable implements Identifiable, Serializable {
     }
 
     /**
-     * A human-readable description of the object
+     * @return A human-readable description of the object
      */
     public String getDescription() {
         return this.description;
@@ -96,7 +96,7 @@ public abstract class Describable implements Identifiable, Serializable {
     }
 
     /**
-     * The name of an object is a possibly ambiguous human-readable identifier that need not be an external database
+     * @return The name of an object is a possibly ambiguous human-readable identifier that need not be an external database
      * reference.
      */
     public String getName() {

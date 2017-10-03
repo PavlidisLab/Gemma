@@ -18,107 +18,65 @@
  */
 package ubic.gemma.web.util;
 
+import org.springframework.context.support.ApplicationObjectSupport;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
-import org.springframework.context.support.ApplicationObjectSupport;
-import org.springframework.stereotype.Component;
-
 /**
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class MessageUtilImpl extends ApplicationObjectSupport implements MessageUtil {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#getText(java.lang.String, java.util.Locale)
-     */
     @Override
     public String getText( String msgKey, Locale locale ) {
         return getMessageSourceAccessor().getMessage( msgKey, locale );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#getText(java.lang.String, java.lang.Object[], java.util.Locale)
-     */
     @Override
     public String getText( String msgKey, Object[] args, Locale locale ) {
         return getMessageSourceAccessor().getMessage( msgKey, args, locale );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#getText(java.lang.String, java.lang.String, java.util.Locale)
-     */
     @Override
     public String getText( String msgKey, String arg, Locale locale ) {
         return getText( msgKey, new Object[] { arg }, locale );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String)
-     */
     @Override
     public void saveMessage( HttpServletRequest request, String msg ) {
         this.saveMessage( request.getSession(), msg );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
-     * java.lang.Object, java.lang.String)
-     */
     @Override
     public void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage ) {
         String newMessage = getText( key, new Object[] { parameter }, request.getLocale() );
-        if ( newMessage == null ) newMessage = defaultMessage;
+        if ( newMessage == null )
+            newMessage = defaultMessage;
         saveMessage( request, newMessage );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
-     * java.lang.Object[], java.lang.String)
-     */
     @Override
     public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
         String newMessage = getText( key, parameters, request.getLocale() );
-        if ( newMessage == null ) newMessage = defaultMessage;
+        if ( newMessage == null )
+            newMessage = defaultMessage;
         saveMessage( request, newMessage );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
-     * java.lang.String)
-     */
     @Override
     public void saveMessage( HttpServletRequest request, String key, String defaultMessage ) {
         String newMessage = getText( key, new Object[] {}, request.getLocale() );
-        if ( newMessage == null ) newMessage = defaultMessage;
+        if ( newMessage == null )
+            newMessage = defaultMessage;
         saveMessage( request, newMessage );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
-     */
     @Override
     @SuppressWarnings("unchecked")
     public void saveMessage( HttpSession session, String msg ) {

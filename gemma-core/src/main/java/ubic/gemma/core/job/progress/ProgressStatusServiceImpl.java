@@ -15,11 +15,6 @@
  */
 package ubic.gemma.core.job.progress;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Queue;
-import java.util.Vector;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,16 +22,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Queue;
+import java.util.Vector;
+
 /**
  * This class exposes methods for AJAX calls.
- * 
+ *
  * @author klc
- * @version $Id$
  */
 @Component
 public class ProgressStatusServiceImpl implements ProgressStatusService {
@@ -48,16 +46,19 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
 
     @Override
     public synchronized void addEmailAlert( String taskId ) {
-        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+        if ( taskId == null )
+            throw new IllegalArgumentException( "task id cannot be null" );
         taskRunningService.getSubmittedTask( taskId ).addEmailAlert();
     }
 
     @Override
     public boolean cancelJob( String taskId ) {
-        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+        if ( taskId == null )
+            throw new IllegalArgumentException( "task id cannot be null" );
 
         SubmittedTask<?> submittedTask = taskRunningService.getSubmittedTask( taskId );
-        if ( submittedTask == null ) throw new IllegalArgumentException( "Couldn't find task with task id: " + taskId );
+        if ( submittedTask == null )
+            throw new IllegalArgumentException( "Couldn't find task with task id: " + taskId );
 
         submittedTask.requestCancellation();
         // FIXME: we can't really say if it is cancelled or not, since task can be running remotely. Client should check
@@ -67,7 +68,8 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
 
     @Override
     public synchronized List<ProgressData> getProgressStatus( String taskId ) {
-        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+        if ( taskId == null )
+            throw new IllegalArgumentException( "task id cannot be null" );
         SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
 
         List<ProgressData> statusObjects = new Vector<ProgressData>();
@@ -117,34 +119,26 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
     @Override
     public SubmittedTaskValueObject getSubmittedTask( String taskId ) {
         SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
-        if ( task == null ) return null;
+        if ( task == null )
+            return null;
         return new SubmittedTaskValueObject( task );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.job.progress.ProgressStatusService#getSubmittedTasks()
-     */
     @Override
     public Collection<SubmittedTaskValueObject> getSubmittedTasks() {
         return SubmittedTaskValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks() );
     }
 
-    /**
-     * AJAX
-     *
-     * @param taskId
-     * @return
-     */
     @Override
     public Object checkResult( String taskId ) throws Exception {
         SubmittedTask<?> submittedTask = taskRunningService.getSubmittedTask( taskId );
-        if ( submittedTask == null ) return null;
+        if ( submittedTask == null )
+            return null;
 
         TaskResult result = submittedTask.getResult();
 
-        if ( result == null ) return null;
+        if ( result == null )
+            return null;
 
         Object answer = result.getAnswer();
 

@@ -94,6 +94,12 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
         return this.taxonDao.findByScientificName( scientificName );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Taxon findByNcbiId( final Long ncbiId ) {
+        return this.taxonDao.findByNcbiId( ncbiId );
+    }
+
     /**
      * @see TaxonService#findChildTaxaByParent(Taxon)
      */

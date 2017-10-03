@@ -102,13 +102,8 @@ public class User extends Person implements gemma.gsec.model.User {
         this.userName = userName;
     }
 
-    /**
-     * Constructs new instances of {@link User}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link User}.
-         */
+
         public static User newInstance() {
             return new User();
         }

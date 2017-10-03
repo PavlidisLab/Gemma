@@ -18,9 +18,6 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import java.util.Collection;
-import java.util.List;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -28,216 +25,212 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Represents a matrix of data from an expression experiment.
- * <p>
  * Expression data is rather complex, so we have to handle some messy cases.
- * <p>
  * The key problem is how to unambiguously identify rows and columns in the matrix. This is greatly complicated by the
  * fact that experiments can combine data from multiple array designs in various ways.
- * <p>
  * Put it together, and the result is that there can be more than one BioAssay per column; the same BioMaterial can be
  * used in multiple columns (supported implictly). There can also be more than on BioMaterial in one column (we don't
  * support this yet either). The same BioSequence can be found in multiple rows. A row can contain data from more than
  * one DesignElement.
- * <p>
  * There are a few constraints: a particular DesignElement can only be used once, in a single row. At the moment we do
  * not directly support technical replicates, though this should be possible. A BioAssay can only appear in a single
  * column.
- * <p>
  * For some operations a ExpressionDataMatrixRowElement object is offered, which encapsulates a combination of
  * DesignElements, a BioSequence, and an index. The list of these can be useful for iterating over the rows of the
  * matrix.
- * 
+ *
  * @author pavlidis
  * @author keshav
- * @version $Id$
  */
 public interface ExpressionDataMatrix<T> {
 
     /**
      * Total number of columns.
-     * 
+     *
      * @return int
      */
-    public int columns();
+    int columns();
 
     /**
      * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
      * design.
-     * 
-     * @param el
-     * @return
+     *
+     * @param el el
+     * @return int
      */
-    public int columns( CompositeSequence el );
+    int columns( CompositeSequence el );
 
     /**
      * Access a single value of the matrix. Note that because there can be multiple bioassays per column and multiple
      * designelements per row, it is possible for this method to retrieve a data that does not come from the bioassay
      * and/or designelement arguments.
-     * 
-     * @param designElement
-     * @param bioAssay
-     * @return T
+     *
+     * @param designElement de
+     * @param bioAssay      ba
+     * @return T t
      */
-    public T get( CompositeSequence designElement, BioAssay bioAssay );
+    T get( CompositeSequence designElement, BioAssay bioAssay );
 
     /**
      * Access a single value of the matrix. This is generally the easiest way to do it.
-     * 
-     * @param row
-     * @param column
-     * @return
+     *
+     * @param row    row
+     * @param column col
+     * @return t
      */
-    public T get( int row, int column );
+    T get( int row, int column );
 
     /**
      * Access a submatrix
-     * 
-     * @param designElements
-     * @param bioAssays
+     *
+     * @param designElements de
+     * @param bioAssays      bas
      * @return T[][]
      */
-    public T[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays );
+    T[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays );
 
     /**
      * @return The bioassaydimension that covers all the biomaterials in this matrix.
      * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
-     *         used in the experiment.
+     *                               used in the experiment.
      */
-    public BioAssayDimension getBestBioAssayDimension();
+    BioAssayDimension getBestBioAssayDimension();
 
     /**
      * Produce a BioAssayDimension representing the matrix columns for a specific row. The designelement argument is
      * needed because a matrix can combine data from multiple array designs, each of which will generate its own
      * bioassaydimension. Note that if this represents a subsetted data set, the return value may be a lightweight
      * 'fake'.
-     * 
-     * @param designElement
-     * @return
+     *
+     * @param designElement de
+     * @return bad
      */
-    public BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
+    BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
 
     /**
-     * @param index
+     * @param index i
      * @return bioassays that contribute data to the column. There can be multiple bioassays if more than one array was
-     *         used in the study.
+     * used in the study.
      */
-    public Collection<BioAssay> getBioAssaysForColumn( int index );
+    Collection<BioAssay> getBioAssaysForColumn( int index );
 
     /**
-     * @param index
+     * @param index i
      * @return BioMaterial. Note that if this represents a subsetted data set, the BioMaterial may be a lightweight
-     *         'fake'.
+     * 'fake'.
      */
-    public BioMaterial getBioMaterialForColumn( int index );
+    BioMaterial getBioMaterialForColumn( int index );
 
     /**
      * Access a single column of the matrix.
-     * 
-     * @param bioAssay
+     *
+     * @param bioAssay i
      * @return T[]
      */
-    public T[] getColumn( BioAssay bioAssay );
+    T[] getColumn( BioAssay bioAssay );
 
     /**
      * Access a single column of the matrix.
-     * 
+     *
      * @param column index
      * @return T[]
      */
-    public T[] getColumn( Integer column );
+    T[] getColumn( Integer column );
 
     /**
-     * @param bioMaterial
+     * @param bioMaterial bm
      * @return the index of the column for the data for the bioMaterial.
      */
-    public int getColumnIndex( BioMaterial bioMaterial );
+    int getColumnIndex( BioMaterial bioMaterial );
 
     /**
      * Access a submatrix slice by columns
-     * 
-     * @param bioAssays
-     * @return
+     *
+     * @param bioAssays ba
+     * @return t[][]
      */
-    public T[][] getColumns( List<BioAssay> bioAssays );
+    T[][] getColumns( List<BioAssay> bioAssays );
 
     /**
-     * @param index
-     * @return
+     * @param index i
+     * @return cs
      */
-    public CompositeSequence getDesignElementForRow( int index );
+    CompositeSequence getDesignElementForRow( int index );
 
     /**
      * Return the expression experiment this matrix is holding data for.
-     * 
-     * @return
+     *
+     * @return ee
      */
-    public ExpressionExperiment getExpressionExperiment();
+    ExpressionExperiment getExpressionExperiment();
 
     /**
      * Return the quantitation types for this matrix. Often (usually) there will be just one.
-     * 
-     * @return
+     *
+     * @return qts
      */
-    public Collection<QuantitationType> getQuantitationTypes();
+    Collection<QuantitationType> getQuantitationTypes();
 
     /**
      * Access the entire matrix.
-     * 
+     *
      * @return T[][]
      */
-    public T[][] getRawMatrix();
+    T[][] getRawMatrix();
 
     /**
      * Return a row that 'came from' the given design element.
-     * 
-     * @param designElement
-     * @return
+     *
+     * @param designElement de
+     * @return t
      */
-    public T[] getRow( CompositeSequence designElement );
+    T[] getRow( CompositeSequence designElement );
 
     /**
      * Access a single row of the matrix, by index. A complete row is returned.
-     * 
-     * @param index
-     * @return
+     *
+     * @param index i
+     * @return t[]
      */
-    public T[] getRow( Integer index );
+    T[] getRow( Integer index );
 
     /**
      * @return list of elements representing the row 'labels'.
      */
-    public List<ExpressionDataMatrixRowElement> getRowElements();
+    List<ExpressionDataMatrixRowElement> getRowElements();
 
-    public int getRowIndex( CompositeSequence designElement );
+    int getRowIndex( CompositeSequence designElement );
 
     /**
      * Access a submatrix
-     * 
-     * @param designElements
+     *
+     * @param designElements de
      * @return T[][]
      */
-    public T[][] getRows( List<CompositeSequence> designElements );
+    T[][] getRows( List<CompositeSequence> designElements );
 
     /**
-     * 
      * @return true if any values are null or NaN (for Doubles); all other values are considered non-missing.
      */
-    public boolean hasMissingValues();
+    boolean hasMissingValues();
 
     /**
      * @return int
      */
-    public int rows();
+    int rows();
 
     /**
      * Set a value in the matrix, by index
-     * 
-     * @param row
-     * @param column
-     * @param value
+     *
+     * @param row    row
+     * @param column col
+     * @param value  val
      */
-    public void set( int row, int column, T value );
+    void set( int row, int column, T value );
 
 }

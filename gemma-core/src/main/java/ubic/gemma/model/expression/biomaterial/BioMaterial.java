@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,10 +40,10 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
 
     private static final long serialVersionUID = 4374359557498220256L;
     private ubic.gemma.model.genome.Taxon sourceTaxon;
-    private Collection<FactorValue> factorValues = new HashSet<FactorValue>();
-    private Collection<BioAssay> bioAssaysUsedIn = new HashSet<BioAssay>();
-    private Collection<Treatment> treatments = new HashSet<Treatment>();
-    private Collection<Characteristic> characteristics = new HashSet<Characteristic>();
+    private Collection<FactorValue> factorValues = new HashSet<>();
+    private Collection<BioAssay> bioAssaysUsedIn = new HashSet<>();
+    private Collection<Treatment> treatments = new HashSet<>();
+    private Collection<Characteristic> characteristics = new HashSet<>();
     private DatabaseEntry externalAccession;
 
     public Collection<BioAssay> getBioAssaysUsedIn() {
@@ -62,10 +63,9 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * An optional external reference for this BioMaterial. In many cases this is the same as the accession for the
+     * @return An optional external reference for this BioMaterial. In many cases this is the same as the accession for the
      * related BioAssay. We store the information here to help make the data easier to trace. Note that more than one
      * BioMaterial may reference a given external accession.
-     * </p>
      */
     public DatabaseEntry getExternalAccession() {
         return this.externalAccession;
@@ -76,7 +76,7 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
     }
 
     /**
-     * The values that this BioAssay is associated with for the experiment.
+     * @return The values that this BioAssay is associated with for the experiment.
      */
     public Collection<FactorValue> getFactorValues() {
         return this.factorValues;
@@ -91,11 +91,11 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
         return null;
     }
 
-    public ubic.gemma.model.genome.Taxon getSourceTaxon() {
+    public Taxon getSourceTaxon() {
         return this.sourceTaxon;
     }
 
-    public void setSourceTaxon( ubic.gemma.model.genome.Taxon sourceTaxon ) {
+    public void setSourceTaxon( Taxon sourceTaxon ) {
         this.sourceTaxon = sourceTaxon;
     }
 
@@ -107,17 +107,10 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
         this.treatments = treatments;
     }
 
-    /**
-     * Constructs new instances of {@link BioMaterial}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link BioMaterial}.
-         */
         public static BioMaterial newInstance() {
             return new BioMaterial();
         }
-
     }
 
 }

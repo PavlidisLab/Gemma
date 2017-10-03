@@ -18,9 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-
-public abstract class OutlierAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
+public abstract class OutlierAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -29,7 +28,7 @@ public abstract class OutlierAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public OutlierAnalysisEvent() {

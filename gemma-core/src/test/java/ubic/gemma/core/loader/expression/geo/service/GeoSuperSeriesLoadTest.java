@@ -18,29 +18,28 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test can fail if there is already data in the system.
@@ -119,22 +118,22 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         }
     }
 
-    /**
+    /*
      * See bug 2064. GSE14618 is a superseries of GSE14613 and GSE14615. This is actually even worse, because some
      * samples were run on both platforms. This is a situation we don't really want to handle completely.
      *
      */
     @Test
     public void testFetchAndLoadSuperSeriesB() throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                getTestFileBasePath( "gse14618superser" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse14618superser" ) ) );
 
         ee = ees.findByShortName( "GSE14618" );
         tearDown();
 
         //noinspection unchecked
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE14618", false, true, false, false, true, false );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GSE14618", false, true, false, false, true, false );
         assertEquals( 1, results.size() );
 
         ee = results.iterator().next();

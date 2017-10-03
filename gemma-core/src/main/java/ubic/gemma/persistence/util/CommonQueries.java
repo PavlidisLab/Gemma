@@ -156,7 +156,7 @@ public class CommonQueries {
 
     public static Collection<ArrayDesignValueObject> getArrayDesignsUsedVOs( Long eeId, Session session ) {
         List<?> list = createGetADsUsedQueryObject( eeId, session ).list();
-        Collection<ArrayDesignValueObject> vos = new LinkedList<ArrayDesignValueObject>(  );
+        Collection<ArrayDesignValueObject> vos = new LinkedList<>();
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
             vos.add( new ArrayDesignValueObject( ad ) );
         }
@@ -393,7 +393,7 @@ public class CommonQueries {
     }
 
     /**
-     * Given gene ids, return map of of gene id -> probes for that gene.
+     * Given gene ids, return map of of gene id -&gt; probes for that gene.
      */
     public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
         Map<Long, Collection<Long>> cs2genes = new HashMap<>();

@@ -74,6 +74,13 @@ public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnab
     public abstract O getPersistentObject( S service );
 
     /**
+     *
+     * @return the name of the property on the Identifiable object that this object represents.
+     */
+    @NotNull
+    public abstract String getPropertyName( S service);
+
+    /**
      * Checks whether the given object is null, and throws an appropriate exception if necessary.
      *
      * @param response the object that should be checked for being null.

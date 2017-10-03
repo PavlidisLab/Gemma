@@ -19,84 +19,55 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.Map;
-
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+import java.util.Map;
+
 /**
- * TODO Document Me
- * 
  * @author Paul
- * @version $Id$
  */
 public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpressionMetaAnalysis> {
 
     /**
-     * @param analysisId
+     * @param analysisId id
      * @return a collection of included result set info value objects using the given meta-analysis id
      */
-    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
+    Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
             long analysisId );
 
     /**
-     * @param metaAnalysisIds
+     * @param metaAnalysisIds ids
      * @return a collection of summary value objects using the given ids of meta-analyses
      */
-    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
+    Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
             Collection<Long> metaAnalysisIds );
 
     /**
-     * @param analysisId
+     * @param analysisId id
      * @return a collection of result value objects using the given meta-analysis id
      */
-    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
+    Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
 
-    /**
-     * @param idsToFilter
-     * @return
-     */
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+    Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
-    /**
-     * @param taxon
-     * @return
-     */
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
+    Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
-    /** loads a neDifferentialExpressionMetaAnalysisResult */
-    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
+    GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
 
-    /** loads a DifferentialExpressionMetaAnalysis containing a specific result */
-    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
+    GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
 
-    /**
-     * @param investigation
-     * @return
-     */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigation( Investigation investigation );
 
     Map<Investigation, Collection<GeneDifferentialExpressionMetaAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations );
 
-    /**
-     * @param name
-     * @return
-     */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name );
 
-    /**
-     * @param taxon
-     * @return
-     */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
 
-    /**
-     * @param taxon
-     * @return
-     */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 }

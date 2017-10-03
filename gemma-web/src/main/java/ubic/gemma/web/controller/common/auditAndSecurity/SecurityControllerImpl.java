@@ -18,25 +18,6 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.acls.model.Sid;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
-
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
@@ -44,25 +25,37 @@ import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.User;
 import gemma.gsec.util.SecurityUtil;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.acls.model.Sid;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
 
+import java.util.*;
+
 /**
  * Manages data-level security (ie. can make data private).
- * 
+ *
  * @version $Id$
  */
 @Component
@@ -70,7 +63,7 @@ public class SecurityControllerImpl implements SecurityController {
 
     private static final String GROUP_MANAGER_URL = Settings.getBaseUrl() + "manageGroups.html";
 
-    private static Log log = LogFactory.getLog( SecurityControllerImpl.class );
+    private static final Log log = LogFactory.getLog( SecurityControllerImpl.class );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -90,12 +83,6 @@ public class SecurityControllerImpl implements SecurityController {
     @Autowired
     private UserManager userManager;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#addUserToGroup(java.lang.String,
-     * java.lang.String)
-     */
     @Override
     public boolean addUserToGroup( String userName, String groupName ) {
 
@@ -147,11 +134,6 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#createGroup(java.lang.String)
-     */
     @Override
     public String createGroup( String groupName ) {
 
@@ -164,11 +146,6 @@ public class SecurityControllerImpl implements SecurityController {
         return groupName;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#deleteGroup(java.lang.String)
-     */
     @Override
     public void deleteGroup( String groupName ) {
 
@@ -178,44 +155,25 @@ public class SecurityControllerImpl implements SecurityController {
         /*
          * Additional checks for ability to remove group handled by ss.
          */
-        try {
-            userManager.deleteGroup( groupName );
-        } catch ( DataIntegrityViolationException div ) {
-            throw div;
-        }
+        userManager.deleteGroup( groupName );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAuthenticatedUserCount()
-     */
     @Override
     public Integer getAuthenticatedUserCount() {
         return securityService.getAuthenticatedUserCount();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAuthenticatedUserNames()
-     */
     @Override
     public Collection<String> getAuthenticatedUserNames() {
         return securityService.getAuthenticatedUserNames();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAvailableGroups()
-     */
     @Override
     public Collection<UserGroupValueObject> getAvailableGroups() {
         Collection<String> editableGroups = getGroupsUserCanEdit();
         Collection<String> groupsUserIsIn = getGroupsForCurrentUser();
 
-        Collection<String> allGroups = null;
+        Collection<String> allGroups;
         try {
             // administrator...
             allGroups = userManager.findAllGroups();
@@ -223,7 +181,7 @@ public class SecurityControllerImpl implements SecurityController {
             allGroups = groupsUserIsIn;
         }
 
-        Collection<UserGroupValueObject> result = new HashSet<UserGroupValueObject>();
+        Collection<UserGroupValueObject> result = new HashSet<>();
         for ( String g : allGroups ) {
             UserGroupValueObject gvo = new UserGroupValueObject();
             gvo.setCanEdit( editableGroups.contains( g ) );
@@ -235,14 +193,9 @@ public class SecurityControllerImpl implements SecurityController {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAvailablePrincipalSids()
-     */
     @Override
     public Collection<SidValueObject> getAvailablePrincipalSids() {
-        List<SidValueObject> results = new ArrayList<SidValueObject>();
+        List<SidValueObject> results = new ArrayList<>();
         try {
             for ( Sid s : securityService.getAvailableSids() ) {
                 SidValueObject sv = new SidValueObject( s );
@@ -258,14 +211,9 @@ public class SecurityControllerImpl implements SecurityController {
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getAvailableSids()
-     */
     @Override
     public Collection<SidValueObject> getAvailableSids() {
-        List<SidValueObject> results = new ArrayList<SidValueObject>();
+        List<SidValueObject> results = new ArrayList<>();
         try {
             for ( Sid s : securityService.getAvailableSids() ) {
                 SidValueObject sv = new SidValueObject( s );
@@ -281,14 +229,9 @@ public class SecurityControllerImpl implements SecurityController {
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getGroupMembers(java.lang.String)
-     */
     @Override
     public Collection<UserValueObject> getGroupMembers( String groupName ) {
-        Collection<UserValueObject> result = new HashSet<UserValueObject>();
+        Collection<UserValueObject> result = new HashSet<>();
 
         // happens if user is not in any displayed groups.
         if ( StringUtils.isBlank( groupName ) ) {
@@ -315,8 +258,8 @@ public class SecurityControllerImpl implements SecurityController {
             /*
              * You can't remove yourself from a group, or remove users from the USER group.
              */
-            if ( userName.equals( userManager.getCurrentUsername() )
-                    || groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
+            if ( userName.equals( userManager.getCurrentUsername() ) || groupName
+                    .equals( AuthorityConstants.USER_GROUP_NAME ) ) {
                 uvo.setAllowModification( false );
             }
 
@@ -326,12 +269,6 @@ public class SecurityControllerImpl implements SecurityController {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getSecurityInfo(ubic.gemma.web.remote.
-     * EntityDelegator)
-     */
     @Override
     // @Transactional(readOnly = true)
     public SecurityInfoValueObject getSecurityInfo( EntityDelegator ed ) {
@@ -341,19 +278,12 @@ public class SecurityControllerImpl implements SecurityController {
 
         Securable s = getSecurable( ed );
 
-        SecurityInfoValueObject result = securable2VO( s );
-
-        return result;
+        return securable2VO( s );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#getUsersData(java.lang.String, boolean)
-     */
     @Override
     public Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<Securable>();
+        Collection<Securable> secs = new HashSet<>();
 
         // Add experiments.
         secs.addAll( getUsersExperiments( privateOnly ) );
@@ -371,13 +301,6 @@ public class SecurityControllerImpl implements SecurityController {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makeGroupReadable(ubic.gemma.web.remote.
-     * EntityDelegator, java.lang.String)
-     */
     @Override
     public boolean makeGroupReadable( EntityDelegator ed, String groupName ) {
         Securable s = getSecurable( ed );
@@ -385,13 +308,6 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makeGroupWriteable(ubic.gemma.web.remote
-     * .EntityDelegator, java.lang.String)
-     */
     @Override
     public boolean makeGroupWriteable( EntityDelegator ed, String groupName ) {
         Securable s = getSecurable( ed );
@@ -399,12 +315,6 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePrivate(ubic.gemma.web.remote.
-     * EntityDelegator)
-     */
     @Override
     public boolean makePrivate( EntityDelegator ed ) {
         Securable s = getSecurable( ed );
@@ -412,12 +322,6 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePublic(ubic.gemma.web.remote.
-     * EntityDelegator )
-     */
     @Override
     public boolean makePublic( EntityDelegator ed ) {
         Securable s = getSecurable( ed );
@@ -425,13 +329,6 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeGroupReadable(ubic.gemma.web.remote
-     * .EntityDelegator, java.lang.String)
-     */
     @Override
     public boolean removeGroupReadable( EntityDelegator ed, String groupName ) {
         Securable s = getSecurable( ed );
@@ -439,13 +336,6 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeGroupWriteable(ubic.gemma.web.remote
-     * .EntityDelegator, java.lang.String)
-     */
     @Override
     public boolean removeGroupWriteable( EntityDelegator ed, String groupName ) {
         Securable s = getSecurable( ed );
@@ -453,13 +343,6 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#removeUsersFromGroup(java.util.Collection,
-     * java.lang.String)
-     */
     @Override
     public boolean removeUsersFromGroup( String[] userNames, String groupName ) {
         for ( String userName : userNames ) {
@@ -469,25 +352,11 @@ public class SecurityControllerImpl implements SecurityController {
         return true;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#setExpressionExperimentService(ubic.gemma
-     * .expression.experiment.service.ExpressionExperimentService)
-     */
     @Override
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#updatePermission(ubic.gemma.web.controller
-     * .common.auditAndSecurity.SecurityInfoValueObject)
-     */
     @Override
     public SecurityInfoValueObject updatePermission( SecurityInfoValueObject settings ) {
         EntityDelegator sd = new EntityDelegator();
@@ -506,8 +375,9 @@ public class SecurityControllerImpl implements SecurityController {
                 securityService.makeOwnedByUser( s, settings.getOwner().getAuthority() );
             } else {
                 // this warning is not even worth issuing if we are not an administrator.
-                if ( SecurityUtil.isUserAdmin() ) log.warn(
-                        "Can't make groupauthority " + settings.getOwner().getAuthority() + " owner, not implemented" );
+                if ( SecurityUtil.isUserAdmin() )
+                    log.warn( "Can't make groupauthority " + settings.getOwner().getAuthority()
+                            + " owner, not implemented" );
             }
         } catch ( AccessDeniedException e ) {
             log.warn( "Non-administrators cannot change the owner of an entity" );
@@ -520,9 +390,9 @@ public class SecurityControllerImpl implements SecurityController {
          * groupsThatCanRead/groupsThatCanWrite
          */
         String currentGroupName = settings.getCurrentGroup();
-        if ( StringUtils.isNotBlank( currentGroupName )
-                && !( currentGroupName.equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                        || currentGroupName.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
+        if ( StringUtils.isNotBlank( currentGroupName ) && !(
+                currentGroupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || currentGroupName
+                        .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
 
             // this test only makes sense for changing the group's name, not for changing the permissions
             // of potentially shared entities
@@ -555,8 +425,8 @@ public class SecurityControllerImpl implements SecurityController {
              */
             for ( String groupName : getGroupsUserCanEdit() ) {
 
-                if ( groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                        || groupName.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+                if ( groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || groupName
+                        .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
                     // never changes this.
                     continue;
                 }
@@ -569,8 +439,8 @@ public class SecurityControllerImpl implements SecurityController {
              * Add selected ones back
              */
             for ( String reader : settings.getGroupsThatCanRead() ) {
-                if ( reader.equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                        || reader.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+                if ( reader.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || reader
+                        .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
                     // never changes this.
                     continue;
                 }
@@ -578,8 +448,8 @@ public class SecurityControllerImpl implements SecurityController {
                 securityService.makeReadableByGroup( s, reader );
             }
             for ( String writer : settings.getGroupsThatCanWrite() ) {
-                if ( writer.equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                        || writer.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+                if ( writer.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || writer
+                        .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
                     // never changes this.
                     continue;
                 }
@@ -605,11 +475,6 @@ public class SecurityControllerImpl implements SecurityController {
         return securable2VO( s );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#updatePermissions(java.util.Collection)
-     */
     @Override
     public void updatePermissions( SecurityInfoValueObject[] settings ) {
         for ( SecurityInfoValueObject so : settings ) {
@@ -628,7 +493,7 @@ public class SecurityControllerImpl implements SecurityController {
     private Collection<String> getGroupsForUser( String username ) {
 
         if ( username == null ) {
-            return new HashSet<String>();
+            return new HashSet<>();
         }
 
         Collection<String> results;
@@ -636,29 +501,25 @@ public class SecurityControllerImpl implements SecurityController {
         try {
             results = userManager.findGroupsForUser( username );
         } catch ( UsernameNotFoundException e ) {
-            return new HashSet<String>();
+            return new HashSet<>();
         }
         return results;
     }
 
-    /**
-     * @param userName
-     * @return
-     */
     private Collection<String> getGroupsUserCanEdit() {
         return securityService.getGroupsUserCanEdit( userManager.getCurrentUsername() );
     }
 
     /**
-     * @param ed
-     * @return
+     * @param ed ed
+     * @return securable
      * @throws IllegalArgumentException if the Securable cannot be loaded
      */
     private Securable getSecurable( EntityDelegator ed ) {
         String classDelegatingFor = ed.getClassDelegatingFor();
 
         Class<?> clazz;
-        Securable s = null;
+        Securable s;
         try {
             clazz = Class.forName( classDelegatingFor );
         } catch ( ClassNotFoundException e1 ) {
@@ -684,14 +545,10 @@ public class SecurityControllerImpl implements SecurityController {
         return s;
     }
 
-    /**
-     * @param privateOnly
-     * @return
-     */
     private Collection<Securable> getUsersExperiments( boolean privateOnly ) {
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadAll();
 
-        Collection<Securable> secs = new HashSet<Securable>();
+        Collection<Securable> secs = new HashSet<>();
 
         if ( privateOnly ) {
             try {
@@ -707,12 +564,8 @@ public class SecurityControllerImpl implements SecurityController {
         return secs;
     }
 
-    /**
-     * @param privateOnly
-     * @return
-     */
     private Collection<Securable> getUsersExperimentSets( boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<Securable>();
+        Collection<Securable> secs = new HashSet<>();
 
         Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.loadMySets();
         if ( privateOnly ) {
@@ -729,9 +582,9 @@ public class SecurityControllerImpl implements SecurityController {
 
     /**
      * Create a fully-populated value object for the given securable.
-     * 
-     * @param s
-     * @return
+     *
+     * @param s securable
+     * @return security info VO
      */
     private SecurityInfoValueObject securable2VO( Securable s ) {
         /*
@@ -762,14 +615,14 @@ public class SecurityControllerImpl implements SecurityController {
     }
 
     /**
-     * @param securables
+     * @param securables   securables
      * @param currentGroup A specific group that we're focusing on. Can be null
-     * @return
+     * @return security info VOs
      */
     private <T extends Securable> Collection<SecurityInfoValueObject> securables2VOs( Collection<T> securables,
             String currentGroup ) {
 
-        Collection<SecurityInfoValueObject> result = new HashSet<SecurityInfoValueObject>();
+        Collection<SecurityInfoValueObject> result = new HashSet<>();
 
         if ( securables.isEmpty() ) {
             return result;

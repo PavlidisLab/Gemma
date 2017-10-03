@@ -18,24 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-/**
- * 
- */
 public class FailedLinkAnalysisEvent extends NeedsAttentionEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent();
-        }
-
-    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -44,10 +27,18 @@ public class FailedLinkAnalysisEvent extends NeedsAttentionEvent {
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public FailedLinkAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent();
+        }
+
     }
 
 }

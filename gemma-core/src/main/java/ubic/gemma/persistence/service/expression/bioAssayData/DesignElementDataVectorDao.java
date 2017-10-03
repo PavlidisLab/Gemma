@@ -32,67 +32,57 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> {
     /**
      * Creates a new instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds from the
      * passed in <code>entities</code> collection
-     * 
+     *
      * @param entities the collection of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector instances to
-     *        create.
+     *                 create.
      * @return the created instances.
      */
     java.util.Collection<T> create( java.util.Collection<T> entities );
 
     /**
-     * Creates an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds it to the
+     * @param designElementDataVector DE data vector
+     * @return Creates an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector and adds it to the
      * persistent store.
      */
     T create( T designElementDataVector );
 
     /**
-     * Loads an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent store.
+     * @param id id
+     * @return Loads an instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent store.
      */
     T load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.expression.bioAssayData.DesignElementDataVector}.
-     * 
+     *
      * @return the loaded entities.
      */
     java.util.Collection<? extends T> loadAll();
 
     /**
-     * Removes the instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector having the given
-     * <code>identifier</code> from the persistent store.
+     * @param id Removes the instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector having the given
+     *           <code>identifier</code> from the persistent store.
      */
     void remove( java.lang.Long id );
 
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
     void remove( java.util.Collection<T> entities );
 
-    /**
-     * Removes the instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector from the persistent
-     * store.
-     */
     void remove( T designElementDataVector );
 
-    /**
-     * 
-     */
     void thaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
-     * <p>
-     * Thaws associations of the given DesignElementDataVector
-     * </p>
+     * @param designElementDataVector Thaws associations of the given DesignElementDataVector
      */
     void thaw( T designElementDataVector );
 
     /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     * @param entities Updates all instances in the <code>entities</code> collection in the persistent store.
      */
     void update( java.util.Collection<T> entities );
 
     /**
-     * Updates the <code>designElementDataVector</code> instance in the persistent store.
+     * @param designElementDataVector Updates the <code>designElementDataVector</code> instance in the persistent store.
      */
     void update( T designElementDataVector );
 

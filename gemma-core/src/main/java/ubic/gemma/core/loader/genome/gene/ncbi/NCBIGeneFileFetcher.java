@@ -18,21 +18,26 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
-import java.io.File;
-
 import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
 
 /**
  * Class to download files for NCBI gene. Pass the name of the file (without the .gz) to the fetch method: for example,
  * gene_info.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
+
+    public NCBIGeneFileFetcher() {
+        super();
+        this.setExcludePattern( ".gz" );
+        this.setAllowUseExisting( true );
+        initArchiveHandler( "gz" );
+    }
 
     @Override
     public void initConfig() {
@@ -46,37 +51,16 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
     }
 
-    public NCBIGeneFileFetcher() {
-        super();
-        this.setExcludePattern( ".gz" );
-        this.setAllowUseExisting( true );
-        initArchiveHandler( "gz" );
-    }
-
-    /**
-     * @param identifier
-     * @param newDir
-     * @return
-     */
     @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier + ".gz";
     }
 
-    /**
-     * @param identifier
-     * @return
-     */
     @Override
     protected String formRemoteFilePath( String identifier ) {
         return remoteBaseDir + identifier + ".gz";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
-     */
     @Override
     public void setNetDataSourceUtil() {
         this.netDataSourceUtil = new NCBIUtil();

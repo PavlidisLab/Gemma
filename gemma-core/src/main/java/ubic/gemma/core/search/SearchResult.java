@@ -23,7 +23,6 @@ import ubic.gemma.persistence.util.ReflectionUtil;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class SearchResult implements Comparable<SearchResult> {
 
@@ -39,39 +38,25 @@ public class SearchResult implements Comparable<SearchResult> {
 
     private Object resultObject;
 
-    /**
-     * @param searchResult
-     */
     public SearchResult( Object searchResult ) {
-        if ( searchResult == null ) throw new IllegalArgumentException( "Search result cannot be null" );
+        if ( searchResult == null )
+            throw new IllegalArgumentException( "Search result cannot be null" );
         this.resultObject = searchResult;
         this.resultClass = ReflectionUtil.getBaseForImpl( searchResult.getClass() );
         this.objectId = EntityUtils.getId( resultObject );
     }
 
-    /**
-     * @param searchResult
-     * @param score
-     */
     public SearchResult( Object searchResult, double score ) {
         this( searchResult );
         this.score = score;
     }
 
-    /**
-     * @param searchResult
-     * @param score
-     * @param matchingText
-     */
     public SearchResult( Object searchResult, double score, String matchingText ) {
         this( searchResult );
         this.score = score;
         this.highlightedText = matchingText;
     }
 
-    /**
-     * Results with higher scores get put at the FRONT (Descending order!)
-     */
     @Override
     public int compareTo( SearchResult o ) {
         return -this.score.compareTo( o.getScore() );
@@ -79,21 +64,32 @@ public class SearchResult implements Comparable<SearchResult> {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         final SearchResult other = ( SearchResult ) obj;
         if ( objectId == null ) {
-            if ( other.objectId != null ) return false;
-        } else if ( !objectId.equals( other.objectId ) ) return false;
+            if ( other.objectId != null )
+                return false;
+        } else if ( !objectId.equals( other.objectId ) )
+            return false;
         if ( resultClass == null ) {
-            if ( other.resultClass != null ) return false;
-        } else if ( !resultClass.getName().equals( other.resultClass.getName() ) ) return false;
+            if ( other.resultClass != null )
+                return false;
+        } else if ( !resultClass.getName().equals( other.resultClass.getName() ) )
+            return false;
         return true;
     }
 
     public String getHighlightedText() {
         return highlightedText;
+    }
+
+    public void setHighlightedText( String highlightedText ) {
+        this.highlightedText = highlightedText;
     }
 
     /**
@@ -111,8 +107,24 @@ public class SearchResult implements Comparable<SearchResult> {
         return this.resultObject;
     }
 
+    /**
+     * @param resultObject if null, the resultObject is reset to null, but the class and id information will not be
+     *                     overwritten.
+     */
+    public void setResultObject( Object resultObject ) {
+        this.resultObject = resultObject;
+        if ( resultObject != null ) {
+            this.resultClass = ReflectionUtil.getBaseForImpl( resultObject.getClass() );
+            this.objectId = EntityUtils.getId( resultObject );
+        }
+    }
+
     public Double getScore() {
         return score;
+    }
+
+    public void setScore( Double score ) {
+        this.score = score;
     }
 
     @Override
@@ -125,41 +137,20 @@ public class SearchResult implements Comparable<SearchResult> {
     }
 
     /**
-     * Was this a result obtained from a Lucene index search?
-     * 
-     * @return
+     * @return Was this a result obtained from a Lucene index search?
      */
     public boolean isIndexSearchResult() {
         return indexSearch;
-    }
-
-    public void setHighlightedText( String highlightedText ) {
-        this.highlightedText = highlightedText;
     }
 
     public void setIndexSearchResult( boolean isIndexSearchResult ) {
         this.indexSearch = isIndexSearchResult;
     }
 
-    /**
-     * @param resultObject if null, the resultObject is reset to null, but the class and id information will not be
-     *        overwritten.
-     */
-    public void setResultObject( Object resultObject ) {
-        this.resultObject = resultObject;
-        if ( resultObject != null ) {
-            this.resultClass = ReflectionUtil.getBaseForImpl( resultObject.getClass() );
-            this.objectId = EntityUtils.getId( resultObject );
-        }
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
     @Override
     public String toString() {
-        return this.getResultObject() + " matched in: "
-                + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
+        return this.getResultObject() + " matched in: " + ( this.highlightedText != null ?
+                "'" + this.highlightedText + "'" :
+                "(?)" );
     }
 }

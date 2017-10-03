@@ -14,25 +14,18 @@
  */
 package ubic.gemma.core.security.audit;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface AuditableUtil {
 
-    /**
-     * @param valueObjects
-     */
-    public abstract void removeTroubledArrayDesigns( Collection<ArrayDesignValueObject> valueObjects );
+    void removeTroubledArrayDesigns( Collection<ArrayDesignValueObject> valueObjects );
 
-    /**
-     * @param ees
-     */
-    public abstract void removeTroubledEes( Collection<ExpressionExperimentValueObject> eevos );
+    void removeTroubledEes( Collection<ExpressionExperimentValueObject> eevos );
 
 }

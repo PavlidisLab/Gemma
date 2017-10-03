@@ -34,7 +34,7 @@ public class GeneDifferentialExpressionMetaAnalysis extends ubic.gemma.model.ana
     private Collection<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
 
     /**
-     * How many genes were included in the meta-analysis. This does not mean that all genes were analyzed in all the
+     * @return How many genes were included in the meta-analysis. This does not mean that all genes were analyzed in all the
      * experiments.
      */
     public Integer getNumGenesAnalyzed() {
@@ -46,7 +46,7 @@ public class GeneDifferentialExpressionMetaAnalysis extends ubic.gemma.model.ana
     }
 
     /**
-     * The threshold, if any, used to determine which of the metaAnalysis results are persisted to the system.
+     * @return The threshold, if any, used to determine which of the metaAnalysis results are persisted to the system.
      */
     public Double getQvalueThresholdForStorage() {
         return this.qvalueThresholdForStorage;
@@ -72,17 +72,10 @@ public class GeneDifferentialExpressionMetaAnalysis extends ubic.gemma.model.ana
         this.resultSetsIncluded = resultSetsIncluded;
     }
 
-    /**
-     * Constructs new instances of {@link GeneDifferentialExpressionMetaAnalysis}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link GeneDifferentialExpressionMetaAnalysis}.
-         */
         public static GeneDifferentialExpressionMetaAnalysis newInstance() {
             return new GeneDifferentialExpressionMetaAnalysis();
         }
-
     }
 
 }

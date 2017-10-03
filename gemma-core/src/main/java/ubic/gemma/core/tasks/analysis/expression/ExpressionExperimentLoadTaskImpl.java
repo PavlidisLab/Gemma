@@ -1,21 +1,20 @@
 package ubic.gemma.core.tasks.analysis.expression;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.tasks.AbstractTask;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * @author keshav
@@ -96,7 +95,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
 
     /**
      * Do missing value and processed vector creation steps.
-     * 
+     *
      * @param ees
      */
     private void postProcess( Collection<ExpressionExperiment> ees ) {
@@ -137,7 +136,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
 //
 // /**
 // * @param arrayDesigns
-// * @return
+// * @return task result
 // */
 // protected TaskResult processArrayDesignResult( Collection<ArrayDesign> arrayDesigns ) {
 // Map<Object, Object> model = new HashMap<Object, Object>();
@@ -156,7 +155,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
 //
 // /**
 // * @param result
-// * @return
+// * @return task result
 // */
 // protected TaskResult processArrayExpressResult( ExpressionExperiment result ) {
 // if ( result == null ) {
@@ -229,7 +228,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
 // * Clean up the access provided by the user.
 // *
 // * @param expressionExperimentLoadCommand
-// * @return
+// * @return accession
 // */
 // private String getAccession( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 // String accesionNum = expressionExperimentLoadCommand.getAccession();

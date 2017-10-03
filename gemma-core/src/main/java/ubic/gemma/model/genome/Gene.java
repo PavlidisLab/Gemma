@@ -47,12 +47,8 @@ public class Gene extends ChromosomeFeature {
     private Multifunctionality multifunctionality;
     private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
 
-
-
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public Gene() {
     }
@@ -129,8 +125,6 @@ public class Gene extends ChromosomeFeature {
                 " (NCBI " + this.getNcbiGeneId() + ")" );
     }
 
-
-
     public Collection<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
@@ -148,7 +142,7 @@ public class Gene extends ChromosomeFeature {
     }
 
     /**
-     * An Ensembl ID for the gene.
+     * @return An Ensembl ID for the gene.
      */
     public String getEnsemblId() {
         return this.ensemblId;
@@ -207,7 +201,7 @@ public class Gene extends ChromosomeFeature {
     }
 
     /**
-     * Note that a Gene also has a chromosome, so the organism can be inferred that way as well. This direct association
+     * @return Note that a Gene also has a chromosome, so the organism can be inferred that way as well. This direct association
      * is a denormalization for queries that don't care about location, just species-membership.
      */
     public Taxon getTaxon() {
@@ -248,19 +242,10 @@ public class Gene extends ChromosomeFeature {
         return hashCode;
     }
 
-
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.Gene}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.Gene}.
-         */
         public static Gene newInstance() {
             return new Gene();
         }
-
     }
 
 }

@@ -22,35 +22,21 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * Retrieve GEO GDS files from the NCBI FTP server.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class DatasetFetcher extends GeoFetcher {
 
-    /**
-     * @throws ConfigurationException
-     */
     public DatasetFetcher() {
         super();
 
     }
 
-    /*
-     * Pointing to directory: ftp://ftp.ncbi.nih.gov/pub/geo/DATA/SOFT/GDS/
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
-     */
     @Override
     protected String formRemoteFilePath( String identifier ) {
         return remoteBaseDir + identifier + SOFT_GZ;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#initConfig()
-     */
     @Override
     protected void initConfig() {
         this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );

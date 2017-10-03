@@ -38,6 +38,8 @@ public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
      * parameters. The statistical significance tests for each of the effects in the model are stored as separate
      * ResultSet objects. Thus a two-way ANOVA with interactions will have three result sets: the two main effects and
      * the interaction effect.
+     *
+     * @return the result sets
      */
     public Collection<ExpressionAnalysisResultSet> getResultSets() {
         return this.resultSets;
@@ -55,13 +57,8 @@ public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
         this.subsetFactorValue = subsetFactorValue;
     }
 
-    /**
-     * Constructs new instances of {@link DifferentialExpressionAnalysis}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link DifferentialExpressionAnalysis} .
-         */
+
         public static DifferentialExpressionAnalysis newInstance() {
             return new DifferentialExpressionAnalysis();
         }

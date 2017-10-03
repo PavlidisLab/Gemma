@@ -20,9 +20,8 @@ package ubic.gemma.web.controller.common.description.bibref;
 
 /**
  * Supports seaching of pubmed references
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class PubMedSearchCommand {
     String accession;
@@ -32,17 +31,10 @@ public class PubMedSearchCommand {
         this.accession = accession;
     }
 
-    /**
-     * @return the accession
-     */
     public String getAccession() {
         return this.accession;
     }
 
-    /**
-     * @param accession the accession to set
-     * @spring.validator type="positiveNonZeroInteger"
-     */
     public void setAccession( String accession ) {
         this.accession = accession;
     }

@@ -18,35 +18,25 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
+import ubic.gemma.model.common.description.LocalFile;
+
 import java.io.File;
 import java.util.Collection;
-import java.util.HashSet;
-
-import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Used for testing, but might have other uses, to fetch GEO data from local files instead of the GEO website.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class LocalDatasetFetcher extends DatasetFetcher {
 
     private final String localPath;
 
-    /**
-     * @throws ConfigurationException
-     */
     public LocalDatasetFetcher( String localPath ) {
         super();
         this.localPath = localPath;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.expression.geo.DatasetFetcher#fetch(java.lang.String)
-     */
     @Override
     public Collection<LocalFile> fetch( String accession ) {
         log.info( "Seeking GSE file for " + accession );
@@ -57,11 +47,7 @@ public class LocalDatasetFetcher extends DatasetFetcher {
         File seekFile = new File( seekFileName );
 
         if ( seekFile.canRead() ) {
-            LocalFile file = fetchedFile( seekFileName );
-            log.info( "Found " + seekFileName + " for experiment(set) " + accession + "." );
-            Collection<LocalFile> result = new HashSet<LocalFile>();
-            result.add( file );
-            return result;
+            return getFile( accession, seekFileName );
         }
 
         throw new RuntimeException( "Failed to find " + seekFileName );

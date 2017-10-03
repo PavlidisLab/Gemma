@@ -20,8 +20,6 @@
 package ubic.gemma.core.search;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -125,7 +123,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         ee.setCharacteristics( chars );
         eeService.update( ee );
 
-        gene = this.getTestPeristentGene();
+        gene = this.getTestPersistentGene();
 
         this.geneNcbiId = RandomStringUtils.randomNumeric( 8 );
         gene.setNcbiId( geneNcbiId );

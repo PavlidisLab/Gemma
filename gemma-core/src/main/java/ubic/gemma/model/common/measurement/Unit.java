@@ -67,15 +67,8 @@ public abstract class Unit implements Identifiable, Serializable {
         this.unitNameCV = unitNameCV;
     }
 
-    /**
-     * Constructs new instances of {@link Unit}.
-     */
     public static final class Factory {
 
-        /**
-         * Constructs a new instance of {@link Unit}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
         public static Unit newInstance( String unitNameCV ) {
             final Unit entity = new UnitImpl();
             entity.setUnitNameCV( unitNameCV );

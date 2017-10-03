@@ -14,71 +14,64 @@
  */
 package ubic.gemma.core.genome.gene;
 
-import java.util.Collection;
-import java.util.List;
-
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * TODO Document Me
- * 
+ *
  * @author tvrossum
- * @version $Id$
  */
 public interface GeneSetValueObjectHelper {
 
     /**
      * Method to create a GO group object from an ad hoc entity
      */
-    public abstract GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm );
+    GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm );
 
     /**
      * Constructor to build value object from GeneSet. This is a light version and *does not include member ids*! (But
      * the size is set.) No security filtering is done here, assuming that if the user could load the experimentSet
      * entity, they have access to it.
-     * 
+     *
      * @param gs an expressionExperimentSet entity to create a value object for
      * @return a gene set value object with all fields filled except for gene members
      */
-    public abstract DatabaseBackedGeneSetValueObject convertToLightValueObject( GeneSet gs );
+    DatabaseBackedGeneSetValueObject convertToLightValueObject( GeneSet gs );
 
     /**
      * results will be sorted by size
-     * 
-     * @param genesets
+     *
+     * @param genesets                gene sets
      * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be returned.
-     * @return
+     * @return list of gene set value objects
      */
-    public abstract List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> genesets,
+    List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> genesets,
             boolean includeOnesWithoutGenes );
 
     /**
      * Constructor to build value object from GeneSet. No security filtering is done here, assuming that if the user
      * could load the experimentSet entity, they have access to it.
-     * 
+     *
      * @param gs an expressionExperimentSet entity to create a value object for
      */
-    public abstract DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs );
+    DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs );
 
     /**
-     * results will be sorted by size gene sets that lack genes will be excluded
-     * 
-     * @see ubic.gemma.core.genome.gene.service.GeneSetServiceImpl.convertToValueObjects(Collection<GeneSet>, boolean) if you
-     *      want empty sets returned
-     * @param sets
-     * @return
+     * @param sets gene sets
+     * @return results will be sorted by size gene sets that lack genes will be excluded
      */
-    public abstract List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets );
+    List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> sets );
 
     /**
-     * results will be sorted by size
-     * 
-     * @param genesets
+     * @param geneSets                gene sets
      * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be returned.
-     * @return
+     * @return results will be sorted by size
      */
-    public abstract List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> genesets,
+    List<DatabaseBackedGeneSetValueObject> convertToValueObjects( Collection<GeneSet> geneSets,
             boolean includeOnesWithoutGenes );
 
 }

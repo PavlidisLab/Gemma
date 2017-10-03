@@ -14,12 +14,13 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 import java.util.Vector;
 
-import org.apache.commons.lang3.StringUtils;
-
 // simple way to represent a phenotype for the tree, sending the minimal information
+@SuppressWarnings("unused") // Possibly used in front end
 public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> {
 
     // private String _id = "";
@@ -31,11 +32,11 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
     private long privateGeneCount = 0L;
     private String urlId = "";
     private boolean dbPhenotype = false;
-    private List<String> children = new Vector<String>();
+    private List<String> children = new Vector<>();
 
     /**
-     * @param treeCharacteristicValueObject
-     * @param parent the unique ID of the parent (get_id())
+     * @param treeCharacteristicValueObject tree characteristic VO
+     * @param parent                        the unique ID of the parent (get_id())
      */
     public SimpleTreeValueObject( TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
 
@@ -65,26 +66,36 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
             return this.valueUri.compareToIgnoreCase( o.valueUri );
         }
 
-        if ( this._parent != null ) return this._parent.compareToIgnoreCase( o._parent );
+        if ( this._parent != null )
+            return this._parent.compareToIgnoreCase( o._parent );
 
         return this.makeUniqueId( this.urlId, this._parent ).compareTo( o.get_id() );
     }
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         SimpleTreeValueObject other = ( SimpleTreeValueObject ) obj;
         if ( this._parent == null ) {
-            if ( other._parent != null ) return false;
-        } else if ( !this._parent.equals( other._parent ) ) return false;
+            if ( other._parent != null )
+                return false;
+        } else if ( !this._parent.equals( other._parent ) )
+            return false;
         if ( this.value == null ) {
-            if ( other.value != null ) return false;
-        } else if ( !this.value.equals( other.value ) ) return false;
+            if ( other.value != null )
+                return false;
+        } else if ( !this.value.equals( other.value ) )
+            return false;
         if ( this.valueUri == null ) {
-            if ( other.valueUri != null ) return false;
-        } else if ( !this.valueUri.equals( other.valueUri ) ) return false;
+            if ( other.valueUri != null )
+                return false;
+        } else if ( !this.valueUri.equals( other.valueUri ) )
+            return false;
         return true;
     }
 
@@ -93,8 +104,20 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         return this.makeUniqueId( urlId, _parent );
     }
 
+    /**
+     * @param _id id
+     */
+    public void set_id( String _id ) {
+        throw new UnsupportedOperationException( "Don't set this manually" );
+        // this._id = _id;
+    }
+
     public String get_parent() {
         return this._parent;
+    }
+
+    public void set_parent( String _parent ) {
+        this._parent = _parent;
     }
 
     /**
@@ -104,24 +127,53 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         return children;
     }
 
+    /**
+     * Not used directly in java, allow constructor to manage.
+     *
+     * @param children children
+     */
+    public void setChildren( List<String> children ) {
+        this.children = children;
+    }
+
     public long getPrivateGeneCount() {
         return this.privateGeneCount;
+    }
+
+    public void setPrivateGeneCount( long privateGeneCount ) {
+        this.privateGeneCount = privateGeneCount;
     }
 
     public long getPublicGeneCount() {
         return this.publicGeneCount;
     }
 
+    public void setPublicGeneCount( long publicGeneCount ) {
+        this.publicGeneCount = publicGeneCount;
+    }
+
     public String getUrlId() {
         return this.urlId;
+    }
+
+    public void setUrlId( String urlId ) {
+        this.urlId = urlId;
     }
 
     public String getValue() {
         return this.value;
     }
 
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
     public String getValueUri() {
         return this.valueUri;
+    }
+
+    public void setValueUri( String valueUri ) {
+        this.valueUri = valueUri;
     }
 
     @Override
@@ -138,57 +190,16 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         return this._is_leaf;
     }
 
-    public boolean isDbPhenotype() {
-        return this.dbPhenotype;
-    }
-
-    /**
-     * @param _id
-     */
-    public void set_id( String _id ) {
-        throw new UnsupportedOperationException( "Don't set this manually" );
-        // this._id = _id;
-    }
-
     public void set_is_leaf( boolean _is_leaf ) {
         this._is_leaf = _is_leaf;
     }
 
-    public void set_parent( String _parent ) {
-        this._parent = _parent;
-    }
-
-    /**
-     * Not used directly in java, allow constructor to manage.
-     * 
-     * @param children
-     */
-    public void setChildren( List<String> children ) {
-        this.children = children;
+    public boolean isDbPhenotype() {
+        return this.dbPhenotype;
     }
 
     public void setDbPhenotype( boolean dbPhenotype ) {
         this.dbPhenotype = dbPhenotype;
-    }
-
-    public void setPrivateGeneCount( long privateGeneCount ) {
-        this.privateGeneCount = privateGeneCount;
-    }
-
-    public void setPublicGeneCount( long publicGeneCount ) {
-        this.publicGeneCount = publicGeneCount;
-    }
-
-    public void setUrlId( String urlId ) {
-        this.urlId = urlId;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
     }
 
     private String makeUniqueId( String u, String p ) {

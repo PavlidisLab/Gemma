@@ -35,16 +35,10 @@ import ubic.basecode.math.MatrixNormalizer;
  * However, note that this deals with missing values differently than the Bioconductor implementation.
  * 
  * @author pavlidis
- * @version $Id$
- * @see ubic.baseCode.math.MatrixNormalizer
+ * @see ubic.basecode.math.MatrixNormalizer
  */
 public class QuantileNormalizer<R, C> implements Normalizer<R, C> {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrix)
-     */
     @Override
     public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix ) {
 

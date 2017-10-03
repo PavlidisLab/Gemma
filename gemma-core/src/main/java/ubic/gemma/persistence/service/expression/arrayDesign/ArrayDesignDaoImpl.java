@@ -27,7 +27,6 @@ import org.hibernate.collection.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -45,9 +44,7 @@ import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.io.File;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * @author pavlidis
@@ -965,19 +962,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .setFirstResult( offset ).setMaxResults( limit ).list();
     }
 
-    @Override
-    public File getAnnotationFile( String shortName ) {
-        try {
-            String fileName = shortName.replaceAll( Pattern.quote( "/" ), "_" )
-                    + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
-                    + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-            return new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     /**
      * Creates and orderBy parameter.
      *
@@ -1089,10 +1073,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 + "s.troubled, "  //7
                 + "s.needsAttention, " //8
                 + "s.curationNote, "  //9
-                + "t.commonName " //10
+                + "t.commonName, " //10
+                + "eNote, "  //11
+                + "eAttn, " //12
+                + "eTrbl " //13
                 + "from ArrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " join " + ObjectFilter.DAO_AD_ALIAS
                 + ".curationDetails s join " + ObjectFilter.DAO_AD_ALIAS + ".primaryTaxon t left join "
-                + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m ";
+                + ObjectFilter.DAO_AD_ALIAS + ".mergedInto m left join s.lastNeedsAttentionEvent as eAttn "
+                + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
 
         queryString += formAclSelectClause( ObjectFilter.DAO_AD_ALIAS,
                 "ubic.gemma.model.expression.arrayDesign.ArrayDesign" );
@@ -1144,10 +1132,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );
                 }
 
-                v.setHasAnnotationFile( getAnnotationFile( v.getShortName() ).exists() );
-
-                //This was causing null results when being retrieved through the original query
-                this.addCurationEvents( v );
+                // Curation events
+                this.addCurationEvents( v, ( AuditEvent ) list.get( 11 ), ( AuditEvent ) list.get( 12 ),
+                        ( AuditEvent ) list.get( 13 ) );
 
                 result.add( v );
             }

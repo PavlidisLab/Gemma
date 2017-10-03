@@ -18,17 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -37,32 +26,190 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Replaces SimpleExpressionExperimentLoadController
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 @Controller
 public class ExpressionDataFileUploadController {
+
+    private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private PreprocessorService preprocessorService;
+    @Autowired
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+    @Autowired
+    private TaxonService taxonService;
+
+    public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
+        loadEECommand.setValidateOnly( false );
+        return taskRunningService.submitLocalTask( new SimpleEELoadLocalTask( loadEECommand ) );
+    }
+
+    @RequestMapping("/expressionExperiment/upload.html")
+    @SuppressWarnings("unused")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "dataUpload" );
+    }
+
+    public String validate( SimpleExpressionExperimentLoadTaskCommand command ) throws Exception {
+        assert command != null;
+        command.setValidateOnly( true );
+        return taskRunningService.submitLocalTask( new SimpleEEValidateLocalTask( command ) );
+    }
+
+    private SimpleExpressionExperimentCommandValidation doValidate(
+            SimpleExpressionExperimentLoadTaskCommand command ) {
+
+        scrub( command );
+        ExpressionExperiment existing = expressionExperimentService.findByShortName( command.getShortName() );
+        SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
+
+        log.info( "Checking for valid name and files" );
+
+        result.setShortNameIsUnique( existing == null );
+
+        String localPath = command.getServerFilePath();
+        if ( StringUtils.isBlank( localPath ) ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is missing" );
+            return result;
+        }
+
+        File file = new File( localPath );
+
+        if ( !file.canRead() ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "Cannot read from file" );
+            return result;
+        }
+
+        Collection<Long> arrayDesignIds = command.getArrayDesignIds();
+
+        if ( arrayDesignIds.isEmpty() ) {
+            result.setArrayDesignMatchesDataFile( false );
+            result.setArrayDesignMismatchProblemMessage( "Platform must be provided" );
+            return result;
+        }
+
+        DoubleMatrix<String, String> parse = null;
+        try {
+            parse = simpleExpressionDataLoaderService
+                    .parse( FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) );
+        } catch ( FileNotFoundException e ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is missing" );
+        } catch ( IOException e ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
+        } catch ( IllegalArgumentException e ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
+        } catch ( Exception e ) {
+            result.setDataFileIsValidFormat( false );
+            result.setDataFileFormatProblemMessage( "Error Validating: " + e.getMessage() );
+        }
+
+        if ( parse != null ) {
+
+            log.info( "Checking if probe labels match design" );
+
+            result.setNumRows( parse.rows() );
+            result.setNumColumns( parse.columns() );
+
+            Long arrayDesignId = arrayDesignIds.iterator().next();
+
+            ArrayDesign design = arrayDesignService.load( arrayDesignId );
+            design = arrayDesignService.thaw( design );
+
+            // check that the probes can be matched up...
+            int numRowsMatchingArrayDesign = 0;
+            int numRowsNotMatchingArrayDesign = 0;
+            int i = 0;
+            List<String> mismatches = new ArrayList<String>();
+            for ( CompositeSequence cs : design.getCompositeSequences() ) {
+                if ( parse.containsRowName( cs.getName() ) ) {
+                    numRowsMatchingArrayDesign++;
+                } else {
+                    numRowsNotMatchingArrayDesign++;
+                    mismatches.add( cs.getName() );
+                }
+                if ( ++i % 2000 == 0 ) {
+                    log.info( i + " probes checked, " + numRowsMatchingArrayDesign + " match" );
+                }
+            }
+
+            result.setNumberMatchingProbes( numRowsMatchingArrayDesign );
+            result.setNumberOfNonMatchingProbes( numRowsNotMatchingArrayDesign );
+            if ( mismatches.size() > 0 ) {
+                result.setNonMatchingProbeNameExamples(
+                        mismatches.subList( 0, Math.min( 10, mismatches.size() - 1 ) ) );
+            }
+
+        }
+
+        return result;
+    }
+
+    private File getFile( SimpleExpressionExperimentLoadTaskCommand ed ) {
+        File file;
+        String localPath = ed.getServerFilePath();
+        if ( StringUtils.isBlank( localPath ) ) {
+            throw new IllegalArgumentException( "Must provide the file" );
+        }
+
+        file = new File( localPath );
+
+        if ( !file.canRead() ) {
+            throw new IllegalArgumentException( "Cannot read from file:" + file );
+        }
+
+        return file;
+    }
+
+    private void scrub( SimpleExpressionExperimentLoadTaskCommand o ) {
+        o.setName( scrub( o.getName() ) );
+        o.setDescription( scrub( o.getDescription() ) );
+        o.setShortName( scrub( o.getShortName() ) );
+    }
+
+    private String scrub( String s ) {
+        return StringEscapeUtils.escapeHtml4( s );
+    }
 
     private class SimpleEELoadLocalTask extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
 
@@ -119,9 +266,6 @@ public class ExpressionDataFileUploadController {
             }
         }
 
-        /**
-         * @param commandObject
-         */
         private void populateCommandObject( SimpleExpressionExperimentLoadTaskCommand commandObject ) {
             Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
 
@@ -152,10 +296,8 @@ public class ExpressionDataFileUploadController {
         }
     }
 
-    /**
-     *  
-     */
-    private class SimpleEEValidateLocalTask extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
+    private class SimpleEEValidateLocalTask
+            extends AbstractTask<TaskResult, SimpleExpressionExperimentLoadTaskCommand> {
 
         public SimpleEEValidateLocalTask( SimpleExpressionExperimentLoadTaskCommand commandObj ) {
             super( commandObj );
@@ -166,178 +308,6 @@ public class ExpressionDataFileUploadController {
             SimpleExpressionExperimentCommandValidation result = doValidate( taskCommand );
             return new TaskResult( taskCommand, result );
         }
-    }
-
-    private static final Log log = LogFactory.getLog( ExpressionDataFileUploadController.class.getName() );
-
-    @Autowired
-    private TaskRunningService taskRunningService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private PreprocessorService preprocessorService;
-
-    @Autowired
-    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-
-    @Autowired
-    private TaxonService taxonService;
-
-    /**
-     * AJAX
-     * 
-     * @param loadEECommand
-     * @return the taskid
-     */
-    public String load( SimpleExpressionExperimentLoadTaskCommand loadEECommand ) {
-        loadEECommand.setValidateOnly( false );
-        return taskRunningService.submitLocalTask( new SimpleEELoadLocalTask( loadEECommand ) );
-    }
-
-    @RequestMapping("/expressionExperiment/upload.html")
-    @SuppressWarnings("unused")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "dataUpload" );
-    }
-
-    /**
-     * @param command
-     * @return taskId
-     * @throws Exception
-     */
-    public String validate( SimpleExpressionExperimentLoadTaskCommand command ) throws Exception {
-        assert command != null;
-        command.setValidateOnly( true );
-        return taskRunningService.submitLocalTask( new SimpleEEValidateLocalTask( command ) );
-    }
-
-    /**
-     * @param command
-     * @return
-     */
-    private SimpleExpressionExperimentCommandValidation doValidate( SimpleExpressionExperimentLoadTaskCommand command ) {
-
-        scrub( command );
-        ExpressionExperiment existing = expressionExperimentService.findByShortName( command.getShortName() );
-        SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
-
-        log.info( "Checking for valid name and files" );
-
-        result.setShortNameIsUnique( existing == null );
-
-        String localPath = command.getServerFilePath();
-        if ( StringUtils.isBlank( localPath ) ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is missing" );
-            return result;
-        }
-
-        File file = new File( localPath );
-
-        if ( !file.canRead() ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "Cannot read from file" );
-            return result;
-        }
-
-        Collection<Long> arrayDesignIds = command.getArrayDesignIds();
-
-        if ( arrayDesignIds.isEmpty() ) {
-            result.setArrayDesignMatchesDataFile( false );
-            result.setArrayDesignMismatchProblemMessage( "Platform must be provided" );
-            return result;
-        }
-
-        DoubleMatrix<String, String> parse = null;
-        try {
-            parse = simpleExpressionDataLoaderService.parse( FileTools.getInputStreamFromPlainOrCompressedFile( file
-                    .getAbsolutePath() ) );
-        } catch ( FileNotFoundException e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is missing" );
-        } catch ( IOException e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
-        } catch ( IllegalArgumentException e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "File is invalid: " + e.getMessage() );
-        } catch ( Exception e ) {
-            result.setDataFileIsValidFormat( false );
-            result.setDataFileFormatProblemMessage( "Error Validating: " + e.getMessage() );
-        }
-
-        if ( parse != null ) {
-
-            log.info( "Checking if probe labels match design" );
-
-            result.setNumRows( parse.rows() );
-            result.setNumColumns( parse.columns() );
-
-            Long arrayDesignId = arrayDesignIds.iterator().next();
-
-            ArrayDesign design = arrayDesignService.load( arrayDesignId );
-            design = arrayDesignService.thaw( design );
-
-            // check that the probes can be matched up...
-            int numRowsMatchingArrayDesign = 0;
-            int numRowsNotMatchingArrayDesign = 0;
-            int i = 0;
-            List<String> mismatches = new ArrayList<String>();
-            for ( CompositeSequence cs : design.getCompositeSequences() ) {
-                if ( parse.containsRowName( cs.getName() ) ) {
-                    numRowsMatchingArrayDesign++;
-                } else {
-                    numRowsNotMatchingArrayDesign++;
-                    mismatches.add( cs.getName() );
-                }
-                if ( ++i % 2000 == 0 ) {
-                    log.info( i + " probes checked, " + numRowsMatchingArrayDesign + " match" );
-                }
-            }
-
-            result.setNumberMatchingProbes( numRowsMatchingArrayDesign );
-            result.setNumberOfNonMatchingProbes( numRowsNotMatchingArrayDesign );
-            if ( mismatches.size() > 0 ) {
-                result.setNonMatchingProbeNameExamples( mismatches.subList( 0, Math.min( 10, mismatches.size() - 1 ) ) );
-            }
-
-        }
-
-        return result;
-    }
-
-    /**
-     * @param ed
-     */
-    private File getFile( SimpleExpressionExperimentLoadTaskCommand ed ) {
-        File file;
-        String localPath = ed.getServerFilePath();
-        if ( StringUtils.isBlank( localPath ) ) {
-            throw new IllegalArgumentException( "Must provide the file" );
-        }
-
-        file = new File( localPath );
-
-        if ( !file.canRead() ) {
-            throw new IllegalArgumentException( "Cannot read from file:" + file );
-        }
-
-        return file;
-    }
-
-    private void scrub( SimpleExpressionExperimentLoadTaskCommand o ) {
-        o.setName( scrub( o.getName() ) );
-        o.setDescription( scrub( o.getDescription() ) );
-        o.setShortName( scrub( o.getShortName() ) );
-    }
-
-    private String scrub( String s ) {
-        return StringEscapeUtils.escapeHtml4( s );
     }
 
 }

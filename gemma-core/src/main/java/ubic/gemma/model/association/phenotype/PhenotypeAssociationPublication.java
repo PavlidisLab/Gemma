@@ -31,14 +31,7 @@ public abstract class PhenotypeAssociationPublication implements java.io.Seriali
     private String type;
     private BibliographicReference citation;
 
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.ExternalDatabase}.
-         */
-        public static PhenotypeAssociationPublication newInstance() {
-            return new PhenotypeAssociationPublicationImpl();
-        }
-
+    public PhenotypeAssociationPublication() {
     }
 
     public BibliographicReference getCitation() {
@@ -49,23 +42,28 @@ public abstract class PhenotypeAssociationPublication implements java.io.Seriali
         this.citation = citation;
     }
 
-    public PhenotypeAssociationPublication() {
-    }
-
     public String getType() {
         return this.type;
-    }
-
-    public Long getId() {
-        return this.id;
     }
 
     public void setType( String type ) {
         this.type = type;
     }
 
+    public Long getId() {
+        return this.id;
+    }
+
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public static final class Factory {
+
+        public static PhenotypeAssociationPublication newInstance() {
+            return new PhenotypeAssociationPublicationImpl();
+        }
+
     }
 
 }

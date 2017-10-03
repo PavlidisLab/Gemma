@@ -20,84 +20,65 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 /**
  * A "probe" (Affymetrix); for other types of arrays, there is no practical distinction between compositesequences and
  * reporters, and all analysis would take place at the level of CompositeSequences.
- * <p>
  * For a brief time this was part of our core data model; but currently this is used only transiently during parsing
  * etc. of Affymetrix platform sequence files.
  */
 public class Reporter extends Describable {
 
     /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 3703827938981026012L;
+    private Integer row;
+    private Integer col;
+    private Long startInBioChar;
+    private String strand;
+    private CompositeSequence compositeSequence;
+    private ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic;
+
+    /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public Reporter() {
     }
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3703827938981026012L;
-
-    private java.lang.Integer row;
-
-    /**
-     * 
-     */
-    public java.lang.Integer getRow() {
+    public Integer getRow() {
         return this.row;
     }
 
-    public void setRow( java.lang.Integer row ) {
+    public void setRow( Integer row ) {
         this.row = row;
     }
 
-    private java.lang.Integer col;
-
-    /**
-     * 
-     */
-    public java.lang.Integer getCol() {
+    public Integer getCol() {
         return this.col;
     }
 
-    public void setCol( java.lang.Integer col ) {
+    public void setCol( Integer col ) {
         this.col = col;
     }
 
-    private java.lang.Long startInBioChar;
-
-    /**
-     * 
-     */
-    public java.lang.Long getStartInBioChar() {
+    public Long getStartInBioChar() {
         return this.startInBioChar;
     }
 
-    public void setStartInBioChar( java.lang.Long startInBioChar ) {
+    public void setStartInBioChar( Long startInBioChar ) {
         this.startInBioChar = startInBioChar;
     }
 
-    private java.lang.String strand;
-
     /**
-     * <p>
-     * Strand on which the reporter aligns to the biologicalCharacteristic. True=plus strand. False=minus strand.
-     * </p>
+     * @return Strand on which the reporter aligns to the biologicalCharacteristic. True=plus strand. False=minus strand.
      */
-    public java.lang.String getStrand() {
+    public String getStrand() {
         return this.strand;
     }
 
-    public void setStrand( java.lang.String strand ) {
+    public void setStrand( String strand ) {
         this.strand = strand;
     }
 
-    private CompositeSequence compositeSequence;
-
-    /**
-     * 
-     */
     public CompositeSequence getCompositeSequence() {
         return this.compositeSequence;
     }
@@ -106,28 +87,20 @@ public class Reporter extends Describable {
         this.compositeSequence = compositeSequence;
     }
 
-    private ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic;
-
     /**
-     * <p>
-     * The sequence that is on the array for this reporter.
-     * </p>
+     * @return The sequence that is on the array for this reporter.
      */
     public ubic.gemma.model.genome.biosequence.BioSequence getImmobilizedCharacteristic() {
         return this.immobilizedCharacteristic;
     }
 
-    public void setImmobilizedCharacteristic( ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic ) {
+    public void setImmobilizedCharacteristic(
+            ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic ) {
         this.immobilizedCharacteristic = immobilizedCharacteristic;
     }
 
-    /**
-     * Constructs new instances of {@link Reporter}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link Reporter}.
-         */
+
         public static Reporter newInstance() {
             return new Reporter();
         }

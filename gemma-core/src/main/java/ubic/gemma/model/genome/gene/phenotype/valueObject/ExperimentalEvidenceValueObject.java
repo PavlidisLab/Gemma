@@ -40,9 +40,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
         super( id );
     }
 
-    /**
-     * Entity to Value Object
-     */
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
 
@@ -60,9 +57,8 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
                         valueUri = voCha.getValueUri();
                     }
 
-                    CharacteristicValueObject chaValueObject = new CharacteristicValueObject( voCha.getId(), voCha.getValue(),
-                            voCha.getCategory(), valueUri, voCha.getCategoryUri() );
-
+                    CharacteristicValueObject chaValueObject = new CharacteristicValueObject( voCha.getId(),
+                            voCha.getValue(), voCha.getCategory(), valueUri, voCha.getCategoryUri() );
 
                     this.experimentCharacteristics.add( chaValueObject );
                 } else {

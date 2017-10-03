@@ -21,7 +21,6 @@ package ubic.gemma.model.common.quantitationtype;
 import ubic.gemma.model.IdentifiableValueObject;
 
 import java.io.Serializable;
-import java.util.*;
 
 /**
  * @author thea
@@ -50,25 +49,22 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
     public QuantitationTypeValueObject() {
     }
 
-    /**
-     * Constructor to build value object from QuantitationType
-     */
     public QuantitationTypeValueObject( QuantitationType qt ) {
         super( qt.getId() );
         this.name = qt.getName();
         this.description = qt.getDescription();
         this.generalType = qt.getGeneralType().toString();
         this.isBackground = qt.getIsBackground() != null && qt.getIsBackground();
-        this.isBackgroundSubtracted = qt.getIsBackgroundSubtracted() != null && qt.getIsBackgroundSubtracted() ;
-        this.isBatchCorrected =  qt.getIsBatchCorrected() != null && qt.getIsBatchCorrected() ;
-        this.isMaskedPreferred = qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() ;
-        this.isNormalized = qt.getIsNormalized() != null && qt.getIsNormalized() ;
-        this.isPreferred = qt.getIsPreferred() != null && qt.getIsPreferred() ;
-        this.isRatio = qt.getIsRatio() != null && qt.getIsRatio() ;
-        this.representation = qt.getRepresentation().toString() ;
-        this.scale = qt.getScale().toString() ;
-        this.type = qt.getType().toString() ;
-        this.isRecomputedFromRawData = qt.getIsRecomputedFromRawData() != null && qt.getIsRecomputedFromRawData() ;
+        this.isBackgroundSubtracted = qt.getIsBackgroundSubtracted() != null && qt.getIsBackgroundSubtracted();
+        this.isBatchCorrected = qt.getIsBatchCorrected() != null && qt.getIsBatchCorrected();
+        this.isMaskedPreferred = qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred();
+        this.isNormalized = qt.getIsNormalized() != null && qt.getIsNormalized();
+        this.isPreferred = qt.getIsPreferred() != null && qt.getIsPreferred();
+        this.isRatio = qt.getIsRatio() != null && qt.getIsRatio();
+        this.representation = qt.getRepresentation().toString();
+        this.scale = qt.getScale().toString();
+        this.type = qt.getType().toString();
+        this.isRecomputedFromRawData = qt.getIsRecomputedFromRawData() != null && qt.getIsRecomputedFromRawData();
     }
 
     public String getDescription() {
@@ -112,9 +108,7 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
     }
 
     /**
-     * <p>
-     * If the data represented is a missing-value masked version of the preferred data.
-     * </p>
+     * @return If the data represented is a missing-value masked version of the preferred data.
      */
     public boolean getIsMaskedPreferred() {
         return this.isMaskedPreferred;
@@ -141,10 +135,8 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
     }
 
     /**
-     * <p>
-     * Indicates whether the quantitation type is expressed as a ratio. This has a natural impact on the interpretation.
+     * @return Indicates whether the quantitation type is expressed as a ratio. This has a natural impact on the interpretation.
      * If false, the value is "absolute".
-     * </p>
      */
     public boolean getIsRatio() {
         return this.isRatio;

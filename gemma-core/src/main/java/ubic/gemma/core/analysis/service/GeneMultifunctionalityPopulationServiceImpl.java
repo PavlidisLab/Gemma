@@ -19,34 +19,32 @@
 
 package ubic.gemma.core.analysis.service;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.basecode.math.Rank;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.Multifunctionality;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import ubic.basecode.math.Rank;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.Multifunctionality;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
-
 /**
  * Compute gene multifunctionality and store it in the database.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifunctionalityPopulationService {
@@ -68,11 +66,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     @Autowired
     private TaxonService taxonService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService#updateMultifunctionality()
-     */
     @Override
     public void updateMultifunctionality() {
         for ( Taxon t : taxonService.loadAll() ) {
@@ -81,13 +74,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService#updateMultifunctionality(ubic.gemma.model
-     * .genome.Taxon)
-     */
     @Override
     public void updateMultifunctionality( Taxon taxon ) {
         Collection<Gene> genes = geneService.loadAll( taxon );
@@ -103,7 +89,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
         log.info( "Saving multifunctionality for " + genes.size() + " genes" );
 
-        Collection<Gene> batch = new HashSet<Gene>();
+        Collection<Gene> batch = new HashSet<>();
 
         int batchSize = 200;
         int i = 0;
@@ -129,9 +115,9 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
     /**
      * Implementation of multifunctionality computations as described in Gillis and Pavlidis (2011) PLoS ONE 6:2:e17258.
-     * 
-     * @param gomap
-     * @return
+     *
+     * @param gomap gomap
+     * @return map
      */
     private Map<Gene, Multifunctionality> computeMultifunctionality( Map<Gene, Collection<String>> gomap ) {
 
@@ -141,7 +127,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
         assert !gomap.isEmpty();
 
-        Map<String, Integer> goGroupSizes = new HashMap<String, Integer>();
+        Map<String, Integer> goGroupSizes = new HashMap<>();
         for ( Gene g : gomap.keySet() ) {
             for ( String go : gomap.get( g ) ) {
                 if ( !goGroupSizes.containsKey( go ) ) {
@@ -154,8 +140,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
         log.info( "Computed GO group sizes" );
 
-        Map<Gene, Double> geneMultifunctionalityScore = new HashMap<Gene, Double>();
-        Map<Gene, Multifunctionality> geneMultifunctionality = new HashMap<Gene, Multifunctionality>();
+        Map<Gene, Double> geneMultifunctionalityScore = new HashMap<>();
+        Map<Gene, Multifunctionality> geneMultifunctionality = new HashMap<>();
         int numGenes = gomap.size();
 
         for ( Gene gene : gomap.keySet() ) {
@@ -203,10 +189,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         return geneMultifunctionality;
     }
 
-    /**
-     * @param genes
-     * @return
-     */
     private Map<Gene, Collection<String>> fetchGoAnnotations( Collection<Gene> genes ) {
 
         if ( !goService.isRunning() ) {
@@ -226,11 +208,11 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
          * Build the GO 'matrix'.
          */
         int count = 0;
-        Map<Gene, Collection<String>> gomap = new HashMap<Gene, Collection<String>>();
+        Map<Gene, Collection<String>> gomap = new HashMap<>();
         for ( Gene gene : genes ) {
             Collection<VocabCharacteristic> annots = gene2GOService.findByGene( gene );
 
-            Collection<String> termsForGene = new HashSet<String>();
+            Collection<String> termsForGene = new HashSet<>();
 
             if ( annots.isEmpty() ) {
                 // we just count it as a gene with lowest multifunctionality.
@@ -250,8 +232,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
                 termsForGene.add( t.getValue() );
 
-                Collection<OntologyTerm> parents = goService.getAllParents( GeneOntologyServiceImpl.getTermForURI( t
-                        .getValueUri() ) );
+                Collection<OntologyTerm> parents = goService
+                        .getAllParents( GeneOntologyServiceImpl.getTermForURI( t.getValueUri() ) );
 
                 for ( OntologyTerm p : parents ) {
                     termsForGene.add( p.getTerm() );
@@ -272,7 +254,6 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         }
         return gomap;
     }
-
 
     private void saveBatch( Collection<Gene> genes, Map<Gene, Multifunctionality> mfs ) {
         genes = geneService.thawLite( genes );

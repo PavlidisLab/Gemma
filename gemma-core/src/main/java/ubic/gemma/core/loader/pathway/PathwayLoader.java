@@ -14,24 +14,12 @@
  */
 package ubic.gemma.core.loader.pathway;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
-//import org.biopax.paxtools.io.jena.JenaIOHandler;
-//import org.biopax.paxtools.io.pathwayCommons.PathwayCommonsIOHandler;
-//import org.biopax.paxtools.model.BioPAXElement;
-//import org.biopax.paxtools.model.BioPAXLevel;
-//import org.biopax.paxtools.model.Model;
-//import org.biopax.paxtools.model.level3.Interaction;
+import java.io.*;
 
 /**
  * FIXME not implemented.
- * 
+ *
  * @author kelsey
- * @version $Id$
  */
 
 public class PathwayLoader {
@@ -42,10 +30,6 @@ public class PathwayLoader {
         super();
     }
 
-    /**
-     * @param fileName location of biopax owl file to be loaded
-     * @throws FileNotFoundException
-     */
     PathwayLoader( String fileName ) throws IOException {
         this();
         try (InputStream inputStream = new FileInputStream( new File( fileName ) );) {
@@ -56,9 +40,9 @@ public class PathwayLoader {
 
     /**
      * The input stream should be the location of an owl file in biopax format
-     * 
-     * @param inputStream
-     * @throws FileNotFoundException
+     *
+     * @param inputStream inpu stream
+     * @throws FileNotFoundException file not found
      */
     public void load( InputStream inputStream ) throws FileNotFoundException {
         // JenaIOHandler jenaIOHandler = new JenaIOHandler(BioPAXLevel.L2);
@@ -68,9 +52,9 @@ public class PathwayLoader {
 
     /**
      * Loads the desired pathway from pathway commons using their custom identifiers.
-     * 
-     * @param cPathId
-     * @throws IOException
+     *
+     * @param cPathId path id
+     * @throws IOException io problems
      */
     public void load( String cPathId ) throws IOException {
 
@@ -81,17 +65,11 @@ public class PathwayLoader {
 
     }
 
-    /**
-     * @return
-     */
     // public Set<BioPAXElement> getAllObjectsInModel(){
     //
     // return this.loadedModel.getObjects();
     // }
 
-    /**
-     * @return
-     */
     // public Set<Interaction> getAllInteractions(){
     //
     // return this.loadedModel.getObjects( Interaction.class );

@@ -21,6 +21,26 @@ public class TaxonStringArg extends TaxonArg<String> {
         return check( this.value == null ? null : this.tryAllNameProperties( service ) );
     }
 
+    @Override
+    public String getPropertyName( TaxonService service ) {
+        Taxon taxon = service.findByCommonName( this.value );
+
+        if ( taxon != null ) {
+            return "commonName";
+        }
+        taxon = service.findByScientificName( this.value );
+
+        if ( taxon != null ) {
+            return "scientificName";
+        }
+        taxon = service.findByAbbreviation( this.value );
+        if ( taxon != null ) {
+            return "abbreviation";
+        }
+
+        return null;
+    }
+
     /**
      * Tries to retrieve a Taxon based on its names.
      *

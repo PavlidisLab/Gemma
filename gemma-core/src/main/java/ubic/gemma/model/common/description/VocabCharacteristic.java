@@ -56,9 +56,6 @@ public class VocabCharacteristic extends Characteristic {
                 .append( this.getValueUri() ).toHashCode();
     }
 
-    /**
-     * @see ubic.gemma.model.common.description.Characteristic#toString()
-     */
     @Override
     public String toString() {
         // return toString( 0 );
@@ -71,13 +68,8 @@ public class VocabCharacteristic extends Characteristic {
         return ind + this.getValue() + "\n";
     }
 
-    /**
-     * Constructs new instances of {@link VocabCharacteristic}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link VocabCharacteristic}.
-         */
+
         public static VocabCharacteristic newInstance() {
             return new VocabCharacteristic();
         }

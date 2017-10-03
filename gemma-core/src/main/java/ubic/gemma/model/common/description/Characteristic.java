@@ -84,7 +84,7 @@ public class Characteristic extends AbstractAuditable {
     }
 
     /**
-     * This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL ontology
+     * @return This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL ontology
      * term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for the
      * abstract class.
      */
@@ -97,7 +97,7 @@ public class Characteristic extends AbstractAuditable {
     }
 
     /**
-     * either the human readable form of the classUri or a free text version if no classUri exists
+     * @return either the human readable form of the classUri or a free text version if no classUri exists
      */
     public String getCategory() {
         return this.category;
@@ -108,7 +108,7 @@ public class Characteristic extends AbstractAuditable {
     }
 
     /**
-     * The URI of the class that this is an instance of. Will only be different from the termUri when the class is
+     * @return The URI of the class that this is an instance of. Will only be different from the termUri when the class is
      * effectively abstract, and this is a concrete instance. By putting the abstract class URI in the object we can
      * more readily group together Characteristics that are instances of the same class. For example: If the classUri is
      * "Sex", then the termUri might be "male" or "female" for various instances. Otherwise, the classUri and the
@@ -132,7 +132,7 @@ public class Characteristic extends AbstractAuditable {
     }
 
     /**
-     * The human-readable term (e.g., "OrganismPart"; "kinase")
+     * @return The human-readable term (e.g., "OrganismPart"; "kinase")
      */
     public String getValue() {
         return this.value;
@@ -142,21 +142,12 @@ public class Characteristic extends AbstractAuditable {
         this.value = value;
     }
 
-    /**
-     * Constructs new instances of {@link Characteristic}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link Characteristic}.
-         */
+
         public static Characteristic newInstance() {
             return new Characteristic();
         }
 
-        /**
-         * Constructs a new instance of {@link Characteristic}, taking all possible properties (except the
-         * identifier(s))as arguments.
-         */
         public static Characteristic newInstance( String name, String description, AuditTrail auditTrail, String value,
                 String category, String categoryUri, GOEvidenceCode evidenceCode ) {
             final Characteristic entity = new Characteristic();

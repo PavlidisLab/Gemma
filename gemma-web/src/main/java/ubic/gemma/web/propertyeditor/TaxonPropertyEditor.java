@@ -18,26 +18,24 @@
  */
 package ubic.gemma.web.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.beans.PropertyEditorSupport;
 
 /**
  * Used to convert Taxon from and into strings for display in forms. Either by primary key (id), common or scientific
  * name.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class TaxonPropertyEditor extends PropertyEditorSupport {
 
-    private static Log log = LogFactory.getLog( TaxonPropertyEditor.class.getName() );
+    private static final Log log = LogFactory.getLog( TaxonPropertyEditor.class.getName() );
 
-    private TaxonService taxonService;
+    private final TaxonService taxonService;
 
     public TaxonPropertyEditor( TaxonService taxonService ) {
         this.taxonService = taxonService;
@@ -53,13 +51,14 @@ public class TaxonPropertyEditor extends PropertyEditorSupport {
 
     /**
      * Allow us to convert from either an id or the scientific name.
-     * 
-     * @param txt
+     *
+     * @param text text
      */
     @Override
     public void setAsText( String text ) throws IllegalArgumentException {
-        Object taxon = null;
-        if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
+        Object taxon;
+        if ( log.isDebugEnabled() )
+            log.debug( "Transforming " + text + " to a taxon..." );
         try {
             Long id = Long.parseLong( text );
             taxon = taxonService.load( id );

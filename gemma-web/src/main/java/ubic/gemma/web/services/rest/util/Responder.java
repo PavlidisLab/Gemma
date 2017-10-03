@@ -45,24 +45,25 @@ public class Responder {
      * Creates a new 200 response object. Use this method when everything is shiny, and you are returning the object
      * that the client expects. This includes empty collections or arrays
      *
-     * @param servletResponse the object to set the appropriate response code on.
-     * @return {@link ResponseDataObject} always null, as the response payload for code 204 has to be empty.
+     * @param servletResponse the object to set the appropriate response code on
+     * @return always null, as the response payload for code 204 has to be empty.
      */
     public static ResponseDataObject code200( Object toReturn, HttpServletResponse servletResponse ) {
         return code( Response.Status.OK, toReturn, servletResponse );
     }
 
     /**
+     * <p>
      * Creates a new 204 response object. Use this method when client submitted a request that was successfully processed,
      * and no data needs to be returned (e.g. DELETE requests). This response status requires that no payload is returned,
      * as it otherwise defaults to 200 in the javax.ws.rs layer.
-     * <br/>
+     * </p>
      * <a href="https://tools.ietf.org/html/rfc7231#section-6.3.5">HTTP RFC</a>:
      * The 204 (No Content) status code indicates that the server has successfully fulfilled the request and that there
      * is no additional content to send in the response payload body.
      *
-     * @param servletResponse the object to set the appropriate response code on.
-     * @return {@link ResponseDataObject} always null, as the response payload for code 204 has to be empty.
+     * @param servletResponse the object to set the appropriate response code on
+     * @return always null, as the response payload for code 204 has to be empty.
      */
     @SuppressWarnings({ "SameReturnValue", "WeakerAccess", "unused" })
     // Same return value: Intentional behavior - has to be consistent with other methods.
@@ -73,16 +74,17 @@ public class Responder {
     }
 
     /**
+     * <p>
      * Creates a new 400 response object. Use this method when there is an apparent error in the client request.
-     * <br/>
+     * </p>
      * <a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">HTTP RFC</a>:
-     * <quote>The 400 (Bad Request) status code indicates that the server cannot or will not process the request due to
+     * <pre>The 400 (Bad Request) status code indicates that the server cannot or will not process the request due to
      * something that is perceived to be a client error (e.g., malformed request syntax, invalid request message
-     * framing, or deceptive request routing)</quote>
+     * framing, or deceptive request routing)</pre>
      *
-     * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
-     * @param servletResponse the object to set the appropriate response code on.
-     * @return see {@link this#code(Response.Status, Object, HttpServletResponse)}
+     * @param message         A String that will be used in the ResponseErrorObject as a message describing the problem.
+     * @param servletResponse the object to set the appropriate response code on
+     * @return response data object
      */
     public static ResponseDataObject code400( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.BAD_REQUEST;
@@ -90,17 +92,18 @@ public class Responder {
     }
 
     /**
+     * <p>
      * Creates a new 404 response object. Use this method when you are certain that the resource the client requested
-     * does not exist. To denote an empty collection or an array, it is preferred to use {@link this#code204(HttpServletResponse)}.
-     * <br/>
+     * does not exist. To denote an empty collection or an array, it is preferred to use this#code204(HttpServletResponse).
+     * </p>
      * <a href="https://tools.ietf.org/html/rfc7231#section-6.5.4">HTTP RFC</a>:
-     * <quote>The 404 (Not Found) status code indicates that the origin server did not find a current representation for
-     * the target resource or is not willing to disclose that one exists.</quote>
+     * <pre>The 404 (Not Found) status code indicates that the origin server did not find a current representation for
+     * the target resource or is not willing to disclose that one exists.</pre>
      *
-     * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
-     *                        For automatic null object detection, use {@link this#autoCode(Object, HttpServletResponse)}.
-     * @param servletResponse the object to set the appropriate response code on.
-     *                        return see {@link this#code(Response.Status, Object, HttpServletResponse)}
+     * @param message         A String that will be used in the ResponseErrorObject as a message describing the problem.
+     *                        For automatic null object detection, use this#autoCode(Object, HttpServletResponse).
+     * @param servletResponse the object to set the appropriate response code on
+     * @return response data object
      */
     public static ResponseDataObject code404( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.NOT_FOUND;
@@ -110,9 +113,9 @@ public class Responder {
     /**
      * Creates a 503 response object. Use this when you want to signal that this particular service is temporarily unavailable.
      *
-     * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
-     * @param servletResponse the object to set the appropriate response code on.
-     *                        return see {@link this#code(Response.Status, Object, HttpServletResponse)}
+     * @param message         A String that will be used in the ResponseErrorObject as a message describing the problem.
+     * @param servletResponse the object to set the appropriate response code on
+     * @return response data object
      */
     @SuppressWarnings("unused") // Keeping the method in case we need it handy on short notice.
     public static ResponseDataObject code503( String message, HttpServletResponse servletResponse ) {
@@ -121,14 +124,16 @@ public class Responder {
     }
 
     /**
-     * Tries to guess the code of the response based on the given arguments, and creates a {@link ResponseErrorObject} if necessary.
+     * <p>
+     * Tries to guess the code of the response based on the given arguments, and creates a ResponseErrorObject if necessary.
      * Code defaults to '200 - OK', even for empty collections and arrays.
-     * If toReturn is null: '404 - Not found'. Use {@link this#code204(HttpServletResponse)} if you wish to set '204 - No content' instead
-     * If toReturn is an instance of {@link WellComposedErrorBody}: reads the code from the object.
+     * If toReturn is null: '404 - Not found'. Use this#code204(HttpServletResponse) if you wish to set '204 - No content' instead.
+     * If toReturn is an instance of WellComposedErrorBody: reads the code from the object
+     * </p>
      *
-     * @param toReturn        an object to be wrapped in a ResponseObject to be published to the API.
-     * @param servletResponse the object to set the appropriate response code on.
-     * @return see {@link this#code(Response.Status, Object, HttpServletResponse)} for manual code setting.
+     * @param toReturn        an object to be wrapped in a ResponseObject to be published to the API
+     * @param servletResponse the object to set the appropriate response code on
+     * @return response data object
      */
     public static ResponseDataObject autoCode( Object toReturn, HttpServletResponse servletResponse ) {
         if ( toReturn == null ) { // object is null.
@@ -160,6 +165,9 @@ public class Responder {
 
     /**
      * Sets a response code and flushes the servlet response buffer.
+     *
+     * @param code            response code
+     * @param servletResponse servlet response
      */
     private static void sendHeaders( Response.Status code, HttpServletResponse servletResponse ) {
         servletResponse.setStatus( code.getStatusCode() );

@@ -65,13 +65,8 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
         this.sourceExperiment = sourceExperiment;
     }
 
-    /**
-     * Constructs new instances of {@link ExpressionExperimentSubSet}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ExpressionExperimentSubSet}.
-         */
+
         public static ExpressionExperimentSubSet newInstance() {
             return new ExpressionExperimentSubSet();
         }

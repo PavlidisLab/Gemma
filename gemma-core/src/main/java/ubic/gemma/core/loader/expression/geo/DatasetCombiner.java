@@ -18,34 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,16 +25,25 @@ import org.apache.tools.ant.filters.StringInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import ubic.basecode.math.StringDistance;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.EutilFetch;
-import ubic.gemma.core.loader.expression.geo.model.GeoData;
-import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.core.loader.expression.geo.model.GeoSample;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
+import ubic.gemma.core.loader.expression.geo.model.*;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class to handle cases where there are multiple GEO dataset for a single actual experiment. This can occur in at least
@@ -84,33 +65,34 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
  * will have lower numbers. (that is, sample 12929 will match with 12945, not 12955, if the edit distance among the
  * choices is the same).
  * </p>
- * Another problem is that there is no way to go from GDS-->GSE-->other GDS without scraping the GEO web site.
+ * Another problem is that there is no way to go from GDS--&gt;GSE--&gt;other GDS without scraping the GEO web site.
  *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class DatasetCombiner {
 
+    static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    @SuppressWarnings("Annotator")
     private static final String PUNCTUATION_REGEXP = "[\\(\\)\\s-\\._]";
-
     /**
      * Careful, GEO changes this sometimes.
      */
     private static final String GSE_RECORD_REGEXP = "(GSE\\d+)";
-    /**
-     *
-     */
     private static final String ENTREZ_GEO_QUERY_URL_SUFFIX = "[Accession]&cmd=search";
-    /**
-     *
-     */
     private static final String ENTREZ_GEO_QUERY_URL_BASE = "https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=";
-    static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    private static Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
+    private static final Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
+    /**
+     * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
+     * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
+     * as a maximum distance (the pair of descriptors must be at least this close).
+     * Setting this correctly is important if there are to be singletons (samples that don't match to others)
+     */
+    private static final double SIMILARITY_THRESHOLD = 0.5;
     /**
      * Used to help ignore identifiers of microarrays in sample titles.
      */
-    private static Map<String, Collection<String>> microarrayNameStrings = new HashMap<>();
+    private static final Map<String, Collection<String>> microarrayNameStrings = new HashMap<>();
 
     static {
         // note : all lower case!
@@ -140,6 +122,22 @@ public class DatasetCombiner {
         microarrayNameStrings.get( "chip" ).add( "chipc" );
     }
 
+    // Maps of sample accessions to other useful bits.
+    private final LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> accToTitle = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> accToDataset = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<>();
+    private final LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<>();
+    private boolean doSampleMatching = true;
+
+    public DatasetCombiner() {
+        this.doSampleMatching = true;
+    }
+
+    public DatasetCombiner( boolean doSampleMatching ) {
+        this.doSampleMatching = doSampleMatching;
+    }
+
     /**
      * Given GEO series ids, find all associated data sets.
      *
@@ -161,7 +159,7 @@ public class DatasetCombiner {
     }
 
     /**
-     * @param seriesAccession
+     * @param seriesAccession series accession
      * @return GDSs that correspond to the given series. It will be empty if there is no GDS matching.
      */
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
@@ -187,7 +185,7 @@ public class DatasetCombiner {
              * Bug 2690. There must be a better way.
              */
             details = details.replaceAll( "encoding=\"UTF-8\"", "" );
-            try (StringInputStream sis = new StringInputStream( StringUtils.trim( details ) );) {
+            try (StringInputStream sis = new StringInputStream( StringUtils.trim( details ) )) {
 
                 Document document = builder.parse( sis );
 
@@ -212,7 +210,7 @@ public class DatasetCombiner {
     /**
      * Given a GDS, find the corresponding GSEs (there can be more than one in rare cases).
      *
-     * @param datasetAccession
+     * @param datasetAccession dataset accession
      * @return Collection of series this data set is derived from (this is almost always just a single item).
      */
     public static Collection<String> findGSEforGDS( String datasetAccession ) {
@@ -233,9 +231,9 @@ public class DatasetCombiner {
             conn.connect();
 
             try (InputStream is = conn.getInputStream();
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
-                String line = null;
+                String line;
                 while ( ( line = br.readLine() ) != null ) {
                     Matcher mat = pat.matcher( line );
                     if ( mat.find() ) {
@@ -277,34 +275,6 @@ public class DatasetCombiner {
     }
 
     /**
-     * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
-     * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
-     * as a maximum distance (the pair of descriptors must be at least this close).
-     * Setting this correctly is important if there are to be singletons (samples that don't match to others)
-     */
-    private final double SIMILARITY_THRESHOLD = 0.5;
-
-    // Maps of sample accessions to other useful bits.
-    private LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<>();
-    private LinkedHashMap<String, String> accToTitle = new LinkedHashMap<>();
-
-    private LinkedHashMap<String, String> accToDataset = new LinkedHashMap<>();
-
-    private LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<>();
-
-    private LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<>();
-
-    private boolean doSampleMatching = true;
-
-    public DatasetCombiner() {
-        this.doSampleMatching = true;
-    }
-
-    public DatasetCombiner( boolean doSampleMatching ) {
-        this.doSampleMatching = doSampleMatching;
-    }
-
-    /**
      * Given a GEO dataset it, find all GDS ids that are associated with it.
      */
     public Collection<String> findGDSforGDS( String datasetAccession ) {
@@ -314,7 +284,7 @@ public class DatasetCombiner {
     /**
      * Try to line up samples across datasets.
      *
-     * @param dataSets
+     * @param dataSets datasets
      */
     public GeoSampleCorrespondence findGSECorrespondence( Collection<GeoDataset> dataSets ) {
 
@@ -334,8 +304,8 @@ public class DatasetCombiner {
     /**
      * Try to line up samples across datasets contained in a series.
      *
-     * @param series
-     * @return
+     * @param series geo series
+     * @return geo sample correspondence
      */
     public GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
         Collection<GeoDataset> datasets = series.getDatasets();
@@ -363,7 +333,7 @@ public class DatasetCombiner {
     /**
      * See bug 1672 for why this is needed.
      *
-     * @param dataSets
+     * @param dataSets datasets
      */
     private void checkPlatformsMatchSeries( Collection<GeoDataset> dataSets ) {
         for ( GeoDataset dataset : dataSets ) {
@@ -402,9 +372,6 @@ public class DatasetCombiner {
 
     }
 
-    /**
-     * compute the distance.
-     */
     private int computeDistance( String trimmedTest, String trimmedTarget ) {
 
         return StringDistance.editDistance( trimmedTarget, trimmedTest );
@@ -456,6 +423,9 @@ public class DatasetCombiner {
 
     /**
      * This is used if there are no 'datasets' (GDS) to work with; we just use platforms.
+     *
+     * @param series geo series
+     * @return platform sample size
      */
     private int fillAccessionMaps( GeoSeries series ) {
 
@@ -473,6 +443,9 @@ public class DatasetCombiner {
 
     /**
      * This is the main point where comparisons are made.
+     *
+     * @param numDatasetsOrPlatforms number of datasets or platforms
+     * @return geo sample correspondence
      */
     private GeoSampleCorrespondence findCorrespondence( int numDatasetsOrPlatforms ) {
         GeoSampleCorrespondence result = new GeoSampleCorrespondence();
@@ -563,8 +536,10 @@ public class DatasetCombiner {
                     targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
                 }
 
-                log.debug( "Target: " + targetAcc + " (" + datasetOrPlatformA + ") " + targetTitle
-                        + ( targetSecondaryTitle == null ? "" : " a.k.a " + targetSecondaryTitle ) );
+                log.debug( "Target: " + targetAcc + " (" + datasetOrPlatformA + ") " + targetTitle + (
+                        targetSecondaryTitle == null ?
+                                "" :
+                                " a.k.a " + targetSecondaryTitle ) );
                 if ( StringUtils.isBlank( targetTitle ) )
                     throw new IllegalArgumentException( "Can't have blank titles for samples" );
 
@@ -598,14 +573,12 @@ public class DatasetCombiner {
                     }
 
                     // find the best match in this data set.
-                    double mindistance = Double.MAX_VALUE;
+                    double minDistance = Double.MAX_VALUE;
                     String bestMatch = null;
                     String bestMatchAcc = null;
 
                     int numTested = 0;
-                    for ( int i = 0; i < sampleAccs.size(); i++ ) {
-
-                        String testAcc = sampleAccs.get( i );
+                    for ( String testAcc : sampleAccs ) {
 
                         if ( allMatched.contains( testAcc ) )
                             continue;
@@ -669,7 +642,7 @@ public class DatasetCombiner {
 
                         double normalizedDistance = distance / Math.max( trimmedTarget.length(), trimmedTest.length() );
 
-                        double secondaryDistance = Double.MAX_VALUE;
+                        double secondaryDistance;
                         if ( targetSecondaryTitle != null && testSecondaryTitle != null ) {
                             secondaryDistance = computeDistance( targetSecondaryTitle, testSecondaryTitle );
 
@@ -685,13 +658,13 @@ public class DatasetCombiner {
                         }
 
                         // better than last one?
-                        if ( distance > mindistance ) {
+                        if ( distance > minDistance ) {
                             // log.debug( "Didn't beat best previous match, " + bestMatch );
                             continue;
                         }
 
                         // handle ties
-                        if ( distance == mindistance ) {
+                        if ( distance == minDistance ) {
                             wasTied = true;
                             /*
                              * Try to resolve the tie. Messy, yes.
@@ -709,41 +682,47 @@ public class DatasetCombiner {
                                     continue; // still tied, keep old one
                                 } else if ( suffixWeightedDistanceA < suffixWeightedDistanceB ) {
                                     // new one is better.
-                                    mindistance = distance;
+                                    minDistance = distance;
                                     bestMatch = testTitle;
                                     bestMatchAcc = testAcc;
                                     log.debug( "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB
-                                            + ") " + testTitle
-                                            + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                                            + ") " + testTitle + ( testSecondaryTitle == null ?
+                                            "" :
+                                            " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
                                     wasTied = false;
                                 }
                                 if ( suffixWeightedDistanceA > suffixWeightedDistanceB ) {
                                     // old one is still better.
                                     wasTied = false;
+                                    //noinspection UnnecessaryContinue // better for readability
                                     continue;
                                 }
                             } else if ( prefixWeightedDistanceA > prefixWeightedDistanceB ) {
                                 // new one is better.
-                                mindistance = distance;
+                                minDistance = distance;
                                 bestMatch = testTitle;
                                 bestMatchAcc = testAcc;
                                 log.debug(
                                         "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB + ") "
-                                                + testTitle
-                                                + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                                                + testTitle + ( testSecondaryTitle == null ?
+                                                "" :
+                                                " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
                                 wasTied = false;
                             } else if ( prefixWeightedDistanceA < prefixWeightedDistanceB ) {
                                 wasTied = false;
+                                //noinspection UnnecessaryContinue // better for readability
                                 continue; // old best is still better.
                             }
                         } else {
                             // definite new winner no tie
-                            mindistance = distance;
+                            minDistance = distance;
                             bestMatch = testTitle;
                             bestMatchAcc = testAcc;
                             log.debug(
-                                    "Current best match: " + testAcc + " (" + datasetOrPlatformB + ") " + testTitle
-                                            + ( testSecondaryTitle == null ? "" : " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                                    "Current best match: " + testAcc + " (" + datasetOrPlatformB + ") " + testTitle + (
+                                            testSecondaryTitle == null ?
+                                                    "" :
+                                                    " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
                             wasTied = false;
                         }
 
@@ -766,8 +745,7 @@ public class DatasetCombiner {
                             log.debug(
                                     "Match:\n" + targetAcc + "\t" + targetTitle + " (" + accToDataset.get( targetAcc )
                                             + ")" + "\n" + bestMatchAcc + "\t" + bestMatch + " (" + accToDataset
-                                                    .get( bestMatchAcc )
-                                            + ")" + " (Distance: " + mindistance + ")" );
+                                            .get( bestMatchAcc ) + ")" + " (Distance: " + minDistance + ")" );
                         result.addCorrespondence( targetAcc, bestMatchAcc );
                         alreadyMatched.get( bestMatchAcc ).add( datasetOrPlatformA );
                         alreadyMatched.get( targetAcc ).add( datasetOrPlatformB );
@@ -785,7 +763,8 @@ public class DatasetCombiner {
     }
 
     /**
-     * Identify stop-strings relating to microarray names.
+     * @param title title
+     * @return stop-strings relating to microarray names.
      */
     private Collection<String> getMicroarrayStringsToMatch( String title ) {
         Collection<String> result = new HashSet<>();
@@ -807,8 +786,7 @@ public class DatasetCombiner {
         GeoPlatform platform = platforms.iterator().next();
         Collection<String> organisms = platform.getOrganisms();
         assert organisms.size() > 0;
-        String organism = organisms.iterator().next();
-        return organism;
+        return organisms.iterator().next();
     }
 
     private boolean meetsMinimalThreshold( double normalizedDistance ) {
@@ -819,6 +797,7 @@ public class DatasetCombiner {
      * Implements constraints on samples to test.
      *
      * @param accToDatasetOrPlatform (depending on which we are using, platforms or data sets)
+     * @return should test
      */
     private boolean shouldTest( LinkedHashMap<String, String> accToDatasetOrPlatform,
             Map<String, Collection<String>> alreadyMatched, String datasetA, String targetAcc, String datasetB,
@@ -849,57 +828,29 @@ public class DatasetCombiner {
     }
 
     private void sortDataSets( final List<String> sampleAccs, List<String> dataSets ) {
-        Collections.sort( dataSets, new Comparator<String>() {
-            @Override
-            public int compare( String arg0, String arg1 ) {
-                int numSamples0 = 0;
-                int numSamples1 = 0;
-                for ( int j = 0; j < sampleAccs.size(); j++ ) {
-                    String targetAcc = sampleAccs.get( j );
-
-                    // skip samples that are not in this data set.
-                    if ( accToDataset.get( targetAcc ).equals( arg0 ) ) {
-                        numSamples0++;
-                    } else if ( accToDataset.get( targetAcc ).equals( arg1 ) ) {
-                        numSamples1++;
-                    }
-                }
-
-                if ( numSamples0 == numSamples1 ) {
-                    return 0;
-                } else if ( numSamples0 < numSamples1 ) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            }
-        } );
+        this.sortMap( sampleAccs, dataSets, accToDataset );
     }
 
     private void sortPlatforms( final List<String> sampleAccs, List<String> platforms ) {
-        Collections.sort( platforms, new Comparator<String>() {
+        this.sortMap( sampleAccs, platforms, accToPlatform );
+    }
+
+    private void sortMap( final List<String> sampleAccs, final List<String> objects, final Map<String, String> map ) {
+        Collections.sort( objects, new Comparator<String>() {
             @Override
             public int compare( String arg0, String arg1 ) {
                 int numSamples0 = 0;
                 int numSamples1 = 0;
-                for ( int j = 0; j < sampleAccs.size(); j++ ) {
-                    String targetAcc = sampleAccs.get( j );
-
+                for ( String targetAcc : sampleAccs ) {
                     // skip samples that are not in this data set.
-                    if ( accToPlatform.get( targetAcc ).equals( arg0 ) ) {
+                    if ( map.get( targetAcc ).equals( arg0 ) ) {
                         numSamples0++;
-                    } else if ( accToPlatform.get( targetAcc ).equals( arg1 ) ) {
+                    } else if ( map.get( targetAcc ).equals( arg1 ) ) {
                         numSamples1++;
                     }
                 }
 
-                if ( numSamples0 == numSamples1 ) {
-                    return 0;
-                } else if ( numSamples0 < numSamples1 ) {
-                    return -1;
-                } else {
-                    return 1;
-                }
+                return Integer.compare( numSamples0, numSamples1 );
             }
         } );
     }

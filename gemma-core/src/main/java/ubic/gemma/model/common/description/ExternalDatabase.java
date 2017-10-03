@@ -90,7 +90,7 @@ public class ExternalDatabase extends AbstractAuditable {
     }
 
     /**
-     * The name of the database on a local server.
+     * @return The name of the database on a local server.
      */
     public String getLocalInstallDbName() {
         return this.localInstallDbName;
@@ -116,13 +116,8 @@ public class ExternalDatabase extends AbstractAuditable {
         this.webUri = webUri;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.ExternalDatabase}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.ExternalDatabase}.
-         */
+
         public static ubic.gemma.model.common.description.ExternalDatabase newInstance() {
             return new ubic.gemma.model.common.description.ExternalDatabase();
         }

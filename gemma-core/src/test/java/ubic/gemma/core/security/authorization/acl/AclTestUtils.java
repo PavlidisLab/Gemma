@@ -1,12 +1,7 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,22 +9,19 @@ import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.stereotype.Component;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import static org.junit.Assert.*;
 
 /**
  * Methods for checking ACLs.
- * 
+ *
  * @author paul
  * @version $Id$
  */
@@ -49,8 +41,8 @@ public class AclTestUtils {
 
     /**
      * Make sure object f has no ACLs
-     * 
-     * @param f
+     *
+     * @param f f
      */
     public void checkDeletedAcl( Object f ) {
         try {
@@ -65,8 +57,8 @@ public class AclTestUtils {
 
     /**
      * CHeck the entire entity graph of an ee for ACL deletion.
-     * 
-     * @param ee
+     *
+     * @param ee ee
      */
     public void checkDeleteEEAcls( ExpressionExperiment ee ) {
         checkDeletedAcl( ee );
@@ -106,6 +98,7 @@ public class AclTestUtils {
     /**
      * Validate ACLs on EE
      *
+     * @param ee ee
      */
     public void checkEEAcls( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
@@ -175,7 +168,6 @@ public class AclTestUtils {
 
         }
     }
-
 
     public void checkEESubSetAcls( ExpressionExperimentSubSet eeset ) {
         checkEEAcls( eeset.getSourceExperiment() );

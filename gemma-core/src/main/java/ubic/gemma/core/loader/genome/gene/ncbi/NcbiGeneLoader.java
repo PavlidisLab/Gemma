@@ -18,38 +18,35 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Load or update information about genes from the NCBI Gene database.
- * 
+ *
  * @author jsantos, paul
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class NcbiGeneLoader {
-    private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
     private static final int QUEUE_SIZE = 1000;
-
-    private AtomicBoolean generatorDone;
-    private AtomicBoolean converterDone;
-    private AtomicBoolean loaderDone;
+    private static final Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
+    private final AtomicBoolean generatorDone;
+    private final AtomicBoolean converterDone;
+    private final AtomicBoolean loaderDone;
     private Persister persisterHelper;
     private int loadedGeneCount = 0;
     private TaxonService taxonService;
@@ -82,24 +79,17 @@ public class NcbiGeneLoader {
 
     /**
      * download the gene_info and gene2accession files, then call load
-     * 
-     * @return
-     * @throws IOException
      */
     public void load( boolean filterTaxa ) {
-        String geneInfoFile = "";
-        String gene2AccFile = "";
-        String geneHistoryFile = "";
-        String geneEnsemblFile = "";
-        load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, filterTaxa );
+        load( "", "", "", "", filterTaxa );
     }
 
     /**
-     * @param geneInfoFile the gene_info file
-     * @param gene2AccFile the gene2accession file
-     * @param historyfile
-     * @param ensembl mapping file
-     * @param filterTaxa should we filter out taxa we're not supporting
+     * @param geneInfoFile    the gene_info file
+     * @param gene2AccFile    the gene2accession file
+     * @param geneHistoryFile history file
+     * @param geneEnsemblFile mapping file
+     * @param filterTaxa      should we filter out taxa we're not supporting
      */
     public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
             boolean filterTaxa ) {
@@ -112,16 +102,10 @@ public class NcbiGeneLoader {
 
     }
 
-    /**
-     * @param geneInfoFile
-     * @param gene2AccFile
-     * @param geneHistoryFile
-     * @param geneEnsemblFile
-     * @param t the specific taxon to process
-     */
-    public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile, Taxon t ) {
+    public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
+            Taxon t ) {
 
-        Collection<Taxon> taxaToUse = new HashSet<Taxon>();
+        Collection<Taxon> taxaToUse = new HashSet<>();
         taxaToUse.add( t );
 
         this.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, taxaToUse );
@@ -129,11 +113,7 @@ public class NcbiGeneLoader {
     }
 
     public void load( Taxon t ) {
-        String geneInfoFile = "";
-        String gene2AccFile = "";
-        String geneHistoryFile = "";
-        String geneEnsemblFile = "";
-        load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, t );
+        load( "", "", "", "", t );
     }
 
     /**
@@ -152,7 +132,7 @@ public class NcbiGeneLoader {
      * Method to update taxon to indicate that genes have been loaded for that taxon are are usable. If there is a
      * parent taxon for this species and it has genes loaded against it then use that parent's taxons genes rather than
      * the species found in NCBI. Set the flag genesUSable to false for that child taxon that was found in ncbi.
-     * 
+     *
      * @param taxaGenesLoaded List of taxa that have had genes loaded into GEMMA from NCBI.
      */
     public void updateTaxaWithGenesUsable( Collection<Taxon> taxaGenesLoaded ) {
@@ -184,9 +164,6 @@ public class NcbiGeneLoader {
         }
     }
 
-    /**
-     * @param geneQueue
-     */
     void doLoad( final BlockingQueue<Gene> geneQueue ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -229,7 +206,6 @@ public class NcbiGeneLoader {
 
     /**
      * @param geneQueue a blocking queue of genes to be loaded into the database loads genes into the database
-     * @param geneQueue
      */
     private void load( final BlockingQueue<Gene> geneQueue ) {
         final SecurityContext context = SecurityContextHolder.getContext();
@@ -254,13 +230,6 @@ public class NcbiGeneLoader {
         }
     }
 
-    /**
-     * @param geneInfoFile
-     * @param gene2AccFile
-     * @param geneHistoryFile
-     * @param geneEnsemblFile
-     * @param supportedTaxa can be null if we just want everything
-     */
     private void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, String geneEnsemblFile,
             Collection<Taxon> supportedTaxa ) {
         /*
@@ -280,8 +249,8 @@ public class NcbiGeneLoader {
         converter.setProducerDoneFlag( converterDone );
 
         // create queue for GeneInfo objects
-        final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<NcbiGeneData>( QUEUE_SIZE );
-        final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>( QUEUE_SIZE );
+        final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
+        final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
 
         // Threaded producer - loading files into queue as GeneInfo objects
         if ( StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
@@ -305,8 +274,8 @@ public class NcbiGeneLoader {
 
     /**
      * Set to true to avoid downloading the files, if copies already exist (not recommended if you want an update!)
-     * 
-     * @param skipDownload
+     *
+     * @param skipDownload skip download
      */
     public void setSkipDownload( boolean skipDownload ) {
         this.doDownload = !skipDownload;
@@ -315,8 +284,8 @@ public class NcbiGeneLoader {
 
     /**
      * Indicate
-     * 
-     * @param startNcbiid
+     *
+     * @param startNcbiid start ncbi id
      */
     public void setStartingNcbiId( Integer startNcbiid ) {
         this.startingNcbiId = startNcbiid;

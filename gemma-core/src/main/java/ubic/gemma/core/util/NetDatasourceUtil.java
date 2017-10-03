@@ -18,58 +18,38 @@
  */
 package ubic.gemma.core.util;
 
-import java.io.IOException;
-import java.net.SocketException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
-
 import ubic.basecode.util.NetUtils;
+
+import java.io.IOException;
+import java.net.SocketException;
 
 /**
  * Helper methods to get FTP connection.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class NetDatasourceUtil {
 
+    private Log log = LogFactory.getLog( getClass().getName() );
+    private String host;
+    private String login = "anonymous";
+    private String password = "gemma@ubic.ca";
     public NetDatasourceUtil() {
         init();
     }
 
-    private Log log = LogFactory.getLog( getClass().getName() );
-
-    private String host;
-    private String login = "anonymous";
-    private String password = "gemma@ubic.ca";
-
     public abstract void init();
 
-    /**
-     * Convenient method to get a FTP connection.
-     * 
-     * @param mode
-     * @return
-     * @throws SocketException
-     * @throws IOException
-     */
     public FTPClient connect( int mode ) throws SocketException, IOException {
         log.info( "Connecting to " + host + " with " + login + " : " + password );
         return NetUtils.connect( mode, host, login, password );
     }
 
-    /**
-     * @param f
-     * @throws IOException
-     */
     public void disconnect( FTPClient f ) throws IOException {
         f.disconnect();
-    }
-
-    public void setHost( String host ) {
-        this.host = host;
     }
 
     public void setLogin( String login ) {
@@ -82,5 +62,9 @@ public abstract class NetDatasourceUtil {
 
     public String getHost() {
         return host;
+    }
+
+    public void setHost( String host ) {
+        this.host = host;
     }
 }

@@ -22,31 +22,15 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 
 /**
  * Interface representing a mechanism for normalizing two-color arrays.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public interface TwoChannelNormalizer {
 
-    /**
-     * Normalization without consideration of background or weights.
-     * 
-     * @param channelOneSignal
-     * @param channelTwoSignal
-     * @return
-     */
-    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+    DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal );
 
-    /**
-     * @param channelOneSignal
-     * @param channelTwoSignal
-     * @param channelOneBackground
-     * @param channelTwoBackground
-     * @param weights Allows different data points to have different weights in the normalization algorithm.
-     * @return
-     */
-    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
+    DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
             DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights );
 

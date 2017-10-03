@@ -14,27 +14,20 @@
  */
 package ubic.gemma.core.job.executor.webapp;
 
-import java.util.Collection;
-
 import ubic.gemma.core.job.ConflictingTaskException;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
+import java.util.Collection;
+
 /**
- * TODO: document me
- * 
  * @author paul, anton
- * @version $Id$
  */
 public interface TaskRunningService {
 
-    /**
-     * @param taskId id of the task
-     * @return
-     */
-    public SubmittedTask getSubmittedTask( String taskId );
+    SubmittedTask getSubmittedTask( String taskId );
 
     // TODO: Make this user specific. Probably in a controller with a session scoped collection.
     // TODO: at that level (WebAwareTaskRunningService) have a rate limiter for task submission by the same user
@@ -43,27 +36,30 @@ public interface TaskRunningService {
     /**
      * @return the submittedTasks
      */
-    public Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks();
+    Collection<SubmittedTask<? extends TaskResult>> getSubmittedTasks();
 
     /**
      * Submit a task and track its progress. When it is finished, the results can be retrieved with checkResult(). Tasks
      * can be cancelled with cancelTask().
-     * 
+     *
      * @param taskCommand The command to run. The submissionTime of the task is set after this call. This does not mean
-     *        that the job has started - it might be queued.
+     *                    that the job has started - it might be queued.
+     * @param <C>         task command implementation
+     * @return string
      * @throws ubic.gemma.core.job.ConflictingTaskException if the task is disallowed due to another conflicting task (e.g.,
-     *         two tasks of the same type by the same user).
+     *                                                      two tasks of the same type by the same user).
      */
-    public <C extends TaskCommand> String submitLocalTask( C taskCommand ) throws ConflictingTaskException;
+    <C extends TaskCommand> String submitLocalTask( C taskCommand ) throws ConflictingTaskException;
 
-    public <T extends Task> String submitLocalTask( T task ) throws ConflictingTaskException;
+    <T extends Task> String submitLocalTask( T task ) throws ConflictingTaskException;
 
     /**
      * Run task remotely if possible, otherwise run locally.
-     * 
-     * @param taskCommand
-     * @return
-     * @throws ConflictingTaskException
+     *
+     * @param taskCommand task command
+     * @param <C>         task command implementation
+     * @return string
+     * @throws ConflictingTaskException conflicting task problem
      */
-    public <C extends TaskCommand> String submitRemoteTask( C taskCommand ) throws ConflictingTaskException;
+    <C extends TaskCommand> String submitRemoteTask( C taskCommand ) throws ConflictingTaskException;
 }

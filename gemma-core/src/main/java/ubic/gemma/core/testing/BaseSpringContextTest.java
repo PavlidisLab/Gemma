@@ -24,7 +24,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -76,8 +75,8 @@ import java.util.List;
  * subclass for tests that need the container and use the database
  *
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings({ "WeakerAccess", "SameParameterValue", "unused" }) // Better left as is for future convenience
 @ContextConfiguration(locations = { "classpath*:ubic/gemma/applicationContext-component-scan.xml",
         "classpath*:ubic/gemma/testDataSource.xml", "classpath*:ubic/gemma/applicationContext-hibernate.xml",
         "classpath*:gemma/gsec/acl/security-bean-baseconfig.xml",
@@ -89,23 +88,19 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected static final int RANDOM_STRING_LENGTH = 10;
     protected static final int TEST_ELEMENT_COLLECTION_SIZE = 5;
 
-    private static ArrayDesign readOnlyad = null;
+    private static ArrayDesign readOnlyAd = null;
 
-    private static ExpressionExperiment readOnlyee = null;
-
+    private static ExpressionExperiment readOnlyEe = null;
+    protected final HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
+    };
+    protected final Log log = LogFactory.getLog( getClass() );
     @Autowired
     protected ExternalDatabaseService externalDatabaseService;
-
-    protected HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
-    };
-
-    protected Log log = LogFactory.getLog( getClass() );
-
     @Autowired
     protected Persister persisterHelper;
 
     /**
-     * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setteer)
+     * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setter)
      */
     protected JdbcTemplate simpleJdbcTemplate;
 
@@ -119,9 +114,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     private String sqlScriptEncoding;
 
-    /**
-     * @throws Exception
-     */
     @Override
     final public void afterPropertiesSet() throws Exception {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
@@ -138,13 +130,13 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     /**
      * @param commonName e.g. mouse,human,rat
-     * @return
+     * @return taxon
      */
     public Taxon getTaxon( String commonName ) {
         return this.taxonService.findByCommonName( commonName );
     }
 
-    public Gene getTestPeristentGene( Taxon taxon ) {
+    public Gene getTestPersistentGene( Taxon taxon ) {
         return testHelper.getTestPersistentGene( taxon );
     }
 
@@ -155,7 +147,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience shortcut for RandomStringUtils.randomAlphabetic( 10 ) (or something similar to that)
      *
-     * @return
+     * @return random alphabetic string
      */
     public String randomName() {
         return RandomStringUtils.randomAlphabetic( 10 );
@@ -230,10 +222,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
                         continueOnError );
     }
 
-    /**
-     * @param t
-     * @return
-     */
     protected <T> T getBean( Class<T> t ) {
         return this.applicationContext.getBean( t );
     }
@@ -242,34 +230,29 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to obtain instance of any bean by name. Use this only when necessary, you should wire your
      * tests by injection instead.
      *
-     * @param name
-     * @return
+     * @param name name
+     * @return bean
      */
     protected <T> T getBean( String name, Class<T> t ) {
         try {
             return this.applicationContext.getBean( name, t );
-        } catch ( BeansException e ) {
-            throw new RuntimeException( e );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
     }
 
-    /**
-     * @return
-     */
-    protected Gene getTestPeristentGene() {
+    protected Gene getTestPersistentGene() {
         return testHelper.getTestPersistentGene();
     }
 
     /**
      * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
-     * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired. If composite seequences are
+     * The ArrayDesign is provided with some CompositeSequence DesignElements if desired. If composite sequences are
      * created, they are each associated with a single generated Reporter.
      *
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
      * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_at....N_at
-     * @return
+     * @return array design
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, true );
@@ -277,21 +260,21 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     /**
      * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
-     * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired. If composite seequences are
+     * The ArrayDesign is provided with some CompositeSequence DesignElements if desired. If composite sequences are
      * created, they are each associated with a single generated Reporter.
      *
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
      * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_at....N_at
      * @param doSequence            add sequences to the array design that is created. Faster to avoid if you can.
-     * @return
+     * @return array design
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
             boolean doSequence, boolean readOnly ) {
         if ( readOnly ) {
-            if ( readOnlyad == null ) {
-                readOnlyad = testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
+            if ( readOnlyAd == null ) {
+                readOnlyAd = testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
             }
-            return readOnlyad;
+            return readOnlyAd;
         }
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
     }
@@ -311,12 +294,12 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         ad.setTechnologyType( TechnologyType.NONE );
         ad.setPrimaryTaxon( taxon );
 
-        for ( int i = 0; i < probeNames.size(); i++ ) {
+        for ( String probeName : probeNames ) {
 
             // Reporter reporter = Reporter.Factory.newInstance();
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
 
-            compositeSequence.setName( probeNames.get( i ) );
+            compositeSequence.setName( probeName );
 
             // compositeSequence.getComponentReporters().add( reporter );
             compositeSequence.setArrayDesign( ad );
@@ -357,7 +340,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      *
-     * @return
+     * @return bio assay
      */
     protected BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
         return testHelper.getTestPersistentBioAssay( ad );
@@ -366,43 +349,28 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      *
-     * @return
+     * @return bio assay
      */
     protected BioAssay getTestPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
         return testHelper.getTestPersistentBioAssay( ad, bm );
     }
 
-    /**
-     * @return
-     */
     protected BioMaterial getTestPersistentBioMaterial() {
         return testHelper.getTestPersistentBioMaterial();
     }
 
-    /**
-     * @return
-     */
     protected BioMaterial getTestPersistentBioMaterial( Taxon tax ) {
         return testHelper.getTestPersistentBioMaterial( tax );
     }
 
-    /**
-     * @return
-     */
     protected BioSequence getTestPersistentBioSequence() {
         return testHelper.getTestPersistentBioSequence();
     }
 
-    /**
-     * @return
-     */
     protected BioSequence getTestPersistentBioSequence( Taxon t ) {
         return testHelper.getTestPersistentBioSequence( t );
     }
 
-    /**
-     * @return
-     */
     protected BioSequence getTestNonPersistentBioSequence( Taxon t ) {
         return PersistentDummyObjectHelper.getTestNonPersistentBioSequence( t );
     }
@@ -411,10 +379,6 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPersistentBlatResult( querySequence, taxon );
     }
 
-    /**
-     * @param querySequence
-     * @return
-     */
     protected BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
         return testHelper.getTestPersistentBlatResult( querySequence, null );
     }
@@ -423,15 +387,15 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to get a (fairly) complete randomly generated persisted expression experiment.
      *
      * @param readOnly If the test only needs to read, a new data set might not be created.
-     * @return
+     * @return EE
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment( boolean readOnly ) {
         if ( readOnly ) {
-            if ( readOnlyee == null ) {
-                log.info( "Initializing test expression experimement (one-time for read-only tests)" );
-                readOnlyee = testHelper.getTestExpressionExperimentWithAllDependencies();
+            if ( readOnlyEe == null ) {
+                log.info( "Initializing test expression experiment (one-time for read-only tests)" );
+                readOnlyEe = testHelper.getTestExpressionExperimentWithAllDependencies();
             }
-            return readOnlyee;
+            return readOnlyEe;
         }
 
         return testHelper.getTestExpressionExperimentWithAllDependencies();
@@ -440,8 +404,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience method to get a (fairly) complete randomly generated persisted expression experiment.
      *
-     * @param doSequence Should the Arraydesign sequence information be filled in? (slower)
-     * @return
+     * @return EE
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences() {
         return testHelper.getTestExpressionExperimentWithAllDependencies( true );
@@ -449,7 +412,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     /**
      * @param prototype used to choose the platform
-     * @return
+     * @return EE
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences(
             ExpressionExperiment prototype ) {
@@ -459,7 +422,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience method to provide a Contact that can be used to fill non-nullable associations in test objects.
      *
-     * @return
+     * @return Contact
      */
     protected Contact getTestPersistentContact() {
         return testHelper.getTestPersistentContact();
@@ -468,7 +431,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Get a database entry from a fictitious database.
      *
-     * @return
+     * @return Db entry
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry() {
         return getTestPersistentDatabaseEntry( null, RandomStringUtils.randomAlphabetic( 10 ) );
@@ -478,7 +441,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
      *
-     * @return
+     * @param ed external Db
+     * @return Db entry
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry( ExternalDatabase ed ) {
         return getTestPersistentDatabaseEntry( null, ed );
@@ -492,7 +456,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
      *
-     * @return
+     * @return Db entry
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry( String accession, ExternalDatabase ed ) {
         return testHelper.getTestPersistentDatabaseEntry( accession, ed );
@@ -506,7 +470,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
      * objects. This implementation does NOT fill in associations of the created object.
      *
-     * @return
+     * @return EE
      */
     protected ExpressionExperiment getTestPersistentExpressionExperiment() {
         return testHelper.getTestPersistentExpressionExperiment();
@@ -516,7 +480,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
      * objects. This implementation does NOT fill in associations of the created object.
      *
-     * @return
+     * @param bioAssays bio assays
+     * @return EE
      */
     protected ExpressionExperiment getTestPersistentExpressionExperiment( Collection<BioAssay> bioAssays ) {
         return testHelper.getTestPersistentExpressionExperiment( bioAssays );
@@ -527,16 +492,13 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * objects. This implementation does NOT fill in associations of the created object except for the creation of
      * persistent BioMaterials and BioAssays so that database taxon lookups for this experiment will work.
      *
-     * @return
+     * @param taxon taxon
+     * @return EE
      */
     protected ExpressionExperiment getTestPersistentExpressionExperiment( Taxon taxon ) {
         return testHelper.getTestPersistentExpressionExperiment( taxon );
     }
 
-    /**
-     * @param gene
-     * @return
-     */
     protected GeneProduct getTestPersistentGeneProduct( Gene gene ) {
         return testHelper.getTestPersistentGeneProduct( gene );
     }
@@ -545,7 +507,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to provide a QuantitationType that can be used to fill non-nullable associations in test
      * objects.
      *
-     * @return
+     * @return QT
      */
     protected QuantitationType getTestPersistentQuantitationType() {
         return testHelper.getTestPersistentQuantitationType();
@@ -569,7 +531,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Run as a regular user.
      *
-     * @param userName
+     * @param userName user name
      */
     protected final void runAsUser( String userName ) {
         authenticationTestingUtil.switchToUser( this.applicationContext, userName );
@@ -580,11 +542,11 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
-     * Change the number of elements created in collections (basically controls the size of test data sets). This
-     * needn't be called unless the test needs larger data sets. FCall {@link resetTestCollectionSize} after you are
-     * done.
+     * Change the number of elements created in collections (basically controls the size of test data sets).
+     * This need not be called unless the test needs larger data sets. Call resetTestCollectionSize
+     * after you are done.
      *
-     * @param size
+     * @param size size
      */
     protected void setTestCollectionSize( int size ) {
         testHelper.setTestElementCollectionSize( size );
@@ -592,13 +554,11 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
 }
 
+@SuppressWarnings("WeakerAccess")
 final class AuthenticationTestingUtil {
 
     private UserManager userManager;
 
-    /**
-     * @param token
-     */
     private static void putTokenInContext( AbstractAuthenticationToken token ) {
         SecurityContextHolder.getContext().setAuthentication( token );
     }
@@ -613,6 +573,8 @@ final class AuthenticationTestingUtil {
     /**
      * Grant authority to a test user, with admin privileges, and put the token in the context. This means your tests
      * will be authorized to do anything an administrator would be able to do.
+     *
+     * @param ctx context
      */
     protected void grantAdminAuthority( ApplicationContext ctx ) {
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
@@ -644,17 +606,20 @@ final class AuthenticationTestingUtil {
     /**
      * Grant authority to a test user, with regular user privileges, and put the token in the context. This means your
      * tests will be authorized to do anything that user could do
+     *
+     * @param ctx      context
+     * @param username user name
      */
     protected void switchToUser( ApplicationContext ctx, String username ) {
 
         UserDetails user = userManager.loadUserByUsername( username );
 
-        List<GrantedAuthority> authrs = new ArrayList<>( user.getAuthorities() );
+        List<GrantedAuthority> grantedAuthorities = new ArrayList<>( user.getAuthorities() );
 
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
-        TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing", authrs );
+        TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing", grantedAuthorities );
         token.setAuthenticated( true );
 
         putTokenInContext( token );

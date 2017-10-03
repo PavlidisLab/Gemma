@@ -19,21 +19,16 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TaxonUtility;
 
+import java.util.*;
+
 /**
  * Methods to determine class and table names for coexpression queries.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class CoexpressionQueryUtils {
 
@@ -43,10 +38,6 @@ public class CoexpressionQueryUtils {
         return getExperimentLinkClassName( taxon );
     }
 
-    /**
-     * @param taxon
-     * @return
-     */
     static String getExperimentLinkClassName( Taxon taxon ) {
         String g2gClassName;
         if ( TaxonUtility.isHuman( taxon ) )
@@ -75,7 +66,7 @@ public class CoexpressionQueryUtils {
     }
 
     /**
-     * @param gene
+     * @param gene gene
      * @return the implementation class name for the GeneCoExpression entity for the taxon of the given gene
      */
     static String getGeneLinkClassName( Gene gene ) {
@@ -85,7 +76,7 @@ public class CoexpressionQueryUtils {
     }
 
     /**
-     * @param taxon
+     * @param taxon taxon
      * @return the implementation class name for the GeneCoExpression entity for that taxon.
      */
     static String getGeneLinkClassName( Taxon taxon ) {
@@ -103,7 +94,7 @@ public class CoexpressionQueryUtils {
     }
 
     /**
-     * @param taxon
+     * @param taxon taxon
      * @return the name of the SQL table that has the results for that taxon.
      */
     static String getGeneLinkTableName( Taxon taxon ) {
@@ -121,7 +112,7 @@ public class CoexpressionQueryUtils {
     }
 
     /**
-     * @param taxon
+     * @param taxon taxon
      * @return the name of the SQL Tabel for the support details for that taxon.
      */
     static String getSupportDetailsTableName( Taxon taxon ) {
@@ -139,7 +130,7 @@ public class CoexpressionQueryUtils {
     }
 
     /**
-     * @param links
+     * @param links links
      * @return map of gene IDs to genes it is coexpressed with,
      */
     static Map<Long, Set<Long>> linksToMap( Collection<NonPersistentNonOrderedCoexpLink> links ) {
@@ -148,8 +139,10 @@ public class CoexpressionQueryUtils {
         for ( NonPersistentNonOrderedCoexpLink li : links ) {
             Long g1 = li.getFirstGene();
             Long g2 = li.getSecondGene();
-            if ( !tr.containsKey( g1 ) ) tr.put( g1, new HashSet<Long>() );
-            if ( !tr.containsKey( g2 ) ) tr.put( g2, new HashSet<Long>() );
+            if ( !tr.containsKey( g1 ) )
+                tr.put( g1, new HashSet<Long>() );
+            if ( !tr.containsKey( g2 ) )
+                tr.put( g2, new HashSet<Long>() );
             tr.get( g1 ).add( g2 );
             tr.get( g2 ).add( g1 );
         }

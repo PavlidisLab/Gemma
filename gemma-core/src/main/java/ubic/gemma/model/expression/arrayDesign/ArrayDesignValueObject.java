@@ -24,13 +24,13 @@ import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueO
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 
 /**
  * Value object for quickly displaying varied information about Array Designs.
  *
  * @author paul et al
  */
+@SuppressWarnings("unused") // Used in front end
 public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign>
         implements java.io.Serializable, Comparable<ArrayDesignValueObject> {
     /**
@@ -50,7 +50,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     private Boolean isMergee;
     private Boolean isSubsumed;
     private Boolean isSubsumer;
-    private Boolean hasAnnotationFile;
     private java.util.Date lastGeneMapping;
     private java.util.Date lastRepeatMask;
     private java.util.Date lastSequenceAnalysis;
@@ -94,9 +93,11 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     /**
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
+     *
+     * @param ad ad
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
-        super(ad);
+        super( ad );
         this.name = ad.getName();
         this.shortName = ad.getShortName();
         this.description = ad.getDescription();
@@ -240,9 +241,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * Indicates this array design is the merger of other array designs.
-     * </p>
+     * @return Indicates this array design is the merger of other array designs.
      */
     public Boolean getIsMerged() {
         return this.isMerged;
@@ -253,9 +252,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * Indicates that this array design has been merged into another.
-     * </p>
+     * @return Indicates that this array design has been merged into another.
      */
     public Boolean getIsMergee() {
         return this.isMergee;
@@ -266,9 +263,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * Indicate if this array design is subsumed by some other array design.
-     * </p>
+     * @return Indicate if this array design is subsumed by some other array design.
      */
     public Boolean getIsSubsumed() {
         return this.isSubsumed;
@@ -279,9 +274,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * Indicates if this array design subsumes some other array design(s)
-     * </p>
+     * @return Indicates if this array design subsumes some other array design(s)
      */
     public Boolean getIsSubsumer() {
         return this.isSubsumer;
@@ -332,9 +325,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * The number of unique genes that this array design maps to.
-     * </p>
+     * @return The number of unique genes that this array design maps to.
      */
     public String getNumGenes() {
         return this.numGenes;
@@ -345,9 +336,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * The number of probes that have BLAT alignments.
-     * </p>
+     * @return The number of probes that have BLAT alignments.
      */
     public String getNumProbeAlignments() {
         return this.numProbeAlignments;
@@ -358,9 +347,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * The number of probes that map to bioSequences.
-     * </p>
+     * @return The number of probes that map to bioSequences.
      */
     public String getNumProbeSequences() {
         return this.numProbeSequences;
@@ -371,10 +358,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
     }
 
     /**
-     * <p>
-     * The number of probes that map to genes. This count includes probe-aligned regions, predicted genes, and known
+     * @return The number of probes that map to genes. This count includes probe-aligned regions, predicted genes, and known
      * genes.
-     * </p>
      */
     public String getNumProbesToGenes() {
         return this.numProbesToGenes;
@@ -424,11 +409,4 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return this.getShortName();
     }
 
-    public Boolean getHasAnnotationFile() {
-        return hasAnnotationFile;
-    }
-
-    public void setHasAnnotationFile( Boolean hasAnnotationFile ) {
-        this.hasAnnotationFile = hasAnnotationFile;
-    }
 }

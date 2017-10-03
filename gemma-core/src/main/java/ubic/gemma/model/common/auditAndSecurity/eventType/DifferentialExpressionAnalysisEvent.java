@@ -23,23 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates the experiment was the subject of a differential expression analysis.
  * </p>
  */
-public class DifferentialExpressionAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent();
-        }
-
-    }
+public class DifferentialExpressionAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -48,10 +33,18 @@ public class DifferentialExpressionAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public DifferentialExpressionAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent();
+        }
+
     }
 
 }

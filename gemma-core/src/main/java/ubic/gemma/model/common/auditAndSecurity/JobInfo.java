@@ -39,10 +39,6 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
     private Long id;
     private User user;
 
-    /**
-     * Returns <code>true</code> if the argument is an JobInfo instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -58,9 +54,6 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
         return true;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -103,9 +96,7 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
     }
 
     /**
-     * <p>
-     * A field to store all the message progress updates
-     * </p>
+     * @return A field to store all the message progress updates
      */
     public String getMessages() {
         return this.messages;
@@ -140,9 +131,7 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
     }
 
     /**
-     * <p>
-     * An ID by which this job's results can be found
-     * </p>
+     * @return An ID by which this job's results can be found
      */
     public String getTaskId() {
         return this.taskId;
@@ -153,9 +142,7 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
     }
 
     /**
-     * <p>
-     * The user who started the job. Can be left null to indicate job was run by an anonymous user.
-     * </p>
+     * @return The user who started the job. Can be left null to indicate job was run by an anonymous user.
      */
     public User getUser() {
         return this.user;
@@ -165,20 +152,12 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
         this.user = user;
     }
 
-    /**
-     * Constructs new instances of {@link JobInfo}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link JobInfo}.
-         */
+
         public static JobInfo newInstance() {
             return new JobInfo();
         }
 
-        /**
-         * Constructs a new instance of {@link JobInfo}, taking all required and/or read-only properties as arguments.
-         */
         public static JobInfo newInstance( Boolean runningStatus, Date startTime, Integer phases ) {
             final JobInfo entity = new JobInfo();
             entity.setRunningStatus( runningStatus );
@@ -187,10 +166,6 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
             return entity;
         }
 
-        /**
-         * Constructs a new instance of {@link JobInfo}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
         public static JobInfo newInstance( Boolean runningStatus, String failedMessage, Date startTime, Date endTime,
                 Integer phases, String description, String messages, String taskId, User user ) {
             final JobInfo entity = new JobInfo();

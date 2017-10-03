@@ -18,46 +18,30 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.web.controller.BaseFormController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 /**
  * Controller for editing basic information about array designs.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class ArrayDesignFormController extends BaseFormController {
 
     private ArrayDesignService arrayDesignService = null;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController#onSubmit(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object,
-     * org.springframework.validation.BindException)
-     */
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -66,7 +50,8 @@ public class ArrayDesignFormController extends BaseFormController {
         ArrayDesign existing = arrayDesignService.load( ad.getId() );
 
         if ( existing == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "No such platform with id=" + ad.getId() ) );
+            errors.addError(
+                    new ObjectError( command.toString(), null, null, "No such platform with id=" + ad.getId() ) );
             return processFormSubmission( request, response, command, errors );
         }
 
@@ -81,24 +66,16 @@ public class ArrayDesignFormController extends BaseFormController {
 
         arrayDesignService.update( existing );
 
-        saveMessage( request, "object.updated", new Object[] {
-                ad.getClass().getSimpleName().replaceFirst( "Impl", "" ), ad.getName() }, "Saved" );
+        saveMessage( request, "object.updated",
+                new Object[] { ad.getClass().getSimpleName().replaceFirst( "Impl", "" ), ad.getName() }, "Saved" );
 
         // go back to the aray we just edited.
         return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController#processFormSubmission(javax.servlet
-     * .http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object,
-     * org.springframework.validation.BindException)
-     */
     @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
 
         log.debug( "entering processFormSubmission" );
 
@@ -113,10 +90,9 @@ public class ArrayDesignFormController extends BaseFormController {
      * Case = GET: Step 1 - return instance of command class (from database). This is not called in the POST case
      * because the sessionForm is set to 'true' in the constructor. This means the command object was already bound to
      * the session in the GET case.
-     * 
-     * @param request
+     *
+     * @param request http request
      * @return Object
-     * @throws ServletException
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
@@ -136,12 +112,13 @@ public class ArrayDesignFormController extends BaseFormController {
             Collection<Long> ids = new HashSet<Long>();
             ids.add( id );
             Collection<ArrayDesignValueObject> arrayDesigns = arrayDesignService.loadValueObjectsByIds( ids );
-            if ( arrayDesigns.size() > 0 ) arrayDesign = arrayDesigns.iterator().next();
+            if ( arrayDesigns.size() > 0 )
+                arrayDesign = arrayDesigns.iterator().next();
 
         }
 
         if ( arrayDesign == null ) {
-            return new ArrayDesignValueObject(-1L);
+            return new ArrayDesignValueObject( -1L );
         }
         return arrayDesign;
     }
@@ -149,8 +126,8 @@ public class ArrayDesignFormController extends BaseFormController {
     @Override
     protected ModelAndView getCancelView( HttpServletRequest request ) {
         // go back to the aray we just edited.
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
-                + request.getParameter( "id" ) ) );
+        return new ModelAndView(
+                new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + request.getParameter( "id" ) ) );
     }
 
     @Override

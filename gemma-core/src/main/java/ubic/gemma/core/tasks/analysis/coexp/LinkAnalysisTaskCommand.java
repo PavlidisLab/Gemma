@@ -23,15 +23,14 @@ import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.Task;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Settings;
 
 /**
  * Command object for Link analysis
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class LinkAnalysisTaskCommand extends TaskCommand {
 
@@ -49,23 +48,18 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.coexp" );
     }
 
-    /**
-     * @return
-     */
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
     }
 
-    /**
-     * @return
-     */
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
     public FilterConfig getFilterConfig() {
         return this.filterConfig;
     }
 
-    /**
-     * @return
-     */
     public LinkAnalysisConfig getLinkAnalysisConfig() {
         return this.linkAnalysisConfig;
     }
@@ -73,10 +67,6 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
     @Override
     public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return LinkAnalysisTask.class;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
     }
 
 }

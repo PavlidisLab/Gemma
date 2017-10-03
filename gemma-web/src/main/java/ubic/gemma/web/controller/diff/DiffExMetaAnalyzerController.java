@@ -19,12 +19,6 @@
 package ubic.gemma.web.controller.diff;
 
 import gemma.gsec.authentication.UserManager;
-
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,24 +27,26 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
 import ubic.gemma.model.BaseValueObject;
-import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
-import ubic.gemma.core.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
 
 /**
  * A controller to analyze result sets either locally or in a space.
- * 
+ *
  * @author frances
- * @version $Id$
  */
 @Controller
 public class DiffExMetaAnalyzerController {
-    protected static Log log = LogFactory.getLog( DiffExMetaAnalyzerController.class.getName() );
+    protected static final Log log = LogFactory.getLog( DiffExMetaAnalyzerController.class.getName() );
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -61,19 +57,11 @@ public class DiffExMetaAnalyzerController {
     @Autowired
     private UserManager userManager;
 
-    /**
-     * @param analysisResultSetIds
-     * @return
-     */
     public String analyzeResultSets( Collection<Long> analysisResultSetIds ) {
         DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds );
         return taskRunningService.submitRemoteTask( cmd );
     }
 
-    /**
-     * @param id
-     * @return
-     */
     public BaseValueObject findDetailMetaAnalysisById( Long id ) {
         BaseValueObject baseValueObject = new BaseValueObject();
 
@@ -94,16 +82,10 @@ public class DiffExMetaAnalyzerController {
         return baseValueObject;
     }
 
-    /**
-     * @return
-     */
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
         return this.geneDiffExMetaAnalysisHelperService.loadAllMetaAnalyses();
     }
 
-    /**
-     * @param id
-     */
     public BaseValueObject removeMetaAnalysis( Long id ) {
         BaseValueObject baseValueObject;
 
@@ -116,12 +98,6 @@ public class DiffExMetaAnalyzerController {
         return baseValueObject;
     }
 
-    /**
-     * @param analysisResultSetIds
-     * @param name
-     * @param description
-     * @return
-     */
     public String saveResultSets( Collection<Long> analysisResultSetIds, String name, String description ) {
         boolean persist = StringUtils.isNotBlank( name );
         DiffExMetaAnalyzerTaskCommand cmd = new DiffExMetaAnalyzerTaskCommand( analysisResultSetIds, name, description,
@@ -129,13 +105,6 @@ public class DiffExMetaAnalyzerController {
         return taskRunningService.submitRemoteTask( cmd );
     }
 
-    /**
-     * Show meta-analysis manager
-     * 
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
     @RequestMapping(value = { "/metaAnalysisManager.html" })
     public ModelAndView showMetaAnalysisManager( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "metaAnalysisManager" );

@@ -90,10 +90,6 @@ public class DifferentialExpressionAnalysisTaskImpl
         return new TaskResult( taskCommand, minimalResults );
     }
 
-    /**
-     *
-     * @return
-     */
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
 

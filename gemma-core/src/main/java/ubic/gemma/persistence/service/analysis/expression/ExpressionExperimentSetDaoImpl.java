@@ -133,6 +133,8 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     /**
+     * @param entities entities
+     * @return EE set VOs
      * @deprecated extremely inefficient for EESets, use {@link #loadValueObjects(Collection, boolean)} if possible.
      */
     @Deprecated
@@ -223,6 +225,7 @@ public class ExpressionExperimentSetDaoImpl
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.
+     * @return EE set VOs
      */
     private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids,
             boolean loadEEIds ) {

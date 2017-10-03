@@ -18,34 +18,56 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-/**
- *
- */
+import java.util.*;
+
 public class GeneralType implements java.io.Serializable, Comparable<GeneralType> {
+    public static final GeneralType QUANTITATIVE = new GeneralType( "QUANTITATIVE" );
+    public static final GeneralType CATEGORICAL = new GeneralType( "CATEGORICAL" );
+    public static final GeneralType UNKNOWN = new GeneralType( "UNKNOWN" );
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 2881229542950441811L;
+    private static final Map<String, GeneralType> values = new LinkedHashMap<>( 3, 1 );
+    private static List<String> literals = new ArrayList<>( 3 );
+    private static List<String> names = new ArrayList<>( 3 );
+    private static List<GeneralType> valueList = new ArrayList<>( 3 );
+
+    static {
+        values.put( QUANTITATIVE.value, QUANTITATIVE );
+        valueList.add( QUANTITATIVE );
+        literals.add( QUANTITATIVE.value );
+        names.add( "QUANTITATIVE" );
+        values.put( CATEGORICAL.value, CATEGORICAL );
+        valueList.add( CATEGORICAL );
+        literals.add( CATEGORICAL.value );
+        names.add( "CATEGORICAL" );
+        values.put( UNKNOWN.value, UNKNOWN );
+        valueList.add( UNKNOWN );
+        literals.add( UNKNOWN.value );
+        names.add( "UNKNOWN" );
+        valueList = Collections.unmodifiableList( valueList );
+        literals = Collections.unmodifiableList( literals );
+        names = Collections.unmodifiableList( names );
+    }
+
+    private String value;
 
     /**
-     *
+     * The default constructor allowing super classes to access it.
      */
-    public static final GeneralType QUANTITATIVE = new GeneralType( "QUANTITATIVE" );
+    protected GeneralType() {
+    }
 
-    /**
-     *
-     */
-    public static final GeneralType CATEGORICAL = new GeneralType( "CATEGORICAL" );
-
-    /**
-     *
-     */
-    public static final GeneralType UNKNOWN = new GeneralType( "UNKNOWN" );
+    private GeneralType( String value ) {
+        this.value = value;
+    }
 
     /**
      * Creates an instance of GeneralType from <code>value</code>.
      *
      * @param value the value to create the GeneralType from.
+     * @return general type
      */
     public static GeneralType fromString( String value ) {
         final GeneralType typeValue = values.get( value );
@@ -65,7 +87,7 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
-    public static java.util.List<String> literals() {
+    public static List<String> literals() {
         return literals;
     }
 
@@ -73,9 +95,9 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
      *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
-    public static java.util.List<String> names() {
+    public static List<String> names() {
         return names;
     }
 
@@ -84,67 +106,19 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      *
      * @return A List containing the actual enumeration instance values.
      */
-    public static java.util.List<GeneralType> values() {
+    public static List<GeneralType> values() {
         return valueList;
     }
 
-    private String value;
-
-    private static final java.util.Map<String, GeneralType> values = new java.util.LinkedHashMap<>(
-            3, 1 );
-
-    private static java.util.List<String> literals = new java.util.ArrayList<>( 3 );
-
-    private static java.util.List<String> names = new java.util.ArrayList<>( 3 );
-
-    private static java.util.List<GeneralType> valueList = new java.util.ArrayList<>( 3 );
-
-    /**
-     * Initializes the values.
-     */
-    static {
-        values.put( QUANTITATIVE.value, QUANTITATIVE );
-        valueList.add( QUANTITATIVE );
-        literals.add( QUANTITATIVE.value );
-        names.add( "QUANTITATIVE" );
-        values.put( CATEGORICAL.value, CATEGORICAL );
-        valueList.add( CATEGORICAL );
-        literals.add( CATEGORICAL.value );
-        names.add( "CATEGORICAL" );
-        values.put( UNKNOWN.value, UNKNOWN );
-        valueList.add( UNKNOWN );
-        literals.add( UNKNOWN.value );
-        names.add( "UNKNOWN" );
-        valueList = java.util.Collections.unmodifiableList( valueList );
-        literals = java.util.Collections.unmodifiableList( literals );
-        names = java.util.Collections.unmodifiableList( names );
-    }
-
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected GeneralType() {
-    }
-
-    private GeneralType( String value ) {
-        this.value = value;
-    }
-
-    /**
-     * @see Comparable#compareTo(Object)
-     */
     @Override
     public int compareTo( GeneralType that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
     }
 
-    /**
-     * @see Object#equals(Object)
-     */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof GeneralType && ( ( GeneralType ) object ).getValue().equals( this.getValue() ) );
+        return ( this == object ) || ( object instanceof GeneralType && ( ( GeneralType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
@@ -156,17 +130,11 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
         return this.value;
     }
 
-    /**
-     * @see Object#hashCode()
-     */
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
     }
 
-    /**
-     * @see Object#toString()
-     */
     @Override
     public String toString() {
         return String.valueOf( value );
@@ -175,15 +143,15 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
      * will be the singleton for the JVM in which the current thread is running.
-     * <p>
      * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
      * regular deserialized object is always a newly constructed instance and will therefore never be an existing
      * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
      * to return the proper singleton reference.
-     * <p>
      * This method is documented here: <a
      * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return GeneralType.fromString( this.value );

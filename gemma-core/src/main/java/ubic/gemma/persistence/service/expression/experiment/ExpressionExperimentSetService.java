@@ -100,7 +100,7 @@ public interface ExpressionExperimentSetService
     /**
      * Security at DAO level.
      *
-     * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
+     * @return ExpressionExperimentSets that have more than 1 experiment in them &amp; have a taxon value.
      */
     Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
@@ -111,7 +111,7 @@ public interface ExpressionExperimentSetService
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.
-     * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
+     * @return ExpressionExperimentSets that have more than 1 experiment in them &amp; have a taxon value.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects( boolean loadEEIds );

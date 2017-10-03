@@ -38,13 +38,8 @@ public class Person extends Contact implements gemma.gsec.model.Person {
         this.lastName = lastName;
     }
 
-    /**
-     * Constructs new instances of {@link Person}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link Person}.
-         */
+
         public static Person newInstance() {
             return new Person();
         }

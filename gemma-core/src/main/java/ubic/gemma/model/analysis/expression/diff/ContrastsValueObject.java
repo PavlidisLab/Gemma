@@ -19,13 +19,12 @@ import java.util.Vector;
 
 /**
  * Stores selected details of the contrasts for a single DifferentialExpressionResult
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class ContrastsValueObject {
 
-    private List<ContrastVO> contrasts = new Vector<ContrastVO>( 2 ); // commonly only have one.
+    private List<ContrastVO> contrasts = new Vector<>( 2 ); // commonly only have one.
 
     private Long resultId;
 
@@ -33,14 +32,8 @@ public class ContrastsValueObject {
         this.resultId = resultId;
     }
 
-    /**
-     * @param id
-     * @param factorValueId
-     * @param logFoldchange
-     * @param pvalue
-     * @param secondFactorValueId null unless interaction
-     */
-    public void addContrast( Long id, Long factorValueId, Double logFoldchange, Double pvalue, Long secondFactorValueId ) {
+    public void addContrast( Long id, Long factorValueId, Double logFoldchange, Double pvalue,
+            Long secondFactorValueId ) {
         contrasts.add( new ContrastVO( id, factorValueId, logFoldchange, pvalue, secondFactorValueId ) );
     }
 

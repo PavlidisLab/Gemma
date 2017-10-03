@@ -18,15 +18,11 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Collection;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix1D;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.Rank;
@@ -34,12 +30,15 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix1D;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Collection;
 
 /**
  * An abstract differential expression analyzer to be extended
- * 
+ *
  * @author keshav
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer implements DiffExAnalyzer {
@@ -55,6 +54,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
 
     /**
+     * @param pvalues pvalues
      * @return normalized ranks of the pvalues, or null if they were invalid/unusable.
      */
     double[] computeRanks( double[] pvalues ) {
@@ -82,24 +82,20 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
+     * @param pvalues pvalues
      * @return Qvalues, or null if they could not be computed.
      */
     double[] benjaminiHochberg( Double[] pvalues ) {
-        DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection.benjaminiHochberg( new DenseDoubleMatrix1D(
-                ArrayUtils.toPrimitive( pvalues ) ) );
+        DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection
+                .benjaminiHochberg( new DenseDoubleMatrix1D( ArrayUtils.toPrimitive( pvalues ) ) );
         if ( benjaminiHochberg == null ) {
             return null;
         }
         return benjaminiHochberg.toArray();
     }
 
-    /**
-     * 
-     * @param bioAssaySet
-     * @param config
-     * @return
-     */
-    DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config ) {
+    DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet,
+            DifferentialExpressionAnalysisConfig config ) {
 
         if ( config == null ) {
             config = new DifferentialExpressionAnalysisConfig();
@@ -112,6 +108,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     /**
      * Needed to convert NaN or infinity values to a value we can store in the database.
      *
+     * @param e e
+     * @return converted
      */
     Double nan2Null( Double e ) {
         boolean isNaN = ( e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY

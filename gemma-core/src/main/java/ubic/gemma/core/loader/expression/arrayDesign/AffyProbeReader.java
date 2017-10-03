@@ -79,7 +79,7 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
             int linesParsed = 0;
             while ( ( line = br.readLine() ) != null ) {
 
-                if ( line.startsWith( COMMENTMARK ) ) {
+                if ( line.startsWith( COMMENT_MARK ) ) {
                     continue;
                 }
                 parseOneLine( line );

@@ -8,7 +8,7 @@ import java.util.Collection;
 
 /**
  * Abstract record-based parser. Records are defined by lines starting with a given record separator. The default record
- * separator is ">".
+ * separator is "&gt;".
  *
  * @author pavlidis
  */
@@ -25,7 +25,7 @@ public abstract class RecordParser<T> implements Parser<T> {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
-        try (FileInputStream stream = new FileInputStream( file );) {
+        try (FileInputStream stream = new FileInputStream( file )) {
             parse( stream );
         }
     }
@@ -36,7 +36,7 @@ public abstract class RecordParser<T> implements Parser<T> {
         int nullRecords = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
-        String line = null;
+        String line;
         StringBuilder record = null;
         while ( true ) {
 
@@ -99,6 +99,7 @@ public abstract class RecordParser<T> implements Parser<T> {
      */
     public abstract Object parseOneRecord( String record );
 
+    @SuppressWarnings("WeakerAccess") // Possible external use
     public void setRecordSeparator( String recordSeparator ) {
         this.recordSeparator = recordSeparator;
     }

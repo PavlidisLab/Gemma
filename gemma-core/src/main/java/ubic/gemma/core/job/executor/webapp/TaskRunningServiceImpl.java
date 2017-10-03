@@ -18,22 +18,13 @@
  */
 package ubic.gemma.core.job.executor.webapp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-
-import javax.annotation.Resource;
-
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.infrastructure.common.MessageReceiver;
 import ubic.gemma.core.infrastructure.common.MessageSender;
 import ubic.gemma.core.infrastructure.jms.JMSHelper;
@@ -43,53 +34,44 @@ import ubic.gemma.core.job.ConflictingTaskException;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.job.executor.common.ExecutingTask;
-import ubic.gemma.core.job.executor.common.LogBasedProgressAppender;
-import ubic.gemma.core.job.executor.common.ProgressUpdateCallback;
-import ubic.gemma.core.job.executor.common.TaskCommandToTaskMatcher;
-import ubic.gemma.core.job.executor.common.TaskControl;
-import ubic.gemma.core.job.executor.common.TaskPostProcessing;
-import ubic.gemma.core.job.executor.common.TaskStatusUpdate;
+import ubic.gemma.core.job.executor.common.*;
 import ubic.gemma.core.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.core.tasks.Task;
 import ubic.gemma.persistence.util.Settings;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
+import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Handles the execution of tasks in threads that can be checked by clients later.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class TaskRunningServiceImpl implements TaskRunningService {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
-
+    private final ListeningExecutorService executorService = MoreExecutors
+            .listeningDecorator( Executors.newFixedThreadPool( 20 ) );
+    private final Map<String, SubmittedTask<? extends TaskResult>> submittedTasks = new ConcurrentHashMap<String, SubmittedTask<? extends TaskResult>>();
     @Autowired
     private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
-
     @Autowired
     private TaskPostProcessing taskPostProcessing;
-
     @Autowired
     private JMSBrokerMonitor jmsBrokerMonitor;
-
     @Autowired
     private JMSHelper jmsHelper;
-
     @Resource(name = "taskSubmissionQueue")
     private javax.jms.Queue taskSubmissionQueue;
-
     @Resource(name = "taskControlQueue")
     private javax.jms.Queue taskControlQueue;
-
-    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator( Executors
-            .newFixedThreadPool( 20 ) );
-
-    private final Map<String, SubmittedTask<? extends TaskResult>> submittedTasks = new ConcurrentHashMap<String, SubmittedTask<? extends TaskResult>>();
 
     @Override
     public SubmittedTask getSubmittedTask( String taskId ) {
@@ -200,11 +182,6 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         checkNotNull( taskCommand.getSecurityContext().getAuthentication(), "Must have Authentication." );
     }
 
-    /**
-     * @param taskCommand
-     * @param taskId
-     * @return
-     */
     private SubmittedTask<TaskResult> constructSubmittedTaskProxy( TaskCommand taskCommand, String taskId ) {
         String resultQueueName = Settings.getString( "gemma.remoteTasks.resultQueuePrefix" ) + taskId;
         String statusQueueName = Settings.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;

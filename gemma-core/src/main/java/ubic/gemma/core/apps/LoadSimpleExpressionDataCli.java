@@ -19,40 +19,33 @@
 
 package ubic.gemma.core.apps;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.io.*;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Command Line tools for loading the expression experiment in flat files
- * 
+ *
  * @author xiangwan
- * @version $Id$
  */
 public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     final static String SPLITCHAR = "\t{1}";
@@ -72,20 +65,13 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     final static int TECHNOLOGYTYPEI = ARRAYDESIGNNAMEI + 1;
     // final static int IMAGECLONEI = QSCALEI + 1;
     final static int TOTALFIELDS = TECHNOLOGYTYPEI + 1;
+    private ExpressionExperimentService eeService;
+    private ArrayDesignService adService = null;
+    private String dirName = "./";
+    private SimpleExpressionDataLoaderService eeLoaderService = null;
+    private String fileName = null;
+    private TaxonService taxonService = null;
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Load an experiment from a tab-delimited file instead of GEO";
-    }
-
-    /**
-     * @param args
-     */
     public static void main( String[] args ) {
         LoadSimpleExpressionDataCli p = new LoadSimpleExpressionDataCli();
         StopWatch watch = new StopWatch();
@@ -103,29 +89,21 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         }
     }
 
-    private ExpressionExperimentService eeService;
-    private ArrayDesignService adService = null;
-    private String dirName = "./";
-    private SimpleExpressionDataLoaderService eeLoaderService = null;
-    private String fileName = null;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
 
-    private TaxonService taxonService = null;
+    @Override
+    public String getShortDesc() {
+        return "Load an experiment from a tab-delimited file instead of GEO";
+    }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "addTSVData";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -139,11 +117,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
@@ -167,7 +140,8 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
                         }
 
                         /* Comments in the list file */
-                        if ( conf.startsWith( "#" ) ) continue;
+                        if ( conf.startsWith( "#" ) )
+                            continue;
 
                         String expName = conf.split( SPLITCHAR )[0];
 
@@ -201,19 +175,12 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         }
     }
 
-    /**
-     * @param fields
-     */
     private void checkForArrayDesignName( String[] fields ) {
         if ( StringUtils.isBlank( fields[ARRAYDESIGNNAMEI] ) ) {
             throw new IllegalArgumentException( "Array design must be given if array design is new." );
         }
     }
 
-    /**
-     * @param fields
-     * @param metaData
-     */
     private void configureArrayDesigns( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
         int i;
         TechnologyType techType = TechnologyType.fromString( fields[TECHNOLOGYTYPEI] );
@@ -263,10 +230,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
     }
 
-    /**
-     * @param fields
-     * @param metaData
-     */
     private void configureQuantitationType( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
         metaData.setQuantitationTypeName( fields[QNAMEI] );
         metaData.setQuantitationTypeDescription( fields[QDESCRIPTIONI] );
@@ -279,10 +242,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         metaData.setScale( sType );
     }
 
-    /**
-     * @param fields
-     * @param metaData
-     */
     private void configureTaxon( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
         Taxon existing = taxonService.findByCommonName( fields[SPECIESI] );
         if ( existing == null ) {
@@ -292,10 +251,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         metaData.setTaxon( existing );
     }
 
-    /**
-     * @param fields
-     * @return
-     */
     private ArrayDesign getNewArrayDesignFromName( String[] fields ) {
         checkForArrayDesignName( fields );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
@@ -304,11 +259,6 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         return ad;
     }
 
-    /**
-     * @param configurationLine
-     * @return
-     * @throws Exception
-     */
     private void loadExperiment( String configurationLine ) throws Exception {
         int i = 0;
         String fields[] = configurationLine.split( SPLITCHAR );

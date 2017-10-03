@@ -65,7 +65,9 @@ public interface PhenotypeAssociationManagerService {
             Set<String> phenotypesValuesUri );
 
     /**
-     * For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds
+     * @param taxon         taxon
+     * @param phenotypeUris URIs
+     * @return For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds
      * genes associated with <em>all</em> the phenotypes together.
      */
     Map<String, Collection<? extends GeneValueObject>> findCandidateGenesForEach( Set<String> phenotypeUris,
@@ -111,14 +113,14 @@ public interface PhenotypeAssociationManagerService {
     Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneNCBI( Integer geneNCBI );
 
     /**
-     * return the list of the owners that have evidence in the system
+     * @return the list of the owners that have evidence in the system
      */
     Collection<String> findEvidenceOwners();
 
     /**
      * Find category term that were used in the database, used to annotated Experiments
      *
-     * @return Collection<CharacteristicValueObject> the terms found
+     * @return the terms found
      */
     Collection<CharacteristicValueObject> findExperimentCategory();
 
@@ -128,7 +130,7 @@ public interface PhenotypeAssociationManagerService {
      * @param givenQueryString the search query
      * @param categoryUri      the mged category (can be null)
      * @param taxonId          the taxon id (can be null)
-     * @return Collection<CharacteristicValueObject> the terms found
+     * @return the terms found
      */
     Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString, String categoryUri,
             Long taxonId );
@@ -136,7 +138,7 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Gets all External Databases that are used with evidence
      *
-     * @return Collection<ExternalDatabaseValueObject> the externalDatabases
+     * @return the externalDatabases
      */
     Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
 
@@ -145,8 +147,9 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      *
-     * @param taxonId, can be null to not constrain by taxon
-     * @return Collection<GeneEvidenceValueObject> list of Genes
+     * @param taxonId can be null to not constrain by taxon
+     * @param query   query
+     * @return list of Genes
      */
     Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
 
@@ -160,7 +163,7 @@ public interface PhenotypeAssociationManagerService {
     /**
      * load all the valueUri and value of phenotype present in Neurocarta
      *
-     * @return Collection<String> the valueUri of the phenotypes
+     * @return the valueUri of the phenotypes
      */
     Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
@@ -173,8 +176,9 @@ public interface PhenotypeAssociationManagerService {
     Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
     /**
-     * Same as {@link this#loadAllPhenotypesByTree(EvidenceFilter)}, but does not flatten out the tree.
+     * Same as loadAllPhenotypesByTree(EvidenceFilter), but does not flatten out the tree.
      *
+     * @param evidenceFilter evidence filter
      * @return a tree set of phenotypes
      */
     Collection<TreeCharacteristicValueObject> loadAllPhenotypesAsTree( EvidenceFilter evidenceFilter );
@@ -204,14 +208,14 @@ public interface PhenotypeAssociationManagerService {
             Long geneDifferentialExpressionMetaAnalysisId );
 
     /**
-     * find all evidence that doesn't come from an external source
+     * @return find all evidence that doesn't come from an external source
      */
     Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithoutExternalDatabaseName();
 
     /**
      * find statistics on evidence used in neurocarta
      *
-     * @return Collection<ExternalDatabaseStatisticsValueObject> statistics for each external database
+     * @return statistics for each external database
      */
     Collection<ExternalDatabaseStatisticsValueObject> loadNeurocartaStatistics();
 
@@ -255,7 +259,7 @@ public interface PhenotypeAssociationManagerService {
      * including ontology children terms
      *
      * @param searchQuery the query search that was type by the user
-     * @return Collection<CharacteristicValueObject> the terms found in the database with taxon and gene occurrence
+     * @return the terms found in the database with taxon and gene occurrence
      */
     Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery );
 
@@ -264,7 +268,7 @@ public interface PhenotypeAssociationManagerService {
      *
      * @param searchQuery query typed by the user
      * @param geneId      the id of the chosen gene
-     * @return Collection<CharacteristicValueObject> list of choices returned
+     * @return list of choices returned
      */
     Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
 

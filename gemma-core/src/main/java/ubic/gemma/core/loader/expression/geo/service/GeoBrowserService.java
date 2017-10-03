@@ -14,48 +14,37 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 
-import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-
 /**
  * @author paul
- * @version $Id$
  */
 public interface GeoBrowserService {
 
     /**
      * Get details from GEO about an accession.
-     * 
-     * @param accession
-     * @return
-     * @throws IOException
+     *
+     * @param accession accession
+     * @return details
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public abstract String getDetails( String accession ) throws IOException;
+    String getDetails( String accession ) throws IOException;
 
     /**
      * @param start page number, not starting record
      * @param count page size
-     * @return
-     * @throws IOException
-     * @throws ParseException 
+     * @return geo records
+     * @throws IOException    if there is a problem while manipulating the file
+     * @throws ParseException if there is a problem with parsing
      */
-    public abstract List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException;
-    
-    /**
-     * @param searchString
-     * @return
-     * @throws IOException
-     * @throws ParseException
-     */
-    public abstract List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException, ParseException;
+    List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException;
 
-    /**
-     * @param accession
-     * @param currentState
-     */
-    public abstract boolean toggleUsability( String accession );
+    List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException, ParseException;
+
+    boolean toggleUsability( String accession );
 
 }

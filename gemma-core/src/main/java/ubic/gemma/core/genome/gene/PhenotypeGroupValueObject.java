@@ -37,37 +37,19 @@
 
 package ubic.gemma.core.genome.gene;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
+import java.util.Collection;
+
 /**
- * TODO Document Me
- * 
  * @author tvrossum
- * @version $Id$
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in the front use
 public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = -7264201170714207356L;
-
-    /**
-     * Method to create a display object from scratch
-     * 
-     * @param name cannot be null
-     * @param description should not be null
-     * @param taxonId can be null
-     * @param taxonName can be null
-     * @param memberIds can be null; for a gene this is a collection just containing their id
-     */
-    public static PhenotypeGroupValueObject convertFromGeneSetValueObject( GeneSetValueObject gsvo, String searchTerm ) {
-        return new PhenotypeGroupValueObject( gsvo.getName(), gsvo.getDescription(), gsvo.getTaxonId(),
-                gsvo.getTaxonName(), gsvo.getGeneIds(), gsvo.getName(), gsvo.getDescription(), searchTerm );
-    }
-
     private String phenotypeCategory;
     private String phenotypeName;
-
     private String searchTerm;
 
     public PhenotypeGroupValueObject() {
@@ -76,12 +58,12 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
 
     /**
      * Method to create a display object from scratch
-     * 
-     * @param name cannot be null
+     *
+     * @param name        cannot be null
      * @param description should not be null
-     * @param taxonId can be null
-     * @param taxonName can be null
-     * @param memberIds can be null; for a gene this is a collection just containing their id
+     * @param taxonId     can be null
+     * @param taxonName   can be null
+     * @param memberIds   can be null; for a gene this is a collection just containing their id
      */
     public PhenotypeGroupValueObject( String name, String description, Long taxonId, String taxonName,
             Collection<Long> memberIds, String phenotypeName, String phenotypeCategory, String searchTerm ) {
@@ -97,6 +79,12 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setPhenotypeName( phenotypeName );
         this.setPhenotypeCategory( phenotypeCategory );
         this.setSearchTerm( searchTerm );
+    }
+
+    public static PhenotypeGroupValueObject convertFromGeneSetValueObject( GeneSetValueObject gsvo,
+            String searchTerm ) {
+        return new PhenotypeGroupValueObject( gsvo.getName(), gsvo.getDescription(), gsvo.getTaxonId(),
+                gsvo.getTaxonName(), gsvo.getGeneIds(), gsvo.getName(), gsvo.getDescription(), searchTerm );
     }
 
     @Override
@@ -132,15 +120,24 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
         return phenotypeCategory;
     }
 
+    public void setPhenotypeCategory( String phenotypeCategory ) {
+        this.phenotypeCategory = phenotypeCategory;
+    }
+
     public String getPhenotypeName() {
         return phenotypeName;
     }
 
-    /**
-     * @return the searchTerm
-     */
+    public void setPhenotypeName( String phenotypeName ) {
+        this.phenotypeName = phenotypeName;
+    }
+
     public String getSearchTerm() {
         return searchTerm;
+    }
+
+    public void setSearchTerm( String searchTerm ) {
+        this.searchTerm = searchTerm;
     }
 
     @Override
@@ -150,21 +147,6 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
         result = prime * result + ( ( phenotypeCategory == null ) ? 0 : phenotypeCategory.hashCode() );
         result = prime * result + ( ( phenotypeName == null ) ? 0 : phenotypeName.hashCode() );
         return result;
-    }
-
-    public void setPhenotypeCategory( String phenotypeCategory ) {
-        this.phenotypeCategory = phenotypeCategory;
-    }
-
-    public void setPhenotypeName( String phenotypeName ) {
-        this.phenotypeName = phenotypeName;
-    }
-
-    /**
-     * @param searchTerm the searchTerm to set
-     */
-    public void setSearchTerm( String searchTerm ) {
-        this.searchTerm = searchTerm;
     }
 
 }

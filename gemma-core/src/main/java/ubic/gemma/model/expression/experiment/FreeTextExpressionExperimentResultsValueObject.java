@@ -62,6 +62,7 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
      * @param taxonId     can be null
      * @param taxonName   can be null
      * @param memberIds   can be null; for a gene or experiment, this is a collection just containing their id
+     * @param queryString query string
      */
     public FreeTextExpressionExperimentResultsValueObject( String name, String description, Long taxonId,
             String taxonName, Collection<Long> memberIds, String queryString ) {

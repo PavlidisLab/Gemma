@@ -19,26 +19,34 @@
 package ubic.gemma.model.common.search;
 
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class SearchSettingsImpl extends SearchSettings {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -8856730658411678433L;
+    private boolean doHighlighting = false;
+
+    public SearchSettingsImpl() {
+    }
+
+    /**
+     * NOTE the query is trim()'ed, no need to do that later.
+     *
+     * @param query query
+     */
+    public SearchSettingsImpl( String query ) {
+        this.setQuery( query.trim() );
+    }
 
     /**
      * Convenience method to get pre-configured settings.
-     * 
-     * @param query
-     * @return
+     *
+     * @param query query
+     * @return search settings
      */
     public static SearchSettings arrayDesignSearch( String query ) {
         SearchSettingsImpl s = new SearchSettingsImpl( query );
@@ -49,9 +57,9 @@ public class SearchSettingsImpl extends SearchSettings {
 
     /**
      * Convenience method to get pre-configured settings.
-     * 
-     * @param query
-     * @return
+     *
+     * @param query query
+     * @return search settings
      */
     public static SearchSettings bibliographicReferenceSearch( String query ) {
         SearchSettings s = new SearchSettingsImpl( query );
@@ -62,9 +70,10 @@ public class SearchSettingsImpl extends SearchSettings {
 
     /**
      * Convenience method to get pre-configured settings.
-     * 
-     * @param query
-     * @return
+     *
+     * @param query       query
+     * @param arrayDesign the array design to limit the search to
+     * @return search settings
      */
     public static SearchSettings compositeSequenceSearch( String query, ArrayDesign arrayDesign ) {
         SearchSettings s = new SearchSettingsImpl( query );
@@ -76,9 +85,9 @@ public class SearchSettingsImpl extends SearchSettings {
 
     /**
      * Convenience method to get pre-configured settings.
-     * 
-     * @param query
-     * @return
+     *
+     * @param query query
+     * @return search settings
      */
     public static SearchSettings expressionExperimentSearch( String query ) {
         SearchSettingsImpl s = new SearchSettingsImpl( query );
@@ -90,9 +99,9 @@ public class SearchSettingsImpl extends SearchSettings {
 
     /**
      * Convenience method to get pre-configured settings.
-     * 
-     * @param query
-     * @return
+     *
+     * @param query query
+     * @return search settings
      */
     public static SearchSettingsImpl expressionExperimentSetSearch( String query ) {
         SearchSettingsImpl s = new SearchSettingsImpl( query );
@@ -103,9 +112,10 @@ public class SearchSettingsImpl extends SearchSettings {
 
     /**
      * Convenience method to get pre-configured settings.
-     * 
-     * @param query
-     * @return
+     *
+     * @param query query
+     * @param taxon the taxon to limit the search to
+     * @return search settings
      */
     public static SearchSettings geneSearch( String query, Taxon taxon ) {
         SearchSettings s = new SearchSettingsImpl( query );
@@ -115,22 +125,17 @@ public class SearchSettingsImpl extends SearchSettings {
         return s;
     }
 
-    private boolean doHighlighting = false;
-
-    public SearchSettingsImpl() {
+    public boolean getDoHighlighting() {
+        return this.doHighlighting;
     }
 
     /**
-     * NOTE the query is trim()'ed, no need to do that later.
-     * 
-     * @param query
+     * Set to false to reduce overhead when highlighting isn't needed.
+     *
+     * @param doHighlighting do highlighting
      */
-    public SearchSettingsImpl( String query ) {
-        this.setQuery( query.trim() );
-    }
-
-    public boolean getDoHighlighting() {
-        return this.doHighlighting;
+    public void setDoHighlighting( boolean doHighlighting ) {
+        this.doHighlighting = doHighlighting;
     }
 
     /**
@@ -148,15 +153,6 @@ public class SearchSettingsImpl extends SearchSettings {
         this.setSearchProbes( false );
         this.setSearchGeneSets( false );
         this.setSearchExperimentSets( false );
-    }
-
-    /**
-     * Set to false to reduce overhead when highlighting isn't needed.
-     * 
-     * @param doHighlighting
-     */
-    public void setDoHighlighting( boolean doHighlighting ) {
-        this.doHighlighting = doHighlighting;
     }
 
     @Override

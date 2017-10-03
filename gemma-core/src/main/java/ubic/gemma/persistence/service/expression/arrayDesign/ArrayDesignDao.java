@@ -16,7 +16,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -123,6 +122,4 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
-
-    File getAnnotationFile( String shortName );
 }

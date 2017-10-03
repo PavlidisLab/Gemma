@@ -18,22 +18,19 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collection;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultServiceImpl;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class BlatResultServiceTest extends BaseSpringContextTest {
 
@@ -42,11 +39,6 @@ public class BlatResultServiceTest extends BaseSpringContextTest {
     @Autowired
     BlatResultService blatResultService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() {
 
@@ -57,11 +49,6 @@ public class BlatResultServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * Test method for
-     * {@link BlatResultServiceImpl#find(ubic.gemma.model.genome.biosequence.BioSequence)}
-     * .
-     */
     @Test
     public final void testFindBlatResultByBioSequence() {
 

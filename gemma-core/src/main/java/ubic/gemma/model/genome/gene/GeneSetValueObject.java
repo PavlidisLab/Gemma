@@ -28,9 +28,8 @@ import java.util.HashSet;
 
 /**
  * Represents a Gene group gene set
- * 
+ *
  * @author kelsey
- * @version $Id$
  */
 public class GeneSetValueObject implements SecureValueObject {
 
@@ -38,7 +37,7 @@ public class GeneSetValueObject implements SecureValueObject {
 
     private boolean currentUserIsOwner = false;
     private String description;
-    private Collection<Long> geneIds = new HashSet<Long>();
+    private Collection<Long> geneIds = new HashSet<>();
     private Long id;
     private boolean isPublic;
     private boolean isShared;
@@ -58,8 +57,8 @@ public class GeneSetValueObject implements SecureValueObject {
 
     /**
      * Create a lightweight wrapper that can be used for security filtering
-     * 
-     * @param id
+     *
+     * @param id id
      */
     public GeneSetValueObject( Long id ) {
         super();
@@ -68,10 +67,11 @@ public class GeneSetValueObject implements SecureValueObject {
 
     /**
      * Create a lightweight wrapper that can be used for security filtering
-     * 
-     * @param ids
-     * @return
+     *
+     * @param ids ids
+     * @return collection of VOs
      */
+    @SuppressWarnings("unused") // Possible external use
     public static Collection<GeneSetValueObject> fromIds( Collection<Long> ids ) {
         Collection<GeneSetValueObject> result = new ArrayList<>();
         for ( Long id : ids ) {
@@ -102,107 +102,34 @@ public class GeneSetValueObject implements SecureValueObject {
         return true;
     }
 
-    /**
-     * @return
-     */
     public String getDescription() {
         return this.description;
     }
 
-    /**
-     * @return
-     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public Collection<Long> getGeneIds() {
         return this.geneIds;
     }
 
-    /**
-     * @return
-     */
+    public void setGeneIds( Collection<Long> geneMembers ) {
+        this.geneIds = geneMembers;
+    }
+
     @Override
     public Long getId() {
         return this.id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     @Override
     public boolean getIsPublic() {
         return this.isPublic;
-    }
-
-    @Override
-    public boolean getIsShared() {
-        return this.isShared;
-    }
-
-    /**
-     * @return
-     */
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public Class<? extends Securable> getSecurableClass() {
-        return GeneSet.class;
-    }
-
-    /**
-     * returns the number of members in the group
-     * 
-     * @return
-     */
-    public Integer getSize() {
-        if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() )
-            return this.getGeneIds().size();
-        else if ( this.size > 0 ) return this.size;
-        return 0;
-    }
-
-    public Long getTaxonId() {
-        return this.taxonId;
-    }
-
-    public String getTaxonName() {
-        return this.taxonName;
-    }
-
-    @Override
-    public boolean getUserCanWrite() {
-        return this.userOwned;
-    }
-
-    @Override
-    public boolean getUserOwned() {
-        return this.currentUserIsOwner;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
-    }
-
-    /**
-     * @param description
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
-     * @param geneMembers
-     */
-    public void setGeneIds( Collection<Long> geneMembers ) {
-        this.geneIds = geneMembers;
-    }
-
-    /**
-     * @param id
-     */
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     @Override
@@ -212,9 +139,38 @@ public class GeneSetValueObject implements SecureValueObject {
     }
 
     @Override
+    public boolean getIsShared() {
+        return this.isShared;
+    }
+
+    @Override
     public void setIsShared( boolean isShared ) {
         this.isShared = isShared;
 
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    @Override
+    public Class<? extends Securable> getSecurableClass() {
+        return GeneSet.class;
+    }
+
+    /**
+     * @return the number of members in the group
+     */
+    public Integer getSize() {
+        if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() )
+            return this.getGeneIds().size();
+        else if ( this.size > 0 )
+            return this.size;
+        return 0;
     }
 
     public void setSize( Integer size ) {
@@ -224,19 +180,25 @@ public class GeneSetValueObject implements SecureValueObject {
         this.size = size;
     }
 
-    /**
-     * @param name
-     */
-    public void setName( String name ) {
-        this.name = name;
+    public Long getTaxonId() {
+        return this.taxonId;
     }
 
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
     }
 
+    public String getTaxonName() {
+        return this.taxonName;
+    }
+
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
+    }
+
+    @Override
+    public boolean getUserCanWrite() {
+        return this.userOwned;
     }
 
     @Override
@@ -245,8 +207,21 @@ public class GeneSetValueObject implements SecureValueObject {
     }
 
     @Override
+    public boolean getUserOwned() {
+        return this.currentUserIsOwner;
+    }
+
+    @Override
     public void setUserOwned( boolean isUserOwned ) {
         this.currentUserIsOwner = isUserOwned;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
     }
 
 }

@@ -265,6 +265,7 @@ public class EntityUtils {
      *
      * @param showOnlyEditable only show those the user has access to edit
      * @param showPublic       also show public items (wont work if showOnlyEditable is true)
+     * @return clause
      */
     public static String addGroupAndUserNameRestriction( boolean showOnlyEditable, boolean showPublic ) {
 
@@ -308,7 +309,7 @@ public class EntityUtils {
     }
 
     /**
-     * Populates parameters in query created using {@link this#addGroupAndUserNameRestriction(boolean, boolean)}.
+     * Populates parameters in query created using addGroupAndUserNameRestriction(boolean, boolean).
      *
      * @param queryObject    the query object created using the sql query with group and username restrictions.
      * @param sessionFactory session factory from the DAO that is using this method.
@@ -338,14 +339,15 @@ public class EntityUtils {
     /**
      * Checks ACL related properties from the AclObjectIdentity.
      * Some of the code is adapted from {@link gemma.gsec.util.SecurityUtil}, but allows usage without an Acl object.
+     *
      * @param aoi the acl object identity of an object whose permissions are to be checked.
      * @return an array of booleans that represent permissions of currently logged in user as follows:
-     *  <ol>
-     *      <li>is object public</li>
-     *      <li>can user write to object</li>
-     *      <li>is object shared</li>
-     *  </ol>
-     *  (note that actual indexing in the array starts at 0).
+     * <ol>
+     * <li>is object public</li>
+     * <li>can user write to object</li>
+     * <li>is object shared</li>
+     * </ol>
+     * (note that actual indexing in the array starts at 0).
      */
     public static boolean[] getPermissions( AclObjectIdentity aoi ) {
         boolean isPublic = false;

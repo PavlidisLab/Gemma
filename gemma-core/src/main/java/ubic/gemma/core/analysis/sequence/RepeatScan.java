@@ -18,47 +18,36 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.loader.genome.FastaParser;
+import ubic.gemma.core.util.TimeUtil;
+import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.util.Settings;
+
+import java.io.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.core.loader.genome.FastaParser;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.util.Settings;
-import ubic.gemma.core.util.TimeUtil;
-import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
-
 /**
  * Scan sequences for repeats
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class RepeatScan {
 
     private static final String REPEAT_MASKER_CONFIG_PARAM = "repeatMasker.exe";
-
+    private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 2;
     private static Log log = LogFactory.getLog( RepeatScan.class.getName() );
-
     private static String REPEAT_MASKER = Settings.getString( REPEAT_MASKER_CONFIG_PARAM );
 
-    private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 2;
-
     /**
-     * @param sequences
+     * @param sequences          sequences
      * @param outputSequencePath in FASTA format
      * @return Sequences which were updated.
      */
@@ -77,7 +66,8 @@ public class RepeatScan {
         Map<String, BioSequence> map = new HashMap<String, BioSequence>();
         for ( BioSequence maskedSeq : results ) {
             String identifier = maskedSeq.getName();
-            if ( log.isDebugEnabled() ) log.debug( "Masked: " + identifier );
+            if ( log.isDebugEnabled() )
+                log.debug( "Masked: " + identifier );
             map.put( identifier, maskedSeq );
         }
 
@@ -87,7 +77,8 @@ public class RepeatScan {
             String identifier = SequenceWriter.getIdentifier( origSeq );
             BioSequence maskedSeq = map.get( identifier );
 
-            if ( log.isDebugEnabled() ) log.debug( "Orig: " + identifier );
+            if ( log.isDebugEnabled() )
+                log.debug( "Orig: " + identifier );
 
             if ( maskedSeq == null ) {
                 log.warn( "No masked sequence for " + identifier );
@@ -112,8 +103,8 @@ public class RepeatScan {
     /**
      * Run repeatmasker on the sequences. The sequence will be updated with the masked (lower-case) sequences and the
      * fraction of masked bases will be filled in.
-     * 
-     * @param sequences
+     *
+     * @param sequences sequences
      * @return sequences that had repeats.
      */
     public Collection<BioSequence> repeatScan( Collection<BioSequence> sequences ) {
@@ -130,8 +121,8 @@ public class RepeatScan {
 
             execRepeatMasker( querySequenceFile, taxon );
 
-            final String outputSequencePath = querySequenceFile.getParent() + File.separatorChar
-                    + querySequenceFile.getName() + ".masked";
+            final String outputSequencePath =
+                    querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".masked";
             // final String outputScorePath = querySequenceFile.getParent() + File.separatorChar
             // + querySequenceFile.getName() + ".masked";
 
@@ -166,17 +157,17 @@ public class RepeatScan {
 
     /**
      * Run a gfClient query, using a call to exec().
-     * 
-     * @param querySequenceFile
-     * @param outputPath
-     * @return
+     *
+     * @param querySequenceFile file
+     * @param taxon             taxon
      */
     private void execRepeatMasker( File querySequenceFile, Taxon taxon ) throws IOException {
 
         checkForExe();
 
-        final String cmd = REPEAT_MASKER + " -parallel 8 -xsmall -species " + taxon.getCommonName() + " "
-                + querySequenceFile.getAbsolutePath();
+        final String cmd =
+                REPEAT_MASKER + " -parallel 8 -xsmall -species " + taxon.getCommonName() + " " + querySequenceFile
+                        .getAbsolutePath();
         log.info( "Running repeatmasker like this: " + cmd );
 
         final Process run = Runtime.getRuntime().exec( cmd );
@@ -220,21 +211,16 @@ public class RepeatScan {
 
     }
 
-    /**
-     * @param querySequenceFile
-     * @param outputSequencePath
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
     private void handleNoOutputCondition( File querySequenceFile, final String outputSequencePath )
             throws FileNotFoundException, IOException {
         // this happens if there were no repeats to mask. Check to make sure.
-        final String outputSummary = querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName()
-                + ".out";
+        final String outputSummary =
+                querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".out";
         if ( !( new File( outputSummary ) ).exists() ) {
             // okay, something is wrong for sure.
-            throw new RuntimeException( "Repeatmasker seems to have failed, it left no useful output (looking for "
-                    + outputSequencePath + " or " + outputSummary );
+            throw new RuntimeException(
+                    "Repeatmasker seems to have failed, it left no useful output (looking for " + outputSequencePath
+                            + " or " + outputSummary );
         }
         InputStream is = new FileInputStream( outputSummary );
         try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {

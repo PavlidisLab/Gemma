@@ -25,41 +25,40 @@ import java.util.Collection;
 
 /**
  * Interface for classes that allow parsing of files and streams.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public interface Parser<T> {
 
-    public static final int PARSE_ALERT_FREQUENCY = 10000;
+    int PARSE_ALERT_FREQUENCY = 10000;
 
     /**
      * @return the results of the parse.
      */
-    public Collection<T> getResults();
+    Collection<T> getResults();
 
     /**
      * Parse a {@link File}
-     * 
-     * @param f
-     * @throws IOException
+     *
+     * @param f file
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public void parse( File f ) throws IOException;
+    void parse( File f ) throws IOException;
 
     /**
      * Parse a {@link InputStream}.
-     * 
-     * @throws IOException
-     * @param stream
+     *
+     * @param is input stream
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public void parse( InputStream is ) throws IOException;
+    void parse( InputStream is ) throws IOException;
 
     /**
      * Parse a file identified by its path.
-     * 
+     *
      * @param filename Absolute path to the file
-     * @throws IOException
+     * @throws IOException if there is a problem while manipulating the file
      */
-    public void parse( String filename ) throws IOException;
+    void parse( String filename ) throws IOException;
 
 }

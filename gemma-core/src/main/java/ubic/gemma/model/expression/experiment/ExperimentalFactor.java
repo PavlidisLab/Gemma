@@ -50,8 +50,6 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
     public ExperimentalFactor() {
     }
 
-
-
     @Override
     public boolean equals( Object obj ) {
         if ( obj == null )
@@ -104,15 +102,13 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
         return result;
     }
 
-
-
     @Override
     public Securable getSecurityOwner() {
         return this.securityOwner;
     }
 
     /**
-     * Used to hint the security system about who 'owns' this,
+     * @param securityOwner Used to hint the security system about who 'owns' this,
      */
     public void setSecurityOwner( ExpressionExperiment securityOwner ) {
         this.securityOwner = securityOwner;
@@ -143,7 +139,7 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
     }
 
     /**
-     * The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
+     * @return The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
      */
     public Collection<ubic.gemma.model.expression.experiment.FactorValue> getFactorValues() {
         return this.factorValues;
@@ -154,7 +150,7 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
     }
 
     /**
-     * Categorical vs. continuous. Continuous factors must have a 'measurement' associated with the factorvalues,
+     * @return Categorical vs. continuous. Continuous factors must have a 'measurement' associated with the factorvalues,
      * Categorical ones must not.
      */
     public FactorType getType() {
@@ -165,15 +161,8 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
         this.type = type;
     }
 
-
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalFactor}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.experiment.ExperimentalFactor}.
-         */
+
         public static ubic.gemma.model.expression.experiment.ExperimentalFactor newInstance() {
             return new ubic.gemma.model.expression.experiment.ExperimentalFactor();
         }

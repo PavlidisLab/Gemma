@@ -104,7 +104,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * Create a data matrix like sourceMatrix but use the values from dataMatrix.
      *
-     * @param dataMatrix - The rows can be different than the original matrix, but the columns must be the same.
+     * @param sourceMatrix source matrix
+     * @param dataMatrix   the rows can be different than the original matrix, but the columns must be the same.
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix ) {
@@ -126,6 +127,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /**
      * Create a matrix based on another one's selected rows.
+     *
+     * @param rowsToUse    rows
+     * @param sourceMatrix matrix
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
         init();
@@ -161,8 +165,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Create a matrix given a 'raw' matrix that uses the same samples as the experiment. Only simple situations are
      * supported (one platform, not subsetting the dataset).
      *
-     * @param ee to be associated with this
-     * @param qt to be associated with this
+     * @param ee     to be associated with this
+     * @param qt     to be associated with this
      * @param matrix with valid row and column elements, and the data
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, QuantitationType qt,
@@ -227,6 +231,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * Create a matrix based on another one's selected columns. The results will be somewhat butchered - only a single
      * BioAssayDimension and the ranks will be copied over (not recomputed based on the selected columns).
+     *
+     * @param columnsToUse columns
+     * @param sourceMatrix matrix
      */
     public ExpressionDataDoubleMatrix( List<BioMaterial> columnsToUse, ExpressionDataDoubleMatrix sourceMatrix ) {
         init();
@@ -291,7 +298,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     /**
-     * Convert this to a collection of vectors.
+     * @return Convert this to a collection of vectors.
      */
     public Collection<ProcessedExpressionDataVector> toProcessedDataVectors() {
         Collection<ProcessedExpressionDataVector> result = new HashSet<>();
@@ -370,7 +377,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /**
      * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
-     *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
+     * vectors used to construct the matrix were not ProcessedExpressionDataVectors.
      */
     public Map<CompositeSequence, Double> getRanks() {
         return this.ranks;
@@ -450,7 +457,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Sets the row of matrix to the input data.
      *
      * @param rowIndex The row index of the data in the matrix to be replaced.
-     * @param data The input data.
+     * @param data     The input data.
      */
     public void setRow( int rowIndex, Double[] data ) {
         if ( rowIndex > this.matrix.rows() ) {
@@ -613,7 +620,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     public boolean hasMissingValues() {
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                if ( Double.isNaN( matrix.get( i, j ) ) ) return true;
+                if ( Double.isNaN( matrix.get( i, j ) ) )
+                    return true;
             }
         }
         return false;

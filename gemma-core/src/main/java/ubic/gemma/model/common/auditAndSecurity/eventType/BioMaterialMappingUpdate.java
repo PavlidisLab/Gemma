@@ -23,22 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * To indicate that the biomaterial to bioassay mapping of the expression experiment was modified.
  * </p>
  */
-public class BioMaterialMappingUpdate extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate();
-        }
-
-    }
+public class BioMaterialMappingUpdate
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -47,10 +33,18 @@ public class BioMaterialMappingUpdate extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public BioMaterialMappingUpdate() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate();
+        }
+
     }
 
 }

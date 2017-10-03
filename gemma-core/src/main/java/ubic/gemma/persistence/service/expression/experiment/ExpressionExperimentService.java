@@ -272,19 +272,19 @@ public interface ExpressionExperimentService
 
     /**
      * Gets the AuditEvents of the latest link analyses for the specified expression experiment ids. This returns a map
-     * of id -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * of id -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastLinkAnalysis( Collection<Long> ids );
 
     /**
      * Gets the AuditEvents of the latest missing value analysis for the specified expression experiment ids. This
-     * returns a map of id -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * returns a map of id -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastMissingValueAnalysis( Collection<Long> ids );
 
     /**
      * Gets the AuditEvents of the latest rank computation for the specified expression experiment ids. This returns a
-     * map of id -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * map of id -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastProcessedDataUpdate( Collection<Long> ids );
 

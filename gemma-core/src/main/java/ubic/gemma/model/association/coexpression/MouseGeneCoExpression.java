@@ -20,27 +20,12 @@ package ubic.gemma.model.association.coexpression;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-/**
- * 
- */
 public abstract class MouseGeneCoExpression extends Gene2GeneCoexpression {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 6475614056538630827L;
 
-    /**
-     * Constructs new instances of {@link MouseGeneCoExpression}.
-     */
     public static final class Factory {
 
-        /**
-         * @param effect
-         * @param secondGene
-         * @param firstGene
-         * @return
-         */
         public static MouseGeneCoExpression newInstance( Double effect, Long firstGene, Long secondGene ) {
             final MouseGeneCoExpression entity = new MouseGeneCoExpressionImpl();
             assert effect != null && firstGene != null && secondGene != null;

@@ -1,123 +1,120 @@
 package ubic.gemma.core.apps;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Map;
-
 import ubic.gemma.core.apps.ShellDelegatingBlat.BlattableGenome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.Map;
+
+@SuppressWarnings("unused") // Possible external use
 public interface Blat {
 
     /**
      * This value is basically a threshold fraction of aligned bases in the query. Hits below this score are simply not
      * reported. {@link BlatResult} has implementation of score computation.
-     * 
+     *
      * @see BlatResult
      */
-    public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.7;
-    public static final double STEPSIZE = 7;
+    double DEFAULT_BLAT_SCORE_THRESHOLD = 0.7;
+    double STEPSIZE = 7;
 
     /**
      * Run a BLAT search using the gfClient.
-     * 
-     * @param b. The genome is inferred from the Taxon held by the sequence.
+     *
+     * @param b The genome is inferred from the Taxon held by the sequence.
      * @return Collection of BlatResult objects.
-     * @throws IOException
      */
-    public abstract Collection<BlatResult> blatQuery( BioSequence b ) throws IOException;
+    Collection<BlatResult> blatQuery( BioSequence b ) throws IOException;
 
     /**
      * Run a BLAT search using the gfClient.
-     * 
-     * @param b
-     * @param genome
+     *
+     * @param b         The genome is inferred from the Taxon held by the sequence.
      * @param sensitive if true use the more sensitive gfServer, if available.
      * @return Collection of BlatResult objects.
-     * @throws IOException
      */
-    public abstract Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon, boolean sensitive )
-            throws IOException;
+    Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon, boolean sensitive ) throws IOException;
 
     /**
-     * @param sequences
-     * @param taxon The taxon whose database will be searched.
+     * @param sequences The genome is inferred from the Taxon held by the sequence.
+     * @param taxon     The taxon whose database will be searched.
+     * @param sensitive if true use the more sensitive gfServer, if available.
      * @return map of the input sequences to a corresponding collection of blat result(s)
-     * @throws IOException
      */
-    public abstract Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences,
-            boolean sensitive, Taxon taxon ) throws IOException;
+    Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
+            Taxon taxon ) throws IOException;
 
-    public abstract Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
+    Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
             throws IOException;
 
     /**
      * @return the blatScoreThreshold
      */
-    public abstract double getBlatScoreThreshold();
+    double getBlatScoreThreshold();
+
+    /**
+     * @param blatScoreThreshold the blatScoreThreshold to set
+     */
+    void setBlatScoreThreshold( double blatScoreThreshold );
 
     /**
      * @return Returns the gfClientExe.
      */
-    public abstract String getGfClientExe();
+    String getGfClientExe();
 
     /**
      * @return Returns the gfServerExe.
      */
-    public abstract String getGfServerExe();
+    String getGfServerExe();
 
     /**
      * @return Returns the host.
      */
-    public abstract String getHost();
+    String getHost();
 
     /**
      * @return Returns the humanServerPort.
      */
-    public abstract int getHumanServerPort();
+    int getHumanServerPort();
 
     /**
      * @return Returns the mouseServerPort.
      */
-    public abstract int getMouseServerPort();
+    int getMouseServerPort();
 
     /**
      * @return Returns the ratServerPort.
      */
-    public abstract int getRatServerPort();
+    int getRatServerPort();
 
     /**
      * @return Returns the seqDir.
      */
-    public abstract String getSeqDir();
+    String getSeqDir();
 
     /**
      * @return Returns the seqFiles.
      */
-    public abstract String getSeqFiles( BlattableGenome genome );
+    String getSeqFiles( BlattableGenome genome );
 
     /**
      * @param inputStream to the Blat output file in psl format
      * @return processed results.
      */
-    public abstract Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException;
-
-    /**
-     * @param blatScoreThreshold the blatScoreThreshold to set
-     */
-    public abstract void setBlatScoreThreshold( double blatScoreThreshold );
+    Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException;
 
     /**
      * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
      */
-    public abstract void startServer( BlattableGenome genome, int port ) throws IOException;
+    void startServer( BlattableGenome genome, int port ) throws IOException;
 
     /**
      * Stop the gfServer, if it was started by this.
      */
-    public abstract void stopServer( int port );
+    void stopServer( int port );
 
 }

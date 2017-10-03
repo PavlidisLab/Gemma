@@ -2,7 +2,9 @@ package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -31,7 +33,20 @@ public interface BaseVoEnabledService<O extends Identifiable, VO extends Identif
     /**
      * Loads value objects representing all the entities of specific type.
      *
-     * @return collection
+     * @return a collection of value objects
      */
     Collection<VO> loadAllValueObjects();
+
+    /**
+     * Loads all value objects based on the given properties.
+     *
+     * @param offset  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
+     * @param limit   see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
+     * @param orderBy see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
+     * @param asc     see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
+     * @param filter  see ubic.gemma.web.services.rest.util.WebServiceWithFiltering#all
+     * @return collection of value objects.
+     */
+    Collection<VO> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter );
 }

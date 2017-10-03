@@ -23,32 +23,21 @@ package ubic.gemma.core.analysis.report;
  * Interface for twitter feed functionality.
  * 
  * @author paul
- * @version $Id$
  */
 public interface TwitterOutbound {
 
-    /**
-     * 
-     */
-    public abstract void disable();
 
-    /**
-     * 
-     */
-    public abstract void enable();
+    void disable();
 
-    /**
-     * Send Tweet.
-     */
-    public abstract void sendDailyFeed();
 
-    public abstract void sendManualTweet( String feed );
+    void enable();
 
-    /**
-     * for testing
-     * 
-     * @return
-     */
-    abstract String generateDailyFeed();
+
+    void sendDailyFeed();
+
+    void sendManualTweet( String feed );
+
+
+    String generateDailyFeed();
 
 }

@@ -19,43 +19,39 @@
 
 package ubic.gemma.web.services;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.model.genome.Gene;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
- * given a query gene id & collection of target gene ids will determine the overlapping Go terms (intersection) between
+ * given a query gene id &amp; collection of target gene ids will determine the overlapping Go terms (intersection) between
  * each pair of Query Gene and Target Gene. The actual overlapping go terms will be returned as a single string
  * delimited by white space.
- * 
+ *
  * @author gavin, klc
  */
 
 public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( GeneOverlapEndpoint.class );
-
-    private GeneOntologyService geneOntologyService;
-
-    private GeneService geneService;
-
+    private static final Log log = LogFactory.getLog( GeneOverlapEndpoint.class );
     /**
      * The local name of the expected request/response.
      */
     private static final String LOCAL_NAME = "geneOverlap";
+    private GeneOntologyService geneOntologyService;
+    private GeneService geneService;
 
     /**
      * Sets the "business service" to delegate to.
@@ -70,9 +66,9 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
-     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @param document       a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
     @Override
@@ -116,8 +112,8 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        Map<Long, Collection<OntologyTerm>> gene2Ot = geneOntologyService.calculateGoTermOverlap( queryGene,
-                geneIdLongs );
+        Map<Long, Collection<OntologyTerm>> gene2Ot = geneOntologyService
+                .calculateGoTermOverlap( queryGene, geneIdLongs );
 
         Collection<Long> geneCol = gene2Ot.keySet();
 

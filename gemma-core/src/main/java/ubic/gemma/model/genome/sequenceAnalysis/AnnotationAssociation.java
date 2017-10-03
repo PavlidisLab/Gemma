@@ -34,9 +34,7 @@ public class AnnotationAssociation extends ubic.gemma.model.association.BioSeque
     private ExternalDatabase source;
 
     /**
-     * <p>
-     * The original source of the annotation, such as GEO or flyBase.
-     * </p>
+     * @return The original source of the annotation, such as GEO or flyBase.
      */
     public ExternalDatabase getSource() {
         return this.source;
@@ -46,13 +44,8 @@ public class AnnotationAssociation extends ubic.gemma.model.association.BioSeque
         this.source = source;
     }
 
-    /**
-     * Constructs new instances of {@link AnnotationAssociation}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link AnnotationAssociation}.
-         */
+
         public static AnnotationAssociation newInstance() {
             return new AnnotationAssociation();
         }

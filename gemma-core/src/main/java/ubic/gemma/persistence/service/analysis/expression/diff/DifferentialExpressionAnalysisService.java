@@ -38,12 +38,14 @@ import java.util.Map;
 public interface DifferentialExpressionAnalysisService extends AnalysisService<DifferentialExpressionAnalysis> {
 
     /**
+     * @param par       result set
      * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
 
     /**
+     * @param ears      result sets
      * @param threshold (double) for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
      * @return an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
      */
@@ -51,6 +53,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
 
     /**
+     * @param par       result set
      * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -66,9 +69,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
-    /**
-     * Given a collection of ids, return a map of id -> collection of differential expression analysis
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds( Collection<Long> investigationIds );
 
@@ -80,9 +80,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
 
-    /**
-     * Return a collection of experiments in which the given gene was analyzed.
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
@@ -90,6 +87,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
 
     /**
+     * @param expressionExperiments ees
      * @return quite deeply thawed analyses (not the results themselves, but metadata)
      */
     Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
@@ -111,7 +109,8 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     void update( ExpressionAnalysisResultSet a );
 
     /**
-     * Is the analysis deleteable, or is it tied up with another entity that keeps it from being removed.
+     * @param differentialExpressionAnalysis analysis
+     * @return Is the analysis deleteable, or is it tied up with another entity that keeps it from being removed.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );

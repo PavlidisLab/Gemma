@@ -71,7 +71,7 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
 
         while ( ( line = br.readLine() ) != null ) {
 
-            if ( line.startsWith( COMMENTMARK ) ) {
+            if ( line.startsWith( COMMENT_MARK ) ) {
                 continue;
             }
 

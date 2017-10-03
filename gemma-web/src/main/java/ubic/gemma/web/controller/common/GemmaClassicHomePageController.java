@@ -18,30 +18,24 @@
  */
 package ubic.gemma.web.controller.common;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.WebConstants;
+
+import java.util.*;
 
 /**
  * Responsible for display of the Gemma home page.
- * 
+ *
  * @author joseph
- * @version $Id$
  * @deprecated
  */
 @Controller
@@ -85,11 +79,6 @@ public class GemmaClassicHomePageController {
         return mav;
     }
 
-    /**
-     * FIXME : I wish we could use @Scheduled to update this kind of thing periodically.
-     * 
-     * @param
-     */
     public void updateCounts() {
         Map<String, Long> stats = new HashMap<String, Long>();
 

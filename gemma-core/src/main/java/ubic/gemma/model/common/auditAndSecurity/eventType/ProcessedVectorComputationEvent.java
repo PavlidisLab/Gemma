@@ -24,23 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Expression Experiment
  * </p>
  */
-public class ProcessedVectorComputationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent();
-        }
-
-    }
+public class ProcessedVectorComputationEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -49,10 +34,18 @@ public class ProcessedVectorComputationEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ProcessedVectorComputationEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent();
+        }
+
     }
 
 }

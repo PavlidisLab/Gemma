@@ -18,35 +18,24 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Class to store the expression data prior to conversion. The data are read from series files sample by sample, and
  * within each sample designElement by designElement, and within each designElement, quantitationType by
  * quantitationType. Values are stored in vectors, roughly equivalent to DesignElementDataVectors.
- * <p>
  * This is an important class as it encompasses how we convert GEO sample data into vectors. There are a couple of
  * assumptions that this is predicated on. First, we assume that all samples are presented with their quantitation types
  * in the same order. Second, we assume that all samples have the same quantitation type, OR at worst, some are missing
  * off the 'end' for some samples (in which case the vectors are padded). We do not assume that all samples have
  * quantitation types with the same names (quantitation types correspond to column names in the GEO files).
- * <p>
  * There are two counterexamples we have found (so far) that push or violate these assumptions: GSE360 and GSE4345
  * (which is really broken). Loading GSE4345 results in a cast exception because the quantitation types are 'mixed up'
  * across the samples.
@@ -56,13 +45,10 @@ import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
  */
 public class GeoValues implements Serializable {
 
-    private static Collection<String> aggressivelyRemovedQuantitationTypes = new HashSet<>();
-
-    private static Log log = LogFactory.getLog( GeoValues.class.getName() );
-
     private static final long serialVersionUID = 3748363645735281578L;
-
-    private static Collection<String> skippableQuantitationTypes = new HashSet<>();
+    private static final Collection<String> aggressivelyRemovedQuantitationTypes = new HashSet<>();
+    private static final Log log = LogFactory.getLog( GeoValues.class.getName() );
+    private static final Collection<String> skippableQuantitationTypes = new HashSet<>();
 
     // private Map<Object, String> quantitationTypeMap = new HashMap<Object, String>();
 
@@ -232,7 +218,8 @@ public class GeoValues implements Serializable {
 
         String[] moreSkip = new String[] { "Pos_Fraction", "% > B635+2SD", "% > B635+1SD", "% > B532+2SD",
                 "% > B532+1SD", "F532 % Sat.", "F635 % Sat.", "rIsSaturated", "gIsSaturated", "ch1 Signal Noise Ratio",
-                "ch2 Signal Noise Ratio", "gIsFeatNonUnifOL", "gIsPosAndSignif", "rIsPosAndSignif", "rIsFeatNonUnifOL" };
+                "ch2 Signal Noise Ratio", "gIsFeatNonUnifOL", "gIsPosAndSignif", "rIsPosAndSignif",
+                "rIsFeatNonUnifOL" };
 
         skippableQuantitationTypes.addAll( Arrays.asList( moreSkip ) );
 
@@ -241,24 +228,23 @@ public class GeoValues implements Serializable {
     /*
      * Map of platform --> quantitationtype -> designElement -> values; values in same order as sampleVector.
      */
-    private Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<>();
-
-    private Map<GeoPlatform, Map<Integer, Collection<String>>> quantitationTypeIndexMap = new HashMap<>();
-
-    private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<>();
+    private final Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<>();
+    private final Map<GeoPlatform, Map<Integer, Collection<String>>> quantitationTypeIndexMap = new HashMap<>();
+    private final Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<>();
 
     /*
      * This plays the role of the BioAssayDimension; map of platform --> quantitationType --> samples
      */
-    private Map<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<>();
+    private final Map<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<>();
 
     /**
-     * @param columnName
-     * @param index - the actual index of the data in the final data structure, not necessarily the column where the
-     *        data are found in the data file (as that can vary from sample to sample).
+     * @param columnName column name
+     * @param index      - the actual index of the data in the final data structure, not necessarily the column where the
+     *                   data are found in the data file (as that can vary from sample to sample).
      */
     public void addQuantitationType( GeoPlatform platform, String columnName, Integer index ) {
-        if ( columnName == null ) throw new IllegalArgumentException( "Column name cannot be null" );
+        if ( columnName == null )
+            throw new IllegalArgumentException( "Column name cannot be null" );
 
         if ( !quantitationTypeNameMap.containsKey( platform ) ) {
             quantitationTypeNameMap.put( platform, new HashMap<String, Integer>() );
@@ -298,7 +284,8 @@ public class GeoValues implements Serializable {
             boolean newNameIsWanted = isWantedQuantitationType( columnName, false );
 
             if ( !newNameIsWanted ) {
-                log.warn( "Alternate name is an unwanted quantitation type; data may be retaining anyway because of other name" );
+                log.warn(
+                        "Alternate name is an unwanted quantitation type; data may be retaining anyway because of other name" );
             }
 
             qtIndexMapForPlatform.get( index ).add( columnName ); // add it anyway.
@@ -310,20 +297,18 @@ public class GeoValues implements Serializable {
     /**
      * Only call this to add a sample for which there are no data.
      *
-     * @param sample
-     * @return
+     * @param sample geo sample
      */
     public void addSample( GeoSample sample ) {
         GeoPlatform platform = sample.getPlatforms().iterator().next();
 
-        if ( platform.getTechnology().equals( PlatformType.MPSS )
-                || platform.getTechnology().equals( PlatformType.SAGE ) ) {
+        if ( platform.getTechnology().equals( PlatformType.MPSS ) || platform.getTechnology()
+                .equals( PlatformType.SAGE ) ) {
             /*
              * We're not going to add data for this. Setting this false is a bit redundant (see
              * GeoPlatform.useDataFromGeo) but can't hurt.
              */
             platform.setUseDataFromGEO( false );
-            return;
 
         } else if ( !sampleDimensions.containsKey( platform ) ) {
             /*
@@ -350,7 +335,6 @@ public class GeoValues implements Serializable {
             sample.setMightNotHaveDataInFile( true );
             log.warn( "Sample lacks data, no data will be imported for this data set" );
             platform.setUseDataFromGEO( false );
-            return;
 
             // throw new UnsupportedOperationException(
             // "Can't deal with empty samples when that sample is the first one on its platform." );
@@ -368,35 +352,33 @@ public class GeoValues implements Serializable {
 
     /**
      * Store a value. It is assumed that designElements have unique names.
-     * <p>
      * Implementation note: The first time we see a sample, we associate it with a 'dimension' that is connected to the
      * platform and quantitation type. In parallel, we add the data to a 'vector' for the designElement that is likewise
      * connected to the platform the sample uses, the quantitation type. Because in GEO files samples are seen one at a
-     * time, the vectors for each designelement are built up. Thus it is important that we add a value for each sample
+     * time, the vectors for each designElement are built up. Thus it is important that we add a value for each sample
      * for each design element.
-     * <p>
      * Note what happens if data is MISSING for a given designElement/quantitationType/sample combination. This can
-     * happen (typically all the quantitation types for a designelement in a given sample). This method will NOT be
+     * happen (typically all the quantitation types for a designElement in a given sample). This method will NOT be
      * called. When the next sample is processed, the new data will be added onto the end in the wrong place. Then the
      * data in the vectors stored here will be incorrect. Thus the GEO parser has to ensure that each vector is
      * 'completed' before moving to the next sample.
      *
-     * @param sample
+     * @param sample                sample
      * @param quantitationTypeIndex The column number for the quantitation type, needed because the names of the
-     *        quantitation types don't always match across samples (but hopefully the columns do). Even though the first
-     *        column contains the design element name (ID_REF), the first quantitation type should be numbered 0. This
-     *        is almost always a good way to match values across samples, there ARE cases where the order isn't the same
-     *        for two samples in the same series.
-     * @param quantitationTypeIndex Identifies the quantitation type.
-     * @param designElement
-     * @param value The data point to be stored.
+     *                              quantitation types don't always match across samples (but hopefully the columns do). Even though the first
+     *                              column contains the design element name (ID_REF), the first quantitation type should be numbered 0. This
+     *                              is almost always a good way to match values across samples, there ARE cases where the order isn't the same
+     *                              for two samples in the same series.
+     * @param designElement         design element
+     * @param value                 The data point to be stored.
      */
     public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
 
         // we really don't allow null values at this stage.
         if ( value == null ) {
-            throw new IllegalArgumentException( "Attempted to add null for sample=" + sample + " qtype="
-                    + quantitationTypeIndex + " de=" + designElement );
+            throw new IllegalArgumentException(
+                    "Attempted to add null for sample=" + sample + " qtype=" + quantitationTypeIndex + " de="
+                            + designElement );
         }
 
         GeoPlatform platform = addSample( sample, quantitationTypeIndex );
@@ -426,7 +408,7 @@ public class GeoValues implements Serializable {
     /**
      * Remove the data for a given platform (use to save memory)
      *
-     * @param geoPlatform
+     * @param geoPlatform geo platform
      */
     public void clear( GeoPlatform geoPlatform ) {
         this.data.remove( geoPlatform );
@@ -435,9 +417,9 @@ public class GeoValues implements Serializable {
     /**
      * If possible, null out the data for a quantitation type on a given platform.
      *
-     * @param platform
-     * @param datasetSamples
-     * @param quantitationTypeIndex
+     * @param platform              platform
+     * @param datasetSamples        dataset samples
+     * @param quantitationTypeIndex QT index
      */
     public void clear( GeoPlatform platform, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
         if ( datasetSamples.size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
@@ -451,11 +433,11 @@ public class GeoValues implements Serializable {
      * Get the indices of the data for a set of samples - this can be used to get a slice of the data. This is
      * inefficient but shouldn't need to be called all that frequently.
      *
-     * @param platform
+     * @param platform       platform
      * @param neededSamples, must be from the same platform. If we don't have data for a given sample, the index
-     *        returned will be null. This can happen when some samples don't have all the quantitation types (GSE360 for
-     *        example).
-     * @return
+     *                       returned will be null. This can happen when some samples don't have all the quantitation types (GSE360 for
+     *                       example).
+     * @return integer array
      */
     public Integer[] getIndices( GeoPlatform platform, List<GeoSample> neededSamples, Integer quantitationType ) {
 
@@ -480,7 +462,8 @@ public class GeoValues implements Serializable {
                 i++;
             }
 
-            if ( !found ) result.add( null );
+            if ( !found )
+                result.add( null );
 
         }
 
@@ -488,10 +471,6 @@ public class GeoValues implements Serializable {
 
     }
 
-    /**
-     * @param columnName
-     * @return
-     */
     public Integer getQuantitationTypeIndex( GeoPlatform platform, String columnName ) {
         Map<String, Integer> map = this.quantitationTypeNameMap.get( platform );
         if ( map == null ) {
@@ -502,7 +481,7 @@ public class GeoValues implements Serializable {
     }
 
     /**
-     * @param samplePlatform
+     * @param samplePlatform sample platform
      * @return Collection of Objects representing the quantitation types for the given platform.
      */
     public Collection<Object> getQuantitationTypes( GeoPlatform samplePlatform ) {
@@ -512,22 +491,15 @@ public class GeoValues implements Serializable {
         return this.data.get( samplePlatform ).keySet();
     }
 
-    /**
-     * @param quantitationType
-     * @param designElement
-     * @return
-     */
     public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement ) {
         return data.get( platform ).get( quantitationType ).get( designElement );
     }
 
     /**
-     * Return a 'slice' of the data corresponding to the indices provided.
-     *
-     * @param quantitationType
-     * @param designElement
-     * @param indices
-     * @return
+     * @param quantitationType QT
+     * @param designElement    design element
+     * @param indices          indices
+     * @return a 'slice' of the data corresponding to the indices provided.
      */
     public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement,
             Integer[] indices ) {
@@ -539,7 +511,8 @@ public class GeoValues implements Serializable {
         List<Object> rawvals = map2.get( designElement );
 
         // this can happen if the data doesn't contain that designElement.
-        if ( rawvals == null ) return null;
+        if ( rawvals == null )
+            return null;
         for ( Integer i : indices ) {
             if ( i == null ) {
                 result.add( null );
@@ -550,15 +523,17 @@ public class GeoValues implements Serializable {
                  * sample GSM15832 was run on HG-U95V1 while the rest are on HG-U95V2, so a few probes are missing data.
                  */
                 if ( rawvals.size() < ( i + 1 ) ) {
-                    throw new IllegalStateException( "Data out of bounds index=" + i + " (" + designElement + " on "
-                            + platform + " quant.type # " + quantitationType + ") - vector has only " + rawvals.size()
-                            + " values." );
+                    throw new IllegalStateException(
+                            "Data out of bounds index=" + i + " (" + designElement + " on " + platform
+                                    + " quant.type # " + quantitationType + ") - vector has only " + rawvals.size()
+                                    + " values." );
                 }
                 Object value = rawvals.get( i );
                 if ( value == null ) {
                     if ( log.isDebugEnabled() )
-                        log.debug( "No data for index " + i + " (" + designElement + " on " + platform
-                                + " quant.type # " + quantitationType + ") - vector has " + rawvals.size() + " values." );
+                        log.debug(
+                                "No data for index " + i + " (" + designElement + " on " + platform + " quant.type # "
+                                        + quantitationType + ") - vector has " + rawvals.size() + " values." );
                 }
                 result.add( value );
             }
@@ -566,9 +541,6 @@ public class GeoValues implements Serializable {
         return result;
     }
 
-    /**
-     * @return
-     */
     public boolean hasData() {
         return !this.sampleDimensions.isEmpty();
     }
@@ -577,15 +549,15 @@ public class GeoValues implements Serializable {
      * Some quantitation types are 'skippable' - they are easily recomputed from other values, or are not necessary in
      * the system. Skipping these makes loading the data more manageable for some data sets that are very large.
      *
-     * @param quantitationTypeName
-     * @param aggressive To be more aggressive in remove unwanted quantitation types.
+     * @param quantitationTypeName QT name
+     * @param aggressive           To be more aggressive in remove unwanted quantitation types.
      * @return true if the name is NOT on the 'skippable' list.
      */
     public boolean isWantedQuantitationType( String quantitationTypeName, boolean aggressive ) {
         if ( quantitationTypeName == null )
             throw new IllegalArgumentException( "Quantitation type name cannot be null" );
-        return !skippableQuantitationTypes.contains( quantitationTypeName )
-                && !aggressivelyRemovedQuantitationTypes.contains( quantitationTypeName );
+        return !skippableQuantitationTypes.contains( quantitationTypeName ) && !aggressivelyRemovedQuantitationTypes
+                .contains( quantitationTypeName );
     }
 
     /**
@@ -593,8 +565,8 @@ public class GeoValues implements Serializable {
      * be semi-deep copies. This is only needed for when we are splitting a series apart, especially when it is not
      * along Platform lines.
      *
-     * @param samples
-     * @return
+     * @param samples samples
+     * @return geo values
      */
     public GeoValues subset( Collection<GeoSample> samples ) {
 
@@ -679,17 +651,17 @@ public class GeoValues implements Serializable {
 
             assert data.get( platform ) != null : platform;
 
-            buf.append( "============== " + platform + " =================\n" );
+            buf.append( "============== " ).append( platform ).append( " =================\n" );
             Object[] ar = sampleDimensions.get( platform ).keySet().toArray();
             Arrays.sort( ar );
             for ( Object qType : ar ) {
                 String qTName = StringUtils.join( quantitationTypeIndexMap.get( platform ).get( qType ), "/" );
-                buf.append( "---------------- Platform " + platform + " QuantitationType #" + qType + " (" + qTName
-                        + ") ------------------\n" );
+                buf.append( "---------------- Platform " ).append( platform ).append( " QuantitationType #" )
+                        .append( qType ).append( " (" ).append( qTName ).append( ") ------------------\n" );
                 buf.append( "DeEl" );
 
                 for ( GeoSample sam : sampleDimensions.get( platform ).get( qType ) ) {
-                    buf.append( "\t" + sam.getGeoAccession() );
+                    buf.append( "\t" ).append( sam.getGeoAccession() );
                 }
                 buf.append( "\n" );
 
@@ -704,7 +676,7 @@ public class GeoValues implements Serializable {
                         if ( val == null || StringUtils.isBlank( val.toString() ) ) {
                             val = ".";
                         }
-                        buf.append( "\t" + val );
+                        buf.append( "\t" ).append( val );
                     }
 
                     buf.append( "\n" );
@@ -733,7 +705,8 @@ public class GeoValues implements Serializable {
                 // This is the number of samples that have been processed so far for the given quantitation type.
                 int numSamples = sampleDimensions.get( platform ).get( qType ).size();
 
-                if ( skippableQuantitationTypes.contains( qType ) ) continue;
+                if ( skippableQuantitationTypes.contains( qType ) )
+                    continue;
                 Map<Integer, Collection<String>> qtMap = quantitationTypeIndexMap.get( platform );
                 if ( qtMap == null ) {
                     // for data sets where there is no data, this could happen.
@@ -761,12 +734,12 @@ public class GeoValues implements Serializable {
                             vals.add( null );
                         }
                     } else if ( vals.size() > numSamples ) {
-                        log.error( "Samples so far: "
-                                + StringUtils.join( sampleDimensions.get( platform ).get( qType ), ',' ) );
-                        throw new IllegalStateException( "Validation failed at platform=" + platform
-                                + " designelement=" + designElement + " qType=" + qType + " expected " + numSamples
-                                + " values, got " + vals.size() + "; name(s) for qType are "
-                                + StringUtils.join( qtNames, "," ) );
+                        log.error( "Samples so far: " + StringUtils
+                                .join( sampleDimensions.get( platform ).get( qType ), ',' ) );
+                        throw new IllegalStateException(
+                                "Validation failed at platform=" + platform + " designelement=" + designElement
+                                        + " qType=" + qType + " expected " + numSamples + " values, got " + vals.size()
+                                        + "; name(s) for qType are " + StringUtils.join( qtNames, "," ) );
                     }
                 }
                 if ( log.isDebugEnabled() )
@@ -779,9 +752,9 @@ public class GeoValues implements Serializable {
     /**
      * Only needs to be called 'externally' if you know there is no data for the sample.
      *
-     * @param sample
-     * @param quantitationTypeIndex
-     * @return
+     * @param sample                sample
+     * @param quantitationTypeIndex QT index
+     * @return geo platform
      */
     private GeoPlatform addSample( GeoSample sample, Integer quantitationTypeIndex ) {
         if ( sample.getPlatforms().size() > 1 ) {

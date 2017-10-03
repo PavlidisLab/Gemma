@@ -37,15 +37,8 @@ public class AlignmentBasedGeneMappingEvent
     public AlignmentBasedGeneMappingEvent() {
     }
 
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent}.
-         */
+
         public static ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent newInstance() {
             return new ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent();
         }

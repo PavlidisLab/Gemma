@@ -42,8 +42,6 @@ public abstract class Chromosome implements Identifiable, Serializable {
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public Chromosome() {
     }
@@ -82,12 +80,13 @@ public abstract class Chromosome implements Identifiable, Serializable {
     }
 
     /**
-     * The database where we have the assesmbly of the chromosome, such as the GoldenPath.
+     * @return The database where we have the assesmbly of the chromosome, such as the GoldenPath.
      */
     public ExternalDatabase getAssemblyDatabase() {
         return this.assemblyDatabase;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
@@ -97,7 +96,7 @@ public abstract class Chromosome implements Identifiable, Serializable {
     }
 
     /**
-     * The sequence of the chromosome. This is typically going to be just a reference to the sequence in an external
+     * @return The sequence of the chromosome. This is typically going to be just a reference to the sequence in an external
      * database.
      */
     public BioSequence getSequence() {
@@ -108,21 +107,12 @@ public abstract class Chromosome implements Identifiable, Serializable {
         return this.taxon;
     }
 
-    /**
-     * Constructs new instances of {@link Chromosome}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link Chromosome}.
-         */
+
         public static Chromosome newInstance() {
             return new ChromosomeImpl();
         }
 
-        /**
-         * Constructs a new instance of {@link Chromosome}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
         public static Chromosome newInstance( String name, ExternalDatabase assemblyDatabase, BioSequence sequence,
                 ubic.gemma.model.genome.Taxon taxon ) {
             final Chromosome entity = new ChromosomeImpl();
@@ -141,10 +131,6 @@ public abstract class Chromosome implements Identifiable, Serializable {
             return entity;
         }
 
-        /**
-         * Constructs a new instance of {@link Chromosome}, taking all required and/or read-only properties as
-         * arguments.
-         */
         public static Chromosome newInstance( String name, Taxon taxon ) {
             final Chromosome entity = new ChromosomeImpl();
             try {

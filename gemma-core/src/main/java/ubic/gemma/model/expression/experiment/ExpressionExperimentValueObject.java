@@ -110,6 +110,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     /**
      * Constructor using this VO for EESubSets - does not populate most of VO properties, only source experiment and the isSubset property.
+     *
+     * @param ee ee
      */
     public ExpressionExperimentValueObject( ExpressionExperimentSubSet ee ) {
         super( ee.getId() );
@@ -246,8 +248,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      *
      * @param bioAssaySet either EE or EESubSet instance.
      * @return value object that represents the subset, or lite version of this VO for EE.
-     * @see this#ExpressionExperimentValueObject(ExpressionExperimentSubSet) for subSet VO description
-     * @see this#ExpressionExperimentValueObject(ExpressionExperiment, boolean) for lite VO description
      */
     public static ExpressionExperimentValueObject createValueObject( BioAssaySet bioAssaySet ) {
         if ( bioAssaySet instanceof ExpressionExperiment ) {
@@ -360,7 +360,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * The date the platform associated with the experiment was last updated. If there are multiple platforms this
+     * @return The date the platform associated with the experiment was last updated. If there are multiple platforms this
      * should be the date of the most recent modification of any of them. This is used to help flag experiments that
      * need re-analysis due to changes in the underlying array design(s)
      */
@@ -381,7 +381,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * The date this object was generated.
+     * @return The date this object was generated.
      */
     public Date getDateCached() {
         return this.dateCached;
@@ -508,7 +508,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * Used in display of gene-wise analysis results.
+     * @return Used in display of gene-wise analysis results.
      */
     public Boolean getHasProbeSpecificForQueryGene() {
         return this.hasProbeSpecificForQueryGene;
@@ -579,7 +579,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * The number of terms (Characteristics) the experiment has to describe it.
+     * @return The number of terms (Characteristics) the experiment has to describe it.
      */
     public Integer getNumAnnotations() {
         return this.numAnnotations;
@@ -590,7 +590,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * The number of experimental factors the experiment has (counting those that are populated with biomaterials)
+     * @return The number of experimental factors the experiment has (counting those that are populated with biomaterials)
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
@@ -641,7 +641,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * Details of samples that were removed (or marked as outliers). This can happen multiple times in the life of a
+     * @return Details of samples that were removed (or marked as outliers). This can happen multiple times in the life of a
      * data set, so this is a collection of AuditEvents.
      */
     public Collection<AuditEventValueObject> getSampleRemovedFlags() {
@@ -678,9 +678,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * <p>
-     * The ID of the source experiment, if this is an ExpressionExperimentSubSet; otherwise will be null.
-     * </p>
+     * @return The ID of the source experiment, if this is an ExpressionExperimentSubSet; otherwise will be null.
      */
     public Long getSourceExperiment() {
         return this.sourceExperiment;
@@ -716,7 +714,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     @Override
     public boolean getUserCanWrite() {
-        // FIXME consider making return type Boolean
         if ( this.currentUserHasWritePermission == null )
             return false;
         return this.currentUserHasWritePermission;
@@ -729,7 +726,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     @Override
     public boolean getUserOwned() {
-        // FIXME consider making return type Boolean
         if ( this.currentUserIsOwner == null )
             return false;
         return this.currentUserIsOwner;

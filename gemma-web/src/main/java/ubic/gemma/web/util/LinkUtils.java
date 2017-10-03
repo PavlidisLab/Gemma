@@ -27,9 +27,8 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * Methods to generate links and/or urls to common resources.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class LinkUtils {
 
@@ -43,7 +42,7 @@ public class LinkUtils {
     }
 
     /**
-     * @param blatResult
+     * @param blatResult blat result
      * @return URL to the genome browser for the given blat result, or null if the URL cannot be formed correctly.
      */
     public static String getGenomeBrowserLink( BlatResultValueObject blatResult ) {
@@ -72,10 +71,6 @@ public class LinkUtils {
         return link;
     }
 
-    /**
-     * @param product
-     * @return
-     */
     public static String getNcbiUrl( GeneProductValueObject product ) {
         String ncbiLink = "";
         if ( product.getType().equals( GeneProductType.RNA.getValue() ) ) {
@@ -89,8 +84,8 @@ public class LinkUtils {
     }
 
     public static String getNcbiUrl( GeneValueObject gene ) {
-        return "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
-                + gene.getNcbiId();
+        return "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" + gene
+                .getNcbiId();
     }
 
 }

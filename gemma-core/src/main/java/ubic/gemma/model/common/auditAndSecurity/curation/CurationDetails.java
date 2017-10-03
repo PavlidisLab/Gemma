@@ -75,9 +75,6 @@ public class CurationDetails implements Identifiable, Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    /**
-     * @return a simple hash code based on this instances ID.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;

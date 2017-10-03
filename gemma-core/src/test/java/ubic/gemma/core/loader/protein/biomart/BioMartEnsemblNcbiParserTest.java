@@ -37,15 +37,11 @@ import ubic.gemma.model.genome.Taxon;
  * for too.
  * 
  * @author ldonnison
- * @version $Id$
  */
 public class BioMartEnsemblNcbiParserTest {
 
     private BiomartEnsembleNcbiParser parser = null;
 
-    /**
-     * @throws java.lang.Exception
-     */
     @Before
     public void setUp() throws Exception {
 
@@ -57,7 +53,7 @@ public class BioMartEnsemblNcbiParserTest {
         parser = new BiomartEnsembleNcbiParser( taxon, attributesToGet );
     }
 
-    /**
+    /*
      * Tests that the number of attributes are counted corrrectly
      */
     @Test
@@ -70,7 +66,7 @@ public class BioMartEnsemblNcbiParserTest {
 
     }
 
-    /**
+    /*
      * Test method for {@link ubic.gemma.core.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
      * . Tests that a standard human taxon line can be parsed
      */
@@ -94,7 +90,7 @@ public class BioMartEnsemblNcbiParserTest {
 
     }
 
-    /**
+    /*
      * Test method for {@link ubic.gemma.core.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
      * . Tests that a standard taxon line can be parsed
      */
@@ -113,7 +109,7 @@ public class BioMartEnsemblNcbiParserTest {
 
     }
 
-    /**
+    /*
      * Test method for {@link ubic.gemma.core.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
      * . Tests that a standard human taxon line can be parsed
      */
@@ -146,7 +142,7 @@ public class BioMartEnsemblNcbiParserTest {
         }
     }
 
-    /**
+    /*
      * Tests that a biomart mouse file can be parsed
      */
     @Test

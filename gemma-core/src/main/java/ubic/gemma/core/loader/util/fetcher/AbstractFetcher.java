@@ -18,6 +18,11 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.model.common.description.LocalFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -27,25 +32,19 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.common.description.LocalFile;
-
 /**
  * @author pavlidis
- * @version $Id$
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public abstract class AbstractFetcher implements Fetcher {
 
-    private static final int NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY = 5;
     protected static final int INFO_UPDATE_INTERVAL = 5000;
-
-    // how long we wait in ms for a download that has stalled.
+    protected static final Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
+    private static final int NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY = 5;
+    /**
+     * how long we wait in ms for a download that has stalled.
+     */
     private static final long STALLED_BAIL_TIME_LIMIT = 60 * 1000L;
-
-    protected static Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
     /**
      * Whether we are allowed to use an existing file rather than downloading again, in the case where we can't connect
      * to the remote host to check the size of the file. Setting force=true overrides this. Default is FALSE.
@@ -61,9 +60,6 @@ public abstract class AbstractFetcher implements Fetcher {
 
     protected String remoteBaseDir = null;
 
-    /**
-     * 
-     */
     public AbstractFetcher() {
         super();
         initConfig();
@@ -84,16 +80,9 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param allowUseExisting the allowUseExisting to set
-     */
-    public void setAllowUseExisting( boolean allowUseExisting ) {
-        this.allowUseExisting = allowUseExisting;
-    }
-
-    /**
      * Set to true if downloads should proceed even if the file already exists.
-     * 
-     * @param force
+     *
+     * @param force new force
      */
     @Override
     public void setForce( boolean force ) {
@@ -101,17 +90,20 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param seekFile
-     * @return
+     * @param allowUseExisting the allowUseExisting to set
      */
+    public void setAllowUseExisting( boolean allowUseExisting ) {
+        this.allowUseExisting = allowUseExisting;
+    }
+
     protected LocalFile fetchedFile( String seekFile ) {
         return this.fetchedFile( seekFile, seekFile );
     }
 
     /**
-     * @param seekFilePath Absolute path to the file for download
+     * @param seekFilePath   Absolute path to the file for download
      * @param outputFilePath Absolute path to the download location.
-     * @return
+     * @return local file
      */
     protected LocalFile fetchedFile( String seekFilePath, String outputFilePath ) {
         LocalFile file = LocalFile.Factory.newInstance();
@@ -131,13 +123,13 @@ public abstract class AbstractFetcher implements Fetcher {
 
     /**
      * Wrap the existing file in the required Collection&lt;LocalFile&gt;
-     * 
-     * @param existingFile
-     * @param seekFile
-     * @return
+     *
+     * @param existingFile existing file
+     * @param seekFile     seek file
+     * @return collection of local files
      */
     protected Collection<LocalFile> getExistingFile( File existingFile, String seekFile ) {
-        Collection<LocalFile> fallback = new HashSet<LocalFile>();
+        Collection<LocalFile> fallback = new HashSet<>();
         LocalFile lf = LocalFile.Factory.newInstance();
         try {
             lf.setLocalURL( existingFile.toURI().toURL() );
@@ -154,20 +146,20 @@ public abstract class AbstractFetcher implements Fetcher {
 
     /**
      * Like mkdir(accession) but for cases where there is no accession.
-     * 
-     * @return
+     *
+     * @return file
      */
     protected File mkdir() throws IOException {
         return this.mkdir( null );
     }
 
     /**
-     * Create a directory according to the current accession number and set path information, including any nonexisting
+     * Create a directory according to the current accession number and set path information, including any non-existing
      * parent directories. If the path cannot be used, we use a temporary directory.
-     * 
-     * @param accession
+     *
+     * @param accession accession
      * @return new directory
-     * @throws IOException
+     * @throws IOException if there is a problem while manipulating the file
      */
     protected File mkdir( String accession ) throws IOException {
         File newDir = null;
@@ -216,7 +208,7 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param future
+     * @param future future task
      * @return true if it finished normally, false if it was cancelled.
      */
     protected boolean waitForDownload( FutureTask<Boolean> future ) {
@@ -245,20 +237,22 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param future
-     * @param expectedSize
-     * @param outputFileName
+     * @param future       future task
+     * @param expectedSize expected size
+     * @param outputFile   output file
      * @return true if it finished normally, false if it was cancelled.
      */
     protected boolean waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
-        int iters = 0;
+        int i = 0;
         long previousSize = 0;
         StopWatch idleTimer = new StopWatch();
         while ( !future.isDone() && !future.isCancelled() ) {
             try {
                 Thread.sleep( INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
-                log.info( "Cancelling download" );
+                if ( log != null ) {
+                    log.info( "Cancelling download" );
+                }
                 boolean cancelled = future.cancel( true );
                 if ( cancelled ) {
                     return false;
@@ -269,8 +263,11 @@ public abstract class AbstractFetcher implements Fetcher {
                     return false;
                 }
 
-                log.error( "Cancellation of actual download might not have happend? Task says it was not cancelled: "
-                        + future );
+                if ( log != null ) {
+                    log.error(
+                            "Cancellation of actual download might not have happened? Task says it was not cancelled: "
+                                    + future );
+                }
 
                 return false;
 
@@ -279,9 +276,8 @@ public abstract class AbstractFetcher implements Fetcher {
             /*
              * Avoid logging too much. If we're waiting for a long download, reduce frequency of updates.
              */
-            if ( outputFile.length() < expectedSize
-                    && ( iters < NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY || iters
-                            % NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY == 0 ) ) {
+            if ( outputFile.length() < expectedSize && ( i < NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY
+                    || i % NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY == 0 ) ) {
 
                 double percent = 100.00 * outputFile.length() / expectedSize;
 
@@ -296,25 +292,31 @@ public abstract class AbstractFetcher implements Fetcher {
                      * Possibly consider bailing after a while.
                      */
                     if ( idleTimer.getTime() > STALLED_BAIL_TIME_LIMIT ) {
-                        log.warn( "Download does not seem to be happening, bailing" );
+                        if ( log != null ) {
+                            log.warn( "Download does not seem to be happening, bailing" );
+                        }
                         return false;
                     }
-                    if ( idleTimer.getTime() == 0 ) idleTimer.start();
+                    if ( idleTimer.getTime() == 0 )
+                        idleTimer.start();
                 } else {
                     idleTimer.reset();
                     idleTimer.start();
                 }
             }
 
-            if ( outputFile.length() >= expectedSize ) {
-                // no special action, it will finish soon enough.
-            }
+            //            if ( outputFile.length() >= expectedSize ) {
+            //                // no special action, it will finish soon enough.
+            //            }
 
             previousSize = outputFile.length();
 
-            iters++;
+            i++;
         }
-        if ( iters == 0 ) log.info( "File with size " + outputFile.length() + " bytes." );
+        if ( i == 0 )
+            if ( log != null ) {
+                log.info( "File with size " + outputFile.length() + " bytes." );
+            }
         return true;
     }
 

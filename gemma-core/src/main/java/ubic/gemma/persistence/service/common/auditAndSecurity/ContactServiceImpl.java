@@ -24,22 +24,15 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 /**
  * @author keshav
  * @author pavlidis
- * @version $Id$
  * @see ContactService
  */
 @Service
 public class ContactServiceImpl extends ContactServiceBase {
 
-    /**
-     * @see ContactService#createFromValueObject(Contact)
-     */
     protected Contact handleCreate( Contact contact ) {
         return this.getContactDao().create( contact );
     }
 
-    /**
-     * @see ContactService#find(Contact)
-     */
     @Override
     protected Contact handleFind( Contact contact ) {
         return this.getContactDao().find( contact );
@@ -50,17 +43,11 @@ public class ContactServiceImpl extends ContactServiceBase {
         return this.getContactDao().findOrCreate( contact );
     }
 
-    /**
-     * @see ContactService#remove(Contact)
-     */
     @Override
     protected void handleRemove( Contact contact ) {
         this.getContactDao().remove( contact );
     }
 
-    /**
-     * @see ContactService#update(Contact)
-     */
     @Override
     protected void handleUpdate( Contact contact ) {
         this.getContactDao().update( contact );

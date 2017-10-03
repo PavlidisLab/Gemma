@@ -22,10 +22,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
- * @version $Id$
  */
 public class HumanCoexpressionSupportDetailsImpl extends SupportDetails {
 

@@ -18,26 +18,10 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
@@ -55,11 +39,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import java.io.InputStream;
+import java.util.*;
+import java.util.zip.GZIPInputStream;
+
+import static org.junit.Assert.*;
+
 /**
  * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
  *
  * @author pavlidis
- * @version $Id$
  */
 public class GeoConverterTest extends BaseSpringContextTest {
 
@@ -74,13 +63,14 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        if ( doneSetup ) return;
+        if ( doneSetup )
+            return;
         super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
 
         doneSetup = true;
     }
 
-    /**
+    /*
      * quantitation type problem. See bug 1760
      */
     @SuppressWarnings("unchecked")
@@ -112,26 +102,24 @@ public class GeoConverterTest extends BaseSpringContextTest {
         fail( "Didn't find the 'value' quantitation type" );
     }
 
-    /**
+    /*
      * Bug 3976: make sure we skip non-expression data sets.
      *
-     * @throws Exception
      */
     @Test
     public final void test5C() throws Exception {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
         GeoSeries series = ( GeoSeries ) g.generate( "GSE35721" ).iterator().next();
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc.convert( series );
+        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> r = ( Collection<ExpressionExperiment> ) this.gc
+                .convert( series );
         assertTrue( r.isEmpty() );
     }
 
-    /**
+    /*
      * GSE2388 is an example of where the array and sample taxon do not match. This test checks that the biomaterial and
      * array taxons are set correctly.
      *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -200,9 +188,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( revertedResult[2], -394949.44422, 0.00001 );
     }
 
-    /*
-     * Test method for 'ubic.gemma.core.loader.expression.geo.GeoConverter.convertData(List<String>)'
-     */
     @Test
     public void testConvertDataIntegers() {
         List<Object> testList = new ArrayList<>();
@@ -218,10 +203,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( revertedResult[2], -394949 );
     }
 
-    /**
+    /*
      * for bug 3977
      *
-     * @throws Exception
      */
     // @Test
     // public void testGSE11504RMALog2() throws Exception {
@@ -257,10 +241,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
     }
 
-    /**
+    /*
      * caused "GSM3059 had no platform assigned"
      *
-     * @throws Exception
      */
     @Test
     public void testConvertGSE106() throws Exception {
@@ -276,10 +259,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
     }
 
-    /**
+    /*
      * This is one of our longer/slower tests.
      *
-     * @throws Exception
      */
     @Test
     public void testConvertGSE18Stress() throws Exception {
@@ -379,10 +361,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Lacks data for some samples (on purpose)
      *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -432,10 +413,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertTrue( ok );
     }
 
-    /**
+    /*
      * Note: this series has some samples that don't have all the quantitation types.
-     *
-     * @throws Exception
      */
     @Test
     public void testConvertGSE360() throws Exception {
@@ -451,10 +430,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
     }
 
-    /**
+    /*
      * Has two species.
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -473,10 +450,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 2, ees.size() );
     }
 
-    /**
+    /*
      * Gets no 'preferred' quantitation type. - it should find one.
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -507,10 +482,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertTrue( ok );
     }
 
-    /**
+    /*
      * See bug 3328 - we don't want to use IMAGE clone IDs
-     *
-     * @throws Exception
      */
     @Test
     public void testConvertGSE4229IMAGE() throws Exception {
@@ -524,8 +497,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         ExpressionExperiment ee = ees.iterator().next();
         ArrayDesign platform = ee.getBioAssays().iterator().next().getArrayDesignUsed();
 
@@ -536,10 +508,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertTrue( !acc.startsWith( "IMAGE" ) );
     }
 
-    /**
+    /*
      * Problem with QT being interpreted as String instead of Double.
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -611,10 +581,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertTrue( ok );
     }
 
-    /**
+    /*
      * Was yielding a 'ArrayDesigns must be converted before datasets'.
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -642,10 +610,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 480, ee.getRawExpressionDataVectors().size() );
     }
 
-    /**
+    /*
      * NPE in converter, not reproduced here.
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -665,10 +631,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 1, ees.size() );
     }
 
-    /**
+    /*
      * Case where the same sample can be in multiple series, we had problems with it.
-     *
-     * @throws Exception
      */
     @Test
     public void testConvertMultiSeriesPerSample() throws Exception {
@@ -709,10 +673,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * See bug 3163.
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -747,9 +709,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @SuppressWarnings("unchecked")
     @Test
     public void testConvertMultiTaxonPlatformGSE28843() throws Exception {
@@ -786,10 +745,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
     }
 
-    /**
+    /*
      * Ends up with too few vectors, because of a problem with the quantitation type guesser.
-     *
-     * @throws Exception
      */
     @Test
     public void testFetchAndLoadGSE8294() throws Exception {
@@ -806,10 +763,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 66, e.getRawExpressionDataVectors().size() );
     }
 
-    /**
+    /*
      * Test logic to evaluate a primary array taxon Either from platform taxon, common parent taxon or probe taxon.
-     *
-     * @throws Exception
      */
     @Test
     public final void testGetPrimaryArrayTaxon() throws Exception {
@@ -845,10 +800,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Should result in the rejection of 'irrelevant' probes.
-     *
-     * @throws Exception
      */
     @Test
     public void testGPL6096ExonArray() throws Exception {
@@ -871,10 +824,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // assertEquals( 168, ad.getCompositeSequences().size() );
     }
 
-    /**
+    /*
      * bug 3393/1709 - case change in probe names messing things up.
-     *
-     * @throws Exception
      */
     @Test
     public final void testGSE44903() throws Exception {
@@ -897,10 +848,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 0, e.getRawExpressionDataVectors().size() );
     }
 
-    /**
+    /*
      * Has only one GDS in GEOs when there really should be two. Bug 1829.
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -924,11 +873,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 1, ees.size() );
     }
 
-    /**
+    /*
      * GSE4047 is an example of where some of the samples used have channel 1 and channel 2 taxon different. And thus an
      * exception should be thrown
-     *
-     * @throws Exception
      */
     @Test
     public void testIllegalArgumentExceptionChannel1Channel2taxonDifferent() throws Exception {
@@ -954,11 +901,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Tests that if platform is defined as having multiple organisms but no column can be found that defines the taxon
      * at the probe level then an Exception is thrown
-     *
-     * @throws Exception
      */
     @Test
     public void testIllegalArgumentExceptionMultipleTaxaOnArrayWithNoOrganismColumn() throws Exception {
@@ -985,10 +930,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * We should not longer use IMAGE:XXXXX as the sequence name.
-     *
-     * @throws Exception
      */
     @Test
     public void testImageClones() throws Exception {
@@ -1009,11 +952,9 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Method to test that an array design can have multiple taxa stored against it and that if abbreviations used as
      * probe names mapped to the scientific names correctly if the abbreviation is stored in DB.
-     *
-     * @throws Exception
      */
     @Test
     public void testMultipleTaxaIdentifiedBYAbbreviationsOnArrayWithOrganismColumn() throws Exception {
@@ -1080,15 +1021,13 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * bug 3415. The samples do not have the same quantitation types. In some it is "detection pval" and others
      * "raw_value". We would reject "detection pval" but if the qt already has the name "raw_value" we won't. The way
      * the current setup works, we sort of throw up our hands and keep the data, even though it is messed up.
      * <p>
      * This tests that behaviour. If we start rejecting the data, this test will fail (note that rejecting the data is
      * not unreasonable).
-     *
-     * @throws Exception
      */
     @Test
     public void testParseGSE44625() throws Exception {
@@ -1111,7 +1050,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 2, ee.getQuantitationTypes().size() );
     }
 
-    /**
+    /*
      * Ensure that if platform has one taxon then taxon is still set correctly
      */
     @Test
@@ -1139,10 +1078,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 1, listPossibleTaxonValues.size() );
     }
 
-    /**
+    /*
      * Test splitting
-     *
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -1167,10 +1104,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * Platform has IMAGE:CCCCC in CLONE_ID column, no genbank accessions anywhere.
-     *
-     * @throws Exception
      */
     @Test
     public final void testWithImageNoGenbank() throws Exception {
@@ -1190,10 +1125,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * Has image clones.
-     *
-     * @throws Exception
      */
     @Test
     public final void testWithImages() throws Exception {

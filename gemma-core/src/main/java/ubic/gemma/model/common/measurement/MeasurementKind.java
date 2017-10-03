@@ -5,72 +5,30 @@
 // $Id$
 package ubic.gemma.model.common.measurement;
 
-/**
- * 
- */
+import java.util.List;
+import java.util.Map;
+
 public class MeasurementKind implements java.io.Serializable, Comparable<MeasurementKind> {
+
+    public static final MeasurementKind TIME = new MeasurementKind( "TIME" );
+    public static final MeasurementKind DISTANCE = new MeasurementKind( "DISTANCE" );
+    public static final MeasurementKind TEMPERATURE = new MeasurementKind( "TEMPERATURE" );
+    public static final MeasurementKind QUANTITY = new MeasurementKind( "QUANTITY" );
+    public static final MeasurementKind MASS = new MeasurementKind( "MASS" );
+    public static final MeasurementKind VOLUME = new MeasurementKind( "VOLUME" );
+    public static final MeasurementKind CONCENTRATION = new MeasurementKind( "CONC" );
+    public static final MeasurementKind OTHER = new MeasurementKind( "OTHER" );
+    public static final MeasurementKind COUNT = new MeasurementKind( "COUNT" );
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 7640193836825779342L;
+    private static final Map<String, MeasurementKind> values = new java.util.LinkedHashMap<>( 9, 1 );
 
-    /**
-     * 
-     */
-    public static final MeasurementKind TIME = new MeasurementKind( "TIME" );
+    private static List<String> literals = new java.util.ArrayList<>( 9 );
+    private static List<String> names = new java.util.ArrayList<>( 9 );
+    private static List<MeasurementKind> valueList = new java.util.ArrayList<>( 9 );
 
-    /**
-     * 
-     */
-    public static final MeasurementKind DISTANCE = new MeasurementKind( "DISTANCE" );
-
-    /**
-     * 
-     */
-    public static final MeasurementKind TEMPERATURE = new MeasurementKind( "TEMPERATURE" );
-
-    /**
-     * 
-     */
-    public static final MeasurementKind QUANTITY = new MeasurementKind( "QUANTITY" );
-
-    /**
-     * 
-     */
-    public static final MeasurementKind MASS = new MeasurementKind( "MASS" );
-
-    /**
-     * 
-     */
-    public static final MeasurementKind VOLUME = new MeasurementKind( "VOLUME" );
-
-    /**
-     * 
-     */
-    public static final MeasurementKind CONCENTRATION = new MeasurementKind( "CONC" );
-
-    /**
-     * 
-     */
-    public static final MeasurementKind OTHER = new MeasurementKind( "OTHER" );
-
-    /**
-     * 
-     */
-    public static final MeasurementKind COUNT = new MeasurementKind( "COUNT" );
-
-    private static final java.util.Map<String, MeasurementKind> values = new java.util.LinkedHashMap<String, MeasurementKind>(
-            9, 1 );
-
-    private static java.util.List<String> literals = new java.util.ArrayList<String>( 9 );
-
-    private static java.util.List<String> names = new java.util.ArrayList<String>( 9 );
-
-    private static java.util.List<MeasurementKind> valueList = new java.util.ArrayList<MeasurementKind>( 9 );
-
-    /**
-     * Initializes the values.
-     */
     static {
         values.put( TIME.value, TIME );
         valueList.add( TIME );
@@ -113,10 +71,20 @@ public class MeasurementKind implements java.io.Serializable, Comparable<Measure
         names = java.util.Collections.unmodifiableList( names );
     }
 
+    private String value;
+
+    protected MeasurementKind() {
+    }
+
+    private MeasurementKind( String value ) {
+        this.value = value;
+    }
+
     /**
      * Creates an instance of MeasurementKind from <code>value</code>.
-     * 
+     *
      * @param value the value to create the MeasurementKind from.
+     * @return measurement kind
      */
     public static MeasurementKind fromString( String value ) {
         final MeasurementKind typeValue = values.get( value );
@@ -133,7 +101,7 @@ public class MeasurementKind implements java.io.Serializable, Comparable<Measure
 
     /**
      * Returns an unmodifiable list containing the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
     public static java.util.List<String> literals() {
@@ -142,9 +110,9 @@ public class MeasurementKind implements java.io.Serializable, Comparable<Measure
 
     /**
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
     public static java.util.List<String> names() {
         return names;
@@ -152,63 +120,38 @@ public class MeasurementKind implements java.io.Serializable, Comparable<Measure
 
     /**
      * Returns an unmodifiable list containing the actual enumeration instance values.
-     * 
+     *
      * @return A List containing the actual enumeration instance values.
      */
     public static java.util.List<MeasurementKind> values() {
         return valueList;
     }
 
-    private String value;
-
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected MeasurementKind() {
-    }
-
-    private MeasurementKind( String value ) {
-        this.value = value;
-    }
-
-    /**
-     * @see Comparable#compareTo(Object)
-     */
     @Override
     public int compareTo( MeasurementKind that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
     }
 
-    /**
-     * @see Object#equals(Object)
-     */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof MeasurementKind && ( ( MeasurementKind ) object ).getValue().equals(
-                        this.getValue() ) );
+        return ( this == object ) || ( object instanceof MeasurementKind && ( ( MeasurementKind ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
      * Gets the underlying value of this type safe enumeration.
-     * 
+     *
      * @return the underlying value.
      */
     public String getValue() {
         return this.value;
     }
 
-    /**
-     * @see Object#hashCode()
-     */
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
     }
 
-    /**
-     * @see Object#toString()
-     */
     @Override
     public String toString() {
         return String.valueOf( value );
@@ -217,15 +160,15 @@ public class MeasurementKind implements java.io.Serializable, Comparable<Measure
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
      * will be the singleton for the JVM in which the current thread is running.
-     * <p>
      * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
      * regular deserialized object is always a newly constructed instance and will therefore never be an existing
      * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
      * to return the proper singleton reference.
-     * <p>
-     * This method is documented here: <a
-     * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
+     * This method is documented here:
+     * <a href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return MeasurementKind.fromString( this.value );

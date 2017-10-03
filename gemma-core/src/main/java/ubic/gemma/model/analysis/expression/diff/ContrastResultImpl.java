@@ -20,18 +20,14 @@ package ubic.gemma.model.analysis.expression.diff;
 
 /**
  * @author paul
- * @version $Id$
- * @see ubic.gemma.model.analysis.ContrastResult
  */
 public class ContrastResultImpl extends ContrastResult {
+    
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -4310735803120153778L;
 
-    /**
-     * @see ubic.gemma.model.analysis.ContrastResult#toString()
-     */
     @Override
     public String toString() {
         return "Contrast for " + this.getFactorValue().toString();

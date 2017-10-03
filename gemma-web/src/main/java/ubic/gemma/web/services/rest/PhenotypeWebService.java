@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
-import ubic.gemma.web.services.rest.util.*;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.BoolArg;
 import ubic.gemma.web.services.rest.util.args.IntArg;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
@@ -27,20 +29,17 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * RESTful interface for phenotypes.
  * Does not have an 'all' endpoint (no use-cases). To list all phenotypes on a specific taxon,
- * see {@link TaxaWebService#taxonPhenotypes(TaxonArg, BoolArg, HttpServletResponse)}.
+ * see {@link TaxaWebService#taxonPhenotypes(TaxonArg, BoolArg, BoolArg, HttpServletResponse)}.
  *
  * @author tesarst
  */
 @Component
 @Path("/phenotypes")
 public class PhenotypeWebService extends WebService {
-
-    private static final String ERROR_MSG_DB_NAME_EMPTY = "Required argument 'database' not found.";
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     /**
@@ -55,6 +54,17 @@ public class PhenotypeWebService extends WebService {
     @Autowired
     public PhenotypeWebService( PhenotypeAssociationManagerService phenotypeAssociationManagerService ) {
         this.phenotypeAssociationManagerService = phenotypeAssociationManagerService;
+    }
+
+    /**
+     * Placeholder for root call
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseDataObject all( // Params:
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     /**

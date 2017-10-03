@@ -19,27 +19,23 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.afterinvocation.ByAssociationFilteringProvider;
-
-import java.util.List;
-
 import org.springframework.security.access.AfterInvocationProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+
+import java.util.List;
 
 /**
  * For this particular AfterInvocationProvider, composite sequence authorization is determined based on the secured
  * array design acl. ie. composite sequence security is determined from an owning array desgin's security.
- * 
+ *
  * @author keshav (based in part on code from Acegi)
- * @version $Id: BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider.java,v 1.2 2005/08/17 21:46:32
- *          keshav Exp $
  * @see AfterInvocationProvider
  */
-public class AclAfterCollectionCompSeqByArrayDesignFilter extends
-        ByAssociationFilteringProvider<ArrayDesign, CompositeSequence> {
+public class AclAfterCollectionCompSeqByArrayDesignFilter
+        extends ByAssociationFilteringProvider<ArrayDesign, CompositeSequence> {
 
     private static final String CONFIG_ATTRIBUTE = "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
 
@@ -52,10 +48,6 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter extends
         return CONFIG_ATTRIBUTE;
     }
 
-    /**
-     * @param targetDomainObject
-     * @return
-     */
     @Override
     protected ArrayDesign getAssociatedSecurable( Object targetDomainObject ) {
 
@@ -63,8 +55,8 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter extends
             return ( ArrayDesign ) ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
         }
 
-        throw new IllegalArgumentException( "Don't know how to filter a "
-                + targetDomainObject.getClass().getSimpleName() );
+        throw new IllegalArgumentException(
+                "Don't know how to filter a " + targetDomainObject.getClass().getSimpleName() );
     }
 
 }

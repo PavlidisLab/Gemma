@@ -60,30 +60,14 @@ import java.util.List;
  */
 public class JsonReaderResponse<T> {
 
-    /**
-     * @see Ext.data.DataReader.messageProperty
-     */
-    @SuppressWarnings("JavadocReference") // JS
     public String message = "";
-
     public Collection<T> records;
-
-    /**
-     * @see Ext.data.JsonReader.successProperty
-     */
-    @SuppressWarnings("JavadocReference") // JS
     public boolean success = false;
-
-    /**
-     * @see Ext.data.JsonReader.totalProperty
-     */
-    @SuppressWarnings("JavadocReference") // JS
     public int totalRecords = 0;
 
     /**
-     * Creates a {@link #success}ful JsonReaderResponse with the provided objectsToConvertToRecords. The
+     * Creates a successful JsonReaderResponse with the provided objectsToConvertToRecords. The
      * totalRecords is assumed to be the length of objectsToConvertToRecords
-     *
      */
     public JsonReaderResponse( List<T> objectsToConvertToRecords ) {
         this.records = objectsToConvertToRecords;
@@ -93,6 +77,9 @@ public class JsonReaderResponse<T> {
 
     /**
      * Use for remote paging applications. Creates a {@link #success}ful JsonReaderResponse with the provided objectsToConvertToRecords.
+     *
+     * @param objectsToConvertToRecords objects to convert
+     * @param totalRecords              total records
      */
     public JsonReaderResponse( Collection<T> objectsToConvertToRecords, int totalRecords ) {
         this.records = objectsToConvertToRecords;

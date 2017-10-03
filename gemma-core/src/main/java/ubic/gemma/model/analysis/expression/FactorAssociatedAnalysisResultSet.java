@@ -18,15 +18,12 @@
  */
 package ubic.gemma.model.analysis.expression;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
-/**
- * 
- */
+import java.util.Collection;
+import java.util.HashSet;
+
 public abstract class FactorAssociatedAnalysisResultSet extends AnalysisResultSet {
 
     /**
@@ -38,15 +35,12 @@ public abstract class FactorAssociatedAnalysisResultSet extends AnalysisResultSe
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public FactorAssociatedAnalysisResultSet() {
     }
 
-    /**
-     * 
-     */
     public Collection<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
     }

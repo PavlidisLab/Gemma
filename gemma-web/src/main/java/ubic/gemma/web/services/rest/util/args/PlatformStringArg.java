@@ -20,4 +20,9 @@ public class PlatformStringArg extends PlatformArg<String> {
         return check( this.value == null ? null : service.findByShortName( this.value ) );
     }
 
+    @Override
+    public String getPropertyName( ArrayDesignService service ) {
+        return "shortName";
+    }
+
 }

@@ -18,88 +18,45 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-/**
- *
- */
+import java.util.*;
+
 public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
+    /**
+     * This is effectively the opposite of "log-transformed" (or any other transformation)
+     */
+    public static final ScaleType LINEAR = new ScaleType( "LINEAR" );
+    public static final ScaleType LN = new ScaleType( "LN" );
+    public static final ScaleType LOG2 = new ScaleType( "LOG2" );
+    public static final ScaleType LOG10 = new ScaleType( "LOG10" );
+    public static final ScaleType LOGBASEUNKNOWN = new ScaleType( "LOGBASEUNKNOWN" );
+    /**
+     * Deprecated, do not use.
+     */
+    public static final ScaleType FOLDCHANGE = new ScaleType( "FOLDCHANGE" );
+    public static final ScaleType OTHER = new ScaleType( "OTHER" );
+    /**
+     * An unscaled measurement is one that has no inherent scale; e.g., a categorial value.
+     */
+    public static final ScaleType UNSCALED = new ScaleType( "UNSCALED" );
+    /**
+     * Constrained to be a value between 0 and 100.
+     */
+    public static final ScaleType PERCENT = new ScaleType( "PERCENT" );
+    /**
+     * Indicates value was (originally) an integer count of something, such as RNAseq reads. This does not mean the
+     * value is necessarily an integer.
+     */
+    public static final ScaleType COUNT = new ScaleType( "COUNT" );
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 2817283097042204701L;
+    private static final Map<String, ScaleType> values = new LinkedHashMap<>( 10, 1 );
 
-    /**
-     * <p>
-     * This is effectively the opposite of "log-transformed" (or any other transformation)
-     * </p>
-     */
-    public static final ScaleType LINEAR = new ScaleType( "LINEAR" );
+    private static List<String> literals = new ArrayList<>( 10 );
+    private static List<String> names = new ArrayList<>( 10 );
+    private static List<ScaleType> valueList = new ArrayList<>( 10 );
 
-    /**
-     *
-     */
-    public static final ScaleType LN = new ScaleType( "LN" );
-
-    /**
-     *
-     */
-    public static final ScaleType LOG2 = new ScaleType( "LOG2" );
-
-    /**
-     *
-     */
-    public static final ScaleType LOG10 = new ScaleType( "LOG10" );
-
-    /**
-     *
-     */
-    public static final ScaleType LOGBASEUNKNOWN = new ScaleType( "LOGBASEUNKNOWN" );
-
-    /**
-     * <p>
-     * Deprecated, do not use.
-     * </p>
-     */
-    public static final ScaleType FOLDCHANGE = new ScaleType( "FOLDCHANGE" );
-
-    /**
-     *
-     */
-    public static final ScaleType OTHER = new ScaleType( "OTHER" );
-
-    /**
-     * <p>
-     * An unscaled measurement is one that has no inherent scale; e.g., a categorial value.
-     * </p>
-     */
-    public static final ScaleType UNSCALED = new ScaleType( "UNSCALED" );
-
-    /**
-     * <p>
-     * Contstrained to be a value between 0 and 100.
-     * </p>
-     */
-    public static final ScaleType PERCENT = new ScaleType( "PERCENT" );
-
-    /**
-     * <p>
-     * Indicates value was (originally) an integer count of something, such as RNAseq reads. This does not mean the
-     * value is necessarily an integer.
-     * </p>
-     */
-    public static final ScaleType COUNT = new ScaleType( "COUNT" );
-
-    private static final java.util.Map<String, ScaleType> values = new java.util.LinkedHashMap<>( 10,
-            1 );
-
-    private static java.util.List<String> literals = new java.util.ArrayList<>( 10 );
-
-    private static java.util.List<String> names = new java.util.ArrayList<>( 10 );
-
-    private static java.util.List<ScaleType> valueList = new java.util.ArrayList<>( 10 );
-
-    /**
-     * Initializes the values.
-     */
     static {
         values.put( LINEAR.value, LINEAR );
         valueList.add( LINEAR );
@@ -141,15 +98,28 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
         valueList.add( COUNT );
         literals.add( COUNT.value );
         names.add( "COUNT" );
-        valueList = java.util.Collections.unmodifiableList( valueList );
-        literals = java.util.Collections.unmodifiableList( literals );
-        names = java.util.Collections.unmodifiableList( names );
+        valueList = Collections.unmodifiableList( valueList );
+        literals = Collections.unmodifiableList( literals );
+        names = Collections.unmodifiableList( names );
+    }
+
+    private String value;
+
+    /**
+     * The default constructor allowing super classes to access it.
+     */
+    protected ScaleType() {
+    }
+
+    private ScaleType( String value ) {
+        this.value = value;
     }
 
     /**
      * Creates an instance of ScaleType from <code>value</code>.
      *
      * @param value the value to create the ScaleType from.
+     * @return scale type
      */
     public static ScaleType fromString( String value ) {
         final ScaleType typeValue = values.get( value );
@@ -169,7 +139,7 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
-    public static java.util.List<String> literals() {
+    public static List<String> literals() {
         return literals;
     }
 
@@ -177,9 +147,9 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
      *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
-    public static java.util.List<String> names() {
+    public static List<String> names() {
         return names;
     }
 
@@ -188,37 +158,19 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      *
      * @return A List containing the actual enumeration instance values.
      */
-    public static java.util.List<ScaleType> values() {
+    public static List<ScaleType> values() {
         return valueList;
     }
 
-    private String value;
-
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected ScaleType() {
-    }
-
-    private ScaleType( String value ) {
-        this.value = value;
-    }
-
-    /**
-     * @see Comparable#compareTo(Object)
-     */
     @Override
     public int compareTo( ScaleType that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
     }
 
-    /**
-     * @see Object#equals(Object)
-     */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof ScaleType && ( ( ScaleType ) object ).getValue().equals( this.getValue() ) );
+        return ( this == object ) || ( object instanceof ScaleType && ( ( ScaleType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
@@ -230,17 +182,11 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
         return this.value;
     }
 
-    /**
-     * @see Object#hashCode()
-     */
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
     }
 
-    /**
-     * @see Object#toString()
-     */
     @Override
     public String toString() {
         return String.valueOf( value );
@@ -249,15 +195,15 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
      * will be the singleton for the JVM in which the current thread is running.
-     * <p>
      * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
      * regular deserialized object is always a newly constructed instance and will therefore never be an existing
      * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
      * to return the proper singleton reference.
-     * <p>
-     * This method is documented here: <a
-     * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
+     * This method is documented here:
+     * <a href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return ScaleType.fromString( this.value );

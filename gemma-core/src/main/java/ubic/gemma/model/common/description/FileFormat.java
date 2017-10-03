@@ -18,53 +18,23 @@
  */
 package ubic.gemma.model.common.description;
 
-/**
- * 
- */
 public abstract class FileFormat implements java.io.Serializable {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.FileFormat}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.FileFormat}.
-         */
-        public static ubic.gemma.model.common.description.FileFormat newInstance() {
-            return new ubic.gemma.model.common.description.FileFormatImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.FileFormat}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.common.description.FileFormat newInstance( String formatIdentifier ) {
-            final ubic.gemma.model.common.description.FileFormat entity = new ubic.gemma.model.common.description.FileFormatImpl();
-            entity.setFormatIdentifier( formatIdentifier );
-            return entity;
-        }
-    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 9105276589707517468L;
     private String formatIdentifier;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public FileFormat() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an FileFormat instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -80,23 +50,22 @@ public abstract class FileFormat implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public String getFormatIdentifier() {
         return this.formatIdentifier;
     }
 
-    /**
-     * 
-     */
+    public void setFormatIdentifier( String formatIdentifier ) {
+        this.formatIdentifier = formatIdentifier;
+    }
+
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -105,12 +74,17 @@ public abstract class FileFormat implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setFormatIdentifier( String formatIdentifier ) {
-        this.formatIdentifier = formatIdentifier;
-    }
+    public static final class Factory {
 
-    public void setId( Long id ) {
-        this.id = id;
+        public static ubic.gemma.model.common.description.FileFormat newInstance() {
+            return new ubic.gemma.model.common.description.FileFormatImpl();
+        }
+
+        public static ubic.gemma.model.common.description.FileFormat newInstance( String formatIdentifier ) {
+            final ubic.gemma.model.common.description.FileFormat entity = new ubic.gemma.model.common.description.FileFormatImpl();
+            entity.setFormatIdentifier( formatIdentifier );
+            return entity;
+        }
     }
 
 }

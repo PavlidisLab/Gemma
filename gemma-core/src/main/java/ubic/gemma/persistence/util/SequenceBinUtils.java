@@ -21,11 +21,9 @@ package ubic.gemma.persistence.util;
 /**
  * Used to assign a bin to a chromosome location, identify bins for a range, or to generate SQL to add to a query on a
  * GoldenPath database.
- * <p>
  * Directly ported from Jim Kent's binRange.c and hdb.c.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class SequenceBinUtils {
 
@@ -45,14 +43,13 @@ public class SequenceBinUtils {
 
     /**
      * Directly ported from jksrc binRange.c and hdb.c
-     * <p>
      * From the binRange.c comments: There's a bin for each 128k segment, for each 1M segment, for each 8M segment, for
      * each 64M segment, and for each chromosome (which is assumed to be less than 512M.) A range goes into the smallest
      * bin it will fit in.
-     * 
+     *
      * @param table The alias of the table (SQL) or class (HQL)
-     * @param start
-     * @param end
+     * @param start start
+     * @param end   end
      * @return clause that will restrict to relevant bins to query. This should be ANDed into your WHERE clause.
      */
     public static String addBinToQuery( String table, Long start, Long end ) {
@@ -64,13 +61,14 @@ public class SequenceBinUtils {
 
     /**
      * return bin that this start-end segment is in
-     * 
-     * @param start
-     * @param end
-     * @return
+     *
+     * @param start start
+     * @param end   end
+     * @return bin
      */
     public static int binFromRange( int start, int end ) {
-        if ( end <= BINRANGE_MAXEND_512M ) return binFromRangeStandard( start, end );
+        if ( end <= BINRANGE_MAXEND_512M )
+            return binFromRangeStandard( start, end );
 
         return binFromRangeExtended( start, end );
     }
@@ -80,17 +78,18 @@ public class SequenceBinUtils {
      * segment, for each 8M segment, for each 64M segment, for each 512M segment, and one top level bin for 4Gb. Note,
      * since start and end are int's, the practical limit is up to 2Gb-1, and thus, only four result bins on the second
      * level. A range goes into the smallest bin it will fit in.
-     * 
-     * @param start
-     * @param end
-     * @return
+     *
+     * @param start start
+     * @param end   end
+     * @return bin
      */
     private static int binFromRangeExtended( int start, int end ) {
         int startBin = start, endBin = end - 1, i;
         startBin >>= _binFirstShift;
         endBin >>= _binFirstShift;
         for ( i = 0; i < binOffsetsExtended.length; ++i ) {
-            if ( startBin == endBin ) return _binOffsetOldToExtended + binOffsetsExtended[i] + startBin;
+            if ( startBin == endBin )
+                return _binOffsetOldToExtended + binOffsetsExtended[i] + startBin;
             startBin >>= _binNextShift;
             endBin >>= _binNextShift;
         }
@@ -101,44 +100,47 @@ public class SequenceBinUtils {
      * Given start,end in chromosome coordinates assign it a bin. There's a bin for each 128k segment, for each 1M
      * segment, for each 8M segment, for each 64M segment, and for each chromosome (which is assumed to be less than
      * 512M.) A range goes into the smallest bin it will fit in.
-     * 
-     * @param start
-     * @param end
-     * @return
+     *
+     * @param start start
+     * @param end   end
+     * @return bin
      */
     private static int binFromRangeStandard( int start, int end ) {
         int startBin = start, endBin = end - 1, i;
         startBin >>= _binFirstShift;
         endBin >>= _binFirstShift;
         for ( i = 0; i < binOffsets.length; ++i ) {
-            if ( startBin == endBin ) return binOffsets[i] + startBin;
+            if ( startBin == endBin )
+                return binOffsets[i] + startBin;
             startBin >>= _binNextShift;
             endBin >>= _binNextShift;
         }
         throw new IllegalArgumentException( "start " + start + ", end " + end + " out of range (max is 512M)" );
     }
 
-    /** Return offset for bins of a given level. */
+    /**
+     * Return offset for bins of a given level.
+     */
     private static int binOffset( int level ) {
         assert ( level >= 0 && level < binOffsets.length );
         return binOffsets[level];
     }
 
-    /** Return offset for bins of a given level. */
+    /**
+     * Return offset for bins of a given level.
+     */
     private static int binOffsetExtended( int level ) {
         assert ( level >= 0 && level < binOffsetsExtended.length );
         return binOffsetsExtended[level] + _binOffsetOldToExtended;
     }
 
     /**
-     * If the start and end are in the same bin, we return an 'equals' clause; otherwise a range is returned.
-     * 
-     * @param startBin
-     * @param endBin
-     * @param column
-     * @param query
-     * @param offset
-     * @return
+     * @param startBin start
+     * @param endBin   end
+     * @param column   column
+     * @param query    query
+     * @param offset   offset
+     * @return If the start and end are in the same bin, we return an 'equals' clause; otherwise a range is returned.
      */
     private static String getClause( long startBin, long endBin, String column, String query, int offset ) {
         if ( startBin == endBin ) {
@@ -149,7 +151,9 @@ public class SequenceBinUtils {
         return query;
     }
 
-    /** Add clause that will restrict to relevant bins to query. */
+    /**
+     * Add clause that will restrict to relevant bins to query.
+     */
     private static String hAddBinToQueryExtended( String table, long start, long end ) {
         int bFirstShift = _binFirstShift, bNextShift = _binNextShift;
         long startBin = ( start >> bFirstShift ), endBin = ( ( end - 1 ) >> bFirstShift );
@@ -176,7 +180,13 @@ public class SequenceBinUtils {
         return query;
     }
 
-    /** Add clause that will restrict to relevant bins to query. */
+    /**
+     * @param end           end
+     * @param selfContained self contained
+     * @param start         start
+     * @param table         table
+     * @return Add clause that will restrict to relevant bins to query.
+     */
     private static String hAddBinToQueryStandard( String table, long start, long end, boolean selfContained ) {
         int bFirstShift = _binFirstShift, bNextShift = _binNextShift;
         long startBin = ( start >> bFirstShift ), endBin = ( ( end - 1 ) >> bFirstShift );

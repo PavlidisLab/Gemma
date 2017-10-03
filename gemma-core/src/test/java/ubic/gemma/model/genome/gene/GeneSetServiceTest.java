@@ -79,8 +79,8 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         assert is != null;
         geneOntologyService.loadTermsInNameSpace( is );
 
-        g = this.getTestPeristentGene();
-        g3 = this.getTestPeristentGene();
+        g = this.getTestPersistentGene();
+        g3 = this.getTestPersistentGene();
 
     }
 

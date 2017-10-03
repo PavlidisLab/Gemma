@@ -31,15 +31,11 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.util.ObjectFilter;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    File getAnnotationFile( String shortName );
 
     @Secured({ "GROUP_ADMIN" })
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
@@ -138,12 +134,12 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     /**
      * Gets the AuditEvents of the latest annotation file event for the specified array design ids. This returns a map
-     * of id -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * of id -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastAnnotationFile( Collection<Long> ids );
 
     /**
-     * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id ->
+     * Gets the AuditEvents of the latest gene mapping for the specified array design ids. This returns a map of id -&gt;
      * AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids );
@@ -152,18 +148,18 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     /**
      * Gets the AuditEvents of the latest sequence analyses for the specified array design ids. This returns a map of id
-     * -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastSequenceAnalysis( Collection<Long> ids );
 
     /**
      * Gets the AuditEvents of the latest sequence update for the specified array design ids. This returns a map of id
-     * -> AuditEvent. If the events do not exist, the map entry will point to null.
+     * -&gt; AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids );
 
     /**
-     * @return a map of taxon -> count of how many array designs there are for that taxon. Taxa with no arrays are
+     * @return a map of taxon -&gt; count of how many array designs there are for that taxon. Taxa with no arrays are
      * excluded.
      */
     Map<Taxon, Long> getPerTaxonCount();
@@ -210,7 +206,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc, ArrayList<ObjectFilter[]> filter  );
+    Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter );
 
     /**
      * Function to return a count of all compositeSequences with bioSequence associations

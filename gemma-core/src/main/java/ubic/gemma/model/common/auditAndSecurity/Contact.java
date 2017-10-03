@@ -51,13 +51,8 @@ public class Contact extends AbstractAuditable implements gemma.gsec.model.Conta
         this.email = email;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.Contact}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.Contact}.
-         */
+
         public static ubic.gemma.model.common.auditAndSecurity.Contact newInstance() {
             return new ubic.gemma.model.common.auditAndSecurity.Contact();
         }

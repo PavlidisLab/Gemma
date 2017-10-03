@@ -5,6 +5,8 @@
 // $Id$
 package ubic.gemma.model.association;
 
+import java.util.*;
+
 /**
  * This enumeration was originally based on GO, but is used for all entities that have evidenciary aspects; Thus it has
  * been expanded to include: Terms from RGD&#160;(rat genome database)
@@ -14,96 +16,27 @@ package ubic.gemma.model.association;
  * <li>IPM = Inferred from phenotype manipulation
  * <li>QTM = Quantitative Trait Measurement
  * </ul>
- * <p>
  * And our own custom code IIA which means Inferred from Imported Annotation to distinguish IEAs that we ourselves have
  * computed
  */
+@SuppressWarnings("WeakerAccess") // All constants should have the same access level
 public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEvidenceCode> {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 1672679992320181566L;
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode IC = new GOEvidenceCode( "IC" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode IDA = new GOEvidenceCode( "IDA" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode IEA = new GOEvidenceCode( "IEA" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode IEP = new GOEvidenceCode( "IEP" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode IGI = new GOEvidenceCode( "IGI" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode IMP = new GOEvidenceCode( "IMP" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode IPI = new GOEvidenceCode( "IPI" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode ISS = new GOEvidenceCode( "ISS" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode NAS = new GOEvidenceCode( "NAS" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode ND = new GOEvidenceCode( "ND" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode RCA = new GOEvidenceCode( "RCA" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode TAS = new GOEvidenceCode( "TAS" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode NR = new GOEvidenceCode( "NR" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode EXP = new GOEvidenceCode( "EXP" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode ISA = new GOEvidenceCode( "ISA" );
-
-    /**
-     * 
-     */
     public static final GOEvidenceCode ISM = new GOEvidenceCode( "ISM" );
-
     /**
      * Inferred from Genomic Context; This evidence code can be used whenever information about the genomic context of a
      * gene product forms part of the evidence for a particular annotation. Genomic context includes, but is not limited
@@ -116,81 +49,62 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
      */
     public static final GOEvidenceCode IGC = new GOEvidenceCode( "IGC" );
 
-    /**
-     * 
-     */
     public static final GOEvidenceCode ISO = new GOEvidenceCode( "ISO" );
-
     /**
      * Added by Gemma: Inferred from Imported Annotation. To be distinguished from IEA or IC, represents annotations
      * that were present in imported data, and which have unknown evidence in the original source (though generally put
      * there manually).
      */
     public static final GOEvidenceCode IIA = new GOEvidenceCode( "IIA" );
-
     /**
-     * A type of phylogenetic evidence whereby an aspect of a descendent is inferred through the characterization of an
+     * A type of phylogenetic evidence whereby an aspect of a descendant is inferred through the characterization of an
      * aspect of a ancestral gene.
      */
     public static final GOEvidenceCode IBA = new GOEvidenceCode( "IBA" );
-
     /**
      * A type of phylogenetic evidence whereby an aspect of an ancestral gene is inferred through the characterization
      * of an aspect of a descendant gene.
      */
     public static final GOEvidenceCode IBD = new GOEvidenceCode( "IBD" );
-
     /**
      * A type of phylogenetic evidence characterized by the loss of key sequence residues. Annotating with this evidence
      * codes implies a NOT annotation. This evidence code is also referred to as IMR (inferred from Missing Residues).
      */
     public static final GOEvidenceCode IKR = new GOEvidenceCode( "IKR" );
-
     /**
      * Inferred from Rapid Divergence. A type of phylogenetic evidence characterized by rapid divergence from ancestral
      * sequence. Annotating with this evidence codes implies a NOT annotation.
      */
     public static final GOEvidenceCode IRD = new GOEvidenceCode( "IRD" );
-
     /**
      * Inferred from Missing Residues. Represents a NOT association. IMR is a synonym of IKR.
      */
     public static final GOEvidenceCode IMR = new GOEvidenceCode( "IMR" );
-
     /**
      * Inferred from experimental data (RGD code)
      */
     public static final GOEvidenceCode IED = new GOEvidenceCode( "IED" );
-
     /**
      * Inferred from association of genotype and phenotype (RGD code)
      */
     public static final GOEvidenceCode IAGP = new GOEvidenceCode( "IAGP" );
-
     /**
      * Inferred from phenotype manipulation (RGD code)
      */
     public static final GOEvidenceCode IPM = new GOEvidenceCode( "IPM" );
-
     /**
      * Quantitative Trait Measurement (RGD code)
      */
     public static final GOEvidenceCode QTM = new GOEvidenceCode( "QTM" );
-
-    private String value;
-
-    private static final java.util.Map<String, GOEvidenceCode> values = new java.util.LinkedHashMap<String, GOEvidenceCode>(
-            28, 1 );
-
-    private static java.util.List<String> literals = new java.util.ArrayList<String>( 28 );
-
-    private static java.util.List<String> names = new java.util.ArrayList<String>( 28 );
-
-    private static java.util.List<GOEvidenceCode> valueList = new java.util.ArrayList<GOEvidenceCode>( 28 );
-
     /**
-     * Initializes the values.
+     * The serial version UID of this class. Needed for serialization.
      */
+    private static final long serialVersionUID = 1672679992320181566L;
+    private static final Map<String, GOEvidenceCode> values = new LinkedHashMap<>( 28, 1 );
+    private static List<String> literals = new ArrayList<>( 28 );
+    private static List<String> names = new ArrayList<>( 28 );
+    private static List<GOEvidenceCode> valueList = new ArrayList<>( 28 );
+
     static {
         values.put( IC.value, IC );
         valueList.add( IC );
@@ -304,15 +218,26 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
         valueList.add( QTM );
         literals.add( QTM.value );
         names.add( "QTM" );
-        valueList = java.util.Collections.unmodifiableList( valueList );
-        literals = java.util.Collections.unmodifiableList( literals );
-        names = java.util.Collections.unmodifiableList( names );
+        valueList = Collections.unmodifiableList( valueList );
+        literals = Collections.unmodifiableList( literals );
+        names = Collections.unmodifiableList( names );
+    }
+
+    private String value;
+
+    /**
+     * The default constructor allowing super classes to access it.
+     */
+    protected GOEvidenceCode() {
+    }
+
+    private GOEvidenceCode( String value ) {
+        this.value = value;
     }
 
     /**
-     * Creates an instance of GOEvidenceCode from <code>value</code>.
-     * 
      * @param value the value to create the GOEvidenceCode from.
+     * @return Creates an instance of GOEvidenceCode from <code>value</code>.
      */
     public static GOEvidenceCode fromString( String value ) {
         final GOEvidenceCode typeValue = values.get( value );
@@ -329,40 +254,30 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
 
     /**
      * Returns an unmodifiable list containing the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
-    public static java.util.List<String> literals() {
+    public static List<String> literals() {
         return literals;
     }
 
     /**
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
-    public static java.util.List<String> names() {
+    public static List<String> names() {
         return names;
     }
 
     /**
      * Returns an unmodifiable list containing the actual enumeration instance values.
-     * 
+     *
      * @return A List containing the actual enumeration instance values.
      */
-    public static java.util.List<GOEvidenceCode> values() {
+    public static List<GOEvidenceCode> values() {
         return valueList;
-    }
-
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected GOEvidenceCode() {
-    }
-
-    private GOEvidenceCode( String value ) {
-        this.value = value;
     }
 
     /**
@@ -378,14 +293,13 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
      */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof GOEvidenceCode && ( ( GOEvidenceCode ) object ).getValue().equals(
-                        this.getValue() ) );
+        return ( this == object ) || ( object instanceof GOEvidenceCode && ( ( GOEvidenceCode ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
      * Gets the underlying value of this type safe enumeration.
-     * 
+     *
      * @return the underlying value.
      */
     public String getValue() {
@@ -414,9 +328,11 @@ public class GOEvidenceCode implements java.io.Serializable, Comparable<GOEviden
      * use the equality operator <code>==</code> for enumerations because a regular deserialized object is always a
      * newly constructed instance and will therefore never be an existing reference; it is this
      * <code>readResolve()</code> method which will intercept the deserialization process in order to return the proper
-     * singleton reference. This method is documented here: <a
-     * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
+     * singleton reference. This method is documented here:
+     * <a href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return GOEvidenceCode.fromString( this.value );

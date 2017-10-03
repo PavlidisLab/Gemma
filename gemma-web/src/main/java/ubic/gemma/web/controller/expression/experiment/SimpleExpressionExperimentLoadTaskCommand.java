@@ -18,31 +18,25 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.HashSet;
-
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.HashSet;
+
 /**
  * Extends a SimpleExpressionExperimentMetaData with information about the file
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class SimpleExpressionExperimentLoadTaskCommand extends SimpleExpressionExperimentMetaData {
 
     private static final long serialVersionUID = 1L;
-
-    private String serverFilePath;
-
-    private String originalFileName;
-
-    private String arrayDesignName;
-
-    private String taxonName;
-
     boolean validateOnly;
+    private String serverFilePath;
+    private String originalFileName;
+    private String arrayDesignName;
+    private String taxonName;
 
     public SimpleExpressionExperimentLoadTaskCommand() {
 
@@ -54,28 +48,28 @@ public class SimpleExpressionExperimentLoadTaskCommand extends SimpleExpressionE
         return this.arrayDesignName;
     }
 
-    public String getOriginalFileName() {
-        return originalFileName;
-    }
-
-    public String getServerFilePath() {
-        return serverFilePath;
-    }
-
-    public String getTaxonName() {
-        return this.taxonName;
-    }
-
     public void setArrayDesignName( String arrayDesign ) {
         this.arrayDesignName = arrayDesign;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName;
     }
 
     public void setOriginalFileName( String originalFileName ) {
         this.originalFileName = originalFileName;
     }
 
+    public String getServerFilePath() {
+        return serverFilePath;
+    }
+
     public void setServerFilePath( String serverFilePath ) {
         this.serverFilePath = serverFilePath;
+    }
+
+    public String getTaxonName() {
+        return this.taxonName;
     }
 
     public void setTaxonName( String taxonName ) {
@@ -83,9 +77,7 @@ public class SimpleExpressionExperimentLoadTaskCommand extends SimpleExpressionE
     }
 
     /**
-     * Whether the command object should be validated or actually processed.
-     * 
-     * @return
+     * @return Whether the command object should be validated or actually processed.
      */
     protected boolean isValidateOnly() {
         return validateOnly;

@@ -23,9 +23,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * A command object to be used by spaces.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
 
@@ -39,12 +38,9 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
         super();
     }
 
-    /**
+    /*
      * NOTE: we can't pass in a we command as they are defined in the web module, which messes up the configuration.
-     * 
-     * @param taskId
-     * @param forceAnalysis
-     * @param arrayDesign
+     *
      */
     public ArrayDesignProbeMapTaskCommand( String taskId, boolean forceAnalysis, ArrayDesign arrayDesign ) {
         super();
@@ -53,11 +49,12 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
         this.arrayDesign = arrayDesign;
     }
 
-    /**
-     * @return
-     */
     public ArrayDesign getArrayDesign() {
         return arrayDesign;
+    }
+
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
+        this.arrayDesign = arrayDesign;
     }
 
     @Override
@@ -67,13 +64,6 @@ public class ArrayDesignProbeMapTaskCommand extends TaskCommand {
 
     public boolean isForceAnalysis() {
         return forceAnalysis;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
     }
 
     public void setForceAnalysis( boolean forceAnalysis ) {

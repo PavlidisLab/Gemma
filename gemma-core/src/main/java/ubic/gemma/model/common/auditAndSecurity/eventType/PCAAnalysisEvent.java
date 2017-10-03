@@ -18,24 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-/**
- * 
- */
-public class PCAAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent();
-        }
-
-    }
+public class PCAAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -44,10 +28,18 @@ public class PCAAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public PCAAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent();
+        }
+
     }
 
 }

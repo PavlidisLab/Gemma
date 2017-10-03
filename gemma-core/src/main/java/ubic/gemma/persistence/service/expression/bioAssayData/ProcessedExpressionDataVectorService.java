@@ -18,17 +18,16 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Paul
@@ -46,6 +45,7 @@ public interface ProcessedExpressionDataVectorService {
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed.
      *
+     * @param expressionExperiment ee
      * @return updated expressionExperiment
      */
     @Secured({ "GROUP_USER" })
@@ -53,6 +53,7 @@ public interface ProcessedExpressionDataVectorService {
 
     /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
+     * @param genes        genes
      * @return vectors, which will be subsetted if the bioassayset is a subset.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
@@ -61,23 +62,31 @@ public interface ProcessedExpressionDataVectorService {
 
     /**
      * Note: currently only used in tests
+     *
+     * @param expressionExperiment ee
+     * @return double vector vos
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     /**
      * @param limit (null limit = default hibernate limit).
+     * @param ee    ee
+     * @return double vector vos
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit );
 
     /**
      * Retrieves DEDV's by probes and experiments
+     *
+     * @param expressionExperiments EEs
+     * @param compositeSequences    composite sequences
+     * @return double vector vos
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences );
-
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
@@ -86,22 +95,25 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_AFTER_MAP_READ", "ACL_SECURABLE_COLLECTION_READ" })
     Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, ProcessedExpressionDataVectorDao.RankMethod method );
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes,
+            ProcessedExpressionDataVectorDao.RankMethod method );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             ProcessedExpressionDataVectorDao.RankMethod method );
 
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, ProcessedExpressionDataVectorDao.RankMethod method );
+    Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment,
+            ProcessedExpressionDataVectorDao.RankMethod method );
 
     /**
      * Retrieve expression level information for genes in experiments.
-     * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
+     *
+     * @param eeCol ees
+     * @param pars  genes
+     * @return A map of experiment -&gt; gene -&gt; probe -&gt; array of doubles holding the 1) mean and 2) max expression rank.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
@@ -114,6 +126,8 @@ public interface ProcessedExpressionDataVectorService {
 
     /**
      * Updates a collection of ProcessedExpressionDataVectors
+     *
+     * @param dedvs dedvs
      */
     @Secured({ "GROUP_USER" })
     void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );

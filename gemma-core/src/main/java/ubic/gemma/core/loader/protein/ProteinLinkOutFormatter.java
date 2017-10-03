@@ -20,74 +20,77 @@ package ubic.gemma.core.loader.protein;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**
- * This class concentrates functionality for formating url links to external websites which provide protein protein
+ * This class concentrates functionality for formatting url links to external websites which provide protein protein
  * interaction data. It also provides functionality to format information relating to string within gemma such as
  * evidence codes.
- * <p>
- * For example the string url can be appended with: &limit=20 which increases the number of links dispayed on the string
- * page or &required_score=700 to increase the confidence before displaying the interacton.
- * 
+ * For example the string url can be appended with: &amp;limit=20 which increases the number of links displayed on the string
+ * page or &amp;required_score=700 to increase the confidence before displaying the interaction.
+ *
  * @author ldonnison
- * @version $Id$
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class ProteinLinkOutFormatter {
 
-    /** Name of parameter to pass in link to STRING to limit the number of interactions shown on string page */
-    private static final String LIMITPARAMETER = "&limit=";
+    /**
+     * Name of parameter to pass in link to STRING to limit the number of interactions shown on string page
+     */
+    private static final String LIMIT_PARAMETER = "&limit=";
+    /**
+     * Confidence of score before displaying on STRING page
+     */
+    private static final String REQUIRED_CONFIDENCE = "&required_score=";
+    /**
+     * Gemma default confidence score to use for displaying string links that is display all links with low confidence
+     */
+    private static final String DEFAULT_CONFIDENCE = "150";
+    /**
+     * Equals sign for url
+     */
+    private static final String EQUALS_IN_URL = "=";
+    /**
+     * Plural extension
+     */
+    private static final String PLURAL_EXTENSION = "s";
+    /**
+     * spacer to use to separate evidence codes for display
+     */
+    private static final String EVIDENCE_SPACER = ":";
 
-    /** Confidence of score before displaying on STRING page */
-    private static final String REQUIREDCONFIDENCE = "&required_score=";
-
-    /** Gemma default confidence score to use for displaying string links that is display all links with low confidence */
-    private static final String DEFAULTCONFIDENCE = "150";
-
-    /** Equals sign for url */
-    private static final String EQUALSINURL = "=";
-
-    /** Plural extension */
-    private static final String PLURALEXTENSION = "s";
-
-    /** spacer to use to seperate evidence codes for display */
-    private static final String EVIDENCESPACER = ":";
-
-    private static Log log = LogFactory.getLog( ProteinLinkOutFormatter.class );
+    private static final Log log = LogFactory.getLog( ProteinLinkOutFormatter.class );
 
     /**
      * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
      * increasing number of links displayed on string page. This method allows that number to be changed.
-     * 
-     * @param baseUrl reprsesenting base string url
-     * @param Number of links to display on page
+     *
+     * @param interactions of links to display on page
      * @return String appended with extra value
      */
-    public String addStringInteractionsShown( String numberOfInteractionsToShowOnStringPage ) {
-        return LIMITPARAMETER.concat( numberOfInteractionsToShowOnStringPage );
+    public String addStringInteractionsShown( String interactions ) {
+        return LIMIT_PARAMETER.concat( interactions );
     }
 
     /**
      * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
      * increasing number of links displayed on string page. This method allows that number to be changed.
-     * 
-     * @param baseUrl reprsesenting base string url
-     * @param Number of links to display on page
+     *
+     * @param reqScore required confidence of score
      * @return String appended with extra value
      */
-    public String addStringRequiredConfidence( String requiredConfidenceOfScore ) {
-        return REQUIREDCONFIDENCE.concat( requiredConfidenceOfScore );
+    public String addStringRequiredConfidence( String reqScore ) {
+        return REQUIRED_CONFIDENCE.concat( reqScore );
     }
 
     /**
      * Method that creates a string url. The url is stored in the db as two parts which need merging together that it
-     * url and accession id. For a protein protein interaction there is no id so instead the id has been strored as two
+     * url and accession id. For a protein protein interaction there is no id so instead the id has been stored as two
      * ensembl protein ids merged together. The url has been stored in db as if only protein id is being passed as such
-     * to actually pass the two ids a s has to be added to the url. identifier >identifiers. Thus s is added to the url.
-     * 
-     * @param baseUrl
-     * @return Formated url
+     * to actually pass the two ids a s has to be added to the url. identifier &gt; identifiers. Thus s is added to the url.
+     *
+     * @param entry db entry
+     * @return Formatted url
      */
     public String getBaseUrl( DatabaseEntry entry ) {
         String uri = entry.getUri();
@@ -95,10 +98,10 @@ public class ProteinLinkOutFormatter {
         String baseUri = "";
 
         if ( uri != null && !uri.isEmpty() && accession != null && !accession.isEmpty() ) {
-            if ( uri.endsWith( EQUALSINURL ) ) {
-                baseUri = ( uri.replaceFirst( EQUALSINURL, PLURALEXTENSION + EQUALSINURL ) );
+            if ( uri.endsWith( EQUALS_IN_URL ) ) {
+                baseUri = ( uri.replaceFirst( EQUALS_IN_URL, PLURAL_EXTENSION + EQUALS_IN_URL ) );
             } else {
-                baseUri = uri.concat( PLURALEXTENSION + EQUALSINURL );
+                baseUri = uri.concat( PLURAL_EXTENSION + EQUALS_IN_URL );
             }
             baseUri = baseUri.concat( accession );
         }
@@ -108,7 +111,7 @@ public class ProteinLinkOutFormatter {
     /**
      * Confidence score as parsed from string file is not a percentage instead a number e.g. 150 in percentage that is
      * 0.150
-     * 
+     *
      * @param confidenceScore As parsed by string file
      * @return Formatted confidence percentage as displayed by string
      */
@@ -121,11 +124,11 @@ public class ProteinLinkOutFormatter {
     }
 
     /**
-     * Convert a byte representing the evidence as stored in db to a textural display of evidence. e.g {0,1,0,0,0,1,0} >
+     * Convert a byte representing the evidence as stored in db to a textural display of evidence. e.g {0,1,0,0,0,1,0} &gt;
      * GeneFusion:Database
-     * 
+     *
      * @param bytes byte array representing evidence
-     * @return Formated text of evidence
+     * @return Formatted text of evidence
      */
     public String getEvidenceDisplayText( byte[] bytes ) {
 
@@ -137,10 +140,10 @@ public class ProteinLinkOutFormatter {
                         .values() ) {
                     // if the byte at that particular position is 1 then that means that there is evidence
                     if ( ( bytes[currentEvidence.getPositionInArray()] ) == 1 ) {
-                        evidenceString.append( currentEvidence.getDisplayText() ).append( EVIDENCESPACER );
+                        evidenceString.append( currentEvidence.getDisplayText() ).append( EVIDENCE_SPACER );
                     }
                 }
-                return evidenceString.substring( 0, ( evidenceString.lastIndexOf( EVIDENCESPACER ) ) );
+                return evidenceString.substring( 0, ( evidenceString.lastIndexOf( EVIDENCE_SPACER ) ) );
             }
             log.warn( "The byte array provided was not the correct size for the protein protein interaction" );
 
@@ -153,18 +156,20 @@ public class ProteinLinkOutFormatter {
 
     /**
      * Method that creates a formatted STRING url with extra parameters appended
-     * 
-     * @param entry Database entry representing protein protein interaction
-     * @return String formated url.
+     *
+     * @param entry        Database entry representing protein protein interaction
+     * @param interactions number of interactions to show on string page
+     * @param reqScore     required confidence of score
+     * @return String formatted url.
      */
-    public String getStringProteinProteinInteractionLinkFormatted( DatabaseEntry entry,
-            String numberOfInteractionsToShowOnStringPage, String requiredConfidenceOfScore ) {
+    public String getStringProteinProteinInteractionLinkFormatted( DatabaseEntry entry, String interactions,
+            String reqScore ) {
         String finalUrl = getBaseUrl( entry );
-        if ( numberOfInteractionsToShowOnStringPage != null ) {
-            finalUrl = finalUrl.concat( addStringInteractionsShown( numberOfInteractionsToShowOnStringPage ) );
+        if ( interactions != null ) {
+            finalUrl = finalUrl.concat( addStringInteractionsShown( interactions ) );
         }
-        if ( requiredConfidenceOfScore != null ) {
-            finalUrl = finalUrl.concat( addStringRequiredConfidence( requiredConfidenceOfScore ) );
+        if ( reqScore != null ) {
+            finalUrl = finalUrl.concat( addStringRequiredConfidence( reqScore ) );
         }
 
         return finalUrl;
@@ -172,15 +177,15 @@ public class ProteinLinkOutFormatter {
 
     /**
      * Get the default STRING url for for gemma, which sets the confidence level low.
-     * 
+     *
      * @param entry Database entry representing protein protein interaction
-     * @return String formated url.
+     * @return String formatted url.
      */
     public String getStringProteinProteinInteractionLinkGemmaDefault( DatabaseEntry entry ) {
 
         String finalUrl = getBaseUrl( entry );
         if ( finalUrl != null && !finalUrl.isEmpty() ) {
-            finalUrl = finalUrl.concat( addStringRequiredConfidence( DEFAULTCONFIDENCE ) );
+            finalUrl = finalUrl.concat( addStringRequiredConfidence( DEFAULT_CONFIDENCE ) );
         }
         return finalUrl;
     }

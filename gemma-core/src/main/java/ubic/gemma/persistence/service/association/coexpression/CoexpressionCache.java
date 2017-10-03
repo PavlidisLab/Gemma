@@ -14,18 +14,17 @@
  */
 package ubic.gemma.persistence.service.association.coexpression;
 
+import ubic.gemma.persistence.util.Settings;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.persistence.util.Settings;
-
 /**
  * Cache for coexpression results. Useful caching requires that the query be done at a suitably low stringency, defined
  * by CACHE_QUERY_STRINGENCY, against all data sets.
- * 
+ *
  * @author Paul
- * @version $Id$
  * @see CoexpressionQueryQueue
  */
 public interface CoexpressionCache {
@@ -35,52 +34,35 @@ public interface CoexpressionCache {
      * someone is querying for data from a single dataset, they would use experiment-first mode. FIXME we might need
      * this to be organism-specific.
      */
-    public static final int CACHE_QUERY_STRINGENCY = Settings.getInt( "gemma.cache.gene2gene.stringencyThreshold", 5 );
+    int CACHE_QUERY_STRINGENCY = Settings.getInt( "gemma.cache.gene2gene.stringencyThreshold", 5 );
 
-    /**
-     * @param geneId
-     * @param r
-     */
-    public void cacheCoexpression( Long geneId, Collection<CoexpressionValueObject> r );
+    void cacheCoexpression( Long geneId, Collection<CoexpressionValueObject> r );
 
-    /**
-     * @param r
-     */
-    public void cacheCoexpression( Map<Long, List<CoexpressionValueObject>> r );
+    void cacheCoexpression( Map<Long, List<CoexpressionValueObject>> r );
 
     /**
      * Remove all elements from the cache.
      */
-    public abstract void clearCache();
+    void clearCache();
 
     /**
-     * @param g
+     * @param g g
      * @return results sorted in descending order of support, or null if the gene was not in the cache
      */
-    public abstract List<CoexpressionValueObject> get( Long g );
+    List<CoexpressionValueObject> get( Long g );
 
-    /**
-     * @return
-     */
-    public boolean isEnabled();
+    boolean isEnabled();
 
     /**
      * Bulk remove from cache.
-     * 
-     * @param genes
+     *
+     * @param genes genes
      * @return number of cache entries affected
      */
-    public int remove( Collection<Long> genes );
+    int remove( Collection<Long> genes );
 
-    /**
-     * @param id
-     * @return
-     */
-    public abstract boolean remove( Long id );
+    boolean remove( Long id );
 
-    /**
-     * Clearn and disable the cache
-     */
-    public void shutdown();
+    void shutdown();
 
 }

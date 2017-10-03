@@ -24,9 +24,6 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.io.Serializable;
 
-/**
- *
- */
 public abstract class SearchSettings implements Identifiable, Serializable {
 
     /**
@@ -66,10 +63,6 @@ public abstract class SearchSettings implements Identifiable, Serializable {
     public SearchSettings() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an SearchSettings instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -82,9 +75,6 @@ public abstract class SearchSettings implements Identifiable, Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -247,13 +237,8 @@ public abstract class SearchSettings implements Identifiable, Serializable {
 
     public abstract void noSearches();
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.search.SearchSettings}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.search.SearchSettings}.
-         */
+
         public static SearchSettings newInstance() {
             return new SearchSettingsImpl();
         }

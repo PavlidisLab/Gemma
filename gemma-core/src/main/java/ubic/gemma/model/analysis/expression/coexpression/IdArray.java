@@ -14,33 +14,26 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.googlecode.javaewah.EWAHCompressedBitmap;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+
 /**
- * Represents a set of IDs for entities (e.g., genes or experiments), stored in a bitset.
- * 
+ * Represents a set of IDs for entities (e.g., genes or experiments), stored in a bitSet.
+ *
  * @author Paul
- * @version $Id$
  */
 public abstract class IdArray implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -7563304392793946778L;
+    // keep visible to subclasses.
+    EWAHCompressedBitmap data = new EWAHCompressedBitmap();
 
-    static byte[] pack( EWAHCompressedBitmap bitmap ) {
+    private static byte[] pack( EWAHCompressedBitmap bitmap ) {
         ByteArrayDataOutput os = ByteStreams.newDataOutput();
         try {
             bitmap.serialize( os );
@@ -50,10 +43,7 @@ public abstract class IdArray implements Serializable {
         }
     }
 
-    /**
-     * Internal use.
-     */
-    static EWAHCompressedBitmap unpack( byte[] bitmap ) {
+    private static EWAHCompressedBitmap unpack( byte[] bitmap ) {
         EWAHCompressedBitmap b = new EWAHCompressedBitmap();
         try {
             b.deserialize( ByteStreams.newDataInput( bitmap ) );
@@ -63,12 +53,6 @@ public abstract class IdArray implements Serializable {
         }
     }
 
-    // keep visible to subclasses.
-    EWAHCompressedBitmap data = new EWAHCompressedBitmap();
-
-    /**
-     * @param ids
-     */
     public synchronized void addEntities( Collection<Long> ids ) {
         List<Long> idl = new ArrayList<>( ids );
         Collections.sort( idl );
@@ -76,7 +60,7 @@ public abstract class IdArray implements Serializable {
         EWAHCompressedBitmap b = new EWAHCompressedBitmap();
 
         for ( Long id : idl ) {
-            if ( id.intValue() > Integer.MAX_VALUE ) {
+            if ( id > Integer.MAX_VALUE ) {
                 throw new IllegalArgumentException( "Cannot store values larger than " + Integer.MAX_VALUE );
             }
             b.set( id.intValue() );
@@ -86,7 +70,7 @@ public abstract class IdArray implements Serializable {
 
     /**
      * Add the data set to the list of those which are in the array. If it is already included, nothing will change.
-     * 
+     *
      * @param ds this is cast to an int
      * @throws IllegalArgumentException if the value is too larger to be stored as an integer.
      */
@@ -109,36 +93,37 @@ public abstract class IdArray implements Serializable {
     }
 
     /**
-     * @param other
+     * @param other the other idArray to compare with.
      * @return datasets IDs it has in common with this.
      */
     public Collection<Long> and( IdArray other ) {
         List<Long> result = new ArrayList<>();
         EWAHCompressedBitmap aab = data.and( other.data );
         for ( int i : aab.toArray() ) {
-            result.add( new Long( i ) );
+            result.add( ( long ) i );
         }
         return result;
     }
 
     /**
-     * @param other
+     * @param other the other idArray to compare with.
      * @return datasets IDs it has in common with this, as a set
      */
     public Set<Long> andSet( IdArray other ) {
         Set<Long> result = new HashSet<>();
         EWAHCompressedBitmap aab = data.and( other.data );
         for ( int i : aab.toArray() ) {
-            result.add( new Long( i ) );
+            result.add( ( long ) i );
         }
         return result;
     }
 
-    /**
-     * @return
-     */
     public byte[] getBytes() {
         return pack( this.data );
+    }
+
+    public void setBytes( byte[] bytes ) {
+        this.data = unpack( bytes );
     }
 
     /**
@@ -150,7 +135,7 @@ public abstract class IdArray implements Serializable {
 
         int[] array = data.toArray();
         for ( int i : array ) {
-            result.add( new Long( i ) );
+            result.add( ( long ) i );
         }
         return result;
 
@@ -165,7 +150,7 @@ public abstract class IdArray implements Serializable {
 
         int[] array = data.toArray();
         for ( int i : array ) {
-            result.add( new Long( i ) );
+            result.add( ( long ) i );
         }
         return result;
 
@@ -181,9 +166,9 @@ public abstract class IdArray implements Serializable {
 
     /**
      * Use 'and' instead if possible. FIXME this might be a bit slow.
-     * 
-     * @param g
-     * @return
+     *
+     * @param g the id to check for
+     * @return true if the given id is in this array
      */
     public boolean isIncluded( Long g ) {
         return data.get( g.intValue() );
@@ -194,7 +179,8 @@ public abstract class IdArray implements Serializable {
      */
     public synchronized void removeEntity( Long ds ) {
         // don't remove if not there...
-        if ( !data.get( ds.intValue() ) ) return;
+        if ( !data.get( ds.intValue() ) )
+            return;
 
         // debug code
         int old = this.data.cardinality();
@@ -207,13 +193,6 @@ public abstract class IdArray implements Serializable {
 
         assert old - 1 == this.data.cardinality();
         assert !this.isIncluded( ds );
-    }
-
-    /**
-     * @param bytes
-     */
-    public void setBytes( byte[] bytes ) {
-        this.data = unpack( bytes );
     }
 
     @Override

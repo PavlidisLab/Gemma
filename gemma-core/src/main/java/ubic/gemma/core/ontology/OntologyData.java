@@ -25,29 +25,21 @@ import java.io.Serializable;
  * @author klc Used as a Datapack for sending ajax data back via the dwr remote call
  */
 
+@SuppressWarnings("WeakerAccess") // Possibly used in JS
 public class OntologyData implements Serializable {
 
     private static final String NA = "NA";
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4007478680683944730L;
 
     int id;
     String term;
     String comment;
 
-    /**
-     * @return the data
-     */
-
     public OntologyData() {
         super();
         id = 1;
         term = NA;
         comment = NA;
-
     }
 
     public OntologyData( int id, String term, String comment ) {
@@ -57,44 +49,26 @@ public class OntologyData implements Serializable {
         this.comment = comment;
     }
 
-    /**
-     * @return the comment
-     */
     public String getComment() {
         return comment;
     }
 
-    /**
-     * @return the id
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * @return the term
-     */
-    public String getTerm() {
-        return term;
-    }
-
-    /**
-     * @param comment the comment to set
-     */
     public void setComment( String comment ) {
         this.comment = comment;
     }
 
-    /**
-     * @param id the id to set
-     */
+    public int getId() {
+        return id;
+    }
+
     public void setId( int id ) {
         this.id = id;
     }
 
-    /**
-     * @param term the term to set
-     */
+    public String getTerm() {
+        return term;
+    }
+
     public void setTerm( String term ) {
         this.term = term;
     }

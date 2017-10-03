@@ -18,30 +18,26 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collection;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Collection;
+
 /**
  * Class that can retrieve pubmed records (in XML format) via HTTP. The url used is configured via a resource.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class PubMedXMLFetcher {
 
-    protected static final Log log = LogFactory.getLog( PubMedXMLFetcher.class );
-    private String uri;
-
+    private static final Log log = LogFactory.getLog( PubMedXMLFetcher.class );
     private final static int MAX_TRIES = 2;
+    private final String uri;
 
     public PubMedXMLFetcher() {
         String baseURL = Settings.getString( "entrez.efetch.baseurl" );
@@ -52,17 +48,10 @@ public class PubMedXMLFetcher {
         uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + "&" + idtag;
     }
 
-    /**
-     * For collection of integer pubmed ids.
-     * 
-     * @param pubMedIds
-     * @return Collection<BibliographicReference>
-     * @throws IOException
-     */
     public Collection<BibliographicReference> retrieveByHTTP( Collection<Integer> pubMedIds ) throws IOException {
         StringBuilder buf = new StringBuilder();
         for ( Integer integer : pubMedIds ) {
-            buf.append( integer + "," );
+            buf.append( integer ).append( "," );
         }
         URL toBeGotten = new URL( uri + StringUtils.chomp( buf.toString() ) );
         log.debug( "Fetching " + toBeGotten );
@@ -70,12 +59,6 @@ public class PubMedXMLFetcher {
         return pmxp.parse( toBeGotten.openStream() );
     }
 
-    /**
-     * For an integer pubmed id
-     * 
-     * @param pubMedId
-     * @return BibliographicReference for the id given.
-     */
     public BibliographicReference retrieveByHTTP( int pubMedId ) {
         Collection<BibliographicReference> results = null;
         try {
@@ -84,7 +67,8 @@ public class PubMedXMLFetcher {
                 log.debug( "Fetching " + toBeGotten );
                 PubMedXMLParser pmxp = new PubMedXMLParser();
                 results = pmxp.parse( toBeGotten.openStream() );
-                if ( results != null && results.size() > 0 ) break;
+                if ( results != null && results.size() > 0 )
+                    break;
                 try {
                     Thread.sleep( 500 );
                 } catch ( InterruptedException e ) {
@@ -96,8 +80,6 @@ public class PubMedXMLFetcher {
             }
             assert results.size() == 1;
             return results.iterator().next();
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

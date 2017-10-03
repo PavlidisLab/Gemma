@@ -22,10 +22,7 @@ package ubic.gemma.model.association.coexpression;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
- * @version $Id$
  */
 public class HumanExperimentCoexpressionLinkImpl extends ExperimentCoexpressionLink {
     private static final long serialVersionUID = 8753430934473629791L;
@@ -34,13 +31,8 @@ public class HumanExperimentCoexpressionLinkImpl extends ExperimentCoexpressionL
         this( null, null, null, null );
     }
 
-    /**
-     * @param bioAssaySet
-     * @param linkId
-     * @param firstGene
-     * @param secondGene
-     */
-    public HumanExperimentCoexpressionLinkImpl( BioAssaySet bioAssaySet, Long linkId, Long firstGene, Long secondGene ) {
+    public HumanExperimentCoexpressionLinkImpl( BioAssaySet bioAssaySet, Long linkId, Long firstGene,
+            Long secondGene ) {
         super( bioAssaySet, linkId, firstGene, secondGene );
     }
 

@@ -26,19 +26,18 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -70,9 +69,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     private Map<String, GeoRecord> localInfo;
     private XPathExpression xgse;
@@ -141,7 +137,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         ExternalDatabase geo = externalDatabaseService.find( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<>();
         assert geo != null;
-        rec: for ( GeoRecord record : records ) {
+        rec:
+        for ( GeoRecord record : records ) {
 
             if ( record.getNumSamples() < MIN_SAMPLES ) {
                 toRemove.add( record );
@@ -183,9 +180,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             }
         }
 
-        for ( GeoRecord record : toRemove ) {
-            records.remove( record );
-        }
+        records.removeAll( toRemove );
 
         return records;
 
@@ -220,8 +215,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                 if ( arrayDesign.getCurationDetails().getTroubled() ) {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
-                        trouble = "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
-                                + lastTroubleEvent.getNote() + "\"/>";
+                        trouble =
+                                "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
+                                        + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
                 buf.append(
@@ -240,7 +236,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     }
 
     /**
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     private void initializeLocalInfo() {

@@ -25,9 +25,8 @@ import ubic.gemma.model.genome.Gene;
 /**
  * Wrapper object used to track and eliminate duplicates. Crucial: for the purposes of "equals" and "hashcode", ignores
  * the ID of the link, and the gene order. Sign is used. Sort order is by ID of the first gene only.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersistentNonOrderedCoexpLink> {
 
@@ -39,11 +38,6 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
 
     final private boolean positive;
 
-    /**
-     * @param g1
-     * @param g2
-     * @param b
-     */
     public NonPersistentNonOrderedCoexpLink( Gene g1, Gene g2, boolean b ) {
         if ( g1.getId() < g2.getId() ) {
             this.g1 = g1.getId();
@@ -68,9 +62,6 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
         this.link = null;
     }
 
-    /**
-     * @param link
-     */
     public NonPersistentNonOrderedCoexpLink( Gene2GeneCoexpression link ) {
         this.link = link;
         if ( link.getFirstGene() < link.getSecondGene() ) {
@@ -83,11 +74,6 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
         this.positive = link.isPositiveCorrelation();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
     @Override
     public int compareTo( NonPersistentNonOrderedCoexpLink o ) {
         return getFirstGene().compareTo( o.getFirstGene() );
@@ -95,25 +81,31 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         NonPersistentNonOrderedCoexpLink other = ( NonPersistentNonOrderedCoexpLink ) obj;
         if ( g1 == null ) {
-            if ( other.g1 != null ) return false;
-        } else if ( !g1.equals( other.g1 ) ) return false;
+            if ( other.g1 != null )
+                return false;
+        } else if ( !g1.equals( other.g1 ) )
+            return false;
         if ( g2 == null ) {
-            if ( other.g2 != null ) return false;
-        } else if ( !g2.equals( other.g2 ) ) return false;
-        if ( positive != other.positive ) return false;
+            if ( other.g2 != null )
+                return false;
+        } else if ( !g2.equals( other.g2 ) )
+            return false;
+        if ( positive != other.positive )
+            return false;
 
         return true;
     }
 
     /**
-     * The first gene for the underlying link; this is always the lower ID.
-     * 
-     * @return
+     * @return The first gene for the underlying link; this is always the lower ID.
      */
     public Long getFirstGene() {
         // if ( link == null ) throw new IllegalStateException();
@@ -122,9 +114,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
     }
 
     /**
-     * The underlying link (may be null depending on how this was constructed)
-     * 
-     * @return
+     * @return The underlying link (may be null depending on how this was constructed)
      */
     public Gene2GeneCoexpression getLink() {
         // if ( link == null ) throw new IllegalStateException();
@@ -132,9 +122,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
     }
 
     /**
-     * The second gene for the underlying link; this is always the higher ID - not necesssarily the secondGene
-     * 
-     * @return
+     * @return The second gene for the underlying link; this is always the higher ID - not necesssarily the secondGene
      */
     public Long getSecondGene() {
         // if ( link == null ) throw new IllegalStateException();
@@ -152,9 +140,6 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
         return result;
     }
 
-    /**
-     * @return
-     */
     public boolean isPositiveCorrelation() {
         return positive;
     }

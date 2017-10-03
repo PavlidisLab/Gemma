@@ -89,7 +89,7 @@ public abstract class QuantitationType extends Describable {
     }
 
     /**
-     * True if this is just a background measurement.
+     * @return True if this is just a background measurement.
      */
     public Boolean getIsBackground() {
         return this.isBackground;
@@ -100,7 +100,7 @@ public abstract class QuantitationType extends Describable {
     }
 
     /**
-     * True if this is explicitly background-subtracted by Gemma (if it was background-subtracted before the data got to
+     * @return True if this is explicitly background-subtracted by Gemma (if it was background-subtracted before the data got to
      * us, we might not know)
      */
     public Boolean getIsBackgroundSubtracted() {
@@ -120,7 +120,7 @@ public abstract class QuantitationType extends Describable {
     }
 
     /**
-     * If the data represented is a missing-value masked version of the preferred data.
+     * @return If the data represented is a missing-value masked version of the preferred data.
      */
     public Boolean getIsMaskedPreferred() {
         return this.isMaskedPreferred;
@@ -147,7 +147,7 @@ public abstract class QuantitationType extends Describable {
     }
 
     /**
-     * Indicates whether the quantitation type is expressed as a ratio (e.g., of expression to a reference or
+     * @return Indicates whether the quantitation type is expressed as a ratio (e.g., of expression to a reference or
      * pseudo-reference). This has a natural impact on the interpretation. If false, the value is "absolute".
      */
     public Boolean getIsRatio() {
@@ -196,13 +196,8 @@ public abstract class QuantitationType extends Describable {
         this.type = type;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
-         */
+
         public static QuantitationType newInstance() {
             return new QuantitationTypeImpl();
         }

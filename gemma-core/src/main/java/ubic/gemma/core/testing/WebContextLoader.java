@@ -31,11 +31,11 @@ import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
 /**
- * See {@link http://jira.springframework.org/browse/SPR-5243} and {@link http
- * ://dhruba.name/2008/10/25/using-mockservletcontext-and-contextloader-with-spring-25-testcontext-framework/}.
- * 
+ * See <a href="http://jira.springframework.org/browse/SPR-5243">SPR-5243</a> and
+ * <a href="http://dhruba.name/2008/10/25/using-mockservletcontext-and-contextloader-with-spring-25-testcontext-framework/">
+ * Using mock servlet context and context loader with spring</a>.
+ *
  * @author paul
- * @version $Id$
  * @see BaseSpringWebTest
  */
 public class WebContextLoader extends AbstractContextLoader {
@@ -44,8 +44,8 @@ public class WebContextLoader extends AbstractContextLoader {
     @Override
     public ApplicationContext loadContext( String... locations ) throws Exception {
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading WebApplicationContext for locations ["
-                    + StringUtils.arrayToCommaDelimitedString( locations ) + "]." );
+            logger.debug( "Loading WebApplicationContext for locations [" + StringUtils
+                    .arrayToCommaDelimitedString( locations ) + "]." );
         }
         ConfigurableWebApplicationContext context = new XmlWebApplicationContext();
         context.setConfigLocations( locations );
@@ -63,12 +63,6 @@ public class WebContextLoader extends AbstractContextLoader {
         return "-context.xml";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.context.SmartContextLoader#loadContext(org.springframework.test.context.
-     * MergedContextConfiguration)
-     */
     @Override
     public ApplicationContext loadContext( MergedContextConfiguration arg0 ) throws Exception {
         String[] locations = arg0.getLocations();

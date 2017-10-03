@@ -18,13 +18,14 @@
  */
 package ubic.gemma.core.loader.protein.biomart;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.util.Settings;
+
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -33,32 +34,23 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.util.FileTools;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.Settings;
-
 /**
  * BioMart is a query-oriented data management system. In our particular case we are using it to map ensembl, ncbi and
- * hgnc ids. To construct the query we pass the taxon and the attributes we wish to query for. Note the formating of
- * taxon for biomart consists of latin name without the point e.g. hsapiens For more information visit the site:
- * {@link http://www.biomart.org/martservice.html}
- * <p>
+ * hgnc ids. To construct the query we pass the taxon and the attributes we wish to query for. Note the formatting of
+ * taxon for biomart consists of latin name without the point e.g. 'hsapiens'. For more information visit
+ * <a href="http://www.biomart.org/martservice.html">the biomart website</a>.
  * Note that Gemma now includes Ensembl ids imported for NCBI genes, using the gene2ensembl file provided by NCBI.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class BiomartEnsemblNcbiFetcher {
 
     public final static String BIOMARTPATH = "protein.biomart.remotepath";
     private static final String BIOMART = "biomart";
     private static final String FILESEPARATOR = "\t";
-    private static Log log = LogFactory.getLog( BiomartEnsemblNcbiFetcher.class );
     private static final int READ_TIMEOUT_SECONDS = 30;
+    private static final Log log = LogFactory.getLog( BiomartEnsemblNcbiFetcher.class );
     private String urlBiomartService = "";
 
     public BiomartEnsemblNcbiFetcher() {
@@ -68,7 +60,7 @@ public class BiomartEnsemblNcbiFetcher {
     /**
      * Method that based on the taxon supplied constructs an array of attributes that can be queried on. For example if
      * hsapiens is supplied then hgnc_id can be supplied as a query parameter.
-     * 
+     *
      * @param biomartTaxonName Biomart formatted taxon name
      * @return An Array of strings representing the attributes that can be used to query biomart.
      */
@@ -85,15 +77,15 @@ public class BiomartEnsemblNcbiFetcher {
     /**
      * Main method that iterates through each taxon supplied and calls the fetch method for each taxon. Which returns a
      * biomart file for each taxon supplied.
-     * 
+     *
      * @param taxa Collection of taxa to retrieve biomart files for.
      * @return A map of biomart files as stored on local file system keyed on taxon.
-     * @throws IOException
+     * @throws IOException if there is a problem while manipulating the file
      */
     public Map<Taxon, File> fetch( Collection<Taxon> taxa ) throws IOException {
-        Map<Taxon, File> taxonFileMap = new HashMap<Taxon, File>();
-        String taxonName = "";
-        File taxonFile = null;
+        Map<Taxon, File> taxonFileMap = new HashMap<>();
+        String taxonName;
+        File taxonFile;
 
         for ( Taxon taxon : taxa ) {
             taxonName = this.getBiomartTaxonName( taxon );
@@ -108,27 +100,26 @@ public class BiomartEnsemblNcbiFetcher {
 
     /**
      * Given a biomart taxon formatted name fetch the file from biomart and save as a local file.
-     * 
-     * @return
-     * @throws Exception
+     *
+     * @return biomart file
+     * @throws IOException when there is a problem while manipulating the file
      */
     public File fetchFileForProteinQuery( String bioMartTaxonName ) throws IOException {
         log.info( "Retrieving biomart file for taxon " + bioMartTaxonName + " from url " + urlBiomartService );
         String xmlQueryString = getXmlQueryAsStringForProteinQuery( bioMartTaxonName );
-        URL url = null;
+        URL url;
         try {
-            url = new URL( urlBiomartService + URLEncoder.encode( "query", "UTF-8" ) + "="
-                    + URLEncoder.encode( xmlQueryString, "UTF-8" ) );
+            url = new URL( urlBiomartService + URLEncoder.encode( "query", "UTF-8" ) + "=" + URLEncoder
+                    .encode( xmlQueryString, "UTF-8" ) );
             // data = ;
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        } catch ( UnsupportedEncodingException e ) {
+        } catch ( MalformedURLException | UnsupportedEncodingException e ) {
             throw new RuntimeException( e );
         }
-        assert url != null;
-        try (BufferedReader biomartBufferedReader = this.readBioMart( url );) {
+
+        try (BufferedReader biomartBufferedReader = this.readBioMart( url )) {
             File EnsemblEntrezHGCNProteinMappingFile = this.getFileName( bioMartTaxonName );
-            String headerForEnsemblEntrezHGCNProteinMapping = getHeaderForBiomartFileForProteinQuery( bioMartTaxonName );
+            String headerForEnsemblEntrezHGCNProteinMapping = getHeaderForBiomartFileForProteinQuery(
+                    bioMartTaxonName );
 
             return this.writeFile( EnsemblEntrezHGCNProteinMappingFile, headerForEnsemblEntrezHGCNProteinMapping,
                     biomartBufferedReader );
@@ -139,12 +130,12 @@ public class BiomartEnsemblNcbiFetcher {
     }
 
     /**
-     * Biomart taxon names are formated as the scientific name all lowercase with the genus name shortened to one letter
-     * and appended to species name E.g. Homo sapiens >hsapiens
-     * 
-     * @param Gemma taxon object
-     * @return Biomart taxon formated name.
-     * @exception The taxon does not contain a valid scientific name.
+     * Biomart taxon names are formatted as the scientific name all lowercase with the genus name shortened to one letter
+     * and appended to species name E.g. Homo sapiens &gt; hsapiens
+     *
+     * @param gemmaTaxon taxon object
+     * @return Biomart taxon formatted name.
+     * @throws RuntimeException The taxon does not contain a valid scientific name.
      */
     public String getBiomartTaxonName( Taxon gemmaTaxon ) {
         String biomartTaxonName = null;
@@ -170,7 +161,7 @@ public class BiomartEnsemblNcbiFetcher {
     /**
      * Method that gets the configured download path and constructs the file name of the biomart file Which is biomart +
      * biomarttaxonaname + .txt. If a biomart directory does not exist then create it.
-     * 
+     *
      * @param biomartTaxonName The biomart configured taxon name
      * @return File path to newly created biomart file on local system.
      */
@@ -185,7 +176,7 @@ public class BiomartEnsemblNcbiFetcher {
     /**
      * Method to construct a header for the downloaded biomart file. The file that comes from biomart has no header so
      * this documents what attributes have been queried for, this can be taxon specific
-     * 
+     *
      * @param biomartTaxonName The taxon queried for
      * @return Header line for biomart file e.g. ensembl_gene_id ensembl_transcript_id entrezgene ensembl_peptide_id
      */
@@ -201,31 +192,34 @@ public class BiomartEnsemblNcbiFetcher {
     /**
      * Constructs an xml query for biomart. This can be generated from the biomart site. The attributes sit under
      * attributes filter external
-     * 
-     * @param
+     *
+     * @param biomartTaxonName taxon name
      * @return String of xml populated with taxon
      */
     private String getXmlQueryAsStringForProteinQuery( String biomartTaxonName ) {
         StringBuilder xmlQuery = new StringBuilder( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
         xmlQuery.append( "<!DOCTYPE Query>" );
-        xmlQuery.append( "<Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" >" );
-        xmlQuery.append( "<Dataset name = \"" + biomartTaxonName + "_gene_ensembl\" interface = \"default\" >" );
+        xmlQuery.append(
+                "<Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" >" );
+        xmlQuery.append( "<Dataset name = \"" ).append( biomartTaxonName )
+                .append( "_gene_ensembl\" interface = \"default\" >" );
         for ( String attributes : attributesToRetrieveFromBioMartForProteinQuery( biomartTaxonName ) ) {
             if ( attributes != null && !( attributes.isEmpty() ) ) {
-                xmlQuery.append( "<Attribute name = \"" + attributes + "\" />" );
+                xmlQuery.append( "<Attribute name = \"" ).append( attributes ).append( "\" />" );
             }
         }
         xmlQuery.append( "</Dataset>" );
         xmlQuery.append( "</Query>" );
-        if ( log.isDebugEnabled() ) log.debug( "Biomart query was:\n" + xmlQuery.toString() );
+        if ( log.isDebugEnabled() )
+            log.debug( "Biomart query was:\n" + xmlQuery.toString() );
         return xmlQuery.toString();
     }
 
     /**
      * Configure the URL for biomart
-     * 
-     * @throws ConfigurationException one of the file download paths in the properties file was not configured
-     *         correctly.
+     *
+     * @throws RuntimeException (ConfigurationException) one of the file download paths in the properties file was not configured
+     *                          correctly.
      */
     private void initConfig() {
 
@@ -236,12 +230,12 @@ public class BiomartEnsemblNcbiFetcher {
 
     /**
      * Submit a xml query to biomart service return the returned data as a bufferedreader
-     * 
+     *
      * @param urlToRead Biomart configured URL
      * @return BufferedReader Stream to read data from
      */
     private BufferedReader readBioMart( URL urlToRead ) {
-        URLConnection conn = null;
+        URLConnection conn;
         try {
             conn = urlToRead.openConnection();
             conn.setReadTimeout( 1000 * READ_TIMEOUT_SECONDS );
@@ -259,22 +253,23 @@ public class BiomartEnsemblNcbiFetcher {
 
     /**
      * Method reads data returned from biomart and writes to file adding a header containing the queried attributes.
-     * 
-     * @param biomartTaxonName Taxon name configured for biomart
-     * @param reader The reader for reading data returned from biomart
+     *
+     * @param file          file
+     * @param headerForFile file header
+     * @param reader        The reader for reading data returned from biomart
      * @return File the biomart data written to file
      * @throws IOException Problem writing to file
      */
     private File writeFile( File file, String headerForFile, BufferedReader reader ) throws IOException {
 
-        try (BufferedWriter writer = new BufferedWriter( new FileWriter( file ) );) {
-            writer.append( headerForFile + "\n" );
+        try (BufferedWriter writer = new BufferedWriter( new FileWriter( file ) )) {
+            writer.append( headerForFile ).append( "\n" );
             String line;
             while ( ( line = reader.readLine() ) != null ) {
                 if ( line.contains( "ERROR" ) && line.contains( "Exception" ) ) {
                     throw new IOException( "Error from BioMart: " + line );
                 }
-                writer.append( line + "\n" );
+                writer.append( line ).append( "\n" );
             }
         }
         reader.close();

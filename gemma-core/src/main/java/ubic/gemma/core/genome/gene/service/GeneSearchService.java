@@ -40,7 +40,7 @@ public interface GeneSearchService {
      *
      * @param goId    GO id that must be in the format "GO_#######"
      * @param taxonId must not be null and must correspond to a taxon
-     * @return Collection<GeneSetValueObject> empty if goId was blank or taxonId didn't correspond to a taxon
+     * @return empty if goId was blank or taxonId didn't correspond to a taxon
      */
     Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId );
 
@@ -53,7 +53,8 @@ public interface GeneSearchService {
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      *
-     * @param query A list of gene names (symbols), one per line.
+     * @param query   A list of gene names (symbols), one per line.
+     * @param taxonId taxon id
      * @return collection of gene value objects
      */
     Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException;
@@ -61,7 +62,8 @@ public interface GeneSearchService {
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      *
-     * @param query gene names (symbols)
+     * @param query   gene names (symbols)
+     * @param taxonId taxon id
      * @return query with match. Null values means nothing was found for that key (query)
      */
     Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) throws IOException;

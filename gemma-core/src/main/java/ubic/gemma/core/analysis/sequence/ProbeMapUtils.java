@@ -19,20 +19,18 @@
 
 package ubic.gemma.core.analysis.sequence;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-
 /**
  * @author paul
- * @version $Id$
  */
 public class ProbeMapUtils {
 
@@ -40,8 +38,8 @@ public class ProbeMapUtils {
 
     /**
      * Prune a set of results that have the same coordinates and query. See bug 4037
-     * 
-     * @param blatResults
+     *
+     * @param blatResults blat results
      */
     public static void removeDuplicates( Collection<BlatResult> blatResults ) {
         int init = blatResults.size();
@@ -67,9 +65,9 @@ public class ProbeMapUtils {
 
     /**
      * Compute a hash for the result based only on the characteristics of the alignment (that is, not the Id)
-     * 
-     * @param br
-     * @return
+     *
+     * @param br br
+     * @return integer
      */
     public static Integer hashBlatResult( BlatResult br ) {
         int result = 1;
@@ -99,16 +97,17 @@ public class ProbeMapUtils {
 
     /**
      * Compute a hash for the result based only on the characteristics of the alignment (that is, not the Id)
-     * 
-     * @param br
-     * @return
+     *
+     * @param br br
+     * @return integer
      */
     public static Integer hashBlatResult( BlatResultValueObject br ) {
         int result = 1;
         int prime = 31;
         result = prime * result + ( ( br.getQuerySequence() == null ) ? 0 : br.getQuerySequence().hashCode() );
-        result = prime * result
-                + ( ( br.getTargetChromosomeName() == null ) ? 0 : br.getTargetChromosomeName().hashCode() );
+        result = prime * result + ( ( br.getTargetChromosomeName() == null ) ?
+                0 :
+                br.getTargetChromosomeName().hashCode() );
 
         result = prime * result + ( ( br.getBlockCount() == null ) ? 0 : br.getBlockCount().hashCode() );
         result = prime * result + ( ( br.getBlockSizes() == null ) ? 0 : br.getBlockSizes().hashCode() );

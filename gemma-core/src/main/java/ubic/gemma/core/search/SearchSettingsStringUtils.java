@@ -1,15 +1,14 @@
 package ubic.gemma.core.search;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.queryParser.QueryParser;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.genome.Taxon;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.queryParser.QueryParser;
-
-import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.genome.Taxon;
 
 public class SearchSettingsStringUtils {
 
@@ -36,9 +35,9 @@ public class SearchSettingsStringUtils {
     /**
      * Checks whether there is a taxon set in the given SearchSettings, and if not, tries to extract a taxon from the
      * SearchSettings query
-     * 
-     * @param settings
-     * @return
+     *
+     * @param settings settings
+     * @return search settings
      */
     public static SearchSettings processSettings( SearchSettings settings, HashMap<String, Taxon> nameToTaxonMap ) {
 
@@ -85,9 +84,9 @@ public class SearchSettingsStringUtils {
 
     /**
      * Makes the query lower case, removes quotes and removes all (sub)strings in STRINGS_TO_REMOVE array from it.
-     * 
-     * @param settings
-     * @return
+     *
+     * @param settings settings
+     * @return search settings
      */
     private static SearchSettings processSearchString( SearchSettings settings ) {
         String searchString = QueryParser.escape( settings.getQuery().toLowerCase() );

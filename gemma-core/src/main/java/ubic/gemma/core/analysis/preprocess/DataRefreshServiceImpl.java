@@ -15,15 +15,11 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
- * @version $Id$
  */
 public class DataRefreshServiceImpl implements DataRefreshService {
 

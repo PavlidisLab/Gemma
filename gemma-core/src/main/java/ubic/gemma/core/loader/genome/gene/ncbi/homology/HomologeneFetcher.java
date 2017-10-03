@@ -19,25 +19,20 @@
 
 package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
-import java.io.File;
-
 import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.gemma.core.loader.genome.gene.ncbi.NCBIUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.File;
+
 /**
  * Grabs urls like ftp:///ftp.ncbi.nih.gov/pub/HomoloGene/current/homologene.data
- * 
+ *
  * @author klc
- * @version $Id: HomologeneFetcher.java
  */
 public class HomologeneFetcher extends FtpFetcher {
 
-    /**
-     * @throws ConfigurationException
-     */
     @Override
     protected void initConfig() {
 
@@ -51,20 +46,11 @@ public class HomologeneFetcher extends FtpFetcher {
 
     }
 
-    /**
-     * @param identifier
-     * @param newDir
-     * @return
-     */
     @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier;
     }
 
-    /**
-     * @param identifier
-     * @return
-     */
     @Override
     protected String formRemoteFilePath( String identifier ) {
         return remoteBaseDir + identifier;

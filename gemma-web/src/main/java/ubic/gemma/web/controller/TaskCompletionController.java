@@ -32,7 +32,6 @@ import ubic.gemma.core.job.executor.webapp.TaskRunningService;
  * Generic controller that looks for a finished job. Used when a job is done to get the result.
  * 
  * @author pavlidis
- * @version $Id$
  */
 @Controller
 public class TaskCompletionController {
@@ -40,12 +39,6 @@ public class TaskCompletionController {
     @Autowired
     TaskRunningService taskRunningService;
 
-    /**
-     * AJAX
-     * 
-     * @param taskId
-     * @return
-     */
     public Object checkResult( String taskId ) throws Exception {
         SubmittedTask<?> submittedTask = taskRunningService.getSubmittedTask( taskId );
         if ( submittedTask == null ) return null;

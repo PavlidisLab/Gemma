@@ -19,18 +19,19 @@
 package ubic.gemma.persistence;
 
 import org.junit.Test;
-
 import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * Tests for deadlocking issues; see bug 2888.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ExperimentLoadTortureTest extends BaseSpringContextTest {
 
-    /** Disabled; this test was failing all of a sudden. */
+    /*
+     * Disabled; this test was failing all of a sudden.
+     *
+     */
     @Test
     public void testConcurrentLoading() throws Exception {
         // /*

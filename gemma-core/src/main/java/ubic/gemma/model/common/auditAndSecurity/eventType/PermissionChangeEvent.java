@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * Represents a change in permissions
- * 
+ *
  * @author paul
  */
 public class PermissionChangeEvent extends AuditEventType {

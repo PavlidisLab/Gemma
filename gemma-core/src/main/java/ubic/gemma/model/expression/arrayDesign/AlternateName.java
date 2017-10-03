@@ -18,53 +18,23 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-/**
- * 
- */
 public abstract class AlternateName implements java.io.Serializable {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.arrayDesign.AlternateName}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.arrayDesign.AlternateName}.
-         */
-        public static ubic.gemma.model.expression.arrayDesign.AlternateName newInstance() {
-            return new ubic.gemma.model.expression.arrayDesign.AlternateNameImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.arrayDesign.AlternateName}, taking all
-         * possible properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.expression.arrayDesign.AlternateName newInstance( String name ) {
-            final ubic.gemma.model.expression.arrayDesign.AlternateName entity = new ubic.gemma.model.expression.arrayDesign.AlternateNameImpl();
-            entity.setName( name );
-            return entity;
-        }
-    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1208836332065611893L;
     private String name;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public AlternateName() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an AlternateName instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -80,23 +50,22 @@ public abstract class AlternateName implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public String getName() {
         return this.name;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -105,12 +74,17 @@ public abstract class AlternateName implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+    public static final class Factory {
 
-    public void setName( String name ) {
-        this.name = name;
+        public static ubic.gemma.model.expression.arrayDesign.AlternateName newInstance() {
+            return new ubic.gemma.model.expression.arrayDesign.AlternateNameImpl();
+        }
+
+        public static ubic.gemma.model.expression.arrayDesign.AlternateName newInstance( String name ) {
+            final ubic.gemma.model.expression.arrayDesign.AlternateName entity = new ubic.gemma.model.expression.arrayDesign.AlternateNameImpl();
+            entity.setName( name );
+            return entity;
+        }
     }
 
 }

@@ -61,9 +61,7 @@ public abstract class GeneProduct extends ChromosomeFeature {
     }
 
     /**
-     * <p>
-     * GI for the gene product (if available)
-     * </p>
+     * @return GI for the gene product (if available)
      */
     public String getNcbiGi() {
         return this.ncbiGi;
@@ -81,13 +79,7 @@ public abstract class GeneProduct extends ChromosomeFeature {
         this.type = type;
     }
 
-    /**
-     * Constructs new instances of {@link GeneProduct}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link GeneProduct}.
-         */
         public static GeneProduct newInstance() {
             return new GeneProductImpl();
         }

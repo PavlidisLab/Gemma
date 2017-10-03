@@ -23,23 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that batch information was obtained
  * </p>
  */
-public class BatchInformationFetchingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent();
-        }
-
-    }
+public class BatchInformationFetchingEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -48,10 +33,18 @@ public class BatchInformationFetchingEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public BatchInformationFetchingEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent();
+        }
+
     }
 
 }

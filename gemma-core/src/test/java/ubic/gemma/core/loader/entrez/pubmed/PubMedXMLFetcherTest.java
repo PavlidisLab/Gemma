@@ -18,24 +18,20 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import ubic.gemma.model.common.description.BibliographicReference;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class PubMedXMLFetcherTest {
     private static Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
@@ -79,10 +75,8 @@ public class PubMedXMLFetcherTest {
         }
     }
 
-    /**
+    /*
      * 23865096 is a NCBI bookshelf article, not a paper
-     * 
-     * @throws Exception
      */
     @Test
     public final void testRetrieveByHTTPBookshelf() throws Exception {
@@ -125,9 +119,6 @@ public class PubMedXMLFetcherTest {
         pmf = null;
     }
 
-    /**
-     * @param e
-     */
     private void checkCause( RuntimeException e ) {
         if ( e.getCause() instanceof java.net.ConnectException ) {
             log.warn( "Test skipped due to connection exception" );

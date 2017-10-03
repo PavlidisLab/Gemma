@@ -18,28 +18,25 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.SocketException;
-import java.util.Collection;
-import java.util.concurrent.FutureTask;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.ftp.FTP;
-
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.concurrent.FutureTask;
+
 /**
  * Retrieve and unpack the raw data files for GEO series. These are the CEL and other files (RPT, EXP and maybe DAT) for
  * Affymetrix data sets. For other types of arrays there may also be raw data?
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class RawDataFetcher extends FtpArchiveFetcher {
 
@@ -49,10 +46,6 @@ public class RawDataFetcher extends FtpArchiveFetcher {
         initArchiveHandler( "tar" );
     }
 
-    /**
-     * @param identifier
-     * @return true if the files exist.
-     */
     public boolean checkForFile( String identifier ) {
         try {
             // FIXME this needs to deal with the URL.
@@ -74,7 +67,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
 
     /**
      * @param identifier The url for the supplementary file.
-     * @see ubic.gemma.core.loader.loaderutils.Fetcher#fetch(java.lang.String)
+     * @return local files
      */
     @Override
     public Collection<LocalFile> fetch( String identifier ) {
@@ -110,17 +103,12 @@ public class RawDataFetcher extends FtpArchiveFetcher {
             }
 
             return result;
-        } catch ( SocketException e ) {
-            throw new RuntimeException( e );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
     }
 
-    /**
-     * @throws ConfigurationException
-     */
     @Override
     public void initConfig() {
         localBasePath = Settings.getString( "geo.local.datafile.basepath" );
@@ -138,37 +126,17 @@ public class RawDataFetcher extends FtpArchiveFetcher {
         this.netDataSourceUtil = new GeoUtil();
     }
 
-    /**
-     * @param identifier
-     * @param newDir
-     * @return
-     */
     @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier + "_RAW.tar";
     }
 
-    /**
+    /*
      * ftp://ftp.ncbi.nih.gov/pub/geo/DATA/supplementary/series/GSE1105/GSE1105%5FRAW%2Etar
-     * 
-     * @param identifier
-     * @return
      */
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        String seekFile = remoteBaseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
-        return seekFile;
+        return remoteBaseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
     }
-
-    // /**
-    // * This is for bug 3194, but you know, it's just not going to be worth it.
-    // *
-    // * @param identifier
-    // * @return
-    // */
-    // private String formSecondGuessRemoteFilePath( String identifier ) {
-    // String seekFile = remoteBaseDir + "/" + identifier + "/" + identifier + "_non-normalized.txt.gz";
-    // return seekFile;
-    // }
 
 }

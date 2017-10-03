@@ -22,15 +22,10 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 
 /**
  * Represents the process of normalizing arrays.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public interface Normalizer<R, C> {
 
-    /**
-     * @param dataMatrix
-     * @return
-     */
-    public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix );
+    DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix );
 }

@@ -22,26 +22,13 @@ import java.util.Collection;
 
 /**
  * Defines a class that can convert objects from one type to another.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public interface Converter<S, T> {
 
-    /**
-     * Given a collection of source domain objects, conver them into Gemma domain objects.
-     * 
-     * @param sourceDomainObjects
-     * @return
-     */
-    public Collection<T> convert( Collection<? extends S> sourceDomainObjects );
+    Collection<T> convert( Collection<? extends S> sourceDomainObjects );
 
-    /**
-     * Convert a single object.
-     * 
-     * @param sourceDomainObject
-     * @return
-     */
-    public T convert( S sourceDomainObject );
+    T convert( S sourceDomainObject );
 
 }

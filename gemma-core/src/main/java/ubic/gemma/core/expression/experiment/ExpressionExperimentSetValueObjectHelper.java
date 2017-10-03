@@ -19,17 +19,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface ExpressionExperimentSetValueObjectHelper {
 
     /**
      * Tries to load an existing experiment set with the param's id, if no experiment can be loaded, create a new one
      * with id = null. Sets all fields of the new entity with values from the valueObject param.
-     * 
+     *
      * @param setVO if null, returns null
-     * @return
+     * @return ee set
      */
-    public abstract ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject setVO );
+    ExpressionExperimentSet convertToEntity( ExpressionExperimentSetValueObject setVO );
 
 }

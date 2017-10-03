@@ -35,14 +35,12 @@ import java.util.Collection;
  * Manage the mean-variance relationship.
  *
  * @author ptan
- * @version $Id$
  */
 @Component
 public class MeanVarianceServiceImpl implements MeanVarianceService {
 
-    private static ByteArrayConverter bac = new ByteArrayConverter();
-    private static Log log = LogFactory.getLog( MeanVarianceServiceImpl.class );
-
+    private static final Log log = LogFactory.getLog( MeanVarianceServiceImpl.class );
+    private static final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private MeanVarianceServiceHelper meanVarianceServiceHelper;
 
@@ -51,7 +49,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     /**
      * @param matrix on which mean variance relation is computed with
-     * @param mvr object, if null, a new object is created
+     * @param mvr    object, if null, a new object is created
      * @return MeanVarianceRelation object
      */
     private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix, MeanVarianceRelation mvr ) {
@@ -78,11 +76,6 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         return mvr;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.MeanVarianceService#create(ExpressionExperiment, boolean)
-     */
     @Override
     public MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute ) {
 
@@ -107,7 +100,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             }
 
             Collection<QuantitationType> qtList = expressionExperimentService.getPreferredQuantitationType( ee );
-            QuantitationType qt = null;
+            QuantitationType qt;
 
             if ( qtList.size() == 0 ) {
                 log.error( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );

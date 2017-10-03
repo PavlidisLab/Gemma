@@ -18,13 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -32,51 +25,49 @@ import org.apache.commons.configuration.io.FileHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.core.loader.expression.geo.model.GeoValues;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
+import java.util.*;
 
 /**
  * Has the unpleasant task of figuring out what the quantitation type should look like, given a description and name
  * string.
  *
  * @author Paul
- * @version $Id$
  * @see GeoValues for a list of Quantitation Type names which are skipped (so some of the below might not be needed)
  */
+@SuppressWarnings("WeakerAccess")
 public class QuantitationTypeParameterGuesser {
 
-    private static Log log = LogFactory.getLog( QuantitationTypeParameterGuesser.class.getName() );
+    private static final Log log = LogFactory.getLog( QuantitationTypeParameterGuesser.class.getName() );
 
-    private static Set<String> measuredSignalDescPatterns = new HashSet<>();
-    private static Set<String> derivedSignalDescPatterns = new HashSet<>();
-    private static Set<String> ratioDescPatterns = new HashSet<>();
-    private static Set<String> measuredSignalNamePatterns = new HashSet<>();
-    private static Set<String> derivedSignalNamePatterns = new HashSet<>();
+    private static final Set<String> measuredSignalDescPatterns = new HashSet<>();
+    private static final Set<String> derivedSignalDescPatterns = new HashSet<>();
+    private static final Set<String> ratioDescPatterns = new HashSet<>();
+    private static final Set<String> measuredSignalNamePatterns = new HashSet<>();
+    private static final Set<String> derivedSignalNamePatterns = new HashSet<>();
     // private static Set<String> ratioStringNamePatterns = new HashSet<String>();
 
-    private static Set<String> isNormalizedPatterns = new HashSet<>();
-    private static Set<String> isBackgroundSubtractedNamePatterns = new HashSet<>();
-    private static Set<String> isBackgroundSubtractedDescPatterns = new HashSet<>();
-    private static Set<String> isPreferredNamePatterns = new HashSet<>();
+    private static final Set<String> isNormalizedPatterns = new HashSet<>();
+    private static final Set<String> isBackgroundSubtractedNamePatterns = new HashSet<>();
+    private static final Set<String> isBackgroundSubtractedDescPatterns = new HashSet<>();
+    private static final Set<String> isPreferredNamePatterns = new HashSet<>();
     // private static Set<String> isPreferredDescPatterns = new HashSet<String>();
 
-    private static Map<ScaleType, Set<String>> scaleDescPatterns = new HashMap<>();
-    private static Map<StandardQuantitationType, Set<String>> typeDescPatterns = new HashMap<>();
-    private static Map<PrimitiveType, Set<String>> representationDescPatterns = new HashMap<>();
-    private static Map<Boolean, Set<String>> isBackgroundDescPatterns = new HashMap<>();
+    private static final Map<ScaleType, Set<String>> scaleDescPatterns = new HashMap<>();
+    private static final Map<StandardQuantitationType, Set<String>> typeDescPatterns = new HashMap<>();
+    private static final Map<PrimitiveType, Set<String>> representationDescPatterns = new HashMap<>();
+    private static final Map<Boolean, Set<String>> isBackgroundDescPatterns = new HashMap<>();
 
-    private static Map<ScaleType, Set<String>> scaleNamePatterns = new HashMap<>();
-    private static Map<StandardQuantitationType, Set<String>> typeNamePatterns = new HashMap<>();
-    private static Map<PrimitiveType, Set<String>> representationNamePatterns = new HashMap<>();
-    private static Map<Boolean, Set<String>> isBackgroundNamePatterns = new HashMap<>();
-    private static Map<Boolean, Set<String>> isRatioNamePatterns = new HashMap<>();
-    private static Map<Boolean, Set<String>> isRatioDescPatterns = new HashMap<>();
+    private static final Map<ScaleType, Set<String>> scaleNamePatterns = new HashMap<>();
+    private static final Map<StandardQuantitationType, Set<String>> typeNamePatterns = new HashMap<>();
+    private static final Map<PrimitiveType, Set<String>> representationNamePatterns = new HashMap<>();
+    private static final Map<Boolean, Set<String>> isBackgroundNamePatterns = new HashMap<>();
+    private static final Map<Boolean, Set<String>> isRatioNamePatterns = new HashMap<>();
+    private static final Map<Boolean, Set<String>> isRatioDescPatterns = new HashMap<>();
 
     static {
         CompositeConfiguration config = new CompositeConfiguration();
@@ -136,7 +127,7 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.put( ScaleType.LOGBASEUNKNOWN, new HashSet<String>() );
         scaleDescPatterns.put( ScaleType.UNSCALED, new HashSet<String>() );
         scaleDescPatterns.put( ScaleType.LN, new HashSet<String>() );
-        
+
         scaleNamePatterns.put( ScaleType.PERCENT, new HashSet<String>() );
         scaleNamePatterns.put( ScaleType.LN, new HashSet<String>() );
         scaleNamePatterns.put( ScaleType.LINEAR, new HashSet<String>() );
@@ -182,8 +173,8 @@ public class QuantitationTypeParameterGuesser {
         typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "p_value" );
         typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "d_p-value" );
         typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "ch[12](_bkd)?b?n? ?_(\\s)?sd" );
-        typeDescPatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add(
-                ".*(mean|median|background) standard deviation.*" );
+        typeDescPatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( ".*(mean|median|background) standard deviation.*" );
         typeDescPatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "standard deviation.*" );
         typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( ".*ch[12][_\\s]confidence.*" );
         typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( ".*ch[12][i][_\\s]sd" );
@@ -201,8 +192,8 @@ public class QuantitationTypeParameterGuesser {
 
         typeDescPatterns.get( StandardQuantitationType.CORRELATION ).add( ".*correlation.*" );
 
-        typeNamePatterns.get( StandardQuantitationType.COORDINATE ).add(
-                ".*(array_row|array_column|top|left|right|bot).*" );
+        typeNamePatterns.get( StandardQuantitationType.COORDINATE )
+                .add( ".*(array_row|array_column|top|left|right|bot).*" );
         typeNamePatterns.get( StandardQuantitationType.COORDINATE )
                 .add( "(x_coord|y_coord|x_location|y_location|x|y)" );
         typeNamePatterns.get( StandardQuantitationType.COORDINATE ).add( "(row|column)" );
@@ -213,8 +204,8 @@ public class QuantitationTypeParameterGuesser {
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "flags?" ); // FLAGS are now skipped
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "(m|p)m[_\\s]excess" );
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "negative" );
-        typeDescPatterns.get( StandardQuantitationType.OTHER ).add(
-                "number of pixels used to calculate a feature's intensity" ); // special case...
+        typeDescPatterns.get( StandardQuantitationType.OTHER )
+                .add( "number of pixels used to calculate a feature's intensity" ); // special case...
 
         representationDescPatterns.put( PrimitiveType.DOUBLE, new HashSet<String>() );
         representationDescPatterns.put( PrimitiveType.INT, new HashSet<String>() );
@@ -237,8 +228,8 @@ public class QuantitationTypeParameterGuesser {
         representationNamePatterns.get( PrimitiveType.INT ).add( "pairs[_\\s]in[_\\s]?avg" );
         representationDescPatterns.get( PrimitiveType.INT ).add( "area" );
         representationDescPatterns.get( PrimitiveType.INT ).add( "b[\\s_]pixels" );
-        representationDescPatterns.get( PrimitiveType.INT ).add(
-                ".*(array_row|array_column|top|left(?!\\safter)|right|bot).*" );
+        representationDescPatterns.get( PrimitiveType.INT )
+                .add( ".*(array_row|array_column|top|left(?!\\safter)|right|bot).*" );
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*(x_coord|y_coord|x_location|y_location).*" );
         representationNamePatterns.get( PrimitiveType.STRING ).add( "abs([ _])?call" );
         representationNamePatterns.get( PrimitiveType.STRING ).add( "flag(s)?" );
@@ -263,8 +254,7 @@ public class QuantitationTypeParameterGuesser {
         isRatioDescPatterns.get( Boolean.TRUE ).add( ".*percent(age)?.*" );
 
         isBackgroundNamePatterns.get( Boolean.TRUE ).add( "ch[12]b.*" );
-        isBackgroundDescPatterns
-                .get( Boolean.TRUE )
+        isBackgroundDescPatterns.get( Boolean.TRUE )
                 .add( ".*(?<!subtracted\\s(by\\s)?)(?<!over the\\s)((pixel|feature)\\s)?(background(\\s|\\sintensity|\\ssignal)?)(?!subtracted).*" );
 
         isNormalizedPatterns.add( ".*(?<!un)normalized.*" );
@@ -305,9 +295,9 @@ public class QuantitationTypeParameterGuesser {
     /**
      * Attempt to fill in the details of the quantitation type.
      *
-     * @param qt QuantitationType to fill in details for.
-     * @param namelc of the quantitation type from the GEO sample column
-     * @param descriptionlc of the quantitation type from the GEO sample column
+     * @param qt           QuantitationType to fill in details for.
+     * @param name         of the quantitation type from the GEO sample column
+     * @param description  of the quantitation type from the GEO sample column
      * @param exampleValue to help conversion test whether the parameters match.
      */
     public static void guessQuantitationTypeParameters( QuantitationType qt, String name, String description,
@@ -315,7 +305,7 @@ public class QuantitationTypeParameterGuesser {
 
         String namelc = name.toLowerCase();
 
-        String descriptionlc = null;
+        String descriptionlc;
 
         if ( description != null ) {
             descriptionlc = description.toLowerCase();
@@ -327,14 +317,14 @@ public class QuantitationTypeParameterGuesser {
          * Here are our default values.
          */
         GeneralType gType = GeneralType.QUANTITATIVE;
-        ScaleType sType = ScaleType.LINEAR;
-        StandardQuantitationType qType = StandardQuantitationType.OTHER;
-        Boolean isBackground = Boolean.FALSE;
-        PrimitiveType rType = PrimitiveType.DOUBLE;
-        Boolean isBackgroundSubtracted = Boolean.FALSE;
+        ScaleType sType;
+        StandardQuantitationType qType;
+        Boolean isBackground;
+        PrimitiveType rType;
+        Boolean isBackgroundSubtracted;
         // Boolean isPreferred = Boolean.FALSE;
-        Boolean isNormalized = Boolean.FALSE;
-        Boolean isRatio = Boolean.FALSE;
+        Boolean isNormalized;
+        Boolean isRatio;
 
         sType = guessScaleType( namelc, descriptionlc );
         qType = guessType( namelc, descriptionlc );
@@ -354,8 +344,8 @@ public class QuantitationTypeParameterGuesser {
             rType = PrimitiveType.INT;
         }
 
-        if ( name.contains( "Probe ID" ) || descriptionlc.equalsIgnoreCase( "Probe Set ID" )
-                || name.equals( "experiment name" ) ) {
+        if ( name.contains( "Probe ID" ) || descriptionlc.equalsIgnoreCase( "Probe Set ID" ) || name
+                .equals( "experiment name" ) ) {
             /*
              * special case...not a quantitation type.
              */
@@ -370,31 +360,35 @@ public class QuantitationTypeParameterGuesser {
 
         qt.setGeneralType( gType );
 
-        if ( qt.getScale() == null ) qt.setScale( sType );
+        if ( qt.getScale() == null )
+            qt.setScale( sType );
 
-        if ( qt.getType() == null ) qt.setType( qType );
+        if ( qt.getType() == null )
+            qt.setType( qType );
 
-        if ( qt.getRepresentation() == null ) qt.setRepresentation( rType );
+        if ( qt.getRepresentation() == null )
+            qt.setRepresentation( rType );
 
-        if ( qt.getIsBackground() == null ) qt.setIsBackground( isBackground );
+        if ( qt.getIsBackground() == null )
+            qt.setIsBackground( isBackground );
 
-        if ( qt.getIsBackgroundSubtracted() == null ) qt.setIsBackgroundSubtracted( isBackgroundSubtracted );
+        if ( qt.getIsBackgroundSubtracted() == null )
+            qt.setIsBackgroundSubtracted( isBackgroundSubtracted );
 
-        if ( qt.getIsNormalized() == null ) qt.setIsNormalized( isNormalized );
+        if ( qt.getIsNormalized() == null )
+            qt.setIsNormalized( isNormalized );
 
-        if ( qt.getIsRatio() == null ) qt.setIsRatio( isRatio );
+        if ( qt.getIsRatio() == null )
+            qt.setIsRatio( isRatio );
 
-        if ( qt.getIsPreferred() == null ) qt.setIsPreferred( isPreferred( qt ) );
+        if ( qt.getIsPreferred() == null )
+            qt.setIsPreferred( isPreferred( qt ) );
 
-        if ( qt.getIsMaskedPreferred() == null ) qt.setIsMaskedPreferred( Boolean.FALSE );
+        if ( qt.getIsMaskedPreferred() == null )
+            qt.setIsMaskedPreferred( Boolean.FALSE );
 
     }
 
-    /**
-     * @param namelc
-     * @param descriptionlc
-     * @return
-     */
     protected static Boolean guessIsBackground( String name, String description ) {
         for ( Boolean type : isBackgroundDescPatterns.keySet() ) {
             for ( String patt : isBackgroundDescPatterns.get( type ) ) {
@@ -431,8 +425,8 @@ public class QuantitationTypeParameterGuesser {
             /*
              * Goofy special case of 'null' thanks to bad decision by GEO data submitters. See bug 1760
              */
-            if ( StringUtils.isNotBlank( exampleString ) && exampleString != null
-                    && !exampleString.equalsIgnoreCase( "null" ) ) {
+            if ( StringUtils.isNotBlank( exampleString ) && exampleString != null && !exampleString
+                    .equalsIgnoreCase( "null" ) ) {
 
                 try {
                     Double.parseDouble( exampleString );
@@ -449,33 +443,17 @@ public class QuantitationTypeParameterGuesser {
         }
 
         for ( PrimitiveType type : representationDescPatterns.keySet() ) {
-            for ( String patt : representationNamePatterns.get( type ) ) {
-                if ( name.matches( patt ) ) {
-                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
-                        continue; // cannot be double.
-                    }
-                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
-                        continue;
-                    }
-
-                    return type;
-                }
-            }
-            for ( String patt : representationDescPatterns.get( type ) ) {
-                if ( description.matches( patt ) ) {
-                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
-                        continue; // cannot be double.
-                    }
-                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
-                        continue;
-                    }
-                    return type;
-                }
-            }
-
+            PrimitiveType guessed;
+            guessed = checkType( type, name, couldBeDouble, couldBeInt );
+            if ( guessed != null )
+                return guessed;
+            guessed = checkType( type, description, couldBeDouble, couldBeInt );
+            if ( guessed != null )
+                return guessed;
         }
 
-        if ( !couldBeDouble ) return PrimitiveType.STRING;
+        if ( !couldBeDouble )
+            return PrimitiveType.STRING;
 
         return PrimitiveType.DOUBLE;
 
@@ -501,11 +479,6 @@ public class QuantitationTypeParameterGuesser {
         return ScaleType.LINEAR; // default
     }
 
-    /**
-     * @param name
-     * @param description
-     * @return
-     */
     protected static StandardQuantitationType guessType( String name, String description ) {
         for ( StandardQuantitationType type : typeDescPatterns.keySet() ) {
 
@@ -540,11 +513,6 @@ public class QuantitationTypeParameterGuesser {
 
     }
 
-    /**
-     * @param name
-     * @param description
-     * @return
-     */
     protected static boolean isBackgroundSubtracted( String name, String description ) {
         for ( String patt : isBackgroundSubtractedNamePatterns ) {
             log.debug( name + " test " + patt );
@@ -563,11 +531,6 @@ public class QuantitationTypeParameterGuesser {
         return false;
     }
 
-    /**
-     * @param name
-     * @param description
-     * @return
-     */
     protected static boolean isNormalized( String name, String description ) {
         for ( String patt : isNormalizedPatterns ) {
             if ( name.matches( patt ) ) {
@@ -587,8 +550,8 @@ public class QuantitationTypeParameterGuesser {
     /**
      * Determine if a quantitation type is 'preferred'.
      *
-     * @param qt
-     * @return
+     * @param qt QT
+     * @return is preferred
      */
     protected static boolean isPreferred( QuantitationType qt ) {
         assert qt != null;
@@ -610,7 +573,8 @@ public class QuantitationTypeParameterGuesser {
 
     protected static boolean isRatio( String name, String description ) {
 
-        if ( !maybeRatio( name ) ) return false;
+        if ( !maybeRatio( name ) )
+            return false;
 
         for ( Boolean type : isRatioNamePatterns.keySet() ) {
             for ( String patt : isRatioNamePatterns.get( type ) ) {
@@ -630,11 +594,6 @@ public class QuantitationTypeParameterGuesser {
         return false;
     }
 
-    /**
-     * @param namelc
-     * @param descriptionlc
-     * @return
-     */
     protected static boolean maybeBackground( String namelc, String descriptionlc ) {
         if ( descriptionlc.contains( "background over the background" ) ) {
             return false; // definitely not.
@@ -659,10 +618,7 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static boolean maybeDerivedSignal( String name ) {
-        if ( name.matches( "(pix_)?rat(io)?.*" ) ) {
-            return false;
-        }
-        return true;
+        return !name.matches( "(pix_)?rat(io)?.*" );
     }
 
     protected static boolean maybeMeasuredSignal( String name ) {
@@ -677,17 +633,33 @@ public class QuantitationTypeParameterGuesser {
             return false;
         }
 
-        if ( name.matches( "detection" ) ) return false;
+        if ( name.matches( "detection" ) )
+            return false;
 
-        if ( name.matches( "CHPDetection" ) ) return false;
+        //noinspection RedundantIfStatement // Better for readability
+        if ( name.matches( "CHPDetection" ) )
+            return false;
 
         return true;
     }
 
     protected static boolean maybeRatio( String name ) {
-        if ( name.matches( "(p|m)m[\\s_]excess" ) ) {
-            return false;
+        return !name.matches( "(p|m)m[\\s_]excess" );
+    }
+
+    private static PrimitiveType checkType( PrimitiveType type, String value, boolean couldBeDouble,
+            boolean couldBeInt ) {
+        for ( String patt : representationDescPatterns.get( type ) ) {
+            if ( value.matches( patt ) ) {
+                if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
+                    continue; // cannot be double.
+                }
+                if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
+                    continue;
+                }
+                return type;
+            }
         }
-        return true;
+        return null;
     }
 }

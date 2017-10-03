@@ -14,21 +14,12 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -39,14 +30,19 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * Test based on GSE19480, see bug 3177
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
@@ -73,9 +69,6 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
-    /**
-     * @param analysis
-     */
     public void checkResults( DifferentialExpressionAnalysis analysis ) {
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 
@@ -113,8 +106,8 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     @Before
     public void setup() throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( FileTools
-                .resourceToPath( "/data/analysis/expression" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/expression" ) ) );
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE19420", false, true, false, false );
@@ -145,15 +138,12 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void test() throws Exception {
         ee = expressionExperimentService.thawLite( ee );
 
-        AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
-                null, true );
+        AnalysisType aa = analysisService
+                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION, aa );
 

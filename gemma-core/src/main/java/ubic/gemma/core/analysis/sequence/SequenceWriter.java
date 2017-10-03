@@ -18,6 +18,11 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -25,39 +30,30 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.genome.biosequence.BioSequence;
-
 /**
  * Tools for writing biosequences to files so they can be analyzed by external tools, and then read back into Gemma.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class SequenceWriter {
-    private static Log log = LogFactory.getLog( SequenceWriter.class.getName() );
-
     /**
      * Spaces in the sequence name will cause problems when converting back from some formats (e.g. PSL), so they are
      * replaced.
      */
     public static final String SPACE_REPLACEMENT = "_____";
-
     /**
      * Required for some applications (read: Repeatmasker) that can't handle long identifiers.
      */
     private static final int MAX_SEQ_IDENTIFIER_LENGTH = 50;
+    private static Log log = LogFactory.getLog( SequenceWriter.class.getName() );
 
     /**
      * Write a collection of sequences in FASTA format
-     * 
-     * @param sequences
-     * @param outputFile
+     *
+     * @param sequences  sequences
+     * @param outputFile file
      * @return number of sequences written, excluding blanks and duplicates.
-     * @throws IOException
+     * @throws IOException io problems
      */
     public static int writeSequencesToFile( Collection<BioSequence> sequences, File outputFile ) throws IOException {
         try (BufferedWriter out = new BufferedWriter( new FileWriter( outputFile ) );) {
@@ -87,8 +83,9 @@ public class SequenceWriter {
                 }
             }
 
-            log.info( "Wrote " + count + " sequences to " + outputFile
-                    + ( repeats > 0 ? " ( " + repeats + " repeated items were skipped)." : "" ) );
+            log.info( "Wrote " + count + " sequences to " + outputFile + ( repeats > 0 ?
+                    " ( " + repeats + " repeated items were skipped)." :
+                    "" ) );
             return count;
         }
     }
@@ -96,9 +93,9 @@ public class SequenceWriter {
     /**
      * Modify the identifier for the purposes of using in temporary Fasta files. WARNING There is a faint possibility
      * that this could cause problems in identifying the sequences later.
-     * 
-     * @param b
-     * @return
+     *
+     * @param b b
+     * @return string
      */
     public static String getIdentifier( BioSequence b ) {
         String identifier = b.getName();

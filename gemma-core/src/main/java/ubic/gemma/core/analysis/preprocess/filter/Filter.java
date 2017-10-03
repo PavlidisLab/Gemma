@@ -22,16 +22,9 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public interface Filter<T extends ExpressionDataMatrix<Double>> {
 
-    /**
-     * Remove some rows from the input matrix, return the revised matrix.
-     * 
-     * @param dataMatrix
-     * @return
-     */
-    public T filter( T dataMatrix );
+    T filter( T dataMatrix );
 
 }

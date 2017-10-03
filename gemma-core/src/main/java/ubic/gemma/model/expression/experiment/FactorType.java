@@ -5,32 +5,51 @@
 // $Id$
 package ubic.gemma.model.expression.experiment;
 
-/**
- * 
- */
+import java.util.*;
+
 public class FactorType implements java.io.Serializable, Comparable<FactorType> {
+    public static final FactorType CONTINUOUS = new FactorType( "continuous" );
+    public static final FactorType CATEGORICAL = new FactorType( "categorical" );
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 94783304160127784L;
+    private static final Map<String, FactorType> values = new LinkedHashMap<String, FactorType>( 2, 1 );
+    private static List<String> literals = new ArrayList<String>( 2 );
+    private static List<String> names = new ArrayList<String>( 2 );
+    private static List<FactorType> valueList = new ArrayList<FactorType>( 2 );
+
+    static {
+        values.put( CONTINUOUS.value, CONTINUOUS );
+        valueList.add( CONTINUOUS );
+        literals.add( CONTINUOUS.value );
+        names.add( "CONTINUOUS" );
+        values.put( CATEGORICAL.value, CATEGORICAL );
+        valueList.add( CATEGORICAL );
+        literals.add( CATEGORICAL.value );
+        names.add( "CATEGORICAL" );
+        valueList = Collections.unmodifiableList( valueList );
+        literals = Collections.unmodifiableList( literals );
+        names = Collections.unmodifiableList( names );
+    }
+
+    private String value;
 
     /**
-     * 
+     * The default constructor allowing super classes to access it.
      */
-    public static final FactorType CONTINUOUS = new FactorType( "continuous" );
+    protected FactorType() {
+    }
 
-    /**
-     * 
-     */
-    public static final FactorType CATEGORICAL = new FactorType( "categorical" );
-
-    private static final java.util.Map<String, FactorType> values = new java.util.LinkedHashMap<String, FactorType>( 2,
-            1 );
+    private FactorType( String value ) {
+        this.value = value;
+    }
 
     /**
      * Creates an instance of FactorType from <code>value</code>.
-     * 
+     *
      * @param value the value to create the FactorType from.
+     * @return factor type
      */
     public static FactorType fromString( String value ) {
         final FactorType typeValue = values.get( value );
@@ -47,65 +66,30 @@ public class FactorType implements java.io.Serializable, Comparable<FactorType> 
 
     /**
      * Returns an unmodifiable list containing the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
-    public static java.util.List<String> literals() {
+    public static List<String> literals() {
         return literals;
     }
 
     /**
      * Returns an unmodifiable list containing the names of the literals that are known by this enumeration.
-     * 
+     *
      * @return A List containing the actual names of the literals defined by this enumeration, this list can not be
-     *         modified.
+     * modified.
      */
-    public static java.util.List<String> names() {
+    public static List<String> names() {
         return names;
     }
 
     /**
      * Returns an unmodifiable list containing the actual enumeration instance values.
-     * 
+     *
      * @return A List containing the actual enumeration instance values.
      */
-    public static java.util.List<FactorType> values() {
+    public static List<FactorType> values() {
         return valueList;
-    }
-
-    private String value;
-
-    private static java.util.List<String> literals = new java.util.ArrayList<String>( 2 );
-
-    private static java.util.List<String> names = new java.util.ArrayList<String>( 2 );
-
-    private static java.util.List<FactorType> valueList = new java.util.ArrayList<FactorType>( 2 );
-
-    /**
-     * Initializes the values.
-     */
-    static {
-        values.put( CONTINUOUS.value, CONTINUOUS );
-        valueList.add( CONTINUOUS );
-        literals.add( CONTINUOUS.value );
-        names.add( "CONTINUOUS" );
-        values.put( CATEGORICAL.value, CATEGORICAL );
-        valueList.add( CATEGORICAL );
-        literals.add( CATEGORICAL.value );
-        names.add( "CATEGORICAL" );
-        valueList = java.util.Collections.unmodifiableList( valueList );
-        literals = java.util.Collections.unmodifiableList( literals );
-        names = java.util.Collections.unmodifiableList( names );
-    }
-
-    /**
-     * The default constructor allowing super classes to access it.
-     */
-    protected FactorType() {
-    }
-
-    private FactorType( String value ) {
-        this.value = value;
     }
 
     /**
@@ -121,13 +105,13 @@ public class FactorType implements java.io.Serializable, Comparable<FactorType> 
      */
     @Override
     public boolean equals( Object object ) {
-        return ( this == object )
-                || ( object instanceof FactorType && ( ( FactorType ) object ).getValue().equals( this.getValue() ) );
+        return ( this == object ) || ( object instanceof FactorType && ( ( FactorType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**
      * Gets the underlying value of this type safe enumeration.
-     * 
+     *
      * @return the underlying value.
      */
     public String getValue() {
@@ -153,15 +137,15 @@ public class FactorType implements java.io.Serializable, Comparable<FactorType> 
     /**
      * This method allows the deserialization of an instance of this enumeration type to return the actual instance that
      * will be the singleton for the JVM in which the current thread is running.
-     * <p>
      * Doing this will allow users to safely use the equality operator <code>==</code> for enumerations because a
      * regular deserialized object is always a newly constructed instance and will therefore never be an existing
      * reference; it is this <code>readResolve()</code> method which will intercept the deserialization process in order
      * to return the proper singleton reference.
-     * <p>
-     * This method is documented here: <a
-     * href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
+     * This method is documented here:
+     * <a href="http://java.sun.com/j2se/1.3/docs/guide/serialization/spec/input.doc6.html">Java Object Serialization
      * Specification</a>
+     *
+     * @return object
      */
     private Object readResolve() {
         return FactorType.fromString( this.value );

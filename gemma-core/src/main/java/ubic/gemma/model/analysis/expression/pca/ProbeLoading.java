@@ -21,58 +21,27 @@ package ubic.gemma.model.analysis.expression.pca;
 /**
  * Only stored for some of the probes (e.g. the top ones)
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public abstract class ProbeLoading implements java.io.Serializable {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.analysis.expression.pca.ProbeLoading}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.pca.ProbeLoading}.
-         */
-        public static ubic.gemma.model.analysis.expression.pca.ProbeLoading newInstance() {
-            return new ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.analysis.expression.pca.ProbeLoading}, taking all
-         * possible properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.analysis.expression.pca.ProbeLoading newInstance( Integer componentNumber,
-                Double loading, Integer loadingRank, ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
-            final ubic.gemma.model.analysis.expression.pca.ProbeLoading entity = new ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl();
-            entity.setComponentNumber( componentNumber );
-            entity.setLoading( loading );
-            entity.setLoadingRank( loadingRank );
-            entity.setProbe( probe );
-            return entity;
-        }
-    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -2328381846024383305L;
     private Integer componentNumber;
-
     private Double loading;
-
     private Integer loadingRank;
-
     private Long id;
-
     private ubic.gemma.model.expression.designElement.CompositeSequence probe;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public ProbeLoading() {
     }
 
     /**
-     * Returns <code>true</code> if the argument is an ProbeLoading instance and all identifiers for this entity equal
+     * @return <code>true</code> if the argument is an ProbeLoading instance and all identifiers for this entity equal
      * the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
     @Override
@@ -91,42 +60,56 @@ public abstract class ProbeLoading implements java.io.Serializable {
     }
 
     /**
-     * Which component this loading is for (the first component is number 1)
+     * @return Which component this loading is for (the first component is number 1)
      */
     public Integer getComponentNumber() {
         return this.componentNumber;
     }
 
-    /**
-     * 
-     */
+    public void setComponentNumber( Integer componentNumber ) {
+        this.componentNumber = componentNumber;
+    }
+
     public Long getId() {
         return this.id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     /**
-     * The raw loading value from the SVD. This corresponds to the values in the left singular vector.
+     * @return The raw loading value from the SVD. This corresponds to the values in the left singular vector.
      */
     public Double getLoading() {
         return this.loading;
     }
 
+    public void setLoading( Double loading ) {
+        this.loading = loading;
+    }
+
     /**
-     * The rank of this loading among the ones which were stored for the component
+     * @return The rank of this loading among the ones which were stored for the component
      */
     public Integer getLoadingRank() {
         return this.loadingRank;
     }
 
-    /**
-     * 
-     */
+    public void setLoadingRank( Integer loadingRank ) {
+        this.loadingRank = loadingRank;
+    }
+
     public ubic.gemma.model.expression.designElement.CompositeSequence getProbe() {
         return this.probe;
     }
 
+    public void setProbe( ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
+        this.probe = probe;
+    }
+
     /**
-     * Returns a hash code based on this entity's identifiers.
+     * @return Returns a hash code based on this entity's identifiers.
      */
     @Override
     public int hashCode() {
@@ -136,24 +119,22 @@ public abstract class ProbeLoading implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setComponentNumber( Integer componentNumber ) {
-        this.componentNumber = componentNumber;
-    }
+    public static final class Factory {
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+        public static ubic.gemma.model.analysis.expression.pca.ProbeLoading newInstance() {
+            return new ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl();
+        }
 
-    public void setLoading( Double loading ) {
-        this.loading = loading;
-    }
-
-    public void setLoadingRank( Integer loadingRank ) {
-        this.loadingRank = loadingRank;
-    }
-
-    public void setProbe( ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
-        this.probe = probe;
+        public static ubic.gemma.model.analysis.expression.pca.ProbeLoading newInstance( Integer componentNumber,
+                Double loading, Integer loadingRank,
+                ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
+            final ubic.gemma.model.analysis.expression.pca.ProbeLoading entity = new ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl();
+            entity.setComponentNumber( componentNumber );
+            entity.setLoading( loading );
+            entity.setLoadingRank( loadingRank );
+            entity.setProbe( probe );
+            return entity;
+        }
     }
 
 }

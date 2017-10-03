@@ -22,49 +22,30 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 /**
  * Yes, this is used by the ArrayDesignController, but should be phased out.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignHtmlUtil {
 
     /**
      * Generate a pretty HTML table with the array design stats summary, used for AJAX version.
-     * 
-     * @param object
-     * @return
+     *
+     * @param object object
+     * @return string
      */
     public static String getSummaryHtml( ArrayDesignValueObject object ) {
         return "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td><tr>  "
                 + "<td colspan='2' <strong style='font-size:smaller'>Sequence analysis details</strong></td> "
-                + " </tr></tr>" + "<tr><td>Elements</td><td align=\"right\" >"
-                + object.getDesignElementCount()
-                + "</td></tr>"
-                + "<tr><td title=\"Number of elements with sequences\">"
-                + "With seq"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbeSequences()
-                + "</td></tr>"
+                + " </tr></tr>" + "<tr><td>Elements</td><td align=\"right\" >" + object.getDesignElementCount()
+                + "</td></tr>" + "<tr><td title=\"Number of elements with sequences\">" + "With seq"
+                + "</td><td align=\"right\" >" + object.getNumProbeSequences() + "</td></tr>"
                 + "<tr><td title=\"Number of elements with at least one genome alignment (if available)\">"
-                + "With align"
-                + "</td>"
-                + "<td align=\"right\" >"
-                + object.getNumProbeAlignments()
-                + "</td></tr>"
-                + "<tr><td title=\"Number of elements mapped to genes\">"
-                + "Mapped to genes"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToGenes()
-                + "</td></tr>"
-                + "<tr><td title=\"Number of unique genes represented on the platform\" >"
-                + "Unique genes"
-                + "</td><td align=\"right\" >"
-                + object.getNumGenes()
-                + "</td></tr>"
-                + "<tr><td colspan=2 align='center' class='small'>"
-                + "(as of "
-                + object.getDateCached()
-                + ")"
+                + "With align" + "</td>" + "<td align=\"right\" >" + object.getNumProbeAlignments() + "</td></tr>"
+                + "<tr><td title=\"Number of elements mapped to genes\">" + "Mapped to genes"
+                + "</td><td align=\"right\" >" + object.getNumProbesToGenes() + "</td></tr>"
+                + "<tr><td title=\"Number of unique genes represented on the platform\" >" + "Unique genes"
+                + "</td><td align=\"right\" >" + object.getNumGenes() + "</td></tr>"
+                + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + object.getDateCached() + ")"
                 + "</td></tr>" + "</table>";
     }
 }

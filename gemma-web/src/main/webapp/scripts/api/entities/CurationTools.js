@@ -11,6 +11,7 @@ Ext.namespace('Gemma');
 Gemma.CurationTools = Ext.extend(Ext.Panel, {
     curatable: null, // for curation details info retrieval
     auditable: null, // to be passed to auditController when creating new events
+    entityType: "",
 
     border: false,
     defaultType: 'box',
@@ -40,6 +41,9 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
     initComponent: function () {
         Gemma.CurationTools.superclass.initComponent.call(this);
 
+        this.entityType = this.isExperiment() ? "Experiment" : "Platform";
+
+        this.add(this.createHeaderInfoPanel());
         this.add(this.createCurationPanel());
         this.add(this.createTroublePanel());
     },
@@ -80,6 +84,31 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         panelTrouble.addButton(changeTroubleButton);
 
         return panelTrouble;
+    },
+
+    /**
+     * Creates an Ext.Panel with general curation info.
+     * @returns {Ext.Panel} panel that can be added to the page
+     */
+    createHeaderInfoPanel: function () {
+        var panelCuration = new Ext.Panel({
+            layout: 'hbox',
+            buttonAlign: 'left',
+            defaults: {
+                width: '100%',
+                border: false,
+                padding: 0
+            }
+        });
+
+        // Status and input elements
+        panelCuration.add({
+            html: '<div class="v-padded">' +
+            '<span class="bold width170">' + this.entityType + ' last updated: </span>' + Gemma.Renderers.dateTimeRenderer(this.curatable.lastUpdated) +
+            '</div>'
+        });
+
+        return panelCuration;
     },
 
     /**
@@ -167,15 +196,14 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
     getTroubleStatusHtml: function () {
         // Base status
         // This is messy because we have to detect whether we are dealing with ArrayDesign or ExpressionExperiment
-        // Changing th model is undesirable in thi case, since this is the only place in the UI we actually care
+        // Changing th model is undesirable in this case, since this is the only place in the UI we actually care
         // whether the trouble comes from the EE itself, or its platform.
-        var type = this.curatable.actuallyTroubled === undefined ? 'Platform' : 'Experiment';
-        var str = (this.curatable.actuallyTroubled !== undefined && this.curatable.actuallyTroubled === true)
-        || (this.curatable.actuallyTroubled === undefined && this.curatable.troubled)
-            ? '<span class="red width190"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>' + type + ' Troubled</span>'
-            : '<span class="green width190"><i class="fa fa-check-circle fa-lg fa-fw"></i>' + type + ' Not Troubled</span>';
+        var str = (this.isExperiment() && this.curatable.actuallyTroubled === true)
+        || (!this.isExperiment() && this.curatable.troubled)
+            ? '<span class="red width190"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>' + this.entityType + ' Troubled</span>'
+            : '<span class="green width190"><i class="fa fa-check-circle fa-lg fa-fw"></i>' + this.entityType + ' Not Troubled</span>';
 
-        if (this.curatable.actuallyTroubled !== undefined
+        if (this.isExperiment()
             && this.curatable.platformTroubled) {
             str += '<span class="gray-red">' +
                 ' <i class="fa fa-exclamation-triangle"></i> Platform troubled ' +
@@ -265,7 +293,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         // Check for information change
         // Only update note if different from stored value, and it is non-empty, unless it has been non-empty before are we are clearing it
-        if ( (note && note !== this.curatable.curationNote) || (this.curatable.curationNote && note !== this.curatable.curationNote)  ) {
+        if ((note && note !== this.curatable.curationNote) || (this.curatable.curationNote && note !== this.curatable.curationNote)) {
             AuditController.addAuditEvent(this.auditable, "CurationNoteUpdateEvent", note, null, {
                 callback: noteCB
             });
@@ -301,6 +329,14 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         AuditController.addAuditEvent(this.auditable, obj.type, obj.comment, obj.details, {
             callback: cb
         });
+    },
+
+    /**
+     * @returns {boolean} true if the managed curatable object is an experiment, false otherwise (meaning it is likely
+     * an array design).
+     */
+    isExperiment: function () {
+        return this.curatable.actuallyTroubled !== undefined;
     }
 
 });

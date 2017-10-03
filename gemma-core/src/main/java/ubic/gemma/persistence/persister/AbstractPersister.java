@@ -18,11 +18,6 @@
  */
 package ubic.gemma.persistence.persister;
 
-import java.lang.reflect.InvocationTargetException;
-import java.text.NumberFormat;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -33,47 +28,44 @@ import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
-
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Settings;
+
+import java.lang.reflect.InvocationTargetException;
+import java.text.NumberFormat;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Base class for persisters.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class AbstractPersister extends HibernateDaoSupport implements Persister {
-
-    /**
-     * How many times per collection to update us (at most)
-     */
-    private static final int COLLECTION_INFO_FREQUENCY = 10;
-
-    protected static Log log = LogFactory.getLog( AbstractPersister.class.getName() );
-
-    /**
-     * This should match the JDBC batch size for Hibernate.
-     */
-    protected static final int SESSION_BATCH_SIZE = Settings.getInt( "gemma.hibernate.jdbc_batch_size" );
 
     /**
      * Collections smaller than this don't result in logging about progress.
      */
     public static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.persister.Persister#isTransient(java.lang.Object)
+    /**
+     * This should match the JDBC batch size for Hibernate.
      */
+    protected static final int SESSION_BATCH_SIZE = Settings.getInt( "gemma.hibernate.jdbc_batch_size" );
+    protected static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
+    /**
+     * How many times per collection to update us (at most)
+     */
+    private static final int COLLECTION_INFO_FREQUENCY = 10;
+
     @Override
     @Transactional
     public boolean isTransient( Object entity ) {
-        if ( entity == null ) return true;
+        if ( entity == null )
+            return true;
         Long id = EntityUtils.getId( entity );
 
-        if ( id == null ) return true; // assume.
+        if ( id == null )
+            return true; // assume.
 
         /*
          * We normally won't get past this point; the case where it might is when the transaction has been rolled back
@@ -126,15 +118,13 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
 
     }
 
-    /*
-     * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
-     */
     @Override
     @Transactional
     public Collection<?> persist( Collection<?> col ) {
-        if ( col == null || col.size() == 0 ) return col;
+        if ( col == null || col.size() == 0 )
+            return col;
 
-        Collection<Object> result = new HashSet<Object>();
+        Collection<Object> result = new HashSet<>();
         try {
             int count = 0;
             log.debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
@@ -160,27 +150,18 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         return result;
     }
 
-    /**
-     * @param startTime
-     * @return
-     */
     protected double elapsedMinutes( long startTime ) {
-        return Double.parseDouble( NumberFormat.getNumberInstance().format(
-                0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) );
+        return Double.parseDouble(
+                NumberFormat.getNumberInstance().format( 0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) );
     }
 
-    /**
-     * @param col
-     * @param count
-     * @param numElementsPerUpdate
-     * @return
-     */
     protected int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
         assert col != null && col.size() > 0;
-        if ( increment ) ++count;
+        if ( increment )
+            ++count;
 
-        if ( col.size() >= MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS && log.isInfoEnabled()
-                && ( !increment || count % numElementsPerUpdate == 0 ) ) {
+        if ( col.size() >= MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS && log.isInfoEnabled() && ( !increment
+                || count % numElementsPerUpdate == 0 ) ) {
             String collectionItemsClassName = col.iterator().next().getClass().getName();
             log.info( "Processed " + count + "/" + col.size() + " " + collectionItemsClassName + "'s" );
         }
@@ -188,80 +169,64 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     }
 
     protected int numElementsPerUpdate( Collection<?> col ) {
-        if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY ) return Integer.MAX_VALUE;
+        if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY )
+            return Integer.MAX_VALUE;
         return Math.max( ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY ), 20 );
     }
 
-    /**
-     * Persist the elements in a collection.
-     * <p>
-     * This method is necessary because in-place persisting does not work.
-     * 
-     * @param collection
-     * @return
-     */
     protected void persistCollectionElements( Collection<?> collection ) {
-        if ( collection == null ) return;
-        if ( collection.size() == 0 ) return;
+        if ( collection == null )
+            return;
+        if ( collection.size() == 0 )
+            return;
 
         try {
             StopWatch t = new StopWatch();
             t.start();
             int c = 0;
             for ( Object object : collection ) {
-                if ( !isTransient( object ) ) continue;
+                if ( !isTransient( object ) )
+                    continue;
                 Object persistedObj = persist( object );
 
                 c++;
 
                 if ( t.getTime() > 5000 ) {
-                    log.info( "Persist " + c + " elements: " + t.getTime() + "ms since last check (last class="
-                            + object.getClass().getSimpleName() + ")" );
+                    log.info( "Persist " + c + " elements: " + t.getTime() + "ms since last check (last class=" + object
+                            .getClass().getSimpleName() + ")" );
                     c = 0;
                     t.reset();
                     t.start();
                 }
 
-                if ( persistedObj == null ) continue;
+                if ( persistedObj == null )
+                    continue;
                 BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
                 assert BeanUtils.getSimpleProperty( object, "id" ) != null;
 
             }
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
-            throw new RuntimeException( e );
-        } catch ( NoSuchMethodException e ) {
+        } catch ( IllegalAccessException | NoSuchMethodException | InvocationTargetException e ) {
             throw new RuntimeException( e );
         }
 
         // collection = persistedCollection;
     }
 
-    /**
-     * Persist or update the elements in a collection.
-     * <p>
-     * This method is necessary because in-place persisting does not work.
-     * 
-     * @param collection
-     * @return
-     */
     protected void persistOrUpdateCollectionElements( Collection<?> collection ) {
-        if ( collection == null ) return;
-        if ( collection.size() == 0 ) return;
+        if ( collection == null )
+            return;
+        if ( collection.size() == 0 )
+            return;
 
         try {
             for ( Object object : collection ) {
                 Object persistedObj = persistOrUpdate( object );
-                if ( persistedObj == null ) continue;
+                if ( persistedObj == null )
+                    continue;
                 BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
                 assert BeanUtils.getSimpleProperty( object, "id" ) != null;
             }
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
-            throw new RuntimeException( e );
-        } catch ( NoSuchMethodException e ) {
+        } catch ( IllegalAccessException | NoSuchMethodException | InvocationTargetException e ) {
             throw new RuntimeException( e );
         }
     }

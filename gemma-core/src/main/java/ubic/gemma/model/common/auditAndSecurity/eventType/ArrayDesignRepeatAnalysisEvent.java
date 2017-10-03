@@ -18,26 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-/**
- * 
- */
-public class ArrayDesignRepeatAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent();
-        }
-
-    }
+public class ArrayDesignRepeatAnalysisEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,10 +28,18 @@ public class ArrayDesignRepeatAnalysisEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ArrayDesignRepeatAnalysisEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent();
+        }
+
     }
 
 }

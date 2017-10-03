@@ -14,24 +14,18 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import java.util.Date;
-import java.util.Map;
-
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Date;
+import java.util.Map;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface BatchInfoPopulationHelperService {
 
-    /**
-     * @param ee
-     * @param dates
-     * @return
-     */
-    public ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates );
+    ExperimentalFactor createBatchFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates );
 
 }

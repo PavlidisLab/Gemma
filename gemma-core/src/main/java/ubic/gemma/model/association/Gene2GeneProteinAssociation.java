@@ -19,18 +19,38 @@
 package ubic.gemma.model.association;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 
-/**
- * 
- */
 public abstract class Gene2GeneProteinAssociation extends Gene2GeneAssociation {
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 8142881537025422087L;
+    final private Double confidenceScore = null;
+    final private byte[] evidenceVector = null;
+    final private DatabaseEntry databaseEntry = null;
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.association.Gene2GeneProteinAssociation}.
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
      */
+    public Gene2GeneProteinAssociation() {
+    }
+
+    public Double getConfidenceScore() {
+        return this.confidenceScore;
+    }
+
+    public DatabaseEntry getDatabaseEntry() {
+        return this.databaseEntry;
+    }
+
+    public byte[] getEvidenceVector() {
+        return this.evidenceVector;
+    }
+
     public static final class Factory {
 
         public static Gene2GeneProteinAssociation newInstance( Gene firstGene, Gene secondGene,
@@ -50,45 +70,6 @@ public abstract class Gene2GeneProteinAssociation extends Gene2GeneAssociation {
             return entity;
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8142881537025422087L;
-    final private Double confidenceScore = null;
-
-    final private byte[] evidenceVector = null;
-
-    final private DatabaseEntry databaseEntry = null;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Gene2GeneProteinAssociation() {
-    }
-
-    /**
-     * 
-     */
-    public Double getConfidenceScore() {
-        return this.confidenceScore;
-    }
-
-    /**
-     * 
-     */
-    public DatabaseEntry getDatabaseEntry() {
-        return this.databaseEntry;
-    }
-
-    /**
-     * 
-     */
-    public byte[] getEvidenceVector() {
-        return this.evidenceVector;
     }
 
 }

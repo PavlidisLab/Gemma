@@ -62,7 +62,7 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     }
 
     /**
-     * Describes the nature of the link between (genetic or physiological variation in) the gene and the phenotype, such
+     * @return Describes the nature of the link between (genetic or physiological variation in) the gene and the phenotype, such
      * as "predisposes to" or "causes".
      */
     public Characteristic getAssociationType() {
@@ -82,7 +82,7 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     }
 
     /**
-     * An optional external identifiable source for the evidence, if it does not come from with the system. Used to flag
+     * @return An optional external identifiable source for the evidence, if it does not come from with the system. Used to flag
      * evidence that is imported from other phenotype databases, for example.
      */
     public DatabaseEntry getEvidenceSource() {
@@ -102,10 +102,8 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     }
 
     /**
-     * <p>
-     * If true, this association is a negative one: it indicates the evidence argues against an association between the
+     * @return If true, this association is a negative one: it indicates the evidence argues against an association between the
      * gene and the phenotype. The default value is false. Use of this field should follow curator guidelines.
-     * </p>
      */
     public Boolean getIsNegativeEvidence() {
         return this.isNegativeEvidence;
@@ -116,7 +114,7 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     }
 
     /**
-     * The phenotype this association is about. A phenotype is (basically) a term from a controlled vocabulary such as a
+     * @return The phenotype this association is about. A phenotype is (basically) a term from a controlled vocabulary such as a
      * disease.
      */
     public Collection<Characteristic> getPhenotypes() {
@@ -128,7 +126,7 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     }
 
     /**
-     * A score, either provided by the system or (often) imported from an external source. If this is populated, the
+     * @return A score, either provided by the system or (often) imported from an external source. If this is populated, the
      * scoreType should be populated.
      */
     public String getScore() {
@@ -140,9 +138,7 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     }
 
     /**
-     * <p>
-     * Describes the score associated with the evidence.
-     * </p>
+     * @return Describes the score associated with the evidence.
      */
     public QuantitationType getScoreType() {
         return this.scoreType;
@@ -153,7 +149,7 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
     }
 
     /**
-     * The relative strength of the evidence, where higher values are better. This strength may be based on human
+     * @return The relative strength of the evidence, where higher values are better. This strength may be based on human
      * curation could be from an outside source), automated criteria, or a combination of the two.
      */
     public Double getStrength() {

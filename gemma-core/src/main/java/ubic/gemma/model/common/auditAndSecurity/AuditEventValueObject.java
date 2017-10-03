@@ -128,9 +128,6 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
         this.performer = name;
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent#toString()
-     */
     @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();

@@ -19,13 +19,6 @@
 package ubic.gemma.web.controller.genome.gene;
 
 import gemma.gsec.SecurityService;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +27,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -43,13 +35,18 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.web.persistence.SessionListManager;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Exposes GeneSetServices methods over ajax. Some methods take and return collections to be compatible with Store
  * interfaces (which, as of May 2014, we do not use)
- * 
+ *
  * @author kelsey
- * @version $Id$
  */
+@SuppressWarnings("unused") // Used in front end
 @Controller
 @RequestMapping("/geneSet")
 public class GeneSetController {
@@ -66,8 +63,8 @@ public class GeneSetController {
     /**
      * AJAX adds the gene group to the session, used by SessionGeneGroupStore and SessionDatasetGroupStore sets the
      * groups taxon value and reference.
-     * 
-     * @param geneSetVo value object constructed on the client.
+     *
+     * @param geneSetVos        value object constructed on the client.
      * @param modificationBased whether the set was modified by the user
      * @return collection of added session groups (with updated reference.id etc)
      * @deprecated
@@ -89,10 +86,10 @@ public class GeneSetController {
     /**
      * * AJAX adds the gene group to the session, used by SessionGeneGroupStore and SessionDatasetGroupStore sets the
      * groups taxon value and reference.
-     * 
-     * @param gsvo
+     *
+     * @param gsvo              gsvo
      * @param modificationBased whether the set was modified by the user
-     * @return
+     * @return gene set vo
      */
     public SessionBoundGeneSetValueObject addSessionGroup( SessionBoundGeneSetValueObject gsvo,
             Boolean modificationBased ) {
@@ -104,13 +101,13 @@ public class GeneSetController {
 
     /**
      * AJAX adds the gene group to the session
-     * 
-     * @param geneSetVo value object constructed on the client.
+     *
+     * @param geneSetVos value object constructed on the client.
      * @return id of the new gene group
      */
     public Collection<GeneSetValueObject> addUserAndSessionGroups( Collection<GeneSetValueObject> geneSetVos ) {
 
-        Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
+        Collection<GeneSetValueObject> result = new HashSet<>();
 
         Collection<SessionBoundGeneSetValueObject> sessionResult = new HashSet<>();
 
@@ -133,9 +130,9 @@ public class GeneSetController {
 
     /**
      * AJAX returns a JSON string encoding whether the current user owns the group and whether the group is db-backed
-     * 
-     * @param s
-     * @return
+     *
+     * @param gsvo gsvo
+     * @return string
      */
     public String canCurrentUserEditGroup( GeneSetValueObject gsvo ) {
         boolean userCanEditGroup = false;
@@ -154,7 +151,7 @@ public class GeneSetController {
 
     /**
      * AJAX create an entities in the database based on the value objects passed in
-     * 
+     *
      * @param geneSetVos value objects constructed on the client.
      * @return value objects converted from the newly created entities
      */
@@ -175,18 +172,18 @@ public class GeneSetController {
 
     /**
      * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
-     * 
-     * @param geneId
+     *
+     * @param geneId gene id
      * @return collection of geneSetValueObject
      */
     public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
 
-        return findGeneSetsByGene( geneId );
+        return geneSetService.findGeneSetsByGene( geneId );
     }
 
     /**
-     * @param query string to match to a gene set.
-     * @param taxonId
+     * @param query   string to match to a gene set.
+     * @param taxonId taxon id
      * @return collection of GeneSetValueObject
      */
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
@@ -195,13 +192,14 @@ public class GeneSetController {
 
     /**
      * AJAX If the current user has access to given gene group, will return the gene value objects in the gene group
-     * 
-     * @param groupId
-     * @param limit if greater than zero, limit to how many genes are returned (for previews)
-     * @return
+     *
+     * @param groupId group id
+     * @param limit   if greater than zero, limit to how many genes are returned (for previews)
+     * @return gene vos
      */
     public Collection<GeneValueObject> getGenesInGroup( Long groupId, final Integer limit ) {
-        if ( groupId == null || groupId < 0 ) throw new IllegalArgumentException( "Must be a persistent gene group" );
+        if ( groupId == null || groupId < 0 )
+            throw new IllegalArgumentException( "Must be a persistent gene group" );
 
         // FIXME inefficient way to implement the limit
         Collection<GeneValueObject> genesInGroup = geneSetService.getGenesInGroup( new GeneSetValueObject( groupId ) );
@@ -221,21 +219,22 @@ public class GeneSetController {
 
     /**
      * AJAX
-     * 
-     * @param groupId
+     *
+     * @param groupId group id
      * @return ids of genes in the gene set.
      */
     public Collection<Long> getGeneIdsInGroup( Long groupId ) {
-        if ( groupId == null || groupId < 0 ) throw new IllegalArgumentException( "Must be a persistent gene group" );
+        if ( groupId == null || groupId < 0 )
+            throw new IllegalArgumentException( "Must be a persistent gene group" );
         return geneSetService.getGeneIdsInGroup( new GeneSetValueObject( groupId ) );
     }
 
     /**
      * AJAX Returns the current users gene sets as well as their session gene sets
-     * 
-     * @param privateOnly
-     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
-     * @return
+     *
+     * @param privateOnly private only
+     * @param taxonId     if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return gene set vos
      */
     public Collection<GeneSetValueObject> getUserAndSessionGeneGroups( boolean privateOnly, Long taxonId ) {
 
@@ -253,22 +252,21 @@ public class GeneSetController {
 
     /**
      * AJAX Returns just the current users gene sets
-     * 
-     * @param privateOnly
-     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
-     * @return
+     *
+     * @param privateOnly private only
+     * @param taxonId     if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return gene set vos
      */
     public Collection<SessionBoundGeneSetValueObject> getUserSessionGeneGroups( boolean privateOnly, Long taxonId ) {
-        Collection<SessionBoundGeneSetValueObject> result = sessionListManager.getAllGeneSets( taxonId );
-        return result;
+        return sessionListManager.getAllGeneSets( taxonId );
     }
 
     /**
      * AJAX Returns just the current users gene sets
-     * 
-     * @param privateOnly
-     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
-     * @return
+     *
+     * @param privateOnly private only
+     * @param taxonId     if non-null, restrict the groups by ones which have genes in the given taxon.
+     * @return gene set vos
      */
     public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
 
@@ -277,9 +275,9 @@ public class GeneSetController {
 
     /**
      * AJAX - load with the IDs filled in
-     * 
-     * @param groupId
-     * @return
+     *
+     * @param id id
+     * @return gene set vos
      */
     public DatabaseBackedGeneSetValueObject load( Long id ) {
 
@@ -292,8 +290,9 @@ public class GeneSetController {
 
     /**
      * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so).
-     * 
-     * @param groups
+     *
+     * @param vos vos
+     * @return gene set vos
      */
     public Collection<DatabaseBackedGeneSetValueObject> remove( Collection<DatabaseBackedGeneSetValueObject> vos ) {
         geneSetService.deleteDatabaseEntities( vos );
@@ -302,9 +301,10 @@ public class GeneSetController {
 
     /**
      * AJAX Given a valid gene group will remove it from the session.
-     * 
+     *
+     * @param vos vos
+     * @return gene set vos
      * @deprecated
-     * @param groups
      */
     @Deprecated
     public Collection<SessionBoundGeneSetValueObject> removeSessionGroups(
@@ -318,8 +318,9 @@ public class GeneSetController {
 
     /**
      * AJAX Given valid gene groups will remove them from the session or the database appropriately.
-     * 
-     * @param groups
+     *
+     * @param vos vos
+     * @return gene set vos
      */
     public Collection<GeneSetValueObject> removeUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
 
@@ -346,11 +347,10 @@ public class GeneSetController {
 
     /**
      * If the current user has access to given gene group will return the gene ids in the gene group;
-     * <p>
      * FIXME do we use this?
-     * 
-     * @param groupId
-     * @return
+     *
+     * @param request request
+     * @return model and view
      */
     @RequestMapping(value = "/showGeneSet.html", method = RequestMethod.GET)
     public ModelAndView showGeneSet( HttpServletRequest request ) {
@@ -367,20 +367,22 @@ public class GeneSetController {
     /**
      * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
      * gene to be added to the gene set twice.
-     * 
-     * @param groupId
-     * @param geneIds
+     *
+     * @param geneSetVos vos
+     * @return gene set vos
      */
-    public Collection<DatabaseBackedGeneSetValueObject> update( Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
+    public Collection<DatabaseBackedGeneSetValueObject> update(
+            Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
         return geneSetService.updateDatabaseEntity( geneSetVos );
     }
 
     /**
      * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
      * gene to be added to the gene set twice. Cannot update name or description, just members
-     * 
+     *
      * @param groupId id of the gene set being updated
-     * @param geneIds
+     * @param geneIds gene ids
+     * @return string
      */
     public String updateMembers( Long groupId, Collection<Long> geneIds ) {
         return geneSetService.updateDatabaseEntityMembers( groupId, geneIds );
@@ -389,9 +391,9 @@ public class GeneSetController {
     /**
      * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
      * gene to be added to the gene set twice.
-     * 
-     * @param groupId
-     * @param geneIds
+     *
+     * @param geneSetVO gene set vos
+     * @return gene set vo
      */
     public DatabaseBackedGeneSetValueObject updateNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {
         return geneSetService.updateDatabaseEntityNameDesc( geneSetVO );
@@ -399,8 +401,9 @@ public class GeneSetController {
 
     /**
      * AJAX Updates the session group.
-     * 
-     * @param groups
+     *
+     * @param vos vos
+     * @return gene set vos
      * @deprecated
      */
     @Deprecated
@@ -414,9 +417,9 @@ public class GeneSetController {
 
     /**
      * AJAX updates a session group
-     * 
-     * @param vos
-     * @return
+     *
+     * @param vos vos
+     * @return gene set vo
      */
     public SessionBoundGeneSetValueObject updateSessionGroup( SessionBoundGeneSetValueObject vos ) {
         sessionListManager.updateGeneSet( vos );
@@ -425,8 +428,9 @@ public class GeneSetController {
 
     /**
      * AJAX Updates the session group and user database groups.
-     * 
-     * @param groups
+     *
+     * @param vos vos
+     * @return gene set vos
      */
     public Collection<GeneSetValueObject> updateUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
 
@@ -454,8 +458,8 @@ public class GeneSetController {
 
     /**
      * create an entity in the database based on the value object parameter
-     * 
-     * @param eesvo
+     *
+     * @param obj gene set vo
      * @return value object converted from the newly created entity
      */
     private GeneSetValueObject create( GeneSetValueObject obj ) {
@@ -472,14 +476,14 @@ public class GeneSetController {
     }
 
     /**
-     * @param request
-     * @return
+     * @param request request
+     * @return gene set vo
      * @throws IllegalArgumentException if a matching EE can't be loaded
      */
     private GeneSetValueObject getGeneSetFromRequest( HttpServletRequest request ) {
 
-        GeneSetValueObject geneSet = null;
-        Long id = null;
+        GeneSetValueObject geneSet;
+        Long id;
 
         if ( request.getParameter( "id" ) != null ) {
             try {

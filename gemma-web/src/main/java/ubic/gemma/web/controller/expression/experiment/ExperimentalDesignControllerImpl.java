@@ -26,22 +26,22 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.core.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.core.util.AnchorTagUtil;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -55,16 +55,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-//import AuditTrailService;
-//import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignEvent;
-
 /**
  * Main entry point to editing and viewing experimental designs. Note: do not use parametrized collections as
  * parameters for ajax methods in this class! Type information is lost during proxy creation so DWR can't figure out
  * what type of collection the method should take. See bug 2756. Use arrays instead.
  *
  * @author keshav
- * @version $Id$
  */
 @Controller
 @RequestMapping("/experimentalDesign")
@@ -309,10 +305,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
         }
         // ugly fix for bug 3746
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.load( designId ) );
-        ee = expressionExperimentService.thawLite(ee);
+        ExpressionExperiment ee = experimentalDesignService
+                .getExpressionExperiment( this.experimentalDesignService.load( designId ) );
+        ee = expressionExperimentService.thawLite( ee );
         ExperimentalDesign ed = ee.getExperimentalDesign();
-
 
         for ( ExperimentalFactor factor : ed.getExperimentalFactors() ) {
             result.add( new ExperimentalFactorValueObject( factor ) );

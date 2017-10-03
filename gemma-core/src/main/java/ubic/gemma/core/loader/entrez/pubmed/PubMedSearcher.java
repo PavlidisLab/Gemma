@@ -18,25 +18,26 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.xml.sax.SAXException;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.common.description.BibliographicReference;
+
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
-
 /**
  * Simple application to perform pubmed searches from a list of terms, and persist the results in the database.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class PubMedSearcher extends AbstractCLIContextCLI {
-    static PubMedSearch pms = new PubMedSearch();
+    private static final PubMedSearch pms = new PubMedSearch();
+
+    public PubMedSearcher() {
+        super();
+    }
 
     public static void main( String[] args ) {
         PubMedSearcher p = new PubMedSearcher();
@@ -45,10 +46,6 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    public PubMedSearcher() {
-        super();
     }
 
     @Override
@@ -66,11 +63,6 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         return "perform pubmed searches from a list of terms, and persist the results in the database";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.AbstractSpringAwareCLI#buildOptions()
-     */
     @Override
     protected void buildOptions() {
         addOption( "d", "persist", false, "Persist the results. Otherwise just search." );
@@ -81,11 +73,11 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
 
         Exception err = processCommandLine( args );
 
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         try {
-            @SuppressWarnings("unchecked")
-            Collection<BibliographicReference> refs = pms
+            @SuppressWarnings("unchecked") Collection<BibliographicReference> refs = pms
                     .searchAndRetrieveByHTTP( ( Collection<String> ) getArgList() );
 
             System.out.println( refs.size() + " references found" );
@@ -94,11 +86,7 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
                 getPersisterHelper().persist( refs );
             }
 
-        } catch ( IOException e ) {
-            return e;
-        } catch ( SAXException e ) {
-            return e;
-        } catch ( ParserConfigurationException e ) {
+        } catch ( IOException | ParserConfigurationException | SAXException e ) {
             return e;
         }
         resetLogging();

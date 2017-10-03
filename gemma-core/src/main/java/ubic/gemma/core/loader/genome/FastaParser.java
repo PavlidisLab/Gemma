@@ -18,25 +18,23 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.core.loader.util.parser.RecordParser;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * FASTA sequence file parser. Results are in BioSequence objects. Parsing a single record
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class FastaParser extends RecordParser<BioSequence> {
 
@@ -54,7 +52,8 @@ public class FastaParser extends RecordParser<BioSequence> {
     @Override
     public Object parseOneRecord( String record ) {
 
-        if ( StringUtils.isBlank( record ) ) return null;
+        if ( StringUtils.isBlank( record ) )
+            return null;
 
         Matcher matcher = pattern.matcher( record );
 
@@ -67,7 +66,8 @@ public class FastaParser extends RecordParser<BioSequence> {
         StringBuilder sequence = new StringBuilder();
         while ( matcher.find() ) {
             // skip comments.
-            if ( matcher.group( 1 ).startsWith( ";" ) ) continue;
+            if ( matcher.group( 1 ).startsWith( ";" ) )
+                continue;
 
             sequence.append( matcher.group( 1 ) );
         }
@@ -88,10 +88,10 @@ public class FastaParser extends RecordParser<BioSequence> {
     /**
      * Recognizes Defline format as described at {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
      * Our amendments: FIXME: recognize multi-line headers separated by ^A.(used for redundant sequences)
-     * <p>
      * FIXME: parsing of more obscure (to us) headers might not be complete.
-     * 
-     * @param bioSequence
+     *
+     * @param matcher matcher
+     * @return BAs
      */
     private Collection<BioSequence> parseHeader( Matcher matcher ) {
         Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
@@ -129,7 +129,8 @@ public class FastaParser extends RecordParser<BioSequence> {
                 keep = parseDeflineHeader( bioSequence, rheader );
             }
 
-            if ( keep ) bioSequences.add( bioSequence );
+            if ( keep )
+                bioSequences.add( bioSequence );
         }
         return bioSequences;
     }
@@ -142,10 +143,10 @@ public class FastaParser extends RecordParser<BioSequence> {
      *        Affymetrix consensus/exemplar                exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      *        Affymetrix-like format                       array:probe or other string containing ':'.
      * </pre>
-     * 
-     * @param bioSequence
-     * @param header
-     * @return
+     *
+     * @param bioSequence BA
+     * @param header      header
+     * @return boolean
      */
     private boolean parseAffyHeader( BioSequence bioSequence, String header ) {
         // affymetrix format
@@ -211,10 +212,10 @@ public class FastaParser extends RecordParser<BioSequence> {
      * <li>NIA 15k and 7k sets : H[0-9A-Z]{1-9}-\d | alternate (example: &gt;H4002F12-5 )
      * <li>Generic: probeid
      * </ul>
-     * 
-     * @param bioSequence
-     * @param header
-     * @return
+     *
+     * @param bioSequence BA
+     * @param header      header
+     * @return boolean
      */
     private boolean parseDeflineHeader( BioSequence bioSequence, String header ) {
         // one of the genbank formats.
@@ -256,7 +257,8 @@ public class FastaParser extends RecordParser<BioSequence> {
         } else {
             // generic.
             bioSequence.setName( split[0] );
-            if ( split.length > 1 ) bioSequence.setDescription( split[1] );
+            if ( split.length > 1 )
+                bioSequence.setDescription( split[1] );
             // log.warn( "Defline-style FASTA header in unrecognized format, started with " + firstTag );
             // return false;
         }
@@ -265,10 +267,10 @@ public class FastaParser extends RecordParser<BioSequence> {
 
     /**
      * This is a special case, but these are used on microarrays.
-     * 
-     * @param bioSequence
-     * @param header
-     * @return
+     *
+     * @param bioSequence BA
+     * @param header      header
+     * @return boolean
      */
     private boolean parseNIA( BioSequence bioSequence, String header ) {
         String firstTag = StringUtils.removeStart( header, ">" );

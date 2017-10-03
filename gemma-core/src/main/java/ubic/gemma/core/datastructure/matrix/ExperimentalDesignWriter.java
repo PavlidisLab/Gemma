@@ -18,68 +18,53 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
 
 /**
  * Output compatible with {@link ExperimentalDesignImporterImpl}.
- * 
+ *
  * @author keshav
- * @version $Id$
  * @see ExperimentalDesignImporterImpl
  */
 public class ExperimentalDesignWriter {
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private final Log log = LogFactory.getLog( this.getClass() );
 
     /**
-     * @param writer
-     * @param ExpressionExperiment ee
-     * @param writeHeader
      * @param sortByDesign whether the design should be arranged in the order defined by
-     *        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
-     * @throws IOException
+     *                     ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @param writer       writer
+     * @param ee           ee
+     * @param writeHeader  writer header
      */
     public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader, boolean sortByDesign )
             throws IOException {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
-        boolean writeBaseHeader = writeHeader;
-        write( writer, ee, bioAssays, writeBaseHeader, writeHeader, sortByDesign );
+        write( writer, ee, bioAssays, writeHeader, writeHeader, sortByDesign );
     }
 
     /**
-     * @param writer
-     * @param ExpressionExperiment ee
      * @param writeBaseHeader comments
-     * @param writeHeader column names
-     * @param bioAssays
-     * @param sortByDesign whether the design should be arranged in the order defined by
-     *        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
-     * @throws IOException
+     * @param writeHeader     column names
+     * @param sortByDesign    whether the design should be arranged in the order defined by
+     *                        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @param ee              ee
+     * @param bioAssays       bas
+     * @param writer          writer
      */
-    public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader, boolean writeHeader,
-            boolean sortByDesign )
-            throws IOException {
+    public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader,
+            boolean writeHeader, boolean sortByDesign ) throws IOException {
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -110,8 +95,8 @@ public class ExperimentalDesignWriter {
         for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
 
             /* column 0 of the design matrix */
-            String rowName = ExpressionDataWriterUtils.constructBioAssayName( bioMaterial,
-                    bioMaterials.get( bioMaterial ) );
+            String rowName = ExpressionDataWriterUtils
+                    .constructBioAssayName( bioMaterial, bioMaterials.get( bioMaterial ) );
             buf.append( rowName );
 
             buf.append( "\t" );
@@ -140,7 +125,8 @@ public class ExperimentalDesignWriter {
             buf.append( "\n" );
         }
 
-        if ( log.isDebugEnabled() ) log.debug( buf.toString() );
+        if ( log.isDebugEnabled() )
+            log.debug( buf.toString() );
 
         writer.write( buf.toString() );
         writer.flush();
@@ -149,12 +135,6 @@ public class ExperimentalDesignWriter {
 
     /**
      * Write an (R-friendly) header
-     * 
-     * @param writer
-     * @param expressionExperiment
-     * @param factors
-     * @param writeBaseHeader
-     * @param buf
      */
     private void writeHeader( Writer writer, ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, boolean writeBaseHeader, StringBuffer buf ) {
@@ -165,9 +145,9 @@ public class ExperimentalDesignWriter {
 
         for ( ExperimentalFactor ef : factors ) {
             buf.append( ExperimentalDesignImporterImpl.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
-            buf.append( ef.getName() + " :" );
+            buf.append( ef.getName() ).append( " :" );
             if ( ef.getCategory() != null ) {
-                buf.append( " Category=" + ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
+                buf.append( " Category=" ).append( ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
             }
             buf.append( " Type=" );
 
@@ -184,7 +164,7 @@ public class ExperimentalDesignWriter {
 
         for ( ExperimentalFactor ef : factors ) {
             String efName = StringUtil.makeValidForR( ef.getName() );
-            buf.append( "\t" + efName );
+            buf.append( "\t" ).append( efName );
         }
 
         buf.append( "\n" );

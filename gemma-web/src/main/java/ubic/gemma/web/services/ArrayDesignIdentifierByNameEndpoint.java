@@ -18,33 +18,30 @@
  */
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
- * array design short name -> return matching array design identifier
- * 
+ * array design short name -&gt; return matching array design identifier
+ *
  * @author klc, gavin
- * @version$Id$
  */
 public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
-
-    private ArrayDesignService arrayDesignService;
-    private static Log log = LogFactory.getLog( ArrayDesignIdentifierByNameEndpoint.class );
 
     /**
      * The local name of the expected request.
      */
     public static final String ARRAY_LOCAL_NAME = "arrayDesignIdentifierByName";
+    private static final Log log = LogFactory.getLog( ArrayDesignIdentifierByNameEndpoint.class );
+    private ArrayDesignService arrayDesignService;
 
     /**
      * Sets the "business service" to delegate to.
@@ -55,9 +52,9 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
-     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @param document       a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
     @Override
@@ -81,7 +78,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
         // get Array Design ID and build results in the form of a collection
-        Collection<String> adId = new HashSet<String>();
+        Collection<String> adId = new HashSet<>();
         adId.add( ad.getId().toString() );
 
         Element wrapper = buildWrapper( document, adId, "arrayDesign_ids" );

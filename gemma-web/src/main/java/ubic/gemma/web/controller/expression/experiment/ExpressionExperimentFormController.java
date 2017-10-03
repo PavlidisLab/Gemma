@@ -18,64 +18,48 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.tools.ant.filters.StringInputStream;
-import org.springframework.validation.BindException;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
-
+import antlr.ANTLRException;
 import com.sdicons.json.model.JSONInteger;
 import com.sdicons.json.model.JSONObject;
 import com.sdicons.json.model.JSONString;
 import com.sdicons.json.model.JSONValue;
 import com.sdicons.json.parser.JSONParser;
-
-import antlr.ANTLRException;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.tools.ant.filters.StringInputStream;
+import org.springframework.validation.BindException;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Handle editing of expression experiments.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class ExpressionExperimentFormController extends BaseFormController {
 
@@ -98,11 +82,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
         setCommandClass( ExpressionExperimentEditValueObject.class );
     }
 
-    /**
-
-     * @return ModelAndView
-     * @throws Exception
-     */
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -136,14 +115,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         + "/expressionExperiment/showExpressionExperiment.html?id=" + eeCommand.getId() ) );
     }
 
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -160,9 +131,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
             }
 
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView(
-                    new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
-                            + request.getContextPath() + "/expressionExperiment/showAllExpressionExperiments.html" ) );
+            return new ModelAndView( new RedirectView(
+                    "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                            + "/expressionExperiment/showAllExpressionExperiments.html" ) );
         }
 
         ModelAndView mav = super.processFormSubmission( request, response, command, errors );
@@ -198,9 +169,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
         this.bioMaterialService = bioMaterialService;
     }
 
-    /**
-     * @param expressionExperimentService
-     */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
@@ -245,7 +213,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        qts.addAll( quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ));
+        qts.addAll(
+                quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
 
         obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( ee ) );
 
@@ -257,10 +226,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
         return obj;
     }
 
-    /**
-     * @param request
-     * @return Map
-     */
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         Map<Object, Object> referenceData = new HashMap<Object, Object>();
@@ -268,7 +233,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         Collection<ExternalDatabase> keepers = new HashSet<ExternalDatabase>();
         for ( ExternalDatabase database : edCol ) {
-            if ( database.getType() == null ) continue;
+            if ( database.getType() == null )
+                continue;
             if ( database.getType().equals( DatabaseType.EXPRESSION ) ) {
                 keepers.add( database );
             }
@@ -283,7 +249,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
         return referenceData;
     }
 
-
     private void audit( ExpressionExperiment ee, AuditEventType eventType, String note ) {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
@@ -294,9 +259,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
     /**
      * Change the relationship between bioassays and biomaterials.
-     * 
-     * @param request
-     * @param expressionExperiment
+     *
+     * @param request              request
+     * @param expressionExperiment ee
      * @return true if there were changes
      */
     private boolean updateBioMaterialMap( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
@@ -399,10 +364,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
     /**
      * Check old vs. new quantitation types, and update any affected data vectors.
-     * 
-     * @param request
-     * @param expressionExperiment
-     * @param updatedQuantitationTypes
+     *
+     * @param request                  request
+     * @param expressionExperiment     ee
+     * @param updatedQuantitationTypes updated QTs
      * @return whether any changes were made
      */
     private boolean updateQuantTypes( HttpServletRequest request, ExpressionExperiment expressionExperiment,
@@ -485,8 +450,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     if ( newName != null && ( oldName == null || !oldName.equals( newName ) ) ) {
                         dirty = true;
                     }
-                    if ( newDescription != null
-                            && ( oldDescription == null || !oldDescription.equals( newDescription ) ) ) {
+                    if ( newDescription != null && ( oldDescription == null || !oldDescription
+                            .equals( newDescription ) ) ) {
                         dirty = true;
                     }
                     if ( !gentype.equals( newgentype ) ) {

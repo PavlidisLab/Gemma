@@ -80,13 +80,7 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
         this.sourceAccession = sourceAccession;
     }
 
-    /**
-     * Constructs new instances of {@link GeneSet}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link GeneSet}.
-         */
         public static GeneSet newInstance() {
             return new GeneSet();
         }

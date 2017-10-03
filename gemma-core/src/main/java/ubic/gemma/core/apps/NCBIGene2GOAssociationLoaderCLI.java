@@ -18,34 +18,33 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
+import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
+import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
-import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
-import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
-
 /**
- * Load GO -> gene associations from NCBI.
- * 
+ * Load GO -&gt; gene associations from NCBI.
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
     private static final String GENE2GO_FILE = "gene2go.gz";
+    private String filePath = null;
 
     public static void main( String[] args ) {
         NCBIGene2GOAssociationLoaderCLI p = new NCBIGene2GOAssociationLoaderCLI();
@@ -56,31 +55,21 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         }
     }
 
-    private String filePath = null;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "updateGOAnnots";
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.SYSTEM;
     }
+
     @Override
     public String getShortDesc() {
         return "Update GO annotations";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -90,11 +79,6 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         addOption( pathOption );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception e = processCommandLine( args );

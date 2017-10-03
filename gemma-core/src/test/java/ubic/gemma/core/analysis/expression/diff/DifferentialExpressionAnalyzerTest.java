@@ -22,10 +22,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Tests the {@link DifferentialExpessionAnalysis} tool.
- * 
  * @author keshav
- * @version $Id$
  */
 public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
@@ -33,18 +30,12 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     AnalysisSelectionAndExecutionService analysis = null;
     DiffExAnalyzer analyzer;
 
-    /**
-     * * Tests determineAnalysis.
-     * <p>
+    /*
+     * Tests determineAnalysis.
      * 2 experimental factors
-     * <p>
      * 2 factor value / experimental factor
-     * <p>
      * complete block design and biological replicates
-     * <p>
-     * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzerImpl}
-     * 
-     * @throws Exception
+     * Expected analyzer: TwoWayAnovaWithInteractionsAnalyzerImpl
      */
     @Test
     public void testDetermineAnalysisA() throws Exception {
@@ -53,18 +44,12 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
-    /**
+    /*
      * Tests determineAnalysis.
-     * <p>
      * 2 experimental factors
-     * <p>
      * 2 factor value / experimental factor
-     * <p>
      * no replicates
-     * <p>
-     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzerImpl}
-     * 
-     * @throws Exception
+     * Expected analyzer: TwoWayAnovaWithoutInteractionsAnalyzerImpl
      */
     @Test
     public void testDetermineAnalysisB() throws Exception {
@@ -74,16 +59,9 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
     @Override
     protected void configureMocks() throws Exception {
-
         configureMockAnalysisServiceHelper( 2 );
-
     }
 
 }

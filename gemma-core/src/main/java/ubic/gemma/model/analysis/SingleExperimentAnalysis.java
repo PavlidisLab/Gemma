@@ -24,39 +24,31 @@ import gemma.gsec.model.SecuredChild;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
-/**
- * 
- */
 public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements SecuredChild {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -6301345978501023402L;
 
-    /**
-     * 
-     */
     private BioAssaySet experimentAnalyzed;
-
-    /**
-     * # of genes etc.
-     */
     private Integer numberOfElementsAnalyzed;
 
-    /**
-     * 
-     */
     public BioAssaySet getExperimentAnalyzed() {
         return this.experimentAnalyzed;
     }
 
+    public void setExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
+        this.experimentAnalyzed = experimentAnalyzed;
+    }
+
     /**
-     * The number of probes or genes (or other elements) used in the analysis. The exact meaning is determined by the
+     * @return The number of probes or genes (or other elements) used in the analysis. The exact meaning is determined by the
      * subclass + implementation.
      */
     public Integer getNumberOfElementsAnalyzed() {
         return this.numberOfElementsAnalyzed;
+    }
+
+    public void setNumberOfElementsAnalyzed( Integer numberOfElementsAnalyzed ) {
+        this.numberOfElementsAnalyzed = numberOfElementsAnalyzed;
     }
 
     @Override
@@ -65,13 +57,5 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
          * Note: this could be a subset. But that's a secured child as well. AclAdvice fixes that.
          */
         return this.getExperimentAnalyzed();
-    }
-
-    public void setExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
-        this.experimentAnalyzed = experimentAnalyzed;
-    }
-
-    public void setNumberOfElementsAnalyzed( Integer numberOfElementsAnalyzed ) {
-        this.numberOfElementsAnalyzed = numberOfElementsAnalyzed;
     }
 }

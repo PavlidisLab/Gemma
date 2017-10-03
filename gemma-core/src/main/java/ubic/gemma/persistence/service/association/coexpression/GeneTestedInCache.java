@@ -19,39 +19,28 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import java.util.Map;
-
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedIn;
+
+import java.util.Map;
 
 /**
  * Cache of the 'tested-in' information for genes. As new analyses are done, this cache must be invalidated but
  * otherwise can speed up the post-processing steps.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public interface GeneTestedInCache {
 
-    public void cacheTestedIn( GeneCoexpressionTestedIn testedIn );
+    void cacheTestedIn( GeneCoexpressionTestedIn testedIn );
 
-    public void clearCache();
+    void clearCache();
 
-    public GeneCoexpressionTestedIn get( Long geneId );
+    GeneCoexpressionTestedIn get( Long geneId );
 
-    /**
-     * @param idMap
-     */
-    public void cache( Map<Long, GeneCoexpressionTestedIn> idMap );
+    void cache( Map<Long, GeneCoexpressionTestedIn> idMap );
 
-    /**
-     * @param queryGeneId
-     * @return
-     */
-    public boolean contains( Long queryGeneId );
+    boolean contains( Long queryGeneId );
 
-    /**
-     * @param id
-     */
-    public void remove( Long id );
+    void remove( Long id );
 
 }

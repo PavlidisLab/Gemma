@@ -37,15 +37,12 @@ public abstract class ChromosomeFeature extends Describable {
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public ChromosomeFeature() {
     }
 
     /**
-     * The NCBI id for this feature.
-     *
+     * @return The NCBI id for this feature.
      * @deprecated use NcbiGi or NcbiGeneId.
      */
     @Deprecated
@@ -66,7 +63,7 @@ public abstract class ChromosomeFeature extends Describable {
     }
 
     /**
-     * The last-used NCBI id for this feature, according to the history information provided by NCBI. This may be empty.
+     * @return The last-used NCBI id for this feature, according to the history information provided by NCBI. This may be empty.
      */
     public String getPreviousNcbiId() {
         return this.previousNcbiId;

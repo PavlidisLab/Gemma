@@ -18,53 +18,20 @@
  */
 package ubic.gemma.model.common.description;
 
-/** 
+/**
+ * @author paul
  */
 public abstract class PublicationType implements java.io.Serializable {
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = -7520632580702206897L;
-
-    /**
-     * Constructs new instances of {@link PublicationType}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link PublicationType}.
-         */
-        public static PublicationType newInstance() {
-            return new PublicationTypeImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link PublicationType}, taking all possible properties (except the
-         * identifier(s))as arguments.
-         */
-        public static PublicationType newInstance( String type ) {
-            final PublicationType entity = new PublicationTypeImpl();
-            entity.setType( type );
-            return entity;
-        }
-    }
-
     private String type;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public PublicationType() {
     }
-
-    /**
-     * Returns <code>true</code> if the argument is an PublicationType instance and all identifiers for this entity
-     * equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
+    
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -80,23 +47,22 @@ public abstract class PublicationType implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public String getType() {
         return this.type;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
+    public void setType( String type ) {
+        this.type = type;
+    }
+
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -105,12 +71,17 @@ public abstract class PublicationType implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+    public static final class Factory {
 
-    public void setType( String type ) {
-        this.type = type;
+        public static PublicationType newInstance() {
+            return new PublicationTypeImpl();
+        }
+
+        public static PublicationType newInstance( String type ) {
+            final PublicationType entity = new PublicationTypeImpl();
+            entity.setType( type );
+            return entity;
+        }
     }
 
 }

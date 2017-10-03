@@ -14,26 +14,17 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,13 +32,20 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 /**
  * Test based on GSE8441
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
@@ -79,8 +77,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     @Before
     public void setup() throws IOException {
-        try (InputStream io = this.getClass().getResourceAsStream(
-                "/data/analysis/expression/GSE8441_expmat_8probes.txt" );) {
+        try (InputStream io = this.getClass()
+                .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" );) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
             metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
@@ -104,20 +102,20 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         }
     }
 
-    /**
+    /*
      * NOTE I added a constant probe to this data after I set this up.
      * 
      * <pre>
-     * expMatFile <- "GSE8441_expmat_8probes.txt"
-     * expDesignFile <- "606_GSE8441_expdesign.data.txt"
-     * expMat <- log2(read.table(expMatFile, header = TRUE, row.names = 1, sep = "\t", quote=""))
-     * expDesign <- read.table(expDesignFile, header = TRUE, row.names = 1, sep = "\t", quote="")
+     * expMatFile &lt;- "GSE8441_expmat_8probes.txt"
+     * expDesignFile &lt;- "606_GSE8441_expdesign.data.txt"
+     * expMat &lt;- log2(read.table(expMatFile, header = TRUE, row.names = 1, sep = "\t", quote=""))
+     * expDesign &lt;- read.table(expDesignFile, header = TRUE, row.names = 1, sep = "\t", quote="")
      * 
-     * expData <- expMat[rownames(expDesign)]
+     * expData &lt;- expMat[rownames(expDesign)]
      * 
      * names(expData) == row.names(expDesign)
      * attach(expDesign)
-     * lf<-lm(unlist(expData["217757_at",])~Treatment*Sex )
+     * lf&lt;-lm(unlist(expData["217757_at",])~Treatment*Sex )
      * summary(lf)
      * anova(lf)
      * 
@@ -126,14 +124,12 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
      * 
      * # etc.
      * </pre>
-     * 
-     * @throws Exception
      */
     @Test
     public void test() throws Exception {
 
-        AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
-                null, true );
+        AnalysisType aa = analysisService
+                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION, aa );
 
@@ -157,8 +153,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         Collection<DifferentialExpressionAnalysis> persistent = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
 
-        DifferentialExpressionAnalysis refetched = differentialExpressionAnalysisService.load( persistent.iterator()
-                .next().getId() );
+        DifferentialExpressionAnalysis refetched = differentialExpressionAnalysisService
+                .load( persistent.iterator().next().getId() );
 
         differentialExpressionAnalysisService.thaw( refetched );
         for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
@@ -170,7 +166,6 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         differentialExpressionAnalyzerService.redoAnalysis( ee, refetched, true );
 
     }
-
 
     public void checkResults( DifferentialExpressionAnalysis analysis ) {
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();

@@ -18,21 +18,16 @@
  */
 package ubic.gemma.core.util;
 
+import org.apache.commons.lang3.time.StopWatch;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import org.apache.commons.lang3.time.StopWatch;
-
 /**
  * @author paul
- * @version $Id$
  */
 public class TimeUtil {
 
-    /**
-     * @param overallWatch
-     * @return
-     */
     public static String getMinutesElapsed( StopWatch overallWatch ) {
         Long overallElapsed = overallWatch.getTime();
         NumberFormat nf = new DecimalFormat();

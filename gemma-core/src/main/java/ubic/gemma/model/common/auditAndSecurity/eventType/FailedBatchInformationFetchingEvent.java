@@ -24,23 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * just isn't available, use the specific subtype of this.
  * </p>
  */
-public class FailedBatchInformationFetchingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent();
-        }
-
-    }
+public class FailedBatchInformationFetchingEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -49,10 +34,18 @@ public class FailedBatchInformationFetchingEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public FailedBatchInformationFetchingEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent();
+        }
+
     }
 
 }

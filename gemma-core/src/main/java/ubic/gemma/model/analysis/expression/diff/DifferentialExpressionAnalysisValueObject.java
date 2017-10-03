@@ -44,6 +44,7 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     /**
      * Does not populate the resultSets.
+     * @param analysis the analysis to read the values from
      */
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
         this.id = analysis.getId();
@@ -124,6 +125,8 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     /**
      * If this is a subset analysis
+     *
+     * @param id the source experiment id
      */
     public void setSourceExperiment( Long id ) {
         this.sourceExperiment = id;

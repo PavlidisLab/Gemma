@@ -31,10 +31,6 @@ public class UserQuery implements java.io.Serializable, gemma.gsec.model.Secured
     private Long id;
     private SearchSettings searchSettings;
 
-    /**
-     * Returns <code>true</code> if the argument is an UserQuery instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -48,9 +44,7 @@ public class UserQuery implements java.io.Serializable, gemma.gsec.model.Secured
     }
 
     /**
-     * <p>
-     * How often to auto-run this query, given in hours.
-     * </p>
+     * @return How often to auto-run this query, given in hours.
      */
     public Integer getAutoRunFrequencyHours() {
         return this.autoRunFrequencyHours;
@@ -101,9 +95,6 @@ public class UserQuery implements java.io.Serializable, gemma.gsec.model.Secured
         this.url = url;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -112,20 +103,12 @@ public class UserQuery implements java.io.Serializable, gemma.gsec.model.Secured
         return hashCode;
     }
 
-    /**
-     * Constructs new instances of {@link UserQuery}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link UserQuery}.
-         */
+
         public static UserQuery newInstance() {
             return new UserQuery();
         }
 
-        /**
-         * Constructs a new instance of {@link UserQuery}, taking all required and/or read-only properties as arguments.
-         */
         public static UserQuery newInstance( String url, java.util.Date lastUsed ) {
             final UserQuery entity = new UserQuery();
             entity.setUrl( url );
@@ -133,10 +116,6 @@ public class UserQuery implements java.io.Serializable, gemma.gsec.model.Secured
             return entity;
         }
 
-        /**
-         * Constructs a new instance of {@link UserQuery}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
         public static UserQuery newInstance( String url, String name, java.util.Date lastUsed,
                 Integer autoRunFrequencyHours, SearchSettings searchSettings ) {
             final UserQuery entity = new UserQuery();

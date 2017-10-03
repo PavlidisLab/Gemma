@@ -22,9 +22,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 
-
 public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
-
 
     private static final long serialVersionUID = -8503436886033033975L;
     private final GOEvidenceCode evidenceCode = null;
@@ -33,14 +31,8 @@ public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationIm
         return this.evidenceCode;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.association.Gene2GOAssociation}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.association.Gene2GOAssociation}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
+
         public static Gene2GOAssociation newInstance( Gene gene, VocabCharacteristic ontologyEntry,
                 GOEvidenceCode evidenceCode ) {
             final Gene2GOAssociation entity = new ubic.gemma.model.association.Gene2GOAssociationImpl();

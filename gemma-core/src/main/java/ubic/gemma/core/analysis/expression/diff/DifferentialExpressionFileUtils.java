@@ -18,30 +18,22 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.io.File;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
 
 /**
  * @author keshav
- * @version $Id$
  */
 public class DifferentialExpressionFileUtils {
 
+    public static final String PVALUE_DIST_SUFFIX = ".dist.txt";
+    private static final String PVALUE_DIST = "diff" + File.separatorChar + "diffExStatDistributions";
     private static Log log = LogFactory.getLog( DifferentialExpressionFileUtils.class );
-
     private static String analysisStoragePath = Settings.getAnalysisStoragePath();
 
-    private static final String PVALUE_DIST = "diff" + File.separatorChar + "diffExStatDistributions";
-
-    public static final String PVALUE_DIST_SUFFIX = ".dist.txt";
-
-    /**
-     * @return
-     */
     public static File getBaseDifferentialDirectory( String shortName ) {
         File f = null;
         if ( shortName == null ) {

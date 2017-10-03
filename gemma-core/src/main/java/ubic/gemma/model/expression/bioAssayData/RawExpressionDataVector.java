@@ -39,13 +39,8 @@ public abstract class RawExpressionDataVector extends DesignElementDataVector {
         this.expressionExperiment = expressionExperiment;
     }
 
-    /**
-     * Constructs new instances of {@link RawExpressionDataVector}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link RawExpressionDataVector}.
-         */
+
         public static RawExpressionDataVector newInstance() {
             return new RawExpressionDataVectorImpl();
         }

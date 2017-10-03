@@ -20,15 +20,13 @@ package ubic.gemma.web.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.maintenance.ExpressionExperimentReportTaskCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author klc
- * @version $Id$ *
  */
 @Controller
 public class ExpressionExperimentReportGenerationController {
@@ -38,12 +36,6 @@ public class ExpressionExperimentReportGenerationController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    /**
-     * AJAX entry point.
-     * 
-     * @return
-     * @throws Exception
-     */
     public String run( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -55,12 +47,6 @@ public class ExpressionExperimentReportGenerationController {
         return taskRunningService.submitLocalTask( cmd );
     }
 
-    /**
-     * AJAX entry point
-     * 
-     * @return
-     * @throws Exception
-     */
     public String runAll() throws Exception {
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( true );

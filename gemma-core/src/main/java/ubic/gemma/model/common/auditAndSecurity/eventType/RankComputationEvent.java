@@ -23,21 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * For backwards compatibility only.
  * </p>
  */
-public class RankComputationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent();
-        }
-
-    }
+public class RankComputationEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,10 +33,18 @@ public class RankComputationEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public RankComputationEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent();
+        }
+
     }
 
 }

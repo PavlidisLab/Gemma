@@ -21,8 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.hibernate.SessionFactory;
 import org.hibernate.jdbc.Work;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.sql.Connection;
@@ -69,30 +67,18 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
         } );
     }
 
-    /**
-     * @see DesignElementDataVectorDao#thaw(Collection)
-     */
     @Override
     public void thaw( final Collection<? extends DesignElementDataVector> designElementDataVectors ) {
         this.handleThaw( designElementDataVectors );
     }
 
-    /**
-     * @see DesignElementDataVectorDao#thaw(DesignElementDataVector)
-     */
     @Override
     public void thaw( final T designElementDataVector ) {
         this.handleThaw( designElementDataVector );
     }
 
-    /**
-     * Performs the core logic for {@link #thaw(Collection)}
-     */
     protected abstract void handleThaw( Collection<? extends DesignElementDataVector> designElementDataVectors );
 
-    /**
-     * Performs the core logic for {@link #thaw(DesignElementDataVector)}
-     */
     protected abstract void handleThaw( T designElementDataVector );
 
 }

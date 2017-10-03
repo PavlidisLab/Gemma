@@ -82,7 +82,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
             BlatAssociation ba = BlatAssociation.Factory.newInstance();
 
-            Gene g = this.getTestPeristentGene();
+            Gene g = this.getTestPersistentGene();
 
             GeneProduct gp = this.getTestPersistentGeneProduct( g );
             if ( i == 10 ) {

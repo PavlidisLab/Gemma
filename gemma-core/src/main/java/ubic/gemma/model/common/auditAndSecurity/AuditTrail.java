@@ -21,6 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -31,17 +32,15 @@ public abstract class AuditTrail implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -7450755789163303140L;
     private Long id;
-    private Collection<AuditEvent> events = new java.util.ArrayList<>();
+    private Collection<AuditEvent> events = new ArrayList<>();
 
     /**
      * Add an event to the AuditTrail
+     *
+     * @param event event
      */
     public abstract void addEvent( AuditEvent event );
 
-    /**
-     * Returns <code>true</code> if the argument is an AuditTrail instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -54,9 +53,6 @@ public abstract class AuditTrail implements Identifiable, Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -66,7 +62,7 @@ public abstract class AuditTrail implements Identifiable, Serializable {
     }
 
     /**
-     * Get the first event in the audit trail.
+     * @return the first event in the audit trail.
      */
     public abstract AuditEvent getCreationEvent();
 
@@ -87,7 +83,7 @@ public abstract class AuditTrail implements Identifiable, Serializable {
     }
 
     /**
-     * Get the last (most recent) event in the AuditTrail.
+     * @return the last (most recent) event in the AuditTrail.
      */
     public abstract AuditEvent getLast();
 
@@ -109,13 +105,8 @@ public abstract class AuditTrail implements Identifiable, Serializable {
 
     public abstract void update( String note, User actor );
 
-    /**
-     * Constructs new instances of {@link AuditTrail}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link AuditTrail}.
-         */
+
         public static AuditTrail newInstance() {
             return new AuditTrailImpl();
         }

@@ -20,7 +20,6 @@ package ubic.gemma.model.common.description;
 
 /**
  * @author luke
- * @version $Id$
  */
 public class AnnotationValueObject {
 
@@ -46,164 +45,110 @@ public class AnnotationValueObject {
         return className;
     }
 
-    /**
-     * @return the classUri
-     */
+    public void setClassName( String ontologyClass ) {
+        this.className = ontologyClass;
+    }
+
     public String getClassUri() {
         return classUri;
+    }
+
+    public void setClassUri( String classUri ) {
+        this.classUri = classUri;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public String getEvidenceCode() {
-        return evidenceCode;
-    }
-
-    /**
-     * @return the id
-     */
-    public Long getId() {
-        return id;
-    }
-
-    public String getObjectClass() {
-        return objectClass;
-    }
-
-    /**
-     * @return the parentDescription
-     */
-    public String getParentDescription() {
-        return parentDescription;
-    }
-
-    /**
-     * @return the parentLink
-     */
-    public String getParentLink() {
-        return parentLink;
-    }
-
-    /**
-     * @return the parentName
-     */
-    public String getParentName() {
-        return parentName;
-    }
-
-    /**
-     * @return the parentOfParentDescription
-     */
-    public String getParentOfParentDescription() {
-        return parentOfParentDescription;
-    }
-
-    /**
-     * @return the parentOfParentLink
-     */
-    public String getParentOfParentLink() {
-        return parentOfParentLink;
-    }
-
-    /**
-     * @return the parentOfParentName
-     */
-    public String getParentOfParentName() {
-        return parentOfParentName;
-    }
-
-    public String getTermName() {
-        return termName;
-    }
-
-    /**
-     * @return the termUri
-     */
-    public String getTermUri() {
-        return termUri;
-    }
-
-    public void setClassName( String ontologyClass ) {
-        this.className = ontologyClass;
-    }
-
-    /**
-     * @param classUri the classUri to set
-     */
-    public void setClassUri( String classUri ) {
-        this.classUri = classUri;
-    }
-
     public void setDescription( String description ) {
         this.description = description;
+    }
+
+    public String getEvidenceCode() {
+        return evidenceCode;
     }
 
     public void setEvidenceCode( String evidenceCode ) {
         this.evidenceCode = evidenceCode;
     }
 
-    /**
-     * @param id the id to set
-     */
+    public Long getId() {
+        return id;
+    }
+
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public String getObjectClass() {
+        return objectClass;
     }
 
     public void setObjectClass( String objectClass ) {
         this.objectClass = objectClass;
     }
 
-    /**
-     * @param parentDescription the parentDescription to set
-     */
+    public String getParentDescription() {
+        return parentDescription;
+    }
+
     public void setParentDescription( String parentDescription ) {
         this.parentDescription = parentDescription;
     }
 
-    /**
-     * @param parentLink the parentLink to set
-     */
+    public String getParentLink() {
+        return parentLink;
+    }
+
     public void setParentLink( String parentLink ) {
         this.parentLink = parentLink;
     }
 
-    /**
-     * @param parentDescription the parentDescription to set
-     */
+    public String getParentName() {
+        return parentName;
+    }
+
     public void setParentName( String parentName ) {
         this.parentName = parentName;
     }
 
-    /**
-     * @param parentOfParentDescription the parentOfParentDescription to set
-     */
+    public String getParentOfParentDescription() {
+        return parentOfParentDescription;
+    }
+
     public void setParentOfParentDescription( String parentOfParentDescription ) {
         this.parentOfParentDescription = parentOfParentDescription;
     }
 
-    /**
-     * @param parentOfParentLink the parentOfParentLink to set
-     */
+    public String getParentOfParentLink() {
+        return parentOfParentLink;
+    }
+
     public void setParentOfParentLink( String parentOfParentLink ) {
         this.parentOfParentLink = parentOfParentLink;
     }
 
-    /**
-     * @param parentOfParentName the parentOfParentName to set
-     */
+    public String getParentOfParentName() {
+        return parentOfParentName;
+    }
+
     public void setParentOfParentName( String parentOfParentName ) {
         this.parentOfParentName = parentOfParentName;
+    }
+
+    public String getTermName() {
+        return termName;
     }
 
     public void setTermName( String ontologyTerm ) {
         this.termName = ontologyTerm;
     }
 
-    /**
-     * @param termUri the termUri to set
-     */
+    public String getTermUri() {
+        return termUri;
+    }
+
     public void setTermUri( String termUri ) {
         this.termUri = termUri;
     }

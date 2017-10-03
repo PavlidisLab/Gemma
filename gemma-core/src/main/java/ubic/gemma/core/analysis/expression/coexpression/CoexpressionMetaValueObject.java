@@ -18,23 +18,15 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.util.Settings;
 
+import java.util.*;
+
 /**
  * @author luke
- * @version $Id$
  */
 public class CoexpressionMetaValueObject {
 
@@ -53,8 +45,8 @@ public class CoexpressionMetaValueObject {
     /**
      * Upper bound on how large we let the graph be from the server side. Can be overridden via the setter.
      */
-    private int maxEdges = Settings.getInt( "gemma.cytoscapeweb.maxEdges",
-            CoexpressionMetaValueObject.DEFAULT_MAX_EDGES_PER_GRAPH );
+    private int maxEdges = Settings
+            .getInt( "gemma.cytoscapeweb.maxEdges", CoexpressionMetaValueObject.DEFAULT_MAX_EDGES_PER_GRAPH );
 
     /**
      * How many data sets were actually used in the query; that is, which had coexpression analysis done.
@@ -68,7 +60,7 @@ public class CoexpressionMetaValueObject {
      */
     private boolean queryGenesOnly = false;
 
-    /**
+    /*
      * This will be greater than zero if the data were trimmed prior to sending to the client.
      */
     // private int nonQueryGeneTrimmedValue = 0;
@@ -102,94 +94,65 @@ public class CoexpressionMetaValueObject {
         return errorState;
     }
 
+    public void setErrorState( String errorState ) {
+        this.errorState = errorState;
+    }
+
     /**
-     * How many edges total are we allowed to have in the graph? Above this, they can get trimmed.
-     * 
-     * @return
+     * @return How many edges total are we allowed to have in the graph? Above this, they can get trimmed.
      */
     public int getMaxEdges() {
         return maxEdges;
     }
 
-    public int getNumDatasetsQueried() {
-        return numDatasetsQueried;
-    }
-
-    public Collection<GeneValueObject> getQueryGenes() {
-        return queryGenes;
+    /**
+     * Override the value of gemma.cytoscapeweb.maxEdges (or DEFAULT_MAX_EDGES_PER_GRAPH )
+     *
+     * @param maxEdges max edges
+     */
+    public void setMaxEdges( int maxEdges ) {
+        this.maxEdges = maxEdges;
     }
 
     // public int getNonQueryGeneTrimmedValue() {
     // return nonQueryGeneTrimmedValue;
     // }
 
-    public int getQueryStringency() {
-        return queryStringency;
-    }
-
-    /**
-     * A sorted list of the results (sorting must be done elsewhere!)
-     * 
-     * @return
-     */
-    public List<CoexpressionValueObjectExt> getResults() {
-        return results;
-    }
-
-    /**
-     * The original search settings from the client. FIXME ??? Does not reflect any adjustments that might have been
-     * made to the stringency
-     * 
-     * @return
-     */
-    public CoexpressionSearchCommand getSearchSettings() {
-        return searchSettings;
-    }
-
-    public Map<Long, CoexpressionSummaryValueObject> getSummaries() {
-        return summaries;
-    }
-
-    public boolean isQueryGenesOnly() {
-        return queryGenesOnly;
-    }
-
-    public void setErrorState( String errorState ) {
-        this.errorState = errorState;
-    }
-
-    /**
-     * Override the value of gemma.cytoscapeweb.maxEdges (or DEFAULT_MAX_EDGES_PER_GRAPH )
-     * 
-     * @param maxEdges
-     */
-    public void setMaxEdges( int maxEdges ) {
-        this.maxEdges = maxEdges;
+    public int getNumDatasetsQueried() {
+        return numDatasetsQueried;
     }
 
     /**
      * @param numDatasetsQueried the number of data sets which were actually used in the query (a subset of those
-     *        requested by the user if they didn't have coexpression analysis done)
+     *                           requested by the user if they didn't have coexpression analysis done)
      */
     public void setNumDatasetsQueried( int numDatasetsQueried ) {
         this.numDatasetsQueried = numDatasetsQueried;
     }
 
-    //
-    // public void setNonQueryGeneTrimmedValue( int nonQueryGeneTrimmedValue ) {
-    // this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
-    // }
+    public Collection<GeneValueObject> getQueryGenes() {
+        return queryGenes;
+    }
 
     public void setQueryGenes( Collection<GeneValueObject> queryGenes ) {
         this.queryGenes = queryGenes;
     }
 
-    public void setQueryGenesOnly( boolean queryGenesOnly ) {
-        this.queryGenesOnly = queryGenesOnly;
+    public int getQueryStringency() {
+        return queryStringency;
     }
 
     public void setQueryStringency( int queryStringency ) {
         this.queryStringency = queryStringency;
+    }
+
+    /**
+     * A sorted list of the results (sorting must be done elsewhere!)
+     *
+     * @return coexp VOs
+     */
+    public List<CoexpressionValueObjectExt> getResults() {
+        return results;
     }
 
     /**
@@ -199,6 +162,21 @@ public class CoexpressionMetaValueObject {
         this.results = results;
     }
 
+    //
+    // public void setNonQueryGeneTrimmedValue( int nonQueryGeneTrimmedValue ) {
+    // this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
+    // }
+
+    /**
+     * The original search settings from the client. FIXME ??? Does not reflect any adjustments that might have been
+     * made to the stringency
+     *
+     * @return coexp search command
+     */
+    public CoexpressionSearchCommand getSearchSettings() {
+        return searchSettings;
+    }
+
     /**
      * @param searchSettings, should be the original settings
      */
@@ -206,11 +184,20 @@ public class CoexpressionMetaValueObject {
         this.searchSettings = searchSettings;
     }
 
-    /**
-     * @param summary
-     */
+    public Map<Long, CoexpressionSummaryValueObject> getSummaries() {
+        return summaries;
+    }
+
     public void setSummaries( Map<Long, CoexpressionSummaryValueObject> summary ) {
         this.summaries = summary;
+    }
+
+    public boolean isQueryGenesOnly() {
+        return queryGenesOnly;
+    }
+
+    public void setQueryGenesOnly( boolean queryGenesOnly ) {
+        this.queryGenesOnly = queryGenesOnly;
     }
 
     @Override
@@ -227,11 +214,9 @@ public class CoexpressionMetaValueObject {
      * This method just removes low stringency results until it goes below the limit, regardless of whether the genes
      * involved were query genes or not. This means, in effect, the original query could have been done at this higher
      * stringency.
-     * <p>
      * The other trim method only removes non-query gene edges, so it is suitable for large 'query genes only'.
-     * <p>
      * Warning, this method can remove results that user may have expected.
-     * 
+     *
      * @deprecated because this is too ad hoc and messy
      */
     @Deprecated
@@ -244,7 +229,8 @@ public class CoexpressionMetaValueObject {
             return;
         }
 
-        if ( geneResults.size() <= this.getMaxEdges() ) return;
+        if ( geneResults.size() <= this.getMaxEdges() )
+            return;
 
         int startStringency = this.queryStringency;
         int initialTrimStringency = startStringency;
@@ -274,7 +260,8 @@ public class CoexpressionMetaValueObject {
         this.setResults( strippedGeneResults );
         this.setQueryStringency( initialTrimStringency );
 
-        if ( this.searchSettings != null ) this.searchSettings.setStringency( initialTrimStringency );
+        if ( this.searchSettings != null )
+            this.searchSettings.setStringency( initialTrimStringency );
 
         trimUnusedSummaries();
 
@@ -449,11 +436,9 @@ public class CoexpressionMetaValueObject {
     // trimUnusedSummaries();
     // }
 
-    /**
-     * 
-     */
     private void trimUnusedSummaries() {
-        if ( summaries == null ) return;
+        if ( summaries == null )
+            return;
 
         /*
          * remove irrelevant gene summaries.
@@ -480,7 +465,7 @@ public class CoexpressionMetaValueObject {
     // *
     // * @param startStringency
     // * @param stringencyDist
-    // * @return
+    // * @return int
     // */
     // private int findTrimStringency( int startStringency, CountingMap<Integer> stringencyDist ) {
     // int initTrimStringency = startStringency;

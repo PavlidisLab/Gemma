@@ -18,16 +18,10 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.util.converter.Converter;
@@ -42,29 +36,30 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.SequenceBinUtils;
+import ubic.gemma.persistence.util.Settings;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts.
- * 
+ *
  * @author pavlidis
  * @author jrsantos
- * @version $Id$
- * @see NCBIGene2Accession, NCBIGeneInfo
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class NcbiGeneConverter implements Converter<Object, Object> {
 
     // configured in project.properties, override in Gemma.properties
     private static final String RETAIN_PROTEIN_INFO_PARAM = "gemma.store.ncbi.proteininfo";
 
-    private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
-    AtomicBoolean producerDone = new AtomicBoolean( false );
-    AtomicBoolean sourceDone = new AtomicBoolean( false );
-    private static ExternalDatabase genBank;
-    private static ExternalDatabase ensembl;
-
-    private static boolean retainProteinInformation = Settings.getBoolean( RETAIN_PROTEIN_INFO_PARAM, false );
+    private static final Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
+    private static final ExternalDatabase genBank;
+    private static final ExternalDatabase ensembl;
+    private static final boolean retainProteinInformation = Settings.getBoolean( RETAIN_PROTEIN_INFO_PARAM, false );
 
     static {
         genBank = ExternalDatabase.Factory.newInstance();
@@ -73,25 +68,32 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         ensembl.setName( "Ensembl" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.Converter#convert(java.util.Collection)
+    AtomicBoolean producerDone = new AtomicBoolean( false );
+    AtomicBoolean sourceDone = new AtomicBoolean( false );
+
+    /**
+     * @return the genBank
      */
+    public static ExternalDatabase getGenbank() {
+        return genBank;
+    }
+
+    /**
+     * @return the ensembl
+     */
+    public static ExternalDatabase getEnsembl() {
+        return ensembl;
+    }
+
     @Override
-    public Collection<Object> convert( Collection<? extends Object> sourceDomainObjects ) {
-        Collection<Object> results = new HashSet<Object>();
+    public Collection<Object> convert( Collection<?> sourceDomainObjects ) {
+        Collection<Object> results = new HashSet<>();
         for ( Object object : sourceDomainObjects ) {
             results.add( this.convert( object ) );
         }
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.Converter#convert(java.lang.Object)
-     */
     public Gene convert( NCBIGeneInfo info ) {
         Gene gene = Gene.Factory.newInstance();
 
@@ -106,9 +108,8 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
          * uncovered recently...can be minimized by running this regularly.
          */
         if ( info.getHistory() != null ) {
-            if ( info.getHistory().getCurrentId() != null ) {
-                assert info.getGeneId().equals( info.getHistory().getCurrentId() );
-            }
+            assert info.getHistory().getCurrentId() == null || info.getGeneId()
+                    .equals( info.getHistory().getCurrentId() );
 
             assert info.getHistory().getPreviousIds() != null;
             if ( !info.getHistory().getPreviousIds().isEmpty() ) {
@@ -118,8 +119,8 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
         } else if ( StringUtils.isNotBlank( info.getDiscontinuedId() ) ) {
             if ( log.isDebugEnabled() )
-                log.debug( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
-                        + info.getDiscontinuedId() );
+                log.debug( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id " + info
+                        .getDiscontinuedId() );
             gene.setPreviousNcbiId( info.getDiscontinuedId() );
         }
 
@@ -148,7 +149,8 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         }
 
         for ( String dbname : info.getDbXrefs().keySet() ) {
-            if ( !dbname.equalsIgnoreCase( "Ensembl" ) ) continue;
+            if ( !dbname.equalsIgnoreCase( "Ensembl" ) )
+                continue;
             String identifier = info.getDbXrefs().get( dbname );
             DatabaseEntry crossref = DatabaseEntry.Factory.newInstance();
             crossref.setAccession( identifier );
@@ -160,11 +162,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.loaderutils.Converter#convert(java.lang.Object)
-     */
     @Override
     @SuppressWarnings("unchecked")
     public Object convert( Object sourceDomainObject ) {
@@ -176,13 +173,8 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         return convert( ncbiGene.getInfo() );
     }
 
-    /**
-     * @param acc
-     * @param gene
-     * @return
-     */
     public Collection<GeneProduct> convert( NCBIGene2Accession acc, Gene gene ) {
-        Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
+        Collection<GeneProduct> geneProducts = new HashSet<>();
         // initialize up to two Gene Products
         // one for RNA, one for Protein (if retainProteinInformation = true)
 
@@ -235,15 +227,15 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             protein.setGene( gene );
             protein.setName( acc.getProteinAccession() );
             protein.setType( GeneProductType.PROTEIN );
-            protein.setDescription( "Imported from NCBI Gene"
-                    + ( acc.getStatus() != null ? " (" + acc.getStatus() + ")" : "" ) );
+            protein.setDescription(
+                    "Imported from NCBI Gene" + ( acc.getStatus() != null ? " (" + acc.getStatus() + ")" : "" ) );
 
             DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
             accession.setAccession( acc.getProteinAccession() );
             accession.setAccessionVersion( acc.getProteinAccessionVersion() );
             accession.setExternalDatabase( genBank );
 
-            Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
+            Collection<DatabaseEntry> accessions = new HashSet<>();
             accessions.add( accession );
             protein.setAccessions( accessions );
             geneProducts.add( protein );
@@ -251,11 +243,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         return geneProducts;
     }
 
-    /**
-     * @param acc
-     * @param gene
-     * @return
-     */
     private PhysicalLocation getPhysicalLocation( NCBIGene2Accession acc, Gene gene ) {
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
         pl.setChromosome( gene.getPhysicalLocation().getChromosome() );
@@ -265,16 +252,12 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         if ( acc.getStartPosition() != null ) {
             pl.setNucleotide( acc.getStartPosition() );
             pl.setNucleotideLength( ( int ) Math.abs( acc.getEndPosition() - acc.getStartPosition() ) );
-            pl.setBin( SequenceBinUtils.binFromRange( acc.getStartPosition().intValue(), acc.getEndPosition()
-                    .intValue() ) );
+            pl.setBin( SequenceBinUtils
+                    .binFromRange( acc.getStartPosition().intValue(), acc.getEndPosition().intValue() ) );
         }
         return pl;
     }
 
-    /**
-     * @param acc
-     * @param gene
-     */
     private void getChromosomeDetails( NCBIGene2Accession acc, Gene gene ) {
         Chromosome chrom = gene.getPhysicalLocation().getChromosome();
         BioSequence chromSeq = BioSequence.Factory.newInstance();
@@ -302,7 +285,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // grab all accessions and fill in GeneProduct/DatabaseEntry
         // and associate with Gene
         Collection<NCBIGene2Accession> gene2accession = data.getAccessions();
-        Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
+        Collection<GeneProduct> geneProducts = new HashSet<>();
 
         for ( NCBIGene2Accession acc : gene2accession ) {
             geneProducts.addAll( convert( acc, gene ) );
@@ -363,20 +346,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     public void setSourceDoneFlag( AtomicBoolean flag ) {
         this.sourceDone = flag;
-    }
-
-    /**
-     * @return the genBank
-     */
-    public static ExternalDatabase getGenbank() {
-        return genBank;
-    }
-
-    /**
-     * @return the ensembl
-     */
-    public static ExternalDatabase getEnsembl() {
-        return ensembl;
     }
 
 }

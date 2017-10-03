@@ -22,4 +22,9 @@ public class TaxonIdArg extends TaxonArg<Long> {
     public Taxon getPersistentObject( TaxonService service ) {
         return check( service.load( this.value ) );
     }
+
+    @Override
+    public String getPropertyName( TaxonService service ) {
+        return "id";
+    }
 }

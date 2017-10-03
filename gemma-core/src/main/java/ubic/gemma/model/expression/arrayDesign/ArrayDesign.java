@@ -30,8 +30,7 @@ import java.util.Collection;
  *
  * @author Paul
  */
-public class ArrayDesign extends AbstractAuditable
-        implements gemma.gsec.model.SecuredNotChild, Curatable {
+public class ArrayDesign extends AbstractAuditable implements gemma.gsec.model.SecuredNotChild, Curatable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -59,11 +58,9 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     /**
-     * <p>
-     * The number of design elements, according to the manufactuerer or determined at the time the array design was
+     * @return The number of design elements, according to the manufactuerer or determined at the time the array design was
      * entered into the system. The actual number of design elements can only be determined by looking at the associated
      * Collection of DesignElements.
-     * </p>
      */
     public Integer getAdvertisedNumberOfDesignElements() {
         return this.advertisedNumberOfDesignElements;
@@ -99,9 +96,7 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     /**
-     * <p>
-     * Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
-     * </p>
+     * @return Accessions for this array design in other databases, e.g., GEO, ArrayExpression.
      */
     public Collection<ubic.gemma.model.common.description.DatabaseEntry> getExternalReferences() {
         return this.externalReferences;
@@ -113,9 +108,7 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     /**
-     * <p>
-     * Files containing data that were loaded to create this ArrayDesign
-     * </p>
+     * @return Files containing data that were loaded to create this ArrayDesign
      */
     public Collection<ubic.gemma.model.common.description.LocalFile> getLocalFiles() {
         return this.localFiles;
@@ -142,11 +135,9 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     /**
-     * <p>
-     * The taxon the array design is for. This could be a non-specific taxon ("salmonid"). It may not match the
+     * @return The taxon the array design is for. This could be a non-specific taxon ("salmonid"). It may not match the
      * sequences on the array exactly. For example, a mouse array might have some non-mouse sequences as controls, but
      * the primary taxon is still mouse.
-     * </p>
      */
     public ubic.gemma.model.genome.Taxon getPrimaryTaxon() {
         return this.primaryTaxon;
@@ -157,10 +148,8 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     /**
-     * <p>
-     * A brief unique (but optional) human-readable name for the expression experiment. For example in the past we often
+     * @return A brief unique (but optional) human-readable name for the expression experiment. For example in the past we often
      * used names like "HG-U95A".
-     * </p>
      */
     public String getShortName() {
         return this.shortName;
@@ -171,10 +160,8 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     /**
-     * <p>
-     * Array designs that this array design "covers". For example, the HG-U133_Plus_2 array includes all the elements
+     * @return Array designs that this array design "covers". For example, the HG-U133_Plus_2 array includes all the elements
      * that are on the HG-U133A and HG-U133B, so they are subsumed by the HG-U133_Plus_2.
-     * </p>
      */
     public Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> getSubsumedArrayDesigns() {
         return this.subsumedArrayDesigns;
@@ -186,10 +173,8 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     /**
-     * <p>
-     * An array design that subsumes this one (contains DesignElements that are equivalent to the ones on this
+     * @return An array design that subsumes this one (contains DesignElements that are equivalent to the ones on this
      * arraydesign).
-     * </p>
      */
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign getSubsumingArrayDesign() {
         return this.subsumingArrayDesign;
@@ -239,17 +224,12 @@ public class ArrayDesign extends AbstractAuditable
     }
 
     @Override
-    public void setCurationDetails(CurationDetails curationDetails) {
+    public void setCurationDetails( CurationDetails curationDetails ) {
         this.curationDetails = curationDetails;
     }
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
-         */
+
         public static ubic.gemma.model.expression.arrayDesign.ArrayDesign newInstance() {
             return new ubic.gemma.model.expression.arrayDesign.ArrayDesign();
         }

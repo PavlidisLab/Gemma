@@ -19,34 +19,27 @@
 
 package ubic.gemma.model.association.coexpression;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.IntArrayList;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import ubic.basecode.io.ByteArrayConverter;
+
 import java.util.List;
 import java.util.TreeMap;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.basecode.io.ByteArrayConverter;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.list.IntArrayList;
-
 /**
  * Represents a GeneCoexpressionNodeDegree
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class GeneCoexpressionNodeDegreeValueObject {
 
     private static ByteArrayConverter bac = new ByteArrayConverter();
-
     private Long geneId;
-
     private TreeMap<Integer, Integer> nodeDegreesNeg = new TreeMap<>();
-
     private TreeMap<Integer, Integer> nodeDegreesPos = new TreeMap<>();
-
     private TreeMap<Integer, Double> relDegreesNeg = new TreeMap<>();
-
     private TreeMap<Integer, Double> relDegreesPos = new TreeMap<>();
 
     public GeneCoexpressionNodeDegreeValueObject( GeneCoexpressionNodeDegree entity ) {
@@ -58,77 +51,41 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     public double[] asDoubleArrayNegRanks() {
-        DoubleArrayList list = new DoubleArrayList();
-        if ( relDegreesNeg.isEmpty() ) return toPrimitive( list );
-        list.setSize( Math.max( list.size(), relDegreesNeg.lastKey() + 1 ) );
-        for ( Integer s : relDegreesNeg.keySet() ) {
-            list.set( s, relDegreesNeg.get( s ) );
-        }
-
-        return toPrimitive( list );
+        return asDoubleArray( relDegreesNeg );
     }
 
     public double[] asDoubleArrayPosRanks() {
-        DoubleArrayList list = new DoubleArrayList();
-        if ( relDegreesPos.isEmpty() ) return toPrimitive( list );
-        list.setSize( Math.max( list.size(), relDegreesPos.lastKey() + 1 ) );
-        for ( Integer s : relDegreesPos.keySet() ) {
-            list.set( s, relDegreesPos.get( s ) );
-        }
-
-        return toPrimitive( list );
+        return asDoubleArray( relDegreesPos );
     }
 
     /**
-     * counts at each level of support, starting from 0 (which will be 0), up to the maximum support.
-     * 
-     * @return
+     * @return counts at each level of support, starting from 0 (which will be 0), up to the maximum support.
      */
     public int[] asIntArrayNeg() {
-        IntArrayList list = new IntArrayList();
-        if ( nodeDegreesNeg.isEmpty() ) return toPrimitive( list );
-        Integer maxSupport = nodeDegreesNeg.lastKey();
-        list.setSize( maxSupport + 1 );
-        for ( Integer s = 0; s <= maxSupport; s++ ) {
-            if ( nodeDegreesNeg.containsKey( s ) ) {
-                list.set( s, nodeDegreesNeg.get( s ) );
-            } else {
-                list.set( s, 0 );
-            }
-        }
-        return toPrimitive( list );
+        return this.asIntArray( nodeDegreesNeg );
     }
 
     /**
-     * counts at each level of support, starting from 0 (which will be 0), up to the maximum support.
-     * 
-     * @return
+     * @return counts at each level of support, starting from 0 (which will be 0), up to the maximum support.
      */
     public int[] asIntArrayPos() {
-        IntArrayList list = new IntArrayList();
-        if ( nodeDegreesPos.isEmpty() ) return toPrimitive( list );
-        Integer maxSupport = nodeDegreesPos.lastKey();
-        list.setSize( maxSupport + 1 );
-        for ( Integer s = 0; s <= maxSupport; s++ ) {
-            if ( nodeDegreesPos.containsKey( s ) ) {
-                list.set( s, nodeDegreesPos.get( s ) );
-            } else {
-                list.set( s, 0 );
-            }
-        }
-
-        return toPrimitive( list );
+        return this.asIntArray( nodeDegreesPos );
     }
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         GeneCoexpressionNodeDegreeValueObject other = ( GeneCoexpressionNodeDegreeValueObject ) obj;
         if ( geneId == null ) {
-            if ( other.geneId != null ) return false;
-        } else if ( !geneId.equals( other.geneId ) ) return false;
+            if ( other.geneId != null )
+                return false;
+        } else if ( !geneId.equals( other.geneId ) )
+            return false;
         return true;
     }
 
@@ -137,7 +94,8 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     /**
-     * @param support value
+     * @param support  value
+     * @param positive positive
      * @return how many links have this much support (specifically).
      */
     public Integer getLinksWithExactSupport( Integer support, boolean positive ) {
@@ -149,16 +107,17 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     /**
-     * @param i
+     * @param i support
      * @return total number of links (this is just the total of positive and negative; if some of those are with the
-     *         same genes it's a double count, sorry)
+     * same genes it's a double count, sorry)
      */
     public Integer getLinksWithMinimumSupport( int i ) {
         return this.getLinksWithMinimumSupport( i, true ) + this.getLinksWithMinimumSupport( i, false );
     }
 
     /**
-     * @param support threshold
+     * @param support  threshold
+     * @param positive positive
      * @return how many links have at least this much support (cumulative)
      */
     public Integer getLinksWithMinimumSupport( Integer support, boolean positive ) {
@@ -191,10 +150,6 @@ public class GeneCoexpressionNodeDegreeValueObject {
         return this.nodeDegreesPos.isEmpty() ? 0 : this.nodeDegreesPos.lastKey();
     }
 
-    /**
-     * @param support
-     * @return
-     */
     public Double getRankAtMinimumSupport( Integer support, boolean positive ) {
         // this can be invalid if node degree isn't updated for this gene.F
         if ( positive ) {
@@ -213,10 +168,6 @@ public class GeneCoexpressionNodeDegreeValueObject {
         return result;
     }
 
-    /**
-     * @param support
-     * @param isPositive
-     */
     public synchronized void increment( Integer support, boolean positive ) {
         if ( positive ) {
             if ( !nodeDegreesPos.containsKey( support ) ) {
@@ -242,9 +193,9 @@ public class GeneCoexpressionNodeDegreeValueObject {
 
     /**
      * Equivalent to getLinksWithMinimumSupport( 0 )
-     * 
+     *
      * @return how many links this gene has in total, across all levels of support (positive and negative correlations
-     *         combined)
+     * combined)
      */
     public int total() {
         return this.getLinksWithMinimumSupport( 0, true ) + this.getLinksWithMinimumSupport( 0, false );
@@ -271,9 +222,6 @@ public class GeneCoexpressionNodeDegreeValueObject {
         return r;
     }
 
-    /**
-     * @return
-     */
     private void initLinkCounts( byte[] linkCountBytes, boolean isPositive ) {
         int[] byteArrayToInts = bac.byteArrayToInts( linkCountBytes );
 
@@ -281,6 +229,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
             return;
         }
 
+        //noinspection Duplicates // Can not extract method, arrays have diferent primitive types
         if ( isPositive ) {
             nodeDegreesPos = new TreeMap<>();
             for ( int i = 1; i < byteArrayToInts.length; i++ ) {
@@ -295,9 +244,6 @@ public class GeneCoexpressionNodeDegreeValueObject {
 
     }
 
-    /**
-     * @param relativeLinkRanks
-     */
     private void initRelRanks( byte[] relativeLinkRanks, boolean isPositive ) {
         double[] ranks = bac.byteArrayToDoubles( relativeLinkRanks );
 
@@ -305,6 +251,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
             return;
         }
 
+        //noinspection Duplicates // Can not extract method, arrays have diferent primitive types
         if ( isPositive ) {
             relDegreesPos = new TreeMap<>();
             for ( int i = 1; i < ranks.length; i++ ) {
@@ -319,20 +266,42 @@ public class GeneCoexpressionNodeDegreeValueObject {
 
     }
 
-    /**
-     * @param list
-     * @return
-     */
     private double[] toPrimitive( DoubleArrayList list ) {
+        //noinspection unchecked
         return ArrayUtils.toPrimitive( ( ( List<Double> ) list.toList() ).toArray( new Double[] {} ) );
     }
 
-    /**
-     * @param list
-     * @return
-     */
     private int[] toPrimitive( IntArrayList list ) {
+        //noinspection unchecked
         return ArrayUtils.toPrimitive( ( ( List<Integer> ) list.toList() ).toArray( new Integer[] {} ) );
+    }
+
+    private double[] asDoubleArray( TreeMap<Integer, Double> map ) {
+        DoubleArrayList list = new DoubleArrayList();
+        if ( map.isEmpty() )
+            return toPrimitive( list );
+        list.setSize( Math.max( list.size(), map.lastKey() + 1 ) );
+        for ( Integer s : map.keySet() ) {
+            list.set( s, map.get( s ) );
+        }
+
+        return toPrimitive( list );
+    }
+
+    private int[] asIntArray( TreeMap<Integer, Integer> nodeDegreesNeg ) {
+        IntArrayList list = new IntArrayList();
+        if ( nodeDegreesNeg.isEmpty() )
+            return toPrimitive( list );
+        Integer maxSupport = nodeDegreesNeg.lastKey();
+        list.setSize( maxSupport + 1 );
+        for ( Integer s = 0; s <= maxSupport; s++ ) {
+            if ( nodeDegreesNeg.containsKey( s ) ) {
+                list.set( s, nodeDegreesNeg.get( s ) );
+            } else {
+                list.set( s, 0 );
+            }
+        }
+        return toPrimitive( list );
     }
 
 }

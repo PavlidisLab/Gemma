@@ -18,23 +18,14 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -47,12 +38,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
@@ -102,8 +97,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         metaData.getArrayDesigns().add( ad );
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/experimentalDesignTestData.txt" );) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestData.txt" );) {
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
         }
@@ -144,8 +139,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test(expected = Exception.class)
     public final void testParseFailedDryRun() throws Exception {
 
-        try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/experimentalDesignTestBad.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );) {
 
             experimentalDesignImporter.importDesign( ee, is, true );
             fail( "Should have gotten an Exception" );
@@ -154,16 +149,14 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     }
 
-    /**
+    /*
      * test case where the design file has extra information not relevant to the current samples.
-     * 
-     * @throws Exception
      */
     @Test
     public final void testParseWhereExtraValue() throws Exception {
 
-        try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/experimentalDesignTestExtra.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );) {
 
             experimentalDesignImporter.importDesign( ee, is, false );
         }
@@ -180,9 +173,6 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         checkResults( bms );
     }
 
-    /**
-     * @param bms
-     */
     private void checkResults( Collection<BioMaterial> bms ) {
         // check.
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );

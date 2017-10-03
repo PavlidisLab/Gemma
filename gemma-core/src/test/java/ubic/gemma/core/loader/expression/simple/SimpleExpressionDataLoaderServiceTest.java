@@ -96,9 +96,6 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertEquals( 12, ee.getBioAssays().size() );
     }
 
-    /**
-     *
-     */
     @Test
     public final void testLoadB() throws Exception {
 

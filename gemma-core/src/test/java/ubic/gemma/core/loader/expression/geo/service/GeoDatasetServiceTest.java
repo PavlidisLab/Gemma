@@ -18,89 +18,75 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.util.Collection;
-
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTask;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.File;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 /**
  * Test full procedure of loading GEO data, focus on corner cases. Tests deletion of data sets as well.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
+    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    @Autowired
+    TwoChannelMissingValues twoChannelMissingValues;
+    @Autowired
+    ExpressionExperimentLoadTask expressionExperimentLoadTask;
+    @Autowired
+    ExpressionDataFileService dataFileService;
+    @Autowired
+    AclTestUtils aclTestUtils;
+    @Autowired
     private GeoService geoService;
-
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
     @Autowired
     private ExpressionExperimentService eeService;
-
     private ExpressionExperiment ee;
-
     @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
 
-    @Autowired
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
-    TwoChannelMissingValues twoChannelMissingValues;
-
-    @Autowired
-    ExpressionExperimentLoadTask expressionExperimentLoadTask;
-
-    @Autowired
-    ExpressionDataFileService dataFileService;
-
-    @Autowired
-    AclTestUtils aclTestUtils;
-
-    /**
+    /*
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
     @Test
     public void testFetchAndLoadGSE1133() throws Exception {
 
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse1133Short" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse1133Short" ) ) );
         Collection<?> results = null;
 
         try {
@@ -174,11 +160,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     //        aclTestUtils.checkEEAcls( ee );
     //    }
 
-    /**
+    /*
      * Left out quantitation types due to bug in how quantitation types were cached during persisting, if the QTs didn't
      * have descriptions.
-     * 
-     * @throws Exception
      */
     @Test
     public void testFetchAndLoadGSE13657() throws Exception {
@@ -221,12 +205,13 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     @After
     public void tearDown() throws Exception {
-        if ( ee != null ) try {
-            eeService.remove( ee );
-        } catch ( Exception e ) {
-            log.info( "Failed to remove EE after test: " + e.getMessage() );
-            throw e;
-        }
+        if ( ee != null )
+            try {
+                eeService.remove( ee );
+            } catch ( Exception e ) {
+                log.info( "Failed to remove EE after test: " + e.getMessage() );
+                throw e;
+            }
     }
 
     @Test
@@ -269,7 +254,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         assertTrue( f.length() > 0 );
     }
 
-    /**
+    /*
      * For bug 2312 - qts getting dropped.
      */
     @Test
@@ -309,8 +294,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadGSE5949() throws Exception {
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "GSE5949short" ) ) );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE5949short" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE5949", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -372,9 +357,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     }
 
-    /**
-     * @param matrix
-     */
     @SuppressWarnings("unused")
     private void printMatrix( DoubleMatrix<Object, Object> matrix ) {
         StringBuilder buf = new StringBuilder();
@@ -414,7 +396,8 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             }
 
         }
-        if ( soughtDesignElement == null || soughtBioAssay == null ) fail( "didn't find values for " + sampleToTest );
+        if ( soughtDesignElement == null || soughtBioAssay == null )
+            fail( "didn't find values for " + sampleToTest );
 
         Double actualValue = matrix.get( soughtDesignElement, soughtBioAssay );
         assertNotNull( "No value for " + soughtBioAssay, actualValue );
@@ -422,9 +405,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
     }
 
-    /**
-     * 
-     */
     @Test
     public void testLoadGSE30521ExonArray() throws Exception {
         try {

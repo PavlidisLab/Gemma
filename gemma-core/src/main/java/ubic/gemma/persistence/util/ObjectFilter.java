@@ -37,7 +37,7 @@ public class ObjectFilter {
      * @throws ParseException in case the given requiredValue could not be parsed into the propertyType.
      * @see ObjectFilter#ObjectFilter(String, Object, String, String)
      */
-    public ObjectFilter( String propertyName, Class propertyType, String requiredValue, String operator,
+    public ObjectFilter( String propertyName, Class propertyType, Object requiredValue, String operator,
             String objectAlias ) throws ParseException {
         this.propertyName = propertyName;
         this.propertyType = propertyType;
@@ -76,13 +76,32 @@ public class ObjectFilter {
         checkTypeCorrect();
     }
 
-    private Object convertToParamType( String requiredValue, Class propertyType ) throws ParseException {
-        if ( String.class.isAssignableFrom( propertyType ) ) {
+    private Object convertToParamType( Object requiredValue, Class propertyType ) throws ParseException {
+        if ( Iterable.class.isAssignableFrom( requiredValue.getClass() ) ) {
+            // We got a collection
+            @SuppressWarnings("unchecked") // Assuming default is string
+                    Collection<String> reqCol = ( Collection<String> ) requiredValue;
+            if ( String.class.isAssignableFrom( propertyType ) ) {
+                return requiredValue;
+            } else if ( Number.class.isAssignableFrom( propertyType ) ) {
+                Collection<Number> newCol = new ArrayList<>( reqCol.size() );
+                for ( String s : reqCol ) {
+                    newCol.add( NumberFormat.getInstance().parse( s ) );
+                }
+                return newCol;
+            } else if ( Boolean.class.isAssignableFrom( propertyType ) ) {
+                Collection<Boolean> newCol = new ArrayList<>( reqCol.size() );
+                for ( String s : reqCol ) {
+                    newCol.add( Boolean.parseBoolean( s ) );
+                }
+                return newCol;
+            }
+        } else if ( String.class.isAssignableFrom( propertyType ) ) {
             return requiredValue;
         } else if ( Number.class.isAssignableFrom( propertyType ) ) {
-            return NumberFormat.getInstance().parse( requiredValue );
+            return NumberFormat.getInstance().parse( ( String ) requiredValue );
         } else if ( Boolean.class.isAssignableFrom( propertyType ) ) {
-            return Boolean.parseBoolean( requiredValue );
+            return Boolean.parseBoolean( ( String ) requiredValue );
         }
         throw new IllegalArgumentException( "Property type not supported (" + propertyType + ")." );
     }
@@ -93,11 +112,10 @@ public class ObjectFilter {
                         operator.equals( lessThan ) ) // lt
                 ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
-        } else if ( operator.equals( in ) &&  // Check 'in' conditions
-                ( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) ) // Check value is iterable
-        {
-            throw new IllegalArgumentException(
-                    "requiredValue for operator " + operator + " has to be an Iterable Object." );
+        } else if ( operator.equals( in ) ){ // Check 'in' conditions
+            if( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
+                throw new IllegalArgumentException( "requiredValue for operator " + operator + " has to be an Iterable Object." );
+            }
         } else if ( propertyType != null && !( requiredValue == null || requiredValue.getClass()
                 .isAssignableFrom( propertyType ) ) ) { // Check the type matches
             throw new IllegalArgumentException(

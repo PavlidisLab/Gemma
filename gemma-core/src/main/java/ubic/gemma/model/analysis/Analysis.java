@@ -29,10 +29,7 @@ import ubic.gemma.model.common.protocol.Protocol;
  * @author Paul
  */
 public abstract class Analysis extends AbstractAuditable {
-
-    /**
-     *
-     */
+    
     private static final long serialVersionUID = -7666181528240555473L;
     private Protocol protocol;
 
@@ -42,9 +39,6 @@ public abstract class Analysis extends AbstractAuditable {
     public Analysis() {
     }
 
-    /**
-     *
-     */
     public Protocol getProtocol() {
         return this.protocol;
     }

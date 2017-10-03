@@ -19,24 +19,9 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * 
+ *
  */
-public class ManualAnnotationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent}
-         * .
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent();
-        }
-
-    }
+public class ManualAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -45,10 +30,18 @@ public class ManualAnnotationEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ManualAnnotationEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent();
+        }
+
     }
 
 }

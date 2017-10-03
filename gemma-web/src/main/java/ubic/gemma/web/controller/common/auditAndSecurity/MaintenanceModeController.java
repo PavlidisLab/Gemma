@@ -18,10 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -29,17 +26,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
-import gemma.gsec.util.SecurityUtil;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.Constants;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * Performs actions required when we wish to indicate that the system is undergoing maintenance and many not behave
  * normally.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Controller
 @RequestMapping("/admin/maintenanceMode.html")
@@ -50,19 +47,11 @@ public class MaintenanceModeController {
         return "admin/maintenanceMode";
     }
 
-    /**
-     * @param stop
-     * @param start
-     * @param request
-     * @return
-     * @throws Exception
-     */
     @RequestMapping(method = RequestMethod.POST)
     public ModelAndView setMode( String stop, String start, HttpServletRequest request ) throws Exception {
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> config = ( Map<String, Object> ) request.getSession().getServletContext()
-                .getAttribute( Constants.CONFIG );
+        @SuppressWarnings("unchecked") Map<String, Object> config = ( Map<String, Object> ) request.getSession()
+                .getServletContext().getAttribute( Constants.CONFIG );
 
         // check that the user is admin!
 

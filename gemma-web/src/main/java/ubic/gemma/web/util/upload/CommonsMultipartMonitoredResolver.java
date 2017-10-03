@@ -18,18 +18,7 @@
  */
 package ubic.gemma.web.util.upload;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -43,44 +32,45 @@ import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
 import org.springframework.web.util.WebUtils;
 
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An adaptation of the standard Spring CommonsMultipartResolver that uses a MonitoredOutputStream. This allows
  * asynchronous client-side monitoring of the upload process.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class CommonsMultipartMonitoredResolver implements MultipartResolver, ServletContextAware {
 
-    private ServletFileUpload fileUpload;
-
-    private String defaultEncoding = WebUtils.DEFAULT_CHARACTER_ENCODING;
-
+    private final Log logger = LogFactory.getLog( getClass() );
     private File uploadTempDir;
-
     /*
      * This is set in gemma-servlet.xml where this bean is configured.
      */
     private long sizeMax = 4194304L;
 
-    protected final Log logger = LogFactory.getLog( getClass() );
-
     @Override
     public void cleanupMultipart( MultipartHttpServletRequest request ) {
 
-        if ( request instanceof FailedMultipartHttpServletRequest ) return;
+        if ( request instanceof FailedMultipartHttpServletRequest )
+            return;
 
         Map<String, MultipartFile> multipartFiles = request.getFileMap();
-        for ( Iterator<MultipartFile> it = multipartFiles.values().iterator(); it.hasNext(); ) {
-            CommonsMultipartFile file = ( CommonsMultipartFile ) it.next();
+        for ( MultipartFile multipartFile : multipartFiles.values() ) {
+            CommonsMultipartFile file = ( CommonsMultipartFile ) multipartFile;
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Cleaning up multipart file [" + file.getName() + "] with original filename ["
-                        + file.getOriginalFilename() + "], stored " + file.getStorageDescription() );
+                logger.debug( "Cleaning up multipart file [" + file.getName() + "] with original filename [" + file
+                        .getOriginalFilename() + "], stored " + file.getStorageDescription() );
             }
             file.getFileItem().delete();
         }
@@ -91,34 +81,26 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
         return ServletFileUpload.isMultipartContent( request );
     }
 
-    /*
-     * This is called when a multipart HTTP request is received. When intercepted, the request is attached to a monitor
-     * that can be used to check progress of the upload.
-     * 
-     * @see UploadListener for the attached listener.
-     * 
-     * @see org.springframework.web.multipart.MultipartResolver#resolveMultipart(javax.servlet.http.HttpServletRequest)
-     */
     @Override
     public MultipartHttpServletRequest resolveMultipart( HttpServletRequest request ) throws MultipartException {
         String enc = determineEncoding( request );
 
-        this.fileUpload = this.newFileUpload( request );
+        ServletFileUpload fileUpload = this.newFileUpload( request );
         DiskFileItemFactory newFactory = ( DiskFileItemFactory ) fileUpload.getFileItemFactory();
         fileUpload.setSizeMax( sizeMax );
         newFactory.setRepository( this.uploadTempDir );
         fileUpload.setHeaderEncoding( enc );
 
         try {
-            MultiValueMap<String, MultipartFile> multipartFiles = new LinkedMultiValueMap<String, MultipartFile>();
-            Map<String, String[]> multipartParams = new HashMap<String, String[]>();
+            MultiValueMap<String, MultipartFile> multipartFiles = new LinkedMultiValueMap<>();
+            Map<String, String[]> multipartParams = new HashMap<>();
 
             // Extract multipart files and multipart parameters.
             List<?> fileItems = fileUpload.parseRequest( request );
-            for ( Iterator<?> it = fileItems.iterator(); it.hasNext(); ) {
-                FileItem fileItem = ( FileItem ) it.next();
+            for ( Object fileItem1 : fileItems ) {
+                FileItem fileItem = ( FileItem ) fileItem1;
                 if ( fileItem.isFormField() ) {
-                    String value = null;
+                    String value;
                     String fieldName = fileItem.getFieldName();
 
                     try {
@@ -149,11 +131,6 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                 }
             }
             return new DefaultMultipartHttpServletRequest( request, multipartFiles, multipartParams, null );
-        } catch ( FileUploadBase.SizeLimitExceededException ex ) {
-            /*
-             * Don't throw an exception - we want to return JSON.
-             */
-            return new FailedMultipartHttpServletRequest( request, ex.getMessage() );
         } catch ( FileUploadException ex ) {
             return new FailedMultipartHttpServletRequest( request, ex.getMessage() );
         }
@@ -161,7 +138,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     /**
      * Set the maximum allowed size (in bytes) before uploads are refused. -1 indicates no limit (the default).
-     * 
+     *
      * @param maxUploadSize the maximum upload size allowed
      * @see org.apache.commons.fileupload.FileUploadBase#setSizeMax
      */
@@ -169,9 +146,6 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
         this.sizeMax = maxUploadSize;
     }
 
-    /**
-     * 
-     */
     @Override
     public void setServletContext( ServletContext servletContext ) {
         if ( this.uploadTempDir == null ) {
@@ -181,27 +155,25 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     /**
      * Determine the encoding for the given request. Can be overridden in subclasses.
-     * <p>
      * The default implementation checks the request encoding, falling back to the default encoding specified for this
      * resolver.
-     * 
+     *
      * @param request current HTTP request
      * @return the encoding for the request (never <code>null</code>)
      * @see javax.servlet.ServletRequest#getCharacterEncoding
-     * @see #setDefaultEncoding
      */
     protected String determineEncoding( HttpServletRequest request ) {
         String enc = request.getCharacterEncoding();
         if ( enc == null ) {
-            enc = this.defaultEncoding;
+            enc = WebUtils.DEFAULT_CHARACTER_ENCODING;
         }
         return enc;
     }
 
     /**
      * Create a factory for disk-based file items with a listener we can check for progress.
-     * 
-     * @param request
+     *
+     * @param request request
      * @return the new FileUpload instance
      */
     protected ServletFileUpload newFileUpload( HttpServletRequest request ) {

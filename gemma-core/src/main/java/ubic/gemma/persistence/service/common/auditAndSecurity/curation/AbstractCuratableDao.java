@@ -86,7 +86,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
             Collection<AuditEvent> events = eventMap.get( id );
             events.add( event );
         } else {
-            Collection<AuditEvent> events = new ArrayList<AuditEvent>();
+            Collection<AuditEvent> events = new ArrayList<>();
             events.add( event );
             eventMap.put( id, events );
         }
@@ -97,20 +97,21 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * Note that the events can still be null, as the value-change events they represent might have not occurred since
      * the curatable object was created, and they are not initialised with a creation event.
      *
-     * @param vo the value object that needs its curation events populated.
+     * @param vo             the value object that needs its curation events populated.
+     * @param attentionEvent the last event that updated the needs attention property
+     * @param noteEvent      the last event that updated the curation note property
+     * @param troubleEvent   the last event that updated the troubled property
      */
-    protected void addCurationEvents( AbstractCuratableValueObject vo ) {
-        Long id = vo.getId();
-        Curatable curatable = this.load( id );
-        CurationDetails details = curatable.getCurationDetails();
-        if ( details.getLastNoteUpdateEvent() != null ) {
-            vo.setLastNoteUpdateEvent( new AuditEventValueObject( details.getLastNoteUpdateEvent() ) );
+    protected void addCurationEvents( AbstractCuratableValueObject vo, AuditEvent noteEvent, AuditEvent attentionEvent,
+            AuditEvent troubleEvent ) {
+        if ( noteEvent != null ) {
+            vo.setLastNoteUpdateEvent( new AuditEventValueObject( noteEvent ) );
         }
-        if ( details.getLastNeedsAttentionEvent() != null ) {
-            vo.setLastNeedsAttentionEvent( new AuditEventValueObject( details.getLastNeedsAttentionEvent() ) );
+        if ( attentionEvent != null ) {
+            vo.setLastNeedsAttentionEvent( new AuditEventValueObject( attentionEvent ) );
         }
-        if ( details.getLastTroubledEvent() != null ) {
-            vo.setLastTroubledEvent( new AuditEventValueObject( details.getLastTroubledEvent() ) );
+        if ( troubleEvent != null ) {
+            vo.setLastTroubledEvent( new AuditEventValueObject( troubleEvent ) );
         }
     }
 

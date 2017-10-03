@@ -30,25 +30,23 @@ import java.util.List;
 
 /**
  * Utility methods to manipulate compass (and lucene).
- * 
+ *
  * @author keshav
- * @version $Id$
  */
+@SuppressWarnings("WeakerAccess") // Possible external use
 public class CompassUtils {
 
-    private static Log log = LogFactory.getLog( CompassUtils.class );
+    private static final Log log = LogFactory.getLog( CompassUtils.class );
 
     /**
      * Deletes compass lock file(s).
-     * 
-     * @throws IOException
      */
     public static void deleteCompassLocks() {
         /*
          * FIXME Note that normally the lock files are not present - only during indexing. So I am turning this into a
          * no-op for now until we evaluate the necessity. - PP
          * 
-         * The locks are stored in the same directoy as the indexes, so to do this we need to know the location of the
+         * The locks are stored in the same directory as the indexes, so to do this we need to know the location of the
          * indexes (there are multiple locations)
          */
 
@@ -68,8 +66,8 @@ public class CompassUtils {
 
     /**
      * disables the index mirroring operation.
-     * 
-     * @param device
+     *
+     * @param device device
      */
     public static void disableIndexMirroring( CompassGpsInterfaceDevice device ) {
         device.stop();
@@ -77,8 +75,8 @@ public class CompassUtils {
 
     /**
      * enables the index mirroring operation.
-     * 
-     * @param device
+     *
+     * @param device device
      */
     public static void enableIndexMirroring( CompassGpsInterfaceDevice device ) {
         device.start();
@@ -86,9 +84,8 @@ public class CompassUtils {
 
     /**
      * Deletes and re-creates the index. See the IndexService
-     * 
-     * @param gps
-     * @throws IOException
+     *
+     * @param gps gps
      */
     public static synchronized boolean rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         boolean wasRunningBefore = gps.isRunning();
@@ -103,12 +100,14 @@ public class CompassUtils {
         }
 
         if ( gps.getIndexCompass().getSearchEngineIndexManager().indexExists() ) {
-            if ( wasRunningBefore ) gps.stop();
+            if ( wasRunningBefore )
+                gps.stop();
 
             gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
             log.info( "Deleting old index" );
 
-            if ( wasRunningBefore ) gps.start();
+            if ( wasRunningBefore )
+                gps.start();
         }
 
         gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
@@ -130,11 +129,11 @@ public class CompassUtils {
     }
 
     /**
-     * @param compass eg: InternalCompass expressionBean = (InternalCompass) this.getBean("compassExpression"); Need
-     *        this for replacing the indexes and it contains the path to the indexes to replace
+     * @param compass     eg: InternalCompass expressionBean = (InternalCompass) this.getBean("compassExpression"); Need
+     *                    this for replacing the indexes and it contains the path to the indexes to replace
      * @param pathToIndex An absolute path to the directory where the new indexes are located. Path should end at index
-     *        sub dir.
-     * @throws IOException
+     *                    sub dir.
+     * @throws IOException IO problems
      */
     public static synchronized void swapCompassIndex( Compass compass, String pathToIndex ) throws IOException {
 
@@ -178,9 +177,9 @@ public class CompassUtils {
      * "Turning on" means adding the compass context to our spring context, as well as creating the compass index
      * directory. This does not turn on index mirroring to automatically update the index while persisting data (to a
      * database). To do this, call enableIndexMirroring after running this.
-     * 
-     * @param testEnv
-     * @param paths
+     *
+     * @param testEnv test env
+     * @param paths   paths
      */
     public static void turnOnCompass( boolean testEnv, List<String> paths ) {
         deleteCompassLocks();
@@ -194,8 +193,8 @@ public class CompassUtils {
 
     /**
      * Add the compass contexts to the other spring contexts
-     * 
-     * @param paths
+     *
+     * @param paths paths
      */
     private static void addCompassContext( List<String> paths ) {
         paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
@@ -203,8 +202,8 @@ public class CompassUtils {
 
     /**
      * Add the compass test contexts to the other spring contexts.
-     * 
-     * @param paths
+     *
+     * @param paths paths
      */
     private static void addCompassTestContext( List<String> paths ) {
         paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );

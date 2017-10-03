@@ -24,18 +24,12 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignAddCommand {
     ArrayDesign arrayDesign;
-
     FileUpload file;
-
     Taxon taxon;
 
-    /**
-     * 
-     */
     public ArrayDesignAddCommand() {
         this.file = new FileUpload();
         this.arrayDesign = ArrayDesign.Factory.newInstance();
@@ -50,20 +44,6 @@ public class ArrayDesignAddCommand {
     }
 
     /**
-     * @return the sequenceFile
-     */
-    public FileUpload getFile() {
-        return this.file;
-    }
-
-    /**
-     * @return the taxon
-     */
-    public Taxon getTaxon() {
-        return this.taxon;
-    }
-
-    /**
      * @param arrayDesign the arrayDesign to set
      */
     public void setArrayDesign( ArrayDesign arrayDesign ) {
@@ -71,10 +51,24 @@ public class ArrayDesignAddCommand {
     }
 
     /**
-     * @param sequenceFile the sequenceFile to set
+     * @return the sequenceFile
+     */
+    public FileUpload getFile() {
+        return this.file;
+    }
+
+    /**
+     * @param file the sequenceFile to set
      */
     public void setFile( FileUpload file ) {
         this.file = file;
+    }
+
+    /**
+     * @return the taxon
+     */
+    public Taxon getTaxon() {
+        return this.taxon;
     }
 
     /**

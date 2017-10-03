@@ -38,7 +38,6 @@ import ubic.gemma.persistence.util.TaxonUtility;
  * Helper class to use for generating the link objects for persistence.
  * 
  * @author Paul
- * @version $Id$
  */
 public class LinkCreator {
 
@@ -120,12 +119,6 @@ public class LinkCreator {
         }
     }
 
-    /**
-     * @param g1
-     * @param g2
-     * @param isPositive
-     * @return
-     */
     public SupportDetails createSupportDetails( Long g1, Long g2, boolean isPositive ) {
         try {
             return supportDetailsFactoryMethodByIds.newInstance( g1, g2, isPositive );

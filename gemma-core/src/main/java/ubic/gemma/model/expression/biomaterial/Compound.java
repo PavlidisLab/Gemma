@@ -18,26 +18,65 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-/**
- * 
- */
 public abstract class Compound extends ubic.gemma.model.common.Describable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.biomaterial.Compound}.
+     * The serial version UID of this class. Needed for serialization.
      */
+    private static final long serialVersionUID = 8136911145519622152L;
+    private Boolean isSolvent;
+    private String registryNumber;
+    private ubic.gemma.model.common.description.DatabaseEntry externalLIMS;
+    private ubic.gemma.model.common.description.Characteristic compoundIndices;
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public Compound() {
+    }
+
+    public ubic.gemma.model.common.description.Characteristic getCompoundIndices() {
+        return this.compoundIndices;
+    }
+
+    public void setCompoundIndices( ubic.gemma.model.common.description.Characteristic compoundIndices ) {
+        this.compoundIndices = compoundIndices;
+    }
+
+    public ubic.gemma.model.common.description.DatabaseEntry getExternalLIMS() {
+        return this.externalLIMS;
+    }
+
+    public void setExternalLIMS( ubic.gemma.model.common.description.DatabaseEntry externalLIMS ) {
+        this.externalLIMS = externalLIMS;
+    }
+
+    public Boolean getIsSolvent() {
+        return this.isSolvent;
+    }
+
+    public void setIsSolvent( Boolean isSolvent ) {
+        this.isSolvent = isSolvent;
+    }
+
+    /**
+     * @return CAS registry number (see http://www.cas.org/)
+     */
+    public String getRegistryNumber() {
+        return this.registryNumber;
+    }
+
+    public void setRegistryNumber( String registryNumber ) {
+        this.registryNumber = registryNumber;
+    }
+
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.biomaterial.Compound}.
-         */
+
         public static ubic.gemma.model.expression.biomaterial.Compound newInstance() {
             return new ubic.gemma.model.expression.biomaterial.CompoundImpl();
         }
 
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.biomaterial.Compound}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
         public static ubic.gemma.model.expression.biomaterial.Compound newInstance( String name, String description,
                 Boolean isSolvent, String registryNumber,
                 ubic.gemma.model.common.description.DatabaseEntry externalLIMS,
@@ -51,70 +90,6 @@ public abstract class Compound extends ubic.gemma.model.common.Describable {
             entity.setCompoundIndices( compoundIndices );
             return entity;
         }
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8136911145519622152L;
-    private Boolean isSolvent;
-
-    private String registryNumber;
-
-    private ubic.gemma.model.common.description.DatabaseEntry externalLIMS;
-
-    private ubic.gemma.model.common.description.Characteristic compoundIndices;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Compound() {
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.Characteristic getCompoundIndices() {
-        return this.compoundIndices;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.DatabaseEntry getExternalLIMS() {
-        return this.externalLIMS;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getIsSolvent() {
-        return this.isSolvent;
-    }
-
-    /**
-     * CAS registry number (see http://www.cas.org/)
-     */
-    public String getRegistryNumber() {
-        return this.registryNumber;
-    }
-
-    public void setCompoundIndices( ubic.gemma.model.common.description.Characteristic compoundIndices ) {
-        this.compoundIndices = compoundIndices;
-    }
-
-    public void setExternalLIMS( ubic.gemma.model.common.description.DatabaseEntry externalLIMS ) {
-        this.externalLIMS = externalLIMS;
-    }
-
-    public void setIsSolvent( Boolean isSolvent ) {
-        this.isSolvent = isSolvent;
-    }
-
-    public void setRegistryNumber( String registryNumber ) {
-        this.registryNumber = registryNumber;
     }
 
 }

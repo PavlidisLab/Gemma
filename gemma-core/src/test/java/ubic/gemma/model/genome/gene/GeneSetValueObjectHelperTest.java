@@ -47,7 +47,7 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
     @Before
     public void setUp() {
 
-        g1 = this.getTestPeristentGene();
+        g1 = this.getTestPersistentGene();
         tax1 = this.getTaxon( "human" );
         g1.setTaxon( tax1 );
 

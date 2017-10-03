@@ -89,7 +89,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         ee = this.eeService.thawLite( ee );
     }
 
-    /**
+    /*
      * Note that this test will fail if you run it again on a dirty DB. Sorry!
      */
     @Test

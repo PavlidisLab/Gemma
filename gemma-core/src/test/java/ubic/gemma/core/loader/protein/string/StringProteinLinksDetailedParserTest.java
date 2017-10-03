@@ -18,11 +18,10 @@
  */
 package ubic.gemma.core.loader.protein.string;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
+import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,27 +29,19 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.core.loader.protein.string.model.StringProteinProteinInteraction;
-import ubic.gemma.model.genome.Taxon;
+import static org.junit.Assert.*;
 
 /**
  * Tests the parsing of a STRING proteinlinksdetailed file. Each line in the file represents a protein protein
  * interaction. Tests cover parsing an individual line, a sample file and checking that if formating errors are
  * encountered errors are thrown.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 public class StringProteinLinksDetailedParserTest {
 
     private StringProteinProteinInteractionFileParser parser = null;
 
-    /**
-     * @throws java.lang.Exception
-     */
     @Before
     public void setUp() throws Exception {
         // set up an array of taxon to process
@@ -66,7 +57,7 @@ public class StringProteinLinksDetailedParserTest {
         parser.setTaxa( taxa );
     }
 
-    /**
+    /*
      * Test to ensure that a small file containing 100 lines can be parsed correctly. The file contains all one taxon.
      * There are duplicate interactions in the file e.g. 10090.ENSMUSP00000000001 10090.ENSMUSP00000000153 0 0 0 0 0 900
      * 27 902 10090.ENSMUSP00000000153 10090.ENSMUSP00000000001 0 0 0 0 0 900 27 902 are effectively the same and should
@@ -91,11 +82,10 @@ public class StringProteinLinksDetailedParserTest {
         }
     }
 
-    /**
+    /*
      * Test to make sure that is an invalid line is parsed an error is thrown. This line contains too many characters it
      * should be 10 Test method for
      * {@link ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
-     * . *
      */
     @Test
     public void testParseOneLineInvalidWrongNumberOfFields() {
@@ -109,11 +99,10 @@ public class StringProteinLinksDetailedParserTest {
 
     }
 
-    /**
+    /*
      * Test to make sure that is an invalid line is parsed an error is thrown. This line contains some characters where
      * they should be numbers Test method for
      * {@link ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
-     * . *
      */
     @Test
     public void testParseOneLineNumberFormatException() {
@@ -128,10 +117,9 @@ public class StringProteinLinksDetailedParserTest {
 
     }
 
-    /**
+    /*
      * Test to make sure that if file is corrupt and the two taxon do not match throw error Test method for
      * {@link ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
-     * . *
      */
     @Test
     public void testParseOneLineTaxonDifferent() {
@@ -140,16 +128,15 @@ public class StringProteinLinksDetailedParserTest {
             parser.parseOneLine( line );
             fail();
         } catch ( RuntimeException e ) {
-            assertTrue( e.getMessage().contains(
-                    "Protein 1 882.DVU0002 protein 2  333.DVU0001 do not contain matching taxons" ) );
+            assertTrue( e.getMessage()
+                    .contains( "Protein 1 882.DVU0002 protein 2  333.DVU0001 do not contain matching taxons" ) );
         }
 
     }
 
-    /**
+    /*
      * Test to make sure that if taxon is not supported then null is returned. Test method for
      * {@link ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
-     * . *
      */
     @Test
     public void testParseOneLineTaxonNotSupported() {
@@ -164,12 +151,11 @@ public class StringProteinLinksDetailedParserTest {
 
     }
 
-    /**
+    /*
      * Test to make sure that a line can be parsed correctly to its constituent values. Also that the alpabetical
      * sorting of the protein works so that the most alpabetically higer value gets stored in protein 1. Make sure that
      * the proteins get stored in the same order. Test method for
      * {@link ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionFileParser#parseOneLine(java.lang.String)}
-     * . *
      */
     @Test
     public void testParseOneValidLine() {

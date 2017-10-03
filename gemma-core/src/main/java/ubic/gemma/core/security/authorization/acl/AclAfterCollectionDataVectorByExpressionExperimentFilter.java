@@ -19,27 +19,23 @@
 package ubic.gemma.core.security.authorization.acl;
 
 import gemma.gsec.acl.afterinvocation.ByAssociationFilteringProvider;
-
-import java.util.List;
-
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
-
 import ubic.gemma.model.expression.bioAssayData.DataVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
+import java.util.List;
+
 /**
  * Filter collections of DesignElementDataVectors or DataVectorValueObjects based on the permissions of the associated
  * ExpressionExperiment(s).
- * 
+ *
  * @author pavlidis (based in part on code from Acegi)
- * @version $Id: BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider.java,v 1.2 2005/08/17 21:46:32
- *          keshav Exp $
  */
-public class AclAfterCollectionDataVectorByExpressionExperimentFilter extends
-        ByAssociationFilteringProvider<ExpressionExperiment, Object> {
+public class AclAfterCollectionDataVectorByExpressionExperimentFilter
+        extends ByAssociationFilteringProvider<ExpressionExperiment, Object> {
 
     private static final String CONFIG_ATTRIBUTE = "AFTER_ACL_DATAVECTOR_COLLECTION_READ";
 
@@ -53,10 +49,6 @@ public class AclAfterCollectionDataVectorByExpressionExperimentFilter extends
         return CONFIG_ATTRIBUTE;
     }
 
-    /**
-     * @param targetDomainObject
-     * @return
-     */
     @Override
     protected ExpressionExperiment getAssociatedSecurable( Object targetDomainObject ) {
         ExpressionExperiment domainObject = null;

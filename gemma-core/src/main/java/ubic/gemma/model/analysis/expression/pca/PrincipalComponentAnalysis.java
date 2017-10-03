@@ -67,9 +67,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * <p>
-     * How many probe loadings were stored per component (max).
-     * </p>
+     * @return How many probe loadings were stored per component (max).
      */
     public Integer getMaxNumProbesPerComponent() {
         return this.maxNumProbesPerComponent;
@@ -80,9 +78,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * <p>
-     * How many components results are stored for (e.g. 3)
-     * </p>
+     * @return How many components results are stored for (e.g. 3)
      */
     public Integer getNumComponentsStored() {
         return this.numComponentsStored;
@@ -101,7 +97,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * Convenience method to access the eigenvectors, as a List of Double[].
+     * @return Convenience method to access the eigenvectors, as a List of Double[].
      */
     @Transient
     public List<Double[]> getEigenvectorArrays() throws IllegalArgumentException {
@@ -144,7 +140,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * An array of values representing the fraction of the variance each component accounts for. Convenience method to
+     * @return An array of values representing the fraction of the variance each component accounts for. Convenience method to
      * access the Eigenvalue data.
      */
     @Transient
@@ -156,17 +152,10 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
         return result;
     }
 
-    /**
-     * Constructs new instances of {@link PrincipalComponentAnalysis}.
-     */
     public static final class Factory {
-        /**
-         * Constructs a new instance of {@link PrincipalComponentAnalysis}.
-         */
         public static PrincipalComponentAnalysis newInstance() {
             return new PrincipalComponentAnalysis();
         }
-
     }
 
 }

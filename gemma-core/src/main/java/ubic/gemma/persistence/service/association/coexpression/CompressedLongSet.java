@@ -19,28 +19,22 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.googlecode.javaewah.EWAHCompressedBitmap;
+
+import java.util.*;
 
 /**
  * Encapsulates an array of Longs (which are actually stored as Integers...thanks to limitation of compressedbitmap I am
  * using).
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class CompressedLongSet {
 
     private EWAHCompressedBitmap data;
 
     /**
-     * @param longs
+     * @param longs set
      */
     public CompressedLongSet( Set<Long> longs ) {
         List<Long> v = new ArrayList<>( longs );
@@ -58,8 +52,8 @@ public class CompressedLongSet {
 
     /**
      * Will be in order.
-     * 
-     * @return
+     *
+     * @return positions
      */
     public Long[] getValues() {
         List<Integer> positions = data.getPositions();

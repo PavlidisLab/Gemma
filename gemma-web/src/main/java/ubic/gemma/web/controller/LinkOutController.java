@@ -19,27 +19,25 @@
 
 package ubic.gemma.web.controller;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.directwebremoting.annotations.Param;
 import org.directwebremoting.annotations.RemoteMethod;
 import org.directwebremoting.annotations.RemoteProxy;
 import org.directwebremoting.spring.BeanCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.image.LinkOutValueObject;
 import ubic.gemma.core.image.aba.AllenBrainAtlasService;
 import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.core.image.aba.ImageSeries;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * A controller for getting details from other web resources (like allen brain atlas)
- * 
+ *
  * @author kelsey
- * @version $Id$
  */
 @Controller
 @RemoteProxy(creator = BeanCreator.class, creatorParams = @Param(name = "bean", value = "linkOutController"), name = "LinkOutController")
@@ -50,9 +48,9 @@ public class LinkOutController {
 
     /**
      * AJAX METHOD Given a gene's official symbol will return value object with the link to use
-     * 
-     * @param geneOfficialSymbol
-     * @return
+     *
+     * @param geneOfficialSymbol gene official symbol
+     * @return linkout vo
      */
     @RemoteMethod
     public LinkOutValueObject getAllenBrainAtlasLink( String geneOfficialSymbol ) {

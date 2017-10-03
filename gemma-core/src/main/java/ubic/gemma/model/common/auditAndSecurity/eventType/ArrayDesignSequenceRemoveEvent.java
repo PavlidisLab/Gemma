@@ -26,23 +26,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * misleading.
  * </p>
  */
-public class ArrayDesignSequenceRemoveEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * Constructs new instances of
-     * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of
-         * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent}.
-         */
-        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent();
-        }
-
-    }
+public class ArrayDesignSequenceRemoveEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -51,10 +36,18 @@ public class ArrayDesignSequenceRemoveEvent extends
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ArrayDesignSequenceRemoveEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent newInstance() {
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent();
+        }
+
     }
 
 }

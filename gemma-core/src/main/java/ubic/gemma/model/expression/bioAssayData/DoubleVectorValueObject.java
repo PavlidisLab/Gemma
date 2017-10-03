@@ -37,7 +37,6 @@ import java.util.*;
  * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
  *
  * @author paul
- * @version $Id$
  */
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
@@ -56,8 +55,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      */
     private Long sourceVectorId = null;
 
-
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -70,6 +67,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      *
      * @param bioassaySet, possibly a subset, which we are going to slice.
      * @param bad          all we nee is the id, the name and the list of bioassays from this.S
+     * @param vec          VO
      */
     public DoubleVectorValueObject( BioAssaySet bioassaySet, DoubleVectorValueObject vec,
             BioAssayDimensionValueObject bad ) {
@@ -114,8 +112,11 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     /**
      * Create a vector where we expect to have to create one or more gaps to match other vectors, defined by dimToMatch.
      *
-     * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
-     *                   that aren't in the dedv's bioAssayDimension.
+     * @param dimToMatch   ensure that the vector missing values to match the locations of any bioassays in dimToMatch
+     *                     that aren't in the dedv's bioAssayDimension.
+     * @param genes        genes
+     * @param dedv         dedv
+     * @param vectorsBadVo BA dimension vo
      */
     public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
             Collection<Long> genes, BioAssayDimension dimToMatch ) {
@@ -153,8 +154,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
     }
 
-
-
     @Override
     public boolean equals( Object obj ) {
         if ( id != null ) {
@@ -186,8 +185,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return prime * ( ( sourceVectorId == null ) ? 0 : sourceVectorId.hashCode() );
     }
 
-
-
     public double[] getData() {
         return data;
     }
@@ -209,7 +206,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     /**
-     * If this returns non-null, it means the vector is a slice of another vector identified by the return value.
+     * @return If this returns non-null, it means the vector is a slice of another vector identified by the return value.
      */
     public Long getSourceVectorId() {
         return sourceVectorId;
@@ -260,8 +257,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     /**
+     * @param ee                      required
      * @param cs                      required
      * @param updatedQuantitationType required because this might be changed.
+     * @return design element data vector
      */
     public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee, CompositeSequence cs,
             QuantitationType updatedQuantitationType ) {
@@ -286,8 +285,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
     }
-
-
 
     private void addGaps( BioAssayDimension dimToMatch ) {
 

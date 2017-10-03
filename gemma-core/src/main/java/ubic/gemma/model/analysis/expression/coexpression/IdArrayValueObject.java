@@ -20,16 +20,10 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 /**
- * TODO Document Me
- * 
  * @author paul
- * @version $Id$
  */
 public class IdArrayValueObject extends IdArray {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 3449107398932831708L;
 
     public IdArrayValueObject( byte[] data ) {

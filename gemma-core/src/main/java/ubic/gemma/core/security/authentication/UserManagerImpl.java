@@ -18,13 +18,14 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserExistsException;
+import gemma.gsec.authentication.UserManager;
+import gemma.gsec.authentication.UserService;
+import gemma.gsec.model.GroupAuthority;
+import gemma.gsec.model.User;
+import gemma.gsec.model.UserGroup;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -48,20 +49,12 @@ import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserExistsException;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.authentication.UserService;
-import gemma.gsec.model.GroupAuthority;
-import gemma.gsec.model.User;
-import gemma.gsec.model.UserGroup;
+import java.util.*;
 
 /**
  * Implementation for Spring Security, plus some other handy methods.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Service
 @Transactional
@@ -69,19 +62,10 @@ public class UserManagerImpl implements UserManager {
 
     protected final Log logger = LogFactory.getLog( getClass() );
 
-    /**
-     * 
-     */
     private boolean enableAuthorities = false;
 
-    /**
-     * 
-     */
     private boolean enableGroups = true;
 
-    /**
-     * 
-     */
     private String rolePrefix = "GROUP_";
 
     @Autowired(required = false)
@@ -188,8 +172,8 @@ public class UserManagerImpl implements UserManager {
         UserGroup g = ubic.gemma.model.common.auditAndSecurity.UserGroup.Factory.newInstance();
         g.setName( groupName );
         for ( GrantedAuthority ga : authorities ) {
-            g.getAuthorities().add(
-                    ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance( ga.getAuthority() ) );
+            g.getAuthorities().add( ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory
+                    .newInstance( ga.getAuthority() ) );
         }
 
         userService.create( g );
@@ -252,11 +236,6 @@ public class UserManagerImpl implements UserManager {
         userCache.removeUserFromCache( username );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.security.provisioning.GroupManager#findAllGroups()
-     */
     @Override
     public List<String> findAllGroups() {
         Collection<UserGroup> groups = userService.listAvailableGroups();
@@ -268,11 +247,6 @@ public class UserManagerImpl implements UserManager {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.security.authentication.UserManager#findAllUsers()
-     */
     @Override
     public Collection<String> findAllUsers() {
         Collection<User> users = userService.loadAll();
@@ -388,6 +362,10 @@ public class UserManagerImpl implements UserManager {
         return rolePrefix;
     }
 
+    public void setRolePrefix( String rolePrefix ) {
+        this.rolePrefix = rolePrefix;
+    }
+
     @Override
     public boolean groupExists( String groupName ) {
         return userService.groupExists( groupName );
@@ -397,8 +375,16 @@ public class UserManagerImpl implements UserManager {
         return enableAuthorities;
     }
 
+    public void setEnableAuthorities( boolean enableAuthorities ) {
+        this.enableAuthorities = enableAuthorities;
+    }
+
     public boolean isEnableGroups() {
         return enableGroups;
+    }
+
+    public void setEnableGroups( boolean enableGroups ) {
+        this.enableGroups = enableGroups;
     }
 
     @Override
@@ -450,7 +436,7 @@ public class UserManagerImpl implements UserManager {
         /*
          * if ( authenticationManager != null ) { logger.debug( "Reauthenticating user '" + username +
          * "' for password change request." );
-         * 
+         *
          * authenticationManager.authenticate( new UsernamePasswordAuthenticationToken( username, password ) ); } else {
          * logger.debug( "No authentication manager set. Password won't be re-checked." ); }
          */
@@ -489,25 +475,14 @@ public class UserManagerImpl implements UserManager {
         userService.update( group );
     }
 
-    public void setEnableAuthorities( boolean enableAuthorities ) {
-        this.enableAuthorities = enableAuthorities;
-    }
-
-    public void setEnableGroups( boolean enableGroups ) {
-        this.enableGroups = enableGroups;
-    }
-
-    public void setRolePrefix( String rolePrefix ) {
-        this.rolePrefix = rolePrefix;
-    }
-
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     @Transactional
     public void updateUser( UserDetails user ) {
         String username = user.getUsername();
         User u = userService.findByUserName( username );
-        if ( u == null ) throw new IllegalArgumentException( "No user could be loaded with name=" + user );
+        if ( u == null )
+            throw new IllegalArgumentException( "No user could be loaded with name=" + user );
 
         u.setPassword( user.getPassword() );
         u.setEnabled( user.isEnabled() );
@@ -574,14 +549,6 @@ public class UserManagerImpl implements UserManager {
         return newAuthentication;
     }
 
-    /**
-     * Create a fresh UserDetails based on a given one.
-     * 
-     * @param username
-     * @param userFromUserQuery
-     * @param combinedAuthorities
-     * @return
-     */
     protected UserDetails createUserDetails( String username, UserDetailsImpl userFromUserQuery,
             List<GrantedAuthority> combinedAuthorities ) {
         return new UserDetailsImpl( userFromUserQuery.getPassword(), username, userFromUserQuery.isEnabled(),
@@ -616,7 +583,7 @@ public class UserManagerImpl implements UserManager {
     }
 
     /**
-     * @param username
+     * @param username username
      * @return user, or null if the user is anonymous.
      * @throws UsernameNotFoundException if the user does not exist in the system
      */
@@ -635,10 +602,6 @@ public class UserManagerImpl implements UserManager {
         return u;
     }
 
-    /**
-     * @param groupName
-     * @return
-     */
     private UserGroup loadGroup( String groupName ) {
         UserGroup group = userService.findGroupByName( groupName );
 
@@ -649,10 +612,6 @@ public class UserManagerImpl implements UserManager {
         return group;
     }
 
-    /**
-     * @param username
-     * @return
-     */
     private User loadUser( String username ) {
         User user = userService.findByUserName( username );
         if ( user == null ) {

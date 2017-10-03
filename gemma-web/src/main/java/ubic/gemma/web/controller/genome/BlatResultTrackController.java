@@ -18,32 +18,29 @@
  */
 package ubic.gemma.web.controller.genome;
 
-import java.util.Collection;
-import java.util.HashSet;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
-
 import ubic.gemma.core.analysis.sequence.BlatResult2Psl;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.view.TextView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
- * See <a href="http://genome.ucsc.edu/goldenPath/help/customTrack.html"}>goldenPath help on custom track</a>. This simply generates text that can be used to
+ * See <a href="http://genome.ucsc.edu/goldenPath/help/customTrack.html">goldenPath help on custom track</a>. This simply generates text that can be used to
  * view our alignments in the UCSC browser. For example, urls like the following would work:
  * <p>
- * http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.example.ca/Gemma/blatTrack. html&id=2929
+ * <a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org=human&hgt.customText=http://www.example.ca/Gemma/blatTrack.html&id=2929">also this</a>
  * </p>
- * <p>
  * Where the 'id' is the id in our system of the BLAT result to be views, and www.example.ca should be replaced with
  * ConfigUtils.getBaseUrl() (configured with gemma.base.url)
- * 
+ *
  * @author pavlidis
  */
 @Controller

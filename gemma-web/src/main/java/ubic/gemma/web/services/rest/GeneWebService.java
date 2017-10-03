@@ -73,6 +73,17 @@ public class GeneWebService extends WebService {
     }
 
     /**
+     * Placeholder for root call
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseDataObject all( // Params:
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+    }
+
+    /**
      * Retrieves all genes matching the identifier.
      *
      * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
