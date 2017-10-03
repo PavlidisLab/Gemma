@@ -1310,9 +1310,12 @@ public class ExpressionExperimentController {
             ee.setDescription( command.getDescription() );
         }
         if ( !command.isRemovePrimaryPublication() && StringUtils.isNotBlank( command.getPubMedId() ) ) {
-            details +=
-                    ( changed ? ", " : "" ) + "primary publication (id " + ee.getPrimaryPublication().getId() + " -> "
-                            + command.getPubMedId() + ")";
+            if ( ee.getPrimaryPublication() != null ) {
+                details += ( changed ? ", " : "" ) + "primary publication (id " + ee.getPrimaryPublication().getId()
+                        + " -> " + command.getPubMedId() + ")";
+            } else {
+                details += ( changed ? ", " : "" ) + "primary publication ( none -> " + command.getPubMedId() + ")";
+            }
             changed = true;
             updatePubMed( entityId, command.getPubMedId() );
         } else if ( command.isRemovePrimaryPublication() ) {
