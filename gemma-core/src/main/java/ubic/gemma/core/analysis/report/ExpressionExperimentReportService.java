@@ -78,5 +78,7 @@ public interface ExpressionExperimentReportService {
      * Recalculates the batch effect and batch confound information for datasets that have been updated
      * in the last 24 hours.
      */
+    @SuppressWarnings("unused") // Used by scheduler
+    @Secured({ "GROUP_AGENT" })
     void recalculateBatchInfo();
 }
