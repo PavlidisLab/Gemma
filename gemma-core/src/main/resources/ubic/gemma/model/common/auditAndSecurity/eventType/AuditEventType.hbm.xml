@@ -62,6 +62,8 @@
 				name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent" select-before-update="false" />
 			<subclass abstract="false" discriminator-value="BatchCorrectionEvent"
 				name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent" select-before-update="false" />
+			<subclass abstract="false" discriminator-value="BatchProblemsUpdateEvent"
+					  name="ubic.gemma.model.common.auditAndSecurity.eventType.BatchProblemsUpdateEvent" select-before-update="false" />
 			<subclass abstract="false" discriminator-value="DifferentialExpressionAnalysisEvent"
 				name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent"
 				select-before-update="false">
