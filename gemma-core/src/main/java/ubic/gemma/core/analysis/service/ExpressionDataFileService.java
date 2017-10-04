@@ -108,6 +108,11 @@ public interface ExpressionDataFileService {
     /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
      * expression applied (currently supports default settings only). It will be gzip-compressed.
+     * The file will be regenerated even if one already exists if the forceWrite parameter is true, or if there was
+     * a recent change (more recent than the last modified date of the existing file) to any of the experiments platforms.
+     * @param ee experiment
+     * @param filtered filtered
+     * @param forceWrite force re-write even if file already exists and is up to date.
      */
     File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
 
@@ -122,6 +127,10 @@ public interface ExpressionDataFileService {
 
     /**
      * Locate or create an experimental design file for a given experiment.
+     * The file will be regenerated even if one already exists if the forceWrite parameter is true, or if there was
+     * a recent change (more recent than the last modified date of the existing file) to any of the experiments platforms.
+     * @param ee experiment
+     * @param forceWrite force re-write even if file already exists and is up to date
      */
     File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
 
@@ -138,14 +147,6 @@ public interface ExpressionDataFileService {
     File writeOrLocateJSONDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
 
     File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
-
-    /**
-     * create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only).
-     */
-    File writeTemporaryDataFile( ExpressionExperiment ee, boolean filtered );
-
-    File writeTemporaryDesignFile( ExpressionExperiment ee );
 
     void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) throws IOException;
 

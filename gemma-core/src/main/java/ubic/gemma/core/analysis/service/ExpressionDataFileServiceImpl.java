@@ -27,7 +27,6 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
@@ -45,7 +44,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
@@ -72,9 +70,13 @@ import java.util.zip.ZipOutputStream;
 @Component
 public class ExpressionDataFileServiceImpl implements ExpressionDataFileService {
 
-    private static final String DECIMAL_FORMAT = "%.4g";
-
     private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
+    private static final String DECIMAL_FORMAT = "%.4g";
+    private static final String MSG_FILE_FORCED = "Forcing file (%s) regeneration";
+    private static final String MSG_FILE_OUTDATED = "File (%s) outdated, regenerating";
+    private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
+    private static final String MSG_FILE_NOT_EXISTS = "File (%s) does not exist or can not be accessed ";
+
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -87,8 +89,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private CoexpressionService gene2geneCoexpressionService = null;
-    @Autowired
-    private DifferentialExpressionAnalyzerService analyzerService;
 
     /**
      * FIXME this is a common chunk of code... should refactor.
@@ -181,7 +181,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     String[] annotationStrings = geneAnnotations.get( csid );
                     /*
                      * Fields:
-                     * 
+                     *
                      * 1: gene symbols
                      * 2: gene name
                      * 4: ncbi ID
@@ -207,7 +207,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     }
 
-    public String analysisResultSetWithContrastsToString( ExpressionAnalysisResultSet resultSet,
+    private String analysisResultSetWithContrastsToString( ExpressionAnalysisResultSet resultSet,
             Map<Long, String[]> geneAnnotations ) {
         StringBuilder buf = new StringBuilder();
 
@@ -317,7 +317,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         deleteAndLog( getOutputFile( getCoexpressionDataFilename( ee ) ) );
 
         // design file
-        deleteAndLog( getOutputFile( getDesignFileName( ee, DATA_FILE_SUFFIX_COMPRESSED ) ) );
+        deleteAndLog( getOutputFile( getDesignFileName( ee ) ) );
     }
 
     @Override
@@ -481,14 +481,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) {
-
         try {
             File f = getOutputFile( ee, filtered );
-            if ( !forceWrite && f.canRead() ) {
-                log.info( f + " exists, not regenerating" );
+            Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
+
+            if ( checkFileOkToReturn( forceWrite, f, check ) ) {
                 return f;
             }
+
             return writeDataFile( ee, filtered, f, true );
+
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -524,19 +526,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) {
-
         ee = expressionExperimentService.thawLite( ee );
-
-        String filename = getDesignFileName( ee, DATA_FILE_SUFFIX_COMPRESSED );
         try {
-            File f = getOutputFile( filename );
-            if ( !forceWrite && f.canRead() ) {
-                log.info( f + " exists, not regenerating" );
+            File f = getOutputFile( getDesignFileName( ee ) );
+            Date check = ee.getCurationDetails().getLastUpdated();
+
+            if ( checkFileOkToReturn( forceWrite, f, check ) ) {
                 return f;
             }
 
-            log.info( "Creating new experimental design file: " + f.getName() );
-            return writeDesignMatrix( f, ee, true );
+            return writeDesignMatrix( f, ee );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -572,12 +571,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
 
             log.info( "Creating new JSON expression data file: " + f.getName() );
-            ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
+            ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered );
 
-            Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
-
-            writeJson( f, geneAnnotations, matrix );
+            writeJson( f, matrix );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -610,37 +606,30 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
     }
 
-    @Override
-    public File writeTemporaryDataFile( ExpressionExperiment ee, boolean filtered ) {
-
-        try {
-
-            File f = getOutputFile( ee, filtered, false, true );
-
-            return writeDataFile( ee, filtered, f, false );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    public File writeTemporaryDesignFile( ExpressionExperiment ee ) {
-
-        ee = expressionExperimentService.thawLite( ee );
-
-        // not compressed
-        String filename = getDesignFileName( ee, DATA_FILE_SUFFIX );
-
-        filename = RandomStringUtils.randomAlphabetic( 6 ) + filename;
-        try {
-            File f = getOutputFile( filename, true );
-
-            log.info( "Creating new experimental design file: " + f.getName() );
-            return writeDesignMatrix( f, ee, true, false );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+    /**
+     * Checks whether the given file is ok to return, or it should be regenerated.
+     *
+     * @param forceWrite whether the file should be overridden even if found.
+     * @param f          the file to check.
+     * @param check      the file will be considered invalid after this date.
+     * @return true, if the given file is ok to be returned, false if it should be regenerated.
+     */
+    private boolean checkFileOkToReturn( boolean forceWrite, File f, Date check ) {
+        Date modified = new Date( f.lastModified() );
+        if ( f.canRead() ) {
+            if ( forceWrite ) {
+                log.info( String.format( MSG_FILE_FORCED, f.getPath() ) );
+            } else if ( modified.after( check ) ) {
+                log.info( String.format( MSG_FILE_OUTDATED, f.getPath() ) );
+            } else {
+                log.info( String.format( MSG_FILE_EXISTS, f.getPath() ) );
+                return true;
+            }
+        } else if ( !f.canRead() ) {
+            log.info( String.format( MSG_FILE_NOT_EXISTS, f.getPath() ) );
         }
 
+        return false;
     }
 
     /**
@@ -728,7 +717,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + filteredAdd + suffix;
     }
 
-    private ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered, File f ) {
+    private ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered ) {
         ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix;
         if ( filtered ) {
@@ -742,8 +731,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return matrix;
     }
 
-    private String getDesignFileName( ExpressionExperiment ee, String suffix ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign" + suffix;
+    private String getDesignFileName( ExpressionExperiment ee ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign"
+                + DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     private String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
@@ -785,49 +775,41 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return result.replaceAll( "[\\W]+", "." );
     }
 
-    private Map<Long, Collection<Gene>> getGeneAnnotations( Collection<ArrayDesign> ads ) {
-        Map<Long, Collection<Gene>> annots = new HashMap<>();
-        for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesign = arrayDesignService.thaw( arrayDesign );
-            annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFile( arrayDesign ) );
-        }
-        return annots;
-    }
-
     /**
      * @return Map of composite sequence ids to an array of strings: [probe name, genes symbol(s), gene Name(s), gemma
      * id(s), ncbi id(s)].
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
-        Map<Long, String[]> annots = new HashMap<>();
+        Map<Long, String[]> annotations = new HashMap<>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
-            annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
+            annotations.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
         }
-        return annots;
+        return annotations;
     }
 
     private Map<CompositeSequence, String[]> getGeneAnnotationsAsStringsByProbe( Collection<ArrayDesign> ads ) {
-        Map<CompositeSequence, String[]> annots = new HashMap<>();
+        Map<CompositeSequence, String[]> annotations = new HashMap<>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesign = arrayDesignService.thaw( arrayDesign );
 
-            Map<Long, CompositeSequence> csidmap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
+            Map<Long, CompositeSequence> csIdMap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
 
-            Map<Long, String[]> geneAnnots = ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign );
+            Map<Long, String[]> geneAnnotations = ArrayDesignAnnotationServiceImpl
+                    .readAnnotationFileAsString( arrayDesign );
 
-            for ( Entry<Long, String[]> e : geneAnnots.entrySet() ) {
+            for ( Entry<Long, String[]> e : geneAnnotations.entrySet() ) {
 
-                if ( !csidmap.containsKey( e.getKey() ) ) {
+                if ( !csIdMap.containsKey( e.getKey() ) ) {
                     continue;
                 }
 
-                annots.put( csidmap.get( e.getKey() ), e.getValue() );
+                annotations.put( csIdMap.get( e.getKey() ), e.getValue() );
 
             }
 
         }
-        return annots;
+        return annotations;
     }
 
     private File getJSONOutputFile( QuantitationType type ) throws IOException {
@@ -1016,7 +998,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         Taxon tax = expressionExperimentService.getTaxon( ee );
         assert tax != null;
 
-        // FIXME TESTME
         Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService.getCoexpression( ee, true );
 
         Date timestamp = new Date( System.currentTimeMillis() );
@@ -1052,7 +1033,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private File writeDataFile( ExpressionExperiment ee, boolean filtered, File f, boolean compress )
             throws IOException {
         log.info( "Creating new expression data file: " + f.getName() );
-        ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
+        ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered );
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
         Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
@@ -1066,37 +1047,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      *
      * @return file that was written
      */
-    private File writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign )
-            throws IOException {
-        return writeDesignMatrix( file, expressionExperiment, orderByDesign, true );
-    }
+    private File writeDesignMatrix( File file, ExpressionExperiment expressionExperiment ) throws IOException {
 
-    /**
-     * @return file that was written
-     */
-    private File writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign,
-            boolean compress ) throws IOException {
+        OutputStream oStream;
+        oStream = new GZIPOutputStream( new FileOutputStream( file ) );
 
-        OutputStream ostream;
-
-        if ( compress ) {
-            ostream = new GZIPOutputStream( new FileOutputStream( file ) );
-        } else {
-            // TODO note that the file name will still have a .gz extension even though it is uncompressed, change later
-            // if necessary
-            file = new File( file.getAbsolutePath().replace( DATA_FILE_SUFFIX_COMPRESSED, DATA_FILE_SUFFIX ) );
-            ostream = new FileOutputStream( file );
-        }
-
-        try (Writer writer = new OutputStreamWriter( ostream )) {
+        try (Writer writer = new OutputStreamWriter( oStream )) {
             ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-            edWriter.write( writer, expressionExperiment, true, orderByDesign );
+            edWriter.write( writer, expressionExperiment, true, true );
         }
         return file;
     }
 
-    private void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
-            ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
+    private void writeJson( File file, ExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
         try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix, true );

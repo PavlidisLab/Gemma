@@ -266,7 +266,7 @@ public class ExpressionExperimentDataFetchController {
 
                 /* the design file */
                 if ( eedId != null ) {
-                    f = expressionDataFileService.writeOrLocateDesignFile( ee, true ); // overwrite, it's fast.
+                    f = expressionDataFileService.writeOrLocateDesignFile( ee, false );
                 }
                 /* the data file */
                 else {

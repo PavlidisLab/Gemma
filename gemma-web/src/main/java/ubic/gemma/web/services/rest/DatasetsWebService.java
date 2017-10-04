@@ -251,13 +251,13 @@ public class DatasetsWebService extends WebServiceWithFiltering {
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
         ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeTemporaryDataFile( ee, filter );
+        File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
         return outputFile( file, ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
     private Response outputDesignFile( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeTemporaryDesignFile( ee );
+        File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
         return outputFile( file, ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
@@ -269,28 +269,14 @@ public class DatasetsWebService extends WebServiceWithFiltering {
                 throw new GemmaApiException( errorBody );
             }
 
-            Response response = Response.ok( Files.readAllBytes( file.toPath() ) )
+            return Response.ok( Files.readAllBytes( file.toPath() ) )
                     .header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
-
-            deleteFile( file );
-
-            return response;
         } catch ( IOException e ) {
             WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
                     String.format( error, shortName ) );
             errorBody.addErrorsField( "error", e.getMessage() );
 
-            deleteFile( file );
-
             throw new GemmaApiException( errorBody );
-        }
-    }
-
-    private void deleteFile( File file ) {
-        if ( file.canWrite() && file.delete() ) {
-            log.info( "Deleted: " + file );
-        } else {
-            log.warn( "Could not delete file: " + file );
         }
     }
 
