@@ -49,6 +49,7 @@ public abstract class CompositeSequenceArg<T>
         assert(this.arrayDesign != null);
         CompositeSequenceValueObject vo = this.getValueObject( service );
         if(!Objects.equals( vo.getArrayDesign().getId(), this.arrayDesign.getId() )) throwNotFound();
+        vo.setGeneMappingSummaries( service.getGeneMappingSummary( this.getPersistentObject( service ) ) );
         return vo;
     }
 

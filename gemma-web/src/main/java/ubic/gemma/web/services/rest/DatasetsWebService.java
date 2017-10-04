@@ -216,7 +216,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
-     * @param filterData filters the expression data so that they do not contain samples under a minimum threshold.
+     * @param filterData return filtered the expression data.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/data")

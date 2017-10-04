@@ -24,7 +24,7 @@ public abstract class WebServiceWithFiltering extends WebService {
      *
      * @param filter  optional parameter (defaults to empty string) filters the result by given properties.
      *                <p>
-     *                Filtering can be done on any* property or nested property that the ExpressionExperiment class has (
+     *                Filtering can be done on any* property or nested property that the ExpressionExperiment/ArrayDesign class has (
      *                and is mapped by hibernate ). E.g: 'curationDetails' or 'curationDetails.lastTroubledEvent.date'
      *                </p>
      *                * Any property of a supported type. Currently supported types are:
@@ -107,7 +107,6 @@ public abstract class WebServiceWithFiltering extends WebService {
             }
             WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                     FilterArg.ERROR_MSG_MALFORMED_REQUEST );
-            WellComposedErrorBody.addExceptionFields( error, e );
             return Responder.code( error.getStatus(), error, sr );
         }
     }
