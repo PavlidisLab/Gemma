@@ -142,11 +142,6 @@ public class TwitterOutboundImpl implements TwitterOutbound {
         // have to ensure.
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.feed.TwitterOutbound#sendDailyFeed()
-     */
     @Override
     @Secured({ "GROUP_AGENT" })
     public void sendDailyFeed() {

@@ -19,24 +19,23 @@
 
 package ubic.gemma.core.analysis.report;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
  * Interface for twitter feed functionality.
- * 
+ *
  * @author paul
  */
 public interface TwitterOutbound {
 
-
     void disable();
-
 
     void enable();
 
-
+    @Secured({ "GROUP_AGENT" })
     void sendDailyFeed();
 
     void sendManualTweet( String feed );
-
 
     String generateDailyFeed();
 

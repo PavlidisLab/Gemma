@@ -18,32 +18,29 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import java.util.Date;
-
 import org.springframework.security.access.annotation.Secured;
+
+import java.util.Date;
 
 /**
  * Creates reports that can be shown on the web pages or in social media feeds.
- * 
+ *
  * @author paul
  */
 public interface WhatsNewService {
 
     /**
      * save the report from last week.
-     *
      */
     @Secured({ "GROUP_AGENT" })
     void generateWeeklyReport();
 
     /**
      * save the report from the date specified.
-     *
      */
     void saveReport( Date date );
 
     /**
-     *
      * @return new or updated objects from within one week ago.
      */
     WhatsNew getReport();
@@ -55,7 +52,7 @@ public interface WhatsNewService {
 
     /**
      * Retrieve the latest WhatsNew report.
-     * 
+     *
      * @return WhatsNew the latest WhatsNew report cache.
      */
     WhatsNew retrieveReport();
