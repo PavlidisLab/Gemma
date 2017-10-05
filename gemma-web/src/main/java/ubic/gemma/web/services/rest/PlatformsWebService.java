@@ -84,25 +84,36 @@ public class PlatformsWebService extends WebServiceWithFiltering {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        // Uses this.loadVOsPreFilter(...)
         return super.all( filter, offset, limit, sort, sr, arrayDesignService );
     }
 
     /**
-     * Retrieves single platform based on the given identifier.
+     * Retrieves all datasets matching the given identifiers.
      *
-     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "Generic_yeast" or "GPL1355" ). Retrieval by ID
-     *                    is more efficient. Only platforms that user has access to will be available.
+     * @param datasetsArg a list of identifiers, separated by commas (','). Identifiers can either be the
+     *                    ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                    is more efficient.
+     *                    <p>
+     *                    Only datasets that user has access to will be available.
+     *                    </p>
+     *                    <p>
+     *                    Do not combine different identifiers in one query.
+     *                    </p>
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}")
+    @Path("/{platformArg: .+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject platform( // Params:
-            @PathParam("platformArg") PlatformArg<Object> platformArg, // Required
+    public ResponseDataObject platforms( // Params:
+            @PathParam("platformArg") ArrayPlatformArg datasetsArg, // Required
+            @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( platformArg.getValueObject( arrayDesignService ), sr );
+        return super.some( datasetsArg, filter, offset, limit, sort, sr, arrayDesignService );
     }
 
     /**

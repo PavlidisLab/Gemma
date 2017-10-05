@@ -91,23 +91,6 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * Retrieves single dataset based on the given dataset identifier.
-     *
-     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient. Only datasets that user has access to will be available.
-     */
-    @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject dataset( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
-    }
-
-    /**
      * Retrieves all datasets matching the given identifiers.
      *
      * @param datasetsArg a list of identifiers, separated by commas (','). Identifiers can either be the

@@ -12,44 +12,44 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayDatasetArg extends ArrayEntityArg {
+public class ArrayPlatformArg extends ArrayEntityArg {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
-    private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
+    private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Platform identifiers";
 
-    private ArrayDatasetArg( List<String> values ) {
+    private ArrayPlatformArg( List<String> values ) {
         super( values );
     }
 
-    private ArrayDatasetArg( String errorMessage, Exception exception ) {
+    private ArrayPlatformArg( String errorMessage, Exception exception ) {
         super( errorMessage, exception );
     }
 
     /**
      * Used by RS to parse value of request parameters.
      *
-     * @param s the request arrayDataset argument
-     * @return an instance of ArrayDatasetArg representing an array of Dataset identifiers from the input string,
-     * or a malformed ArrayDatasetArg that will throw an {@link GemmaApiException} when accessing its value, if the
-     * input String can not be converted into an array of Dataset identifiers.
+     * @param s the request arrayPlatform argument
+     * @return an instance of ArrayPlatformArg representing an array of Platform identifiers from the input string,
+     * or a malformed ArrayPlatformArg that will throw an {@link GemmaApiException} when accessing its value, if the
+     * input String can not be converted into an array of Platform identifiers.
      */
     @SuppressWarnings("unused")
     public static ArrayStringArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayDatasetArg( String.format( ERROR_MSG, s ),
+            return new ArrayPlatformArg( String.format( ERROR_MSG, s ),
                     new IllegalArgumentException( ERROR_MSG_DETAIL ) );
         }
-        return new ArrayDatasetArg( Arrays.asList( splitString( s ) ) );
+        return new ArrayPlatformArg( Arrays.asList( splitString( s ) ) );
     }
 
     @Override
     protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_EE_ALIAS;
+        return ObjectFilter.DAO_AD_ALIAS;
     }
 
     @Override
     protected String getPropertyName( BaseVoEnabledService service ) {
         String value = this.getValue().get( 0 );
-        DatasetArg arg = DatasetArg.valueOf( value );
+        PlatformArg arg = PlatformArg.valueOf( value );
         return checkPropertyNameString( arg, value, service );
     }
 
