@@ -101,7 +101,7 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    //@Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioAssay bioAssay );
 
 }
