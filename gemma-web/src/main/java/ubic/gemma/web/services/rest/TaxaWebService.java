@@ -28,7 +28,7 @@ import java.util.HashSet;
  */
 @Service
 @Path("/taxa")
-public class TaxaWebService extends WebService {
+public class TaxaWebService extends WebServiceWithFiltering {
 
     private TaxonService taxonService;
     private GeneService geneService;
@@ -73,18 +73,24 @@ public class TaxaWebService extends WebService {
     /**
      * Retrieves single taxon based on the given identifier.
      *
-     * @param taxonArg can either be Taxon ID or one of its string identifiers:
-     *                 scientific name, common name, abbreviation. It is recommended to use ID for efficiency.
+     * @param taxaArg a list of identifiers, separated by commas (','). Identifiers can be the any of
+     *                    taxon ID, scientific name, common name, abbreviation. It is recommended to use ID for efficiency.
+     *                    <p>
+     *                    Only datasets that user has access to will be available.
+     *                    </p>
+     *                    <p>
+     *                    Do not combine different identifiers in one query.
+     *                    </p>
      */
     @GET
-    @Path("/{taxonArg: [a-zA-Z0-9%20\\.]+}")
+    @Path("/{taxaArg: .+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject taxon( // Params:
-            @PathParam("taxonArg") TaxonArg<Object> taxonArg, // Required
+    public ResponseDataObject taxa( // Params:
+            @PathParam("taxaArg") ArrayTaxonArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( taxonArg.getValueObject( taxonService ), sr );
+        return super.some( taxaArg, null, null, null, null, sr, taxonService);
     }
 
     /**
@@ -199,7 +205,7 @@ public class TaxaWebService extends WebService {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode(
-                taxonArg.getTaxonDatasets( expressionExperimentService, taxonArg.getPersistentObject( taxonService ),
+                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
                         filter.getObjectFilters(), offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc() ),
                 sr );
     }

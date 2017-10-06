@@ -359,10 +359,10 @@ public class ExpressionExperimentDaoImpl
     public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, ArrayList<ObjectFilter[]> filter ) {
 
-        String orderByClause = this.getOrderByProperty( orderBy );
+        String orderByProperty = this.getOrderByProperty( orderBy );
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryString( filter, orderByClause, !asc );
+        Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
 
         query.setCacheable( true );
         if ( limit > 0 )

@@ -106,7 +106,7 @@ public class PlatformsWebService extends WebServiceWithFiltering {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platforms( // Params:
-            @PathParam("platformArg") ArrayPlatformArg datasetsArg, // Required
+            @PathParam("platformArg") ArrayPlatformArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20

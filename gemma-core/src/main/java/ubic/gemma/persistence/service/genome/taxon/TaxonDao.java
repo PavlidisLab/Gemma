@@ -21,7 +21,9 @@ package ubic.gemma.persistence.service.genome.taxon;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.util.ObjectFilter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -56,4 +58,8 @@ public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
     void thaw( Taxon taxon );
 
     Taxon findByNcbiId( Long ncbiId );
+
+    @Override
+    Collection<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter );
 }

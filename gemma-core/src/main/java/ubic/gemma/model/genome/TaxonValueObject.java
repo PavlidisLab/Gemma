@@ -37,15 +37,18 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
         setCommonName( taxon.getCommonName() );
         setAbbreviation( taxon.getAbbreviation() );
 
-        setExternalDatabase( ExternalDatabaseValueObject.fromEntity( taxon.getExternalDatabase() ) );
         setNcbiId( taxon.getNcbiId() );
         setIsGenesUsable( taxon.getIsGenesUsable() );
         setIsSpecies( taxon.getIsSpecies() );
         setParentTaxon( taxon.getParentTaxon() != null ? TaxonValueObject.fromEntity( taxon.getParentTaxon() ) : null );
 
         if ( taxon.getExternalDatabase() != null ) {
-            setExternalDatabase( ExternalDatabaseValueObject.fromEntity( taxon.getExternalDatabase() ) );
+            setExternalDatabase( new ExternalDatabaseValueObject( taxon.getExternalDatabase() ) );
         }
+    }
+
+    public TaxonValueObject( Long id ) {
+        super( id );
     }
 
     public static TaxonValueObject fromEntity( Taxon taxon ) {

@@ -93,8 +93,9 @@ public abstract class WebServiceWithFiltering extends WebService {
      */
     protected ResponseDataObject some( ArrayEntityArg arrayArg, FilterArg filter, IntArg offset, IntArg limit,
             SortArg sort, final HttpServletResponse sr, BaseVoEnabledService service ) {
-        return this.callService( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(),
-                arrayArg.combineFilters( filter.getObjectFilters(), service ), sr, service );
+        return this.callService( offset != null ? offset.getValue() : 0, limit != null ? limit.getValue() : 0,
+                sort != null ? sort.getField() : null, sort == null || sort.isAsc(),
+                arrayArg.combineFilters( filter != null ? filter.getObjectFilters() : null, service ), sr, service );
     }
 
     private ResponseDataObject callService( int offset, int limit, String orderBy, boolean asc,

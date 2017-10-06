@@ -30,7 +30,8 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
     public DatabaseEntryValueObject( DatabaseEntry de ) {
         super( de.getId() );
         this.accession = de.getAccession();
-        this.externalDatabase = ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() );
+        this.externalDatabase =
+                de.getExternalDatabase() != null ? new ExternalDatabaseValueObject( de.getExternalDatabase() ) : null;
     }
 
     public DatabaseEntryValueObject( long id ) {

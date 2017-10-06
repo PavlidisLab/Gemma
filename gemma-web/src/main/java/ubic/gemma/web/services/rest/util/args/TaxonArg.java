@@ -46,18 +46,42 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, Tax
         }
     }
 
+    /**
+     * Lists datasets on the taxon that this TaxonArg represents.
+     *
+     * @param expressionExperimentService the service that will be used to retrieve the EEVOs.
+     * @param taxonService                the service that will be used to retrieve the persistent Taxon object.
+     * @param filters                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
+     * @param offset                      see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
+     * @param limit                       see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
+     * @param sort                        see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
+     * @param sortAsc                     see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter
+     * @return a collection of EEVOs matching the input parameters.
+     */
     public Collection<ExpressionExperimentValueObject> getTaxonDatasets(
-            ExpressionExperimentService expressionExperimentService, Taxon taxon, ArrayList<ObjectFilter[]> filters,
-            int offset, int limit, String sort, boolean sortAsc ) {
+            ExpressionExperimentService expressionExperimentService, TaxonService taxonService,
+            ArrayList<ObjectFilter[]> filters, int offset, int limit, String sort, boolean sortAsc ) {
         if ( filters == null ) {
             filters = new ArrayList<>( 1 );
         }
         filters.add( new ObjectFilter[] {
-                new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) } );
+                new ObjectFilter( "id", this.getPersistentObject( taxonService ).getId(), ObjectFilter.is,
+                        ObjectFilter.DAO_TAXON_ALIAS ) } );
 
         return expressionExperimentService.loadValueObjectsPreFilter( offset, limit, sort, sortAsc, filters );
     }
 
+    /**
+     * Lists Genes overlapping a location on a specific chromosome on a taxon that this TaxonArg represents.
+     *
+     * @param taxonService      the service that will be used to retrieve the persistent Taxon object.
+     * @param chromosomeService the service that will be used to find the Chromosome object.
+     * @param geneService       the service that will be used to retrieve the Gene VOs
+     * @param chromosomeName    name of the chromosome to look on
+     * @param start             the start nucleotide denoting the location to look for genes at.
+     * @param size              the size (in nucleotides) of the location from the 'start' nucleotide.
+     * @return collection of Gene VOs overlapping the location defined by the 'start' and 'size' parameters.
+     */
     public Collection<GeneValueObject> getGenesOnChromosome( TaxonService taxonService,
             ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
             int size ) {

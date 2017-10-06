@@ -74,6 +74,16 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
     }
 
     /**
+     * Adds a restriction clause based on the given filters, and includes ACL restrictions as well.
+     *
+     * @param filters see formRestrictionClause( ArrayList, boolean );
+     * @return a string containing the clause, without the leading "WHERE" keyword.
+     */
+    protected static String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {
+        return formRestrictionClause( filters, true );
+    }
+
+    /**
      * Creates a CNF restriction clause from the given Filters list.
      *
      * @param filters A list of filtering properties arrays.
@@ -81,10 +91,11 @@ public abstract class VoEnabledDao<O extends Identifiable, VO extends Identifiab
      *                Arrays will then be in a conjunction (AND) with each other.
      *                I.e. The filter will be in a conjunctive normal form.
      *                <code>[0 OR 1 OR 2] AND [0 OR 1] AND [0 OR 1 OR 3]</code>
+     * @param addAcl  whether the acl restriction clause should also be added.
      * @return a string containing the clause, without the leading "WHERE" keyword.
      */
-    protected static String formRestrictionClause( ArrayList<ObjectFilter[]> filters ) {
-        String queryString = formAclRestrictionClause();
+    protected static String formRestrictionClause( ArrayList<ObjectFilter[]> filters, boolean addAcl ) {
+        String queryString = addAcl ? formAclRestrictionClause() : " ";
 
         if ( filters == null || filters.isEmpty() )
             return queryString;
