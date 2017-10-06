@@ -342,7 +342,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                         + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "cs", compositeSequence ).setFirstResult( offset ).setMaxResults( limit ).list();
+                .setParameter( "cs", compositeSequence ).setFirstResult( offset ).setMaxResults( limit > 0 ? limit : -1 ).list();
 
     }
 

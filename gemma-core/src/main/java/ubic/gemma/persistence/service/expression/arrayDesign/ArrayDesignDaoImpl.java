@@ -284,7 +284,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Query query = this.getLoadValueObjectsQueryString( filter, orderByClause, !asc );
 
         query.setCacheable( true );
-        query.setMaxResults( limit );
+        query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
 
         return this.processADValueObjectQueryResults( this.getExpressionExperimentCountMap(), query );
@@ -959,7 +959,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         final String queryString = "select cs from CompositeSequence as cs where cs.arrayDesign.id = :id";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id )
-                .setFirstResult( offset ).setMaxResults( limit ).list();
+                .setFirstResult( offset ).setMaxResults( limit > 0 ? limit : -1 ).list();
     }
 
     /**

@@ -365,8 +365,7 @@ public class ExpressionExperimentDaoImpl
         Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
 
         query.setCacheable( true );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
+        query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
 
         //noinspection unchecked

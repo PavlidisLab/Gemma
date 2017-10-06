@@ -226,15 +226,16 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     public Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee,
             double qValueThreshold, int offset, int limit ) {
         //noinspection unchecked
-        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
-                .createQuery( fetchResultsByExperimentsQuery )
+        List<Object[]> rows = this.getSessionFactory().getCurrentSession().createQuery( fetchResultsByExperimentsQuery )
                 .setParameterList( "experimentsAnalyzed", Collections.singleton( ee.getId() ) )
-                .setParameter( "threshold", qValueThreshold ).setFirstResult( offset ).setMaxResults( limit ).list();
+                .setParameter( "threshold", qValueThreshold ).setFirstResult( offset )
+                .setMaxResults( limit > 0 ? limit : -1 ).list();
 
         Collection<DifferentialExpressionValueObject> vos = new ArrayList<>( rows.size() );
 
         for ( Object[] row : rows ) {
-            DifferentialExpressionValueObject vo = new DifferentialExpressionValueObject( ( DifferentialExpressionAnalysisResult ) row[1] );
+            DifferentialExpressionValueObject vo = new DifferentialExpressionValueObject(
+                    ( DifferentialExpressionAnalysisResult ) row[1] );
             if ( !vos.contains( vo ) ) {
                 vos.add( vo );
             }
