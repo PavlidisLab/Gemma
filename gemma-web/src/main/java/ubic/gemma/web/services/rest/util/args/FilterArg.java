@@ -57,6 +57,10 @@ public abstract class FilterArg extends MalformableArg {
         super( errorMessage, exception );
     }
 
+    public static FilterArg EMPTY_FILTER(){
+        return new FilterArg(null, null, null, null, null) {};
+    }
+
     /**
      * Tries to access the give properties on the given class to check if they exist. Does not check whether these properties
      * are a mapped hibernate property.

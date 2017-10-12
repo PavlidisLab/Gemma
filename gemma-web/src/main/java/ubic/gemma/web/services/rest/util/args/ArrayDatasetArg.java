@@ -1,7 +1,12 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
@@ -12,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayDatasetArg extends ArrayEntityArg {
+public class ArrayDatasetArg extends ArrayEntityArg<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
 
@@ -47,7 +52,7 @@ public class ArrayDatasetArg extends ArrayEntityArg {
     }
 
     @Override
-    protected String getPropertyName( BaseVoEnabledService service ) {
+    protected String getPropertyName( ExpressionExperimentService service ) {
         String value = this.getValue().get( 0 );
         DatasetArg arg = DatasetArg.valueOf( value );
         return checkPropertyNameString( arg, value, service );

@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -42,7 +42,7 @@ import java.nio.file.Files;
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService extends WebServiceWithFiltering {
+public class DatasetsWebService extends WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
@@ -67,6 +67,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService ) {
+        super( expressionExperimentService );
         this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
@@ -75,7 +76,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -87,7 +88,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.all( filter, offset, limit, sort, sr, expressionExperimentService );
+        return super.all( filter, offset, limit, sort, sr );
     }
 
     /**
@@ -102,7 +103,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{datasetsArg: .+}")
@@ -116,7 +117,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( datasetsArg, filter, offset, limit, sort, sr, expressionExperimentService );
+        return super.some( datasetsArg, filter, offset, limit, sort, sr );
     }
 
     /**

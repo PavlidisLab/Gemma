@@ -20,7 +20,7 @@ import javax.ws.rs.core.Response;
  * @param <VO> the value object type.
  * @author tesarst
  */
-public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnabledService<O, VO>, VO extends IdentifiableValueObject<O>> {
+public abstract class MutableArg<A, O extends Identifiable, VO extends IdentifiableValueObject<O>, S extends BaseVoEnabledService<O, VO>> {
 
     static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' of given value does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";

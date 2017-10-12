@@ -598,10 +598,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
-        final ObjectFilter[] filter = new ObjectFilter[] {
-                new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_AD_ALIAS ) };
+        ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_AD_ALIAS ) ;
         Query queryObject = this
-                .getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {{add( filter );}}, null, false );
+                .getLoadValueObjectsQueryString( ObjectFilter.singleFilter( filter ), null, false );
 
         return processADValueObjectQueryResults( eeCounts, queryObject );
     }

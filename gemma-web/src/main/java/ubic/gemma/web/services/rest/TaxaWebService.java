@@ -6,8 +6,8 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -28,7 +28,7 @@ import java.util.HashSet;
  */
 @Service
 @Path("/taxa")
-public class TaxaWebService extends WebServiceWithFiltering {
+public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObject, TaxonService> {
 
     private TaxonService taxonService;
     private GeneService geneService;
@@ -50,6 +50,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
             ExpressionExperimentService expressionExperimentService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
             ChromosomeService chromosomeService ) {
+        super( taxonService );
         this.taxonService = taxonService;
         this.geneService = geneService;
         this.expressionExperimentService = expressionExperimentService;
@@ -74,13 +75,13 @@ public class TaxaWebService extends WebServiceWithFiltering {
      * Retrieves single taxon based on the given identifier.
      *
      * @param taxaArg a list of identifiers, separated by commas (','). Identifiers can be the any of
-     *                    taxon ID, scientific name, common name, abbreviation. It is recommended to use ID for efficiency.
-     *                    <p>
-     *                    Only datasets that user has access to will be available.
-     *                    </p>
-     *                    <p>
-     *                    Do not combine different identifiers in one query.
-     *                    </p>
+     *                taxon ID, scientific name, common name, abbreviation. It is recommended to use ID for efficiency.
+     *                <p>
+     *                Only datasets that user has access to will be available.
+     *                </p>
+     *                <p>
+     *                Do not combine different identifiers in one query.
+     *                </p>
      */
     @GET
     @Path("/{taxaArg: .+}")
@@ -90,7 +91,8 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @PathParam("taxaArg") ArrayTaxonArg taxaArg, // Optional
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( taxaArg, null, null, null, null, sr, taxonService);
+        return super.some( taxaArg, FilterArg.EMPTY_FILTER(), IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
+                SortArg.valueOf( "+id" ), sr );
     }
 
     /**
@@ -189,7 +191,7 @@ public class TaxaWebService extends WebServiceWithFiltering {
      *
      * @param taxonArg can either be Taxon ID, Taxon NCBI ID, or one of its string identifiers:
      *                 scientific name, common name, abbreviation. It is recommended to use the ID for efficiency.
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService) for details about the
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse) for details about the
      * filter, offset, limit and sort arguments.
      */
     @GET
@@ -205,9 +207,8 @@ public class TaxaWebService extends WebServiceWithFiltering {
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode(
-                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService,
-                        filter.getObjectFilters(), offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc() ),
-                sr );
+                taxonArg.getTaxonDatasets( expressionExperimentService, taxonService, filter.getObjectFilters(),
+                        offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc() ), sr );
     }
 
     /**

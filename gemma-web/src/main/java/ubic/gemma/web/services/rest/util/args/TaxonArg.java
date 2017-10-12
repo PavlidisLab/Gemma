@@ -23,7 +23,7 @@ import java.util.Collection;
  *
  * @author tesarst
  */
-public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonService, TaxonValueObject> {
+public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject, TaxonService> {
 
     /**
      * Minimum value to be considered an NCBI ID, lower values will be considered a regular gemma Taxon ID.

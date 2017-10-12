@@ -1,14 +1,17 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayTaxonArg extends ArrayEntityArg {
+public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, TaxonService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one "
             + "ID, NCBI ID, scientific name, common name or abbreviation, or multiple, separated by (',') character. "
             + "All identifiers must be same type, i.e. do not combine different kinds of IDs and string identifiers.";
@@ -45,7 +48,7 @@ public class ArrayTaxonArg extends ArrayEntityArg {
     }
 
     @Override
-    protected String getPropertyName( BaseVoEnabledService service ) {
+    protected String getPropertyName( TaxonService service ) {
         String value = this.getValue().get( 0 );
         TaxonArg arg = TaxonArg.valueOf( value );
         return checkPropertyNameString( arg, value, service );

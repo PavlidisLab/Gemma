@@ -1,7 +1,10 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
@@ -12,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ArrayPlatformArg extends ArrayEntityArg {
+public class ArrayPlatformArg extends ArrayEntityArg<ArrayDesign, ArrayDesignValueObject, ArrayDesignService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one ID or short name, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine IDs and short names.";
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Platform identifiers";
 
@@ -47,7 +50,7 @@ public class ArrayPlatformArg extends ArrayEntityArg {
     }
 
     @Override
-    protected String getPropertyName( BaseVoEnabledService service ) {
+    protected String getPropertyName( ArrayDesignService service ) {
         String value = this.getValue().get( 0 );
         PlatformArg arg = PlatformArg.valueOf( value );
         return checkPropertyNameString( arg, value, service );
