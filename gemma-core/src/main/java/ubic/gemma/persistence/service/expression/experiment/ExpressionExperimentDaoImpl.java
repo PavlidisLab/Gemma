@@ -1847,9 +1847,8 @@ public class ExpressionExperimentDaoImpl
         // CurationDetails
         vo.setLastUpdated( ( Date ) row[13] );
         vo.setTroubled( ( ( Boolean ) row[14] ) );
-
+        vo.setNeedsAttention( ( Boolean ) row[15] );
         if ( SecurityUtil.isUserAdmin() ) {
-            vo.setNeedsAttention( ( Boolean ) row[15] );
             vo.setCurationNote( ( String ) row[16] );
         }
 

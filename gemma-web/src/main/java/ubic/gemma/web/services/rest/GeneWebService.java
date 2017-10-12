@@ -25,7 +25,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -67,7 +66,7 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
             CompositeSequenceService compositeSequenceService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
             GeneCoexpressionSearchService geneCoexpressionSearchService ) {
-        super(geneService);
+        super( geneService );
         this.geneService = geneService;
         this.geneOntologyService = geneOntologyService;
         this.compositeSequenceService = compositeSequenceService;
@@ -83,7 +82,8 @@ public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObjec
     public ResponseDataObject all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+        // Calling valueOf with empty string to get the correct exception
+        return Responder.autoCode( ArrayGeneArg.valueOf( null ).getValue(), sr );
     }
 
     /**
