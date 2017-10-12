@@ -100,7 +100,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{platformArg: .+}")
@@ -187,7 +187,6 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-
         try {
             probesArg.setPlatform( platformArg.getPersistentObject( arrayDesignService ) );
             return Responder.autoCode( compositeSequenceService
@@ -201,8 +200,6 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
                     FilterArg.ERROR_MSG_MALFORMED_REQUEST );
             return Responder.code( error.getStatus(), error, sr );
         }
-
-        //TODO add getVOsPreFilter to CSservice
     }
 
     /**

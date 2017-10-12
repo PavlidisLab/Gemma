@@ -39,6 +39,14 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
         return array;
     }
 
+    /**
+     * Reads the given MutableArgs property name and checks whether it is null or empty.
+     * @param arg the MutableArg to retrieve the property name from.
+     * @param value one of the values of the property that has been passed into this array arg.
+     * @param service service that may be used to retrieve the property from the MutableArg.
+     * @param <T> type of the given MutableArg.
+     * @return the name of the property that the values in this arrayArg refer to.
+     */
     <T extends MutableArg<?, O, VO, BaseVoEnabledService<O, VO>>> String checkPropertyNameString( T arg, String value, BaseVoEnabledService<O, VO> service ) {
         String identifier = arg.getPropertyName( service );
         if ( Strings.isNullOrEmpty( identifier ) ) {

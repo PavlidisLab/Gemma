@@ -82,6 +82,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      *                <p>
      *                Do not combine different identifiers in one query.
      *                </p>
+     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{taxaArg: .+}")

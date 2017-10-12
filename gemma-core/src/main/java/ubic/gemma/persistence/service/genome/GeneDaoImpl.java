@@ -22,6 +22,7 @@ import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -181,8 +182,8 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Gene findByEnsemblId( String id ) {
         //noinspection unchecked
-        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ensemblId = :id" )
-                .setParameter( "id", id ).uniqueResult();
+        return ( Gene ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "from Gene g where g.ensemblId = :id" ).setParameter( "id", id ).uniqueResult();
     }
 
     @Override
@@ -549,10 +550,63 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     }
 
     @Override
+    public Collection<GeneValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter ) {
+        Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
+
+        query.setCacheable( true );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
+        query.setFirstResult( offset );
+
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+        List<GeneValueObject> vos = new ArrayList<>( list.size() );
+
+        for ( Object[] row : list ) {
+            Gene g = ( Gene ) row[1];
+            g.setTaxon( ( Taxon ) row[2] );
+            GeneValueObject vo = new GeneValueObject( g );
+            vos.add( vo );
+        }
+
+        return vos;
+    }
+
+    @Override
     protected void initDao() throws Exception {
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         CacheUtils.createOrLoadCache( cacheManager, G2CS_CACHE_NAME, terracottaEnabled, 500000, false, false, 0, 0,
                 false );
+    }
+
+    /**
+     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *                        description.
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a hibernate Query object ready to be used for TaxonVO retrieval.
+     */
+    private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
+            boolean orderDesc ) {
+
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select " + ObjectFilter.DAO_GENE_ALIAS + ".id as id, " // 0
+                + ObjectFilter.DAO_GENE_ALIAS + ", " // 1
+                + ObjectFilter.DAO_TAXON_ALIAS + " "  // 2
+                + "from Gene as " + ObjectFilter.DAO_GENE_ALIAS + " " // gene
+                + "left join " + ObjectFilter.DAO_GENE_ALIAS + ".taxon as " + ObjectFilter.DAO_TAXON_ALIAS + " "// taxon
+                + "where " + ObjectFilter.DAO_GENE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+
+        queryString += formRestrictionClause( filters, false );
+        queryString += "group by " + ObjectFilter.DAO_GENE_ALIAS + ".id ";
+        queryString += formOrderByProperty( orderByProperty, orderDesc );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        addRestrictionParameters( query, filters );
+
+        return query;
     }
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {

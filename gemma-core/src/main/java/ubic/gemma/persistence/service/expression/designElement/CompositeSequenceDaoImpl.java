@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.*;
 
@@ -50,13 +51,11 @@ import java.util.*;
 public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
     private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
-
     /**
      * Absolute maximum number of records to return when fetching raw summaries. This is necessary to avoid retrieving
      * millions of records (some sequences are repeats and can have >200,000 records.
      */
     private static final int MAX_CS_RECORDS = 10000;
-
     /**
      * Add your 'where' clause to this.
      */
@@ -73,7 +72,6 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                     + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
                     + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
                     + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
-
     /**
      * Add your 'where' clause to this. returns much less stuff.
      */
@@ -158,6 +156,42 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     }
 
     @Override
+    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
+        /*
+         * TODO: clean this up and perhaps adapt it to the batch method. This thaw might be too deep.
+         */
+        if ( compositeSequence == null )
+            return null;
+        List<?> list = this.getHibernateTemplate().findByNamedParam(
+                "select c from CompositeSequence c left join fetch c.biologicalCharacteristic b "
+                        + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
+                        + " left join fetch pt.externalDatabase " + " left join fetch c.arrayDesign "
+                        + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
+                        + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
+                        + " left join fetch g.aliases left join fetch g.accessions  where c.id=:cid", "cid",
+                compositeSequence.getId() );
+        if ( list.isEmpty() ) {
+            return null;
+        }
+        return ( CompositeSequence ) list.iterator().next();
+    }
+
+    @Override
+    public CompositeSequenceValueObject loadValueObject( CompositeSequence entity ) {
+        return new CompositeSequenceValueObject( entity );
+    }
+
+    @Override
+    public Collection<CompositeSequenceValueObject> loadValueObjects( Collection<CompositeSequence> entities ) {
+        Collection<CompositeSequenceValueObject> vos = new LinkedHashSet<>();
+        for ( CompositeSequence e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
+
+    @Override
     public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
         if ( compositeSequence.getName() == null || compositeSequence.getArrayDesign() == null ) {
             throw new IllegalArgumentException( "compositeSequence must have name and arrayDesign." );
@@ -172,6 +206,45 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         if ( log.isDebugEnabled() )
             log.debug( "Creating new compositeSequence: " + compositeSequence );
         return create( compositeSequence );
+    }
+
+    @Override
+    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
+        // gets all kinds of associations, not just blat.
+        final String queryString =
+                "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
+                        + "GeneProductImpl gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
+                        + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "cs", compositeSequence ).setFirstResult( offset )
+                .setMaxResults( limit > 0 ? limit : -1 ).list();
+
+    }
+
+    @Override
+    public Collection<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+        // Compose query
+        Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
+
+        query.setCacheable( true );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
+        query.setFirstResult( offset );
+
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+        List<CompositeSequenceValueObject> vos = new ArrayList<>( list.size() );
+
+        for ( Object[] row : list ) {
+            CompositeSequence cs = ( CompositeSequence ) row[1];
+            cs.setArrayDesign( ( ArrayDesign ) row[2] );
+            CompositeSequenceValueObject vo = new CompositeSequenceValueObject( cs );
+            vos.add( vo );
+        }
+
+        return vos;
     }
 
     @Override
@@ -331,19 +404,6 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                     "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences.size()
                             + " probes are associated with genes" );
         return returnVal;
-    }
-
-    @Override
-    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
-        // gets all kinds of associations, not just blat.
-        final String queryString =
-                "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
-                        + "GeneProductImpl gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
-                        + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "cs", compositeSequence ).setFirstResult( offset ).setMaxResults( limit > 0 ? limit : -1 ).list();
-
     }
 
     @Override
@@ -583,28 +643,6 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
     }
 
-    @Override
-    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
-        /*
-         * TODO: clean this up and perhaps adapt it to the batch method. This thaw might be too deep.
-         */
-        if ( compositeSequence == null )
-            return null;
-        List<?> list = this.getHibernateTemplate().findByNamedParam(
-                "select c from CompositeSequence c left join fetch c.biologicalCharacteristic b "
-                        + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
-                        + " left join fetch pt.externalDatabase " + " left join fetch c.arrayDesign "
-                        + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
-                        + " left join fetch b.bioSequence2GeneProduct bs2gp "
-                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                        + " left join fetch g.aliases left join fetch g.accessions  where c.id=:cid", "cid",
-                compositeSequence.getId() );
-        if ( list.isEmpty() ) {
-            return null;
-        }
-        return ( CompositeSequence ) list.iterator().next();
-    }
-
     /**
      * @param batch   of composite sequences to process
      * @param results - adding to this
@@ -665,17 +703,32 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
     }
 
-    @Override
-    public CompositeSequenceValueObject loadValueObject( CompositeSequence entity ) {
-        return new CompositeSequenceValueObject( entity );
-    }
+    /**
+     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *                        description.
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a hibernate Query object ready to be used for CSVO retrieval.
+     */
+    private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
+            boolean orderDesc ) {
 
-    @Override
-    public Collection<CompositeSequenceValueObject> loadValueObjects( Collection<CompositeSequence> entities ) {
-        Collection<CompositeSequenceValueObject> vos = new LinkedHashSet<>();
-        for ( CompositeSequence e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select " + ObjectFilter.DAO_PROBE_ALIAS + ".id as id, " // 0
+                + ObjectFilter.DAO_PROBE_ALIAS + ", " // 1
+                + ObjectFilter.DAO_AD_ALIAS + " "  // 2
+                + "from CompositeSequence as " + ObjectFilter.DAO_PROBE_ALIAS + " " // probe
+                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " " // ad
+                + "where " + ObjectFilter.DAO_PROBE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+
+        queryString += formRestrictionClause( filters, false );
+        queryString += "group by " + ObjectFilter.DAO_PROBE_ALIAS + ".id ";
+        queryString += formOrderByProperty( orderByProperty, orderDesc );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        addRestrictionParameters( query, filters );
+
+        return query;
     }
 }

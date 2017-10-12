@@ -55,7 +55,7 @@ public class ArrayCompositeSequenceArg
     public ArrayList<ObjectFilter[]> getPlatformFilter() {
         ObjectFilter filter;
         try {
-            filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId(), ObjectFilter.is,
+            filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId().toString(), ObjectFilter.is,
                     ObjectFilter.DAO_PROBE_ALIAS );
         } catch ( ParseException e ) {
             throw convertParseException( e );

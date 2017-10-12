@@ -103,7 +103,7 @@ public class DatasetsWebService extends WebServiceWithFiltering<ExpressionExperi
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
+     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{datasetsArg: .+}")
