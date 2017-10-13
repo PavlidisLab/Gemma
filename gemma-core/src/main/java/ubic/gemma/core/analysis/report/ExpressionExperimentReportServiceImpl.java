@@ -377,6 +377,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
+    @Secured({ "GROUP_AGENT" })
     public void recalculateBatchInfo() {
         log.info( "Started batch info recalculation task." );
         Calendar calendar = Calendar.getInstance();
