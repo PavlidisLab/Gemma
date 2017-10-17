@@ -33,7 +33,7 @@ public class ArrayDesignProbeMapperTaskImpl extends AbstractTask<TaskResult, Arr
         /*
          * FIXME get rid of web dependency
          */
-        TaskResult result = new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/Gemma" ) ) );
+        TaskResult result = new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/", true ) ) );
 
         return result;
     }

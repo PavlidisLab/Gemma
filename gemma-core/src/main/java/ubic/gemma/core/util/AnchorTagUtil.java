@@ -1,6 +1,7 @@
 package ubic.gemma.core.util;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Used to generate hyperlinks to various things in Gemma.
@@ -15,7 +16,7 @@ public class AnchorTagUtil {
     }
 
     public static String getArrayDesignLink( Long adId, String link, String hover ) {
-        return getLink( String.format( "Gemma/arrays/showArrayDesign.html?id=%d", adId ), link, hover );
+        return getLink( String.format( Settings.getRootContext() + "/arrays/showArrayDesign.html?id=%d", adId ), link, hover );
     }
 
     public static String getBioMaterialLink( Long bmId, String link ) {
@@ -23,7 +24,7 @@ public class AnchorTagUtil {
     }
 
     public static String getBioMaterialLink( Long bmId, String link, String hover ) {
-        return getLink( String.format( "/Gemma/bioMaterial/showBioMaterial.html?id=%d", bmId ), link, hover );
+        return getLink( String.format( Settings.getRootContext() + "/bioMaterial/showBioMaterial.html?id=%d", bmId ), link, hover );
     }
 
     /**
@@ -42,7 +43,7 @@ public class AnchorTagUtil {
      * @return experimental design link html
      */
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
-        return getLink( String.format( "/Gemma/experimentalDesign/showExperimentalDesign.html?edid=%d", edId ),
+        return getLink( String.format( Settings.getRootContext() + "/experimentalDesign/showExperimentalDesign.html?edid=%d", edId ),
                 ( StringUtils.isBlank( link ) ? "Experimental Design" : link ), hover );
     }
 
@@ -55,7 +56,7 @@ public class AnchorTagUtil {
     }
 
     public static String getExpressionExperimentUrl( long eeId ) {
-        return String.format( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=%d", eeId );
+        return String.format( Settings.getRootContext() + "/expressionExperiment/showExpressionExperiment.html?id=%d", eeId );
     }
 
     public static String getLink( String url, String link, String hover ) {

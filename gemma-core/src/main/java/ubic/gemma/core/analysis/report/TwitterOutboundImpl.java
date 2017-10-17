@@ -46,7 +46,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
     /**
      *
      */
-    private static final String EXPERIMENT_URL_BASE = "http://www.chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=";
+    private static final String EXPERIMENT_URI = "expressionExperiment/showExpressionExperiment.html?id=";
 
     private static final AtomicBoolean enabled = new AtomicBoolean(
             Settings.getBoolean( "gemma.twitter.enabled", false ) );
@@ -216,7 +216,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
 
     private String formExperimentUrl( ExpressionExperiment ee ) {
         // return shortenUrl( EXPERIMENT_URL_BASE + ee.getId() );
-        return EXPERIMENT_URL_BASE + ee.getId();
+        return Settings.getBaseUrl() + EXPERIMENT_URI + ee.getId();
     }
 
     /**
@@ -228,19 +228,21 @@ public class TwitterOutboundImpl implements TwitterOutbound {
 
         assert url != null && url.startsWith( "http" );
 
+        String base = Settings.getBaseUrl();
+
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
-            return "Experiment of the day: " + experimentName + " " + url + "; View more at gemma.chibi.ubc.ca";
+            return "Experiment of the day: " + experimentName + " " + url + "; View more at " + base;
         }
 
         if ( updatedExperimentsCount == 0 ) {
             return "Experiment of the day: " + experimentName + " " + url + "; View all " + newExperimentsCount
-                    + " new experiments at gemma.chibi.ubc.ca";
+                    + " new experiments at " + base;
         } else if ( newExperimentsCount == 0 ) {
             return "Experiment of the day: " + experimentName + " " + url + "; View all " + updatedExperimentsCount
-                    + " updated experiments at gemma.chibi.ubc.ca";
+                    + " updated experiments at " + base;
         } else {
             return "Experiment of the day: " + experimentName + " " + url + "; View all " + updatedExperimentsCount
-                    + " updated and " + newExperimentsCount + " new at gemma.chibi.ubc.ca";
+                    + " updated and " + newExperimentsCount + " new at " + base;
         }
     }
 

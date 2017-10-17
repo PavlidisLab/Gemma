@@ -41,7 +41,7 @@ public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<TaskResult, Arra
         RepeatScan scanner = new RepeatScan();
         scanner.repeatScan( sequences );
 
-        TaskResult result = new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/Gemma" ) ) );
+        TaskResult result = new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/", true ) ) );
 
         return result;
     }

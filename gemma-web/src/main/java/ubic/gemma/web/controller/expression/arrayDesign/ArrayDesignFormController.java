@@ -70,7 +70,7 @@ public class ArrayDesignFormController extends BaseFormController {
                 new Object[] { ad.getClass().getSimpleName().replaceFirst( "Impl", "" ), ad.getName() }, "Saved" );
 
         // go back to the aray we just edited.
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() ) );
+        return new ModelAndView( new RedirectView( "/arrays/showArrayDesign.html?id=" + ad.getId(), true ) );
     }
 
     @Override
@@ -127,7 +127,7 @@ public class ArrayDesignFormController extends BaseFormController {
     protected ModelAndView getCancelView( HttpServletRequest request ) {
         // go back to the aray we just edited.
         return new ModelAndView(
-                new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + request.getParameter( "id" ) ) );
+                new RedirectView( "/arrays/showArrayDesign.html?id=" + request.getParameter( "id" ), true ) );
     }
 
     @Override

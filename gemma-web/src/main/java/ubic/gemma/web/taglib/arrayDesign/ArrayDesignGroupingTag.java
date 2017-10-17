@@ -19,6 +19,7 @@
 package ubic.gemma.web.taglib.arrayDesign;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -82,11 +83,11 @@ public class ArrayDesignGroupingTag extends TagSupport {
     }
 
     private String arrayDesignLink( ArrayDesign ad ) {
-        return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a> ("
+        return "<a href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a> ("
                 + ad.getName() + ")";
     }
 
     private String arrayDesignShortLink( ArrayDesign ad ) {
-        return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
+        return "<a href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
     }
 }
