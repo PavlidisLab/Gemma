@@ -219,7 +219,6 @@ Gemma.GeneGrid = Ext.extend( Ext.grid.GridPanel,
        *           e
        */
       getGenesFromList : function( e, taxon ) {
-
          if ( !taxon ) {
             Ext.Msg.alert( Gemma.HelpText.CommonErrors.MissingInput.title,
                Gemma.HelpText.CommonErrors.MissingInput.text );
@@ -236,22 +235,28 @@ Gemma.GeneGrid = Ext.extend( Ext.grid.GridPanel,
          GenePickerController.searchMultipleGenes( text, taxonId, {
 
             callback : function( genes ) {
+               if(genes.length < 1 || (genes.length === 1 && genes[0] === null ) ){
+                   Ext.Msg.alert( "Genes not found", "No genes matching your query and taxon found." );
+                   loadMask.hide();
+                   return;
+               }
                var geneData = [];
                var warned = false;
                for (var i = 0; i < genes.length; ++i) {
                   if ( i >= Gemma.MAX_GENES_PER_QUERY ) {
                      if ( !warned ) {
                         Ext.Msg.alert( "Too many genes", "You can only search up to " + Gemma.MAX_GENES_PER_QUERY
-                           + " genes, some of your selections will be ignored." );
+                           + " genes, some of your selection will be ignored." );
                         warned = true;
                      }
                      break;
                   }
 
-                  if ( this.getStore().find( "id", genes[i].id ) < 0 ) {
+                  if ( genes[i] !== null && this.getStore().find( "id", genes[i].id ) < 0 ) {
                      geneData.push( [ genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
                                      genes[i].officialName ] );
                   }
+
 
                }
                this.getStore().loadData( geneData, true );
