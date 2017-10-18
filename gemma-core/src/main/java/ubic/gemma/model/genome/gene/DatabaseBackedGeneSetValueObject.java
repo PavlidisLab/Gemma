@@ -37,18 +37,11 @@
 
 package ubic.gemma.model.genome.gene;
 
-
 /**
- * TODO Document Me
- * 
  * @author tvrossum
- * @version $Id$
  */
 public class DatabaseBackedGeneSetValueObject extends GeneSetValueObject {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -1360523793656012770L;
 
     /**
