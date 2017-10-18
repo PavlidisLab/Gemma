@@ -3,6 +3,8 @@ package ubic.gemma.web.services.rest.util.args;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
+import java.util.Objects;
+
 /**
  * Composite Sequence argument for CS ID.
  */
@@ -15,7 +17,12 @@ public class CompositeSequenceIdArg extends CompositeSequenceArg<Long> {
 
     @Override
     public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
-        return check( this.value == null ? null : service.load( this.value ) );
+        if( arrayDesign == null ) throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
+        CompositeSequence cs = service.load( this.value );
+        if( !Objects.equals( cs.getArrayDesign().getId(), this.arrayDesign.getId() ) ) {
+            throwNotFound();
+        }
+        return check( this.value == null ? null : cs );
     }
 
     @Override

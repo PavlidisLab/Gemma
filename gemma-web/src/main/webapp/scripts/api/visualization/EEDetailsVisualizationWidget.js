@@ -175,7 +175,6 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
          listeners : {
             'select' : {
                fn : function( combo, rec, index ) {
-                  // debugger;
                   this.setGeneIds( rec.get( 'memberIds' ) ); // I want to deprecate memberIds.
                   this.setSelectedComboRecord( rec.data );
                   this.editBtn.enable();
@@ -295,7 +294,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
 
       var geneIds = this.getGeneIds();
       if ( !geneIds || geneIds === null || geneIds.length === 0 ) {
-         return;
+          return;
       }
       this.getEl().mask();
 

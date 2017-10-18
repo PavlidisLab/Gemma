@@ -125,7 +125,7 @@ public class AnnotationsWebService extends WebService {
      * @see ExpressionExperimentSearchService#searchExpressionExperiments(String) for better description of the search process.
      */
     @GET
-    @Path("/search/{query}/experiments")
+    @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject datasets( // Params:
             @PathParam("query") String query, // Required

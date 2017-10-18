@@ -292,6 +292,7 @@ public interface PhenotypeAssociationManagerService {
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
      * by Quartz
      */
+    @SuppressWarnings("unused") // Used by scheduler
     @Secured({ "GROUP_AGENT" })
     void writeAllEvidenceToFile() throws IOException;
 }

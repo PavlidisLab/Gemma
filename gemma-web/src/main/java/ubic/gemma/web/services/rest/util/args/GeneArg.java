@@ -19,7 +19,7 @@ import java.util.Objects;
  *
  * @author tesarst
  */
-public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneService, GeneValueObject> {
+public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, GeneService> {
 
     private static final String ERROR_MSG_DEFAULT = "The identifier was recognised to be an %s, but no Gene with this %s exists.";
     private static final String ERROR_MSG_TAXON = "Gene with given %s does not exist on this taxon";

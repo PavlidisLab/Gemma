@@ -14,6 +14,8 @@ public class ObjectFilter {
     public static final String DAO_EE_ALIAS = "ee";
     public static final String DAO_AD_ALIAS = "ad";
     public static final String DAO_TAXON_ALIAS = "taxon";
+    public static final String DAO_PROBE_ALIAS = "probe";
+    public static final String DAO_GENE_ALIAS = "gene";
 
     public static final String is = "=";
     public static final String isNot = "!=";
@@ -76,6 +78,17 @@ public class ObjectFilter {
         checkTypeCorrect();
     }
 
+    /**
+     * @param filter the filter to create the ArrayList with
+     * @return an instance of ArrayList&lt;ObjectFilter[]&gt; with only the given filter as the first element of the
+     * only array in the list.
+     */
+    public static ArrayList<ObjectFilter[]> singleFilter( ObjectFilter filter ) {
+        ArrayList<ObjectFilter[]> filters = new ArrayList<>();
+        filters.add( new ObjectFilter[] { filter } );
+        return filters;
+    }
+
     private Object convertToParamType( Object requiredValue, Class propertyType ) throws ParseException {
         if ( Iterable.class.isAssignableFrom( requiredValue.getClass() ) ) {
             // We got a collection
@@ -112,9 +125,10 @@ public class ObjectFilter {
                         operator.equals( lessThan ) ) // lt
                 ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
-        } else if ( operator.equals( in ) ){ // Check 'in' conditions
-            if( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
-                throw new IllegalArgumentException( "requiredValue for operator " + operator + " has to be an Iterable Object." );
+        } else if ( operator.equals( in ) ) { // Check 'in' conditions
+            if ( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
+                throw new IllegalArgumentException(
+                        "requiredValue for operator " + operator + " has to be an Iterable Object." );
             }
         } else if ( propertyType != null && !( requiredValue == null || requiredValue.getClass()
                 .isAssignableFrom( propertyType ) ) ) { // Check the type matches

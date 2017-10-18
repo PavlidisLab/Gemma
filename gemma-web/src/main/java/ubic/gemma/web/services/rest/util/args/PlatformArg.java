@@ -18,7 +18,7 @@ import java.util.Collection;
  *
  * @author tesarst
  */
-public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDesignService, ArrayDesignValueObject> {
+public abstract class PlatformArg<T> extends MutableArg<T, ArrayDesign, ArrayDesignValueObject, ArrayDesignService> {
 
     /**
      * Used by RS to parse value of request parameters.

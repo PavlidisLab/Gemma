@@ -1,0 +1,53 @@
+package ubic.gemma.web.services.rest.util.args;
+
+import com.google.common.base.Strings;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.util.ObjectFilter;
+import ubic.gemma.web.services.rest.util.GemmaApiException;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneValueObject, GeneService> {
+    private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one Ncbi ID, Ensembl ID or official symbol, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine Ensembl and Ncbi IDs.";
+    private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
+
+    private ArrayGeneArg( List<String> values ) {
+        super( values );
+    }
+
+    private ArrayGeneArg( String errorMessage, Exception exception ) {
+        super( errorMessage, exception );
+    }
+
+    /**
+     * Used by RS to parse value of request parameters.
+     *
+     * @param s the request arrayGene argument
+     * @return an instance of ArrayGeneArg representing an array of Gene identifiers from the input string,
+     * or a malformed ArrayGeneArg that will throw an {@link GemmaApiException} when accessing its value, if the
+     * input String can not be converted into an array of Gene identifiers.
+     */
+    @SuppressWarnings("unused")
+    public static ArrayStringArg valueOf( final String s ) {
+        if ( Strings.isNullOrEmpty( s ) ) {
+            return new ArrayGeneArg( String.format( ERROR_MSG, s ), new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+        }
+        return new ArrayGeneArg( Arrays.asList( splitString( s ) ) );
+    }
+
+    @Override
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_GENE_ALIAS;
+    }
+
+    @Override
+    protected String getPropertyName( GeneService service ) {
+        String value = this.getValue().get( 0 );
+        GeneArg arg = GeneArg.valueOf( value );
+        return checkPropertyNameString( arg, value, service );
+    }
+
+}

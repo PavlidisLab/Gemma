@@ -1051,7 +1051,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         currDBFoundinExtDBs = true;
                 }
 
-                if ( dbFromColln != null && dbFromColln.getLastUpdateDate().getTime() > thisFile.lastModified() ) {
+                if ( dbFromColln != null && dbFromColln.getLastUpdateDate() != null
+                        && dbFromColln.getLastUpdateDate().getTime() > thisFile.lastModified() ) {
                     fileWriterDataSource = new BufferedWriter( new FileWriter(
                             datasetsFolderPath + externalDatabaseValueObject.getName().replaceAll( " ", "" )
                                     + ".tsv" ) );

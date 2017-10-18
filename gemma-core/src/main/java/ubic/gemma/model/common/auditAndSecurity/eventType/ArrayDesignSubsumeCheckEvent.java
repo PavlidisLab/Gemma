@@ -18,9 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-/**
- *
- */
 public class ArrayDesignSubsumeCheckEvent
         extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 

@@ -20,12 +20,13 @@ import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchSe
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.args.GeneArg;
-import ubic.gemma.web.services.rest.util.args.IntArg;
+import ubic.gemma.web.services.rest.util.WebServiceWithFiltering;
+import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -43,7 +44,7 @@ import java.util.ArrayList;
  */
 @Component
 @Path("/genes")
-public class GeneWebService extends WebService {
+public class GeneWebService extends WebServiceWithFiltering<Gene, GeneValueObject, GeneService> {
 
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
@@ -65,6 +66,7 @@ public class GeneWebService extends WebService {
             CompositeSequenceService compositeSequenceService,
             PhenotypeAssociationManagerService phenotypeAssociationManagerService,
             GeneCoexpressionSearchService geneCoexpressionSearchService ) {
+        super( geneService );
         this.geneService = geneService;
         this.geneOntologyService = geneOntologyService;
         this.compositeSequenceService = compositeSequenceService;
@@ -80,24 +82,32 @@ public class GeneWebService extends WebService {
     public ResponseDataObject all( // Params:
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+        // Calling valueOf with empty string to get the correct exception
+        return Responder.autoCode( ArrayGeneArg.valueOf( null ).getValue(), sr );
     }
 
     /**
      * Retrieves all genes matching the identifier.
      *
-     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
-     *                guaranteed to be unique) identifier. Official symbol returns a gene homologue on a random taxon.
+     * @param genesArg can either be the NCBI ID, Ensembl ID or official symbol.
+     *                 a list of identifiers, separated by commas (','). Identifiers can be one of
+     *                 NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
+     *                 guaranteed to be unique) identifier. Official symbol returns a gene homologue on a random taxon.
+     *                 <p>
+     *                 Do not combine different identifiers in one query.
+     *                 </p>
+     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
-    @Path("/{geneArg: [a-zA-Z0-9\\.]+}")
+    @Path("/{genesArg: .+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject genes( // Params:
-            @PathParam("geneArg") GeneArg<Object> geneArg, // Required
+            @PathParam("genesArg") ArrayGeneArg genesArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( geneArg.getValueObjects( geneService ), sr );
+        return super.some( genesArg, FilterArg.EMPTY_FILTER(), IntArg.valueOf( "0" ), IntArg.valueOf( "-1" ),
+                SortArg.valueOf( "+id" ), sr );
     }
 
     /**
@@ -192,7 +202,7 @@ public class GeneWebService extends WebService {
             @QueryParam("stringency") @DefaultValue("1") IntArg stringency, // Optional, default 1
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        super.checkReqArg(with, "with");
+        super.checkReqArg( with, "with" );
         return Responder
                 .autoCode( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
                     this.add( geneArg.getPersistentObject( geneService ).getId() );

@@ -142,5 +142,7 @@
 			<subclass abstract="false" discriminator-value="MakePublicEvent"
 				name="ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent" select-before-update="false" />
 		</subclass>
+		<subclass abstract="false" discriminator-value="ExperimentalDesignUpdatedEvent"
+				  name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent" select-before-update="false" />
 	</class>
 </hibernate-mapping>

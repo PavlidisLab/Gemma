@@ -10,7 +10,7 @@ import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
  * @author tesarst
  */
 public abstract class DatabaseEntryArg<T>
-        extends MutableArg<T, DatabaseEntry, DatabaseEntryService, DatabaseEntryValueObject> {
+        extends MutableArg<T, DatabaseEntry, DatabaseEntryValueObject, DatabaseEntryService> {
 
     /**
      * Used by RS to parse value of request parameters.

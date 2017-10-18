@@ -47,7 +47,7 @@ public interface AuditTrailService extends BaseService<AuditTrail> {
     AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note );
 
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, String detail );
 
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")

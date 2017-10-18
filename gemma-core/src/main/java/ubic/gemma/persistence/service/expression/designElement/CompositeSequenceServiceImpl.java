@@ -36,6 +36,7 @@ import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.*;
 
@@ -273,5 +274,17 @@ public class CompositeSequenceServiceImpl extends VoEnabledService<CompositeSequ
                 blatResults.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
             }
         }
+    }
+
+    @Override
+    public Collection<CompositeSequenceValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+        Collection<CompositeSequenceValueObject> vos = super.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+        for(CompositeSequenceValueObject vo : vos){
+            // This is hyper super ultra inefficient
+            // FIXME convert this to a single query retrieval on the dao level.
+            vo.setGeneMappingSummaries( this.getGeneMappingSummary( this.load( vo.getId() ) ) );
+        }
+        return vos;
     }
 }

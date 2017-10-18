@@ -17,7 +17,7 @@ import java.util.Collection;
  * @author tesarst
  */
 public abstract class DatasetArg<T>
-        extends MutableArg<T, ExpressionExperiment, ExpressionExperimentService, ExpressionExperimentValueObject> {
+        extends MutableArg<T, ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
 
     /**
      * Used by RS to parse value of request parameters.

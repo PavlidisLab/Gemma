@@ -18,7 +18,7 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     @Override
     public CompositeSequence getPersistentObject( CompositeSequenceService service ) {
-        assert ( arrayDesign != null );
+        if( arrayDesign == null ) throw new IllegalArgumentException( "Platform not set for composite sequence retrieval" );
         return check( this.value == null ? null : service.findByName( arrayDesign, this.value ) );
     }
 

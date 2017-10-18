@@ -18,19 +18,31 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-public abstract class AnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
+/**
+ * Describes an event that involved a change of assignment of factor value to bio material, or other changes in the
+ * experimental design.
+ */
+public class ExperimentalDesignUpdatedEvent extends AuditEventType {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -7488448191665314917L;
+    private static final long serialVersionUID = 6359338763821876809L;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      *
      * @author Paul
      */
-    public AnnotationEvent() {
+    public ExperimentalDesignUpdatedEvent() {
+    }
+
+    public static final class Factory {
+
+        public static ExperimentalDesignUpdatedEvent newInstance() {
+            return new ExperimentalDesignUpdatedEvent();
+        }
+
     }
 
 }

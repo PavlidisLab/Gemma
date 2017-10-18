@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -42,7 +42,7 @@ import java.nio.file.Files;
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService extends WebServiceWithFiltering {
+public class DatasetsWebService extends WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
@@ -67,6 +67,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService ) {
+        super( expressionExperimentService );
         this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
@@ -75,7 +76,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
     }
 
     /**
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
+     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -87,24 +88,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.all( filter, offset, limit, sort, sr, expressionExperimentService );
-    }
-
-    /**
-     * Retrieves single dataset based on the given dataset identifier.
-     *
-     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                   is more efficient. Only datasets that user has access to will be available.
-     */
-    @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public ResponseDataObject dataset( // Params:
-            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        return Responder.autoCode( datasetArg.getValueObject( expressionExperimentService ), sr );
+        return super.all( filter, offset, limit, sort, sr );
     }
 
     /**
@@ -119,21 +103,21 @@ public class DatasetsWebService extends WebServiceWithFiltering {
      *                    <p>
      *                    Do not combine different identifiers in one query.
      *                    </p>
-     * @see WebServiceWithFiltering#all(FilterArg, IntArg, IntArg, SortArg, HttpServletResponse, BaseVoEnabledService)
+     * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
     @Path("/{datasetsArg: .+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasets( // Params:
-            @PathParam("datasetsArg") ArrayDatasetArg datasetsArg, // Required
+            @PathParam("datasetsArg") ArrayDatasetArg datasetsArg, // Optional
             @QueryParam("filter") @DefaultValue("") DatasetFilterArg filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return super.some( datasetsArg, filter, offset, limit, sort, sr, expressionExperimentService );
+        return super.some( datasetsArg, filter, offset, limit, sort, sr );
     }
 
     /**
@@ -216,7 +200,7 @@ public class DatasetsWebService extends WebServiceWithFiltering {
      *
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
-     * @param filterData filters the expression data so that they do not contain samples under a minimum threshold.
+     * @param filterData return filtered the expression data.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/data")
@@ -251,13 +235,13 @@ public class DatasetsWebService extends WebServiceWithFiltering {
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
         ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeTemporaryDataFile( ee, filter );
+        File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
         return outputFile( file, ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
     private Response outputDesignFile( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
-        File file = expressionDataFileService.writeTemporaryDesignFile( ee );
+        File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
         return outputFile( file, ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
@@ -269,28 +253,14 @@ public class DatasetsWebService extends WebServiceWithFiltering {
                 throw new GemmaApiException( errorBody );
             }
 
-            Response response = Response.ok( Files.readAllBytes( file.toPath() ) )
+            return Response.ok( Files.readAllBytes( file.toPath() ) )
                     .header( "Content-Disposition", "attachment; filename=" + file.getName() ).build();
-
-            deleteFile( file );
-
-            return response;
         } catch ( IOException e ) {
             WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
                     String.format( error, shortName ) );
             errorBody.addErrorsField( "error", e.getMessage() );
 
-            deleteFile( file );
-
             throw new GemmaApiException( errorBody );
-        }
-    }
-
-    private void deleteFile( File file ) {
-        if ( file.canWrite() && file.delete() ) {
-            log.info( "Deleted: " + file );
-        } else {
-            log.warn( "Could not delete file: " + file );
         }
     }
 

@@ -19,13 +19,17 @@ import org.hibernate.*;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -147,5 +151,70 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
             vos.add( this.loadValueObject( e ) );
         }
         return vos;
+    }
+
+    @Override
+    public Collection<TaxonValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
+            ArrayList<ObjectFilter[]> filter ) {
+        // Compose query
+        Query query = this.getLoadValueObjectsQueryString( filter, orderBy, !asc );
+
+        query.setCacheable( true );
+        if ( limit > 0 )
+            query.setMaxResults( limit );
+        query.setFirstResult( offset );
+
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+        List<TaxonValueObject> vos = new ArrayList<>( list.size() );
+
+        for ( Object[] row : list ) {
+            TaxonValueObject vo = new TaxonValueObject( ( Taxon ) row[1] );
+            if ( row[2] != null ) {
+                vo.setExternalDatabase( new ExternalDatabaseValueObject( ( ExternalDatabase ) row[2] ) );
+            }
+            if ( row[3] != null ) {
+                vo.setParentTaxon( new TaxonValueObject( ( Taxon ) row[3] ) );
+                if ( row[4] != null ) {
+                    vo.getParentTaxon().setParentTaxon( new TaxonValueObject( ( Taxon ) row[4] ) );
+                }
+            }
+            vos.add( vo );
+        }
+
+        return vos;
+    }
+
+    /**
+     * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
+     *                        description.
+     * @param orderByProperty the property to order by.
+     * @param orderDesc       whether the ordering is ascending or descending.
+     * @return a hibernate Query object ready to be used for TaxonVO retrieval.
+     */
+    private Query getLoadValueObjectsQueryString( ArrayList<ObjectFilter[]> filters, String orderByProperty,
+            boolean orderDesc ) {
+
+        //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
+        String queryString = "select " + ObjectFilter.DAO_TAXON_ALIAS + ".id as id, " // 0
+                + ObjectFilter.DAO_TAXON_ALIAS + ", " // 1
+                + "ED, "  // 2
+                + "PT, "  // 3
+                + "PTT "  // 4
+                + "from Taxon as " + ObjectFilter.DAO_TAXON_ALIAS + " " // taxon
+                + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".externalDatabase as ED " // external db
+                + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".parentTaxon as PT " // parent taxon
+                + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".parentTaxon.parentTaxon as PTT " // parent p taxon
+                + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
+
+        queryString += formRestrictionClause( filters, false );
+        queryString += "group by " + ObjectFilter.DAO_TAXON_ALIAS + ".id ";
+        queryString += formOrderByProperty( orderByProperty, orderDesc );
+
+        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+
+        addRestrictionParameters( query, filters );
+
+        return query;
     }
 }

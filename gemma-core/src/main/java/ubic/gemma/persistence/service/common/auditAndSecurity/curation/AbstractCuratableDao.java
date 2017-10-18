@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
+import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.jdbc.Work;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -104,7 +105,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      */
     protected void addCurationEvents( AbstractCuratableValueObject vo, AuditEvent noteEvent, AuditEvent attentionEvent,
             AuditEvent troubleEvent ) {
-        if ( noteEvent != null ) {
+        if ( noteEvent != null && SecurityUtil.isUserAdmin() ) {
             vo.setLastNoteUpdateEvent( new AuditEventValueObject( noteEvent ) );
         }
         if ( attentionEvent != null ) {

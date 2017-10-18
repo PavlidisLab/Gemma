@@ -39,18 +39,25 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
         this.checked = checked;
     }
 
+    public ExternalDatabaseValueObject( ExternalDatabase ed ){
+        super();
+        this.id = ed.getId();
+        this.name = ed.getName();
+    }
+
     public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
         if ( eds == null )
             return null;
 
-        Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = new TreeSet<>();
+        Collection<ExternalDatabaseValueObject> vos = new TreeSet<>();
         for ( ExternalDatabase ed : eds ) {
-            externalDatabaseValueObjects.add( fromEntity( ed ) );
+            if(ed != null) vos.add( new ExternalDatabaseValueObject( ed ) );
         }
 
-        return externalDatabaseValueObjects;
+        return vos;
     }
 
+    @Deprecated // use constructor instead
     public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
         if ( ed == null )
             return null;

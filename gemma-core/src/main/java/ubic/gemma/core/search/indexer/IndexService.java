@@ -24,16 +24,16 @@ import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 
 /**
  * @author paul
- * @version $Id$
  */
+@SuppressWarnings("unused") // Used by scheduler, possible external use
 public interface IndexService {
 
     /**
-     * @param command
+     * @param command command
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String index( IndexerTaskCommand command );
+    String index( IndexerTaskCommand command );
 
     /**
      * Indexes expression experiments, genes, array designs, probes and bibliographic references. This is a convenience
@@ -42,7 +42,7 @@ public interface IndexService {
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String indexAll();
+    String indexAll();
 
     /**
      * Indexes array designs.
@@ -50,7 +50,7 @@ public interface IndexService {
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String indexArrayDesigns();
+    String indexArrayDesigns();
 
     /**
      * Indexes bibliographic references.
@@ -58,7 +58,7 @@ public interface IndexService {
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String indexBibligraphicReferences();
+    String indexBibligraphicReferences();
 
     /**
      * Indexes sequences
@@ -66,7 +66,7 @@ public interface IndexService {
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String indexBioSequences();
+    String indexBioSequences();
 
     /**
      * Indexes expression experiments.
@@ -74,7 +74,7 @@ public interface IndexService {
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String indexExpressionExperiments();
+    String indexExpressionExperiments();
 
     /**
      * Indexes genes.
@@ -82,7 +82,7 @@ public interface IndexService {
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String indexGenes();
+    String indexGenes();
 
     /**
      * Indexes probes.
@@ -90,6 +90,6 @@ public interface IndexService {
      * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public String indexProbes();
+    String indexProbes();
 
 }

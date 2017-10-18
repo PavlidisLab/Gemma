@@ -778,7 +778,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         SearchResultDisplayObject newSrDo;
 
         List<DatabaseBackedGeneSetValueObject> valueObjects = geneSetValueObjectHelper
-                .convertToLightValueObjects( sets, false );
+                .convertToValueObjects( sets, false );
         if ( watch.getTime() > 500 )
             log.info( "Database stage done: " + watch.getTime() + "ms" );
 

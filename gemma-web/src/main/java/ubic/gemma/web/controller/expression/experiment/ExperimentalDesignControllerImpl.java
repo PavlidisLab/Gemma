@@ -30,12 +30,14 @@ import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.util.AnchorTagUtil;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
@@ -86,6 +88,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     private FactorValueService factorValueService;
     @Autowired
     private SecurityService securityService;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Override
     public void createDesignFromFile( Long eeid, String filePath ) {
@@ -480,8 +484,18 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             }
         }
-        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "BioMaterials updated ("
-        // + bmvos.length + " items)", StringUtils.join( bmvos, "\n" ) );
+        StringBuilder details = new StringBuilder( "Updated bio materials:\n" );
+        for ( BioMaterialValueObject vo : bmvos ) {
+            if(vo == null){
+                continue;
+            }
+            BioMaterial ba = bioMaterialService.load( vo.getId() );
+            if ( ba != null ) {
+                details.append( "id: " ).append( ba.getId() ).append( " - " ).append( ba.getName() ).append( "\n" );
+            }
+        }
+        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
+                "BioMaterials updated (" + bmvos.length + " items)", details.toString() );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
