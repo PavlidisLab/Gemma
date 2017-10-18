@@ -20,331 +20,330 @@ Gemma.MAX_GENES_PER_PASTE = 1000;
  * @class GeneGrid
  * @extends Gemma.GemmaGridPanel
  */
-Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel,
-    {
+Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 
-        collapsible: false,
-        autoWidth: true,
-        stateful: false,
-        frame: true,
-        title: "Genes",
-        layout: 'fit',
-        width: 400,
-        height: 250,
+    collapsible: false,
+    autoWidth: true,
+    stateful: false,
+    frame: true,
+    title: "Genes",
+    layout: 'fit',
+    width: 400,
+    height: 250,
 
-        viewConfig: {
-            forceFit: true,
-            emptyText: "Multiple genes can be listed here"
-        },
-        autoScroll: true,
-        columns: [
-            {
-                header: 'Symbol',
-                toolTip: 'Gene symbol',
-                dataIndex: 'officialSymbol',
-                width: 75,
-                sortable: true,
-                renderer: function (value, metadata, record, row, col, ds) {
-                    return String.format("<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a> ",
-                        record.data.id, record.data.officialSymbol);
-                }
-            }, {
-                id: 'desc',
-                toolTip: 'Gene name',
-                header: 'Name',
-                dataIndex: 'officialName'
-            }],
-        autoExpandColumn: 'desc',
-
-        /**
-         * Add to table.
-         *
-         * @param {Array.Number}
-         *           geneIds
-         * @param {Function}
-         *           callback
-         * @param {Array}
-         *           args
-         */
-        loadGenes: function (geneIds, callback, args) {
-            if (!geneIds || geneIds.length === 0) {
-                return;
+    viewConfig: {
+        forceFit: true,
+        emptyText: "Multiple genes can be listed here"
+    },
+    autoScroll: true,
+    columns: [
+        {
+            header: 'Symbol',
+            toolTip: 'Gene symbol',
+            dataIndex: 'officialSymbol',
+            width: 75,
+            sortable: true,
+            renderer: function (value, metadata, record, row, col, ds) {
+                return String.format("<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a> ",
+                    record.data.id, record.data.officialSymbol);
             }
-
-            GenePickerController.getGenes(geneIds, function (genes) {
-                var geneData = [];
-                for (var i = 0; i < genes.length; ++i) {
-                    geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
-                        genes[i].officialName]);
-                }
-                /*
-                 * FIXME this can result in the same gene listed twice. This is taken care of at the server side but looks
-                 * funny.
-                 */
-                this.getStore().loadData(geneData);
-
-                if (callback) {
-                    callback(args);
-                }
-            }.createDelegate(this));
-        },
-
-        /**
-         * Add geneValueObjects to grid.
-         *
-         * @param {Object}
-         *           gvos must have fields for id, taxonScientificName, officialSymbol & officialName
-         */
-        addGeneValueObjects: function (gvos) {
-            if (!gvos || gvos.length === 0) {
-                return;
-            }
-            if (this.getEl()) {
-                this.loadMask = new Ext.LoadMask(this.getEl(), {
-                    msg: Gemma.StatusText.Loading.genes,
-                    msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
-                });
-                this.loadMask.show();
-            }
-            var geneData = [];
-            for (var i = 0; i < gvos.length; ++i) {
-                geneData.push([gvos[i].id, gvos[i].taxonScientificName, gvos[i].officialSymbol, gvos[i].officialName]);
-            }
-            this.getStore().loadData(geneData);
-        },
-
-        /**
-         * @memberOf Gemma.GeneGrid
-         */
-        initComponent: function () {
-            Ext.apply(this, {
-                tbar: new Gemma.GeneChooserToolBar({
-                    geneGrid: this,
-                    extraButtons: this.extraButtons,
-                    style: "border: #a3bad9 solid 1px;"
-                }),
-                store: new Ext.data.SimpleStore({
-                    fields: [{
-                        name: 'id',
-                        type: 'int'
-                    }, {
-                        name: 'taxon'
-                    }, {
-                        name: 'officialSymbol',
-                        type: 'string'
-                    }, {
-                        name: 'officialName',
-                        type: 'string'
-                    }],
-                    sortInfo: {
-                        field: 'officialSymbol',
-                        direction: 'ASC'
-                    }
-                })
-            });
-
-            Gemma.GeneGrid.superclass.initComponent.call(this);
-
-            this.addEvents('addgenes', 'removegenes');
-
-            this.getTopToolbar().geneCombo.on("select", function () {
-                this.fireEvent("addgenes");
-            }, this);
-
-            this.getStore().on("remove", function () {
-                this.fireEvent("removegenes");
-            }, this);
-
-            this.getStore().on("add", function () {
-                this.fireEvent("addgenes");
-            }, this);
-
-            this.on("keypress", function (e) {
-                if (!this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE) {
-                    this.removeGene();
-                }
-            }, this);
-
-            // See http://www.extjs.com/learn/Tutorial:RelayEvents // FIXME use EVENTBUS
-            this.relayEvents(this.getTopToolbar(), ['ready', 'taxonchanged']);
-
-            if (this.genes) {
-                var genes = this.genes instanceof Array ? this.genes : this.genes.split(",");
-                this.loadGenes(genes);
-            }
-
-        },
-
-        removeGene: function () {
-            var selected = this.getSelectionModel().getSelections();
-            for (var i = 0; i < selected.length; ++i) {
-                this.getStore().remove(selected[i]);
-            }
-            this.getSelectionModel().selectLastRow();
-        },
-
-        removeAllGenes: function () {
-            this.getStore().removeAll();
-        },
-
-        record: Ext.data.Record.create([{
-            name: 'id',
-            type: 'int'
         }, {
-            name: 'taxon'
-        }, {
-            name: 'officialSymbol',
-            type: 'string'
-        }, {
-            name: 'officialName',
-            type: 'string'
-        }]),
+            id: 'desc',
+            toolTip: 'Gene name',
+            header: 'Name',
+            dataIndex: 'officialName'
+        }],
+    autoExpandColumn: 'desc',
 
-        addGene: function (gene) {
-            if (!gene) {
-                return;
-            }
-
-            if (this.getStore().find("id", gene.id) < 0) {
-                var Constructor = this.record;
-                var record = new Constructor(gene);
-                this.getStore().add([record]);
-            }
-        },
-
-        /**
-         * Given text, search Gemma for matching genes. Used to 'bulk load' genes from the GUI.
-         *
-         * @param {}
-         *           e
-         */
-        getGenesFromList: function (e, taxon) {
-            if (!taxon) {
-                Ext.Msg.alert(Gemma.HelpText.CommonErrors.MissingInput.title,
-                    Gemma.HelpText.CommonErrors.MissingInput.text);
-                return;
-            }
-
-            var loadMask = new Ext.LoadMask(this.getEl(), {
-                msg: Gemma.StatusText.Loading.genes
-            });
-            loadMask.show();
-
-            var taxonId = taxon.id;
-            var text = e.geneNames;
-            GenePickerController.searchMultipleGenes(text, taxonId, {
-                callback: function (genes) {
-                    if (genes.length < 1 || (genes.length === 1 && genes[0] === null )) {
-                        Ext.Msg.alert("Genes not found", "No genes matching your query and taxon found.");
-                        loadMask.hide();
-                        return;
-                    }
-                    var origLines = text.split(/[\r\n]+/).length;
-                    var nulls = origLines - genes.length;
-                    var geneData = [];
-                    var warned = false;
-                    var alreadyIn = 0;
-                    var totalIn = 0;
-                    for (var i = 0; i < genes.length; ++i) {
-                        if (i >= Gemma.MAX_GENES_PER_QUERY) {
-                            if (!warned) {
-                                Ext.Msg.alert("Too many genes", "You can only search up to " + Gemma.MAX_GENES_PER_QUERY
-                                    + " genes, some of your selection will be ignored.");
-                                warned = true;
-                            }
-                            break;
-                        }
-
-                        if (genes[i] === null) {
-                            nulls = nulls + 1;
-                        } else if (this.getStore().find("id", genes[i].id) < 0) {
-                            geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
-                                genes[i].officialName]);
-                            totalIn++;
-                        } else {
-                            alreadyIn++;
-                        }
-                    }
-                    this.getStore().loadData(geneData, true);
-                    loadMask.hide();
-                    if (alreadyIn > 0 || nulls > 0) {
-                        var inStr = alreadyIn > 0 ? ("  " + alreadyIn + " out of " + origLines + "  genes skipped (already in the group). <br/>") : "";
-                        var nullStr = nulls > 0 ? ("  " + nulls + " out of " + origLines + " gene identifiers not recognized (or do not exist on this taxon). ") : "";
-                        Ext.Msg.alert("Genes loaded", totalIn + " out of " + origLines +" genes loaded. <br/>"
-                            + inStr + nullStr);
-                    }
-
-                }.createDelegate(this),
-
-                errorHandler: function (e) {
-                    if (this.getEl && this.getEl()) {
-                        this.getEl().unmask();
-                    }
-                    Ext.Msg.alert('There was an error', e);
-                }
-            });
-        },
-
-        getTaxonId: function () {
-            return this.getTopToolbar().getTaxonId();
-        },
-
-        setGene: function (geneId, callback, args) {
-            this.getTopToolbar().setGene(geneId, callback, args);
-            this.fireEvent("addgenes", [geneId]);
-        },
-
-        /**
-         *
-         * @return {} list of all geneids currently held, including ones in the grid and possible one in the field.
-         */
-        getGeneIds: function () {
-            var ids = [];
-            var all = this.getStore().getRange();
-            for (var i = 0; i < all.length; ++i) {
-                ids.push(all[i].data.id);
-            }
-            var gene = this.getTopToolbar().geneCombo.getGene();
-            if (gene) {
-                for (var j = 0; j < ids.length; ++j) {
-                    // don't add twice.
-                    if (ids[j] === gene.id) {
-                        return ids;
-                    }
-                }
-                ids.push(gene.id);
-            }
-            return ids;
-        },
-
-        taxonChanged: function (taxon) {
-            this.getTopToolbar().taxonChanged(taxon, true);
-        },
-
-        // returns gene objects in an array
-        // gene = {id, officialSymbol, officialName, taxon}
-        getGenes: function () {
-
-            var genes = [];
-            var all = this.getStore().getRange();
-            for (var i = 0; i < all.length; ++i) {
-                genes.push(all[i].data);
-            }
-            var gene = this.getTopToolbar().geneCombo.getGene();
-            if (gene) {
-                for (var j = 0; j < genes.length; ++j) {
-                    // don't add twice.
-                    if (genes[j].id === gene.id) {
-                        return genes;
-                    }
-                }
-                genes.push(gene);
-            }
-            return genes;
-
+    /**
+     * Add to table.
+     *
+     * @param {Array.Number}
+     *           geneIds
+     * @param {Function}
+     *           callback
+     * @param {Array}
+     *           args
+     */
+    loadGenes: function (geneIds, callback, args) {
+        if (!geneIds || geneIds.length === 0) {
+            return;
         }
 
-    });
+        GenePickerController.getGenes(geneIds, function (genes) {
+            var geneData = [];
+            for (var i = 0; i < genes.length; ++i) {
+                geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
+                    genes[i].officialName]);
+            }
+            /*
+             * FIXME this can result in the same gene listed twice. This is taken care of at the server side but looks
+             * funny.
+             */
+            this.getStore().loadData(geneData);
+
+            if (callback) {
+                callback(args);
+            }
+        }.createDelegate(this));
+    },
+
+    /**
+     * Add geneValueObjects to grid.
+     *
+     * @param {Object}
+     *           gvos must have fields for id, taxonScientificName, officialSymbol & officialName
+     */
+    addGeneValueObjects: function (gvos) {
+        if (!gvos || gvos.length === 0) {
+            return;
+        }
+        if (this.getEl()) {
+            this.loadMask = new Ext.LoadMask(this.getEl(), {
+                msg: Gemma.StatusText.Loading.genes,
+                msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+            });
+            this.loadMask.show();
+        }
+        var geneData = [];
+        for (var i = 0; i < gvos.length; ++i) {
+            geneData.push([gvos[i].id, gvos[i].taxonScientificName, gvos[i].officialSymbol, gvos[i].officialName]);
+        }
+        this.getStore().loadData(geneData);
+    },
+
+    /**
+     * @memberOf Gemma.GeneGrid
+     */
+    initComponent: function () {
+        Ext.apply(this, {
+            tbar: new Gemma.GeneChooserToolBar({
+                geneGrid: this,
+                extraButtons: this.extraButtons,
+                style: "border: #a3bad9 solid 1px;"
+            }),
+            store: new Ext.data.SimpleStore({
+                fields: [{
+                    name: 'id',
+                    type: 'int'
+                }, {
+                    name: 'taxon'
+                }, {
+                    name: 'officialSymbol',
+                    type: 'string'
+                }, {
+                    name: 'officialName',
+                    type: 'string'
+                }],
+                sortInfo: {
+                    field: 'officialSymbol',
+                    direction: 'ASC'
+                }
+            })
+        });
+
+        Gemma.GeneGrid.superclass.initComponent.call(this);
+
+        this.addEvents('addgenes', 'removegenes');
+
+        this.getTopToolbar().geneCombo.on("select", function () {
+            this.fireEvent("addgenes");
+        }, this);
+
+        this.getStore().on("remove", function () {
+            this.fireEvent("removegenes");
+        }, this);
+
+        this.getStore().on("add", function () {
+            this.fireEvent("addgenes");
+        }, this);
+
+        this.on("keypress", function (e) {
+            if (!this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE) {
+                this.removeGene();
+            }
+        }, this);
+
+        // See http://www.extjs.com/learn/Tutorial:RelayEvents // FIXME use EVENTBUS
+        this.relayEvents(this.getTopToolbar(), ['ready', 'taxonchanged']);
+
+        if (this.genes) {
+            var genes = this.genes instanceof Array ? this.genes : this.genes.split(",");
+            this.loadGenes(genes);
+        }
+
+    },
+
+    removeGene: function () {
+        var selected = this.getSelectionModel().getSelections();
+        for (var i = 0; i < selected.length; ++i) {
+            this.getStore().remove(selected[i]);
+        }
+        this.getSelectionModel().selectLastRow();
+    },
+
+    removeAllGenes: function () {
+        this.getStore().removeAll();
+    },
+
+    record: Ext.data.Record.create([{
+        name: 'id',
+        type: 'int'
+    }, {
+        name: 'taxon'
+    }, {
+        name: 'officialSymbol',
+        type: 'string'
+    }, {
+        name: 'officialName',
+        type: 'string'
+    }]),
+
+    addGene: function (gene) {
+        if (!gene) {
+            return;
+        }
+
+        if (this.getStore().find("id", gene.id) < 0) {
+            var Constructor = this.record;
+            var record = new Constructor(gene);
+            this.getStore().add([record]);
+        }
+    },
+
+    /**
+     * Given text, search Gemma for matching genes. Used to 'bulk load' genes from the GUI.
+     *
+     * @param {}
+     *           e
+     */
+    getGenesFromList: function (e, taxon) {
+        if (!taxon) {
+            Ext.Msg.alert(Gemma.HelpText.CommonErrors.MissingInput.title,
+                Gemma.HelpText.CommonErrors.MissingInput.text);
+            return;
+        }
+
+        var loadMask = new Ext.LoadMask(this.getEl(), {
+            msg: Gemma.StatusText.Loading.genes
+        });
+        loadMask.show();
+
+        var taxonId = taxon.id;
+        var text = e.geneNames;
+        GenePickerController.searchMultipleGenes(text, taxonId, {
+            callback: function (genes) {
+                if (genes.length < 1 || (genes.length === 1 && genes[0] === null )) {
+                    Ext.Msg.alert("Genes not found", "No genes matching your query and taxon found.");
+                    loadMask.hide();
+                    return;
+                }
+                var origLines = text.split(/[\r\n]+/).length;
+                var nulls = origLines - genes.length;
+                var geneData = [];
+                var warned = false;
+                var alreadyIn = 0;
+                var totalIn = 0;
+                for (var i = 0; i < genes.length; ++i) {
+                    if (i >= Gemma.MAX_GENES_PER_QUERY) {
+                        if (!warned) {
+                            Ext.Msg.alert("Too many genes", "You can only search up to " + Gemma.MAX_GENES_PER_QUERY
+                                + " genes, some of your selection will be ignored.");
+                            warned = true;
+                        }
+                        break;
+                    }
+
+                    if (genes[i] === null) {
+                        nulls = nulls + 1;
+                    } else if (this.getStore().find("id", genes[i].id) < 0) {
+                        geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
+                            genes[i].officialName]);
+                        totalIn++;
+                    } else {
+                        alreadyIn++;
+                    }
+                }
+                this.getStore().loadData(geneData, true);
+                loadMask.hide();
+                if (alreadyIn > 0 || nulls > 0) {
+                    var inStr = alreadyIn > 0 ? ("  " + alreadyIn + " out of " + origLines + "  genes skipped (already in the group). <br/>") : "";
+                    var nullStr = nulls > 0 ? ("  " + nulls + " out of " + origLines + " gene identifiers not recognized (or do not exist on this taxon). ") : "";
+                    Ext.Msg.alert("Genes loaded", totalIn + " out of " + origLines + " genes loaded. <br/>"
+                        + inStr + nullStr);
+                }
+
+            }.createDelegate(this),
+
+            errorHandler: function (e) {
+                if (this.getEl && this.getEl()) {
+                    this.getEl().unmask();
+                }
+                Ext.Msg.alert('There was an error', e);
+            }
+        });
+    },
+
+    getTaxonId: function () {
+        return this.getTopToolbar().getTaxonId();
+    },
+
+    setGene: function (geneId, callback, args) {
+        this.getTopToolbar().setGene(geneId, callback, args);
+        this.fireEvent("addgenes", [geneId]);
+    },
+
+    /**
+     *
+     * @return {} list of all geneids currently held, including ones in the grid and possible one in the field.
+     */
+    getGeneIds: function () {
+        var ids = [];
+        var all = this.getStore().getRange();
+        for (var i = 0; i < all.length; ++i) {
+            ids.push(all[i].data.id);
+        }
+        var gene = this.getTopToolbar().geneCombo.getGene();
+        if (gene) {
+            for (var j = 0; j < ids.length; ++j) {
+                // don't add twice.
+                if (ids[j] === gene.id) {
+                    return ids;
+                }
+            }
+            ids.push(gene.id);
+        }
+        return ids;
+    },
+
+    taxonChanged: function (taxon) {
+        this.getTopToolbar().taxonChanged(taxon, true);
+    },
+
+    // returns gene objects in an array
+    // gene = {id, officialSymbol, officialName, taxon}
+    getGenes: function () {
+
+        var genes = [];
+        var all = this.getStore().getRange();
+        for (var i = 0; i < all.length; ++i) {
+            genes.push(all[i].data);
+        }
+        var gene = this.getTopToolbar().geneCombo.getGene();
+        if (gene) {
+            for (var j = 0; j < genes.length; ++j) {
+                // don't add twice.
+                if (genes[j].id === gene.id) {
+                    return genes;
+                }
+            }
+            genes.push(gene);
+        }
+        return genes;
+
+    }
+
+});
 
 Ext.reg('genechooser', Gemma.GeneGrid);
 
