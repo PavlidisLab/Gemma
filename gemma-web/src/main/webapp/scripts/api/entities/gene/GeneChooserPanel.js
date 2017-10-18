@@ -233,17 +233,18 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel,
             var taxonId = taxon.id;
             var text = e.geneNames;
             GenePickerController.searchMultipleGenes(text, taxonId, {
-
                 callback: function (genes) {
                     if (genes.length < 1 || (genes.length === 1 && genes[0] === null )) {
                         Ext.Msg.alert("Genes not found", "No genes matching your query and taxon found.");
                         loadMask.hide();
                         return;
                     }
+                    var origLines = text.split(/[\r\n]+/).length;
+                    var nulls = origLines - genes.length;
                     var geneData = [];
                     var warned = false;
-                    var nulls = 0;
                     var alreadyIn = 0;
+                    var totalIn = 0;
                     for (var i = 0; i < genes.length; ++i) {
                         if (i >= Gemma.MAX_GENES_PER_QUERY) {
                             if (!warned) {
@@ -259,16 +260,17 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel,
                         } else if (this.getStore().find("id", genes[i].id) < 0) {
                             geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
                                 genes[i].officialName]);
+                            totalIn++;
                         } else {
-                            alreadyIn = alreadyIn + 1;
+                            alreadyIn++;
                         }
                     }
                     this.getStore().loadData(geneData, true);
                     loadMask.hide();
                     if (alreadyIn > 0 || nulls > 0) {
-                        var inStr = alreadyIn > 0 ? ("  " + alreadyIn + " genes skipped (already in the group) \n") : "";
-                        var nullStr = nulls > 0 ? ("  " + nulls + " genes not found or do not exist for this taxon ") : "";
-                        Ext.Msg.alert("Genes loaded", "Genes loaded successfully. \n"
+                        var inStr = alreadyIn > 0 ? ("  " + alreadyIn + " out of " + origLines + "  genes skipped (already in the group). <br/>") : "";
+                        var nullStr = nulls > 0 ? ("  " + nulls + " out of " + origLines + " gene identifiers not recognized (or do not exist on this taxon). ") : "";
+                        Ext.Msg.alert("Genes loaded", totalIn + " out of " + origLines +" genes loaded. <br/>"
                             + inStr + nullStr);
                     }
 
