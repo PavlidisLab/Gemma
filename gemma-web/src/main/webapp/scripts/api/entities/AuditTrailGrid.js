@@ -139,7 +139,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
         Gemma.AuditTrailGrid.superclass.initComponent.call(this);
 
         this.getColumnModel().defaultSortable = false;
-        this.getStore().setDefaultSort('date');
+        this.getStore().setDefaultSort('date', 'desc');
 
         if (!this.loadOnlyOnRender) {
             this.getStore().load({
