@@ -172,14 +172,6 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         this.numberOfProbesAnalyzed = numberOfProbesAnalyzed;
     }
 
-    public Double getqValue() {
-        return qValue;
-    }
-
-    public void setqValue( Double qValue ) {
-        this.qValue = qValue;
-    }
-
     public Double getQValue() {
         return qValue;
     }
