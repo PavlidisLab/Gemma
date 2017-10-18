@@ -399,11 +399,11 @@ i[class*=qtp] {
 }
 
 .btn-not-loading {
-    background: url("/Gemma/images/icons/control_play_blue.png") no-repeat center;
+    background: url("../../images/icons/control_play_blue.png") no-repeat center;
 }
 
 .btn-loading {
-    background: url("/Gemma/images/loading.gif") no-repeat center;
+    background: url("../../images/loading.gif") no-repeat center;
 }
 
 .ee-status-badge {
