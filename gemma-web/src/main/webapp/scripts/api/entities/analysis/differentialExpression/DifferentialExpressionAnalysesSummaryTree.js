@@ -477,12 +477,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
                + resultSet.resultSetId + '\',\'' + escape( factor )
                + '\')" ext:qtip="View top differentially expressed genes for: ' + escape( factor ) + ' (FDR threshold='
-               + resultSet.threshold + ')">&nbsp;<img src="" + ctxBasePath + "/images/icons/heatmapdiff.png">&nbsp;</span>';
+               + resultSet.threshold + ')">&nbsp;<img src="' + ctxBasePath + '/images/icons/heatmapdiff.png">&nbsp;</span>';
 
             var pValueDistImageSize = 16;
             var strippedFactorName = Ext.util.Format.stripTags( factor );
             // factorName is for backwards compatiility. Deprecated in favor of using the resultSetId.
-            var imageUrl = '" + ctxBasePath + "/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
+            var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                + resultSet.analysisId + '&rsid=' + resultSet.resultSetId + '&factorName=' + escape( strippedFactorName );
             var methodWithArguments = 'showPValueDistributionWindow(\'' + escape( factor ) + '\', \'' + imageUrl
                + '\');';
