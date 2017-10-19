@@ -11,7 +11,7 @@ version: $Id$
 
 <script type="text/javascript">
    Ext.namespace( 'Gemma' );
-   Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+   Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
 
    Ext.onReady( function() {
       Ext.QuickTips.init();
@@ -24,7 +24,7 @@ version: $Id$
          width : 350,
          items : [ new Ext.FormPanel( {
             labelWidth : 90,
-            url : '/Gemma/j_spring_security_check',
+            url : '${pageContext.request.contextPath}/j_spring_security_check',
             method : 'POST',
             id : '_loginForm',
             standardSubmit : true,
@@ -64,7 +64,7 @@ version: $Id$
                allowBlank : false,
                inputType : 'password'
             }, {
-               fieldLabel : '<a href="/Gemma/passwordHint.html">Forgot your password?</a>',
+               fieldLabel : '<a href="${pageContext.request.contextPath}/passwordHint.html">Forgot your password?</a>',
                name : 'passwordHint',
                id : 'passwordHint',
                labelSeparator : '',

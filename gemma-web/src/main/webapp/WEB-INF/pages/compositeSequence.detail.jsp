@@ -38,7 +38,7 @@
 				<fmt:message key="compositeSequence.title" />
 				: ${ compositeSequence.name} on
 				<a
-					href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }">
+					href="${pageContext.request.contextPath}/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }">
 					${compositeSequence.arrayDesign.shortName} </a>
 				[${ compositeSequence.arrayDesign.name}]
 

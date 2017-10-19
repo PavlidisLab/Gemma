@@ -5,8 +5,7 @@
 	</h2>
 </div>
 
-<div id="frontPageSlideShow" align="center"
-	style="width: 100%; background: url(/Gemma/images/slideShow/gradientBack.jpg) repeat-x; margin-bottom: 30px; border-top: 1px solid gainsboro; border-bottom: 1px solid gainsboro;">
+<div id="frontPageSlideShow" align="center">
 	<div id="features" style="overflow: hidden;">
 		<div title="1" id="dataChart">
 			<table>
@@ -17,8 +16,8 @@
 									&chds=a&chdl=${ googleLabels}&chf=bg,s,FFFFFF00
 									&chdlp=b|l&chdls=2f2f2f,13"
 							width="340" height="240" alt="" /> 
-						<img style="position: absolute; top: 123px; left: 250px" src="/Gemma/images/slideShow/humanOutline_35_3.png" /> 
-						<img style="position: absolute; top: 60px; left: 200px"	src="/Gemma/images/slideShow/mouseOutline65_simplified.png" /> 
+						<img style="position: absolute; top: 123px; left: 250px" src="${pageContext.request.contextPath}/images/slideShow/humanOutline_35_3.png" />
+						<img style="position: absolute; top: 60px; left: 200px"	src="${pageContext.request.contextPath}/images/slideShow/mouseOutline65_simplified.png" />
 						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
 					<td class="slideTextTD">Over <b>6000</b> curated expression studies	</td>
@@ -28,7 +27,7 @@
 		<div title="2">
 			<table>
 				<tr>
-					<td class="slideImageTD"><img src="/Gemma/images/slideShow/diffEx.png" style="margin-top: 10px" /></td>
+					<td class="slideImageTD"><img src="${pageContext.request.contextPath}/images/slideShow/diffEx.png" style="margin-top: 10px" /></td>
 					<td align=center class="slideTextTD">
 						Search and visualise <b>differential expression</b> patterns across genes and conditions
 					</td>
@@ -38,7 +37,7 @@
 		<div title="3">
 			<table>
 				<tr>
-					<td class="slideImageTD"><img class="rounded" src="/Gemma/images/slideShow/coex.png" style="margin-top: 15px;">
+					<td class="slideImageTD"><img class="rounded" src="${pageContext.request.contextPath}/images/slideShow/coex.png" style="margin-top: 15px;">
 					</td>
 					<td class="slideTextTD">
 						Search <b>coexpression</b> patterns across studies and visualise the results in a network
@@ -49,7 +48,7 @@
 		<div title="4">
 			<table>
 				<tr>
-					<td class="slideImageTD"><img src="/Gemma/images/slideShow/myGemma2.png" style="padding: 15px"></td>
+					<td class="slideImageTD"><img src="${pageContext.request.contextPath}/images/slideShow/myGemma2.png" style="padding: 15px"></td>
 					<td class="slideTextTD">
 						<b>Create and share</b> your own gene and experiment groups
 					</td>
@@ -59,10 +58,10 @@
 		<div title="5">
 			<table>
 				<tr>
-					<td class="slideImageTD"><img src="/Gemma/images/slideShow/neurocarta.png" style="padding: 15px"></td>
+					<td class="slideImageTD"><img src="${pageContext.request.contextPath}/images/slideShow/neurocarta.png" style="padding: 15px"></td>
 					<td class="slideTextTD">
 						<div>
-							<img src="/Gemma/images/logo/phenocarta-45p.png">
+							<img src="${pageContext.request.contextPath}/images/logo/phenocarta-45p.png">
 						</div> 
 						Browse over 60,000 evidence-based <b>gene-to-phenotype associations</b> and create your own
 					</td>

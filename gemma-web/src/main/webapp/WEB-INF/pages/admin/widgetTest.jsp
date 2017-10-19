@@ -5,10 +5,10 @@
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 
 <jwr:script src='/scripts/app/AnalysisResultsSearch.js' />
-<link rel="stylesheet" href="/Gemma/styles/font-awesome.css">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/styles/font-awesome.css">
 <script>
    Ext.namespace( 'Gemma' );
-   Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+   Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
    Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 
    Ext.onReady( function() {

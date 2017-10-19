@@ -45,7 +45,7 @@
 			</td>
 			<td>
 				<a
-					href="/Gemma/bioMaterial/showBioMaterial.html?id=${bioAssay.sample.id}">${bioAssay.sample.name}</a>
+					href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${bioAssay.sample.id}">${bioAssay.sample.name}</a>
 			</td>
 		</tr>
 		<tr>
@@ -54,7 +54,7 @@
 			</td>
 			<td>
 				<a
-					href="/Gemma/arrays/showArrayDesign.html?id=${bioAssay.arrayDesign.id}">${bioAssay.arrayDesign.shortName}</a>
+					href="${pageContext.request.contextPath}/arrays/showArrayDesign.html?id=${bioAssay.arrayDesign.id}">${bioAssay.arrayDesign.shortName}</a>
 				${bioAssay.arrayDesign.name}
 			</td>
 		</tr>
