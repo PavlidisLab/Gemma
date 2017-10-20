@@ -37,7 +37,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  * Base test for tests that need persistent array design with sequences.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest {
 

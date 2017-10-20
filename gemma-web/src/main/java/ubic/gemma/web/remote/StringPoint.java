@@ -20,7 +20,7 @@ package ubic.gemma.web.remote;
 
 /**
  * @author kelsey
- * @version $Id$
+ *
  */
 
 // Private inner class for converting doubple point to a point of strings.

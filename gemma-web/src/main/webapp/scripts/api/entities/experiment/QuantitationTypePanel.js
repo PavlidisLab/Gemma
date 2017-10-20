@@ -4,7 +4,7 @@ Ext.namespace( "Gemma" );
  * Input description of a quantitation type - for dataset upload.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 Gemma.QuantitationTypePanel = Ext.extend( Ext.form.FieldSet, {
 

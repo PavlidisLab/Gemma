@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GffParserTest extends TestCase {
     private static Log log = LogFactory.getLog( GffParserTest.class.getName() );

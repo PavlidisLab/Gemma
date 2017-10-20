@@ -40,7 +40,7 @@ import ubic.gemma.model.genome.Taxon;
  * Creates a sample small test matrix, not persistent. Useful for testing algorithms. (This is not a test!)
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
 

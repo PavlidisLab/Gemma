@@ -18,7 +18,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
  * Used to indicate failure was due to the format being unusable, but the files are available.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class UnsupportedRawdataFileFormatException extends RuntimeException {
 

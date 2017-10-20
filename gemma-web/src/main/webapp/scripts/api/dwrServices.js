@@ -5,8 +5,7 @@
  * JAWR does not currently support DWR+Spring.
  * 
  * See analytics.jsp for definition of googleAnalyticsTrackPageviewIfConfigured().
- * 
- * $Id$
+ *
  */
 if ( typeof dwr === 'undefined' ) {
    var dwr = {};

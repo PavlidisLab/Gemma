@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class MeshServiceTest extends TestCase {
 

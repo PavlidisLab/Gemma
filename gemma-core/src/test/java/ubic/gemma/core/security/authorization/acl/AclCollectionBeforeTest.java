@@ -47,7 +47,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  * Test the AclCollectionEntryVoter.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class AclCollectionBeforeTest extends BaseSpringContextTest {
 

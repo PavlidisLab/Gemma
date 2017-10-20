@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
  * Used to carry information about the experimental design analysis settings to clients.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class DifferentialExpressionAnalyzerInfo {
 

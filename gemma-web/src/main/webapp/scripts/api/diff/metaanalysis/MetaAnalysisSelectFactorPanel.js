@@ -2,7 +2,7 @@
  * Panel for selecting factors of experiments
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

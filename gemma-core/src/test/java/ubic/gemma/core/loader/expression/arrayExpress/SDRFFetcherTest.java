@@ -29,7 +29,7 @@ import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class SDRFFetcherTest extends TestCase {
 

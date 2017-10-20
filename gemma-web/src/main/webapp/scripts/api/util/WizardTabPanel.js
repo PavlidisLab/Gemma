@@ -2,7 +2,7 @@
  * Wizard tab panel
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma' );
 

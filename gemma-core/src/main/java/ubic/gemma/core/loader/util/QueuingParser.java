@@ -26,7 +26,7 @@ import java.util.concurrent.BlockingQueue;
  * Defines a class that produces object that can be consumed by other classes.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public interface QueuingParser<T> {
 

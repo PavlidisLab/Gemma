@@ -2,7 +2,7 @@
  * Error panel displays errors and/or warnings.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 

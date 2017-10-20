@@ -20,7 +20,7 @@ package ubic.gemma.core.analysis.preprocess.filter;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public class InsufficientSamplesException extends InsufficientDataException {
 

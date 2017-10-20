@@ -39,7 +39,7 @@ import ubic.gemma.persistence.util.Settings;
  * thread where Quartz is being run is authenticated as GROUP_AGENT.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobDetailFactoryBean {
 

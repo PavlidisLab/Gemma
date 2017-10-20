@@ -26,7 +26,7 @@ import ubic.gemma.core.tasks.AbstractTask;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

@@ -39,7 +39,7 @@ import java.util.*;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 @Lazy

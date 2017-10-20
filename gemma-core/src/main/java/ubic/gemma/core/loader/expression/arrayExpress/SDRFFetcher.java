@@ -30,7 +30,7 @@ import ubic.gemma.persistence.util.Settings;
  * Fetch the SRDF file
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class SDRFFetcher extends FtpFetcher {
 

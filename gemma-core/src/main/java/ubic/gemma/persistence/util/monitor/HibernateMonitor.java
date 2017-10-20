@@ -16,7 +16,7 @@ package ubic.gemma.persistence.util.monitor;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public interface HibernateMonitor {
 

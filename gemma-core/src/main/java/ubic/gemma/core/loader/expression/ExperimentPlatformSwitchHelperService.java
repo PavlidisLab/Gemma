@@ -21,7 +21,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Use to finish final transactional step in updating platform
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public interface ExperimentPlatformSwitchHelperService {
 

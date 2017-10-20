@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * Filter to remove rows from an experiment matrix based on the probes.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class RowNameFilter implements Filter<ExpressionDataDoubleMatrix> {
 

@@ -9,7 +9,7 @@
 	(as well as associations) should be included here.
 	
 	author: keshav
-	version: $Id$
+
 -->
 <compass-core-mapping package="ubic.gemma.model">
 	<class name="common.description.BibliographicReference" alias="bibliographicReference" root="true">

@@ -1,7 +1,7 @@
 /**
  * Methods to view and edit security on objects
  * 
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma' );
 

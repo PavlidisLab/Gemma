@@ -32,7 +32,7 @@ import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 @Service
 public class LocalFileServiceImpl extends LocalFileServiceBase {

@@ -28,7 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Use to change the order of the values to match the experimental design.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI {
 

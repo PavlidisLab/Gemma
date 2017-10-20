@@ -8,7 +8,7 @@ import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public class BioSequenceImplTest extends TestCase {
 

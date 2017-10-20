@@ -2,7 +2,7 @@
  * This window asks users to provide name and description for the meta-analysis they want to save.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

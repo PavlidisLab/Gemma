@@ -4,7 +4,7 @@ Ext.namespace( 'Gemma' );
  * Show the data sets that occur in a set of coexpression results. OLD, not used.
  * 
  * @author luke, paul
- * @version $id$
+ * 
  */
 Gemma.CoexpressionDatasetGrid = Ext.extend( Gemma.GemmaGridPanel, {
 

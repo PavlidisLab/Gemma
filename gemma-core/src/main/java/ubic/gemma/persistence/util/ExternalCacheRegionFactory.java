@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component;
  * application.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 @Lazy(value = true)

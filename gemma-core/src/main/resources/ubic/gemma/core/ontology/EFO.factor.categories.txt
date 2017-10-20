@@ -1,5 +1,5 @@
 # Terms usable as 'categories' in Gemma Characteristics.
-# $Id$
+
 # See bug 4272 for discussion of deprecated terms
 # Usable for all places we use categories:
 http://purl.obolibrary.org/obo/CHEBI_23367	molecular entity

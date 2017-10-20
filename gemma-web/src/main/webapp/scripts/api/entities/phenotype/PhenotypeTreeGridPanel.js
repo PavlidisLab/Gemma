@@ -2,7 +2,7 @@
  * It displays all the available phenotypes in the system.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma');
 

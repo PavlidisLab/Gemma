@@ -37,7 +37,7 @@ import org.apache.commons.lang3.StringUtils;
  * (or so we infer)
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GeoSampleCorrespondence implements Serializable {
 

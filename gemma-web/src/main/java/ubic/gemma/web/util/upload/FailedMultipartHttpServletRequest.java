@@ -29,7 +29,7 @@ import org.springframework.web.multipart.support.AbstractMultipartHttpServletReq
  * lets us return JSON that our client can understand.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class FailedMultipartHttpServletRequest extends AbstractMultipartHttpServletRequest {
 

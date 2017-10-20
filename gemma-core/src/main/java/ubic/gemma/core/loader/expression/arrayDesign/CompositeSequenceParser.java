@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * Note that this does not set the ArrayDesign for the CompositeSequences, this must be set by the caller.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> {
 

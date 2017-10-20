@@ -5,7 +5,7 @@
 
 	<!--
 		This document is a Compass mapping file, allowing the Gemma objects to be indexed and searched. All "searchable"
-		attributes (as well as associations) should be included here. author: pp version: $Id$
+		attributes (as well as associations) should be included here. author: pp
 	-->
 <compass-core-mapping package="ubic.gemma.model">
 	<class name="genome.gene.GeneSet" alias="geneSet" root="true">

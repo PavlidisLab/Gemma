@@ -23,7 +23,7 @@ package ubic.gemma.core.loader.util.parser;
  * available.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public interface LineParser<T> extends Parser<T> {
 

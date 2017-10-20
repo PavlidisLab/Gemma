@@ -39,7 +39,7 @@ import org.directwebremoting.util.Messages;
 
 /**
  * @author kelsey
- * @version $Id$
+ *
  */
 public class CharacteristicConverter extends BeanConverter {
 

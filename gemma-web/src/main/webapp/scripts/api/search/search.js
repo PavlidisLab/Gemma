@@ -2,7 +2,7 @@
  * The javascript search interface.
  * 
  * @authors kelsey, paul
- * @version: $Id$
+ *
  */
 Ext.namespace( "Gemma.Search" );
 Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';

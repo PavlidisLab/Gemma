@@ -3,7 +3,7 @@
  * 
  * @class Gemma.DataFilterCombo
  * @extends Ext.form.ComboBox
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

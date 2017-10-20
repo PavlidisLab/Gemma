@@ -24,7 +24,7 @@ import java.lang.reflect.Method;
 /**
  * TODO Document Me
  * @author  Paul
- * @version  $Id$
+ *
  */
 public class LinkCreatorData {
     /**

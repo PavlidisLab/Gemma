@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class SequenceManipulationTest extends TestCase {
 

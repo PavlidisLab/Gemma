@@ -30,7 +30,7 @@ import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignProbeMapTaskCommand;
  * A controller to run array design probe mapper either locally or in a space.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 @Controller
 public class ArrayDesignProbeMapperController {

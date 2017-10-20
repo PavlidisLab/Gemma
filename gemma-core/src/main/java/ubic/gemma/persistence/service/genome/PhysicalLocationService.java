@@ -18,7 +18,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public interface PhysicalLocationService {
 

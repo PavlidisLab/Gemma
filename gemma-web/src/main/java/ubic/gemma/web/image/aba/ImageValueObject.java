@@ -45,7 +45,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author tvrossum
- * @version $Id$
+ *
  */
 public class ImageValueObject implements java.io.Serializable {
     /**

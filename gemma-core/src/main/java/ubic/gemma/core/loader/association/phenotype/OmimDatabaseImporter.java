@@ -40,7 +40,7 @@ import ubic.gemma.model.genome.Gene;
  * TODO Document Me
  * 
  * @author nicolas
- * @version $Id$
+ *
  */
 public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 

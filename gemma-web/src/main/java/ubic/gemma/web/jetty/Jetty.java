@@ -28,7 +28,7 @@ import org.mortbay.jetty.Server;
  * Start Jetty from a run configuration
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class Jetty {
     /**

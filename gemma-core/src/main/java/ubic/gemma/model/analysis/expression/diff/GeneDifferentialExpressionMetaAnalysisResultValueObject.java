@@ -23,7 +23,7 @@ import java.io.Serializable;
 
 /**
  * @author frances
- * @version $Id$
+ *
  */
 public class GeneDifferentialExpressionMetaAnalysisResultValueObject implements Serializable {
 

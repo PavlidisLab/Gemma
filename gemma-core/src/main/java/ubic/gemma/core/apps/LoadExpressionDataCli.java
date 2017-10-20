@@ -49,7 +49,7 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  * file.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 

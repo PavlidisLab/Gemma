@@ -24,7 +24,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class BlatResultTest extends TestCase {
 

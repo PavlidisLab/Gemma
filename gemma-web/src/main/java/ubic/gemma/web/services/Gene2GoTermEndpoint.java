@@ -40,7 +40,7 @@ import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
  * Given a collection of Gene IDs, will return a collection of Gene Ontology URIs for each gene.
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {

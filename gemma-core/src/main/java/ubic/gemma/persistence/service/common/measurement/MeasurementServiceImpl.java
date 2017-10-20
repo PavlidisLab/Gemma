@@ -23,7 +23,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  * @see MeasurementService
  */
 @Service

@@ -22,7 +22,7 @@ package ubic.gemma.core.analysis.preprocess.filter;
  * Used to indicate that analysis was skipped, not necessarily an error.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class InsufficientDataException extends RuntimeException {
 

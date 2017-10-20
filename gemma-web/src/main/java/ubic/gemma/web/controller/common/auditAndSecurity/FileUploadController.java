@@ -48,7 +48,7 @@ import ubic.gemma.web.view.JSONView;
  * @author paul
  * @author keshav
  * @author Traces of Matt Raible
- * @version $Id$
+ *
  */
 public class FileUploadController extends AbstractController {
 

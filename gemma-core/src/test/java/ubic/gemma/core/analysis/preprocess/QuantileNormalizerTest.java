@@ -50,7 +50,7 @@ import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class QuantileNormalizerTest {
     private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );

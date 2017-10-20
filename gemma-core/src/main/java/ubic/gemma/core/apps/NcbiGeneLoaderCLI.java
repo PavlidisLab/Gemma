@@ -34,7 +34,7 @@ import java.io.File;
  * Command line interface to gene parsing and loading
  * 
  * @author joseph
- * @version $Id$
+ *
  */
 public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     private NcbiGeneLoader loader;

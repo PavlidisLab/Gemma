@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GeoContact implements Serializable {
 

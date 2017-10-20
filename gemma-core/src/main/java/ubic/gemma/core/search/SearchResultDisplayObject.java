@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * In effect this wraps the resultValueObject.
  * 
  * @author thea
- * @version $Id$
+ *
  */
 public class SearchResultDisplayObject implements Comparable<SearchResultDisplayObject> {
 

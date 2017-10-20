@@ -47,7 +47,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  * Tests the Group facilities of the UserManager..
  * 
  * @author keshav, paul
- * @version $Id$
+ *
  */
 public class UserGroupServiceTest extends BaseSpringContextTest {
 

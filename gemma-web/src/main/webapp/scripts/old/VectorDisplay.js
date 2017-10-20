@@ -21,7 +21,7 @@ Gemma.MAX_GENEINFO_LENGTH_CHAR = 125;
  * Simple display of vectors in a heatmap display, without thumbnails. Configuration : title, readMethod; then call
  * 'show' passing in the array of parameters for the read method.
  * 
- * @version $Id$
+ * 
  * @deprecated
  * @author Paul based on klcs classes.
  */

@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ComBatTest {
 

@@ -41,7 +41,7 @@ import ubic.gemma.persistence.util.ChromosomeUtil;
  * {@link BlatAssociationScorer} tests
  * 
  * @author ptan
- * @version $Id$
+ *
  */
 public class BlatAssociationScorerTest {
 

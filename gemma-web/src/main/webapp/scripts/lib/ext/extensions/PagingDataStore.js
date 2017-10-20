@@ -9,7 +9,7 @@ Ext.namespace('Gemma');
  * 
  * @class Ext.ux.data.PagingStore
  * @extends Ext.data.Store
- * @version $Id$
+ * 
  * @author Originally: Luke, Paul; updated version from forums.
  */
 

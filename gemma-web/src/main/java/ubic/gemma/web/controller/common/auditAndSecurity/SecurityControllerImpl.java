@@ -56,7 +56,7 @@ import java.util.*;
 /**
  * Manages data-level security (ie. can make data private).
  *
- * @version $Id$
+ *
  */
 @Component
 public class SecurityControllerImpl implements SecurityController {

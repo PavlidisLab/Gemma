@@ -18,7 +18,7 @@ package ubic.gemma.web.persistence;
  * TODO Document Me
  * 
  * @author ?
- * @version $Id$
+ *
  */
 public class ExperimentSetListContainer extends AbstractSetListContainer {
 

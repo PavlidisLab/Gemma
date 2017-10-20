@@ -27,7 +27,7 @@ import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorComm
 
 /**
  * @author keshav
- * @version $Id$
+ *
  */
 public class DiffExpressionSearchCommand implements Serializable {
 

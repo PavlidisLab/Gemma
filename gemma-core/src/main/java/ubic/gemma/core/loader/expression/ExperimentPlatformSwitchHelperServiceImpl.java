@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 @Service
 public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlatformSwitchHelperService {

@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ConfigurationCookieTest extends TestCase {
 

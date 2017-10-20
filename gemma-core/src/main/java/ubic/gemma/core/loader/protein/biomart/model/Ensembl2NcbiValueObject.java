@@ -29,7 +29,7 @@ import java.util.HashSet;
  * collection of entrez gene strings.
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public class Ensembl2NcbiValueObject implements Serializable {
 

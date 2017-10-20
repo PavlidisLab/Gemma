@@ -23,7 +23,7 @@ import ubic.gemma.core.job.TaskResult;
 
 /**
  * @author klc
- * @version $Id$
+ *
  */
 public class IndexerResult extends TaskResult {
 

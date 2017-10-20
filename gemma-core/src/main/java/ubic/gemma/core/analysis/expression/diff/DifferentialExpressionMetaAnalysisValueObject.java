@@ -24,7 +24,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * A value object with meta analysis results.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class DifferentialExpressionMetaAnalysisValueObject {
 

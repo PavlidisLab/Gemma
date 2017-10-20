@@ -46,7 +46,7 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
  * Supports obtaining detailed information about the sequence analysis of probes on microarrays.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 @Component
 public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultService {

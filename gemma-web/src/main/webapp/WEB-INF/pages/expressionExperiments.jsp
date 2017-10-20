@@ -3,7 +3,7 @@
 <%-- 
 
 Display table of expression experiments.
-$Id$ 
+
 --%>
 <head>
 <title><fmt:message key="expressionExperiments.title" /></title>

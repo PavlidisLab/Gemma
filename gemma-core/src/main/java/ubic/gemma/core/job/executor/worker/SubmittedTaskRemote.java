@@ -37,7 +37,7 @@ import ubic.gemma.core.job.executor.common.TaskStatusUpdate;
 
 /**
  * @author anton
- * @version $Id$
+ *
  */
 public class SubmittedTaskRemote {
     private static Log log = LogFactory.getLog( SubmittedTaskRemote.class );

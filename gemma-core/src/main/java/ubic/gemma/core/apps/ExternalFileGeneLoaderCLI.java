@@ -32,7 +32,7 @@ import java.io.IOException;
  * should be in tab delimited format containing gene symbol, gene name, uniprot id in that order.
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
 

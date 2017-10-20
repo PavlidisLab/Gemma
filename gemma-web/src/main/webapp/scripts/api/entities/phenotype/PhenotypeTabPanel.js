@@ -2,7 +2,7 @@
  * This tab panel contains phenotype tree grid panel and phenotype grid panel.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma');
 

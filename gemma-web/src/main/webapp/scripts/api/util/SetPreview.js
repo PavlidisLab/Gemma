@@ -1,7 +1,7 @@
 /**
  * 
  * @author thea
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma' );
 

@@ -27,7 +27,7 @@ import org.springframework.mail.javamail.MimeMessagePreparator;
  * Mock mail sender for testing.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class DummyMailSender extends JavaMailSenderImpl {
 

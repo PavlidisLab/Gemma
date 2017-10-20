@@ -52,7 +52,7 @@ import java.util.*;
  *
  * @author klc
  * @author paul
- * @version $Id$
+ *
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
  */
 @Repository

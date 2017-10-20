@@ -24,7 +24,7 @@ package ubic.gemma.core.loader.protein;
  * should be displayed when that evidence is refered to in GEMMA.
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public enum StringProteinInteractionEvidenceCodeEnum {        
     NEIGHBORHOOD (0, "Neighbourhood"), 

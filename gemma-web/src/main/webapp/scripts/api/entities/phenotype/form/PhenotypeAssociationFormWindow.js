@@ -2,7 +2,7 @@
  * This form lets users create or edit a phenotype association.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 

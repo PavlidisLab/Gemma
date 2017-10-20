@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * Class to perform background adjustment for Affymetrix arrays, RMA-style.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjuster<String, String> {
 

@@ -30,7 +30,7 @@ import ubic.gemma.core.job.progress.ProgressData;
  * Just a mock client inner class to ease testing
  * 
  * @author klc
- * @version $Id$
+ *
  */
 public class MockClient implements Observer {
 

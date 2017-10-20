@@ -20,7 +20,7 @@ import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
  * Represents a gene that was not tested.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class MissingResult extends DiffExprGeneSearchResult {
     /**

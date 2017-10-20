@@ -35,7 +35,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 @SuppressWarnings("static-access")
 public class GeneOntologyServiceTest {

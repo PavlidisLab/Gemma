@@ -27,7 +27,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  * Form information for associating sequences with an (existing) array design.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  * @deprecated not used
  */
 @Deprecated

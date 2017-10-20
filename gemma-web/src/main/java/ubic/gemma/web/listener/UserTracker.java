@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Basic bean to hold number of sessions.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class UserTracker {
 

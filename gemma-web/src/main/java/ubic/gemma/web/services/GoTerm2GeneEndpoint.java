@@ -37,7 +37,7 @@ import ubic.gemma.core.ontology.providers.GeneOntologyService;
  * and Taxon.
  * 
  * @author gavin, klc
- * @version$Id$
+ *
  */
 
 public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {

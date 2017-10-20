@@ -2,7 +2,7 @@
  * Meta-analysis manager displays all the available meta-analyses for the current user.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

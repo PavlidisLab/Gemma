@@ -33,7 +33,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class PubMedSearchTest {
 

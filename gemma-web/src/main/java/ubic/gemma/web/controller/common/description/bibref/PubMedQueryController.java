@@ -14,7 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
  * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
  * arrays instead.
  * 
- * @version $Id$
+ *
  */
 @Controller("/bibRefSearch.html")
 public interface PubMedQueryController {

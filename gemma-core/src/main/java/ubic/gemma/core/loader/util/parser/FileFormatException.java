@@ -22,7 +22,7 @@ package ubic.gemma.core.loader.util.parser;
  * Use to indicate a file format error.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class FileFormatException extends RuntimeException {
 

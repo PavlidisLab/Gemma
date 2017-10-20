@@ -26,7 +26,7 @@ import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author kelsey
- * @version $Id$
+ *
  */
 public interface LocalFileService {
 

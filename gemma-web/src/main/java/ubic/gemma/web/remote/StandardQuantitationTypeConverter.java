@@ -27,7 +27,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class StandardQuantitationTypeConverter extends StringConverter {
     @Override

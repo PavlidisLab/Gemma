@@ -21,7 +21,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ComBatException extends RuntimeException {
 

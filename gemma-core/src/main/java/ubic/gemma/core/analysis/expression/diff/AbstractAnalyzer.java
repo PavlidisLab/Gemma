@@ -27,7 +27,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
  * Analyzer base class.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public abstract class AbstractAnalyzer {
 

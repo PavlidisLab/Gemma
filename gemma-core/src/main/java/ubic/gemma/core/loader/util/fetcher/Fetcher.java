@@ -8,7 +8,7 @@ import ubic.gemma.model.common.description.LocalFile;
  * Interface for classes that can fetch files from a remote location and copy them to a specified location.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public interface Fetcher {
 

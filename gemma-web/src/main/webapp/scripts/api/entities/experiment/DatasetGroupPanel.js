@@ -2,7 +2,7 @@ Ext.namespace( 'Gemma' );
 /**
  * Grid of expression experiment groups (data set groups) with a toolbar for doing basic operations.
  * 
- * @version $Id$
+ *
  * @see DatasetGroupEditor
  */
 

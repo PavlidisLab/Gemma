@@ -24,7 +24,7 @@ import java.util.HashSet;
 /**
  * A class that represents the ImageSeries information gotten from the alan brain atals
  * 
- * @version $Id$ @author kelsey
+ *  @author kelsey
  */
 
 public class ImageSeries {

@@ -33,7 +33,7 @@ import ubic.gemma.persistence.util.Settings;
  * TODO Document Me
  * 
  * @author anton
- * @version $Id$
+ *
  */
 @Component
 public class MailUtilsImpl implements MailUtils {

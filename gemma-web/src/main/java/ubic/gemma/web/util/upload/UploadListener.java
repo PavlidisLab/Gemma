@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @author Original : plosson
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class UploadListener implements OutputStreamListener {
 

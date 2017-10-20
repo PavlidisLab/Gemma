@@ -30,7 +30,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  * Used to convert ArrayDesigns from and into strings for display in forms.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
 

@@ -25,7 +25,7 @@ import org.springframework.stereotype.Controller;
  * This exists just to have an easy way to trick web pages into importing DWR-defined classes that are not in dwrServices.js.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Controller
 public class EmptyController {

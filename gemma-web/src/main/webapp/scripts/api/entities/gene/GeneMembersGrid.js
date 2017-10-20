@@ -1,7 +1,7 @@
 /*
  * Widget for displaying a list of genes, with cofigurable column sets.
  * 
- * Version : $Id$ Author : luke, paul
+ * Author : luke, paul
  */
 Ext.namespace( 'Gemma' );
 

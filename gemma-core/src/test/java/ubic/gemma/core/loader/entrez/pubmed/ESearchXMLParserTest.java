@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ESearchXMLParserTest extends TestCase {
 

@@ -25,7 +25,7 @@ package ubic.gemma.core.association.phenotype.PhenotypeExceptions;
  * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class EntityNotFoundException extends RuntimeException {
 

@@ -32,7 +32,7 @@ import org.junit.Test;
  * Tests of parsing various flat file formats used for Agilent slides (and possibly other types)
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class AgilentScanDateExtractorTest {
 

@@ -26,7 +26,7 @@ import java.util.HashSet;
  * Used to contain GEO summary information from the 'Browse' views.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GeoRecord extends GeoData {
 

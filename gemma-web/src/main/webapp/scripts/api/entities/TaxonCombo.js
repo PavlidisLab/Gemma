@@ -6,7 +6,7 @@ Ext.namespace( 'Gemma' );
  * 
  * @class Gemma.TaxonCombo
  * @extends Ext.form.ComboBox
- * @version $Id$
+ *
  */
 
 TaxonRecord = Ext.data.Record.create( [ {

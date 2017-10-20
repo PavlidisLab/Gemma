@@ -25,7 +25,7 @@ import org.directwebremoting.extend.OutboundVariable;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ClassConverter extends StringConverter {
 

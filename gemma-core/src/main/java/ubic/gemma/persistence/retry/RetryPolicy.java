@@ -26,7 +26,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class RetryPolicy extends SimpleRetryPolicy {
 

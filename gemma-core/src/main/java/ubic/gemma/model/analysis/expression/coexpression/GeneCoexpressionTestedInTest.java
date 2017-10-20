@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public class GeneCoexpressionTestedInTest {
 

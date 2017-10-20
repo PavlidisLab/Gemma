@@ -36,7 +36,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Senders/Receivers to send/receive data from the remote worker application. This proxy is synced with remote state
  * only when client is accessing its methods otherwise the state is stored in messages on the jms queues.
  * 
- * @version $Id$
+ *
  * @author anton
  */
 public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstract<T> {

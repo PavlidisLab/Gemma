@@ -2,7 +2,7 @@
  * It displays all the available phenotyope associations in the system.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace('Gemma');
 

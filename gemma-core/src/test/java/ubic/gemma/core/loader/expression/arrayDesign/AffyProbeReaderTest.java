@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class AffyProbeReaderTest extends TestCase {
     protected static final Log log = LogFactory.getLog( AffyProbeReaderTest.class );

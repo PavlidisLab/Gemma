@@ -2,7 +2,7 @@
  * Loading of data from GEO or ArrayExpress
  * 
  * @author paul
- * @version $Id$
+ * 
  */
 
 var uploadButton;

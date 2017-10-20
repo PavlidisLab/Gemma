@@ -32,7 +32,7 @@ import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
  * Additional tests with updated ontology file, fixing problems getting aspects.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class GeneOntologyServiceTest2 {
     static GeneOntologyServiceImpl gos;

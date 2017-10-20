@@ -44,7 +44,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * See test/data/stat-tests/README.txt for R code.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 

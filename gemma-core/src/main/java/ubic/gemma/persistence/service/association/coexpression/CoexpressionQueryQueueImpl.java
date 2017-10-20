@@ -39,7 +39,7 @@ import ubic.gemma.persistence.service.genome.GeneDao;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 @Repository
 @Lazy

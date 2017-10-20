@@ -20,7 +20,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Retrieve batch information from the data source, if possible, and populate it into experiments.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public interface BatchInfoPopulationService {
 

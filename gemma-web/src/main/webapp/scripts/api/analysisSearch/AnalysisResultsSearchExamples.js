@@ -5,7 +5,7 @@ Ext.namespace( 'Gemma' );
  * geneExampleRecord, experimentExampleRecord.
  * 
  * @author thea
- * @version $Id$
+ *
  */
 Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
 

@@ -1,6 +1,6 @@
 /**
  * @author AZ
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma.Metaheatmap' );
 

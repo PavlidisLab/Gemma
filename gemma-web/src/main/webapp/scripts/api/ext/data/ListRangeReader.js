@@ -7,7 +7,7 @@
  * @param {Object}
  *           recordType
  * @see Ext.data.JsonReader
- * @version $Id$
+ * 
  * @author Paul (revised from older versions)
  * 
  */

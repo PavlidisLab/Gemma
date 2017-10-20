@@ -25,7 +25,7 @@ import java.io.Serializable;
  * FIXME only used once, probably should move? Mimics SecuredValueObject.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 public class BaseValueObject implements Serializable {
 

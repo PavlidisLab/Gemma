@@ -23,7 +23,7 @@ package ubic.gemma.core.loader.util;
  * simply returning the existing data would be confusing. It can hold a reference to the data that was existing.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class AlreadyExistsInSystemException extends RuntimeException {
 

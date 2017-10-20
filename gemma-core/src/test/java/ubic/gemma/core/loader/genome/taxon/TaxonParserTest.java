@@ -26,7 +26,7 @@ import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class TaxonParserTest extends TestCase {
 

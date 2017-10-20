@@ -38,7 +38,7 @@ import ubic.gemma.web.controller.WebConstants;
  * Supports editing of bibliographic references.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class BibliographicReferenceEditFormController extends BaseFormController {
 

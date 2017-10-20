@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * standardized by default.
  * 
  * @author kelsey
- * @version $Id$
+ *
  */
 public class GeneExpressionProfile {
 

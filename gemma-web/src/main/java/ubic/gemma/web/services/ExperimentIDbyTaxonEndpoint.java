@@ -37,7 +37,7 @@ import ubic.gemma.model.genome.Taxon;
  * Given a Taxon (eg. "1" for Homo Sapien), will return all the Expression Experiment IDs that match the Taxon.
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {

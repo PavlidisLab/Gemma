@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page language="java" isErrorPage="true"%>
-<%-- $Id$ --%>
+
 <%-- FIXME This is no longer used. --%>
 		<title>Data already exists in Gemma</title>
 

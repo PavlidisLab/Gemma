@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class EutilFetchTest extends TestCase {
 

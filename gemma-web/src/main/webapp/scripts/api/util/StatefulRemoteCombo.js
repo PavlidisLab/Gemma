@@ -15,7 +15,7 @@ Ext.namespace( 'Gemma' );
  * 
  * @class Gemma.StatefulRemoteCombo
  * @extends Ext.form.ComboBox
- * @version $Id$
+ * 
  * @author paul
  * @see DatasetGroupCombo, ArrayDesignCombo, TaxonCombo for concrete implementations.
  */

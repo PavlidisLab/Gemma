@@ -13,7 +13,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * Task to try to get 'batch' information about an experiment. This usually involves downloading raw data files from the
  * provider.
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

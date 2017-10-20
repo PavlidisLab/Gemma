@@ -30,7 +30,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class QuantitationTypePropertyEditor extends PropertyEditorSupport {
     private static Log log = LogFactory.getLog( QuantitationTypePropertyEditor.class.getName() );

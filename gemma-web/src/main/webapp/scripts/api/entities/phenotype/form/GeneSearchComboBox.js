@@ -2,7 +2,7 @@
  * This ComboBox lets users search for all existing genes in the system.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma.PhenotypeAssociationForm' );
 

@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * For bulk processing of batch-info-fetching.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 

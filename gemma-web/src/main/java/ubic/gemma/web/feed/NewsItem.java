@@ -6,7 +6,7 @@ import java.util.Date;
  * TODO Document Me
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class NewsItem {
 

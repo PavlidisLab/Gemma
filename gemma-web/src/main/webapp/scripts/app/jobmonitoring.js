@@ -2,7 +2,7 @@
  * Shows submitted jobs. Work in progress.
  * 
  * @author paul
- * @version $Id$
+ * 
  */
 Ext.onReady( function() {
 

@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<%-- $Id$ --%>
+
 <%-- Shows the results of a search for pubmed references. --%>
 
 <jsp:useBean id="bibliographicReference" scope="request"

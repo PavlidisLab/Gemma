@@ -14,7 +14,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * A probe mapper spaces task .
  *
  * @author keshav
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

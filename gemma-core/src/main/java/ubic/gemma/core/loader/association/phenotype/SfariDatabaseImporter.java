@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
  * TODO Document Me
  * 
  * @author nicolas
- * @version $Id$
+ *
  */
 public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 

@@ -34,7 +34,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  * features.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
 

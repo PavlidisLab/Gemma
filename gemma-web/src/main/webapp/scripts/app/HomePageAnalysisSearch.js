@@ -1,6 +1,6 @@
 /**
  * @author thea
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma' );
 Gemma.SEARCH_FORM_WIDTH = 900;

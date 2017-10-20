@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class BaselineDetectionTest extends AbstractGeoServiceTest {
 

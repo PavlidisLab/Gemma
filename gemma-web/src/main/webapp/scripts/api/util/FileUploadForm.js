@@ -2,7 +2,7 @@
  * Simple support for uploading a file.
  * 
  * @author Paul
- * @version $Id$
+ * 
  */
 Ext.namespace( "Gemma" );
 Gemma.FileUploadForm = Ext.extend( Ext.Panel, {

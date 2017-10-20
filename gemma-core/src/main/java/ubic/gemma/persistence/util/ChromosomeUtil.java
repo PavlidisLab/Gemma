@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.Chromosome;
  * A utility class for {@link Chromosome}
  * 
  * @author ptan
- * @version $Id$
+ *
  */
 public class ChromosomeUtil {
 

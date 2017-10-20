@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Used for determining the number of samples (biomaterials) associated with a given expression experiment
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {

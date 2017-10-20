@@ -19,7 +19,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
  * TODO Document Me
  * 
  * @author ?
- * @version $Id$
+ *
  */
 public class EvidenceSecurityValueObject {
 

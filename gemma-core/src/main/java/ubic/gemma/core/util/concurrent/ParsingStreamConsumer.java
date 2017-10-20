@@ -27,7 +27,7 @@ import ubic.gemma.core.loader.util.parser.Parser;
  * See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ParsingStreamConsumer<T> extends Thread {
     InputStream is;

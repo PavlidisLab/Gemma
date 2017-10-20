@@ -16,7 +16,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * Space task for computing two channel missing values.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

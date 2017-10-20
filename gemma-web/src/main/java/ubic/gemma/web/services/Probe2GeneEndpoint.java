@@ -39,7 +39,7 @@ import ubic.gemma.model.genome.Gene;
  * gene ids
  * 
  * @author gavin, klc
- * @version$Id$
+ *
  */
 
 public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {

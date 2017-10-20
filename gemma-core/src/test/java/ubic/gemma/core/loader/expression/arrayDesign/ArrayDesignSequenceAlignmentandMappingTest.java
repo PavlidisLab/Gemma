@@ -34,7 +34,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDesignProcessingTest {
 

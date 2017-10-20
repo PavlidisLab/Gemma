@@ -4,7 +4,7 @@ Ext.namespace( 'Gemma' );
  * A grid holding the experiments and their associated factors.
  * 
  * @author keshav
- * @version $Id$
+ *
  * @class Gemma.ExperimentalFactorGrid
  * @extends Gemma.GemmaGridPanel
  */

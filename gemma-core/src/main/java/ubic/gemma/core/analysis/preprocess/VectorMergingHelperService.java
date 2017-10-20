@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public interface VectorMergingHelperService {
 

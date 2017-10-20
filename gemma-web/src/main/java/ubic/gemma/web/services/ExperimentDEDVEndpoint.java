@@ -40,7 +40,7 @@ import ubic.gemma.model.genome.Gene;
  * and the genes that might be responsible for that DEDV
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {

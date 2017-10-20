@@ -7,7 +7,7 @@ import ubic.gemma.core.job.TaskCommand;
  * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
  * arrays instead.
  * 
- * @version $Id$
+ *
  */
 public interface MockLongJobController {
 

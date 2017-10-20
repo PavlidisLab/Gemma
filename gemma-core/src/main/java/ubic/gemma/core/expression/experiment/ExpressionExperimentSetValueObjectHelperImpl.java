@@ -57,7 +57,7 @@ import java.util.HashSet;
  * fill size, experiment ids, and publik/private fields.
  *
  * @author tvrossum
- * @version $Id$
+ *
  */
 @Component
 public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionExperimentSetValueObjectHelper {

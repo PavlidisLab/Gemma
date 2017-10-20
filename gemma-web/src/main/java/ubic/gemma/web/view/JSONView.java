@@ -30,7 +30,7 @@ import org.springframework.web.servlet.View;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class JSONView implements View {
     private String docType = "text/html";

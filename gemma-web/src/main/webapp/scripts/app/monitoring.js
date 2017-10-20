@@ -1,7 +1,7 @@
 /**
  * Monitor hibernate, caches, etc.
  * 
- * @version $Id$
+ * 
  */
 Ext.onReady( function() {
 

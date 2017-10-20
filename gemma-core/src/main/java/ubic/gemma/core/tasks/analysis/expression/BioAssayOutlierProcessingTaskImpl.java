@@ -18,7 +18,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * Handle 'flagging' a sample as an outlier. The sample will not be used in analyses.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

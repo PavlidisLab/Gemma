@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
  * ids it contains.
  * 
  * @author gavin
- * @version$Id$
+ *
  */
 
 public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {

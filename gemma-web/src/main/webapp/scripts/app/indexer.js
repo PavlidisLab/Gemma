@@ -3,7 +3,7 @@
  * 
  * @param {}
  *           data
- * @version $Id$
+ * 
  */
 
 function reset( data ) {

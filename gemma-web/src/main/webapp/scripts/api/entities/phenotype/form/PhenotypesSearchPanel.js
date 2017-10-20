@@ -2,7 +2,7 @@
  * This panel contains one or more instances of PhenotypeSearchComboBox to let users specify phenotypes.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma.PhenotypeAssociationForm' );
 

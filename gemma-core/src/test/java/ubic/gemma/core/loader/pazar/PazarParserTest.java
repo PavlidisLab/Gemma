@@ -25,7 +25,7 @@ import ubic.gemma.core.loader.pazar.model.PazarRecord;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class PazarParserTest extends TestCase {
 

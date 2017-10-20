@@ -24,7 +24,7 @@ package ubic.gemma.web.util;
  * Originally from Appfuse
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class Constants {
     // ~ Static fields/initializers =============================================

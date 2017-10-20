@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class CompositeSequenceParserTest extends TestCase {
     InputStream designElementStream;

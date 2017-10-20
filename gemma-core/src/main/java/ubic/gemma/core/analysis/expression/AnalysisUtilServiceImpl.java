@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Utility methods for dealing with analyses.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 public class AnalysisUtilServiceImpl implements AnalysisUtilService {

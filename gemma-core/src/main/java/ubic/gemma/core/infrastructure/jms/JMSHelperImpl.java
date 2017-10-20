@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
  * TODO Document Me
  * 
  * @author anton
- * @version $Id$
+ *
  */
 @Component
 public class JMSHelperImpl implements JMSHelper {

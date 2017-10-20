@@ -39,7 +39,7 @@ import ubic.gemma.core.testing.BaseSpringWebTest;
 
 /**
  * @author sshao
- * @version $Id$
+ *
  */
 public class RssFeedControllerTest extends BaseSpringWebTest {
 

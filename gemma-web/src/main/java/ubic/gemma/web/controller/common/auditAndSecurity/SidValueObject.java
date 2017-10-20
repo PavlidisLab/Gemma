@@ -28,7 +28,7 @@ import org.springframework.security.acls.model.Sid;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class SidValueObject implements Comparable<SidValueObject>, Serializable {
 

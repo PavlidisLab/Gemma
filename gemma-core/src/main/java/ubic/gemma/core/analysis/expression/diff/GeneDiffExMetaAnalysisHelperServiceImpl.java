@@ -40,7 +40,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * TODO Document Me
  * 
  * @author frances
- * @version $Id$
+ *
  */
 @Component
 public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAnalysisHelperService {

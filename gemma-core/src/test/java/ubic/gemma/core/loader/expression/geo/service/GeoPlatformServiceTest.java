@@ -28,7 +28,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
  * Tests of GeoPlatformService
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
 

@@ -20,7 +20,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 /**
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
- * @version $Id$
+ *
  */
 public class DifferentialExpressionAnalysisResultImpl extends DifferentialExpressionAnalysisResult {
     /**

@@ -30,7 +30,7 @@ import ubic.gemma.core.loader.protein.StringProteinInteractionEvidenceCodeEnum;
  * combined_score. Two objects are equal if they share the same two proteins.
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public class StringProteinProteinInteraction implements Serializable {
     private static final long serialVersionUID = -859220901359582113L;

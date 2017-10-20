@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <%-- Decorator for the home page --%>
-<%-- $Id$ --%>
+
 
 <%-- Include common set of tag library declarations for each layout --%>
 <%@ include file="/common/taglibs.jsp"%>

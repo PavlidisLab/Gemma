@@ -1,5 +1,5 @@
 # Important instructions on working with the UML files.
-# $Id$
+
 
 The new UML2 format requires a little more work to prepare for commits to the repository.
 

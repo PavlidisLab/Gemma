@@ -17,7 +17,7 @@ package ubic.gemma.model.genome.biosequence;
 /**
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class BioSequenceImpl extends ubic.gemma.model.genome.biosequence.BioSequence {
 

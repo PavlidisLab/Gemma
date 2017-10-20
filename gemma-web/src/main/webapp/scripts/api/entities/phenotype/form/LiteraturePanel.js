@@ -2,7 +2,7 @@
  * This literature panel contains literature information.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 

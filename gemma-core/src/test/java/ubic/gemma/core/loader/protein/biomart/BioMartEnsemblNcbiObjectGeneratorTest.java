@@ -38,7 +38,7 @@ import ubic.gemma.model.genome.Taxon;
  * relationship between ensembl genes and entrez genes and map manipulation. Using awk on the file validate the numbers.
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public class BioMartEnsemblNcbiObjectGeneratorTest {
     BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = null;

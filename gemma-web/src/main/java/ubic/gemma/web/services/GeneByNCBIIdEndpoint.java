@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.Gene;
  * IDs.
  * 
  * @author gavin
- * @version$Id$
+ *
  */
 
 public class GeneByNCBIIdEndpoint extends AbstractGemmaEndpoint {

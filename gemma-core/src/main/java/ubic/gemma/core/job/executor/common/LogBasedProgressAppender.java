@@ -31,7 +31,7 @@ import org.apache.log4j.spi.LoggingEvent;
  * inlined in the source code (ie. log.info("the text")).
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class LogBasedProgressAppender extends AppenderSkeleton implements ProgressUpdateAppender {
 

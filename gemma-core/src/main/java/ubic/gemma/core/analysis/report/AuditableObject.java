@@ -23,7 +23,7 @@ import java.util.Date;
 
 /**
  * @author jsantos
- * @version $Id$
+ *
  */
 public class AuditableObject implements Serializable {
     // small holder struct to ease serialization of the list

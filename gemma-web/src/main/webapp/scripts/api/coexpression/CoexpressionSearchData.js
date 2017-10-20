@@ -6,7 +6,7 @@ Ext.namespace( 'Gemma' );
  * 
  * @author cam
  * @class
- * @version $Id$
+ *
  */
 Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
 

@@ -21,7 +21,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public interface SVDService {
     Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( Long eeId, int component, int count );

@@ -41,7 +41,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  * programatically.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ProgressAppenderTest extends BaseSpringContextTest {
 

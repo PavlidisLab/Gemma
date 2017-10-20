@@ -40,7 +40,7 @@ import com.sun.syndication.fetcher.impl.HttpURLFeedFetcher;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 @Controller
 public class FeedReader implements InitializingBean {

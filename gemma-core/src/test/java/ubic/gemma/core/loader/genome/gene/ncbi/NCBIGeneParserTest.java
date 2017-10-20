@@ -32,7 +32,7 @@ import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 
 /**
  * @author keshav
- * @version $Id$
+ *
  */
 public class NCBIGeneParserTest extends TestCase {
 

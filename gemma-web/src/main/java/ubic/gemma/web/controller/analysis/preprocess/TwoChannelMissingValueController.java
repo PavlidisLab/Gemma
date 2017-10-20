@@ -31,7 +31,7 @@ import ubic.gemma.core.tasks.analysis.expression.TwoChannelMissingValueTaskComma
  * Run misssing value computation via web request.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Controller
 public class TwoChannelMissingValueController {

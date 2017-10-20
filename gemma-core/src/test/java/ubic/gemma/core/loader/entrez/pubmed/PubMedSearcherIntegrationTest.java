@@ -28,7 +28,7 @@ import org.junit.Test;
  * Tests command line. This creates an entire new Spring Context so is pretty heavy.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class PubMedSearcherIntegrationTest {
 

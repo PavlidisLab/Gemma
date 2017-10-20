@@ -39,7 +39,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * names.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence> {
 

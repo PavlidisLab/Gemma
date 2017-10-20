@@ -2,7 +2,7 @@
  * This ComboBox lets users specify experiment tag category. 
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 

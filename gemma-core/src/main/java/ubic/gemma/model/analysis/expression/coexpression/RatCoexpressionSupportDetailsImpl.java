@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.Gene;
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class RatCoexpressionSupportDetailsImpl extends SupportDetails {
 

@@ -36,7 +36,7 @@ import java.util.Collection;
  * exon or 3' arrays.
  *
  * @author paul
- * @version $Id$
+ *
  */
 public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 

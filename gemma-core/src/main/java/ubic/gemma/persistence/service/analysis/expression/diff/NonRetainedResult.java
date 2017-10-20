@@ -19,7 +19,7 @@ import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 /**
  * Represents a gene that was tested, but the result wasn't significant.
  * @author paul
- * @version $Id$
+ *
  */
 public class NonRetainedResult extends DiffExprGeneSearchResult {
     /**

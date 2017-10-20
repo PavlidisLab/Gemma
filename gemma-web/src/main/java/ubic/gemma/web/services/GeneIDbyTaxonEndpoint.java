@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.Taxon;
  * Given the Taxon (eg. "1" for Homo Sapiens), will return all the Gene IDs that match the taxon.
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {

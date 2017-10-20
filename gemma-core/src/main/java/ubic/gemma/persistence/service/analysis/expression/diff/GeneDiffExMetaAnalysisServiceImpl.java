@@ -35,7 +35,7 @@ import ubic.gemma.model.genome.Taxon;
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 @Service
 public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysisService {

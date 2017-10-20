@@ -31,7 +31,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  * Test to ensure string links are set correctly in gemma and that evidence codes for interactions are correctly set.
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public class ProteinLinkOutFormatterTest {
 

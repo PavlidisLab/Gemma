@@ -7,7 +7,7 @@ import ubic.gemma.core.tasks.Task;
  * Handles delegation of report generation (to the space, or run locally)
  * 
  * @author klc
- * @version $Id$
+ *
  */
 
 public interface ExpressionExperimentReportTask extends Task<TaskResult, ExpressionExperimentReportTaskCommand> {

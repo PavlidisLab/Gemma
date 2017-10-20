@@ -22,7 +22,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class Ontology {
 

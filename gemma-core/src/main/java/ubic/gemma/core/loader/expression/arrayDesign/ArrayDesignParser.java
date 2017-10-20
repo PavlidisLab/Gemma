@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.Taxon;
  * </ol>
  * 
  * @author keshav
- * @version $Id$
+ *
  * @deprecated
  */
 @Deprecated

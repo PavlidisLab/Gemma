@@ -16,7 +16,7 @@ package ubic.gemma.core.loader.pazar.model;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class PazarRecord {
 
