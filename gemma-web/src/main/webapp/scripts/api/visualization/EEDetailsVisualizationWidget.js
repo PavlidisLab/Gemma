@@ -76,7 +76,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend( Gemma.GeneGrid, {
             scope : this,
             cls : 'x-toolbar-standardbutton'
          } ), new Ext.Button( {
-            icon : Gemma.ICONURL + 'information.png',
+            icon : ctxBasePath + '/images/icons/information.png',
             // text : 'help',
             tootltip : "Get help",
             handler : function() {

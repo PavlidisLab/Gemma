@@ -346,7 +346,7 @@ Gemma.HelpText.WidgetDefaults = {
    DatasetGroupEditor : {
       widgetTT : "Use this tool to create and edit groups of datasets. "
          + "You can modify a built-in group by making a copy (clone) and editing the copy",
-      helpURL : Gemma.HOST + "faculty/pavlidis/wiki/display/gemma/Dataset+chooser"
+      helpURL : Gemma.WIKI + "Dataset+chooser"
    },
    DatasetGroupGridPanel : {
       protectedTT : "Protected; cannot have members changed, usually applies to automatically generated groups."
@@ -381,7 +381,7 @@ Gemma.HelpText.WidgetDefaults = {
    ExperimentalDesignUpload : {
       instructions : '<p>Experimental design submission works in two phases. '
          + 'First you must upload your design file (file format instructions' + ' <a target="_blank" href="'
-         + Gemma.HOST + 'faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload">here</a>). '
+         + Gemma.WIKI + 'Experimental+Design+Upload">here</a>). '
          + 'Then click "submit". If your file format is invalid or does not match the properties of the '
          + 'experiment the design is intended for, you will see an error message.</p>'
    },

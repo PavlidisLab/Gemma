@@ -5,19 +5,19 @@
 	<bannerLeft>
 		<name>Gemma</name>
 		<src>images/logo/gemma-sm50x195.png</src>
-		<href>http://chibi.ubc.ca/Gemma/</href>
+		<href>http://gemma.msl.ubc.ca</href>
 	</bannerLeft>
 	<bannerRight>
 		<src>images/logo/heatfade.inner.png</src>
 	</bannerRight>
 	<body>
 		<links>
-			<item name="Gemma" href="http://gemma.chibi.ubc.ca/" />
+			<item name="Gemma" href="http://gemma.msl.ubc.ca/" />
 			<item name="Pavlidis lab" href="http://chibi.ubc.ca/faculty/pavlidis/lab" />
 		</links>
 		<menu name="Gemma" >
-			<item collapse="true" name="Home" href="http://gemma.chibi.ubc.ca/" />
-			<item collapse="true" name="Resource home" href="http://chibi.ubc.ca/Gemma/resources" />
+			<item collapse="true" name="Home" href="http://gemma.msl.ubc.ca/" />
+			<item collapse="true" name="Resource home" href="http://gemma.msl.ubc.ca/resources" />
 			<item collapse="true" name="Downloads" href="downloads.html" />
 			<item collapse="true" name="baseCode" href="http://chibi.ubc.ca/faculty/pavlidis/basecode/" />
 			<item collapse="true" name="Documentation" href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma" />

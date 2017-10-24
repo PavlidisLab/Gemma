@@ -341,7 +341,7 @@ public class Settings {
      * @return host url e.g. http://www.chibi.ubc.ca
      */
     public static String getHostUrl() {
-        String host = getString( "gemma.hosturl", "http://www.chibi.ubc.ca" );
+        String host = getString( "gemma.hosturl", "http://gemma.msl.ubc.ca" );
         if ( host.length() > 1 && host.endsWith( "/" ) ) {
             return host.substring(0, host.length() - 1);
         }
@@ -352,7 +352,7 @@ public class Settings {
      * @return root context e.g. /Gemma
      */
     public static String getRootContext() {
-        String ctx = getString( "gemma.rootcontext", "/Gemma" );
+        String ctx = getString( "gemma.rootcontext", "" );
         if (ctx.isEmpty() || ctx.equals( "/" ) ) {
             return "";
         }
