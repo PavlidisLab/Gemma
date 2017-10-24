@@ -216,12 +216,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
                         trouble =
-                                "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
+                                "&nbsp;<img src='" + Settings.getRootContext() + "/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
                                         + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
                 buf.append(
-                        "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id=" )
+                        "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" )
                         .append( arrayDesign.getId() ).append( "\">" ).append( gpl ).append( "</a></strong>" )
                         .append( trouble );
             } else {
@@ -316,7 +316,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
             if ( ee != null ) {
                 buf.append(
-                        "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" )
+                        "\n<p><strong><a target=\"_blank\" href=\"" + Settings.getRootContext() + "/expressionExperiment/showExpressionExperiment.html?id=" )
                         .append( ee.getId() ).append( "\">" ).append( gse ).append( "</a></strong>" );
             } else {
                 buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );

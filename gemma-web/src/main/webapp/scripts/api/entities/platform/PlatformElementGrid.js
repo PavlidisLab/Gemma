@@ -52,7 +52,7 @@ Gemma.PlatformElementGrid = Ext
 
          arraylink : function( data, metadata, record, row, column, store ) {
             return "<a ext:qtip='" + record.get( "arrayDesignShortName" )
-               + " Click to view platform details' href='/Gemma/arrays/showArrayDesign.html?id="
+               + " Click to view platform details' href='" + ctxBasePath + "/arrays/showArrayDesign.html?id="
                + record.get( "arrayDesignId" ) + "'>" + record.get( "arrayDesignName" ) + "</a>";
          },
 
@@ -73,7 +73,7 @@ Gemma.PlatformElementGrid = Ext
             for ( var g in d) {
                if ( d[g].id ) {
                   r = r
-                     + "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
+                     + "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id="
                      + d[g].id + "'>" + d[g].officialSymbol + "</a>,";
                   ++count;
                }
@@ -336,7 +336,7 @@ Gemma.PlatformElementGrid = Ext
          handleLoadError : function( scope, b, message, exception ) {
             Ext.DomHelper.overwrite( "messages", {
                tag : 'img',
-               src : '/Gemma/images/iconWarning.gif'
+               src : ctxBasePath + '/images/iconWarning.gif'
             } );
             Ext.DomHelper.overwrite( "messages", {
                tag : 'span',

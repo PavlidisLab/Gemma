@@ -39,7 +39,7 @@
 	<h2>
 		BioMaterial: ${bioMaterial.name} from
 		<a title="${expressionExperiment.name}"
-			href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}">${expressionExperiment.shortName}</a>
+			href="${pageContext.request.contextPath}/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}">${expressionExperiment.shortName}</a>
 	</h2>
 	
 	<table style="width: 650px" class="row-separated pad-cols v-padded">
@@ -98,7 +98,7 @@
 				<ul>
 					<c:forEach items="${bioMaterial.bioAssaysUsedIn}" var="assay">
 						<li><a
-								href="/Gemma/bioAssay/showBioAssay.html?id=${assay.id}">${assay.name}</a></li>
+								href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${assay.id}">${assay.name}</a></li>
 					</c:forEach>
 				</ul>
 			</td>
@@ -143,7 +143,7 @@
 		<TD COLSPAN="2">
 			<DIV align="left">
 				<input type="button"
-					onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}'"
+					onclick="location.href='${pageContext.request.contextPath}/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}'"
 					value="Edit">
 			</DIV>
 		</td>

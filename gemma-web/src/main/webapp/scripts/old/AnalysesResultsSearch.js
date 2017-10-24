@@ -17,7 +17,7 @@ Gemma.AnalysisResultsSearch = Ext.extend( Ext.Panel, {
       this.user = (Ext.get( 'hasUser' ) !== null) ? Ext.get( 'hasUser' ).getValue() : null;
 
       var errorPanel = new Ext.Panel( {
-         tpl : '<img src="/Gemma/images/icons/warning.png">{msg}',
+         tpl : '<img src="' + ctxBasePath + '/images/icons/warning.png">{msg}',
          border : false,
          hidden : true
       } );
@@ -79,7 +79,7 @@ Gemma.AnalysisResultsSearch = Ext.extend( Ext.Panel, {
 
       if ( browserWarning !== "" ) {
          errorPanel.on( 'render', function() {
-            this.update( '<img src="/Gemma/images/icons/warning.png">' + browserWarning );
+            this.update( '<img src="' + ctxBasePath + '/images/icons/warning.png">' + browserWarning );
             this.show();
          } );
       }

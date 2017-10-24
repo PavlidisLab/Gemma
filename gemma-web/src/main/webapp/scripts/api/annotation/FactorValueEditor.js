@@ -504,7 +504,7 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
         });
 
         this.refreshButton = new Ext.Toolbar.Button({
-            icon: '/Gemma/images/icons/arrow_refresh_small.png',
+            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
             tooltip: 'Refresh the factor values',
             handler: function () {
                 this.fireEvent("refresh");

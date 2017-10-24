@@ -164,8 +164,8 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
      * @memberOf Gemma.BioAssayGrid
      */
     nameRenderer: function (value, metadata, record, row, col, ds) {
-        return "<a  title=\"Show details of this bioassay\" style='cursor:pointer' href=\"/Gemma/bioAssay/showBioAssay.html?id="
-            + record.get('id') + "\">" + record.get('name') + "</a>";
+        return "<a  title='Show details of this bioassay' style='cursor:pointer' href='" + ctxBasePath + "/bioAssay/showBioAssay.html?id="
+            + record.get('id') + "'>" + record.get('name') + "</a>";
     },
 
     descRenderer: function (value, metadata, record, row, col, ds) {

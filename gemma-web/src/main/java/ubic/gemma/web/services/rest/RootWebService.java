@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest;
 
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
@@ -20,7 +21,7 @@ import javax.ws.rs.core.MediaType;
 public class RootWebService extends WebService {
 
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
-    private static final String APIDOCS_URL = "http://www.chibi.ubc.ca/Gemma/resources/restapidocs/";
+    private static final String APIDOCS_URL = Settings.getBaseUrl() + "resources/restapidocs/";
 
     /**
      * Required by spring

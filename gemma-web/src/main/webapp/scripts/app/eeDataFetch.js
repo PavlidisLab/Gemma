@@ -2,7 +2,7 @@ function handleFailure( data, e ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/icons/warning.png'
+      src : ctxBasePath + '/images/icons/warning.png'
    } );
    Ext.DomHelper.append( "messages", {
       tag : 'span',
@@ -30,7 +30,7 @@ function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/default/tree/loading.gif'
+      src : ctxBasePath + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 
@@ -57,7 +57,7 @@ function fetchCoExpressionData( eeId ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/default/tree/loading.gif'
+      src : ctxBasePath + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 
@@ -84,7 +84,7 @@ function fetchDiffExpressionData( analysisId ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/default/tree/loading.gif'
+      src : ctxBasePath + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 

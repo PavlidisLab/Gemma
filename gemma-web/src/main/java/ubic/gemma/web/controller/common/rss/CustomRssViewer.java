@@ -38,6 +38,7 @@ import com.sun.syndication.feed.rss.Item;
 
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author sshao
@@ -62,8 +63,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
             ExpressionExperiment e = entry.getKey();
 
             String title = e.getShortName() + " (" + entry.getValue() + "): " + e.getName();
-            String link = "http://" + request.getServerName()
-                    + "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + e.getId().toString();
+            String link = Settings.getBaseUrl() + "expressionExperiment/showExpressionExperiment.html?id=" + e.getId().toString();
 
             int maxLength = 500;
             if ( e.getDescription().length() < 500 ) {
@@ -96,7 +96,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
         int newCount = ( Integer ) model.get( "newCount" );
         feed.setTitle( "RSS | Gemma" );
         feed.setDescription( updateCount + " updated experiments and " + newCount + " new experiments since " + date );
-        feed.setLink( "http://www.chibi.ubc.ca/Gemma/" );
+        feed.setLink( Settings.getBaseUrl() );
 
         super.buildFeedMetadata( model, feed, request );
     }

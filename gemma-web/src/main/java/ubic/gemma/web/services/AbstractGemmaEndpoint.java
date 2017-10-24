@@ -50,7 +50,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     /**
      * Namespace of both request and response.
      */
-    public static final String NAMESPACE_URI = "http://chibi.ubc.ca/Gemma/ws";
+    public static final String NAMESPACE_URI = Settings.getBaseUrl() + "ws";
     public static final String DELIMITER = " ";
     protected static final String REQUEST = "Request";
     protected static final String RESPONSE = "Response";

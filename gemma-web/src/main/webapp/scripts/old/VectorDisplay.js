@@ -35,7 +35,7 @@ Gemma.VectorDisplay = Ext.extend( Ext.Window,
    noGeneLabel : "[No gene]",
 
    plugins : [ new Ext.ux.plugins.ContainerMask( {
-      msg : 'Loading ... <img src="/Gemma/images/loading.gif" />',
+      msg : 'Loading ... <img src="' + ctxBasePath + '/images/loading.gif" />',
       masked : true
    } ) ],
 

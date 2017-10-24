@@ -6,18 +6,18 @@
 <%-- Include common set of meta tags for each layout --%>
 <%@ include file="/common/meta.jsp"%>
 
-<link rel="shortcut icon" href="/Gemma/images/logo/gemmaTinyTrans.gif" />
+<link rel="shortcut icon" href="${pageContext.request.contextPath}/images/logo/gemmaTinyTrans.gif" />
 <title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
 <jwr:style src="/bundles/gemma-all.css" />
-<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/engine.js'></script>
+<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/util.js'></script>
 
 <jwr:script src="/bundles/include.js" />
 <jwr:script src="/bundles/gemma-lib.js" />
 
 <%-- for dwr creation of javascript objects to mirror java value objects; including one of these causes all the objects to be exposed.--%>
-<script type='text/javascript' src='/Gemma/dwr/interface/EmptyController.js'></script>
+<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/interface/EmptyController.js'></script>
 <%-- We should use this as soon as we figure out how to set generateDtoClasses option to dtoall 
 		script type='text/javascript' src='/Gemma/dwr/dtoall.js'></script>	--%>
 

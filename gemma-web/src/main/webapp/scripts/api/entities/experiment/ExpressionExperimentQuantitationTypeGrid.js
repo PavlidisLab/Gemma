@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 /**
  * 
  * Panel containing the most interesting info about an experiment. Used as one tab of the EE page

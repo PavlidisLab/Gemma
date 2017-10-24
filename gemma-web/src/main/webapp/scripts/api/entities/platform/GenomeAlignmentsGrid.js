@@ -1,9 +1,9 @@
 Ext.namespace( 'Gemma' );
 
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
-Gemma.UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
-Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
+Gemma.UCSC_ICON = ctxBasePath + "/images/logo/ucsc.gif";
+Gemma.NCBI_ICON = ctxBasePath + "/images/logo/ncbi.gif";
 UCSC_TRACKS = 'http://genome.ucsc.edu/cgi-bin/hgTracks';
 /**
  * 
@@ -59,7 +59,7 @@ Gemma.GenomeAlignmentsGrid = Ext.extend( Ext.grid.GridPanel, {
       for ( var i in data) {
          if ( data[i].id ) {
             res = res
-               + "<a title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
+               + "<a title='View gene details (opens new window)' target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id="
                + data[i].id + "'>" + data[i].officialSymbol + "</a><br />";
          }
       }

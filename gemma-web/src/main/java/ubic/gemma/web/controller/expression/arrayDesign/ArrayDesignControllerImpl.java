@@ -159,7 +159,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( id );
         if ( assays.size() != 0 ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                     .addObject( "message", "Array  " + arrayDesign.getName()
                             + " can't be deleted. Dataset has a dependency on this Array." );
         }
@@ -240,7 +240,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
                     .addObject( "message", "No search criteria provided" );
         }
 
@@ -248,7 +248,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
                     .addObject( "message", "No search criteria provided" );
 
         }
@@ -258,7 +258,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( searchResults.size() == 1 ) {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
             return new ModelAndView(
-                    new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) )
+                    new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
                     .addObject( "message",
                             "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
@@ -271,7 +271,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         Long overallElapsed = overallWatch.getTime();
         log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
 
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) )
+        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list , true) )
                 .addObject( "message", searchResults.size() + " Platforms matched your search." );
 
     }
@@ -287,7 +287,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( StringUtils.isBlank( sId ) ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
                     .addObject( "taskId", taskId );
         }
 
@@ -295,7 +295,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             Long id = Long.parseLong( sId );
             job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + sId ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + sId , true) )
                     .addObject( "taskId", taskId );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Invalid ID: " + sId );
@@ -603,7 +603,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html" , true) )
                     .addObject( "message", "Platform with id=" + id + " not found" );
         }
         // seems inefficient? but need security filtering.
@@ -611,7 +611,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         String ids = StringUtils.join( EntityUtils.getIds( ees ).toArray(), "," );
         return new ModelAndView(
-                new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + ids ) );
+                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids , true) );
     }
 
     @Override
@@ -689,7 +689,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 log.info( "Generating summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
                 return new TaskResult( taskCommand,
-                        new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
+                        new ModelAndView( new RedirectView( "/arrays/showAllArrayDesignStatistics.html", true ) ) );
             }
             ArrayDesignValueObject report = arrayDesignReportService
                     .generateArrayDesignReport( taskCommand.getEntityId() );
@@ -715,7 +715,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             }
             arrayDesignService.remove( ad );
             return new TaskResult( taskCommand,
-                    new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                    new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
                             .addObject( "message", "Array " + ad.getShortName() + " removed from Database." ) );
 
         }

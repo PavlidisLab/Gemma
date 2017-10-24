@@ -14,7 +14,7 @@
 </div>
 
 <script type="text/javascript">
-   Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+   Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
    Ext.onReady(function() {
 
       Ext.QuickTips.init();

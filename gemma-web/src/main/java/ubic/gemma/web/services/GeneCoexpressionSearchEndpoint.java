@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Settings;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -151,7 +152,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
                 Element gemmaURL = document.createElement( "gemma_details_url" );
                 gemmaURL.appendChild( document.createTextNode(
-                        "http://www.chibi.ubc.ca/Gemma/searchCoexpression.html?g=" + queryGene.getId() + "," + cvo
+                        Settings.getBaseUrl() + "searchCoexpression.html?g=" + queryGene.getId() + "," + cvo
                                 .getFoundGene().getId() + "&s=" + stringency + "&t=2&q&a=5662&an=All%20mouse" ) );
                 item.appendChild( gemmaURL );
 

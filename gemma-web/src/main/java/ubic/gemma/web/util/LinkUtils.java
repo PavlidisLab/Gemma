@@ -32,13 +32,13 @@ import ubic.gemma.persistence.util.Settings;
  */
 public class LinkUtils {
 
-    public static final String UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
+    public static final String UCSC_ICON = Settings.getRootContext() + "/images/logo/ucsc.gif";
 
-    public static final String NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
+    public static final String NCBI_ICON = Settings.getRootContext() + "/images/logo/ncbi.gif";
 
     public static String getGemmaGeneLink( GeneValueObject gene ) {
-        return "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
-                + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a>";
+        return "<a target='_blank' href='" + Settings.getRootContext() + "/gene/showGene.html?id=" + gene.getId()
+                + "'><img height=10 width=10 src='" + Settings.getRootContext() + "/images/logo/gemmaTiny.gif'></a>";
     }
 
     /**

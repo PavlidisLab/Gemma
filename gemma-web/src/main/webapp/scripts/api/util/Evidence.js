@@ -4,7 +4,7 @@ Gemma.isRunningOutsideOfGemma = function() {
    var hostname = window.location.hostname;
 
    // nd-vs-05.chibi.ubc.ca is NeuroDevNet's development website (test website)
-   return (hostname.indexOf( 'chibi.ubc.ca' ) < 0 && hostname.indexOf( 'localhost' ) < 0);
+   return (hostname.indexOf( 'msl.ubc.ca' ) < 0 && hostname.indexOf( 'chibi.ubc.ca' ) < 0 && hostname.indexOf( 'localhost' ) < 0);
 };
 
 Gemma.convertToEvidenceError = function( validateEvidenceValueObject ) {

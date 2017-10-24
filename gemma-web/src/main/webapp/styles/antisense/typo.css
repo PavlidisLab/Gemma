@@ -634,22 +634,22 @@ a.tooltip:hover .tooltiptext {
 }
 
 .x-tool-delete {
-	background-image: url('/Gemma/images/icons/cross.png');
+	background-image: url('../../images/icons/cross.png');
 	margin-left: 10px;
 }
 
 .x-tool-delete-over {
-	background-image: url('/Gemma/images/icons/cross.png');
+	background-image: url('../../images/icons/cross.png');
 	margin-left: 10px;
 }
 
 .x-tool-saveEdit {
-	background-image: url('/Gemma/images/icons/diskEdit2.png');
+	background-image: url('../../images/icons/diskEdit2.png');
 	margin-left: 10px;
 }
 
 .x-tool-saveEdit-over {
-	background-image: url('/Gemma/images/icons/diskEdit2.png');
+	background-image: url('../../images/icons/diskEdit2.png');
 	margin-left: 10px;
 }
 
@@ -690,7 +690,7 @@ a.tooltip:hover .tooltiptext {
 }
 /* end of hover thumbnails*/
 .x-form-trigger-paste-genes {
-	background-image: url("/Gemma/images/icons/page_upload.png")
+	background-image: url("../../images/icons/page_upload.png")
 }
 
 .absolute-position-loading-mask {

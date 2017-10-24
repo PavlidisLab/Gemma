@@ -221,7 +221,7 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
 
                      },
                      scope : this,
-                     icon : "/Gemma/images/icons/details_hidden.gif",
+                     icon : ctxBasePath + "/images/icons/details_hidden.gif",
                      tooltip : "Collapse all"
                   }, {
                      handler : function() {
@@ -233,7 +233,7 @@ Gemma.PhenotypeTreeGridPanel = Ext.extend(Ext.ux.maximgb.tg.GridPanel, {
                            }, 10, this);
                      },
                      scope : this,
-                     icon : "/Gemma/images/icons/details.gif",
+                     icon : ctxBasePath + "/images/icons/details.gif",
                      tooltip : "Expand all"
                   }]
             });

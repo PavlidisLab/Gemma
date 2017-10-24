@@ -78,6 +78,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -273,7 +274,7 @@ public class ExpressionExperimentController {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
             return new ModelAndView(
-                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) )
                     .addObject( "message", "No search criteria provided" );
         }
 
@@ -282,14 +283,14 @@ public class ExpressionExperimentController {
         if ( ids.isEmpty() ) {
 
             return new ModelAndView(
-                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) )
                     .addObject( "message", "Your search yielded no results." );
 
         }
 
         if ( ids.size() == 1 ) {
             return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next() ) )
+                    "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(), true ) )
                     .addObject( "message",
                             "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
@@ -300,7 +301,7 @@ public class ExpressionExperimentController {
         }
 
         return new ModelAndView(
-                new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + list ) )
+                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list , true) )
                 .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
@@ -362,7 +363,7 @@ public class ExpressionExperimentController {
         if ( efs.size() < 1 )
             return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
-        String efUri = "&nbsp;<a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?eeid=" + ee
+        String efUri = "&nbsp;<a target='_blank' href='" + Settings.getRootContext() + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee
                 .getId() + "'>(details)</a >";
         int MAX_TAGS_TO_SHOW = 15;
         Collection<Characteristic> tags = ee.getCharacteristics();
@@ -1343,7 +1344,7 @@ public class ExpressionExperimentController {
         updateCorrelationMatrixFile( id );
         updateMV( id );
         return new ModelAndView(
-                new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+                new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + id , true) );
     }
 
     /**
@@ -1736,7 +1737,7 @@ public class ExpressionExperimentController {
             expressionExperimentService.remove( ee );
 
             return new TaskResult( taskCommand, new ModelAndView(
-                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) )
                     .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }

@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.report.TwitterOutbound;
 import ubic.gemma.core.job.grid.util.JMSBrokerMonitor;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.monitor.CacheMonitor;
 import ubic.gemma.persistence.util.monitor.HibernateMonitor;
 
@@ -122,11 +123,11 @@ public class SystemMonitorController {
             try {
                 int numWorkers = jmsBrokerMonitor.getNumberOfWorkerHosts();
                 if ( numWorkers == 0 ) {
-                    buf.append( "<img src=\"/Gemma/images/icons/exclamation.png\" /> No workers found!" );
+                    buf.append( "<img src=\"" + Settings.getRootContext() + "/images/icons/exclamation.png\" /> No workers found!" );
                 } else {
                     buf.append( "(" + numWorkers + ")" );
                     for ( int i = 0; i < numWorkers; i++ ) {
-                        buf.append( "<img src=\"/Gemma/images/icons/server.png\" />" );
+                        buf.append( "<img src=\"" + Settings.getRootContext() + "/images/icons/server.png\" />" );
                     }
                 }
             } catch ( JMSException e ) {

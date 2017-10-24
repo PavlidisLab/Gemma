@@ -12,8 +12,8 @@ Gemma.Widget.tpl = {
 
 Gemma.Common.tpl = {
    pubmedLink : {
-      simple : '<a target="_blank" href="{pubmedURL}"><img ext:qtip="Go to PubMed (in new window)" ' + 'src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>',
+      simple : '<a target="_blank" href="{pubmedURL}"><img ext:qtip="Go to PubMed (in new window)" ' + 'src="' + ctxBasePath + '/images/pubmed.gif" width="47" height="15" /></a>',
       complex : '<tpl if="pubAvailable==\'true\'">' + '{primaryCitationStr}' + '&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"'
-         + ' href="{pubmedURL}"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp' + '</tpl>' + '<tpl if="pubAvailable==\'false\'">' + 'Not Available' + '</tpl>'
+         + ' href="{pubmedURL}"><img src="' + ctxBasePath + '/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp' + '</tpl>' + '<tpl if="pubAvailable==\'false\'">' + 'Not Available' + '</tpl>'
    }
 };

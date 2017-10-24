@@ -122,7 +122,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend( Ext.Window, {
       // change previous button to 'remove'
       if ( typeof this.geneChooser !== 'undefined' ) {
          // Ext.getCmp( 'geneOverlayChooser' + (this.geneChooserIndex - 1) + 'Button' ).show().setIcon(
-         // '/Gemma/images/icons/delete.png' ).setTooltip( 'Remove this gene or group from your search' ).setHandler(
+         // ctxBasePath + '/images/icons/delete.png' ).setTooltip( 'Remove this gene or group from your search' ).setHandler(
          // this.reset.createDelegate( this ) );
       }
       this.geneChooser.doLayout();

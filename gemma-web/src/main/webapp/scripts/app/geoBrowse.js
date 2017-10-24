@@ -284,7 +284,7 @@ Gemma.GeoBrowseGrid = Ext
             var r = "";
             for (var i = 0; i < record.get( 'correspondingExperiments' ).length; i++) {
                var ee = record.get( 'correspondingExperiments' )[i];
-               r = r + "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?" + "id=" + ee + "\">"
+               r = r + "<a href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?" + "id=" + ee + "'>"
                   + record.get( 'geoAccession' ) + "</a>";
 
             }
@@ -304,20 +304,20 @@ Gemma.GeoBrowseGrid = Ext
 
          usableRenderer : function( value, metadata, record, row, col, ds ) {
             if ( record.get( 'correspondingExperiments' ).length > 0 ) {
-               return "<img src=\"/Gemma/images/icons/gray-thumb.png\" width=\"16\" height=\"16\" alt=\"Already loaded\"/>";
+               return "<img src='" + ctxBasePath + "/images/icons/gray-thumb.png' width='16' height='16' alt='Already loaded'/>";
             }
             if ( record.get( 'usable' ) ) {
                return "<span id=\""
                   + record.get( 'geoAccession' )
                   + "-rating\"  onClick=\"toggleUsability('"
                   + record.get( 'geoAccession' )
-                  + "')\"><img src=\"/Gemma/images/icons/thumbsup.png\"  width=\"16\" height=\"16\"   alt=\"Usable, click to toggle\" /></span>";
+                  + "')\"><img src='" + ctxBasePath + "/images/icons/thumbsup.png'  width='16' height='16'   alt='Usable, click to toggle' /></span>";
             } else {
                return "<span id=\""
                   + record.get( 'geoAccession' )
                   + "-rating\"  onClick=\"toggleUsability('"
                   + record.get( 'geoAccession' )
-                  + "')\"  ><img src=\"/Gemma/images/icons/thumbsdown-red.png\"  alt=\"Judged unusable, click to toggle\"  width=\"16\" height=\"16\"  /></span>";
+                  + "')\"  ><img src='" + ctxBasePath + "/images/icons/thumbsdown-red.png'  alt='Judged unusable, click to toggle'  width='16' height='16'  /></span>";
             }
          },
 
@@ -336,7 +336,7 @@ Gemma.GeoBrowseGrid = Ext
             GeoRecordBrowserController.getDetails.apply( this, callParams );
             Ext.DomHelper.overwrite( "messages", {
                tag : 'img',
-               src : '/Gemma/images/default/tree/loading.gif'
+               src : ctxBasePath + '/images/default/tree/loading.gif'
             } );
             Ext.DomHelper.append( "messages", {
                tag : 'span',
@@ -359,12 +359,12 @@ function handleUsabilitySuccess( data, accession ) {
    if ( data ) {
       Ext.DomHelper.overwrite( accession + "-rating", {
          tag : 'img',
-         src : '/Gemma/images/icons/thumbsup.png'
+         src : ctxBasePath + '/images/icons/thumbsup.png'
       } );
    } else {
       Ext.DomHelper.overwrite( accession + "-rating", {
          tag : 'img',
-         src : '/Gemma/images/icons/thumbsdown-red.png'
+         src : ctxBasePath + '/images/icons/thumbsdown-red.png'
       } );
    }
 
@@ -374,7 +374,7 @@ function handleFailure( data, e ) {
    Ext.DomHelper.overwrite( "taskId", "" );
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/icons/warning.png'
+      src : ctxBasePath + '/images/icons/warning.png'
    } );
    Ext.DomHelper.append( "messages", {
       tag : 'span',
@@ -397,7 +397,7 @@ function toggleUsability( accession ) {
    GeoRecordBrowserController.toggleUsability.apply( this, callParams );
    Ext.DomHelper.overwrite( accession + "-rating", {
       tag : 'img',
-      src : '/Gemma/images/default/tree/loading.gif'
+      src : ctxBasePath + '/images/default/tree/loading.gif'
    } );
 }
 
@@ -420,7 +420,7 @@ function load( accession ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : '/Gemma/images/default/tree/loading.gif'
+      src : ctxBasePath + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Submitting job..." );
 
@@ -491,7 +491,7 @@ Gemma.GeoBrowseToolbar = Ext.extend( Ext.Toolbar, {
          }, {
             id : 'show-as-text',
             xtype : 'button',
-            icon : '/Gemma/images/icons/disk.png',
+            icon : ctxBasePath + '/images/icons/disk.png',
             handler : function() {
                this.fireEvent( 'showText' );
             }.createDelegate( this )

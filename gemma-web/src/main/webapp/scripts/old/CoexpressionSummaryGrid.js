@@ -110,7 +110,7 @@ Gemma.CoexpressionSummaryGrid = Ext
                linksPositive.push( thisSummary.linksMetPositiveStringency );
                linksNegative.push( thisSummary.linksMetNegativeStringency );
                geneDetails.push( String.format(
-                  "<a target=\"_blank\" href='/Gemma/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ",
+                  "<a target=\"_blank\" href='" + ctxBasePath + "/gene/showGene.html?id={0}' ext:qtip='{1}'> {2} </a> ",
                   genes[i].id, genes[i].officialName, genes[i].officialSymbol ) );
             }
 

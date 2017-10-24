@@ -118,7 +118,7 @@ Gemma.ExperimentSetPreview = Ext
             var numWithDiffex = selectedSet.numWithDifferentialExpressionAnalysis;
 
             if ( !(selectedSet instanceof SessionBoundExpressionExperimentSetValueObject) ) {
-               name = '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='
+               name = '<a target="_blank" href="' + ctxBasePath + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
                   + selectedSet.id + '">' + selectedSet.name + '</a>';
             } else {
                name = selectedSet.name;
@@ -321,7 +321,7 @@ Gemma.ExperimentSetPreview = Ext
                         '<tpl for=".">'
                            + '<tpl if="!this.hideUnanalyzedDatasets || hasCoexpressionAnalysis || hasDifferentialExpressionAnalysis">'
                            + ' <div style="padding-bottom:7px;">'
-                           + '<a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+                           + '<a target="_blank" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=',
                         '{id}"',
                         ' ext:qtip="'
                            + '<tpl if="hasCoexpressionAnalysis">Has coexpression analysis&nbsp</tpl>&nbsp;'

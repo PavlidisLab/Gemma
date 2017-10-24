@@ -112,7 +112,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend( Ext.Toolbar, {
       this.newBut = new Ext.Button( {
          handler : this.initNew,
          scope : this,
-         icon : "/Gemma/images/icons/add.png",
+         icon : ctxBasePath + "/images/icons/add.png",
          disabled : false, // if they are logged in.
          tooltip : "Create a new set (click 'commit' when you are done)"
       } );
@@ -121,7 +121,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.commit,
          disabled : true,
          scope : this,
-         icon : "/Gemma/images/icons/database_save.png",
+         icon : ctxBasePath + "/images/icons/database_save.png",
          tooltip : "Commit all changes to the database"
       } );
 
@@ -129,7 +129,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.copy,
          scope : this,
          disabled : true,
-         icon : "/Gemma/images/icons/arrow_branch.png",
+         icon : ctxBasePath + "/images/icons/arrow_branch.png",
          tooltip : "Clone as a new set (click 'save' afterwards)"
       } );
 
@@ -137,7 +137,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.reset,
          scope : this,
          disabled : true,
-         icon : "/Gemma/images/icons/arrow_undo.png",
+         icon : ctxBasePath + "/images/icons/arrow_undo.png",
          tooltip : "Reset selected set to stored version"
       } );
 
@@ -145,14 +145,14 @@ Gemma.GeneGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.remove,
          scope : this,
          disabled : true,
-         icon : "/Gemma/images/icons/database_delete.png",
+         icon : ctxBasePath + "/images/icons/database_delete.png",
          tooltip : "Delete selected set"
       } );
 
       this.publicOrPrivateBut = new Ext.Button( {
          tooltip : "Show/hide public data",
          enableToggle : true,
-         icon : "/Gemma/images/icons/world_add.png",
+         icon : ctxBasePath + "/images/icons/world_add.png",
          handler : this.refreshData,
          pressed : true, // has to match default value in store.
          scope : this

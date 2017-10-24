@@ -273,7 +273,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
             frame : false
          } ),
          defaultTpl : new Ext.Template( '<div style="padding-bottom:7px;">'
-            + '<a target="_blank" href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} '
+            + '<a target="_blank" href="' + ctxBasePath + '/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} '
             + '<span style="color:grey">({taxonCommonName})</span></div>' ),
 
          defaultPreviewTitle : "Gene Selection Preview",

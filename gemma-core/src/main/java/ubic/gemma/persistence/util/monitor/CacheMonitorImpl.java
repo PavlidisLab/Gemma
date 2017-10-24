@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.persistence.util.Settings;
 
 import java.util.Arrays;
 
@@ -94,11 +95,11 @@ public class CacheMonitorImpl implements CacheMonitor {
         buf.append( cacheNames.length ).append( " caches; only non-empty caches listed below." );
         // FIXME make these sortable.
         buf.append(
-                "<br/>&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
+                "<br/>&nbsp;To clear all caches click here: <img src='" + Settings.getRootContext() + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
         buf.append(
-                "<br/>&nbsp;To start statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
+                "<br/>&nbsp;To start statistics collection click here: <img src='" + Settings.getRootContext() + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"enableStatistics()\" alt='Enable stats' title='Enable stats' />&nbsp;&nbsp;" );
         buf.append(
-                "<br/>&nbsp;To stop statistics collection click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
+                "<br/>&nbsp;To stop statistics collection click here: <img src='" + Settings.getRootContext() + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"disableStatistics()\" alt='Disable stats' title='Disable stats' />&nbsp;&nbsp;" );
 
         buf.append( "<table style='font-size:small'  ><tr>" );
         String header = "<th>Name</th><th>HitRate</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>MemMiss</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
@@ -176,7 +177,7 @@ public class CacheMonitorImpl implements CacheMonitor {
     }
 
     private String getClearCacheHtml( String cacheName ) {
-        return "<img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearCache('" + cacheName
+        return "<img src='" + Settings.getRootContext() + "/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearCache('" + cacheName
                 + "')\" alt='Clear cache' title='Clear cache' />&nbsp;&nbsp;";
     }
 

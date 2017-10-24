@@ -5,8 +5,7 @@
  * This supports queries that originate from a URL. Example:
  * 
  * <pre>
- * http:
- * //chibi.ubc.ca/Gemma/home.html?taxon=1&amp;geneList=ARHGAP42P5,TRAV8-5,OR11H12,RNU6-1239P,OR4K1,POTEG,OR11H13P,DUXAP10,POTEM,
+ * /home.html?taxon=1&amp;geneList=ARHGAP42P5,TRAV8-5,OR11H12,RNU6-1239P,OR4K1,POTEG,OR11H13P,DUXAP10,POTEM,
  * </pre>
  * 
  * 
@@ -83,7 +82,7 @@ Gemma.AnalysisResultsSearchForm = Ext
 
                Ext.DomHelper.overwrite( "analysis-results-search-form-messages", {
                   tag : 'img',
-                  src : '/Gemma/images/icons/warning.png'
+                  src : ctxBasePath + '/images/icons/warning.png'
                } );
 
                Ext.DomHelper.append( "analysis-results-search-form-messages", {
@@ -499,7 +498,7 @@ Gemma.AnalysisResultsSearchForm = Ext
                         }, {
                            xtype : 'button',
                            width : 55,
-                           icon : '/Gemma/images/icons/arrow_refresh_small.png',
+                           icon : ctxBasePath + '/images/icons/arrow_refresh_small.png',
                            style : 'margin-top: 8px',
                            text : 'Reset',
                            tooltip : 'Clear all selections and reset the taxon mode ',
@@ -698,7 +697,7 @@ Gemma.AnalysisResultsSearchForm = Ext
             this.geneSearchAndPreviewPanel.add( this.geneSearchAndPreview );
             if ( typeof Ext.getCmp( 'geneChooser' + (this.geneChooserIndex - 1) + 'Button' ) !== 'undefined' ) {
                Ext.getCmp( 'geneChooser' + (this.geneChooserIndex - 1) + 'Button' ).show().setIcon(
-                  '/Gemma/images/icons/delete.png' ).setTooltip( 'Remove this gene or group from your search' )
+                  ctxBasePath + '/images/icons/delete.png' ).setTooltip( 'Remove this gene or group from your search' )
                   .setHandler(
                      this.removeGeneChooser.createDelegate( this, [ 'geneChooserPanel' + (this.geneChooserIndex - 1) ],
                         false ) );

@@ -1,6 +1,6 @@
 Ext.namespace( 'Gemma' );
 Ext.form.Field.prototype.msgTarget = 'side';
-Ext.BLANK_IMAGE_URL = "/Gemma/images/s.gif";
+Ext.BLANK_IMAGE_URL = ctxBasePath + "/images/s.gif";
 // Ext.Require( 'Ext.util.Observable', 'ExpressionDataFileUploadController' ); // Ext 3 doesn't support.
 
 Gemma.DatasetUploadTool = Ext
@@ -95,7 +95,7 @@ Gemma.DatasetUploadTool = Ext
                                 handler : function( button ) {
                                    w.hide();
                                    w.destroy();
-                                   window.location = "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                   window.location = ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id="
                                       + payload.taskId;
 
                                 }
@@ -409,7 +409,7 @@ Ext
                                              {
                                                 xtype : 'label',
                                                 html : "Don't see your platform listed? Please see "
-                                                   + "<a target='_blank' href='/Gemma/arrays/showAllArrayDesigns.html'>the platform list</a>"
+                                                   + "<a target='_blank' href='" + ctxBasePath + "/arrays/showAllArrayDesigns.html'>the platform list</a>"
                                                    + " for more information, "
                                                    + "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your platform."
                                              } ]
@@ -450,7 +450,7 @@ Ext
                                                 enabled : false,
                                                 handler : tool.agree,
                                                 scope : tool,
-                                                fieldLabel : "I have read the '<a target=\'_blank\' href='/Gemma/static/termsAndConditions.html'>terms and conditions</a>'"
+                                                fieldLabel : "I have read the '<a target=\'_blank\' href='" + ctxBasePath + "/static/termsAndConditions.html'>terms and conditions</a>'"
                                              } ]
                                  } ]
 
@@ -493,9 +493,9 @@ Ext
                Ext.DomHelper
                   .overwrite(
                      'array-design-info-inner-html',
-                     "<div style='padding:5px;'><a target='_blank' style='text-decoration:underline' href=\"/Gemma/arrays/showArrayDesign.html?id="
+                     "<div style='padding:5px;'><a target='_blank' style='text-decoration:underline' href='" + ctxBasePath + "/arrays/showArrayDesign.html?id="
                         + arrayDesign.data.id
-                        + "\">"
+                        + "'>"
                         + arrayDesign.data.shortName
                         + " details</a> (opens in new window)<p>Description: "
                         + arrayDesign.data.description

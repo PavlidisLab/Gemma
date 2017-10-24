@@ -408,7 +408,7 @@ Gemma.GeneSearchAndPreview = Ext
             this.relayEvents( this.geneCombo, [ 'select' ] );
 
             this.symbolListButton = new Ext.Button( {
-               icon : "/Gemma/images/icons/page_upload.png",
+               icon : ctxBasePath + "/images/icons/page_upload.png",
                cls : "x-btn-icon",
                tooltip : Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.symbolListButtonInstructions,
                disabled : false,

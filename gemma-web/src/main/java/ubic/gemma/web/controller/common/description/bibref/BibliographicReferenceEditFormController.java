@@ -53,7 +53,7 @@ public class BibliographicReferenceEditFormController extends BaseFormController
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
-            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE ) );
+            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
         }
 
         return super.processFormSubmission( request, response, command, errors );

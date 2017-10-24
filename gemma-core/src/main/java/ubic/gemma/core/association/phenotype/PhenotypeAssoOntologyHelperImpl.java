@@ -162,7 +162,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     @Override
     public OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException {
 
-        if ( valueUri.isEmpty() ) {
+        if ( valueUri == null || valueUri.isEmpty() ) {
             throw new IllegalArgumentException( "URI to load was blank." );
         }
 

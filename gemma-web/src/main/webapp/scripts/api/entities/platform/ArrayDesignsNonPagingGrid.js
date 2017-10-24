@@ -302,7 +302,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                         dataIndex: 'name',
                         width: 0.3, // viewConfig.forceFit resizes based on relative widths,
                         renderer: function (value, metaData, record, rowIndex, colIndex, store) {
-                            return (value && record) ? '<a target="_blank" href="/Gemma/arrays/showArrayDesign.html?id='
+                            return (value && record) ? '<a target="_blank" href="' + ctxBasePath + '/arrays/showArrayDesign.html?id='
                                 + record.id + '">' + value + '</a>' : '';
                         }
                     },
@@ -320,22 +320,22 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                             if (record.get('isMerged')) {
                                 statusString += '<img title="'
                                     + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergedTT + '"'
-                                    + ' src="/Gemma/images/icons/merging_result.png"/>&nbsp;';
+                                    + ' src="' + ctxBasePath + '/images/icons/merging_result.png"/>&nbsp;';
                             }
                             if (record.get('isMergee')) {
                                 statusString += '<img title="'
                                     + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergeeTT + '"'
-                                    + ' src="/Gemma/images/icons/arrow_merge.png"/>&nbsp;';
+                                    + ' src="' + ctxBasePath + '/images/icons/arrow_merge.png"/>&nbsp;';
                             }
                             if (record.get('isSubsumed')) {
                                 statusString += '<img title="'
                                     + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumedTT + '"'
-                                    + ' src="/Gemma/images/icons/subsumed.png"/>&nbsp;';
+                                    + ' src="' + ctxBasePath + '/images/icons/subsumed.png"/>&nbsp;';
                             }
                             if (record.get('isSubsumer')) {
                                 statusString += '<img title="'
                                     + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumerTT + '"'
-                                    + ' src="/Gemma/images/icons/subsumer.png"/>';
+                                    + ' src="' + ctxBasePath + '/images/icons/subsumer.png"/>';
                             }
 
                             return statusString;
@@ -486,7 +486,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                     ref: 'fieldClearBtn',
                     disabled: true,
                     tooltip: 'Clear your search',
-                    icon: '/Gemma/images/icons/cross.png',
+                    icon: ctxBasePath + '/images/icons/cross.png',
                     handler: function () {
                         this.clearFilter();
                     },
@@ -494,7 +494,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                 }, '-', {
                     ref: 'refreshButton',
                     text: 'Refresh',
-                    icon: '/Gemma/images/icons/arrow_refresh_small.png',
+                    icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
                     tooltip: 'Refresh the contents of this table',
                     handler: function () {
                         this.clearFilter();
@@ -657,7 +657,7 @@ Gemma.ArrayDesignsSummaryWindow = Ext
                     this.loadMask.hide();
                 }.createDelegate(this));
             },
-            tpl: '<a href="/Gemma/arrays/generateArrayDesignSummary.html" onclick="return confirm(\'Regenerate report for all platforms?\');">Regenerate this report</a><br><br>'
+            tpl: '<a href="' + ctxBasePath + '/arrays/generateArrayDesignSummary.html" onclick="return confirm(\'Regenerate report for all platforms?\');">Regenerate this report</a><br><br>'
             + Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails,
             padding: 7,
             defaultData: {
