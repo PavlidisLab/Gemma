@@ -22,7 +22,7 @@
 		script type='text/javascript' src='/Gemma/dwr/dtoall.js'></script>	--%>
 
 <%-- for registration, possible from any page--%>
-<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"> </script>
+<script type="text/javascript" src="https://www.google.com/recaptcha/api/js/recaptcha_ajax.js"> </script>
 
 <%-- log javascript errors --%>
 <script type="text/javascript">

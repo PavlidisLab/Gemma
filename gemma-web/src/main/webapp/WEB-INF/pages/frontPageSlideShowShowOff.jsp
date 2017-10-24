@@ -12,7 +12,7 @@
 				<tr>
 					<td class="slideImageTD">
 						<%-- Width here needs to be enough to fit the labels at left and right edges --%> 
-						<img src="http://chart.apis.google.com/chart?chs=340x240&cht=p&chco=224499&chd=${ googleData}
+						<img src="https://chart.apis.google.com/chart?chs=340x240&cht=p&chco=224499&chd=${ googleData}
 									&chds=a&chdl=${ googleLabels}&chf=bg,s,FFFFFF00
 									&chdlp=b|l&chdls=2f2f2f,13"
 							width="340" height="240" alt="" /> 
