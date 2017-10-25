@@ -21,7 +21,7 @@
         if (typeof googleAnalyticsTrackPageviewIfConfigured === 'undefined') {
             var googleAnalyticsTrackPageviewIfConfigured = googleAnalyticsTrackPageviewIfConfigured || function (pageURL) {
                     if (typeof ga !== 'undefined') {
-                        ga('create', '${appConfig["ga.tracker"]}', '${appConfig["ga.tracker"]}', {
+                        ga('create', '${appConfig["ga.tracker"]}', {
                             cookieDomain: '${appConfig["ga.domain"]}'
                         });
                         ga('send', 'pageview', pageURL);
