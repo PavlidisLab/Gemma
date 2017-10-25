@@ -124,6 +124,7 @@
 						<source>lib/jquery-2.1.1.js</source>
 						<source>helpers/FakeDWR.js</source>
 						<source>helpers/jasmine-jquery.js</source>
+						<source>helpers/globals.js</source>
 					</preloadSources>
 					<!-- instead of html unit -->
 					<webDriverClassName>org.openqa.selenium.phantomjs.PhantomJSDriver</webDriverClassName>
