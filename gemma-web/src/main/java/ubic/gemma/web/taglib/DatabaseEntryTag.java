@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author keshav
@@ -78,12 +79,12 @@ public class DatabaseEntryTag extends TagSupport {
                     accession = accession.replaceAll( "\\.[1-9]$", "" );
                     buf.append( accession + "&nbsp;<a title='NCBI page for this entry'"
                             + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + accession
-                            + "'><img src='/Gemma/images/logo/geoTiny.png' /></a>" );
+                            + "'><img src='" + Settings.getRootContext() + "/images/logo/geoTiny.png' /></a>" );
                 } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
                     buf.append( accession
                             + "&nbsp;<a title='ArrayExpress page for this entry'"
                             + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
-                            + accession + "'><img src='/Gemma/images/logo/arrayExpressTiny.png' /></a>" );
+                            + accession + "'><img src='" + Settings.getRootContext() + "/images/logo/arrayExpressTiny.png' /></a>" );
                 } else {
                     buf.append( accession + "(" + databaseEntry.getExternalDatabase().getName() + ":" + ")" );
                 }

@@ -178,9 +178,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
 
-            String url = "/Gemma/getData.html?file=" + f.getName();
-
-            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getName(), true ) );
 
             return new TaskResult( taskCommand, mav );
         }
@@ -298,9 +296,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
 
-            String url = "/Gemma/getData.html?file=" + f.getName();
-
-            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getName(), true ) );
 
             return new TaskResult( taskCommand, mav );
 
@@ -361,8 +357,8 @@ public class ExpressionExperimentDataFetchController {
                 // throw new UnsupportedOperationException(
                 // "Sorry, you can't get multiple analyses at once using this method." );
             }
-            String url = "/Gemma/getData.html?file=" + files.iterator().next().getName();
-            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+
+            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + files.iterator().next().getName(), true ) );
             return new TaskResult( taskCommand, mav );
 
         }

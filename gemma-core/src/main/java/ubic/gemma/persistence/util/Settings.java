@@ -181,17 +181,6 @@ public class Settings {
     }
 
     /**
-     * @return the configured base url (e.g., http://www.chibi.ubc.ca/Gemma/). It will always end in a slash.
-     */
-    public static String getBaseUrl() {
-        String url = getString( "gemma.base.url", "http://www.chibi.ubc.ca/Gemma/" );
-        if ( !url.endsWith( "/" ) ) {
-            return url + "/";
-        }
-        return url;
-    }
-
-    /**
      * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String)
      */
     public static BigDecimal getBigDecimal( String key ) {
@@ -352,7 +341,39 @@ public class Settings {
      * @return host url e.g. http://www.chibi.ubc.ca
      */
     public static String getHostUrl() {
-        return getString( "gemma.hosturl", "http://www.chibi.ubc.ca/" );
+        String host = getString( "gemma.hosturl", "http://gemma.msl.ubc.ca" );
+        if ( host.length() > 1 && host.endsWith( "/" ) ) {
+            return host.substring(0, host.length() - 1);
+        }
+        return host;
+    }
+
+    /**
+     * @return root context e.g. /Gemma
+     */
+    public static String getRootContext() {
+        String ctx = getString( "gemma.rootcontext", "" );
+        if (ctx.isEmpty() || ctx.equals( "/" ) ) {
+            return "";
+        }
+        if ( !ctx.startsWith( "/" ) ) {
+            ctx = "/" + ctx;
+        }
+        if ( ctx.length() > 1 && ctx.endsWith( "/" ) ) {
+            return ctx.substring(0, ctx.length() - 1);
+        }
+        return ctx;
+    }
+
+    /**
+     * @return the configured base url (e.g., http://www.chibi.ubc.ca/Gemma/). It will always end in a slash.
+     */
+    public static String getBaseUrl() {
+        String url = getString( "gemma.baseurl", getHostUrl() + getRootContext() + "/" );
+        if ( !url.endsWith( "/" ) ) {
+            return url + "/";
+        }
+        return url;
     }
 
     /**

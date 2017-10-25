@@ -59,7 +59,7 @@ public class WhatsNewController {
 
     @RequestMapping("/generateCache.html")
     public ModelAndView generateCache( HttpServletRequest request, HttpServletResponse response ) {
-        ModelAndView mav = new ModelAndView( new RedirectView( WebConstants.HOME_URL ) );
+        ModelAndView mav = new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
 
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();

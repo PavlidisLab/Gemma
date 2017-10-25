@@ -40,7 +40,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend( Ext.Panel, {
             },
             items : [ phenotypeSearchComboBox, {
                xtype : 'button', // Remove phenotype button
-               icon : '/Gemma/images/icons/subtract.png',
+               icon : ctxBasePath + '/images/icons/subtract.png',
                margins : '0 0 3 3',
                handler : function() {
                   if ( comboBoxCount > 1 ) {
@@ -70,7 +70,7 @@ Gemma.PhenotypeAssociationForm.PhenotypesSearchPanel = Ext.extend( Ext.Panel, {
       } );
 
       var addPhenotypeRowButton = new Ext.Button( {
-         icon : '/Gemma/images/icons/add.png',
+         icon : ctxBasePath + '/images/icons/add.png',
          fieldLabel : "&nbsp;",
          labelSeparator : '',
          handler : function() {

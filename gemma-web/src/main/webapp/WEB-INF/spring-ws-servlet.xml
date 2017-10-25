@@ -15,53 +15,53 @@
 		</description>
 		<property name="mappings">
 			<props>
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}experimentName">experimentNameEndpoint</prop>
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}experimentId">experimentIdEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}experimentName">experimentNameEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}experimentId">experimentIdEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneName">geneNameEndpoint</prop>
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneId">geneIdEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneName">geneNameEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneId">geneIdEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}arrayDesignUsed">arrayDesignUsedEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}arrayDesignUsed">arrayDesignUsedEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}experimentNumSamples">experimentNumSamplesEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}experimentNumSamples">experimentNumSamplesEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}experimentDEDV">experimentDEDVEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}experimentDEDV">experimentDEDVEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}gene2Go">gene2GoTermEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}gene2Go">gene2GoTermEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}experimentIDbyTaxon">experimentIDbyTaxonEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}experimentIDbyTaxon">experimentIDbyTaxonEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneIDbyTaxon">geneIDbyTaxonEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneIDbyTaxon">geneIDbyTaxonEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}goTerm2Gene">goTerm2GeneEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}goTerm2Gene">goTerm2GeneEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}arrayDesignIdentifierByName">arrayDesignIdentifierByNameEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}arrayDesignIdentifierByName">arrayDesignIdentifierByNameEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}dEDVfromEEIDGeneID">dEDVfromEEIDGeneIDEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}dEDVfromEEIDGeneID">dEDVfromEEIDGeneIDEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneOverlap">geneOverlapEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneOverlap">geneOverlapEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneCoexpression">geneCoexpressionEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneCoexpression">geneCoexpressionEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}experimentAnnotation">experimentAnnotationEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}experimentAnnotation">experimentAnnotationEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}probe2Gene">probe2GeneEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}probe2Gene">probe2GeneEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}gene2Probe">gene2ProbeEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}gene2Probe">gene2ProbeEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}expressionExperimentSetIDs">expressionExperimentSetIDsEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}expressionExperimentSetIDs">expressionExperimentSetIDsEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}dEDVRank">dEDVRankEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}dEDVRank">dEDVRankEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneByNCBIId">geneByNCBIIdEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneByNCBIId">geneByNCBIIdEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneDetailsByGeneID">geneDetailsByGeneIDEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneDetailsByGeneID">geneDetailsByGeneIDEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}differentialExpressionProbeResult">differentialExpressionProbeResultEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}differentialExpressionProbeResult">differentialExpressionProbeResultEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}gene2GOdescription">gene2GOdescriptionEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}gene2GOdescription">gene2GOdescriptionEndpoint</prop>
 
-				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneCoexpressionSearch">geneCoexpressionSearchEndpoint</prop>
+				<prop key="{http://gemma.msl.ubc.ca/ws}geneCoexpressionSearch">geneCoexpressionSearchEndpoint</prop>
 
 			</props>
 		</property>

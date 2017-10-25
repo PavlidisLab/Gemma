@@ -31,7 +31,7 @@ Gemma.FileUploadForm = Ext.extend( Ext.Panel, {
             header : false,
             method : 'POST',
             frame : true,
-            url : '/Gemma/uploadFile.html', // FileUploadController
+            url : ctxBasePath + '/uploadFile.html', // FileUploadController
             timeout : 15000,
             defaults : {
                anchor : '95%',

@@ -41,7 +41,7 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend( Ext.Panel, {
 
                var img = imageObjects[0];
                var homologueText = (img.usingHomologue) ? 'Images are for homologous mouse gene: '
-                  + '<a target="_blank" href="/Gemma/gene/showGene.html?id=' + img.abaHomologousMouseGene.id + '">'
+                  + '<a target="_blank" href="' + ctxBasePath + '/gene/showGene.html?id=' + img.abaHomologousMouseGene.id + '">'
                   + img.abaHomologousMouseGene.officialSymbol + ' [' + img.abaHomologousMouseGene.taxonCommonName
                   + ']</a>' : '';
                this.add( {
@@ -49,7 +49,7 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend( Ext.Panel, {
                      + Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT + '">'
                      + '</i>' + '<a title="Go to Allen Brain Atlas details for '
                      + img.queryGeneSymbol + '" href="' + img.abaGeneURL + '" target="_blank">'
-                     + '<img src="/Gemma/images/logo/aba-icon.png" height="20" width="20" /> </a>' + '</h3>' + '<p>'
+                     + '<img src="' + ctxBasePath + '/images/logo/aba-icon.png" height="20" width="20" /> </a>' + '</h3>' + '<p>'
                      + homologueText + '<p/>'
                } );
                var i;
@@ -91,7 +91,7 @@ Gemma.geneLinkOutPopUp = function( abaImageUrl ) {
       id : abaWindowId,
       stateful : false,
    // Allen no longer gives colour images.
-   // title : "<img height='15' src='/Gemma/images/abaExpressionLegend.gif'>"//
+   // title : "<img height='15' src='" + ctxBasePath + "/images/abaExpressionLegend.gif'>"//
    // ,
    // width : 500,
    // height : 400,

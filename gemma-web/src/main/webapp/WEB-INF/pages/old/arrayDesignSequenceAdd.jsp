@@ -3,9 +3,9 @@
 	class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddCommand" />
 
 	<script type='text/javascript'
-		src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+		src='${pageContext.request.contextPath}/dwr/interface/ProgressStatusService.js'></script>
+	<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/engine.js'></script>
+	<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/util.js'></script>
 	<script type='text/javascript'
 		src="<c:url value="/scripts/progressbar.js"/>"></script>
 	<link rel="stylesheet" type="text/css" media="all"

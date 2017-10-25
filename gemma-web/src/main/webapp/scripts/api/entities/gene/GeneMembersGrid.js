@@ -249,7 +249,7 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
                              width : 75,
                              renderer : function( value, metadata, record, row, col, ds ) {
                                 return String.format(
-                                   "<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a><br>"
+                                   "<a target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={0}'>{1}</a><br>"
                                       + "<span style='font-color:grey; white-space:normal !important;'>{2}</span> ",
                                    record.data.id, record.data.officialSymbol, record.data.officialName );
                              }
@@ -373,7 +373,7 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
 
       exportToTxt : function() {
          // make download link
-         var downloadLink = String.format( "/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds() );
+         var downloadLink = String.format( ctxBasePath + "/gene/downloadGeneList.html?g={0}", this.getGeneIds() );
          window.open( downloadLink );
       }
 
@@ -438,7 +438,7 @@ Gemma.GeneMembersSaveGrid = Ext
             if ( this.allowRemovals ) {
                var removeSelectedBtn = new Ext.Button( {
                   text : 'Remove Selected',
-                  icon : "/Gemma/images/icons/cross.png",
+                  icon : ctxBasePath + "/images/icons/cross.png",
                   hidden : true,
                   handler : function( button ) {
                      var records = this.getSelectionModel().getSelections();
@@ -481,7 +481,7 @@ Gemma.GeneMembersSaveGrid = Ext
                              width : 75,
                              renderer : function( value, metadata, record, row, col, ds ) {
                                 return String.format(
-                                   "<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a>",
+                                   "<a target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={0}'>{1}</a>",
                                    record.data.id, record.data.officialSymbol );
                              }
                           }, {
@@ -497,7 +497,7 @@ Gemma.GeneMembersSaveGrid = Ext
                   dataIndex : 'officialSymbol',
                   width : 35,
                   renderer : function( value, metadata, record, row, col, ds ) {
-                     return String.format( "<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a><br>"
+                     return String.format( "<a target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={0}'>{1}</a><br>"
                         + "<span style='font-color:grey; white-space:normal !important;'>{2}</span> ", record.data.id,
                         record.data.officialSymbol, record.data.officialName );
                   }
@@ -576,7 +576,7 @@ Gemma.GeneMembersSaveGrid = Ext
                disabled : (this.allowSaveToSession || this.hideOkCancel)
             } );
             this.exportButton = new Ext.Button( {
-               icon : "/Gemma/images/download.gif",
+               icon : ctxBasePath + "/images/download.gif",
                tooltip : Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.exportTT,
                handler : this.exportToTxt,
                scope : this
@@ -763,7 +763,7 @@ Gemma.GeneMembersSaveGrid = Ext
 
          exportToTxt : function() {
             // make download link
-            var downloadLink = String.format( "/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds() );
+            var downloadLink = String.format( ctxBasePath + "/gene/downloadGeneList.html?g={0}", this.getGeneIds() );
             window.open( downloadLink );
          },
 
@@ -1073,7 +1073,7 @@ Gemma.GeneAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
       } );
 
       this.addBtn = new Ext.Toolbar.Button( {
-         icon : "/Gemma/images/icons/add.png",
+         icon : ctxBasePath + "/images/icons/add.png",
          cls : "x-btn-text-icon",
          tooltip : "Add selected genes(s) to the list",
          text : 'Add',

@@ -29,7 +29,7 @@ Gemma.AjaxLogin.AjaxRegister = Ext
                         {
                            id : '_registerForm',
                            labelWidth : 140, // label settings here cascade unless overridden
-                           url : '/Gemma/signup.html',
+                           url : ctxBasePath + '/signup.html',
                            frame : true,
                            monitorValid : true, // use with formBind in Button for client side validation
                            bodyStyle : 'padding:5px 5px 0',

@@ -241,7 +241,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             if ( this.allowRemovals ) {
                var removeSelectedBtn = new Ext.Button( {
                   text : 'Remove Selected',
-                  icon : "/Gemma/images/icons/cross.png",
+                  icon : ctxBasePath + "/images/icons/cross.png",
                   hidden : true,
                   handler : function( button ) {
                      debugger;
@@ -281,7 +281,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                      renderer : function( value, metadata, record, row, col, ds ) {
                         return String
                            .format(
-                              "<a  style='cursor:pointer;' target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>",
+                              "<a  style='cursor:pointer;' target='_blank' href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>",
                               record.data.id, record.data.shortName );
                      },
                      sortable : true,
@@ -328,7 +328,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                      renderer : function( value, metadata, record, row, col, ds ) {
                         return String
                            .format(
-                              "<a style='cursor:pointer;' target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
+                              "<a style='cursor:pointer;' target='_blank' href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
                                  + "&nbsp;<span style='color:grey'>{3}&nbsp;{4}</span>" + "<br>{2}", record.data.id,
                               record.data.shortName, record.data.name, record.data.hasCoexpressionAnalysis ? 'C' : '',
                               record.data.hasDifferentialExpressionAnalysis ? 'D' : '' );
@@ -417,7 +417,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                disabled : (this.allowSaveToSession || this.hideOkCancel)
             } );
             this.exportButton = new Ext.Button( {
-               icon : "/Gemma/images/download.gif",
+               icon : ctxBasePath + "/images/download.gif",
                tooltip : "Export to text",
                handler : this.exportToTxt,
                scope : this
@@ -546,7 +546,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          // // fixme: this is duplicated code.
          // var eeTemplate = new Ext.XTemplate(
          // '<tpl for="."><a style="pointer:cursor;" target="_blank" title="{name}"
-         // href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+         // href=ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id=',
          // '{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
          // ' ext:qtip="{name}">{shortName}</a></tpl>' );
          // return eeTemplate.apply( record.data );
@@ -636,7 +636,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          },
 
          login : function() {
-            window.open( "/Gemma/login.jsp" );
+            window.open( ctxBasePath + "/login.jsp" );
          },
          okHandler : function() {
             // if user has made changes, save to session
@@ -671,7 +671,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          exportToTxt : function() {
             // make download link
             var downloadLink = String.format(
-               "/Gemma/expressionExperiment/downloadExpressionExperimentList.html?e={0}", this.getEEIds() );
+               ctxBasePath + "/expressionExperiment/downloadExpressionExperimentList.html?e={0}", this.getEEIds() );
             window.open( downloadLink );
          },
 
@@ -1056,7 +1056,7 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
       } );
 
       this.addBtn = new Ext.Toolbar.Button( {
-         icon : "/Gemma/images/icons/add.png",
+         icon : ctxBasePath + "/images/icons/add.png",
          cls : "x-btn-text-icon",
          tooltip : "Add selected experiment(s) to the list",
          text : 'Add',

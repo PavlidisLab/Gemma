@@ -5,7 +5,7 @@
  * @version $Id$
  */
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 Gemma.USER_PAGE_SIZE = 10;
 
@@ -108,7 +108,7 @@ Ext.onReady( function() {
          text : 'Add',
          tooltip : 'Add a new user',
          disabled : true,
-         icon : '/Gemma/images/icons/add.png',
+         icon : ctxBasePath + '/images/icons/add.png',
          cls : 'x-btn-text-icon',
          handler : function() {
             userGrid.getStore().insert( 0, new record( {
@@ -125,7 +125,7 @@ Ext.onReady( function() {
          text : 'Remove',
          disabled : true,
          tooltip : 'Remove selected user',
-         icon : '/Gemma/images/icons/delete.png',
+         icon : ctxBasePath + '/images/icons/delete.png',
          cls : 'x-btn-text-icon',
          handler : function() {
             var sm = userGrid.getSelectionModel();
@@ -148,7 +148,7 @@ Ext.onReady( function() {
       {
          text : 'Save',
          tooltip : 'Save the selected user',
-         icon : "/Gemma/images/icons/database_save.png",
+         icon : ctxBasePath + "/images/icons/database_save.png",
          cls : 'x-btn-text-icon',
          handler : function() {
             var sm = userGrid.getSelectionModel();

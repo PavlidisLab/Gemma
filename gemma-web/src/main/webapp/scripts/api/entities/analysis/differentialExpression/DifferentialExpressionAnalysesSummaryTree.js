@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 /**
  * This provides a summary of the differential analyses done for a particular dataset/expression experiment. It is
@@ -395,7 +395,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             }, this );
             return String.format( "<span style='cursor:pointer' ext:qtip='Delete this analysis' "
                + "onClick='Ext.getCmp(&quot;eemanager&quot;).deleteExperimentAnalysis({0},{1},false)'>"
-               + "<img src='/Gemma/images/icons/cross.png'/></span>", this.ee.id, analysis.id );
+               + "<img src='" + ctxBasePath + "/images/icons/cross.png'/></span>", this.ee.id, analysis.id );
          },
 
          getRedoLink : function( analysis ) {
@@ -410,7 +410,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             }, this );
             return String.format( "<span style='cursor:pointer' ext:qtip='Re-run this analysis' "
                + "onClick='Ext.getCmp(&quot;eemanager&quot;).redoExperimentAnalysis({0},{1},false)'>"
-               + "<img src='/Gemma/images/icons/arrow_refresh_small.png'/></span>", this.ee.id, analysis.id );
+               + "<img src='" + ctxBasePath + "/images/icons/arrow_refresh_small.png'/></span>", this.ee.id, analysis.id );
          },
 
          /**
@@ -434,7 +434,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             }, this );
             return String.format( "<span style='cursor:pointer' ext:qtip='Refresh the summary stats' "
                + "onClick='Ext.getCmp(&quot;eemanager&quot;).refreshDiffExStats({0},{1},false)'>"
-               + "<img src='/Gemma/images/icons/database_refresh.png'/></span>", /* FIXME use different icon */
+               + "<img src='" + ctxBasePath + "/images/icons/database_refresh.png'/></span>", /* FIXME use different icon */
             this.ee.id, analysis.id );
          },
 
@@ -477,12 +477,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
                + resultSet.resultSetId + '\',\'' + escape( factor )
                + '\')" ext:qtip="View top differentially expressed genes for: ' + escape( factor ) + ' (FDR threshold='
-               + resultSet.threshold + ')">&nbsp;<img src="/Gemma/images/icons/heatmapdiff.png">&nbsp;</span>';
+               + resultSet.threshold + ')">&nbsp;<img src="' + ctxBasePath + '/images/icons/heatmapdiff.png">&nbsp;</span>';
 
             var pValueDistImageSize = 16;
             var strippedFactorName = Ext.util.Format.stripTags( factor );
             // factorName is for backwards compatiility. Deprecated in favor of using the resultSetId.
-            var imageUrl = '/Gemma/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
+            var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                + resultSet.analysisId + '&rsid=' + resultSet.resultSetId + '&factorName=' + escape( strippedFactorName );
             var methodWithArguments = 'showPValueDistributionWindow(\'' + escape( factor ) + '\', \'' + imageUrl
                + '\');';
@@ -729,7 +729,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             var eeInfoTitle = "P-value distribution for "
                + factorName
                + " in: "
-               + "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+               + "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id="
                + this.ee.id + "'>" + this.ee.shortName + "</a> (" + Ext.util.Format.ellipsis( this.ee.name, 35 ) + ")";
 
             new Ext.Window( {
@@ -760,7 +760,7 @@ function visualizeDiffExpressionHandler( eeid, diffResultId, factorDetails ) {
       readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
       title : "Top diff. ex. probes for " + factorDetails,
       showLegend : false,
-      downloadLink : String.format( "/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
+      downloadLink : String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
          diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD )
    } );
 

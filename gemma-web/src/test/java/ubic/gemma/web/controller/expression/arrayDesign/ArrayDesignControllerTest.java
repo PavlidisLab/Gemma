@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.testing.BaseSpringWebTest;
+import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
@@ -42,7 +43,7 @@ public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testShowAllArrayDesigns() throws Exception {
-        request = newPost( "Gemma/arrayDesign/showAllArrayDesigns.html" );
+        request = newPost( Settings.getRootContext() + "/arrayDesign/showAllArrayDesigns.html" );
 
         ModelAndView mav = arrayDesignController.showAllArrayDesigns( request, ( HttpServletResponse ) null );
         Collection<Object> c = mav.getModel().values();

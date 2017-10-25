@@ -24,8 +24,8 @@
 		</script>
 		<p>
 			Sorry, to upload data you must
-			<a href="/Gemma/login.jsp">login</a> or
-			<a href="<c:url value="/Gemma/register.html" />">register</a>.
+			<a href="${pageContext.request.contextPath}/login.jsp">login</a> or
+			<a href="${pageContext.request.contextPath}/register.html">register</a>.
 		</p>
 	</security:authorize>
 

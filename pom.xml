@@ -5,12 +5,12 @@
     <name>Gemma</name>
     <groupId>gemma</groupId>
     <artifactId>gemma</artifactId>
-    <version>1.19</version>
+    <version>1.20</version>
     <inceptionYear>2005</inceptionYear>
     <description>
         The Gemma Project for meta-analysis of genomics data
     </description>
-    <url>http://www.chibi.ubc.ca/Gemma</url>
+    <url>http://gemma.msl.ubc.ca</url>
     <organization>
         <name>UBC Centre for High-throughput Biology</name>
         <url>http://www.chibi.ubc.ca/</url>
@@ -314,7 +314,7 @@
         <dependency>
             <groupId>baseCode</groupId>
             <artifactId>baseCode</artifactId>
-            <version>1.0.21</version>
+            <version>1.0.22</version>
         </dependency>
     </dependencies>
     <build>

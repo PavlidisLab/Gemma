@@ -25,10 +25,10 @@ Gemma.PhenotypeEvidenceManagerGridPanel = Ext.extend(Gemma.PhenotypeEvidenceGrid
             dataIndex : 'geneOfficialSymbol',
             width : 0.15,
             renderer : function(value, metadata, record, row, col, ds) {
-               var geneLink = '/Gemma/gene/showGene.html?id=' + record.data.geneId;
+               var geneLink = ctxBasePath + '/gene/showGene.html?id=' + record.data.geneId;
 
                return String.format("{0} <a target='_blank' href='" + geneLink
-                     + "' ext:qtip='Go to {0} Details (in new window)'><img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/></a> ", value);
+                     + "' ext:qtip='Go to {0} Details (in new window)'><img src='" + ctxBasePath + "/images/icons/magnifier.png' height='10' width='10'/></a> ", value);
             },
             sortable : true
          }, {

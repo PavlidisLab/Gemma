@@ -217,14 +217,14 @@ Gemma.PlatformDetails = Ext
                   if ( db == "GEO" ) {
                      text = text + ac + "&nbsp;<a "
                         + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ac
-                        + "'><img  ext:qtip='NCBI page for this entry' src='/Gemma/images/logo/geoTiny.png' /></a>";
+                        + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath + "/images/logo/geoTiny.png' /></a>";
                   } else if ( db == "ArrayExpress" ) {
                      text = text
                         + ac
                         + "&nbsp;<a title='ArrayExpress page for this entry'"
                         + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
                         + ac
-                        + "'><img  ext:qtip='NCBI page for this entry' src='/Gemma/images/logo/arrayExpressTiny.png' /></a>";
+                        + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath + "/images/logo/arrayExpressTiny.png' /></a>";
 
                   } else {
                      text = text + "&nbsp;" + ac + " (" + databaseEntry.getExternalDatabase().getName() + ")";
@@ -311,7 +311,7 @@ Gemma.PlatformDetails = Ext
          renderExperimentLink : function( platformDetails ) {
             var text = platformDetails.expressionExperimentCount + "";
             if ( platformDetails.expressionExperimentCount > 0 ) {
-               text += "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View the experiments tab'"
+               text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View the experiments tab'"
                   + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;experiments&#39;)'>";
             }
             return new Ext.Panel( {
@@ -357,7 +357,7 @@ Gemma.PlatformDetails = Ext
 
          renderElementsLink : function( platformDetails ) {
             var text = platformDetails.designElementCount;
-            text += "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View the elements tab'"
+            text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View the elements tab'"
                + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;elements&#39;)'>";
             return new Ext.Panel( {
                border : false,
@@ -381,7 +381,7 @@ Gemma.PlatformDetails = Ext
                   + this.id
                   + '&#39;).promptForAlternateName('
                   + platformDetails.id
-                  + ');return false;" ext:qtip="Add a new alternate name for this design" src="/Gemma/images/icons/add.png" />';
+                  + ');return false;" ext:qtip="Add a new alternate name for this design" src="' + ctxBasePath + '/images/icons/add.png" />';
             }
             return new Ext.Panel( {
                border : false,

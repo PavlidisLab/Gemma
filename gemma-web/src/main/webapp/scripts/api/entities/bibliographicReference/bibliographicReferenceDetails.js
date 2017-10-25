@@ -93,7 +93,7 @@ Gemma.BibliographicReference.DetailsPanel = Ext
 
                if ( bibliographicPhenotype.evidenceId == currentEvidenceId ) {
                   genePhenotypeRow += '</b>'
-                     + ' <img height="12" src="/Gemma/images/icons/asterisk_black.png" ext:qtip="This is the annotation you are editing." /> ';
+                     + ' <img height="12" src="' + ctxBasePath + '/images/icons/asterisk_black.png" ext:qtip="This is the annotation you are editing." /> ';
                }
 
                return genePhenotypeRow;

@@ -223,9 +223,9 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 text: 'Show Details',
                 itemId: 'design',
                 tooltip: 'Go to the design details',
-                icon: '/Gemma/images/magnifier.png',
+                icon: ctxBasePath + '/images/magnifier.png',
                 handler: function () {
-                    window.open("/Gemma/experimentalDesign/showExperimentalDesign.html?eeid=" + experimentDetails.id);
+                    window.open(ctxBasePath + "/experimentalDesign/showExperimentalDesign.html?eeid=" + experimentDetails.id);
                 }
             }],
             html: batchInfo + '<div id="eeDesignMatrix" style="height:80%">Loading...</div>',
@@ -244,7 +244,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         var eeId = this.eeId;
         var title = "Data for a 'random' sampling of probes";
         var geneList = [];
-        var downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
+        var downloadLink = String.format(ctxBasePath + "/dedv/downloadDEDV.html?ee={0}", eeId);
         var viz = new Gemma.VisualizationWithThumbsPanel({
             thumbnails: false,
             downloadLink: downloadLink,
@@ -280,10 +280,10 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         var refreshDiagnosticsLink = '';
         if (this.editable || isAdmin) {
             refreshDiagnosticsLink = '<a href="refreshCorrMatrix.html?id=' + experimentDetails.id + '"><img '
-                + 'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh" ' + 'alt="refresh" />Refresh</a><br>';
+                + 'src="' + ctxBasePath + '/images/icons/arrow_refresh_small.png" title="refresh" ' + 'alt="refresh" />Refresh</a><br>';
         }
         this.refreshDiagnosticsBtn = new Ext.Button({
-            icon: '/Gemma/images/icons/arrow_refresh_small.png',
+            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
             text: 'Refresh',
             handler: function () {
                 window.location = "refreshCorrMatrix.html?id=" + experimentDetails.id;

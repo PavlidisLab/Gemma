@@ -167,12 +167,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
             if ( id != null ) {
                 return new ModelAndView(
-                        new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+                        new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + id , true) );
             }
 
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
             return new ModelAndView(
-                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) );
 
         }
 

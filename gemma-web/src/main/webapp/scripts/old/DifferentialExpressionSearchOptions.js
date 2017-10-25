@@ -9,7 +9,7 @@
 // * pass in a "threshold" param to set value
 // */
 //
-//Gemma.DifferentialExpressionSearchOptions = Ext.extend(Ext.Window,{
+//  Gemma.DifferentialExpressionSearchOptions = Ext.extend(Ext.Window,{
 //	title: 'Differential expression search refinements',
 //	layout: 'form',
 //	width: 275,
@@ -51,7 +51,7 @@
 //				value: this.threshold,
 //				fieldLabel: 'Threshold ' +
 //				'<img ext:qtip="Only genes with a qvalue less than this threshold are returned." ' +
-//				'src="/Gemma/images/icons/question_blue.png"/>',
+//				'src="' + ctxBasePath + '/images/icons/question_blue.png"/>',
 //				width: 60
 //			}]
 //		});

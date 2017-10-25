@@ -25,5 +25,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
 </c:if>
 
-
 <link rel="icon" href="<c:url value="/images/favicon.ico"/>"/>
+
+<script>var ctxBasePath = '${ctxPath}';</script>
+

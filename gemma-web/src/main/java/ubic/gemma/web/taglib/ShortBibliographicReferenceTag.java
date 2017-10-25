@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author joseph
@@ -110,14 +111,14 @@ public class ShortBibliographicReferenceTag extends TagSupport {
                     String link = citationVO.getPubmedURL();
 
                     buf.append( "<a target='_blank' href='" + link
-                            + "' ><img src='/Gemma/images/pubmed.gif' /> </a>&nbsp;" );
+                            + "' ><img src='" + Settings.getRootContext() + "/images/pubmed.gif' /> </a>&nbsp;" );
 
                     /*
                      * Add link to edit page within Gemma
                      */
 
-                    buf.append( "<a target='_blank' href='/Gemma/bibRef/bibRefView.html?accession=" + pubMedId
-                            + "'><img src='/Gemma/images/magnifier.png' /></a>" );
+                    buf.append( "<a target='_blank' href='" + Settings.getRootContext() + "/bibRef/bibRefView.html?accession=" + pubMedId
+                            + "'><img src='" + Settings.getRootContext() + "/images/magnifier.png' /></a>" );
 
                 }
             }

@@ -187,7 +187,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
 
         if ( request.getParameter( "cancel" ) != null ) {
             this.saveMessage( request, "Cancelled Search" );
-            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE ) );
+            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
         }
 
         return this.doSearch( request, response, command, errors );

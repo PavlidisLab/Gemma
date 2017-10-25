@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.persistence.util.Settings;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -104,7 +105,7 @@ public class AssayViewTag extends TagSupport {
         for ( ArrayDesignValueObject design : designs ) {
             Long count = arrayMaterialCount.get( design );
             buf.append( "<th>" + count
-                    + " BioAssays on<br /><a target='_blank' href=\"/Gemma/arrays/showArrayDesign.html?id=" + design
+                    + " BioAssays on<br /><a target='_blank' href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" + design
                     .getId() + "\" title=\"" + design.getName() + "\" >" + ( design.getShortName() == null ?
                     design.getName() :
                     design.getShortName() ) + "</a></th>" );
@@ -130,13 +131,13 @@ public class AssayViewTag extends TagSupport {
                 buf.append( "<tr class='odd' align=justify>" );
             }
 
-            String bmLink = "<a href='/Gemma/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material
+            String bmLink = "<a href='" + Settings.getRootContext() + "/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material
                     .getName() + "</a>";
             buf.append( "<td>" + bmLink + "</td>" );
 
             Map<ArrayDesignValueObject, Collection<BioAssayValueObject>> assayMap = bioAssayMap.get( material );
 
-            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='/Gemma/images/icons/arrow_switch.png' />&nbsp;&nbsp;&nbsp;";
+            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='" + Settings.getRootContext() + "/images/icons/arrow_switch.png' />&nbsp;&nbsp;&nbsp;";
             for ( ArrayDesignValueObject design : designs ) {
                 if ( assayMap.containsKey( design ) ) {
                     Collection<BioAssayValueObject> assays = assayMap.get( design );
@@ -150,7 +151,7 @@ public class AssayViewTag extends TagSupport {
 
                     if ( assayMap.get( design ).size() > 1 ) {
                         String link = "<a title='" + StringUtils.join( tooltips.toArray(), "\n" )
-                                + "' href='/Gemma/bioAssay/showAllBioAssays.html?id=" + StringUtils
+                                + "' href='" + Settings.getRootContext() + "/bioAssay/showAllBioAssays.html?id=" + StringUtils
                                 .join( ids.toArray(), "," ) + "'> (list) </a>";
                         buf.append(
                                 "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount + "</td>\n" );
@@ -165,7 +166,7 @@ public class AssayViewTag extends TagSupport {
                         BioAssayValueObject assay = ( ( List<BioAssayValueObject> ) assayMap.get( design ) ).get( 0 );
                         String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60 );
                         String link = "<a target=\"_blank\" title='" + shortDesc
-                                + "' href='/Gemma/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>" + assay
+                                + "' href='" + Settings.getRootContext() + "/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>" + assay
                                 .getName() + "</a>";
                         String editAttributes =
                                 " align='left' class='dragItem' id='bioassay." + assay.getId() + "' material='"
@@ -286,7 +287,7 @@ public class AssayViewTag extends TagSupport {
 
             material.setName( "[New biomaterial " + i + "]" );
             buf.append( "<td>" + material.getName() + "</td>" );
-            String image = "<img height=10 width=20 src='/Gemma/images/arrow_out.png' />";
+            String image = "<img height=10 width=20 src='" + Settings.getRootContext() + "/images/arrow_out.png' />";
             for ( ArrayDesignValueObject design : designs ) {
                 emptyCount = addEmpty( buf, assayToMaterial, emptyCount, material, image, design );
             }

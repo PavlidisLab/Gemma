@@ -41,7 +41,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext
             }.createDelegate( this );
 
             var generateLinkPlaceholder = function() {
-               return '<img src="/Gemma/images/s.gif" height="16" width="16">';
+               return '<img src="' + ctxBasePath + '/images/s.gif" height="16" width="16">';
             };
 
             var showLoadMask = function( msg ) {
@@ -276,7 +276,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext
                                             + '\\\'Cannot view meta-analysis\\\', ' + 'showMetaAnalysisWindow, '
                                             + '[ \\\'' + escape( record.data.name ) + '\\\', '
                                             + record.data.numGenesAnalyzed + ' ])\');',
-                                            '/Gemma/images/icons/magnifier.png', 'Show details', 10, 10 );
+                                            ctxBasePath + '/images/icons/magnifier.png', 'Show details', 10, 10 );
                                    }
                                 },
                                 {
@@ -315,7 +315,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext
                                       if ( record.data.diffExpressionEvidence == null ) {
                                          if ( record.data.ownedByCurrentUser ) {
                                             adminLinks += generateLink( 'showSaveAsEvidenceWindow(' + record.data.id
-                                               + ');', '/Gemma/images/icons/neurocarta-add.png',
+                                               + ');', ctxBasePath + '/images/icons/neurocarta-add.png',
                                                'Save as Phenocarta evidence' );
                                          } else {
                                             adminLinks += generateLinkPlaceholder();
@@ -325,13 +325,13 @@ Gemma.MetaAnalysisManagerGridPanel = Ext
                                          adminLinks += generateLink( 'eval(\'processMetaAnalysis(' + record.data.id
                                             + ', ' + '\\\'Cannot view Phenocarta evidence\\\', '
                                             + 'showViewEvidenceWindow, ' + '[ ' + record.data.id + ' ])\');',
-                                            '/Gemma/images/icons/neurocarta-check.png', 'View Phenocarta evidence' );
+                                            ctxBasePath + '/images/icons/neurocarta-check.png', 'View Phenocarta evidence' );
                                       }
                                       adminLinks += ' ';
 
                                       if ( record.data.editable ) {
                                          adminLinks += generateLink( 'removeMetaAnalysis(' + record.data.id + ');',
-                                            '/Gemma/images/icons/cross.png', 'Remove meta-analysis' );
+                                            ctxBasePath + '/images/icons/cross.png', 'Remove meta-analysis' );
                                       } else {
                                          adminLinks += generateLinkPlaceholder();
                                       }
@@ -382,7 +382,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext
                            } );
                         },
                         scope : this,
-                        icon : "/Gemma/images/icons/add.png",
+                        icon : ctxBasePath + "/images/icons/add.png",
                         tooltip : "Add new meta-analysis"
                      } ]
                   } );

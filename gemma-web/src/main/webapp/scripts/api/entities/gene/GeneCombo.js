@@ -249,9 +249,9 @@ Gemma.GeneSearch = Ext.extend( Ext.FormPanel, {
          if ( msg.length === 0 ) {
 
             if ( typeof pageTracker !== 'undefined' ) {
-               pageTracker._trackPageview( "/Gemma/gene/showGene" );
+               pageTracker._trackPageview( ctxBasePath + "/gene/showGene" );
             }
-            document.location.href = String.format( "/Gemma/gene/showGene.html?id={0}", this.geneCombo.getValue() );
+            document.location.href = String.format( ctxBasePath + "/gene/showGene.html?id={0}", this.geneCombo.getValue() );
          } else {
             this.handleError( msg );
          }
@@ -266,9 +266,9 @@ Gemma.GeneSearch = Ext.extend( Ext.FormPanel, {
             if ( msg.length === 0 ) {
 
                if ( typeof pageTracker !== 'undefined' ) {
-                  pageTracker._trackPageview( "/Gemma/gene/showGene" );
+                  pageTracker._trackPageview( ctxBasePath + "/gene/showGene" );
                }
-               document.location.href = String.format( "/Gemma/gene/showGene.html?id={0}", this.geneCombo.getValue() );
+               document.location.href = String.format( ctxBasePath + "/gene/showGene.html?id={0}", this.geneCombo.getValue() );
             } else {
                this.handleError( msg );
             }
@@ -297,7 +297,7 @@ Gemma.GeneSearch = Ext.extend( Ext.FormPanel, {
    handleError : function( msg, e ) {
       Ext.DomHelper.overwrite( "geneSearchMessages", {
          tag : 'img',
-         src : '/Gemma/images/icons/warning.png'
+         src : ctxBasePath + '/images/icons/warning.png'
       } );
       Ext.DomHelper.append( "geneSearchMessages", {
          tag : 'span',

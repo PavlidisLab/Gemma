@@ -148,7 +148,7 @@ Gemma.CoexpressionGrid = Ext
                               xtype : 'label',
                               html : '&nbsp&nbsp<img ext:qtip="'
                                  + Gemma.HelpText.WidgetDefaults.CoexpressionGrid.stringencySpinnerTT
-                                 + '" src="/Gemma/images/icons/question_blue.png"/>',
+                                 + '" src="' + ctxBasePath + '/images/icons/question_blue.png"/>',
                               height : 15
                            }, {
                               xtype : 'tbspacer'
@@ -203,7 +203,7 @@ Gemma.CoexpressionGrid = Ext
                   itemId : 'bbarStatus'
                }, '->', {
                   xtype : 'button',
-                  icon : "/Gemma/images/icons/cross.png",
+                  icon : ctxBasePath + "/images/icons/cross.png",
                   itemId : 'bbarClearButton',
                   handler : function() {
                      this.hideBottomToolbar();
@@ -401,7 +401,7 @@ Gemma.CoexpressionGrid = Ext
                Ext.DomHelper.applyStyles( "coexpression-msg", "height: 2.2em" );
                Ext.DomHelper.overwrite( "coexpression-msg", [ {
                   tag : 'img',
-                  src : '/Gemma/images/icons/information.png'
+                  src : ctxBasePath + '/images/icons/information.png'
                }, {
                   tag : 'span',
                   html : "&nbsp;&nbsp;" + errorMessage
@@ -469,7 +469,7 @@ Gemma.CoexpressionGrid = Ext
          //
          // return String.format(
          // '<span onClick="{0}" id="aba-{1}-button"><img height=15 width=15
-         // src="/Gemma/images/logo/aba-icon.png"'
+         // src=ctxBasePath + "/images/logo/aba-icon.png"'
          // + ' ext:qtip="Link to expression data from the Allen Brain Atlas for {2}" />'
          // + '</span>', call, value.officialSymbol, value.officialSymbol);
          // },
@@ -481,7 +481,7 @@ Gemma.CoexpressionGrid = Ext
          //
          // if (data['gene2GeneProteinAssociationStringUrl']) {
          // result = String.format('<span>' + '<a href="{0}" target="_blank" class="external">'
-         // + '<img src="/Gemma/images/logo/string_logo.gif" '
+         // + '<img src="' + ctxBasePath + '/images/logo/string_logo.gif" '
          // + 'ext:qtip="Click to view the protein protein interaction obtained from {1} '
          // + 'evidence with a combined association score of {2} from STRING" />' + '</a>'
          // + '</span>', data['gene2GeneProteinAssociationStringUrl'],
@@ -490,12 +490,12 @@ Gemma.CoexpressionGrid = Ext
          // }
          // if (data['queryRegulatesFound']) {
          // result = result + " "
-         // + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png"'
+         // + '<span> <img height="16" width = "16" src="' + ctxBasePath + '/images/logo/pazar-icon.png"'
          // + ' ext:qtip="Query may regulate the coexpressed gene, according to Pazar" />'
          // + '</span>';
          // } else if (data['foundRegulatesQuery']) {
          // result = result + " "
-         // + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png"'
+         // + '<span> <img height="16" width = "16" src="' + ctxBasePath + '/images/logo/pazar-icon.png"'
          // + ' ext:qtip="The query may be regulated by the coexpressed gene, according to Pazar" />'
          // + '</span>';
          // }
@@ -608,7 +608,7 @@ Gemma.CoexpressionGrid = Ext
           * 
           */
          geneTemplate : new Ext.Template(
-            "<a style='cursor:pointer;font-weight:{fontWeight};' target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
+            "<a style='cursor:pointer;font-weight:{fontWeight};' target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
 
          /**
           * 
@@ -631,7 +631,7 @@ Gemma.CoexpressionGrid = Ext
          },
 
          visStyler : function( value, metadata, record, row, col, ds ) {
-            return "<img style='cursor:pointer' src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+            return "<img style='cursor:pointer' src='" + ctxBasePath + "/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
          },
 
          /**
@@ -664,7 +664,7 @@ Gemma.CoexpressionGrid = Ext
                      experiments : activeExperiments,
                      queryGene : queryGene,
                      foundGene : foundGene,
-                     downloadLink : String.format( "/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
+                     downloadLink : String.format( ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
                         .join( ',' ), queryGene.id, foundGene.id ),
                      title : "Coexpression for:  " + queryGene.name + " + " + foundGene.name
                   } );

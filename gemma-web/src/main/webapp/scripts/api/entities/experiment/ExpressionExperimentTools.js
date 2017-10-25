@@ -1,5 +1,5 @@
 Ext.namespace('Gemma');
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 /**
  *
@@ -34,7 +34,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         }, this);
         var refreshButton = new Ext.Button({
             text: 'Refresh',
-            icon: '/Gemma/images/icons/arrow_refresh_small.png',
+            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
             tooltip: 'Refresh statistics (not including the differential expression ones)',
             handler: function () {
                 manager.updateEEReport(this.experimentDetails.id);
@@ -175,7 +175,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: '/Gemma/images/icons/control_play_blue.png',
+            icon: ctxBasePath + '/images/icons/control_play_blue.png',
             tooltip: 'missing value computation',
             handler: manager.doLinks.createDelegate(this, [id]),
             scope: this,
@@ -224,7 +224,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: '/Gemma/images/icons/control_play_blue.png',
+            icon: ctxBasePath + '/images/icons/control_play_blue.png',
             tooltip: 'missing value computation',
             handler: manager.doMissingValues.createDelegate(this, [id]),
             scope: this,
@@ -284,7 +284,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: '/Gemma/images/icons/control_play_blue.png',
+            icon: ctxBasePath + '/images/icons/control_play_blue.png',
             tooltip: 'processed vector computation',
             handler: manager.doProcessedVectors.createDelegate(this, [id]),
             scope: this,
@@ -333,7 +333,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: '/Gemma/images/icons/control_play_blue.png',
+            icon: ctxBasePath + '/images/icons/control_play_blue.png',
             tooltip: 'differential expression analysis',
             handler: manager.doDifferential.createDelegate(this, [id]),
             scope: this,
@@ -398,7 +398,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: '/Gemma/images/icons/control_play_blue.png',
+            icon: ctxBasePath + '/images/icons/control_play_blue.png',
             tooltip: 'principal component analysis',
             // See EEManger.js doPca(id, hasPca)
             handler: manager.doPca.createDelegate(this, [id, true]),
@@ -450,7 +450,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var hasBatchInformation = ee.hasBatchInformation;
         var technologyType = ee.technologyType;
         var runBtn = new Ext.Button({
-            icon: '/Gemma/images/icons/control_play_blue.png',
+            icon: ctxBasePath + '/images/icons/control_play_blue.png',
             tooltip: 'batch information',
             // See EEManager.js doBatchInfoFetch(id)
             handler: manager.doBatchInfoFetch.createDelegate(this, [id]),

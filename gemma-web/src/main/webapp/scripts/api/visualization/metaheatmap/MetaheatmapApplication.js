@@ -243,7 +243,7 @@ Gemma.Metaheatmap.Application = Ext
                                 xtype : 'button',
                                 ref : 'saveSelectedButton',
                                 text : '<b>Save Selected</b>',
-                                icon : '/Gemma/images/icons/disk.png',
+                                icon : ctxBasePath + '/images/icons/disk.png',
                                 cls : 'x-btn-text-icon',
                                 tooltip : 'Select genes or experiments by holding down the "Ctrl" key and clicking on row or column labels.',
                                 scope : this,
@@ -322,11 +322,11 @@ Gemma.Metaheatmap.Application = Ext
                                 xtype : 'button',
                                 text : '<b>Download</b>',
                                 ref : 'downloadButton',
-                                icon : '/Gemma/images/download.gif',
+                                icon : ctxBasePath + '/images/download.gif',
                                 menu : new Ext.menu.Menu( {
                                    items : [ {
                                       text : 'As text',
-                                      icon : '/Gemma/images/icons/page_white_text.png',
+                                      icon : ctxBasePath + '/images/icons/page_white_text.png',
                                       tooltip : 'Download a formatted text version of your search results',
                                       handler : function() {
                                          var textWindow = new Gemma.Metaheatmap.DownloadWindow( {
@@ -341,7 +341,7 @@ Gemma.Metaheatmap.Application = Ext
                                       scope : this
                                    }, {
                                       text : 'As image',
-                                      icon : '/Gemma/images/icons/picture.png',
+                                      icon : ctxBasePath + '/images/icons/picture.png',
                                       tooltip : 'Download heatmap image',
                                       handler : function() {
                                          this.visualizationPanel.downloadImage();
@@ -353,7 +353,7 @@ Gemma.Metaheatmap.Application = Ext
                              '-',
                              {
                                 xtype : 'button',
-                                icon : '/Gemma/images/icons/question_blue.png',
+                                icon : ctxBasePath + '/images/icons/question_blue.png',
                                 cls : 'x-btn-icon',
                                 tooltip : 'Click here for documentation on how to use this visualizer.',
                                 handler : function() {

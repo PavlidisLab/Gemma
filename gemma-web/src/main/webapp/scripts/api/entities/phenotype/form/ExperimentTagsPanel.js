@@ -51,7 +51,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
                   },
                   items : [experimentTagCategoryComboBox, experimentTagValueComboBox, {
                         xtype : 'button', // Remove experiment tag button
-                        icon : '/Gemma/images/icons/subtract.png',
+                        icon : ctxBasePath + '/images/icons/subtract.png',
                         margins : '0 0 3 3',
                         handler : function() {
                            if (comboBoxCount > 1) {
@@ -81,7 +81,7 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
             });
 
          var addExperimentTagRowButton = new Ext.Button({
-               icon : '/Gemma/images/icons/add.png',
+               icon : ctxBasePath + '/images/icons/add.png',
                fieldLabel : "&nbsp;",
                labelSeparator : '',
                handler : function() {

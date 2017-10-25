@@ -13,7 +13,7 @@
    }(document, 'script', 'twitter-wjs');
 </script>
 
-<a href="/Gemma/rssfeed"
+<a href="${pageContext.request.contextPath}/rssfeed"
 	title="Subscribe to Gemma feeds" target="_blank"><img src="images/icons/rss_feed.gif"
 	style="border: 0" /></a>
 <br>

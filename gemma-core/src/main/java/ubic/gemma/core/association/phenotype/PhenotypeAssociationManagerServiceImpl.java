@@ -1845,7 +1845,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
-        if ( tc == null ) {
+        if ( tc == null ||  tc.getValueUri() == null ) {
             // ???? there was a null check at the end of this method, which doesn't do any good since we access TC in
             // the next line here.
             return;

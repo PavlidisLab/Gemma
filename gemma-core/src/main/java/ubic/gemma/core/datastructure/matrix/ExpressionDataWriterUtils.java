@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.util.Settings;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,7 +40,6 @@ import java.util.List;
 public class ExpressionDataWriterUtils {
 
     public static final String DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS = "___";
-    private static final String WEBSITE = "http://chibi.ubc.ca/Gemma";
 
     /**
      * Appends base header information (about the experiment) to a file.
@@ -55,7 +55,7 @@ public class ExpressionDataWriterUtils {
         if ( experiment != null ) {
             buf.append( "# shortName=" ).append( experiment.getShortName() ).append( "\n" );
             buf.append( "# name=" ).append( experiment.getName() ).append( "\n" );
-            buf.append( "# Experiment details: " + WEBSITE + "/expressionExperiment/showExpressionExperiment.html?id=" )
+            buf.append( "# Experiment details: " + Settings.getBaseUrl() + "expressionExperiment/showExpressionExperiment.html?id=" )
                     .append( experiment.getId() ).append( "\n" );
         }
 

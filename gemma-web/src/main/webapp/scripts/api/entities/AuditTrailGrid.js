@@ -123,13 +123,13 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
             }),
             tbar: [{
                 xtype: 'button',
-                icon: "/Gemma/images/icons/add.png",
+                icon: ctxBasePath + "/images/icons/add.png",
                 tooltip: 'Add&nbsp;a&nbsp;comment',
                 handler: this.showAddEventDialog,
                 scope: this
             }, {
                 xtype: 'button',
-                icon: "/Gemma/images/icons/arrow_refresh_small.png",
+                icon: ctxBasePath + "/images/icons/arrow_refresh_small.png",
                 tooltip: 'Reload view from the database',
                 handler: this.refreshGrid,
                 scope: this
