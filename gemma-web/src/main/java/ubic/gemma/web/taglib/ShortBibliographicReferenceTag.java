@@ -35,7 +35,6 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author joseph
- * @version
  */
 public class ShortBibliographicReferenceTag extends TagSupport {
 
