@@ -1013,11 +1013,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         log.info( "Searching for vectors for " + genes.size() + " genes from " + needToSearch.size()
                 + " experiments not in cache" );
 
-        Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed( EntityUtils.getIds( getExperiments( ees ) ),
+        Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed( EntityUtils.getIdsFast( getExperiments( ees ) ),
                 this.getSessionFactory().getCurrentSession() ).keySet();
         assert !arrays.isEmpty();
         Map<Long, Collection<Long>> cs2gene = CommonQueries
-                .getCs2GeneIdMap( genesToSearch, EntityUtils.getIds( arrays ),
+                .getCs2GeneIdMap( genesToSearch, EntityUtils.getIdsFast( arrays ),
                         this.getSessionFactory().getCurrentSession() );
 
         if ( cs2gene.size() == 0 ) {
@@ -1036,7 +1036,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 .getCs2GeneMapForProbes( cs2gene.keySet(), this.getSessionFactory().getCurrentSession() );
 
         Map<ProcessedExpressionDataVector, Collection<Long>> processedDataVectors = getProcessedVectors(
-                EntityUtils.getIds( needToSearch ), cs2gene );
+                EntityUtils.getIdsFast( needToSearch ), cs2gene );
 
         Map<BioAssaySet, Collection<BioAssayDimension>> bioAssayDimensions = this.getBioAssayDimensions( needToSearch );
 

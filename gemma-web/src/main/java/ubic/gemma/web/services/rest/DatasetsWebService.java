@@ -17,11 +17,13 @@ package ubic.gemma.web.services.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
@@ -42,7 +44,8 @@ import java.nio.file.Files;
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService extends WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
+public class DatasetsWebService extends
+        WebServiceWithFiltering<ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> {
 
     private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
     private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
@@ -52,6 +55,8 @@ public class DatasetsWebService extends WebServiceWithFiltering<ExpressionExperi
     private ExpressionDataFileService expressionDataFileService;
     private ArrayDesignService arrayDesignService;
     private BioAssayService bioAssayService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private GeneService geneService;
 
     /**
      * Required by spring
@@ -66,13 +71,16 @@ public class DatasetsWebService extends WebServiceWithFiltering<ExpressionExperi
     public DatasetsWebService( DifferentialExpressionResultService differentialExpressionResultService,
             ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
-            BioAssayService bioAssayService ) {
+            BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
+            GeneService geneService ) {
         super( expressionExperimentService );
         this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
         this.expressionDataFileService = expressionDataFileService;
         this.arrayDesignService = arrayDesignService;
         this.bioAssayService = bioAssayService;
+        this.processedExpressionDataVectorService = processedExpressionDataVectorService;
+        this.geneService = geneService;
     }
 
     /**
@@ -231,6 +239,69 @@ public class DatasetsWebService extends WebServiceWithFiltering<ExpressionExperi
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
         return outputDesignFile( ee );
+    }
+
+    /**
+     * Retrieves the expression levels of given genes on given datasets.
+     *
+     * @param datasets a list of dataset identifiers separated by commas (','). The identifiers can either be the
+     *                 ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                 is more efficient. Only datasets that user has access to will be available.
+     *                 <p>
+     *                 You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                 call to yield an error.
+     *                 </p>
+     * @param genes    a list of gene identifiers, separated by commas (','). Identifiers can be one of
+     *                 NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
+     *                 guaranteed to be unique) identifier. Official symbol will return a random homologue. Use one
+     *                 of the IDs to specify the correct taxon - if the gene taxon does not match the taxon of the
+     *                 given datasets, expression levels for that gene will be missing from the response.
+     *                 <p>
+     *                 You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                 call to yield an error.
+     *                 </p>
+     */
+    @GET
+    @Path("/{datasets: .+}/expressions/genes/{genes: .+}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetExpressions( // Params:
+            @PathParam("datasets") ArrayDatasetArg datasets, // Required
+            @PathParam("genes") ArrayGeneArg genes, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode( processedExpressionDataVectorService
+                .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
+                        genes.getPersistentObjects( geneService ) ), sr );
+    }
+
+    /**
+     * Retrieves the expression levels of genes highly expressed in the given component on given datasets.
+     *
+     * @param datasets  a list of dataset identifiers separated by commas (','). The identifiers can either be the
+     *                  ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                  is more efficient. Only datasets that user has access to will be available.
+     *                  <p>
+     *                  You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                  call to yield an error.
+     *                  </p>
+     * @param limit     maximum amount of returned gene-probe expression level pairs.
+     * @param component the pca component to limit the results to.
+     */
+    @GET
+    @Path("/{datasets: .+}/expressions/pca")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetExpressionsPca( // Params:
+            @PathParam("datasets") ArrayDatasetArg datasets, // Required
+            @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("component") IntArg component, // Required, default 1
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        checkReqArg( component, "component" );
+        return Responder.autoCode( processedExpressionDataVectorService
+                .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
+                        component.getValue() ), sr );
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {

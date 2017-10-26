@@ -20,7 +20,7 @@ public class ArrayPlatformArg extends ArrayEntityArg<ArrayDesign, ArrayDesignVal
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Platform identifiers";
 
     private ArrayPlatformArg( List<String> values ) {
-        super( values );
+        super( values, PlatformArg.class );
     }
 
     private ArrayPlatformArg( String errorMessage, Exception exception ) {

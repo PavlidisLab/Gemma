@@ -24,7 +24,7 @@ public class ArrayCompositeSequenceArg
     private ArrayDesign arrayDesign;
 
     private ArrayCompositeSequenceArg( List<String> values ) {
-        super( values );
+        super( values, CompositeSequenceArg.class );
     }
 
     private ArrayCompositeSequenceArg( String errorMessage, Exception exception ) {

@@ -1,6 +1,5 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import com.sun.istack.NotNull;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
@@ -35,7 +34,8 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
 
     @Override
     public String toString() {
-        if(this.value == null) return "";
+        if ( this.value == null )
+            return "";
         return String.valueOf( this.value );
     }
 
@@ -61,7 +61,7 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
      */
     public final VO getValueObject( S service ) {
         O object = this.value == null ? null : this.getPersistentObject( service );
-        return check(service.loadValueObject( object ));
+        return check( service.loadValueObject( object ) );
     }
 
     /**
@@ -70,15 +70,12 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
      * @param service the service to use for the value object retrieval.
      * @return an object whose identifier matches the value of this mutable argument.
      */
-    @NotNull
     public abstract O getPersistentObject( S service );
 
     /**
-     *
      * @return the name of the property on the Identifiable object that this object represents.
      */
-    @NotNull
-    public abstract String getPropertyName( S service);
+    public abstract String getPropertyName( S service );
 
     /**
      * Checks whether the given object is null, and throws an appropriate exception if necessary.

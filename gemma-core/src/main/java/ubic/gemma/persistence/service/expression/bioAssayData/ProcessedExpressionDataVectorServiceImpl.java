@@ -3,16 +3,19 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
+import ubic.gemma.persistence.util.EntityUtils;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Paul
@@ -22,6 +25,10 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private SVDService svdService;
 
     @Override
     public void clearCache() {
@@ -49,6 +56,80 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         clearCache(); // uncomment for debugging TEMPORARY FIX FOR 4320
 
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
+            Collection<Gene> genes ) {
+        Collection<DoubleVectorValueObject> vectors = getProcessedDataArrays( ees, EntityUtils.getIdsFast( genes ) );
+        Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
+
+        // Adapted from DEDV controller
+        for ( ExpressionExperiment ee : ees ) {
+            Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
+            for ( DoubleVectorValueObject v : vectors ) {
+                if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+                    continue;
+                }
+
+                if ( v.getGenes() == null || v.getGenes().isEmpty() ) {
+                    continue;
+                }
+
+                for ( Gene g : genes ) {
+                    if ( v.getGenes().contains( g.getId() ) ) {
+                        if ( !vectorsPerGene.containsKey( g ) ) {
+                            vectorsPerGene.put( g, new LinkedList<DoubleVectorValueObject>() );
+                        }
+                        vectorsPerGene.get( g ).add( v );
+                    }
+                }
+
+            }
+            vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene ) );
+        }
+
+        return vos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
+            int threshold, int component ) {
+        Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
+
+        // Adapted from DEDV controller
+        for ( ExpressionExperiment ee : ees ) {
+            Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
+            Collection<DoubleVectorValueObject> vectors =  svdService.getTopLoadedVectors( ee.getId(), component, threshold ).values();
+            for ( DoubleVectorValueObject v : vectors ) {
+                if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+                    continue;
+                }
+
+                if ( v.getGenes() == null || v.getGenes().isEmpty() ) {
+                    if ( !vectorsPerGene.containsKey( null ) ) {
+                        vectorsPerGene.put( null, new LinkedList<DoubleVectorValueObject>() );
+                    }
+                    vectorsPerGene.get( null ).add( v );
+                }
+
+                for ( Long gId : v.getGenes() ) {
+                    Gene g = geneService.load( gId );
+                    if ( g != null ) {
+                        if ( !vectorsPerGene.containsKey( g ) ) {
+                            vectorsPerGene.put( g, new LinkedList<DoubleVectorValueObject>() );
+                        }
+                        vectorsPerGene.get( g ).add( v );
+                    }
+                }
+
+            }
+            vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene ) );
+        }
+
+        return vos;
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.hibernate.*;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Sid;
+import ubic.gemma.model.common.Identifiable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -127,8 +128,24 @@ public class EntityUtils {
     }
 
     /**
-     * @return either a list (if entities was a list) or collection of ids.
+     * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
+     * implement the Identifiable interface.
      */
+    public static Collection<Long> getIdsFast( Collection<? extends Identifiable> entities ) {
+        Collection<Long> r = new ArrayList<>( entities.size() );
+        for ( Identifiable i : entities ) {
+            r.add( i.getId() );
+        }
+        return r;
+    }
+
+    /**
+     * @return either a list (if entities was a list) or collection of ids.
+     * @deprecated use getIdsFast instead. If you are forced to using this method on a list of entities because they do
+     * not implement the Identifiable interface, consider adding said interface to the class signature. When switching
+     * to the getIdsFast, also make sure that you do not need a Set.
+     */
+    @Deprecated
     public static Collection<Long> getIds( Collection<?> entities ) {
 
         Collection<Long> r;

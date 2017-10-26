@@ -19,7 +19,9 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -61,8 +63,27 @@ public interface ProcessedExpressionDataVectorService {
             Collection<Long> genes );
 
     /**
-     * Note: currently only used in tests
-     *
+     * @param ees   expressionExperiments
+     * @param genes genes
+     * @return value objects containing structured information about the expression levels of given genes
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    Collection<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
+            Collection<Gene> genes );
+
+    /**
+     * @param ees   expressionExperiments
+     * @param component the principal component
+     * @param threshold threshold
+     * @return value objects containing structured information about the expression levels of genes highly loaded in
+     * the given principal component.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Transactional(readOnly = true)
+    Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
+            int threshold, int component );
+
+    /**
      * @param expressionExperiment ee
      * @return double vector vos
      */

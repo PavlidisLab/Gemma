@@ -18,7 +18,7 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Taxon identifiers";
 
     private ArrayTaxonArg( List<String> values ) {
-        super( values );
+        super( values, TaxonArg.class );
     }
 
     private ArrayTaxonArg( String errorMessage, Exception exception ) {
