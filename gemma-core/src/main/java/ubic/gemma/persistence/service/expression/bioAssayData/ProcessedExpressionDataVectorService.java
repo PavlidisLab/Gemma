@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -72,7 +73,7 @@ public interface ProcessedExpressionDataVectorService {
             Collection<Gene> genes );
 
     /**
-     * @param ees   expressionExperiments
+     * @param ees       expressionExperiments
      * @param component the principal component
      * @param threshold threshold
      * @return value objects containing structured information about the expression levels of genes highly loaded in
@@ -82,6 +83,17 @@ public interface ProcessedExpressionDataVectorService {
     @Transactional(readOnly = true)
     Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
             int threshold, int component );
+
+    /**
+     * @param diffExResultSetId the differential expression result set to access
+     * @param threshold         threshold
+     * @return value objects containing structured information about the expression levels of genes highly loaded in
+     * the given principal component.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Transactional(readOnly = true)
+    Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx( Collection<ExpressionExperiment> ees,
+            Long diffExResultSetId, double threshold, int max );
 
     /**
      * @param expressionExperiment ee
@@ -154,4 +166,6 @@ public interface ProcessedExpressionDataVectorService {
     void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
 
     void remove( Collection<ProcessedExpressionDataVector> processedExpressionDataVectors );
+
+    List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
 }

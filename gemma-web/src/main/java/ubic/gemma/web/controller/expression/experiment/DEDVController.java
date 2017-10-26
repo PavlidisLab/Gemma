@@ -32,26 +32,25 @@ import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionServic
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
@@ -422,7 +421,8 @@ public class DEDVController {
             log.debug( "Threshold specified not using default value: " + givenThreshold );
         }
 
-        List<DoubleVectorValueObject> dedvs = getDiffExVectors( resultSetId, threshold, 50 );
+        List<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService
+                .getDiffExVectors( resultSetId, threshold, MAX_RESULTS_TO_RETURN );
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
                 .sortVectorDataByDesign( dedvs );
@@ -615,7 +615,8 @@ public class DEDVController {
              */
             Long eeId = eeIds.iterator().next();
 
-            Collection<DoubleVectorValueObject> diffExVectors = getDiffExVectors( resultSetId, thresh, 50 );
+            Collection<DoubleVectorValueObject> diffExVectors = processedExpressionDataVectorService
+                    .getDiffExVectors( resultSetId, thresh, MAX_RESULTS_TO_RETURN );
 
             if ( diffExVectors == null || diffExVectors.isEmpty() ) {
                 mav.addObject( "text", "No results" );
@@ -625,7 +626,8 @@ public class DEDVController {
             /*
              * Organize the vectors in the same way expected by the ee+gene type of request.
              */
-            ExpressionExperimentValueObject ee = expressionExperimentService.loadValueObject( expressionExperimentService.load( eeId ) );
+            ExpressionExperimentValueObject ee = expressionExperimentService
+                    .loadValueObject( expressionExperimentService.load( eeId ) );
 
             result = new HashMap<>();
             Map<Long, Collection<DoubleVectorValueObject>> gmap = new HashMap<>();
@@ -756,71 +758,6 @@ public class DEDVController {
         }
         converted.append( "\r\n" );
         return converted.toString();
-    }
-
-    private List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
-            int minNumberOfResults ) {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-        ExpressionAnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResultSet( resultSetId );
-        if ( ar == null ) {
-            log.warn( "No diff ex result set with ID=" + resultSetId );
-            return null;
-        }
-
-        differentialExpressionResultService.thawLite( ar );
-
-        if ( watch.getTime() > 200 ) {
-            log.info( "Thaw result set: " + watch.getTime() );
-        }
-
-        BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
-
-        List<DifferentialExpressionValueObject> ee2probeResults = differentialExpressionResultService
-                .findInResultSet( ar, threshold, MAX_RESULTS_TO_RETURN, minNumberOfResults );
-
-        Collection<Long> probes = new HashSet<>();
-        // Map<CompositeSequenceId, pValue>
-        // using id instead of entity for map key because want to use a value object for retrieval later
-        Map<Long, Double> pvalues = new HashMap<>();
-        for ( DifferentialExpressionValueObject par : ee2probeResults ) {
-            probes.add( par.getProbeId() );
-            pvalues.put( par.getProbeId(), par.getP() );
-        }
-
-        watch.reset();
-        watch.start();
-        Collection<DoubleVectorValueObject> processedDataArraysByProbe = processedExpressionDataVectorService
-                .getProcessedDataArraysByProbeIds( analyzedSet, probes );
-        List<DoubleVectorValueObject> dedvs = new ArrayList<>( processedDataArraysByProbe );
-
-        watch.stop();
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Fetch " + dedvs.size() + " DEDVs for " + probes.size() + " genes in " + watch.getTime()
-                    + " ms. (result set=" + ar.getId() + ")" );
-        }
-
-        /*
-         * Resort
-         */
-        for ( DoubleVectorValueObject v : dedvs ) {
-            v.setPvalue( pvalues.get( v.getDesignElement().getId() ) );
-        }
-
-        Collections.sort( dedvs, new Comparator<DoubleVectorValueObject>() {
-            @Override
-            public int compare( DoubleVectorValueObject o1, DoubleVectorValueObject o2 ) {
-                if ( o1.getPvalue() == null )
-                    return -1;
-                if ( o2.getPvalue() == null )
-                    return 1;
-                return o1.getPvalue().compareTo( o2.getPvalue() );
-            }
-        } );
-
-        return dedvs;
-
     }
 
     private LinkedHashSet<ExperimentalFactor> getFactorNames(
