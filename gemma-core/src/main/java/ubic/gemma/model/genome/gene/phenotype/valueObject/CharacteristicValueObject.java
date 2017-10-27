@@ -33,7 +33,7 @@ import java.util.List;
  *
  * @see Characteristic
  */
-public class CharacteristicValueObject extends CharacteristicBasicValueObject
+public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
         implements Comparable<CharacteristicValueObject> {
 
     private static final Log log = LogFactory.getLog( CharacteristicValueObject.class );
@@ -43,6 +43,8 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
     protected String urlId = "";
     private boolean alreadyPresentInDatabase = false;
     private boolean alreadyPresentOnGene = false;
+    private String category = "";
+    private String categoryUri = null;
     /**
      * child term from a root
      */
@@ -62,6 +64,8 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
      */
     private boolean root = false;
     private String taxon = "";
+    private String value = "";
+    private String valueUri = null;
 
     /**
      * Required when using the class as a spring bean.
@@ -83,8 +87,9 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
 
-        if(this.value == null){
-            log.warn( "Characteristic with null value. Id: "+this.id+" cat: "+this.category+" cat uri: "+this.categoryUri );
+        if ( this.value == null ) {
+            log.warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                    + this.categoryUri );
         }
     }
 
@@ -105,8 +110,9 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
     public CharacteristicValueObject( Long id, String value, String valueUri ) {
         this( id, valueUri );
         this.value = value;
-        if(this.value == null){
-            log.warn( "Characteristic with null value. Id: "+this.id+" cat: "+this.category+" cat uri: "+this.categoryUri );
+        if ( this.value == null ) {
+            log.warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                    + this.categoryUri );
         }
     }
 
@@ -115,8 +121,6 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
         this.category = category;
         this.categoryUri = categoryUri;
     }
-
-
 
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<? extends Characteristic> characteristics ) {
@@ -135,17 +139,15 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
         return characteristicValueObjects;
     }
 
-
-
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         if ( this.valueUri != null ) {
             result = prime * result + this.valueUri.hashCode();
-        } else if (this.value != null){
+        } else if ( this.value != null ) {
             result = prime * result + this.value.hashCode();
-        } else{
+        } else {
             result = prime * result + this.id.hashCode();
         }
         return result;
@@ -189,8 +191,6 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
 
         return true;
     }
-
-
 
     public String getCategory() {
         return this.category;
@@ -310,8 +310,6 @@ public class CharacteristicValueObject extends CharacteristicBasicValueObject
     public void setRoot( boolean root ) {
         this.root = root;
     }
-
-
 
     private void parseUrlId() {
         if ( StringUtils.isBlank( valueUri ) )
