@@ -112,7 +112,7 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
     @Override
     public Collection<BioAssay> findByAccession( String accession ) {
         if ( StringUtils.isBlank( accession ) )
-            return new HashSet<BioAssay>();
+            return new HashSet<>();
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
@@ -177,10 +177,37 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
 
     @Override
     public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities ) {
-        Collection<BioAssayValueObject> vos = new LinkedHashSet<BioAssayValueObject>();
+        Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
         for ( BioAssay e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }
         return vos;
     }
+
+    /**
+     * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
+     * @param entity the bio assay to convert into a VO
+     * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
+     * @return a bioAssay value object
+     */
+    @Override
+    public BioAssayValueObject loadValueObject( BioAssay entity, boolean basic ) {
+        return new BioAssayValueObject( entity, basic );
+    }
+
+    /**
+     * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
+     * @param entities the bio assays to convert into a VO
+     * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
+     * @return a collection of bioAssay value objects
+     */
+    @Override
+    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities , boolean basic) {
+        Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
+        for ( BioAssay e : entities ) {
+            vos.add( this.loadValueObject( e, basic ) );
+        }
+        return vos;
+    }
+
 }

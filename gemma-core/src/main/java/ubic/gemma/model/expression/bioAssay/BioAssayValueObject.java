@@ -60,6 +60,10 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     }
 
     public BioAssayValueObject( BioAssay bioAssay ) {
+        this(bioAssay, false);
+    }
+
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
         super( bioAssay.getId() );
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
@@ -81,7 +85,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         }
 
         if ( bioAssay.getSampleUsed() != null ) {
-            this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed() );
+            this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed(), basic );
             sample.getBioAssays().add( this.getId() );
         }
 

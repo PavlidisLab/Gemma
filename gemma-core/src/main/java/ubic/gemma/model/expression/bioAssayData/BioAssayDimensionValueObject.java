@@ -218,7 +218,8 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
             sampleUsed.setId( bmVo.getId() );
             sampleUsed.setName( bmVo.getName() );
             sampleUsed.setDescription( "Fake placeholder" );
-            for ( FactorValueValueObject fvVo : bmVo.getFactorValueObjects() ) {
+            for ( IdentifiableValueObject iVo : bmVo.getFactorValueObjects() ) {
+                FactorValueValueObject fvVo = ( FactorValueValueObject ) iVo;
                 FactorValue fv = FactorValue.Factory.newInstance();
                 assert fvVo.getId() != null;
                 fv.setId( fvVo.getId() );

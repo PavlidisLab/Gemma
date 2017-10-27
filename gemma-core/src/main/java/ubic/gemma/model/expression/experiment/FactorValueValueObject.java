@@ -22,7 +22,10 @@ import java.util.Iterator;
  * Note: this used to be called FactorValueObject and now replaces the old FactorValueValueObject. Confusing!
  *
  * @author Paul
+ * @deprecated aim towards using the FactorValueBasicValueObject. This one is confusing. Once usage of this
+ * type has been completely phased out, revise the BioMaterialValueObject and relevant DAOs and Services.
  */
+@Deprecated
 public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
@@ -73,10 +76,28 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      * @param value value
      * @deprecated FIXME this makes no sense and we _do_ pass in the EF category in several places.s
      */
-    @Deprecated
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
         super( value.getId() );
         init( value, c );
+    }
+
+    static String getSummaryString( FactorValue fv ) {
+        StringBuilder buf = new StringBuilder();
+        if ( fv.getCharacteristics().size() > 0 ) {
+            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
+                Characteristic c = iter.next();
+                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
+                if ( iter.hasNext() )
+                    buf.append( ", " );
+            }
+        } else if ( fv.getMeasurement() != null ) {
+            buf.append( fv.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
+            buf.append( fv.getValue() );
+        } else {
+            buf.append( "?" );
+        }
+        return buf.toString();
     }
 
     @Override
@@ -219,25 +240,6 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     @Override
     public String toString() {
         return "FactorValueValueObject [factor=" + factor + ", value=" + value + "]";
-    }
-
-    private String getSummaryString( FactorValue fv ) {
-        StringBuilder buf = new StringBuilder();
-        if ( fv.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
-                Characteristic c = iter.next();
-                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
-                if ( iter.hasNext() )
-                    buf.append( ", " );
-            }
-        } else if ( fv.getMeasurement() != null ) {
-            buf.append( fv.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
-            buf.append( fv.getValue() );
-        } else {
-            buf.append( "?" );
-        }
-        return buf.toString();
     }
 
     private void init( FactorValue val, Characteristic c ) {

@@ -33,7 +33,7 @@ import java.util.List;
  *
  * @see Characteristic
  */
-public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
+public class CharacteristicValueObject extends CharacteristicBasicValueObject
         implements Comparable<CharacteristicValueObject> {
 
     private static final Log log = LogFactory.getLog( CharacteristicValueObject.class );
@@ -43,8 +43,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     protected String urlId = "";
     private boolean alreadyPresentInDatabase = false;
     private boolean alreadyPresentOnGene = false;
-    private String category = "";
-    private String categoryUri = null;
     /**
      * child term from a root
      */
@@ -64,10 +62,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
      */
     private boolean root = false;
     private String taxon = "";
-    private String value = "";
-    private String valueUri = null;
-
-
 
     /**
      * Required when using the class as a spring bean.
