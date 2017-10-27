@@ -15,7 +15,7 @@ public class TaxonNcbiIdArg extends TaxonArg<Long> {
      */
     TaxonNcbiIdArg( long l ) {
         this.value = l;
-        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Taxon" );
+        setNullCause("ID", "Taxon" );
     }
 
     @Override

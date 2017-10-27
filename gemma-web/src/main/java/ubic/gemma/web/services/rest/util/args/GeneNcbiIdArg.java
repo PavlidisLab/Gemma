@@ -17,7 +17,7 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
      */
     GeneNcbiIdArg( int l ) {
         this.value = l;
-        this.nullCause = getDefaultError();
+        setNullCause( ID_NAME, "Gene" );
     }
 
     @Override

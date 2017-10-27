@@ -13,7 +13,7 @@ public class CompositeSequenceNameArg extends CompositeSequenceArg<String> {
 
     CompositeSequenceNameArg( String s ) {
         this.value = s;
-        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "name", "Composite Sequence" );
+        setNullCause("name", "Composite Sequence" );
     }
 
     @Override

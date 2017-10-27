@@ -21,7 +21,6 @@ import java.util.Objects;
  */
 public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, GeneService> {
 
-    private static final String ERROR_MSG_DEFAULT = "The identifier was recognised to be an %s, but no Gene with this %s exists.";
     private static final String ERROR_MSG_TAXON = "Gene with given %s does not exist on this taxon";
     private static final String ENSEMBL_ID_REGEX = "(ENSTBE|MGP_BALBcJ_|MGP_PWKPhJ_|ENSMUS|MGP_129S1SvImJ_|"
             + "ENSSHA|ENSPFO|ENSRNO|FB|MGP_NODShiLtJ_|ENSLAF|ENSOAN|MGP_FVBNJ_|ENSDAR|ENSSSC|ENSGGO|ENSAMX|"
@@ -116,13 +115,6 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, Ge
      * @return the name of the identifier that the GeneArg represents.
      */
     abstract String getIdentifierName();
-
-    /**
-     * @return the default null cause error message.
-     */
-    String getDefaultError() {
-        return String.format( ERROR_MSG_DEFAULT, getIdentifierName(), getIdentifierName() );
-    }
 
     /**
      * @return the error message for when the null cause is gene not existing on a taxon.

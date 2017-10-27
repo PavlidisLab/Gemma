@@ -190,6 +190,7 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
      * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
      * @return a bioAssay value object
      */
+    //TODO remove when FactorValueValueObject usage is phased out
     @Override
     public BioAssayValueObject loadValueObject( BioAssay entity, boolean basic ) {
         return new BioAssayValueObject( entity, basic );
@@ -202,6 +203,7 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
      * @return a collection of bioAssay value objects
      */
     @Override
+    //TODO remove when FactorValueValueObject usage is phased out
     public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities , boolean basic) {
         Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
         for ( BioAssay e : entities ) {

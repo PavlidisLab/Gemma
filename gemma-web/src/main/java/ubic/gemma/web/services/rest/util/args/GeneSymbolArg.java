@@ -21,7 +21,7 @@ public class GeneSymbolArg extends GeneArg<String> {
 
     GeneSymbolArg( String s ) {
         this.value = s;
-        this.nullCause = this.getDefaultError();
+        setNullCause( ID_NAME, "Gene" );
     }
 
     @Override

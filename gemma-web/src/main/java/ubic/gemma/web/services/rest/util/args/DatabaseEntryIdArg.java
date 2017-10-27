@@ -12,7 +12,7 @@ public class DatabaseEntryIdArg extends DatabaseEntryArg<Long> {
 
     DatabaseEntryIdArg( long l ) {
         this.value = l;
-        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Database Entry" );
+        setNullCause( "ID", "Database Entry" );
     }
 
     @Override
