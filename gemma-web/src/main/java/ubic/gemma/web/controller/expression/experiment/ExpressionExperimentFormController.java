@@ -24,8 +24,10 @@ import com.sdicons.json.model.JSONObject;
 import com.sdicons.json.model.JSONString;
 import com.sdicons.json.model.JSONValue;
 import com.sdicons.json.parser.JSONParser;
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.tools.ant.filters.StringInputStream;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -194,6 +196,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
+        if ( !SecurityUtil.isUserLoggedIn() ) {
+            throw new AccessDeniedException( "User does not have access to experiment management" );
+        }
+
         Long id = null;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
