@@ -4,10 +4,7 @@
 	<title>Registration</title>
 	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/signup.js' />
-	<script type="text/javascript" src="https://api.recaptcha.net/js/recaptcha_ajax.js">
-	
-</script>
-
+	<script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 </head>
 
 <p>

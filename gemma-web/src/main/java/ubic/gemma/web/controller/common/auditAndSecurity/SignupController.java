@@ -23,8 +23,6 @@ import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.util.JSONUtil;
 import gemma.gsec.util.SecurityUtil;
-import net.tanesha.recaptcha.ReCaptchaImpl;
-import net.tanesha.recaptcha.ReCaptchaResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
@@ -33,16 +31,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-interface RecaptchaTester {
-    boolean validateCaptcha( HttpServletRequest request, String recaptchaPvtKey );
-}
 
 /**
  * Controller to signup new users. See also the UserListController.
@@ -59,7 +54,7 @@ public class SignupController extends BaseController {
     @Autowired
     private UserManager userManager;
 
-    private RecaptchaTester recaptchaTester = new DefaultRecaptchaTester();
+    private ReCaptcha reCaptcha = new ReCaptcha( Settings.getString( "gemma.recaptcha.privateKey" ) );
 
     @RequestMapping(value = "/ajaxLoginCheck.html")
     public void ajaxLoginCheck( HttpServletRequest request, HttpServletResponse response ) throws Exception {
@@ -160,13 +155,10 @@ public class SignupController extends BaseController {
 
         String cPass = request.getParameter( "passwordConfirm" );
 
-        String recaptchaPvtKey = Settings.getString( "gemma.recaptcha.privateKey" );
 
-        if ( StringUtils.isNotBlank( recaptchaPvtKey ) ) {
+        if ( reCaptcha.isPrivateKeySet() ) {
 
-            boolean valid = recaptchaTester.validateCaptcha( request, recaptchaPvtKey );
-
-            if ( !valid ) {
+            if ( !reCaptcha.validateRequest( request ).isValid() ) {
                 jsonText = "{success:false,message:'Captcha was not entered correctly.'}";
                 jsonUtil.writeToResponse( jsonText );
                 return;
@@ -249,22 +241,7 @@ public class SignupController extends BaseController {
         }
     }
 
-    public void setRecaptchaTester( RecaptchaTester recaptchaTester ) {
-        this.recaptchaTester = recaptchaTester;
-    }
-}
-
-class DefaultRecaptchaTester implements RecaptchaTester {
-
-    @Override
-    public boolean validateCaptcha( HttpServletRequest request, String recaptchaPvtKey ) {
-        String rcChallenge = request.getParameter( "recaptcha_challenge_field" );
-        String rcResponse = request.getParameter( "recaptcha_response_field" );
-
-        String remoteAddress = request.getRemoteAddr();
-        ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-        reCaptcha.setPrivateKey( recaptchaPvtKey );
-        ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer( remoteAddress, rcChallenge, rcResponse );
-        return reCaptchaResponse.isValid();
+    public void setRecaptchaTester( ReCaptcha reCaptcha ) {
+        this.reCaptcha = reCaptcha;
     }
 }

@@ -18,6 +18,9 @@
       content="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software"/>
 
 <c:set var="ctxPath" value="${pageContext.request.contextPath}" scope="request"/>
+<c:set var="recaptchaPublicKey" value="${appConfig['gemma.recaptcha.publicKey']}" scope="request"/>
+
+
 
 <meta name="author" content="Gemma admin (gemma@chibi.ubc.ca)"/>
 
@@ -27,5 +30,8 @@
 
 <link rel="icon" href="<c:url value="/images/favicon.ico"/>"/>
 
-<script>var ctxBasePath = '${ctxPath}';</script>
+<script>
+    var ctxBasePath = '${ctxPath}';
+    var recaptchaPublicKey = '${recaptchaPublicKey}';
+</script>
 
