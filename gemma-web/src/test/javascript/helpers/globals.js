@@ -23,3 +23,4 @@
  * variables here and assume they are correctly initialized.
  */
 ctxBasePath="";
+recaptchaPublicKey="";
