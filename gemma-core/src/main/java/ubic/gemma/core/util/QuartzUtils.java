@@ -24,7 +24,7 @@ import org.quartz.impl.StdScheduler;
 
 /**
  * @author keshav
- * @version $Id$
+ *
  */
 public class QuartzUtils {
     private static Log log = LogFactory.getLog( QuartzUtils.class );

@@ -1,7 +1,7 @@
 /**
  * Displays summary of an experimental design. FIXME move somewher emore logical
  * 
- * @version $Id$
+ *
  * @author Luke, Paul
  * @type
  */

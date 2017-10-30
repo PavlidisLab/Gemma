@@ -49,7 +49,7 @@ import java.util.List;
 /**
  * @author luke
  * @author paul
- * @version $Id$
+ *
  */
 @Controller
 public class CoexpressionSearchController {

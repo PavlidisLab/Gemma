@@ -17,7 +17,7 @@
 /**
  * Draw line plots with (optional) sample labels above the graph.
  * 
- * @version $Id$
+ * 
  * @author Paul
  */
 var LinePlot = (function() {

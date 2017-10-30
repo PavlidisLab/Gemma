@@ -15,7 +15,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * A differential expression meta-analysis space task
  * 
  * @author frances
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

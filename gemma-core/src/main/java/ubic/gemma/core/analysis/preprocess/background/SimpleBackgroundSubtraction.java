@@ -25,7 +25,7 @@ import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix;
  * Implements simplest background subtraction, with the option to set small values to a preset value.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class SimpleBackgroundSubtraction<R, C> implements BackgroundAdjuster<R, C> {
 

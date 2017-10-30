@@ -27,7 +27,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author jsantos
- * @version $Id$
+ *
  */
 public class CompositeSequenceMapValueObject implements Comparable<CompositeSequenceMapValueObject> {
 

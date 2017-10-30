@@ -1,5 +1,5 @@
 -- Changes for mean-variance relation storing
--- $Id$
+
 
 
 alter table INVESTIGATION add column MEAN_VARIANCE_RELATION_FK BIGINT unique;

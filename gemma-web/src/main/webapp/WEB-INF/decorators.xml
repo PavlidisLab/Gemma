@@ -1,8 +1,5 @@
 <!--  
-    Sitemesh configuration 
-    
-    $Id$
-    
+    Sitemesh configuration
 -->
 <decorators defaultdir="/decorators">
     <excludes>

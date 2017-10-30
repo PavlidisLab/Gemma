@@ -33,7 +33,7 @@ import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
  * ftp.ncbi.nih.gov.gene/DATA
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHistory> {
 

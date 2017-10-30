@@ -26,7 +26,7 @@ import ubic.gemma.core.tasks.Task;
  * Useless command
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Deprecated
 public class MonitorTaskCommand extends TaskCommand {

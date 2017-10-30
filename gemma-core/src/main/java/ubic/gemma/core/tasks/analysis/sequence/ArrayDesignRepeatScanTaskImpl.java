@@ -20,7 +20,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * An array design repeat scan spaces task
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

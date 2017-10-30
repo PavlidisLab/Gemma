@@ -27,7 +27,7 @@ import ubic.gemma.persistence.util.Settings;
  * Fetch GEO "GPLXXX_family.soft.gz" files
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class PlatformFetcher extends GeoFetcher {
 

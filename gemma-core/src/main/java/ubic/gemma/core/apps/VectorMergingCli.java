@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * For experiments that used multiple array designs, merge the expression profiles
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 

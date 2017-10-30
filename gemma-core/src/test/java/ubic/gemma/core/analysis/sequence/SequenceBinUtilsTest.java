@@ -25,7 +25,7 @@ import ubic.gemma.persistence.util.SequenceBinUtils;
  * Test values are from hg18 all_est.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class SequenceBinUtilsTest extends TestCase {
 

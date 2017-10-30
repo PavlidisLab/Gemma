@@ -30,7 +30,7 @@ import ubic.gemma.core.tasks.AbstractTask;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")

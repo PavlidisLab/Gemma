@@ -36,7 +36,7 @@ import org.springframework.web.servlet.view.AbstractView;
  * Send a file to the browser. The full path to the file must be passed into the model.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class DownloadBinaryFileView extends AbstractView {
 

@@ -11,7 +11,7 @@ import ubic.gemma.model.genome.Gene;
  * Gene2GeneProteinAssociationService class providing functionality for handling Gene2geneProteinAssociations
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 @Service
 public class Gene2GeneProteinAssociationServiceImpl

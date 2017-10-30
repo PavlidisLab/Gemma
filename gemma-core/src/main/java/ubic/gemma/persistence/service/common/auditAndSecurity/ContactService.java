@@ -23,7 +23,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 
 /**
  * @author kelsey
- * @version $Id$
+ *
  */
 public interface ContactService {
 

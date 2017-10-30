@@ -24,7 +24,7 @@ import java.io.Serializable;
  * A command object with a selected factor and associated experiment.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class DiffExpressionSelectedFactorCommand implements Serializable {
 

@@ -7,7 +7,7 @@
  *
  * @author Paul
  *
- * @version $Id$
+ *
  *
  *
  * @class Gemma.DatasetGroupEditor

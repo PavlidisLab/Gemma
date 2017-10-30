@@ -1,5 +1,5 @@
 -- Used by test: GeoConverterTest.
--- $Id$
+
 insert ignore into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Salmonidae","salmonid","8015",0,1);
 set @r:=(select ID from TAXON where COMMON_NAME='salmonid');
 insert ignore into TAXON (SCIENTIFIC_NAME,COMMON_NAME,ABBREVIATION,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Salmo salar","atlantic salmon","ssal","8030",1,@r,0);

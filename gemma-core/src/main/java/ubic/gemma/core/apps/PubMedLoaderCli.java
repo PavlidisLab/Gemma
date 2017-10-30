@@ -31,7 +31,7 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  * Load PubMed files from XML files -- not used routinely!
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class PubMedLoaderCli extends AbstractCLIContextCLI {
 

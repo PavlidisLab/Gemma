@@ -46,7 +46,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author klc
- * @version $Id$
+ *
  */
 public class GeneSetServiceTest extends BaseSpringContextTest {
 

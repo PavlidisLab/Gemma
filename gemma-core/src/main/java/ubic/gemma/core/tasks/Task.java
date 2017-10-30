@@ -21,7 +21,7 @@ import ubic.gemma.core.job.TaskResult;
  * TODO document me
  * 
  * @author anton
- * @version $Id$
+ *
  */
 public interface Task<T extends TaskResult, C extends TaskCommand> {
 

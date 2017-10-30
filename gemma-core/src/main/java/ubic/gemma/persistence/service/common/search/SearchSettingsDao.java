@@ -18,7 +18,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public interface SearchSettingsDao {
 	

@@ -29,7 +29,7 @@ import javax.servlet.http.HttpSessionListener;
  * 
  * @author keshav
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class UserCounterListener implements ServletContextListener, HttpSessionListener {
 

@@ -27,7 +27,7 @@ import org.springframework.web.servlet.mvc.AbstractUrlViewController;
  * System statistics
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 @Controller
 public class SystemStatsController extends AbstractUrlViewController {

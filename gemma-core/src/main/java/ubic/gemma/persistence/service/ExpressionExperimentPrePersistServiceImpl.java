@@ -42,7 +42,7 @@ import ubic.gemma.persistence.util.Settings;
  * Sets up the array designs, put the designelements in the data vectors.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExperimentPrePersistService {

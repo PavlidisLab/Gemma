@@ -27,7 +27,7 @@ import java.util.Collection;
  * when deciding which links are new and which are updated. See CoexpressionDaoImpl.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class GeneCoexpressedGenes extends IdArray {
 

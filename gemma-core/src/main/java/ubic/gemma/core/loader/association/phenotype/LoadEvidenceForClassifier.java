@@ -36,7 +36,7 @@ import ubic.gemma.persistence.util.Settings;
  * Retrieve information used for classifying Phenocarta evidence quality. FIXME this doesn't do anything right now.
  * 
  * @author nicolas
- * @version $Id$
+ *
  */
 public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 

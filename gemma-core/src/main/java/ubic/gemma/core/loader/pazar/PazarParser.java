@@ -26,7 +26,7 @@ import ubic.gemma.core.loader.util.parser.BasicLineParser;
  * ssTODO Document Me
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class PazarParser extends BasicLineParser<PazarRecord> {
 

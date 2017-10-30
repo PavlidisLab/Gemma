@@ -25,7 +25,7 @@ import org.springframework.classify.BinaryExceptionClassifier;
  * is 'false'). Sorry.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class RetryExceptionCauseClassifier extends BinaryExceptionClassifier {
 

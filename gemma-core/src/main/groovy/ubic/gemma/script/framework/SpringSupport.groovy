@@ -16,7 +16,7 @@ import org.apache.commons.lang3.time.StopWatch
  * With authentication use constructore that takes user name and password.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 class SpringSupport {
 

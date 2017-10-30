@@ -1,8 +1,6 @@
-/* $Id$ */
-
 /**
  * @projectDescription An cross-browser implementation of the HTML5 <canvas> text methods
- * @author Fabien Ménager
+ * @author Fabien Mï¿½nager
  * @version $Revision$
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  */

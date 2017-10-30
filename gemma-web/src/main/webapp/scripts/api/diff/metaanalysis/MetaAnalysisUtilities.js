@@ -2,7 +2,7 @@
  * Meta-analysis utilities
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

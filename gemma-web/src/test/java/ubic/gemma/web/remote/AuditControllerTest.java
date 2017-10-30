@@ -35,7 +35,7 @@ import ubic.gemma.core.testing.BaseSpringWebTest;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public class AuditControllerTest extends BaseSpringWebTest {
 

@@ -1,6 +1,6 @@
 <%-- 
 author: keshav
-version: $Id$
+
 --%>
 <%@ include file="/common/taglibs.jsp"%>
 

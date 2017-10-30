@@ -54,7 +54,7 @@ import ubic.gemma.persistence.util.Settings;
  * TODO Parent of all Importers
  * 
  * @author nicolas
- * @version $Id$
+ *
  */
 public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends SymbolChangeAndLoggingAbstract {
 

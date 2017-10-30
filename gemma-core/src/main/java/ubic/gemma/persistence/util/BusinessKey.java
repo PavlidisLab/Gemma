@@ -58,7 +58,7 @@ import java.util.HashSet;
  * another (in queries from the database; this is on top of basic 'equals', but should be compatible).
  *
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class BusinessKey {
 

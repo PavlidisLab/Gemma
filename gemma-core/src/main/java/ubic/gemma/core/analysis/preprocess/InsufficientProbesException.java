@@ -22,7 +22,7 @@ import ubic.gemma.core.analysis.preprocess.filter.InsufficientDataException;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class InsufficientProbesException extends InsufficientDataException {
 

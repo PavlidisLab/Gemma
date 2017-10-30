@@ -5,7 +5,7 @@ import ubic.gemma.core.job.TaskResult;
 
 /**
  * @author anton
- * @version $Id$
+ *
  */
 public interface MailUtils {
 

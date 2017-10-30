@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String> {
 

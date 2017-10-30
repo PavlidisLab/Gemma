@@ -4,7 +4,7 @@ Ext.namespace( 'Gemma.Metaheatmap' );
  * Panel that contains the heatmap display canvas.
  * 
  * @author AZ
- * @version $Id$
+ * 
  */
 Gemma.Metaheatmap.HeatmapBox = Ext.extend( Ext.Panel, {
 

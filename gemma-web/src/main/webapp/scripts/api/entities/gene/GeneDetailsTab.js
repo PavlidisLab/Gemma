@@ -1,6 +1,3 @@
-/**
- * $Id$
- */
 Ext.namespace('Gemma');
 
 /**

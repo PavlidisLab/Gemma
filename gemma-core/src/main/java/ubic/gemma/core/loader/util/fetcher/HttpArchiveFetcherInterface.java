@@ -27,7 +27,7 @@ import ubic.gemma.model.common.description.LocalFile;
  * Interface for downloading via http files and unarchiving them
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public interface HttpArchiveFetcherInterface extends Fetcher {
 

@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * Remove rows that have no BioSequence associated with the row.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatrix> {
 

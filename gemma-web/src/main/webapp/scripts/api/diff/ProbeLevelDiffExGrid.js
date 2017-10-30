@@ -3,8 +3,7 @@ Ext.namespace( 'Gemma' );
 /**
  * 
  * Grid to display expression experiments with differential evidence for each probe (e.g., for a single gene).
- * 
- * $Id$
+ *
  */
 Gemma.ProbeLevelDiffExGrid = Ext
    .extend(

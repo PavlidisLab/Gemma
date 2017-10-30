@@ -461,7 +461,7 @@ public interface ExpressionExperimentService
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperiment expressionExperiment );
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );

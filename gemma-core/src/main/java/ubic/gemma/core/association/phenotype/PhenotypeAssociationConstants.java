@@ -24,7 +24,7 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author ??
- * @version $Id$
+ *
  */
 public class PhenotypeAssociationConstants {
 

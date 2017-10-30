@@ -3,7 +3,7 @@ Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 /**
  * @author keshav
- * @version $Id$
+ * 
  */
 Ext.onReady( function() {
 

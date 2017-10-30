@@ -51,7 +51,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueOb
  * EvidenceImporterAbstractCLI contain the naming rules of those colunms
  * 
  * @author nicolas
- * @version $Id$
+ *
  */
 public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 

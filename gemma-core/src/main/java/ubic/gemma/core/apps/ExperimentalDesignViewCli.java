@@ -50,9 +50,9 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
         ExpressionExperimentService ees = getBean( ExpressionExperimentService.class );
         Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjects(
-                EntityUtils.getIds( ees.loadAll() ), false );
+                EntityUtils.getIdsFast( ees.loadAll() ), false );
 
-        Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<Long, ExpressionExperimentValueObject>();
+        Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<>();
 
         for ( ExpressionExperimentValueObject expressionExperiment : experiments ) {
             ed2ee.put( expressionExperiment.getExperimentalDesign(), expressionExperiment );
@@ -60,9 +60,9 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
         Collection<ExperimentalDesign> designs = eds.loadAll();
 
-        Map<Long, Long> factor2Design = new HashMap<Long, Long>();
+        Map<Long, Long> factor2Design = new HashMap<>();
 
-        Map<String, Map<String, Collection<FactorValueValueObject>>> categoryMap = new TreeMap<String, Map<String, Collection<FactorValueValueObject>>>();
+        Map<String, Map<String, Collection<FactorValueValueObject>>> categoryMap = new TreeMap<>();
 
         for ( ExperimentalDesign experimentalDesign : designs ) {
 

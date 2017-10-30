@@ -24,7 +24,7 @@ import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class NcbiGeneEnsemblFileParser extends BasicLineMapParser<String, String> {
     Map<String, String> id2ensembl = new HashMap<String, String>();

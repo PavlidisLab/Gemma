@@ -18,7 +18,7 @@ package ubic.gemma.model.analysis.expression.diff;
  * Helper object, not for general use.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class ContrastVO {
 

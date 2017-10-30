@@ -34,7 +34,7 @@ import ubic.gemma.core.analysis.preprocess.normalize.TwoColorArrayLoessNormalize
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 @SuppressWarnings("deprecation")
 public class TwoColorArrayLoessNormalizerTest {

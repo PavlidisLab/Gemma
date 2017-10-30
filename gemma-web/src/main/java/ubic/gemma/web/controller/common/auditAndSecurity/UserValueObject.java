@@ -22,7 +22,7 @@ import gemma.gsec.model.User;
 
 /**
  * @author keshav
- * @version $Id$
+ *
  */
 public class UserValueObject {
     private String currentGroup;

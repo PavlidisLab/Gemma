@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page language="java" isErrorPage="true"%>
-<%-- $Id$ --%>
+
 
 <%-- This is not being used. --%>
 

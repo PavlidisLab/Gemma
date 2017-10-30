@@ -2,7 +2,7 @@
  * This is the toolbar for the phenotype panel.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace('Gemma');
 

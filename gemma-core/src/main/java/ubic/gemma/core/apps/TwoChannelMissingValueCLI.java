@@ -49,7 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * (saving you a step!)
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingCLI {
 

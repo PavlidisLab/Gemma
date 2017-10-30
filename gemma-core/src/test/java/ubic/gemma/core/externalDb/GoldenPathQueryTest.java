@@ -33,7 +33,7 @@ import ubic.gemma.persistence.util.Settings;
  * These tests require a populated Human database. Valid as of 11/2009.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GoldenPathQueryTest extends TestCase {
 

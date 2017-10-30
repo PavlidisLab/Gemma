@@ -25,7 +25,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class TaskUtils {
 

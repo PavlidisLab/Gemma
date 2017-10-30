@@ -34,7 +34,7 @@ import ubic.gemma.model.common.Identifiable;
  * At the moment (May 2015) only the suitability score is fully implemented.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public abstract class Geeq implements Identifiable {
 

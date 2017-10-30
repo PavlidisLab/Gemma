@@ -57,7 +57,7 @@ import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 

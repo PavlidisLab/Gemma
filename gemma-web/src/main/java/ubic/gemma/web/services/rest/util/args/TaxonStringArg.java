@@ -12,8 +12,7 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
         this.value = s;
-        this.nullCause = String
-                .format( ERROR_FORMAT_ENTITY_NOT_FOUND, "common or scientific name, or abbreviation,", "Taxon" );
+        setNullCause( "common or scientific name, or abbreviation,", "Taxon" );
     }
 
     @Override

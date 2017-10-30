@@ -22,7 +22,7 @@ import ubic.gemma.core.job.TaskCommand;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ExpressionExperimentDataFetchCommand extends TaskCommand {
 

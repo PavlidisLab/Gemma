@@ -36,7 +36,7 @@ import ubic.gemma.persistence.util.Settings;
  * Test exercises the fastacmd - requires executable.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
     @Autowired

@@ -18,7 +18,7 @@ import java.util.Collection;
 
 /**
  * @author keshav
- * @version $Id$
+ *
  */
 @Component
 @Scope("prototype")
@@ -264,7 +264,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
 // * Job that loads in a javaspace.
 // *
 // * @author Paul
-// * @version $Id$
+// *
 // */
 // private class LoadRemoteJob extends LoadLocalJob {
 //

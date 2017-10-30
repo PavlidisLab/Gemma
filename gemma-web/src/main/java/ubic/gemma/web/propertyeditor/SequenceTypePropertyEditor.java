@@ -24,7 +24,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class SequenceTypePropertyEditor extends PropertyEditorSupport {
 

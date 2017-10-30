@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
  * logging control over the default RetryContext.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 public class RetryLogger extends RetryListenerSupport {

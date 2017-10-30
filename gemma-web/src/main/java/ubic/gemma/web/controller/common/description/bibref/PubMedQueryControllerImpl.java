@@ -38,7 +38,7 @@ import ubic.gemma.web.controller.BaseController;
  * Allow users to search for and view PubMed abstracts from NCBI, or from Gemma.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 @Controller("/bibRefSearch.html")
 public class PubMedQueryControllerImpl extends BaseController implements PubMedQueryController {

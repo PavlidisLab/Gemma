@@ -24,7 +24,7 @@ import java.util.Collection;
 
 /**
  * @author frances
- * @version $Id$
+ *
  */
 public class GeneDifferentialExpressionMetaAnalysisDetailValueObject implements Serializable {
 

@@ -37,7 +37,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  * Tests the two way anova analyzer with interactions. See test/data/stat-tests/README.txt for R code.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 

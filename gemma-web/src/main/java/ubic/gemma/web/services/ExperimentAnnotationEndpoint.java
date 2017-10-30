@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * (http://www.geneontology.org/GO.evidence.shtml)
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {

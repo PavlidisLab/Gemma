@@ -24,7 +24,7 @@ import ubic.gemma.persistence.util.EntityUtils;
  * Bean to expose for remote access via AJAX, when all that is needed is the ID and a way to know what the class is.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class EntityDelegator {
 

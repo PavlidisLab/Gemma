@@ -22,7 +22,7 @@ package ubic.gemma.core.loader.expression.geo;
  * Can be thrown to indicate an invalid input for GEO loading.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class InvalidAccessionException extends RuntimeException {
 

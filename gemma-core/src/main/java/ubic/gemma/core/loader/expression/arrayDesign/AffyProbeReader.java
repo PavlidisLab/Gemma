@@ -54,7 +54,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * off-line using a PERL script.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Collection<Reporter>> {
 

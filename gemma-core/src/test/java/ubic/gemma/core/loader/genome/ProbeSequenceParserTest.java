@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ProbeSequenceParserTest extends TestCase {
 

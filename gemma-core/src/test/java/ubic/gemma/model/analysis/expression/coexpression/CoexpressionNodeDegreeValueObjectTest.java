@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public class CoexpressionNodeDegreeValueObjectTest {
 

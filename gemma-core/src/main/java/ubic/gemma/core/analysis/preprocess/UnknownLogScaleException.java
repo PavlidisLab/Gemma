@@ -23,7 +23,7 @@ package ubic.gemma.core.analysis.preprocess;
  * This exception gets thrown when the log scale is unknown or ambiguous.
  * 
  * @author ptan
- * @version $Id$
+ *
  */
 public class UnknownLogScaleException extends UnsupportedOperationException {
 

@@ -15,7 +15,7 @@ import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 /**
  * TODO Document Me
  *
- * @version $Id$
+ *
  */
 public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 

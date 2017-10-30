@@ -12,7 +12,7 @@ public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {
         this.value = s;
-        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "short name", "Dataset" );
+        setNullCause( "short name", "Dataset" );
     }
 
     @Override

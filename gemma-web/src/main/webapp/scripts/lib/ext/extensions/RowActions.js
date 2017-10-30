@@ -15,7 +15,7 @@
  * @copyright (c) 2008, by Ing. Jozef SakÃ¡loÅ¡
  * @date      22. March 2008
  * @version   1.0
- * @revision  $Id$
+ *
  *
  * @license Ext.ux.grid.RowActions is licensed under the terms of
  * the Open Source LGPL 3.0 license.  Commercial use is permitted to the extent

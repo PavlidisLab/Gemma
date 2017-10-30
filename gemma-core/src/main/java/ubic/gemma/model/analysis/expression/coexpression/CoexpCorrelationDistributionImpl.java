@@ -18,7 +18,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class CoexpCorrelationDistributionImpl extends CoexpCorrelationDistribution {
 

@@ -2,7 +2,7 @@
  * Panel for showing analyzed result
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

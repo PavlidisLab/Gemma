@@ -1,5 +1,5 @@
 ## CUstomized for Gemma - adds @Override on methods.
-## version: $Id$
+##
 
 ##
 ##  This macro will render the equals() method

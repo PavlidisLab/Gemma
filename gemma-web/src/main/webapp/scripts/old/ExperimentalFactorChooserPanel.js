@@ -8,7 +8,7 @@ Ext.namespace( 'Gemma' );
  * @extends Ext.Window
  * 
  * @author keshav
- * @version $Id$
+ * 
  * @deprecated no longer used
  */
 

@@ -26,7 +26,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
  * Convert all types of EvidenceValueObjects to their corresponding entity
  * 
  * @author nicolas
- * @version $Id$
+ *
  */
 public interface PhenotypeAssoManagerServiceHelper {
 

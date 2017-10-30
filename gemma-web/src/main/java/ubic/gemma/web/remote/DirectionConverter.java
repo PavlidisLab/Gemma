@@ -25,7 +25,7 @@ import ubic.gemma.model.analysis.expression.diff.Direction;
  * DWR converter for Direction type.
  * 
  * @author Paul
- * @version $Id$
+ *
  * @see ubic.gemma.model.analysis.expression.diff.Direction
  */
 public class DirectionConverter extends StringConverter {

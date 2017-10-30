@@ -32,7 +32,7 @@ import ubic.gemma.core.job.TaskResult;
  * Deprecated: Use Task/AbstractTask instead.
  *
  * @author klc
- * @version $Id$
+ *
  */
 @Deprecated
 public abstract class BackgroundJob<T extends TaskCommand, R extends TaskResult>  {

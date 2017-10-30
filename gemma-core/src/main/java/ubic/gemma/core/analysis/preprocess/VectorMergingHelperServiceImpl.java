@@ -46,7 +46,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Transactional methods for updating merged vectors.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 @Service
 public class VectorMergingHelperServiceImpl implements VectorMergingHelperService {

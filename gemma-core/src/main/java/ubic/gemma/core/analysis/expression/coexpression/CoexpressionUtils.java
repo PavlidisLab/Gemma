@@ -31,7 +31,7 @@ import ubic.basecode.dataStructure.CountingMap;
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class CoexpressionUtils {
     /**

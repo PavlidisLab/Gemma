@@ -23,7 +23,7 @@ package ubic.gemma.model.expression.experiment;
  * Simplified representation of Geeq
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class GeeqValueObject {
 

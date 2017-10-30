@@ -37,7 +37,7 @@ import ubic.gemma.model.genome.Taxon;
  * Given the official symbol and taxon of a gene, will return the matching gene ID.
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 

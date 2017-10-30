@@ -24,7 +24,7 @@ import ubic.gemma.model.common.description.Characteristic;
 
 /**
  * @author Nicolas
- * @version $Id$
+ *
  */
 public class BibliographicPhenotypesValueObject implements Comparable<BibliographicPhenotypesValueObject> {
 

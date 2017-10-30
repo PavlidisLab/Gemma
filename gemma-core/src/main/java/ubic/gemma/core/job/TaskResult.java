@@ -24,7 +24,7 @@ import java.io.Serializable;
  * This class describes the result of long-running task. Like a Future, constructed at the time of task completion.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class TaskResult implements Serializable {
     private static final long serialVersionUID = 1L;

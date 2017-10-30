@@ -36,7 +36,7 @@ import java.util.*;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  * @see ubic.gemma.model.association.Gene2GOAssociation
  */
 @Repository

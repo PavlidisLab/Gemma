@@ -34,7 +34,7 @@ import ubic.gemma.persistence.util.Settings;
  * Class to handle saving client-side javascript error messages and warnings to a server-side log.
  * 
  * @author tvrossum
- * @version $Id$
+ *
  */
 @Controller
 public class JavascriptLogger {

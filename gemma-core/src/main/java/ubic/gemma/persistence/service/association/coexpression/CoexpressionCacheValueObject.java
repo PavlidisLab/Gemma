@@ -22,7 +22,7 @@ import java.util.Collection;
  * result gene, in all experiments.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class CoexpressionCacheValueObject implements Serializable {
 

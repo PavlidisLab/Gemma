@@ -1,6 +1,5 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import com.sun.istack.NotNull;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
@@ -22,7 +21,7 @@ import javax.ws.rs.core.Response;
  */
 public abstract class MutableArg<A, O extends Identifiable, VO extends IdentifiableValueObject<O>, S extends BaseVoEnabledService<O, VO>> {
 
-    static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' of given value does not exist or is not accessible.";
+    private static final String ERROR_FORMAT_ENTITY_NOT_FOUND = "The identifier was recognised to be '%1$s', but entity of type '%2$s' with '%1$s' equal to '%3$s' does not exist or is not accessible.";
     private static final String ERROR_MSG_ENTITY_NOT_FOUND = "Entity with the given identifier does not exist or is not accessible.";
     /**
      * The value in a Type that the argument represents.
@@ -35,15 +34,9 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
 
     @Override
     public String toString() {
-        if(this.value == null) return "";
+        if ( this.value == null )
+            return "";
         return String.valueOf( this.value );
-    }
-
-    /**
-     * @return the reason that the object represented by the argument was null.
-     */
-    public final String getNullCause() {
-        return nullCause;
     }
 
     /**
@@ -61,7 +54,7 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
      */
     public final VO getValueObject( S service ) {
         O object = this.value == null ? null : this.getPersistentObject( service );
-        return check(service.loadValueObject( object ));
+        return check( service.loadValueObject( object ) );
     }
 
     /**
@@ -70,15 +63,12 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
      * @param service the service to use for the value object retrieval.
      * @return an object whose identifier matches the value of this mutable argument.
      */
-    @NotNull
     public abstract O getPersistentObject( S service );
 
     /**
-     *
      * @return the name of the property on the Identifiable object that this object represents.
      */
-    @NotNull
-    public abstract String getPropertyName( S service);
+    public abstract String getPropertyName( S service );
 
     /**
      * Checks whether the given object is null, and throws an appropriate exception if necessary.
@@ -116,8 +106,18 @@ public abstract class MutableArg<A, O extends Identifiable, VO extends Identifia
     void throwNotFound() {
         WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.NOT_FOUND,
                 ERROR_MSG_ENTITY_NOT_FOUND );
-        WellComposedErrorBody.addExceptionFields( errorBody, new EntityNotFoundException( getNullCause() ) );
+        WellComposedErrorBody.addExceptionFields( errorBody, new EntityNotFoundException( this.nullCause ) );
         throw new GemmaApiException( errorBody );
+    }
+
+    /**
+     * Composes a null cause from the given values.
+     *
+     * @param identifierName the name of the identifier that the MutableArg refers to.
+     * @param entityName     the name of the entity that this MutableArg represents.
+     */
+    void setNullCause( String identifierName, String entityName ) {
+        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, identifierName, entityName, this.value );
     }
 
 }

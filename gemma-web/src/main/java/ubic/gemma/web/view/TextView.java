@@ -30,7 +30,7 @@ import org.springframework.web.servlet.view.AbstractView;
  * written.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class TextView extends AbstractView {
 

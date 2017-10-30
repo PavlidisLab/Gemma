@@ -39,7 +39,7 @@ import ubic.gemma.model.genome.Gene;
  * Not used yet...
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 @Component
 public class CoexpressionAddons {

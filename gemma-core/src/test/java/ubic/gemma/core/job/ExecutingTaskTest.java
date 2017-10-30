@@ -46,7 +46,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author anton
- * @version $Id$
+ *
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 

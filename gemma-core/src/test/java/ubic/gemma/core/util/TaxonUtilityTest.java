@@ -31,7 +31,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author kelsey
- * @version $Id$
+ *
  */
 public class TaxonUtilityTest extends BaseSpringContextTest {
 

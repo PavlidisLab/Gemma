@@ -27,7 +27,7 @@ import cern.colt.list.DoubleArrayList;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class SpearmanMetricsTest {
 

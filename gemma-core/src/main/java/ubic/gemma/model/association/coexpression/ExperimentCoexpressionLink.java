@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  * Represents coexpression at the level of experiment, referinng to links stored as Gene2GeneCoexpression.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public abstract class ExperimentCoexpressionLink implements Serializable {
 

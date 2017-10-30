@@ -9,7 +9,7 @@
  * 
  * @authors Luke, Paul, klc
  * 
- * @version $Id$
+ * 
  */
 
 Gemma.GeneSessionSaveForm = Ext.extend( Ext.Panel, {

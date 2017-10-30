@@ -2,7 +2,7 @@
  * Common config for components in phenotype tab panel
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace('Gemma');
 

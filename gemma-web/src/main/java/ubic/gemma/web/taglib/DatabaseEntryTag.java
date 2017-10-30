@@ -30,7 +30,7 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author keshav
- * @version $Id$
+ *
  */
 public class DatabaseEntryTag extends TagSupport {
 

@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Used for determining which array designs were used in a given expression experiment (EE)
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {

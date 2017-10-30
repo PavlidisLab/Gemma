@@ -27,7 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 @Service
 public class JobInfoServiceImpl implements JobInfoService {

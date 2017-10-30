@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * something like dedv-"gene IDs"-"Number of Experiments".xml http://chibi.ubc.ca/Gemma/ws/xml/
  * 
  * @author gavin, klc
- * @version$Id$
+ *
  */
 public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 

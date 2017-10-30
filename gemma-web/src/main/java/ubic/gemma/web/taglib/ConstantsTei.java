@@ -37,7 +37,7 @@ import ubic.gemma.web.util.Constants;
  * made visible.
  * 
  * @author Matt Raible
- * @version $Id$
+ *
  */
 public class ConstantsTei extends TagExtraInfo {
     private final Log log = LogFactory.getLog( ConstantsTei.class );

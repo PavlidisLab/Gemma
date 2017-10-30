@@ -28,7 +28,7 @@ import ubic.gemma.core.job.progress.ProgressData;
 
 /**
  * @author klc
- * @version $Id$
+ *
  */
 public class ProgressDataTest {
 

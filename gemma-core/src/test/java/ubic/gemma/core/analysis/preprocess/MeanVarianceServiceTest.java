@@ -57,7 +57,7 @@ import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 
 /**
  * @author ptan
- * @version $Id$
+ *
  */
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 

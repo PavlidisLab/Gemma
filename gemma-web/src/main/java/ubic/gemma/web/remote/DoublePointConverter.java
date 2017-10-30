@@ -37,7 +37,7 @@ import ubic.basecode.dataStructure.DoublePoint;
  * precision to 3 when the double gets converted to a string.
  * 
  * @author kelsey
- * @version $Id$
+ *
  */
 public class DoublePointConverter extends BeanConverter {
 

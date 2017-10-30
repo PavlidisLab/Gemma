@@ -25,7 +25,7 @@ import org.aspectj.lang.annotation.Pointcut;
  * General-purpose pointcuts to recognize CRUD operations etc.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Aspect
 public class SystemArchitectureAspect {

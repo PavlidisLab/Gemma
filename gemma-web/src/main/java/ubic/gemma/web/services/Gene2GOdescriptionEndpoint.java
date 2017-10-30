@@ -39,7 +39,7 @@ import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl;
  * descriptions.
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {

@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.Gene;
 /**
  * TODO Document Me
  *
- * @version $Id$
+ *
  */
 public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 

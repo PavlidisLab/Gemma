@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class IlluminaProbeReaderTest extends TestCase {
     protected static final Log log = LogFactory.getLog( IlluminaProbeReaderTest.class );

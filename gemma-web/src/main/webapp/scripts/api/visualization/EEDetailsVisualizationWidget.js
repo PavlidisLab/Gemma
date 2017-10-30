@@ -21,7 +21,7 @@ Ext.namespace( 'Gemma' );
  * Used in GeneSearchVisualizationPage.js
  * 
  * @author paul, based on older code.
- * @version $Id$
+ * 
  */
 Gemma.EEDetailsVisualizationWidget = Ext.extend( Gemma.GeneGrid, {
 

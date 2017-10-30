@@ -23,7 +23,7 @@ import ubic.gemma.core.util.NetDatasourceUtil;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class NCBIUtil extends NetDatasourceUtil {
 

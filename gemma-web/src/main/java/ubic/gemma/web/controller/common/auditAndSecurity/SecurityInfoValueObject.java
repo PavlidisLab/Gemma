@@ -28,7 +28,7 @@ import java.util.HashSet;
  * Carries extensive security information about an entity.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class SecurityInfoValueObject {
 

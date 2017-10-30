@@ -36,7 +36,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class UserServiceImplTest {
     private UserServiceImpl userService = new UserServiceImpl();

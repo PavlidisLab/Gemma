@@ -38,4 +38,7 @@ public interface BioAssayDao extends BaseVoEnabledDao<BioAssay, BioAssayValueObj
 
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
+    BioAssayValueObject loadValueObject( BioAssay entity, boolean basic );
+
+    Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
 }

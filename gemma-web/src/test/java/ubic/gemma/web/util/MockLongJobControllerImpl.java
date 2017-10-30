@@ -36,7 +36,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * Controller that does nothing except wait a while. Used for tests.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 @Controller
 public class MockLongJobControllerImpl implements MockLongJobController {

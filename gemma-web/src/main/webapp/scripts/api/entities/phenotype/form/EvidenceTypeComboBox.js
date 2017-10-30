@@ -2,7 +2,7 @@
  * This ComboBox lets users specify type of evidence.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 

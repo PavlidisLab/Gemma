@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -57,11 +58,14 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     private Map<String, String> factors;
     private Collection<FactorValueValueObject> factorValueObjects = new HashSet<>();
+    private Collection<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
     /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
     private Map<String, String> factorValues;
     private String name;
+
+    private boolean basicFVs;
 
     /**
      * Required when using the class as a spring bean.
@@ -74,6 +78,10 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     }
 
     public BioMaterialValueObject( BioMaterial bm ) {
+        this( bm, false );
+    }
+
+    public BioMaterialValueObject( BioMaterial bm, boolean basic ) {
         super( bm.getId() );
         this.name = bm.getName();
         this.description = bm.getDescription();
@@ -82,11 +90,17 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             this.characteristics.add( new CharacteristicValueObject( ch ) );
         }
 
+        this.basicFVs = basic;
         this.factors = new HashMap<>();
         this.factorValues = new HashMap<>();
         this.factorIdToFactorValueId = new HashMap<>();
         for ( FactorValue fv : bm.getFactorValues() ) {
-            this.factorValueObjects.add( new FactorValueValueObject( fv ) );
+            if(basicFVs){
+                this.fVBasicVOs.add( new FactorValueBasicValueObject( fv ) );
+            }else{
+                this.factorValueObjects.add( new FactorValueValueObject( fv ) );
+            }
+
             ExperimentalFactor factor = fv.getExperimentalFactor();
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
@@ -197,8 +211,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.factors = factors;
     }
 
-    public Collection<FactorValueValueObject> getFactorValueObjects() {
-        return factorValueObjects;
+    public Collection<? extends IdentifiableValueObject> getFactorValueObjects() {
+        return basicFVs ? fVBasicVOs : factorValueObjects;
     }
 
     public void setFactorValueObjects( Collection<FactorValueValueObject> factorValueObjects ) {

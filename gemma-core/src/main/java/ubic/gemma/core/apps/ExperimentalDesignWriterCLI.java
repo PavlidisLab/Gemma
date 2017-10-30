@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Writes out the experimental design for a given experiment. This can be directly read into R.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
 

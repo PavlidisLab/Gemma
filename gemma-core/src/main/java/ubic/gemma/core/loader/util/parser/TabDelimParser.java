@@ -27,7 +27,7 @@ import org.apache.commons.lang3.StringUtils;
  * A simple tab delim file parser
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class TabDelimParser extends BasicLineParser<String[]> {
 

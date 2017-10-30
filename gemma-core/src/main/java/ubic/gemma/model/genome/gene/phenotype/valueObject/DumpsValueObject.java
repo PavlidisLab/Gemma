@@ -18,7 +18,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
  * TODO Document Me
  * 
  * @author jleong
- * @version $Id$
+ *
  */
 public class DumpsValueObject {
     

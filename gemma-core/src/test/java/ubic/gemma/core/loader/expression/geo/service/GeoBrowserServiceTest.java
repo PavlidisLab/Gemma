@@ -33,7 +33,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
     @Autowired

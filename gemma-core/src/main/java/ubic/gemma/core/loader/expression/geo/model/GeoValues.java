@@ -41,7 +41,7 @@ import java.util.Map.Entry;
  * across the samples.
  *
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GeoValues implements Serializable {
 

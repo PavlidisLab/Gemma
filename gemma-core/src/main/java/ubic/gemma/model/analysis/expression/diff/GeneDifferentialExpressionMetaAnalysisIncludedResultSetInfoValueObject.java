@@ -25,8 +25,6 @@ import java.io.Serializable;
  * FIXME name is too long!
  * 
  * @author frances
- * @version $Id: GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject.java,v 1.1 2012/11/28 01:44:28
- *          frances Exp $
  */
 public class GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject implements Serializable {
 

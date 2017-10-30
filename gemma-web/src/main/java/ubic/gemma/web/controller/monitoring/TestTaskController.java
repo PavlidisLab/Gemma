@@ -29,7 +29,7 @@ import ubic.gemma.core.job.grid.util.MonitorTaskCommand;
  * Exists entirely to create a dumb job that doesn't do anything, for test purposes.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 public class TestTaskController {

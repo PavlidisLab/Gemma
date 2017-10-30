@@ -28,7 +28,7 @@ import ubic.gemma.core.tasks.Task;
  * A command object to be used by spaces.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
 

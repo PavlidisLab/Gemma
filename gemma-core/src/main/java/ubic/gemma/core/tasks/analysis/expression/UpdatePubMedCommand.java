@@ -24,7 +24,7 @@ import ubic.gemma.core.tasks.Task;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class UpdatePubMedCommand extends TaskCommand {
 

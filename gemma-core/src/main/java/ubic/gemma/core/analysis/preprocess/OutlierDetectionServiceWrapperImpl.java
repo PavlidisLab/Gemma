@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * I made a wrapper class to OutlierDetectionServiceImpl so that I could write transactional methods
  * 
- * @version $Id$
+ *
  */
 @Service
 public class OutlierDetectionServiceWrapperImpl implements OutlierDetectionServiceWrapper {

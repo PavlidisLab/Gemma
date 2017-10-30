@@ -32,7 +32,7 @@ import ubic.gemma.core.tasks.analysis.expression.SvdTaskCommand;
  * Run SVD on a data set.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Controller
 public class SvdController {

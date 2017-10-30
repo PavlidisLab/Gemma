@@ -6,7 +6,7 @@
    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
    http://www.springframework.org/schema/context 
    http://www.springframework.org/schema/context/spring-context-3.2.xsd">
-	<!-- author: keshav $Id$ -->
+	<!-- author: keshav -->
 
 	<!-- See LuceneEnvironment for documentation of these parameters -->
 

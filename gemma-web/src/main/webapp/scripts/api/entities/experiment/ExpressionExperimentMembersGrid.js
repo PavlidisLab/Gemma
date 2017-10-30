@@ -6,7 +6,7 @@ Ext.namespace( 'Gemma' );
  * Define selectedExpressionExperimentValueObject in config or with setSelectedExpressionExperimentValueObject(eesvo) to
  * display an experiment group. Use loadExperimentSet(eesvo) to display an experiment group after initialisation.
  * 
- * @version $Id$
+ *
  */
 Gemma.ExpressionExperimentMembersGrid = Ext
    .extend(

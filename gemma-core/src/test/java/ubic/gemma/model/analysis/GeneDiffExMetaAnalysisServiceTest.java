@@ -31,7 +31,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class GeneDiffExMetaAnalysisServiceTest extends BaseSpringContextTest {
 

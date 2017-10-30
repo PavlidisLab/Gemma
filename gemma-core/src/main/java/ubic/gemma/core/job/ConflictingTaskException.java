@@ -23,7 +23,7 @@ package ubic.gemma.core.job;
  * the same type but this may be subject to business rules documented elsewhere
  * 
  * @author paul
- * @version $Id$
+ *
  * @see ubic.gemma.core.job.executor.webapp.TaskRunningServiceImpl
  */
 public class ConflictingTaskException extends RuntimeException {

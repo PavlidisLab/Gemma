@@ -29,7 +29,7 @@ import ubic.gemma.core.tasks.AbstractTask;
  * Empty task that can be run to monitor the state of the Space.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 @Deprecated
 @Component

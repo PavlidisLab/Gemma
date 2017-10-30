@@ -17,7 +17,7 @@ public class GeneEnsemblIdArg extends GeneAnyIdArg<String> {
      */
     GeneEnsemblIdArg( String s ) {
         this.value = s;
-        this.nullCause = getDefaultError();
+        setNullCause( ID_NAME, "Gene" );
     }
 
     @Override

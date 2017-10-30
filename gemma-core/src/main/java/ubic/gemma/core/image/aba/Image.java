@@ -21,7 +21,7 @@ package ubic.gemma.core.image.aba;
 /**
  * allen brain Atlas Image class. represents 1 image in the Allen brain atlas library.
  * 
- * @version $Id$ @author kelsey
+ *  @author kelsey
  */
 public class Image {
 

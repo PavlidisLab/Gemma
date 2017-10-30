@@ -51,7 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 

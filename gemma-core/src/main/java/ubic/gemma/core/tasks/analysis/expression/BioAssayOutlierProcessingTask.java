@@ -24,7 +24,7 @@ import ubic.gemma.core.tasks.Task;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public interface BioAssayOutlierProcessingTask extends Task<TaskResult, BioAssayOutlierProcessingTaskCommand> {
 }

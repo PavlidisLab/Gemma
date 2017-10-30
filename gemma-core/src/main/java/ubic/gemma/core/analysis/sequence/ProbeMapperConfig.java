@@ -15,7 +15,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * Holds parameters for how mapping should be done.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class ProbeMapperConfig {
 

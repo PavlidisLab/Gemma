@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidence
 
 /**
  * @author frances
- * @version $Id$
+ *
  */
 public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements SecureValueObject {
     /**

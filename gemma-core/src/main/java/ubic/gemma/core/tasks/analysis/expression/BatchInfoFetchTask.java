@@ -19,7 +19,7 @@ import ubic.gemma.core.tasks.Task;
 
 /**
  * @author anton
- * @version $Id$
+ *
  */
 public interface BatchInfoFetchTask extends Task<TaskResult, BatchInfoFetchTaskCommand> {
 }

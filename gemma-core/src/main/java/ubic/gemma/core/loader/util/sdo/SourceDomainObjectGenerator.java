@@ -22,7 +22,7 @@ import java.util.Collection;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public interface SourceDomainObjectGenerator {
 

@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * </ul>
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public interface ArrayDesignMergeService {
 

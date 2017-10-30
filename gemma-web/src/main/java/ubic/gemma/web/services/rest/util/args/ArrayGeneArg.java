@@ -15,7 +15,7 @@ public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneValueObject, GeneServ
     private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
 
     private ArrayGeneArg( List<String> values ) {
-        super( values );
+        super( values, GeneArg.class );
     }
 
     private ArrayGeneArg( String errorMessage, Exception exception ) {

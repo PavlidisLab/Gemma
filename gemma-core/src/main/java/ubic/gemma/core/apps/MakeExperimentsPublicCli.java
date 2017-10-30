@@ -22,7 +22,7 @@ import gemma.gsec.SecurityService;
  * Make data sets public. You must be the owner of the experiment to do this.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCLI {
 

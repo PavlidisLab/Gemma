@@ -33,7 +33,7 @@ import org.hibernate.usertype.UserType;
  * Converts strings in the database into java.net.URL objects.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class HibernateURLType implements UserType {
 

@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ExpressionDataMatrixRowSort {
 

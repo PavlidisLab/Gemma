@@ -41,7 +41,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 

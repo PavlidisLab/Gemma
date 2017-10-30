@@ -34,7 +34,7 @@ File with probes to keep (-n is ignored)
 
 =head2 Version
 
-$Id$
+
 
 =cut
 

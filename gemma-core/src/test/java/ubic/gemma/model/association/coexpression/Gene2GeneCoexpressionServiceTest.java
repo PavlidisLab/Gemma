@@ -45,7 +45,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 /**
  * @author klc
- * @version $Id$
+ *
  */
 public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 

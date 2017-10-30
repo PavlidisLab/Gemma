@@ -67,8 +67,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private String value = "";
     private String valueUri = null;
 
-
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -89,8 +87,9 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
 
-        if(this.value == null){
-            log.warn( "Characteristic with null value. Id: "+this.id+" cat: "+this.category+" cat uri: "+this.categoryUri );
+        if ( this.value == null ) {
+            log.warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                    + this.categoryUri );
         }
     }
 
@@ -111,8 +110,9 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     public CharacteristicValueObject( Long id, String value, String valueUri ) {
         this( id, valueUri );
         this.value = value;
-        if(this.value == null){
-            log.warn( "Characteristic with null value. Id: "+this.id+" cat: "+this.category+" cat uri: "+this.categoryUri );
+        if ( this.value == null ) {
+            log.warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                    + this.categoryUri );
         }
     }
 
@@ -121,8 +121,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this.category = category;
         this.categoryUri = categoryUri;
     }
-
-
 
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<? extends Characteristic> characteristics ) {
@@ -141,17 +139,15 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         return characteristicValueObjects;
     }
 
-
-
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         if ( this.valueUri != null ) {
             result = prime * result + this.valueUri.hashCode();
-        } else if (this.value != null){
+        } else if ( this.value != null ) {
             result = prime * result + this.value.hashCode();
-        } else{
+        } else {
             result = prime * result + this.id.hashCode();
         }
         return result;
@@ -195,8 +191,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
         return true;
     }
-
-
 
     public String getCategory() {
         return this.category;
@@ -316,8 +310,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     public void setRoot( boolean root ) {
         this.root = root;
     }
-
-
 
     private void parseUrlId() {
         if ( StringUtils.isBlank( valueUri ) )

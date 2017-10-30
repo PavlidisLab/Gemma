@@ -23,7 +23,7 @@ import ubic.gemma.core.tasks.Task;
 
 /**
  * @author Paul
- * @version $Id$
+ *
  */
 public interface DifferentialExpressionAnalysisTask extends Task<TaskResult, DifferentialExpressionAnalysisTaskCommand> {
 }

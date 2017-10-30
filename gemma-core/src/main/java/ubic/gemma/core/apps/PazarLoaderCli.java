@@ -26,7 +26,7 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class PazarLoaderCli extends AbstractCLIContextCLI {
 

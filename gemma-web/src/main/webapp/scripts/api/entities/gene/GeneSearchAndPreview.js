@@ -2,7 +2,7 @@
  * A gene search combo and a geneSetPreview.
  * 
  * @author thea
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

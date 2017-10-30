@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class FastaParserTest extends TestCase {
 

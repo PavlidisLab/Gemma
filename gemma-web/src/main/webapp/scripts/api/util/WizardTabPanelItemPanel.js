@@ -2,7 +2,7 @@
  * It is a child panel inside wizard tab panel.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma' );
 

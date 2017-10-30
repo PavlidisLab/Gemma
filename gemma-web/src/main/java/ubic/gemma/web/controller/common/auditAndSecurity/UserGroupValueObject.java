@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class UserGroupValueObject {
 

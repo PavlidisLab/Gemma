@@ -30,7 +30,7 @@ import org.apache.commons.lang3.time.StopWatch;
  * parseOneLine method that is implemented must handle adding the data to the Map.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
 

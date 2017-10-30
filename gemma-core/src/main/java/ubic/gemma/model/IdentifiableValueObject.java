@@ -36,4 +36,9 @@ public abstract class IdentifiableValueObject<O extends Identifiable> {
     public void setId( Long id ) {
         this.id = id;
     }
+
+    @Override
+    public int hashCode() {
+        return 31 * id.hashCode();
+    }
 }

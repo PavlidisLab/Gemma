@@ -2,7 +2,7 @@
  * It displays evidence linked to the current phenotypes and gene.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

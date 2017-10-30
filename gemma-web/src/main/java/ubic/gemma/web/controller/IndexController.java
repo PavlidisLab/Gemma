@@ -24,7 +24,7 @@ import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
  * TODO Document Me
  * 
  * @author anton
- * @version $Id$
+ *
  */
 @Controller
 public class IndexController {

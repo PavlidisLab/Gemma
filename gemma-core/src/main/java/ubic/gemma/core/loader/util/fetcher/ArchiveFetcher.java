@@ -22,7 +22,7 @@ package ubic.gemma.core.loader.util.fetcher;
  * Interface defining a class that downloads archives and unpacks them.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public interface ArchiveFetcher extends Fetcher {
 

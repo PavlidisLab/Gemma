@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * </ul>
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 

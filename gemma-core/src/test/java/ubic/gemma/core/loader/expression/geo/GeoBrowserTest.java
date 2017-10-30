@@ -33,7 +33,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GeoBrowserTest {
 

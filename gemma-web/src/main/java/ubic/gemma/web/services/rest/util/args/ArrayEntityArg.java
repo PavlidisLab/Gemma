@@ -9,17 +9,23 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.core.Response;
+import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * Array of identifiers of an Identifiable entity
  */
-public abstract class ArrayEntityArg<O extends Identifiable, VO extends IdentifiableValueObject<O>, S extends BaseVoEnabledService<O, VO>> extends ArrayStringArg {
+public abstract class ArrayEntityArg<O extends Identifiable, VO extends IdentifiableValueObject<O>, S extends BaseVoEnabledService<O, VO>>
+        extends ArrayStringArg {
 
-    ArrayEntityArg( List<String> values ) {
+    private Class<? extends MutableArg> argClass;
+
+    ArrayEntityArg( List<String> values, Class<? extends MutableArg> argClass ) {
         super( values );
+        this.argClass = argClass;
     }
 
     ArrayEntityArg( String errorMessage, Exception exception ) {
@@ -41,13 +47,15 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
 
     /**
      * Reads the given MutableArgs property name and checks whether it is null or empty.
-     * @param arg the MutableArg to retrieve the property name from.
-     * @param value one of the values of the property that has been passed into this array arg.
+     *
+     * @param arg     the MutableArg to retrieve the property name from.
+     * @param value   one of the values of the property that has been passed into this array arg.
      * @param service service that may be used to retrieve the property from the MutableArg.
-     * @param <T> type of the given MutableArg.
+     * @param <T>     type of the given MutableArg.
      * @return the name of the property that the values in this arrayArg refer to.
      */
-    <T extends MutableArg<?, O, VO, BaseVoEnabledService<O, VO>>> String checkPropertyNameString( T arg, String value, BaseVoEnabledService<O, VO> service ) {
+    <T extends MutableArg<?, O, VO, BaseVoEnabledService<O, VO>>> String checkPropertyNameString( T arg, String value,
+            BaseVoEnabledService<O, VO> service ) {
         String identifier = arg.getPropertyName( service );
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new GemmaApiException( new WellComposedErrorBody( Response.Status.BAD_REQUEST,
@@ -88,6 +96,22 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
                 FilterArg.ERROR_MSG_MALFORMED_REQUEST );
         WellComposedErrorBody.addExceptionFields( error, e );
         return new GemmaApiException( error );
+    }
+
+    public Collection<O> getPersistentObjects( S service ) {
+        Collection<O> ees = new ArrayList<>( getValue().size() );
+        for ( String s : getValue() ) {
+            try {
+                MutableArg<?, O, VO, S> arg;
+                // noinspection unchecked, JavaReflectionMemberAccess
+                arg = ( MutableArg<?, O, VO, S> ) argClass.getMethod( "valueOf", String.class ).invoke( null, s );
+                ees.add( arg.getPersistentObject( service ) );
+            } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
+                // Could not avoid using reflection, because java does not allow abstract static methods.
+                e.printStackTrace();
+            }
+        }
+        return ees;
     }
 
     /**

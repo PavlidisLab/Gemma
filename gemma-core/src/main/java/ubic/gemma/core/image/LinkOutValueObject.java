@@ -27,7 +27,7 @@ import java.util.Collection;
  * FIXME this really is quite specific for ABA, it should be renamed.
  * 
  * @author kelsey
- * @version $Id$
+ *
  */
 public class LinkOutValueObject implements Serializable {
 

@@ -29,7 +29,7 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
  * TODO Document Me
  * 
  * @author frances
- * @version $Id$
+ *
  */
 public interface GeneDiffExMetaAnalysisHelperService {
     /**

@@ -1,5 +1,5 @@
 # Example unix shell script to start workers
-# $Id$
+
 
 # TODO: there's a way to specify this with wildcards. (i.e. without tr stuff)
 JARS=$(echo ${GEMMA_LIB}/* | tr ' ' ':')

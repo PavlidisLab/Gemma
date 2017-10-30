@@ -47,7 +47,7 @@ import ubic.basecode.util.FileTools;
  * </ul>
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 

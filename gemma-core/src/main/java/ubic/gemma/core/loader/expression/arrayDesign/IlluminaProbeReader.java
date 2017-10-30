@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * Parse an Illumina "manifest.txt" file (tab-delimited). A one-line header is permitted.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
 

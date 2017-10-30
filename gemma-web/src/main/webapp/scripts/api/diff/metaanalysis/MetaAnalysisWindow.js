@@ -2,7 +2,7 @@
  * This window lets users add new meta-analysis and view analyzed result.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

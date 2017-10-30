@@ -24,7 +24,7 @@ import java.util.List;
  * Just like BasicLineMapParser, but can return a list that retrieves the objects in the order they were received.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public abstract class BasicOrderedLineParser<T> extends BasicLineParser<T> {
 

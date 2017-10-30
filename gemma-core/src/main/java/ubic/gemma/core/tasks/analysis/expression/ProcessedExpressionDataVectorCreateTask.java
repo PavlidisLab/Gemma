@@ -25,7 +25,7 @@ import ubic.gemma.core.tasks.Task;
  * A "processed expression data vector create" task
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 
 public interface ProcessedExpressionDataVectorCreateTask extends

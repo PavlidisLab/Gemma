@@ -2,7 +2,7 @@
  * Panel for showing meta-analysis result
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

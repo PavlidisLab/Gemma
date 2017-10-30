@@ -2,7 +2,7 @@
  * This experimental panel allows users to enter data for experimental evidence.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace( 'Gemma.PhenotypeAssociationForm' );
 

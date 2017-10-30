@@ -33,7 +33,7 @@ import java.util.*;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ExperimentalDesignUtils {
 

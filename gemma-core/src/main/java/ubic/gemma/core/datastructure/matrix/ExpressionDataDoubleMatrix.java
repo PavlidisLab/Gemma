@@ -45,7 +45,7 @@ import java.util.*;
  *
  * @author pavlidis
  * @author keshav
- * @version $Id$
+ *
  */
 public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double> {
 

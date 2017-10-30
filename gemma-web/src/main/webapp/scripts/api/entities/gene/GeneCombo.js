@@ -1,7 +1,3 @@
-/*
- * @version : $Id$
- * 
- */
 Ext.namespace( 'Gemma' );
 
 /**

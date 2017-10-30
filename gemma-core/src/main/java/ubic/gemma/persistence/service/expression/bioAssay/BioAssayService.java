@@ -104,4 +104,5 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     //@Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioAssay bioAssay );
 
+    Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
 }

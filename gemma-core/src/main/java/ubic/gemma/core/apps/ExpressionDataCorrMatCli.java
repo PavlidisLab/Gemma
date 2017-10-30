@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Create correlation visualizations for expression experiments
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 

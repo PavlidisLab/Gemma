@@ -29,7 +29,7 @@ import org.springframework.web.servlet.view.AbstractView;
  * Model should contain a single value matching XML_PARAM
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class XmlView extends AbstractView {
 

@@ -27,7 +27,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * known as Blastdbcmd)
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public interface FastaCmd {
 

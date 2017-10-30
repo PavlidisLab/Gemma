@@ -28,7 +28,7 @@ import java.util.List;
  * A parser that combines results across files. To be used if parsing a single file does not make any sense.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public interface FileCombiningParser {
 

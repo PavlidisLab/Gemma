@@ -5,7 +5,7 @@ Ext.namespace( 'Gemma' );
  * 
  * @class Gemma.DatasetGroupCombo
  * @extends Ext.form.ComboBox
- * @version $Id$
+ *
  * @author paul
  * @see DatasetGroupComboPanel for a convenient way to display this with an edit button.
  */

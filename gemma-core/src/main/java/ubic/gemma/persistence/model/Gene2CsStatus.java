@@ -27,7 +27,7 @@ import java.util.Date;
  * Used to store information about what happened when the GENE2CS table was updated.
  * 
  * @author paul
- * @version $Id$
+ *
  * @see TableMaintenanceUtil
  */
 public class Gene2CsStatus implements Serializable {

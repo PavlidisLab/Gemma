@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Switching of platforms that have no composite sequences.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTest {
 

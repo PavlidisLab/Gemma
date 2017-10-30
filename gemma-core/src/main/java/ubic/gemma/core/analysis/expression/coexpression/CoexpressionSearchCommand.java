@@ -24,7 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author luke
- * @version $Id$
+ *
  */
 public class CoexpressionSearchCommand {
 

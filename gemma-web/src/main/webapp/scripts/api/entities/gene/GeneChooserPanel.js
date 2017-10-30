@@ -3,7 +3,7 @@
  * the database. The selected genes are kept in a table which can be edited. This component is the top part of the
  * coexpression interface, but should be reusable.
  * 
- * Version : $Id$ Author : luke, paul
+ * Author : luke, paul
  */
 Ext.namespace('Gemma');
 

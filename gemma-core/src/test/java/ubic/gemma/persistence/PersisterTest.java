@@ -28,7 +28,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class PersisterTest extends BaseSpringContextTest {
 

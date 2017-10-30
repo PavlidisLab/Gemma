@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Prints preferred data matrix to a file.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulatingCLI {
 

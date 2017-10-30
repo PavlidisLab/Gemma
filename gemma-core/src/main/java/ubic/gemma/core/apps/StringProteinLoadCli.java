@@ -60,7 +60,7 @@ import java.util.Collection;
  * protein protein interactions for all taxon using a remote string and biomart file -u username -p password
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public class StringProteinLoadCli extends AbstractCLIContextCLI {
     @Override

@@ -37,7 +37,7 @@ import ubic.gemma.core.tasks.Task;
  * Represents the basic data to enter about an expression experiment when starting from a delimited file of data
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class SimpleExpressionExperimentMetaData extends TaskCommand {
 

@@ -22,7 +22,7 @@ import java.util.Comparator;
 
 /**
  * @author tvrossum
- * @version $Id$
+ *
  */
 public class SearchResultTaxonComparator implements Comparator<SearchResultDisplayObject> {
 

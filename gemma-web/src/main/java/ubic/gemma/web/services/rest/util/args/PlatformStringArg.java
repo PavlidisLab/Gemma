@@ -12,7 +12,7 @@ public class PlatformStringArg extends PlatformArg<String> {
 
     PlatformStringArg( String s ) {
         this.value = s;
-        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "short name", "Platform" );
+        setNullCause( "short name", "Platform" );
     }
 
     @Override

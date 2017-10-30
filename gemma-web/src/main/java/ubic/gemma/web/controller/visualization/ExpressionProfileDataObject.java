@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
  * 
  * @see DoubleVectorValueObject for a similar object.
  * @author Paul
- * @version $Id$
+ *
  */
 public class ExpressionProfileDataObject {
 

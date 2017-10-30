@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * @author keshav
- * @version $Id$
+ *
  */
 public class ExpressionExperimentExperimentalFactorValueObject {
 

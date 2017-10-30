@@ -30,7 +30,7 @@ import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
  * A controller to run array design repeat scan either locally or in a space.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 @Controller
 public class ArrayDesignRepeatScanController {

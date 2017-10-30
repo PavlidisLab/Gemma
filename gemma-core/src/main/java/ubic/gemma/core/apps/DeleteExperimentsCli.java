@@ -21,7 +21,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Delete one or more experiments from the system.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 

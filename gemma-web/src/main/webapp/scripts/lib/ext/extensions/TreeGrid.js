@@ -2,7 +2,7 @@
  * Modification of a ExtJS extension - Ext.ux.maximgb.tg, http://max-bazhenov.com/dev/ux.maximgb.tg/index.php. Small
  * tweaks, performance related; Phenotype tree is where this is used.
  * 
- * @version $Id$
+ * 
  */
 if (Ext.version == '3.0') {
    Ext.override(Ext.grid.GridView, {

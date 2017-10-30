@@ -29,7 +29,7 @@ import javax.jms.ObjectMessage;
  * Part of worker context. Receives commands and submits them to the RemoteTaskRunningService
  * 
  * @author anton
- * @version $Id$
+ *
  */
 @Component("taskSubmissionListener")
 public class TaskSubmissionListener implements MessageListener {

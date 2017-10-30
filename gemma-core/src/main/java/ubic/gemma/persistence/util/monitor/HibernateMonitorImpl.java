@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
  * Monitoring of Hibernate status.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 @Component
 public class HibernateMonitorImpl implements HibernateMonitor {

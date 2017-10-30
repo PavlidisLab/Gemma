@@ -27,7 +27,7 @@ import java.io.InputStreamReader;
  * See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class GenericStreamConsumer extends Thread {
     InputStream is;

@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * Rename probes on array designs.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  * @deprecated this should probably not be used. Instead we should add new designs with the required probe naming
  *             scheme.
  */

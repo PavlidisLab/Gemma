@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
  * Methods for checking ACLs.
  *
  * @author paul
- * @version $Id$
+ *
  */
 @Component
 public class AclTestUtils {

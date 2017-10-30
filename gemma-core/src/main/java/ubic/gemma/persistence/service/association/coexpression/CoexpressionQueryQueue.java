@@ -28,7 +28,7 @@ import ubic.gemma.model.genome.Gene;
  * they were not queried originally in a suitable "unrestricted" way usable across any query for that gene.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public interface CoexpressionQueryQueue {
 

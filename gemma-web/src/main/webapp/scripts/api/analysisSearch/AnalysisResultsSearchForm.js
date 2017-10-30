@@ -13,7 +13,7 @@
  * @requires Gemma.ExperimentSearchAndPreview
  * @requires Gemma.GeneSearchAndPreview
  * @author thea
- * @version $Id$
+ *
  */
 Gemma.AnalysisResultsSearchForm = Ext
    .extend(

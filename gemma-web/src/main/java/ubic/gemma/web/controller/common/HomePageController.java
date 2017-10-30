@@ -40,7 +40,7 @@ import ubic.gemma.web.controller.WebConstants;
  * Responsible for display of the Gemma 2.0 home page. Based on original HomePageController.java
  * 
  * @author thea
- * @version $Id$
+ *
  */
 @Controller
 public class HomePageController {

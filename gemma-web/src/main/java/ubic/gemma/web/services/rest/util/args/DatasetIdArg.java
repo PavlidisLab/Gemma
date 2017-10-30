@@ -15,7 +15,7 @@ public class DatasetIdArg extends DatasetArg<Long> {
      */
     DatasetIdArg( long l ) {
         this.value = l;
-        this.nullCause = String.format( ERROR_FORMAT_ENTITY_NOT_FOUND, "ID", "Dataset" );
+        setNullCause( "ID", "Dataset" );
     }
 
     @Override

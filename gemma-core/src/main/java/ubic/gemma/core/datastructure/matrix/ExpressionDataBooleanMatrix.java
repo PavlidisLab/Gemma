@@ -36,7 +36,7 @@ import java.util.*;
  * Matrix of booleans mapped from an ExpressionExperiment.
  *
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolean> {
 

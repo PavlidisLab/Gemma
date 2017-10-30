@@ -24,7 +24,7 @@ import org.springframework.stereotype.Controller;
  * Controller for associating sequences with an existing arrayDesign.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  * @deprecated not used
  */
 // FIXME: dead code?

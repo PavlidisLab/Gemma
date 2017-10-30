@@ -32,7 +32,7 @@ import org.junit.Test;
  * Unit tests. Note that these depend on BatchInfoPopulationService.MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class BatchInfoPopulationServiceTest {
 

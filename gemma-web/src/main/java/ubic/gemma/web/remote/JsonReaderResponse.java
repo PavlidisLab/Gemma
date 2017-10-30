@@ -56,7 +56,7 @@ import java.util.List;
  *
  * @param <T> Type of Objects that will be converted to Ext.data.Records by the client-side Ext.data.DataReader.
  * @author paul (based on http://github.com/BigLep/ExtJsWithDwr/)
- * @version $Id$
+ *
  */
 public class JsonReaderResponse<T> {
 

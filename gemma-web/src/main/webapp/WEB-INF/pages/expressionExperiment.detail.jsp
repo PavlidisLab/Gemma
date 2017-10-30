@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%--  version $ID$ --%>
+
 <head>
 <title>${expressionExperiment.shortName} Details</title>
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' useRandomParam="false" />

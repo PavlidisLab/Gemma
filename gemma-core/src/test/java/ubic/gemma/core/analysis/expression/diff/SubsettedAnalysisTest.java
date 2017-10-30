@@ -29,7 +29,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 

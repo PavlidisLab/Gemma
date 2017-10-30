@@ -25,7 +25,7 @@ import java.util.HashSet;
  * Stores information about the validation status of an attempted expression experiment load.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class SimpleExpressionExperimentCommandValidation {
 

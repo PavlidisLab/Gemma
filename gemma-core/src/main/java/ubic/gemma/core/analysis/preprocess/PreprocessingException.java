@@ -18,7 +18,7 @@ package ubic.gemma.core.analysis.preprocess;
  * Allows us to catch preprocessing errors and handle them correctly.
  * 
  * @author Paul
- * @version $Id$
+ *
  */
 public class PreprocessingException extends Throwable {
 

@@ -34,7 +34,7 @@ import java.io.Serializable;
 /**
  * @author Original : plosson on 06-janv.-2006 12:19:14 - Last modified by $Author$ on $Date: 2004/11/26 22:43:57
  *         $
- * @version $Id$
+ *
  */
 public class UploadInfo implements Serializable {
     /**

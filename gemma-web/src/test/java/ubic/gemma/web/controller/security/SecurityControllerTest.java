@@ -41,7 +41,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class SecurityControllerTest extends BaseSpringWebTest {
 

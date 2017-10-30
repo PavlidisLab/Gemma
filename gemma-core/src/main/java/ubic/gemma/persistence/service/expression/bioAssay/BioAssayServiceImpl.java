@@ -43,7 +43,7 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
 
     @Autowired
     public BioAssayServiceImpl( BioAssayDao bioAssayDao, BioMaterialDao bioMaterialDao ) {
-        super(bioAssayDao);
+        super( bioAssayDao );
         this.bioAssayDao = bioAssayDao;
         this.bioMaterialDao = bioMaterialDao;
     }
@@ -94,6 +94,11 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
     @Transactional(readOnly = true)
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
         return this.bioAssayDao.thaw( bioAssays );
+    }
+
+    @Override
+    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
+        return entities == null ? null : bioAssayDao.loadValueObjects( entities, basic );
     }
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {

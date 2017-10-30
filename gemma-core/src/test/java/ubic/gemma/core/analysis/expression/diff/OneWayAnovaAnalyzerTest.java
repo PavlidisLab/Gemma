@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * Tests the one way anova analyzer. See test/data/stat-tests/README.txt for R code.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 

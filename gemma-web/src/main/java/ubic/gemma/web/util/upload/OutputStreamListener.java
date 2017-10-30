@@ -25,7 +25,7 @@ package ubic.gemma.web.util.upload;
 
 /**
  * @author Original : plosson 10:09:38
- * @version $Id$
+ *
  */
 public interface OutputStreamListener {
 

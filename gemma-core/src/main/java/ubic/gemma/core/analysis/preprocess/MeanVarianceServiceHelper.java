@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author ptan
- * @version $Id$
+ *
  */
 public interface MeanVarianceServiceHelper {
 

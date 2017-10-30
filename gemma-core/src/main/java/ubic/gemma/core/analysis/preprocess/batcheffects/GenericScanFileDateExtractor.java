@@ -30,7 +30,7 @@ import ubic.basecode.util.FileTools;
  * if the file format is actually known.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
 

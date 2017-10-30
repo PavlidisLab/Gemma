@@ -31,7 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
  * @author tesarst
  */
 @Service
-@Scope( proxyMode = ScopedProxyMode.TARGET_CLASS )
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class CurationDetailsService {
 
     @Autowired
@@ -46,7 +46,7 @@ public class CurationDetailsService {
      *                   is one of {@link CurationDetailsEvent} extensions.
      */
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
     public void update( Curatable curatable, AuditEvent auditEvent ) {
         this.curationDetailsDao.update( curatable, auditEvent );
     }

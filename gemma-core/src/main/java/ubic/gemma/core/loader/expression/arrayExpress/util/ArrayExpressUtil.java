@@ -5,7 +5,7 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ArrayExpressUtil extends NetDatasourceUtil {
 

@@ -2,7 +2,7 @@
  * This window asks users to provide phenotypes and threshold for the meta-analysis which they want to save as evidence.
  * 
  * @author frances
- * @version $Id$
+ *
  */
 Ext.namespace( 'Gemma' );
 

@@ -43,7 +43,7 @@ import java.util.Collection;
  * TODO Document Me
  * 
  * @author tvrossum
- * @version $Id$
+ *
  */
 public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
 

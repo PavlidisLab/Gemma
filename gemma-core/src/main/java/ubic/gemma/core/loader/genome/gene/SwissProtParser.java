@@ -29,7 +29,7 @@ import ubic.gemma.core.loader.util.parser.RecordParser;
  * This does a very minimal parse of Swissprot records, just to get mRNAs associated with a single protein.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class SwissProtParser extends RecordParser<Object> {
 

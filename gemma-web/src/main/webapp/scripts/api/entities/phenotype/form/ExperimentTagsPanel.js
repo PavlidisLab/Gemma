@@ -3,7 +3,7 @@
  * ExperimentTagValueComboBox for users to specify experiment tags.
  * 
  * @author frances
- * @version $Id$
+ * 
  */
 Ext.namespace('Gemma.PhenotypeAssociationForm');
 

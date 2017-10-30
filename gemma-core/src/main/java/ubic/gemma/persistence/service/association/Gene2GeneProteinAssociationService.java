@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.Gene;
  * Service class for Gene2GeneProteinAssociation classes.
  * 
  * @author ldonnison
- * @version $Id$
+ *
  */
 public interface Gene2GeneProteinAssociationService {
 

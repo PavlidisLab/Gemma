@@ -23,7 +23,7 @@ Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY = 100;
  * It's an Ext.util.Observable so that it can fire events (needed to keep form and UI in sync with steps of searching)
  * 
  * @author thea
- * @version $Id$
+ *
  */
 Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
    taxonId : null,

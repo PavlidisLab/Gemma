@@ -23,7 +23,7 @@ import ubic.gemma.model.common.auditAndSecurity.Person;
 
 /**
  * @author kelsey
- * @version $Id$
+ *
  */
 public interface PersonService {
 

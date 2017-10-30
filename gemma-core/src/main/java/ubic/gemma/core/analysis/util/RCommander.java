@@ -32,7 +32,7 @@ import ubic.gemma.persistence.util.Settings;
  * A class that encapsulates a connection to R
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public abstract class RCommander {
 

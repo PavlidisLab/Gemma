@@ -36,7 +36,7 @@ import ubic.basecode.util.FileTools;
  * A simple LineParser implementation that doesn't do anything. Subclass this and implement the "parseOneLine" method.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public abstract class BasicLineParser<T> implements LineParser<T> {
 

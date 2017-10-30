@@ -55,7 +55,7 @@ public abstract class DatasetArg<T>
     public Collection<BioAssayValueObject> getSamples( ExpressionExperimentService service,
             BioAssayService baService ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getPersistentObject( service ) );
-        return baService.loadValueObjects( ee.getBioAssays() );
+        return baService.loadValueObjects( ee.getBioAssays(), true );
     }
 
     /**

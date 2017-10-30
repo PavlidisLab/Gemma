@@ -1,5 +1,5 @@
 -- Add some indices that are not included in the generated gemma-ddl.sql. Some of these are very important to performance
--- $Id$
+
 alter table BIO_SEQUENCE add index name (NAME);
 alter table ALTERNATE_NAME add index name (NAME);
 alter table INVESTIGATION add index name (NAME);

@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.Taxon;
  * Parse the "names.dmp" file from NCBI, ftp://ftp.ncbi.nih.gov/pub/taxonomy/.
  * 
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class TaxonParser extends BasicLineMapParser<Integer, Taxon> {
 

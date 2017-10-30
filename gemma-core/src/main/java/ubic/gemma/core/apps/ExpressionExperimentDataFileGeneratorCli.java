@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
- * @version $Id$
+ *
  */
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 

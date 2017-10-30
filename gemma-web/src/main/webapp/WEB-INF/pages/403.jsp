@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%-- $Id$ --%>
+
 <page:applyDecorator name="default">
 
 <title>

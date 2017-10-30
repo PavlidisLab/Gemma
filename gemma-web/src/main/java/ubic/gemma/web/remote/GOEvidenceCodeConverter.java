@@ -28,7 +28,7 @@ import ubic.gemma.model.association.GOEvidenceCode;
 
 /**
  * @author luke
- * @version $Id$
+ *
  */
 public class GOEvidenceCodeConverter extends StringConverter {
     @Override

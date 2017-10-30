@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class ExceptionTag extends TagSupport {
 

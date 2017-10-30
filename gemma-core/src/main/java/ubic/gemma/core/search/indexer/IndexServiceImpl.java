@@ -38,7 +38,7 @@ import ubic.gemma.persistence.util.CompassUtils;
  * Services for updating the search indexes.
  * 
  * @author keshav
- * @version $Id$
+ *
  */
 @Component
 public class IndexServiceImpl implements IndexService {
@@ -83,7 +83,7 @@ public class IndexServiceImpl implements IndexService {
      * accessible.
      * 
      * @author Paul
-     * @version $Id$
+     *
      */
     // This is started locally. Calls two job: ReIndex and SwapIndices if needed.
     private class IndexerJob extends AbstractTask<IndexerResult, IndexerTaskCommand> {

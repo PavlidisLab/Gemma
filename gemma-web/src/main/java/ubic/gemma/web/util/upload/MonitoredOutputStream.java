@@ -31,7 +31,7 @@ import java.io.OutputStream;
  * 
  * @author Original : plosson on 05-janv.-2006 10:46:33
  * @author pavlidis
- * @version $Id$
+ *
  */
 public class MonitoredOutputStream extends OutputStream {
     private OutputStream target;

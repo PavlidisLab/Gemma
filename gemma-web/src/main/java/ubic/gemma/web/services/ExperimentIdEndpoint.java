@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Given the short name of an Expression Experiment, will return the matching Expression Experiment ID
  * 
  * @author klc, gavin
- * @version$Id$
+ *
  */
 
 public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {

@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * Represents data for displaying a factor (+ factor values) in a chart.
  * 
  * @author paul
- * @version $Id$
+ *
  */
 public class FactorProfile {
 
