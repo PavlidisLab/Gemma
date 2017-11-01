@@ -171,7 +171,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                   parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.length;
                   parentNode.attributes.analysisId = resultSet.analysisId;
                   parentNode.attributes.resultSetId = resultSet.resultSetId;
-                  if ( resultSet.experimentalFactors.length == 1 ) {
+                  if ( resultSet.experimentalFactors.length === 1 && analysis.factorValuesUsed[resultSet.experimentalFactors[0].id] !== undefined) {
                      parentNode.attributes.numberOfFactorValues = analysis.factorValuesUsed[resultSet.experimentalFactors[0].id].length;
                   }
                }
@@ -545,7 +545,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             var text = '';
             var ef = resultSet.experimentalFactors[0];
             var fvu = analysis.factorValuesUsed[ef.id];
-            if ( fvu === null ) {
+            if ( fvu === null || fvu === undefined ) {
                return text;
             }
 

@@ -700,7 +700,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      */
     private void populateWhichFactorValuesUsed( DifferentialExpressionAnalysisValueObject avo,
             Collection<FactorValue> fvs ) {
-        assert fvs != null && !fvs.isEmpty();
+        if( fvs == null || fvs.isEmpty()){
+            return;
+        }
         ExperimentalFactorValueObject subsetFactor = avo.getSubsetFactor();
 
         for ( FactorValue fv : fvs ) {
