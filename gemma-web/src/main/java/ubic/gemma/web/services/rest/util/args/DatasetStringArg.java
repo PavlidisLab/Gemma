@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import com.google.common.base.Strings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -17,7 +18,7 @@ public class DatasetStringArg extends DatasetArg<String> {
 
     @Override
     public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return check( this.value == null ? null : service.findByShortName( this.value ) );
+        return check( Strings.isNullOrEmpty( this.value ) ? null : service.findByShortName( this.value ) );
     }
 
     @Override

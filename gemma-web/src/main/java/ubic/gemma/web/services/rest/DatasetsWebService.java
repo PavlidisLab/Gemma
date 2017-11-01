@@ -114,7 +114,7 @@ public class DatasetsWebService extends
      * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
-    @Path("/{datasetsArg: .+}")
+    @Path("/{datasetsArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasets( // Params:
@@ -262,7 +262,7 @@ public class DatasetsWebService extends
      *                 </p>
      */
     @GET
-    @Path("/{datasets: .+}/expressions/genes/{genes: .+}")
+    @Path("/{datasets: [^/]+}/expressions/genes/{genes: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetExpressions( // Params:
@@ -289,7 +289,7 @@ public class DatasetsWebService extends
      * @param component the pca component to limit the results to.
      */
     @GET
-    @Path("/{datasets: .+}/expressions/pca")
+    @Path("/{datasets: [^/]+}/expressions/pca")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetExpressionsPca( // Params:
@@ -319,7 +319,7 @@ public class DatasetsWebService extends
      * @param limit     maximum amount of returned gene-probe expression level pairs.
      */
     @GET
-    @Path("/{datasets: .+}/expressions/differential")
+    @Path("/{datasets: [^/]+}/expressions/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetExpressionsDiffEx( // Params:

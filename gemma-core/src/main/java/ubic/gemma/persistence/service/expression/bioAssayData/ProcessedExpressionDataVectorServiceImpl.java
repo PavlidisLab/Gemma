@@ -287,6 +287,9 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     private void AddExperimentGeneVectors( Collection<ExperimentExpressionLevelsValueObject> vos,
             ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors ) {
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
+        if(vectors == null){
+            return;
+        }
         for ( DoubleVectorValueObject v : vectors ) {
             if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
                 continue;

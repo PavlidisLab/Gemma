@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneValueObject, GeneService> {
     private static final String ERROR_MSG_DETAIL = "Provide a string that contains at least one Ncbi ID, Ensembl ID or official symbol, or multiple, separated by (',') character. All identifiers must be same type, i.e. do not combine Ensembl and Ncbi IDs.";
-    private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Dataset identifiers";
+    private static final String ERROR_MSG = ArrayArg.ERROR_MSG + " Gene identifiers";
 
     private ArrayGeneArg( List<String> values ) {
         super( values, GeneArg.class );

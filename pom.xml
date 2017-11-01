@@ -5,7 +5,7 @@
     <name>Gemma</name>
     <groupId>gemma</groupId>
     <artifactId>gemma</artifactId>
-    <version>1.20.1</version>
+    <version>1.20.2</version>
     <inceptionYear>2005</inceptionYear>
     <description>
         The Gemma Project for meta-analysis of genomics data
@@ -296,6 +296,13 @@
             <groupId>org.easymock</groupId>
             <artifactId>easymock</artifactId>
             <version>3.2</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
             <scope>test</scope>
             <type>jar</type>
         </dependency>

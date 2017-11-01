@@ -85,7 +85,7 @@ public class TaxaWebService extends WebServiceWithFiltering<Taxon, TaxonValueObj
      * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
-    @Path("/{taxaArg: .+}")
+    @Path("/{taxaArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject taxa( // Params:

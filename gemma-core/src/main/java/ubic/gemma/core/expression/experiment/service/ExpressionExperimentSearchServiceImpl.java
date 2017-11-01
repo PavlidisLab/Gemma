@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.expression.experiment.service;
 
+import com.google.common.collect.Sets;
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -62,8 +63,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     private final TaxonService taxonService;
     private final ExpressionExperimentService expressionExperimentService;
 
-
-
     @Autowired
     public ExpressionExperimentSearchServiceImpl( ExpressionExperimentSetService expressionExperimentSetService,
             CoexpressionAnalysisService coexpressionAnalysisService,
@@ -78,8 +77,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         this.taxonService = taxonService;
         this.expressionExperimentService = expressionExperimentService;
     }
-
-
 
     @Override
     public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
@@ -215,6 +212,26 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                     .toString() );
         }
         return displayResults;
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> query ) {
+
+        Set<ExpressionExperimentValueObject> all = new HashSet<>();
+        Set<ExpressionExperimentValueObject> prev = null;
+        Set<ExpressionExperimentValueObject> current;
+        for ( String s : query ) {
+            s = StringUtils.strip( s );
+            if ( prev == null ) {
+                prev = new HashSet<>( searchExpressionExperiments( s ) );
+                all = new HashSet<>( prev );
+                continue;
+            }
+            current = new HashSet<>( searchExpressionExperiments( s ) );
+
+            all = Sets.intersection( all, current );
+        }
+        return all;
     }
 
     @Override

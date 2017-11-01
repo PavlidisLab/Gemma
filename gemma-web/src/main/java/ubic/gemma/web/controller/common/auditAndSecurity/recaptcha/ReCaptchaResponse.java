@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  *
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2006 University of British Columbia
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,23 @@
  * limitations under the License.
  *
  */
+package ubic.gemma.web.controller.common.auditAndSecurity.recaptcha;
 
-/**
- * PhantomJS execution is "sandboxed", there is no way for the code to access any
- * JavaScript objects and variables outside its own context. Thus we supply missing
- * variables here and assume they are correctly initialized.
- */
-ctxBasePath="";
-recaptchaPublicKey="";
+public class ReCaptchaResponse {
+
+    private boolean valid;
+    private String errorMessage;
+
+    public ReCaptchaResponse(boolean valid, String errorMessage) {
+        this.valid = valid;
+        this.errorMessage = errorMessage;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+}

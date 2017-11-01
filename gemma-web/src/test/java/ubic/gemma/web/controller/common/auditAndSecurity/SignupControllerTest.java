@@ -17,12 +17,15 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
+import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptchaResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
@@ -32,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Tortures the signup system by starting many threads and signing up many users, while at the same time creating a lot
@@ -49,12 +54,13 @@ public class SignupControllerTest extends BaseSpringWebTest {
 
     @Before
     public void setup() {
-        suc.setRecaptchaTester( new RecaptchaTester() {
-            @Override
-            public boolean validateCaptcha( HttpServletRequest request, String recaptchaPvtKey ) {
-                return true;
-            }
-        } );
+
+        ReCaptcha mockReCaptcha = Mockito.mock(ReCaptcha.class);
+
+        when(mockReCaptcha.validateRequest(any(HttpServletRequest.class))).thenReturn(new ReCaptchaResponse(true, ""));
+
+
+        suc.setRecaptchaTester( mockReCaptcha );
     }
 
     @Test

@@ -33,6 +33,12 @@ public interface ExpressionExperimentSearchService {
     Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query );
 
     /**
+     * @return Collection of expression experiment VOs for EEs that are associated with all the given terms.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> value );
+
+    /**
      * does not include session bound sets
      *
      * @param taxonId if the search should not be limited by taxon, pass in null

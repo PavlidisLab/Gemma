@@ -118,8 +118,7 @@ Ext.onReady( function() {
                   xtype : 'recaptcha',
                   name : 'recaptcha',
                   id : 'signup.captcha',
-                  // FIXME don't hardcode!
-                  publickey : '6Lf4KAkAAAAAADFjpOSiyfHhlQ1pkznapAnmIvyr',
+                  publickey : Gemma.RECAPTCHA_PUBLIC_KEY,
                   theme : 'white',
                   lang : 'en',
                   allowBlank : false
@@ -172,9 +171,10 @@ Ext.ux.Recaptcha = Ext.extend( Ext.form.Field, {
    },
 
    validateValue : function() {
-      if ( Ext.get( 'recaptcha_response_field' ).getValue().length > 0 ) {
-         return true;
-      }
+       var response = Ext.get( 'g-recaptcha-response' );
+       if ( response != null && response.getValue().length > 0 ) {
+           return true;
+       }
       this.markInvalid( "Recaptcha must be filled in" );
       return false;
    },
@@ -194,12 +194,10 @@ Ext.ux.Recaptcha = Ext.extend( Ext.form.Field, {
          this.el = document.createElement( 'div' );
          this.el.id = this.getId();
 
-         Recaptcha.create( this.publickey, this.el, {
-            theme : this.theme,
-            lang : this.lang,
-            callback : Recaptcha.focus_response_field
-
-         } );
+          grecaptcha.render( this.el, {
+              'sitekey'  : this.publickey,
+              'theme'    : this.theme
+          });
 
       }
 
