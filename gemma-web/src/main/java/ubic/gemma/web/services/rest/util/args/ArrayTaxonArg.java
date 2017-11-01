@@ -3,7 +3,6 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
@@ -36,8 +35,7 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
     @SuppressWarnings("unused")
     public static ArrayStringArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayTaxonArg( String.format( ERROR_MSG, s ),
-                    new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+            return new ArrayTaxonArg( String.format( ERROR_MSG, s ), new IllegalArgumentException( ERROR_MSG_DETAIL ) );
         }
         return new ArrayTaxonArg( Arrays.asList( splitString( s ) ) );
     }
@@ -49,9 +47,21 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
 
     @Override
     protected String getPropertyName( TaxonService service ) {
-        String value = this.getValue().get( 0 );
-        TaxonArg arg = TaxonArg.valueOf( value );
-        return checkPropertyNameString( arg, value, service );
+        String propertyName;
+        for ( int i = 0; i < this.getValue().size(); i++ ) {
+            try {
+                String value = this.getValue().get( i );
+                TaxonArg arg = TaxonArg.valueOf( value );
+                propertyName = checkPropertyNameString( arg, value, service );
+                return propertyName;
+            } catch ( GemmaApiException e ) {
+                if ( i == this.getValue().size() - 1 ) {
+                    throw e;
+                }
+            }
+        }
+        // should never happen as the catch will rethrow at the end of the loop
+        return null;
     }
 
 }

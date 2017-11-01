@@ -103,7 +103,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      * @see WebServiceWithFiltering#some(ArrayEntityArg, FilterArg, IntArg, IntArg, SortArg, HttpServletResponse)
      */
     @GET
-    @Path("/{platformArg: .+}")
+    @Path("/{platformArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platforms( // Params:
@@ -163,7 +163,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
     }
 
     /**
-     * Retrieves a specific composite sequence (element) for the given platform.
+     * Retrieves composite sequences (elements) of the given platform.
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
@@ -177,7 +177,7 @@ public class PlatformsWebService extends WebServiceWithFiltering<ArrayDesign, Ar
      *                    </p>
      */
     @GET
-    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probesArg: .+}")
+    @Path("/{platformArg: [a-zA-Z0-9\\.]+}/elements/{probesArg: [^/]+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject platformElement( // Params:

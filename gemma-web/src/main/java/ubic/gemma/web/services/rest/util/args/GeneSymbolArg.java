@@ -44,7 +44,9 @@ public class GeneSymbolArg extends GeneArg<String> {
 
     @Override
     public Collection<GeneValueObject> getValueObjects( GeneService service ) {
-        return service.loadValueObjects( service.findByOfficialSymbol( this.value ) );
+        Collection<Gene> genes = service.findByOfficialSymbol( this.value );
+        check( genes == null || genes.size() < 1 ? null : genes.iterator().next() );
+        return service.loadValueObjects( genes );
     }
 
     @Override

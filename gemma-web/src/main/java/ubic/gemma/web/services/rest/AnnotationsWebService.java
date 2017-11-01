@@ -28,10 +28,10 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
+import ubic.gemma.web.services.rest.util.args.ArrayStringArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
@@ -41,6 +41,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * RESTful interface for annotations.
@@ -53,7 +54,6 @@ public class AnnotationsWebService extends WebService {
     private static final String URL_PREFIX = "http://";
 
     private OntologyService ontologyService;
-    private TaxonService taxonService;
     private ExpressionExperimentSearchService expressionExperimentSearchService;
     private CharacteristicService characteristicService;
 
@@ -67,11 +67,10 @@ public class AnnotationsWebService extends WebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public AnnotationsWebService( OntologyService ontologyService, TaxonService taxonService,
+    public AnnotationsWebService( OntologyService ontologyService,
             ExpressionExperimentSearchService expressionExperimentSearchService,
             CharacteristicService characteristicService ) {
         this.ontologyService = ontologyService;
-        this.taxonService = taxonService;
         this.expressionExperimentSearchService = expressionExperimentSearchService;
         this.characteristicService = characteristicService;
     }
@@ -111,7 +110,7 @@ public class AnnotationsWebService extends WebService {
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject search( // Params:
-            @PathParam("query") String query, // Required
+            @PathParam("query") ArrayStringArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( getTerms( query ), sr );
@@ -128,24 +127,30 @@ public class AnnotationsWebService extends WebService {
     @Path("/search/{query}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject datasets( // Params:
-            @PathParam("query") String query, // Required
+            @PathParam("query") ArrayStringArg query, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( expressionExperimentSearchService.searchExpressionExperiments( query ), sr );
+        return Responder
+                .autoCode( expressionExperimentSearchService.searchExpressionExperiments( query.getValue() ), sr );
     }
 
     /**
      * Finds characteristics by either a plain text or URI.
      *
-     * @param query the string to search for.
+     * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private Collection<CharacteristicValueObject> getTerms( String query ) {
-        if ( query.startsWith( URL_PREFIX ) ) {
-            return characteristicService.loadValueObjects(
-                    characteristicService.findByUri( StringEscapeUtils.escapeJava( StringUtils.strip( query ) ) ) );
-        } else {
-            return ontologyService.findExperimentsCharacteristicTags( query, true );
+    private Collection<CharacteristicValueObject> getTerms( ArrayStringArg arg ) {
+        Collection<CharacteristicValueObject> vos = new LinkedList<>();
+        for ( String query : arg.getValue() ) {
+            query = query.trim();
+            if ( query.startsWith( URL_PREFIX ) ) {
+                vos.addAll( characteristicService.loadValueObjects( characteristicService
+                        .findByUri( StringEscapeUtils.escapeJava( StringUtils.strip( query ) ) ) ) );
+            } else {
+                vos.addAll( ontologyService.findExperimentsCharacteristicTags( query, true ) );
+            }
         }
+        return vos;
     }
 }
