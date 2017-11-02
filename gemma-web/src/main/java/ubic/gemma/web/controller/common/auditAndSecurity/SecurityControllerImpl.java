@@ -55,8 +55,6 @@ import java.util.*;
 
 /**
  * Manages data-level security (ie. can make data private).
- *
- *
  */
 @Component
 public class SecurityControllerImpl implements SecurityController {
@@ -651,7 +649,8 @@ public class SecurityControllerImpl implements SecurityController {
             vo.setShared( sharedness.get( s ) );
             vo.setOwner( new SidValueObject( owners.get( s ) ) );
 
-            vo.setCurrentUserOwns( securityService.isOwnedByCurrentUser( s ) );
+            // FIXME this does not seem to be used in the UI and it fixes issue #41: https://github.com/ppavlidis/Gemma/issues/41
+            vo.setCurrentUserOwns( false );//securityService.isOwnedByCurrentUser( s ) );
             vo.setCurrentUserCanwrite( securityService.isEditable( s ) );
 
             vo.setGroupsThatCanRead( groupsThatCanRead == null ? new HashSet<String>() : groupsThatCanRead );
