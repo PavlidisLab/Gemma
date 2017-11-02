@@ -20,13 +20,9 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     private BaseDao<O> mainDao;
 
-
-
     public AbstractService( BaseDao<O> mainDao ) {
         this.mainDao = mainDao;
     }
-
-
 
     @Override
     @Transactional(readOnly = true)

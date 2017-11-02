@@ -460,8 +460,7 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    @Override
-    @Secured({ "GROUP_AGENT", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_AGENT" })
     void update( ExpressionExperiment expressionExperiment );
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );
