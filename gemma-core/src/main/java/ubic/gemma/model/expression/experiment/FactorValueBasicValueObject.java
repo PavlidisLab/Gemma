@@ -10,7 +10,7 @@ package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicBasicValueObject;
 
 import java.io.Serializable;
@@ -30,7 +30,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
     private Boolean isBaseline;
     private Collection<CharacteristicBasicValueObject> characteristics;
     private CharacteristicBasicValueObject experimentalFactorCategory;
-    private Measurement measurement;
+    private MeasurementValueObject measurement;
     private String fvValue;
     private String fvSummary;
     private Long experimentalFactorId;
@@ -51,7 +51,9 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         this.experimentalFactorId = fv.getExperimentalFactor().getId();
         this.isBaseline = fv.getIsBaseline() != null ? fv.getIsBaseline() : false;
 
-        this.measurement = fv.getMeasurement();
+        if ( fv.getMeasurement() != null ) {
+            this.measurement = new MeasurementValueObject( fv.getMeasurement() );
+        }
         this.fvValue = fv.getValue();
 
         if ( fv.getCharacteristics() != null ) {
@@ -93,7 +95,7 @@ public class FactorValueBasicValueObject extends IdentifiableValueObject<FactorV
         return characteristics;
     }
 
-    public Measurement getMeasurement() {
+    public MeasurementValueObject getMeasurement() {
         return measurement;
     }
 
