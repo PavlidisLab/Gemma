@@ -74,8 +74,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      */
     public ExpressionExperimentValueObject( Object[] row ) {
         super( ( Long ) row[0], ( Date ) row[13], ( Boolean ) row[14], ( AuditEvent ) row[29], ( Boolean ) row[15],
-                ( AuditEvent ) row[28], ( String ) row[16],
-                ( AuditEvent ) row[27] );
+                ( AuditEvent ) row[28], ( String ) row[16], ( AuditEvent ) row[27] );
 
         // EE
         this.name = ( String ) row[1];

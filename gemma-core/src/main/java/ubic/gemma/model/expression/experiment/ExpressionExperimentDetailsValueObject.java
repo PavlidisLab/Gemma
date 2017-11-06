@@ -470,7 +470,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     @Override
     public Boolean getTroubled() {
         Boolean troubled = super.getTroubled();
-        if ( !troubled ) {
+        if ( !troubled && this.arrayDesigns != null) {
             for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
                 if ( ad.getTroubled() )
                     return true;
@@ -492,6 +492,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
     public Boolean getPlatformTroubled() {
+        if(this.arrayDesigns == null){
+            return null; // Just because dwr accesses this even when arrayDesigns is not set.
+        }
         for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
             if ( ad.getTroubled() ) {
                 return true;
@@ -517,15 +520,17 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         if ( super.getTroubled() )
             eeTroubleDetails = super.getTroubleDetails( htmlEscape );
 
-        for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
-            if ( ad.getTroubled() ) {
-                adTroubled = true;
-                if ( adTroubleDetails == null ) {
-                    adTroubleDetails = TROUBLE_DETAIL_PLATF;
-                } else {
-                    adTroubleDetails += TROUBLE_DETAIL_SEPARATOR;
+        if(this.arrayDesigns != null) { // Just because dwr accesses this even when arrayDesigns is not set.
+            for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
+                if ( ad.getTroubled() ) {
+                    adTroubled = true;
+                    if ( adTroubleDetails == null ) {
+                        adTroubleDetails = TROUBLE_DETAIL_PLATF;
+                    } else {
+                        adTroubleDetails += TROUBLE_DETAIL_SEPARATOR;
+                    }
+                    adTroubleDetails += ad.getTroubleDetails( false );
                 }
-                adTroubleDetails += ad.getTroubleDetails( false );
             }
         }
 

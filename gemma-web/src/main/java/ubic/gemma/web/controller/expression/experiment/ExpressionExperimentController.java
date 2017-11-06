@@ -699,6 +699,7 @@ public class ExpressionExperimentController {
             finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
         }
 
+        System.out.println("RETURNING: "+finalResult);
         return finalResult;
     }
 
@@ -935,10 +936,6 @@ public class ExpressionExperimentController {
     public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
 
         Collection<ExpressionExperiment> outlierEEs = expressionExperimentService.getExperimentsWithOutliers();
-
-        // List<ExpressionExperimentValueObject> batchEffectEEs =
-        // expressionExperimentService.getExperimentsWithBatchEffect();
-        // List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
 
         Collection<ExpressionExperiment> ees = new HashSet<>();
         ees.addAll( outlierEEs );
