@@ -131,33 +131,10 @@ public class EntityUtils {
      * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
      * implement the Identifiable interface.
      */
-    public static Collection<Long> getIdsFast( Collection<? extends Identifiable> entities ) {
+    public static Collection<Long> getIds( Collection<? extends Identifiable> entities ) {
         Collection<Long> r = new ArrayList<>( entities.size() );
         for ( Identifiable i : entities ) {
             r.add( i.getId() );
-        }
-        return r;
-    }
-
-    /**
-     * @return either a list (if entities was a list) or collection of ids.
-     * @deprecated use getIdsFast instead. If you are forced to using this method on a list of entities because they do
-     * not implement the Identifiable interface, consider adding said interface to the class signature. When switching
-     * to the getIdsFast, also make sure that you do not need a Set.
-     */
-    @Deprecated
-    public static Collection<Long> getIds( Collection<?> entities ) {
-
-        Collection<Long> r;
-
-        if ( List.class.isAssignableFrom( entities.getClass() ) ) {
-            r = new ArrayList<>();
-        } else {
-            r = new HashSet<>();
-        }
-
-        for ( Object object : entities ) {
-            r.add( getId( object ) );
         }
         return r;
     }

@@ -69,7 +69,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     @Transactional(readOnly = true)
     public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
             Collection<Gene> genes ) {
-        Collection<DoubleVectorValueObject> vectors = getProcessedDataArrays( ees, EntityUtils.getIdsFast( genes ) );
+        Collection<DoubleVectorValueObject> vectors = getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
         Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
