@@ -140,17 +140,39 @@ public class AnnotationsWebService extends WebService {
      * @param arg the array arg containing all the strings to search for.
      * @return a collection of characteristics matching the input query.
      */
-    private Collection<CharacteristicValueObject> getTerms( ArrayStringArg arg ) {
-        Collection<CharacteristicValueObject> vos = new LinkedList<>();
+    private Collection<AnnotationSearchResultValueObject> getTerms( ArrayStringArg arg ) {
+        Collection<AnnotationSearchResultValueObject> vos = new LinkedList<>();
         for ( String query : arg.getValue() ) {
             query = query.trim();
             if ( query.startsWith( URL_PREFIX ) ) {
-                vos.addAll( characteristicService.loadValueObjects( characteristicService
+                addAsSearchResults( vos, characteristicService.loadValueObjects( characteristicService
                         .findByUri( StringEscapeUtils.escapeJava( StringUtils.strip( query ) ) ) ) );
             } else {
-                vos.addAll( ontologyService.findExperimentsCharacteristicTags( query, true ) );
+                addAsSearchResults( vos, ontologyService.findExperimentsCharacteristicTags( query, true ) );
             }
         }
         return vos;
+    }
+
+    private void addAsSearchResults( Collection<AnnotationSearchResultValueObject> to,
+            Collection<CharacteristicValueObject> vos ) {
+        for ( CharacteristicValueObject vo : vos ) {
+            to.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
+                    vo.getCategoryUri() ) );
+        }
+    }
+
+    private class AnnotationSearchResultValueObject {
+        public String value;
+        public String valueUri;
+        public String category;
+        public String categoryUri;
+
+        AnnotationSearchResultValueObject( String value, String valueUri, String category, String categoryUri ) {
+            this.value = value;
+            this.valueUri = valueUri;
+            this.category = category;
+            this.categoryUri = categoryUri;
+        }
     }
 }
