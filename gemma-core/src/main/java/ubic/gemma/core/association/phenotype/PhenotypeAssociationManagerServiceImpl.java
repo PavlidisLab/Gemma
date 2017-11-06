@@ -49,7 +49,6 @@ import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -59,6 +58,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAna
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
@@ -127,6 +127,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private UserManager userManager;
 
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
     @Override
     public void afterPropertiesSet() {
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
@@ -162,8 +165,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     .getRelatedExperiments( bibliographicReference );
 
             if ( experiments != null && !experiments.isEmpty() ) {
-                bibliographicReferenceVO
-                        .setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( experiments ) );
+                bibliographicReferenceVO.setExperiments( expressionExperimentService.loadValueObjects( experiments ) );
             }
 
             return bibliographicReferenceVO;
@@ -1845,7 +1847,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
-        if ( tc == null ||  tc.getValueUri() == null ) {
+        if ( tc == null || tc.getValueUri() == null ) {
             // ???? there was a null check at the end of this method, which doesn't do any good since we access TC in
             // the next line here.
             return;

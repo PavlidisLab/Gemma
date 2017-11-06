@@ -1,13 +1,10 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
-import gemma.gsec.util.SecurityUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.jdbc.Work;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
@@ -90,29 +87,6 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
             Collection<AuditEvent> events = new ArrayList<>();
             events.add( event );
             eventMap.put( id, events );
-        }
-    }
-
-    /**
-     * Attaches all curation events to the given value object.
-     * Note that the events can still be null, as the value-change events they represent might have not occurred since
-     * the curatable object was created, and they are not initialised with a creation event.
-     *
-     * @param vo             the value object that needs its curation events populated.
-     * @param attentionEvent the last event that updated the needs attention property
-     * @param noteEvent      the last event that updated the curation note property
-     * @param troubleEvent   the last event that updated the troubled property
-     */
-    protected void addCurationEvents( AbstractCuratableValueObject vo, AuditEvent noteEvent, AuditEvent attentionEvent,
-            AuditEvent troubleEvent ) {
-        if ( noteEvent != null && SecurityUtil.isUserAdmin() ) {
-            vo.setLastNoteUpdateEvent( new AuditEventValueObject( noteEvent ) );
-        }
-        if ( attentionEvent != null ) {
-            vo.setLastNeedsAttentionEvent( new AuditEventValueObject( attentionEvent ) );
-        }
-        if ( troubleEvent != null ) {
-            vo.setLastTroubledEvent( new AuditEventValueObject( troubleEvent ) );
         }
     }
 

@@ -424,7 +424,7 @@ public interface ExpressionExperimentService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, int limit, int start );
+            Collection<Long> ids, Taxon taxon, int limit, int start );
 
     /**
      * Remove raw vectors associated with the given quantitation type. It does not touch processed data.

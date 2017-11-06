@@ -34,6 +34,7 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -67,8 +68,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @SuppressWarnings("unchecked")
     private final Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
             MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
-            DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class,
-            BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
+            DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -111,10 +111,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public ExpressionExperimentValueObject generateSummary( Long id ) {
+    public ExpressionExperimentDetailsValueObject generateSummary( Long id ) {
         assert id != null;
         Collection<Long> ids = Collections.singletonList( id );
-        Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
+        Collection<ExpressionExperimentDetailsValueObject> results = generateSummaryObjects( ids );
         if ( results.size() > 0 ) {
             return results.iterator().next();
         }
@@ -125,14 +125,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Secured({ "GROUP_AGENT" })
     public void generateSummaryObjects() {
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids, false );
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+                .loadDetailsValueObjects( null, false, ids, null, 0, 0 );
         getStats( vos );
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
+    public Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids ) {
 
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids, false );
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+                .loadDetailsValueObjects( null, false, ids, null, 0, 0 );
         getStats( vos );
 
         for ( ExpressionExperimentValueObject vo : vos ) {
@@ -147,13 +149,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * counted towards the number of factors
      */
     @Override
-    public void getAnnotationInformation( Collection<? extends ExpressionExperimentValueObject> vos ) {
+    public void getAnnotationInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
 
         Collection<Long> ids = new HashSet<>();
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
+        for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
             Long id = eeVo.getId();
             ids.add( id );
         }
@@ -162,7 +164,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCountsExcludeBatch( ids );
 
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
+        for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
             Long id = eeVo.getId();
             eeVo.setNumAnnotations( annotationCounts.get( id ) );
             eeVo.setNumPopulatedFactors( factorCounts.get( id ) );
@@ -181,7 +183,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @return Map of EE ids to the most recent update.
      */
     @Override
-    public Map<Long, Date> getEventInformation( Collection<? extends ExpressionExperimentValueObject> vos ) {
+    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -220,7 +222,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         /*
          * add in the last events of interest for all eeVos This step is remarkably slow.
          */
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
+        for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
 
             /*
              * Note that in the current incarnation, the last update date is already filled in, so the checks in this
@@ -314,7 +316,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public Map<Long, Date> getReportInformation( Collection<? extends ExpressionExperimentValueObject> vos ) {
+    public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
         StopWatch timer = new StopWatch();
         Map<Long, Date> result = new HashMap<>();
         timer.start();
@@ -324,11 +326,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             ids.add( vo.getId() );
         }
 
-        Collection<ExpressionExperimentValueObject> cachedVos = retrieveSummaryObjects( ids );
-        Map<Long, ExpressionExperimentValueObject> id2cachedVo = EntityUtils.getIdMap( cachedVos );
+        Collection<ExpressionExperimentDetailsValueObject> cachedVos = retrieveSummaryObjects( ids );
+        Map<Long, ExpressionExperimentDetailsValueObject> id2cachedVo = EntityUtils.getIdMap( cachedVos );
 
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
-            ExpressionExperimentValueObject cacheVo = id2cachedVo.get( eeVo.getId() );
+        for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
+            ExpressionExperimentDetailsValueObject cacheVo = id2cachedVo.get( eeVo.getId() );
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
@@ -350,8 +352,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
-        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<>();
+    public Collection<ExpressionExperimentDetailsValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
+        Collection<ExpressionExperimentDetailsValueObject> eeValueObjects = new ArrayList<>();
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
 
         int incache = 0;
@@ -361,13 +363,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             if ( cachedElement != null ) {
                 incache++;
                 Object el = cachedElement.getObjectValue();
-                assert el instanceof ExpressionExperimentValueObject;
+                assert el instanceof ExpressionExperimentDetailsValueObject;
 
-                eeValueObjects.add( ( ExpressionExperimentValueObject ) el );
+                eeValueObjects.add( ( ExpressionExperimentDetailsValueObject ) el );
                 continue;
             }
 
-            ExpressionExperimentValueObject valueObject = generateSummary( id );
+            ExpressionExperimentDetailsValueObject valueObject = generateSummary( id );
             eeValueObjects.add( valueObject );
         }
         if ( ids.size() > 1 ) {
@@ -434,10 +436,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     /**
      * Compute statistics for EEs, that aren't immediately part of the value object.
      */
-    private void getStats( Collection<ExpressionExperimentValueObject> vos ) {
+    private void getStats( Collection<ExpressionExperimentDetailsValueObject> vos ) {
         log.debug( "Getting stats for " + vos.size() + " value objects." );
         int count = 0;
-        for ( ExpressionExperimentValueObject object : vos ) {
+        for ( ExpressionExperimentDetailsValueObject object : vos ) {
             getStats( object );
 
             if ( ++count % 10 == 0 ) {
@@ -450,11 +452,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     /**
      * Get the stats report for one EE
      */
-    private void getStats( ExpressionExperimentValueObject eeVo ) {
+    private void getStats( ExpressionExperimentDetailsValueObject eeVo ) {
         Long id = eeVo.getId();
         assert id != null;
 
-        Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysis = differentialExpressionAnalysisService
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysis = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( Collections.singleton( id ) );
         if ( analysis != null && analysis.containsKey( eeVo ) ) {
             eeVo.setDifferentialExpressionAnalyses( analysis.get( eeVo ) );

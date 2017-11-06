@@ -30,6 +30,7 @@ import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,8 +55,8 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
 
     @Autowired
     public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao,
-            PhenotypeAssociationService phenotypeAssociationService ) {
-        super( bibliographicReferenceDao, phenotypeAssociationService );
+            PhenotypeAssociationService phenotypeAssociationService, ExpressionExperimentService expressionExperimentService ) {
+        super( bibliographicReferenceDao, phenotypeAssociationService, expressionExperimentService);
     }
 
     @Override

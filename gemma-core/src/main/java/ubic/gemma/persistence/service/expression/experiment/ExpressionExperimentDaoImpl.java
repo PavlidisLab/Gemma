@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.time.StopWatch;
@@ -373,13 +371,9 @@ public class ExpressionExperimentDaoImpl
         List<ExpressionExperimentValueObject> vos = new ArrayList<>( list.size() );
 
         for ( Object[] row : list ) {
-            Long eeId = ( Long ) row[0];
-            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( eeId );
-            this.populateValueObject( vo, row );
+            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( row );
             vos.add( vo );
         }
-
-        populateAnalysisInformation( vos );
 
         return vos;
     }
@@ -395,14 +389,15 @@ public class ExpressionExperimentDaoImpl
      */
     @Override
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
-            List<Long> ids, Taxon taxon, int limit, int start ) {
+            Collection<Long> ids, Taxon taxon, int limit, int start ) {
         //System.out.println(limit +"/"+start);
         final ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
         if ( ids != null ) {
             if ( ids.isEmpty() )
                 return new ArrayList<>();
-            Collections.sort( ids );
-            filters[0] = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS );
+            List<Long> idList = new ArrayList<>( ids );
+            Collections.sort( idList );
+            filters[0] = new ObjectFilter( "id", idList, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS );
         }
         if ( taxon != null ) {
             filters[1] = new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS );
@@ -413,24 +408,32 @@ public class ExpressionExperimentDaoImpl
                 getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
-        if ( limit > 0 )
+        if ( limit > 0 ) {
             query.setMaxResults( limit );
+        }
         query.setFirstResult( start );
 
         //noinspection unchecked
         List<Object[]> list = query.list();
         List<ExpressionExperimentDetailsValueObject> vos = new ArrayList<>( list.size() );
         for ( Object[] row : list ) {
-            Long eeId = ( Long ) row[0];
-            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( eeId );
-            this.populateValueObject( vo, row );
+            ExpressionExperimentDetailsValueObject vo = new ExpressionExperimentDetailsValueObject( row );
 
             // Add array designs
             Collection<ArrayDesignValueObject> adVos = CommonQueries
                     .getArrayDesignsUsedVOs( ( Long ) row[0], this.getSessionFactory().getCurrentSession() );
             vo.setArrayDesigns( adVos );
+
+            // QTs
+            if ( row[24] != null && vo.getTechnologyType() != null ) {
+                fillQuantitationTypeInfo( ( QuantitationType ) row[24], vo );
+            }
+
             vos.add( vo );
         }
+
+        populateAnalysisInformation( vos );
+
         return vos;
     }
 
@@ -1677,53 +1680,6 @@ public class ExpressionExperimentDaoImpl
         return result;
     }
 
-    private void fillQuantitationTypeInfo( Collection<QuantitationType> qts, ExpressionExperimentValueObject v,
-            Long eeId, String type ) {
-
-        if ( v.getTechnologyType() != null && !v.getTechnologyType().equals( type ) ) {
-            v.setTechnologyType( "MIXED" );
-        } else {
-            v.setTechnologyType( type );
-        }
-
-        if ( !type.equals( TechnologyType.ONECOLOR.toString() ) && !type.equals( TechnologyType.NONE.toString() ) ) {
-
-            if ( qts == null ) {
-                log.warn( "No quantitation types for EE=" + eeId + "?" );
-                return;
-            }
-
-            boolean hasIntensityA = false;
-            boolean hasIntensityB = false;
-            boolean hasBothIntensities = false;
-            boolean mayBeOneChannel = false;
-            for ( QuantitationType qt : qts ) {
-                if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
-                    /*
-                     * This could be a dual-mode array, or it could be mis-labeled as two-color; or this might actually
-                     * be ratios. In either case, we should flag it; as it stands we shouldn't use two-channel missing
-                     * value analysis on it.
-                     */
-                    mayBeOneChannel = true;
-                    break;
-                } else if ( ChannelUtils.isSignalChannelA( qt.getName() ) ) {
-                    hasIntensityA = true;
-                    if ( hasIntensityB ) {
-                        hasBothIntensities = true;
-                    }
-                } else if ( ChannelUtils.isSignalChannelB( qt.getName() ) ) {
-                    hasIntensityB = true;
-                    if ( hasIntensityA ) {
-                        hasBothIntensities = true;
-                    }
-                }
-            }
-
-            v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
-            v.setHasEitherIntensity( hasIntensityA || hasIntensityB );
-        }
-    }
-
     /**
      * @param filters         see {@link this#formRestrictionClause(ArrayList)} filters argument for
      *                        description.
@@ -1802,101 +1758,24 @@ public class ExpressionExperimentDaoImpl
         return query;
     }
 
-    private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap(
-            Collection<ExpressionExperimentValueObject> vos ) {
+    private <C extends ExpressionExperimentValueObject> Map<Long, C> getExpressionExperimentValueObjectMap(
+            Collection<C> vos ) {
 
-        Map<Long, ExpressionExperimentValueObject> voMap = new LinkedHashMap<>( vos.size() );
+        Map<Long, C> voMap = new LinkedHashMap<>( vos.size() );
 
-        for ( ExpressionExperimentValueObject vo : vos ) {
+        for ( C vo : vos ) {
             voMap.put( vo.getId(), vo );
         }
 
         return voMap;
     }
 
-    private void populateValueObject( ExpressionExperimentValueObject vo, Object[] row ) {
-
-        // EE
-        vo.setName( ( String ) row[1] );
-        vo.setSource( ( String ) row[2] );
-        vo.setShortName( ( String ) row[3] );
-        vo.setMetadata( ( String ) row[4] );
-        if ( row[5] != null )
-            vo.setProcessedExpressionVectorCount( ( Integer ) row[5] );
-
-        // acc
-        vo.setAccession( ( String ) row[6] );
-
-        // ED
-        vo.setExternalDatabase( ( String ) row[7] );
-        vo.setExternalUri( ( String ) row[8] );
-
-        // Description
-        vo.setDescription( ( String ) row[9] );
-
-        // AD
-        Object technology = row[10];
-        if ( technology != null ) {
-            vo.setTechnologyType( technology.toString() );
-        }
-
-        // Taxon
-        vo.setTaxon( ( String ) row[11] );
-        vo.setTaxonId( ( Long ) row[12] );
-
-        // CurationDetails
-        vo.setLastUpdated( ( Date ) row[13] );
-        vo.setTroubled( ( ( Boolean ) row[14] ) );
-        vo.setNeedsAttention( ( Boolean ) row[15] );
-        if ( SecurityUtil.isUserAdmin() ) {
-            vo.setCurationNote( ( String ) row[16] );
-        }
-
-        // Counts
-        vo.setBioAssayCount( ( ( Long ) row[17] ).intValue() );
-        vo.setArrayDesignCount( ( ( Long ) row[18] ).intValue() );
-        vo.setBioMaterialCount( ( ( Long ) row[19] ).intValue() );
-
-        // Other
-        vo.setExperimentalDesign( ( Long ) row[20] );
-        vo.setParentTaxonId( ( Long ) row[21] );
-
-        // ACL
-        AclObjectIdentity aoi = ( AclObjectIdentity ) row[22];
-
-        boolean[] permissions = EntityUtils.getPermissions( aoi );
-        vo.setIsPublic( permissions[0] );
-        vo.setUserCanWrite( permissions[1] );
-        vo.setIsShared( permissions[2] );
-
-        if ( row[23] instanceof AclPrincipalSid ) {
-            vo.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[23] ).getPrincipal(),
-                    SecurityUtil.getCurrentUsername() ) );
-        } else {
-            vo.setUserOwned( false );
-        }
-
-        // QTs
-        if ( row[24] != null && vo.getTechnologyType() != null ) {
-            //noinspection unchecked
-            fillQuantitationTypeInfo( Collections.singleton( ( QuantitationType ) row[24] ), vo, ( Long ) row[0],
-                    vo.getTechnologyType() );
-        }
-
-        // Batch info
-        vo.setBatchEffect( ( String ) row[25] );
-        vo.setBatchConfound( ( String ) row[26] );
-
-        // Curation events
-        this.addCurationEvents( vo, ( AuditEvent ) row[27], ( AuditEvent ) row[28], ( AuditEvent ) row[29] );
-    }
-
     /**
      * Filling 'hasDifferentialExpressionAnalysis' and 'hasCoexpressionAnalysis'
      */
-    private void populateAnalysisInformation( Collection<ExpressionExperimentValueObject> vos ) {
+    private void populateAnalysisInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
 
-        Map<Long, ExpressionExperimentValueObject> voIdMap = getExpressionExperimentValueObjectMap( vos );
+        Map<Long, ExpressionExperimentDetailsValueObject> voIdMap = getExpressionExperimentValueObjectMap( vos );
 
         if ( voIdMap.isEmpty() ) {
             return;
@@ -1952,6 +1831,39 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getMeans() );
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getVariances() );
+        }
+    }
+
+    private void fillQuantitationTypeInfo( QuantitationType qt, ExpressionExperimentDetailsValueObject vo ) {
+
+        if ( !vo.getTechnologyType().equals( TechnologyType.ONECOLOR.toString() ) && !vo.getTechnologyType()
+                .equals( TechnologyType.NONE.toString() ) ) {
+
+            if ( qt == null ) {
+                return;
+            }
+
+            boolean hasIntensityA = false;
+            boolean hasIntensityB = false;
+            boolean mayBeOneChannel = false;
+
+            if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
+                /*
+                * This could be a dual-mode array, or it could be mis-labeled as two-color; or this might actually
+                * be ratios. In either case, we should flag it; as it stands we shouldn't use two-channel missing
+                * value analysis on it.
+                */
+                mayBeOneChannel = true;
+            }
+            if ( ChannelUtils.isSignalChannelA( qt.getName() ) ) {
+                hasIntensityA = true;
+            }
+            if ( ChannelUtils.isSignalChannelB( qt.getName() ) ) {
+                hasIntensityB = true;
+            }
+
+            vo.setHasBothIntensities( hasIntensityA && hasIntensityB && !mayBeOneChannel );
+            vo.setHasEitherIntensity( hasIntensityA || hasIntensityB );
         }
     }
 

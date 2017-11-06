@@ -658,8 +658,8 @@ public class ExpressionExperimentController {
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
         ExpressionExperiment ee = this.getEESafely( id );
-        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService
-                .loadValueObjects( Collections.singleton( ee.getId() ), false );
+        Collection<ExpressionExperimentDetailsValueObject> initialResults =
+                expressionExperimentService.loadDetailsValueObjects( null, false, Collections.singleton( id ), null, 0,0 );
 
         if ( initialResults.size() == 0 ) {
             return null;

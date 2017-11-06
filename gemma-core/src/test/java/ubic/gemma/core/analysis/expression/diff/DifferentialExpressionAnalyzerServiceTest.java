@@ -38,10 +38,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -211,7 +208,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors()
                 .toArray( new ExperimentalFactor[] {} );
 
-        List<ExperimentalFactor> factorsToUse = Arrays.asList( factors[0] );
+        List<ExperimentalFactor> factorsToUse = Collections.singletonList( factors[0] );
         ExperimentalFactor subsetFactor = factors[1];
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -310,7 +307,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         // check that we read it back correctly.
         {
-            Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
+            Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
                     .getAnalysesByExperiment( Collections.singleton( ee.getId() ) );
             // it will retrieve the analysis of the subset.
             assertEquals( 1, vos.size() );
@@ -318,7 +315,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         // retrieve the analysis of the subset directly.
         {
-            Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
+            Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
                     .getAnalysesByExperiment( Collections.singleton( eeset.getId() ) );
             assertEquals( 1, vos.size() );
             for ( DifferentialExpressionAnalysisValueObject vo : vos.entrySet().iterator().next().getValue() ) {

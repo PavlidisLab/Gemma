@@ -30,6 +30,7 @@ import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject.Condition;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -127,11 +128,11 @@ public class DifferentialExpressionSearchTaskImpl
         log.info( "Loading " + experimentGroupName + " experiments..." );
 
         // database hit: important that this be fast.
-        Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
                 .getAnalysesByExperiment( EntityUtils.getIds( experimentGroup ) );
 
         experiment:
-        for ( ExpressionExperimentValueObject bas : analyses.keySet() ) {
+        for ( ExpressionExperimentDetailsValueObject bas : analyses.keySet() ) {
 
             Collection<DifferentialExpressionAnalysisValueObject> analysesForExperiment = filterAnalyses(
                     analyses.get( bas ) );

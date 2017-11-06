@@ -48,7 +48,7 @@ public interface ExpressionExperimentDao
             ArrayList<ObjectFilter[]> filter );
 
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
-            List<Long> ids, Taxon taxon, int limit, int start );
+            Collection<Long> ids, Taxon taxon, int limit, int start );
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 

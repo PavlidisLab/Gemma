@@ -82,7 +82,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.setDesignElement( vec.getDesignElement() );
 
         if ( !bioassaySet.getId().equals( vec.getExpressionExperiment().getId() ) ) {
-            this.expressionExperiment = ExpressionExperimentValueObject.createValueObject( bioassaySet );
+            this.expressionExperiment = bioassaySet.createValueObject();
         } else {
             this.expressionExperiment = vec.getExpressionExperiment();
         }

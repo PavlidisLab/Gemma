@@ -26,8 +26,10 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import static org.easymock.EasyMock.*;
 
@@ -39,6 +41,9 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
     @Autowired
     private PhenotypeAssociationService pas;
 
+    @Autowired
+    private ExpressionExperimentService ees;
+
     private BibliographicReferenceServiceImpl svc = null;
     private BibliographicReferenceDao brdao = null;
     private DatabaseEntry de = null;
@@ -49,7 +54,7 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
 
         brdao = createMock( BibliographicReferenceDao.class );
 
-        svc = new BibliographicReferenceServiceImpl( brdao, pas );
+        svc = new BibliographicReferenceServiceImpl( brdao, pas, ees );
 
         extDB = ExternalDatabase.Factory.newInstance();
         extDB.setName( "PUBMED" );

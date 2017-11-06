@@ -40,10 +40,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.awt.*;
@@ -118,18 +115,21 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             assert !vec.getBioAssays().isEmpty();
 
-            LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout;
+            LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout = null;
 
             if ( cachedLayouts.containsKey( vec.getExpressionExperiment().getId() ) ) {
                 layout = cachedLayouts.get( vec.getExpressionExperiment().getId() );
-            } else {
+            } else if ( vec.getExpressionExperiment().getClass()
+                    .isInstance( ExpressionExperimentSubsetValueObject.class ) ) {
                 // subset.
-                assert vec.getExpressionExperiment().getSourceExperiment() != null;
-                layout = cachedLayouts.get( vec.getExpressionExperiment().getSourceExperiment() );
+                layout = cachedLayouts.get( ( ( ExpressionExperimentSubsetValueObject ) vec.getExpressionExperiment() )
+                        .getSourceExperiment() );
             }
 
-            assert layout != null;
-            assert !layout.isEmpty();
+            if ( layout == null || layout.isEmpty() ) {
+                log.error( "Did not find cached layout for " + vec.getId() );
+                continue;
+            }
 
             List<BioAssayValueObject> newOrdering = new ArrayList<>( layout.keySet() );
 
@@ -237,6 +237,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     /**
      * Test method for now, shows how this can be used.
+     *
      * @param e ee
      */
     @SuppressWarnings("unused") // Test method for now, shows how this can be used.
@@ -485,13 +486,21 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             /*
              * Then we are looking at a subset, so associate it with the original experiment.
              */
-            assert vec.getExpressionExperiment().getSourceExperiment() != null;
-            actualEe = expressionExperimentService.load( vec.getExpressionExperiment().getSourceExperiment() );
+            if ( !vec.getClass().isInstance( ExpressionExperimentSubsetValueObject.class ) ) {
+                log.error( "Vector is sliced, but the experiment is not a subset!" );
+            }
+            ExpressionExperimentSubsetValueObject eesvo = ( ExpressionExperimentSubsetValueObject ) vec
+                    .getExpressionExperiment();
+
+            if ( eesvo.getSourceExperiment() == null ) {
+                log.error( "Vector is sliced, but the source experiment is null!" );
+            }
+
+            actualEe = expressionExperimentService.load( eesvo.getSourceExperiment() );
             actualEe = expressionExperimentService.thawLiter( actualEe );
         } else {
             actualEe = expressionExperimentService.load( ee.getId() );
             actualEe = expressionExperimentService.thawLiter( actualEe );
-            // plotExperimentalDesign( ee ); // debugging/testing
         }
         return actualEe;
     }
@@ -536,9 +545,14 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
              * Problem: we can't have two layouts for one experiment, which is actually required if there is more than
              * one bioassay dimension. However, this rarely matters. See bug 3775
              */
-            if ( cachedLayouts.containsKey( ee.getId() ) || ( ee.getSourceExperiment() != null && cachedLayouts
-                    .containsKey( ee.getSourceExperiment() ) ) ) {
+            if ( cachedLayouts.containsKey( ee.getId() ) ) {
                 continue;
+            } else if ( vec.getClass().isInstance( ExpressionExperimentSubsetValueObject.class ) ) {
+                ExpressionExperimentSubsetValueObject eesvo = ( ExpressionExperimentSubsetValueObject ) vec
+                        .getExpressionExperiment();
+                if ( eesvo.getSourceExperiment() != null && cachedLayouts.containsKey( eesvo.getSourceExperiment() ) ) {
+                    continue;
+                }
             }
 
             BioAssayDimensionValueObject bioAssayDimension = getBioAssayDimensionForVector( vec );

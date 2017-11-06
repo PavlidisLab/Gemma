@@ -22,16 +22,17 @@ package ubic.gemma.web.persistence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -149,10 +150,10 @@ public class SessionListManagerImpl implements SessionListManager {
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
+    public Collection<ExpressionExperimentDetailsValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = getExperimentIdsInSet( id );
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService
-                .loadValueObjects( eeids, false );
+        Collection<ExpressionExperimentDetailsValueObject> result = expressionExperimentService
+                .loadDetailsValueObjects( null, false, eeids, null, 0, 0 );
         expressionExperimentReportService.getReportInformation( result );
         return result;
     }

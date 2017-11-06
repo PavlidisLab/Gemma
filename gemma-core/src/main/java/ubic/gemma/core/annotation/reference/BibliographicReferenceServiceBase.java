@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotype
 import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
 
@@ -44,12 +45,15 @@ public abstract class BibliographicReferenceServiceBase
 
     final BibliographicReferenceDao bibliographicReferenceDao;
     private final PhenotypeAssociationService phenotypeAssociationService;
+    private final ExpressionExperimentService expressionExperimentService;
 
     public BibliographicReferenceServiceBase( BibliographicReferenceDao bibliographicReferenceDao,
-            PhenotypeAssociationService phenotypeAssociationService ) {
+            PhenotypeAssociationService phenotypeAssociationService,
+            ExpressionExperimentService expressionExperimentService ) {
         super( bibliographicReferenceDao );
         this.bibliographicReferenceDao = bibliographicReferenceDao;
         this.phenotypeAssociationService = phenotypeAssociationService;
+        this.expressionExperimentService = expressionExperimentService;
     }
 
     /**
@@ -187,12 +191,12 @@ public abstract class BibliographicReferenceServiceBase
             BibliographicReference bibliographicReference ) throws Exception;
 
     @Transactional(readOnly = true)
-    private Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
+    public Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
             Collection<BibliographicReference> bibRefs ) {
         if ( bibRefs.isEmpty() ) {
-            return new ArrayList<BibliographicReferenceValueObject>();
+            return new ArrayList<>();
         }
-        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<Long, BibliographicReferenceValueObject>();
+        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<>();
 
         for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
@@ -226,7 +230,7 @@ public abstract class BibliographicReferenceServiceBase
         if ( relatedExperiments.isEmpty() ) {
             bibRefVO.setExperiments( new ArrayList<ExpressionExperimentValueObject>() );
         } else {
-            bibRefVO.setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments ) );
+            bibRefVO.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments ) );
         }
 
     }
@@ -238,8 +242,7 @@ public abstract class BibliographicReferenceServiceBase
         for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = idTobibRefVO.get( bibref.getId() );
             if ( relatedExperiments.containsKey( bibref ) ) {
-                vo.setExperiments(
-                        ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments.get( bibref ) ) );
+                vo.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments.get( bibref ) ) );
             }
         }
     }

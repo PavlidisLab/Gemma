@@ -164,8 +164,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         for ( Object o : qResult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperimentValueObject ee = ExpressionExperimentValueObject
-                    .createValueObject( ( BioAssaySet ) oa[0] );
+            ExpressionExperimentValueObject ee = (( BioAssaySet ) oa[0]).createValueObject();
             DifferentialExpressionValueObject probeResult = new DifferentialExpressionValueObject(
                     ( DifferentialExpressionAnalysisResult ) oa[1] );
 
@@ -273,8 +272,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
             Object[] oa = ( Object[] ) o;
             DifferentialExpressionAnalysisResult probeResult = ( DifferentialExpressionAnalysisResult ) oa[1];
-            ExpressionExperimentValueObject eevo = ExpressionExperimentValueObject
-                    .createValueObject( ( BioAssaySet ) oa[0] );
+            ExpressionExperimentValueObject eevo = (( BioAssaySet ) oa[0]).createValueObject();
             if ( !results.containsKey( eevo ) ) {
                 results.put( eevo, new ArrayList<DifferentialExpressionValueObject>() );
             }
@@ -381,8 +379,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
          */
         for ( Object[] oa : ees ) {
             ExpressionAnalysisResultSet rs = ( ExpressionAnalysisResultSet ) oa[1];
-            ExpressionExperimentValueObject evo = ExpressionExperimentValueObject
-                    .createValueObject( ( BioAssaySet ) oa[0] );
+            ExpressionExperimentValueObject evo = (( BioAssaySet ) oa[0]).createValueObject();
 
             if ( !results.containsKey( evo ) ) {
                 results.put( evo, new ArrayList<DifferentialExpressionValueObject>() );
@@ -450,8 +447,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         for ( Object o : qResult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperimentValueObject ee = ExpressionExperimentValueObject
-                    .createValueObject( ( BioAssaySet ) oa[0] );
+            ExpressionExperimentValueObject ee = (( BioAssaySet ) oa[0]).createValueObject();
             DifferentialExpressionAnalysisResult probeResult = ( DifferentialExpressionAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {
