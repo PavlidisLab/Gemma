@@ -5,6 +5,7 @@ import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -62,9 +63,16 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.name = ee.getName();
         this.source = ee.getSource();
         this.description = ee.getDescription();
-        this.bioAssayCount = ee.getBioAssays() != null ? ee.getBioAssays().size() : null;
-        this.accession = ee.getAccession() != null ? ee.getAccession().toString() : null;
-        this.experimentalDesign = ee.getExperimentalDesign() != null ? ee.getExperimentalDesign().getId() : null;
+        this.bioAssayCount = ee.getBioAssays() != null && Hibernate.isInitialized( ee.getBioAssays() ) ?
+                ee.getBioAssays().size() :
+                null;
+        this.accession = ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ?
+                ee.getAccession().toString() :
+                null;
+        this.experimentalDesign =
+                ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ?
+                        ee.getExperimentalDesign().getId() :
+                        null;
     }
 
     /**
