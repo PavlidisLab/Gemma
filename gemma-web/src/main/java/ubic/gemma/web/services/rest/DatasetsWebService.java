@@ -135,7 +135,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/platforms")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetPlatforms( // Params:
@@ -152,7 +152,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/samples")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSamples( // Params:
@@ -170,7 +170,7 @@ public class DatasetsWebService extends
      * @param qValueThreshold the Q-value threshold.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/analyses/differential")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetDiffAnalysis( // Params:
@@ -193,7 +193,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/annotations")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetAnnotations( // Params:
@@ -211,7 +211,7 @@ public class DatasetsWebService extends
      * @param filterData return filtered the expression data.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/data")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
@@ -230,7 +230,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/design")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/design")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetDesign( // Params:
