@@ -7,6 +7,7 @@ import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -143,8 +144,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             String metadata, String shortName, String source, String taxon, String technologyType, Long taxonId,
             Long parentTaxonId, Long experimentalDesign, Integer processedExpressionVectorCount,
             Integer arrayDesignCount, Integer bioMaterialCount, Boolean currentUserHasWritePermission,
-            Boolean currentUserIsOwner, Boolean isPublic, Boolean isShared ) {
-        super( id );
+            Boolean currentUserIsOwner, Boolean isPublic, Boolean isShared, Date lastUpdated, Boolean troubled,
+            AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
+            AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
+            AuditEventValueObject lastNoteUpdateEvent ) {
+        super( id, lastUpdated, troubled, lastTroubledEvent, needsAttention, lastNeedsAttentionEvent, curationNote,
+                lastNoteUpdateEvent );
         this.name = name;
         this.description = description;
         this.bioAssayCount = bioAssayCount;
@@ -168,6 +173,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.currentUserIsOwner = currentUserIsOwner;
         this.isPublic = isPublic;
         this.isShared = isShared;
+
     }
 
     public String getName() {

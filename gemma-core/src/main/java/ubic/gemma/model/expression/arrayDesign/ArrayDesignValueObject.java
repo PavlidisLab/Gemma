@@ -33,8 +33,7 @@ import java.util.HashSet;
  * @author paul et al
  */
 @SuppressWarnings("unused") // Used in front end
-public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign>
-        implements Serializable {
+public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -140,9 +139,9 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.technologyType = technologyType;
     }
 
-    public ArrayDesignValueObject(Object[] row){
-        super( (Long) row[0], (Date) row[6], (Boolean) row[7], ( AuditEvent ) row[13],
-                (Boolean) row[8], ( AuditEvent ) row[12], (String) row[9], ( AuditEvent ) row[11]);
+    public ArrayDesignValueObject( Object[] row ) {
+        super( ( Long ) row[0], ( Date ) row[6], ( Boolean ) row[7], ( AuditEvent ) row[13], ( Boolean ) row[8],
+                ( AuditEvent ) row[12], ( String ) row[9], ( AuditEvent ) row[11] );
 
         this.name = ( String ) row[1];
         this.shortName = ( String ) row[2];
@@ -156,7 +155,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.description = ( String ) row[4];
         this.isMergee = row[5] != null;
 
-        this.taxon = (String) row[10];
+        this.taxon = ( String ) row[10];
     }
 
     public static Collection<ArrayDesignValueObject> create( Collection<ArrayDesign> subsumees ) {

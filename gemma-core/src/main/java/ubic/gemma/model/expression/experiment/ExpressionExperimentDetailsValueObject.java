@@ -92,12 +92,12 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     public ExpressionExperimentDetailsValueObject() {
     }
 
-    public ExpressionExperimentDetailsValueObject( Long id ) {
-        super( id );
-    }
-
     public ExpressionExperimentDetailsValueObject( Object[] row ) {
         super( row );
+    }
+
+    public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
+        super( ee );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject vo ) {
@@ -106,7 +106,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
                 vo.getSource(), vo.getTaxon(), vo.getTechnologyType(), vo.getTaxonId(), vo.getParentTaxonId(),
                 vo.getExperimentalDesign(), vo.getProcessedExpressionVectorCount(), vo.getArrayDesignCount(),
                 vo.getBioMaterialCount(), vo.getCurrentUserHasWritePermission(), vo.getCurrentUserIsOwner(),
-                vo.getIsPublic(), vo.getIsShared() );
+                vo.getIsPublic(), vo.getIsShared(), vo.getLastUpdated(), vo.getTroubled(), vo.getLastTroubledEvent(),
+                vo.getNeedsAttention(), vo.getLastNeedsAttentionEvent(), vo.getCurationNote(),
+                vo.getLastNoteUpdateEvent() );
     }
 
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
@@ -470,7 +472,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     @Override
     public Boolean getTroubled() {
         Boolean troubled = super.getTroubled();
-        if ( !troubled && this.arrayDesigns != null) {
+        if ( !troubled && this.arrayDesigns != null ) {
             for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
                 if ( ad.getTroubled() )
                     return true;
@@ -484,6 +486,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
     public Boolean getActuallyTroubled() {
+        System.out.println( "troubled: " + super.getTroubled() + " for id:" + id );
         return super.getTroubled();
     }
 
@@ -492,7 +495,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
     public Boolean getPlatformTroubled() {
-        if(this.arrayDesigns == null){
+        if ( this.arrayDesigns == null ) {
             return null; // Just because dwr accesses this even when arrayDesigns is not set.
         }
         for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
@@ -520,7 +523,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         if ( super.getTroubled() )
             eeTroubleDetails = super.getTroubleDetails( htmlEscape );
 
-        if(this.arrayDesigns != null) { // Just because dwr accesses this even when arrayDesigns is not set.
+        if ( this.arrayDesigns != null ) { // Just because dwr accesses this even when arrayDesigns is not set.
             for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
                 if ( ad.getTroubled() ) {
                     adTroubled = true;

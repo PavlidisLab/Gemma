@@ -56,7 +56,7 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
             AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
             AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
             AuditEventValueObject lastNoteUpdateEvent ) {
-        this( id );
+        super( id );
         this.lastUpdated = lastUpdated;
         this.troubled = troubled;
         this.lastTroubledEvent = lastTroubledEvent;

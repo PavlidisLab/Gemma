@@ -1831,7 +1831,7 @@ public class ExpressionExperimentController {
                 }
             }
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject(
-                    expressionExperiment.getId() );
+                    expressionExperiment );
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             publication = bibliographicReferenceService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( publication ) );
