@@ -244,22 +244,23 @@ public class DatasetsWebService extends
     /**
      * Retrieves the expression levels of given genes on given datasets.
      *
-     * @param datasets a list of dataset identifiers separated by commas (','). The identifiers can either be the
-     *                 ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                 is more efficient. Only datasets that user has access to will be available.
-     *                 <p>
-     *                 You can combine various identifiers in one query, but an invalid identifier will cause the
-     *                 call to yield an error.
-     *                 </p>
-     * @param genes    a list of gene identifiers, separated by commas (','). Identifiers can be one of
-     *                 NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
-     *                 guaranteed to be unique) identifier. Official symbol will return a random homologue. Use one
-     *                 of the IDs to specify the correct taxon - if the gene taxon does not match the taxon of the
-     *                 given datasets, expression levels for that gene will be missing from the response.
-     *                 <p>
-     *                 You can combine various identifiers in one query, but an invalid identifier will cause the
-     *                 call to yield an error.
-     *                 </p>
+     * @param datasets        a list of dataset identifiers separated by commas (','). The identifiers can either be the
+     *                        ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                        is more efficient. Only datasets that user has access to will be available.
+     *                        <p>
+     *                        You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                        call to yield an error.
+     *                        </p>
+     * @param genes           a list of gene identifiers, separated by commas (','). Identifiers can be one of
+     *                        NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
+     *                        guaranteed to be unique) identifier. Official symbol will return a random homologue. Use one
+     *                        of the IDs to specify the correct taxon - if the gene taxon does not match the taxon of the
+     *                        given datasets, expression levels for that gene will be missing from the response.
+     *                        <p>
+     *                        You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                        call to yield an error.
+     *                        </p>
+     * @param keepNonSpecific response will include gene non-specific elements
      */
     @GET
     @Path("/{datasets: [^/]+}/expressions/genes/{genes: [^/]+}")
@@ -268,11 +269,12 @@ public class DatasetsWebService extends
     public ResponseDataObject datasetExpressions( // Params:
             @PathParam("datasets") ArrayDatasetArg datasets, // Required
             @PathParam("genes") ArrayGeneArg genes, // Required
+            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
-                        genes.getPersistentObjects( geneService ) ), sr );
+                        genes.getPersistentObjects( geneService ), keepNonSpecific.getValue() ), sr );
     }
 
     /**
@@ -296,12 +298,13 @@ public class DatasetsWebService extends
             @PathParam("datasets") ArrayDatasetArg datasets, // Required
             @QueryParam("component") IntArg component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         checkReqArg( component, "component" );
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
-                        component.getValue() ), sr );
+                        component.getValue(), keepNonSpecific.getValue() ), sr );
     }
 
     /**
@@ -327,12 +330,14 @@ public class DatasetsWebService extends
             @QueryParam("diffExSet") LongArg diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("100.0") DoubleArg threshold, // Optional, default 100.0
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         checkReqArg( diffExSet, "diffExSet" );
         return Responder.autoCode( processedExpressionDataVectorService
-                .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
-                        diffExSet.getValue(), threshold.getValue(), limit.getValue() ), sr );
+                        .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
+                                diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue() ),
+                sr );
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {

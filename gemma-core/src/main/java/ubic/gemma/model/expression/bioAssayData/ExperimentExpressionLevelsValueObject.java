@@ -1,9 +1,11 @@
 package ubic.gemma.model.expression.bioAssayData;
 
-import org.openjena.atlas.logging.Log;
 import ubic.gemma.model.genome.Gene;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unused") // Used in rest api
 public class ExperimentExpressionLevelsValueObject {
@@ -11,28 +13,17 @@ public class ExperimentExpressionLevelsValueObject {
     private static final String ERROR_MSG_GENE_MISSING = "Adding a doubleVectorVO for a gene that is not in the VOs genes list.";
     private static final String GENE_SYMBOL_EMPTY = "not mapped";
     private long datasetId;
-    private LinkedList<GeneExpressionLevelsValueObject> geneExpressionLevels = new LinkedList<>();
+    private LinkedList<GeneElementExpressionsValueObject> geneExpressionLevels = new LinkedList<>();
 
     public ExperimentExpressionLevelsValueObject( long datasetId,
-            Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene ) {
+            Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene, boolean keepGeneNonSpecific ) {
         this.datasetId = datasetId;
-        for ( Map.Entry<Gene, List<DoubleVectorValueObject>> entry : vectorsPerGene.entrySet() ) {
 
-            List<DoubleVectorValueObject> vectors = entry.getValue();
-            for ( DoubleVectorValueObject vector : vectors ) {
-                Gene gene = entry.getKey();
-                if(gene != null){
-                    if (!vector.getGenes().contains( gene.getId() ) ) {
-                        Log.warn( this.getClass(), ERROR_MSG_GENE_MISSING );
-                    }
-                    geneExpressionLevels
-                            .add( new GeneExpressionLevelsValueObject( gene.getNcbiGeneId(), gene.getOfficialSymbol(),
-                                    vector ) );
-                }else{
-                    geneExpressionLevels
-                            .add( new GeneExpressionLevelsValueObject( null, GENE_SYMBOL_EMPTY,
-                                    vector ) );
-                }
+        for ( Gene g : vectorsPerGene.keySet() ) {
+            if ( g != null ) {
+                this.geneExpressionLevels
+                        .add( new GeneElementExpressionsValueObject( g.getOfficialSymbol(), g.getNcbiGeneId(),
+                                vectorsPerGene.get( g ), keepGeneNonSpecific ) );
             }
         }
     }
@@ -41,70 +32,68 @@ public class ExperimentExpressionLevelsValueObject {
         return datasetId;
     }
 
-    public LinkedList<GeneExpressionLevelsValueObject> getGeneExpressionLevels() {
+    public LinkedList<GeneElementExpressionsValueObject> getGeneExpressionLevels() {
         return geneExpressionLevels;
     }
 }
 
 // Used in rest api
 @SuppressWarnings("unused")
-class GeneExpressionLevelsValueObject {
-    private String designElementName;
+class GeneElementExpressionsValueObject {
     private String geneOfficialSymbol;
-    private Boolean geneSpecific;
     private Integer geneNcbiId;
-    private Double averageExpression;
-    private Double maximumExpression = -Double.MAX_VALUE;
-    private Map<String, Double> expressionLevelsPerProbe = new HashMap<>();
+    private List<VectorElementValueObject> elements = new LinkedList<>();
 
-    GeneExpressionLevelsValueObject( Integer geneNcbiId, String geneOfficialSymbol, DoubleVectorValueObject vector ) {
-        this.geneNcbiId = geneNcbiId;
+    GeneElementExpressionsValueObject( String geneOfficialSymbol, Integer geneNcbiId,
+            List<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific ) {
         this.geneOfficialSymbol = geneOfficialSymbol;
-        this.designElementName = vector.getDesignElement().getName();
-        this.geneSpecific = vector.getGenes().size() == 1;
-        extractProbeLevels( vector );
-    }
-
-    private void extractProbeLevels( DoubleVectorValueObject vector ) {
-        int i;
-        double total = 0;
-        for ( i = 0; i < vector.getData().length; i++ ) {
-            double value = vector.getData()[i];
-            expressionLevelsPerProbe.put( vector.getBioAssays().get( i ).getName(), value );
-
-            if ( value > maximumExpression ) {
-                maximumExpression = value;
+        this.geneNcbiId = geneNcbiId;
+        for ( DoubleVectorValueObject vector : vectors ) {
+            if ( vector.getGenes().size() != 1 && !keepGeneNonSpecific ) {
+                continue;
             }
-            total += value;
+            elements.add( new VectorElementValueObject( vector ) );
         }
-        averageExpression = total / i;
-    }
-
-    public Boolean getGeneSpecific() {
-        return geneSpecific;
-    }
-
-    public String getDesignElementName() {
-        return designElementName;
-    }
-
-    public Integer getGeneNcbiId() {
-        return geneNcbiId;
     }
 
     public String getGeneOfficialSymbol() {
         return geneOfficialSymbol;
     }
 
-    public Double getAverageExpression() {
-        return averageExpression;
+    public Integer getGeneNcbiId() {
+        return geneNcbiId;
     }
 
-    public Double getMaximumExpression() {
-        return maximumExpression;
+    public List<VectorElementValueObject> getVectors() {
+        return elements;
+    }
+}
+
+// Used in rest api
+@SuppressWarnings("unused")
+class VectorElementValueObject {
+    private String designElementName;
+    private Map<String, Double> sampleExpressionLevels = new HashMap<>();
+
+    VectorElementValueObject( DoubleVectorValueObject vector ) {
+        this.designElementName = vector.getDesignElement().getName();
+        extractProbeLevels( vector );
     }
 
-    public Map<String, Double> getExpressionLevelsPerProbe() {
-        return expressionLevelsPerProbe;
+    public String getDesignElementName() {
+        return designElementName;
+    }
+
+    public Map<String, Double> getSampleExpressionLevels() {
+        return sampleExpressionLevels;
+    }
+
+    private void extractProbeLevels( DoubleVectorValueObject vector ) {
+
+        int i;
+        for ( i = 0; i < vector.getData().length; i++ ) {
+            double value = vector.getData()[i];
+            sampleExpressionLevels.put( vector.getBioAssays().get( i ).getName(), value );
+        }
     }
 }

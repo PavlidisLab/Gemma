@@ -70,7 +70,7 @@ public interface ProcessedExpressionDataVectorService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Collection<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
-            Collection<Gene> genes );
+            Collection<Gene> genes, boolean keepGeneNonSpecific );
 
     /**
      * @param ees       expressionExperiments
@@ -82,7 +82,7 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     @Transactional(readOnly = true)
     Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca( Collection<ExpressionExperiment> ees,
-            int threshold, int component );
+            int threshold, int component, boolean keepGeneNonSpecific );
 
     /**
      * @param diffExResultSetId the differential expression result set to access
@@ -93,7 +93,7 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     @Transactional(readOnly = true)
     Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx( Collection<ExpressionExperiment> ees,
-            Long diffExResultSetId, double threshold, int max );
+            Long diffExResultSetId, double threshold, int max, boolean keepGeneNonSpecific );
 
     /**
      * @param expressionExperiment ee
