@@ -486,7 +486,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
     public Boolean getActuallyTroubled() {
-        System.out.println( "troubled: " + super.getTroubled() + " for id:" + id );
         return super.getTroubled();
     }
 
