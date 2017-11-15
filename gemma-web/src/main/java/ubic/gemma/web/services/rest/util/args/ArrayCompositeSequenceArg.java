@@ -40,7 +40,7 @@ public class ArrayCompositeSequenceArg
      * input String can not be converted into an array of CompositeSequence identifiers.
      */
     @SuppressWarnings("unused")
-    public static ArrayStringArg valueOf( final String s ) {
+    public static ArrayCompositeSequenceArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
             return new ArrayCompositeSequenceArg( String.format( ERROR_MSG, s ),
                     new IllegalArgumentException( ERROR_MSG_DETAIL ) );
