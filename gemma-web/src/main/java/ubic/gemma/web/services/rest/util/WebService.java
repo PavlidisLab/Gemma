@@ -2,6 +2,7 @@ package ubic.gemma.web.services.rest.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -28,6 +29,7 @@ public abstract class WebService {
     @GET
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("permitAll")
     public ResponseDataObject anyGet( // Params:
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested
@@ -42,6 +44,7 @@ public abstract class WebService {
     @POST
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseDataObject anyPost( // Params:
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested
@@ -56,6 +59,7 @@ public abstract class WebService {
     @DELETE
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseDataObject anyDelete( // Params:
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested
@@ -70,6 +74,7 @@ public abstract class WebService {
     @PUT
     @Path("/{default: .*}")
     @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseDataObject anyPut( // Params:
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested

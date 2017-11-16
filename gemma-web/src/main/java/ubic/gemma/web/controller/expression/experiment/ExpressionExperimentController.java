@@ -699,7 +699,6 @@ public class ExpressionExperimentController {
             finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
         }
 
-        System.out.println("RETURNING: "+finalResult);
         return finalResult;
     }
 

@@ -138,6 +138,7 @@ public class DatasetsWebService extends
     @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    //    @PreAuthorize( "hasRole('GROUP_ADMIN')" ) // TODO remove, left here for reference before it is actually used somewhere.
     public ResponseDataObject datasetPlatforms( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
