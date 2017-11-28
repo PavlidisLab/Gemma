@@ -2,6 +2,7 @@ package ubic.gemma.web.persistence;
 
 import java.util.Collection;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -36,7 +37,7 @@ public interface SessionListManager {
     SessionBoundExpressionExperimentSetValueObject getExperimentSetById( Long id );
 
 
-    Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id );
+    Collection<ExpressionExperimentDetailsValueObject> getExperimentsInSet( Long id );
 
     /**
      * Get the session-bound group using the group's id

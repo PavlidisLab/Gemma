@@ -68,8 +68,8 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     @Override
     @Transactional(readOnly = true)
     public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
-            Collection<Gene> genes ) {
-        Collection<DoubleVectorValueObject> vectors = getProcessedDataArrays( ees, EntityUtils.getIdsFast( genes ) );
+            Collection<Gene> genes, boolean keepGeneNonSpecific, String consolidateMode ) {
+        Collection<DoubleVectorValueObject> vectors = getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
         Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
@@ -94,7 +94,8 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
                 }
 
             }
-            vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene ) );
+            vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
+                    consolidateMode ) );
         }
 
         return vos;
@@ -103,14 +104,15 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     @Override
     @Transactional(readOnly = true)
     public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsPca(
-            Collection<ExpressionExperiment> ees, int limit, int component ) {
+            Collection<ExpressionExperiment> ees, int limit, int component, boolean keepGeneNonSpecific,
+            String consolidateMode ) {
         Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
             Collection<DoubleVectorValueObject> vectors = svdService.getTopLoadedVectors( ee.getId(), component, limit )
                     .values();
-            AddExperimentGeneVectors( vos, ee, vectors );
+            addExperimentGeneVectors( vos, ee, vectors, keepGeneNonSpecific, consolidateMode );
         }
 
         return vos;
@@ -119,13 +121,14 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     @Override
     @Transactional(readOnly = true)
     public Collection<ExperimentExpressionLevelsValueObject> getExpressionLevelsDiffEx(
-            Collection<ExpressionExperiment> ees, Long diffExResultSetId, double threshold, int max ) {
+            Collection<ExpressionExperiment> ees, Long diffExResultSetId, double threshold, int max,
+            boolean keepGeneNonSpecific, String consolidateMode ) {
         Collection<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>();
 
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
             Collection<DoubleVectorValueObject> vectors = getDiffExVectors( diffExResultSetId, threshold, max );
-            AddExperimentGeneVectors( vos, ee, vectors );
+            addExperimentGeneVectors( vos, ee, vectors, keepGeneNonSpecific, consolidateMode );
         }
 
         return vos;
@@ -284,10 +287,11 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * @param ee      the experiment the vectors belong to.
      * @param vectors the vectors to create the new ExperimentExpressionLevelsVO with.
      */
-    private void AddExperimentGeneVectors( Collection<ExperimentExpressionLevelsValueObject> vos,
-            ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors ) {
+    private void addExperimentGeneVectors( Collection<ExperimentExpressionLevelsValueObject> vos,
+            ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
+            String consolidateMode ) {
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
-        if(vectors == null){
+        if ( vectors == null ) {
             return;
         }
         for ( DoubleVectorValueObject v : vectors ) {
@@ -313,7 +317,8 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
             }
 
         }
-        vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene ) );
+        vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
+                consolidateMode ) );
     }
 
     private ProcessedExpressionDataVectorDao getProcessedExpressionDataVectorDao() {

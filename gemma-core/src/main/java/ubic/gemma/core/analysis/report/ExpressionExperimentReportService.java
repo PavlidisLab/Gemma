@@ -19,6 +19,7 @@
 package ubic.gemma.core.analysis.report;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.Collection;
@@ -41,7 +42,7 @@ public interface ExpressionExperimentReportService {
     /**
      * Generate a value object that contain summary information about links, biomaterials, and datavectors
      */
-    ExpressionExperimentValueObject generateSummary( Long id );
+    ExpressionExperimentDetailsValueObject generateSummary( Long id );
 
     /**
      * Generates reports on ALL experiments, including 'private' ones. This should only be run by administrators as it
@@ -54,25 +55,25 @@ public interface ExpressionExperimentReportService {
      * generates a collection of value objects that contain summary information about links, biomaterials, and
      * dataVectors
      */
-    Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids );
+    Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids );
 
-    void getAnnotationInformation( Collection<? extends ExpressionExperimentValueObject> vos );
+    void getAnnotationInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
-    Map<Long, Date> getEventInformation( Collection<? extends ExpressionExperimentValueObject> vos );
+    Map<Long, Date> getEventInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
     /**
      * Fills in link analysis and differential expression analysis summaries, and other info from the report.
      *
      * @return map of when the objects were most recently updated (or created)
      */
-    Map<Long, Date> getReportInformation( Collection<? extends ExpressionExperimentValueObject> vos );
+    Map<Long, Date> getReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
     /**
      * retrieves a collection of cached value objects containing summary information
      *
      * @return a collection of cached value objects
      */
-    Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids );
+    Collection<ExpressionExperimentDetailsValueObject> retrieveSummaryObjects( Collection<Long> ids );
 
     /**
      * Recalculates the batch effect and batch confound information for datasets that have been updated

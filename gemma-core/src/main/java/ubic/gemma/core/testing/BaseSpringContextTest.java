@@ -410,6 +410,10 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestExpressionExperimentWithAllDependencies( true );
     }
 
+    protected ExpressionExperiment getNewTestPersistentCompleteExpressionExperiment() {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( false );
+    }
+
     /**
      * @param prototype used to choose the platform
      * @return EE

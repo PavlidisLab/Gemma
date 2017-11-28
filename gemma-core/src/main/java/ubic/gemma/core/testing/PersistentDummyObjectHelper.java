@@ -290,7 +290,7 @@ public class PersistentDummyObjectHelper {
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( boolean doSequence ) {
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+        ee.setShortName( RandomStringUtils.randomAlphanumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
         ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );

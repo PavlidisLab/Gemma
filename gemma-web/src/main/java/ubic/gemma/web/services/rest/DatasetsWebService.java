@@ -135,9 +135,10 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/platforms")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    //    @PreAuthorize( "hasRole('GROUP_ADMIN')" ) // TODO remove, left here for reference before it is actually used somewhere.
     public ResponseDataObject datasetPlatforms( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
@@ -152,7 +153,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/samples")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetSamples( // Params:
@@ -170,7 +171,7 @@ public class DatasetsWebService extends
      * @param qValueThreshold the Q-value threshold.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/analyses/differential")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetDiffAnalysis( // Params:
@@ -193,7 +194,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/annotations")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject datasetAnnotations( // Params:
@@ -211,7 +212,7 @@ public class DatasetsWebService extends
      * @param filterData return filtered the expression data.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/data")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetData( // Params:
@@ -230,7 +231,7 @@ public class DatasetsWebService extends
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/design")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/design")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response datasetDesign( // Params:
@@ -244,22 +245,29 @@ public class DatasetsWebService extends
     /**
      * Retrieves the expression levels of given genes on given datasets.
      *
-     * @param datasets a list of dataset identifiers separated by commas (','). The identifiers can either be the
-     *                 ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                 is more efficient. Only datasets that user has access to will be available.
-     *                 <p>
-     *                 You can combine various identifiers in one query, but an invalid identifier will cause the
-     *                 call to yield an error.
-     *                 </p>
-     * @param genes    a list of gene identifiers, separated by commas (','). Identifiers can be one of
-     *                 NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
-     *                 guaranteed to be unique) identifier. Official symbol will return a random homologue. Use one
-     *                 of the IDs to specify the correct taxon - if the gene taxon does not match the taxon of the
-     *                 given datasets, expression levels for that gene will be missing from the response.
-     *                 <p>
-     *                 You can combine various identifiers in one query, but an invalid identifier will cause the
-     *                 call to yield an error.
-     *                 </p>
+     * @param datasets        a list of dataset identifiers separated by commas (','). The identifiers can either be the
+     *                        ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                        is more efficient. Only datasets that user has access to will be available.
+     *                        <p>
+     *                        You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                        call to yield an error.
+     *                        </p>
+     * @param genes           a list of gene identifiers, separated by commas (','). Identifiers can be one of
+     *                        NCBI ID, Ensembl ID or official symbol. NCBI ID is the most efficient (and
+     *                        guaranteed to be unique) identifier. Official symbol will return a random homologue. Use one
+     *                        of the IDs to specify the correct taxon - if the gene taxon does not match the taxon of the
+     *                        given datasets, expression levels for that gene will be missing from the response.
+     *                        <p>
+     *                        You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                        call to yield an error.
+     *                        </p>
+     * @param keepNonSpecific whether to keep elements that are mapped to multiple genes.
+     * @param consolidate     whether genes with multiple elements should consolidate the information. The options are:
+     *                        <ul>
+     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its bioAssays)</li>
+     *                        <li>pickvar: only return the vector with highest variance of expression across its bioAssays</li>
+     *                        <li>average: create a new vector that will average the bioAssay values from all vectors</li>
+     *                        </ul>
      */
     @GET
     @Path("/{datasets: [^/]+}/expressions/genes/{genes: [^/]+}")
@@ -268,25 +276,36 @@ public class DatasetsWebService extends
     public ResponseDataObject datasetExpressions( // Params:
             @PathParam("datasets") ArrayDatasetArg datasets, // Required
             @PathParam("genes") ArrayGeneArg genes, // Required
+            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
+            // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevels( datasets.getPersistentObjects( expressionExperimentService ),
-                        genes.getPersistentObjects( geneService ) ), sr );
+                        genes.getPersistentObjects( geneService ), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() ), sr );
     }
 
     /**
      * Retrieves the expression levels of genes highly expressed in the given component on given datasets.
      *
-     * @param datasets  a list of dataset identifiers separated by commas (','). The identifiers can either be the
-     *                  ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                  is more efficient. Only datasets that user has access to will be available.
-     *                  <p>
-     *                  You can combine various identifiers in one query, but an invalid identifier will cause the
-     *                  call to yield an error.
-     *                  </p>
-     * @param limit     maximum amount of returned gene-probe expression level pairs.
-     * @param component the pca component to limit the results to.
+     * @param datasets        a list of dataset identifiers separated by commas (','). The identifiers can either be the
+     *                        ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                        is more efficient. Only datasets that user has access to will be available.
+     *                        <p>
+     *                        You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                        call to yield an error.
+     *                        </p>
+     * @param limit           maximum amount of returned gene-probe expression level pairs.
+     * @param component       the pca component to limit the results to.
+     * @param keepNonSpecific whether to keep elements that are mapped to multiple genes.
+     * @param consolidate     whether genes with multiple elements should consolidate the information. The options are:
+     *                        <ul>
+     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its bioAssays)</li>
+     *                        <li>pickvar: only return the vector with highest variance of expression across its bioAssays</li>
+     *                        <li>average: create a new vector that will average the bioAssay values from all vectors</li>
+     *                        </ul>
      */
     @GET
     @Path("/{datasets: [^/]+}/expressions/pca")
@@ -296,27 +315,38 @@ public class DatasetsWebService extends
             @PathParam("datasets") ArrayDatasetArg datasets, // Required
             @QueryParam("component") IntArg component, // Required, default 1
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
+            // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         checkReqArg( component, "component" );
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
-                        component.getValue() ), sr );
+                        component.getValue(), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() ), sr );
     }
 
     /**
      * Retrieves the expression levels of genes highly expressed in the given component on given datasets.
      *
-     * @param datasets  a list of dataset identifiers separated by commas (','). The identifiers can either be the
-     *                  ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
-     *                  is more efficient. Only datasets that user has access to will be available.
-     *                  <p>
-     *                  You can combine various identifiers in one query, but an invalid identifier will cause the
-     *                  call to yield an error.
-     *                  </p>
-     * @param diffExSet the ID of the differential expression set to retrieve the data from.
-     * @param threshold the threshold that the differential expression has to meet to be included in the response.
-     * @param limit     maximum amount of returned gene-probe expression level pairs.
+     * @param datasets        a list of dataset identifiers separated by commas (','). The identifiers can either be the
+     *                        ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                        is more efficient. Only datasets that user has access to will be available.
+     *                        <p>
+     *                        You can combine various identifiers in one query, but an invalid identifier will cause the
+     *                        call to yield an error.
+     *                        </p>
+     * @param diffExSet       the ID of the differential expression set to retrieve the data from.
+     * @param threshold       the threshold that the differential expression has to meet to be included in the response.
+     * @param limit           maximum amount of returned gene-probe expression level pairs.
+     * @param keepNonSpecific whether to keep elements that are mapped to multiple genes.
+     * @param consolidate     whether genes with multiple elements should consolidate the information. The options are:
+     *                        <ul>
+     *                        <li>pickmax: only return the vector that has the highest expression (mean over all its bioAssays)</li>
+     *                        <li>pickvar: only return the vector with highest variance of expression across its bioAssays</li>
+     *                        <li>average: create a new vector that will average the bioAssay values from all vectors</li>
+     *                        </ul>
      */
     @GET
     @Path("/{datasets: [^/]+}/expressions/differential")
@@ -327,12 +357,16 @@ public class DatasetsWebService extends
             @QueryParam("diffExSet") LongArg diffExSet, // Required
             @QueryParam("threshold") @DefaultValue("100.0") DoubleArg threshold, // Optional, default 100.0
             @QueryParam("limit") @DefaultValue("100") IntArg limit, // Optional, default 100
+            @QueryParam("keepNonSpecific") @DefaultValue("false") BoolArg keepNonSpecific, // Optional, default false
+            @QueryParam("consolidate") @DefaultValue("") ExpLevelConsolidationArg consolidate,
+            // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         checkReqArg( diffExSet, "diffExSet" );
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
-                        diffExSet.getValue(), threshold.getValue(), limit.getValue() ), sr );
+                        diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
+                        consolidate == null ? null : consolidate.getValue() ), sr );
     }
 
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {

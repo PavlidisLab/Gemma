@@ -93,6 +93,24 @@ public class Responder {
 
     /**
      * <p>
+     * Creates a new 401 response object. Use this method when the client .
+     * </p>
+     * <a href="https://tools.ietf.org/html/rfc7235#section-3.1">HTTP RFC</a>:
+     * <pre>The 401 (Unauthorized) status code indicates that the request has not
+     * been applied because it lacks valid authentication credentials for
+     * the target resource.</pre>
+     *
+     * @param message         A String that will be used in the ResponseErrorObject as a message describing the problem.
+     * @param servletResponse the object to set the appropriate response code on
+     * @return response data object
+     */
+    public static ResponseDataObject code401( String message, HttpServletResponse servletResponse ) {
+        Response.Status code = Response.Status.BAD_REQUEST;
+        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
+    }
+
+    /**
+     * <p>
      * Creates a new 404 response object. Use this method when you are certain that the resource the client requested
      * does not exist. To denote an empty collection or an array, it is preferred to use this#code204(HttpServletResponse).
      * </p>

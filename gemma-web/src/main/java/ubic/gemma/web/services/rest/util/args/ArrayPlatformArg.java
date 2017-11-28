@@ -36,7 +36,7 @@ public class ArrayPlatformArg extends ArrayEntityArg<ArrayDesign, ArrayDesignVal
      * input String can not be converted into an array of Platform identifiers.
      */
     @SuppressWarnings("unused")
-    public static ArrayStringArg valueOf( final String s ) {
+    public static ArrayPlatformArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
             return new ArrayPlatformArg( String.format( ERROR_MSG, s ),
                     new IllegalArgumentException( ERROR_MSG_DETAIL ) );

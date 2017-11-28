@@ -64,8 +64,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     public T create( T entity ) {
         Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
-        assert EntityUtils.getId( entity ) != null;
-        assert id.equals( EntityUtils.getId( entity ) );
+        assert entity.getId()  != null;
+        assert id.equals( entity.getId() );
         return entity;
     }
 

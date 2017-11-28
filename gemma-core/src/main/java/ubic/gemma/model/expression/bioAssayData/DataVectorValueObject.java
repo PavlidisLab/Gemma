@@ -23,6 +23,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.io.Serializable;
@@ -70,7 +71,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         assert !this.bioAssayDimension.getBioAssays().isEmpty();
         this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType() );
         this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
-        this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment(), true );
+        this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
     }
 
     public DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,

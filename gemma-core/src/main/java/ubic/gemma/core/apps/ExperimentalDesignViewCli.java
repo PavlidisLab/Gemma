@@ -50,7 +50,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
         ExpressionExperimentService ees = getBean( ExpressionExperimentService.class );
         Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjects(
-                EntityUtils.getIdsFast( ees.loadAll() ), false );
+                EntityUtils.getIds( ees.loadAll() ), false );
 
         Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<>();
 

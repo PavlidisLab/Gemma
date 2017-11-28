@@ -277,7 +277,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             }
 
             assertEquals(
-                    geneCoexpressionService.findCoexpressionRelationships( gene, EntityUtils.getIds( ee ), 0, false )
+                    geneCoexpressionService.findCoexpressionRelationships( gene, Collections.singleton( ee.getId()), 0, false )
                             .size(), geneCoexpressionService.countLinks( ee, gene ).intValue() );
 
             GeneCoexpressionNodeDegreeValueObject nodeDegree = geneCoexpressionService.getNodeDegree( gene );

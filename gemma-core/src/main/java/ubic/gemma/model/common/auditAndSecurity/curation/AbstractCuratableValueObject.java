@@ -1,8 +1,10 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.openjena.atlas.logging.Log;
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 import java.util.Date;
@@ -12,7 +14,9 @@ import java.util.Date;
  * Abstract curatable value object that provides variables and methods for data stored in CurationDetails objects on
  * curatable objects.
  */
-public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C> {
+@SuppressWarnings("WeakerAccess") // Used in front end
+public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C>
+        implements Comparable<AbstractCuratableValueObject<C>> {
 
     private static final String TROUBLE_DETAILS_NONE = "No trouble details provided.";
 
@@ -52,14 +56,32 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
             AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
             AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
             AuditEventValueObject lastNoteUpdateEvent ) {
-        this( id );
+        super( id );
         this.lastUpdated = lastUpdated;
         this.troubled = troubled;
         this.lastTroubledEvent = lastTroubledEvent;
         this.needsAttention = needsAttention;
         this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
-        this.curationNote = curationNote;
-        this.lastNoteUpdateEvent = lastNoteUpdateEvent;
+        if ( SecurityUtil.isUserAdmin() ) {
+            this.curationNote = curationNote;
+            this.lastNoteUpdateEvent = lastNoteUpdateEvent;
+        }
+    }
+
+    /**
+     * Creates a VO with the given curatable properties
+     * Note that the events can still be null, as the value-change events they represent might have not occurred since
+     * the curatable object was created, and they are not initialised with a creation event.
+     *
+     * @param troubleEvent   the last event that updated the troubled property
+     * @param attentionEvent the last event that updated the needs attention property
+     * @param noteEvent      the last event that updated the curation note property
+     */
+    protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled, AuditEvent troubleEvent,
+            Boolean needsAttention, AuditEvent attentionEvent, String curationNote, AuditEvent noteEvent ) {
+        this( id, lastUpdated, troubled, troubleEvent == null ? null : new AuditEventValueObject( troubleEvent ),
+                needsAttention, attentionEvent == null ? null : new AuditEventValueObject( attentionEvent ),
+                curationNote, noteEvent == null ? null : new AuditEventValueObject( noteEvent ) );
     }
 
     public Date getLastUpdated() {
@@ -139,5 +161,13 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         }
 
         return htmlEscape ? StringEscapeUtils.escapeHtml4( details ) : details;
+    }
+
+    @Override
+    public int compareTo( AbstractCuratableValueObject<C> arg0 ) {
+        if ( arg0.getId() == null || this.getId() == null ) {
+            return 0;
+        }
+        return arg0.getId().compareTo( this.getId() );
     }
 }

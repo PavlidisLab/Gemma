@@ -146,7 +146,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select p from PhenotypeAssociation as p fetch all properties where "
-                        + "p.evidenceSource.externalDatabase.name=:name" ).setParameter( "name", externalDatabaseName )
+                        + "lower(p.evidenceSource.externalDatabase.name)=:name" ).setParameter( "name", externalDatabaseName.toLowerCase() )
                 .setFirstResult( start ).setMaxResults( limit != null ? limit : DEFAULT_PA_LIMIT ).list();
     }
 

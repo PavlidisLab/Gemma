@@ -43,4 +43,6 @@ public abstract class BioAssaySet extends Investigation {
     public void setBioAssays( Collection<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
     }
+
+    public abstract ExpressionExperimentValueObject createValueObject();
 }

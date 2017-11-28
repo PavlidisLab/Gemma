@@ -18,9 +18,11 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -31,8 +33,7 @@ import java.util.HashSet;
  * @author paul et al
  */
 @SuppressWarnings("unused") // Used in front end
-public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign>
-        implements java.io.Serializable, Comparable<ArrayDesignValueObject> {
+public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -138,19 +139,31 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.technologyType = technologyType;
     }
 
+    public ArrayDesignValueObject( Object[] row ) {
+        super( ( Long ) row[0], ( Date ) row[6], ( Boolean ) row[7], ( AuditEvent ) row[13], ( Boolean ) row[8],
+                ( AuditEvent ) row[12], ( String ) row[9], ( AuditEvent ) row[11] );
+
+        this.name = ( String ) row[1];
+        this.shortName = ( String ) row[2];
+
+        TechnologyType color = ( TechnologyType ) row[3];
+        if ( color != null ) {
+            this.technologyType = color.toString();
+            this.color = color.getValue();
+        }
+
+        this.description = ( String ) row[4];
+        this.isMergee = row[5] != null;
+
+        this.taxon = ( String ) row[10];
+    }
+
     public static Collection<ArrayDesignValueObject> create( Collection<ArrayDesign> subsumees ) {
         Collection<ArrayDesignValueObject> r = new HashSet<>();
         for ( ArrayDesign ad : subsumees ) {
             r.add( new ArrayDesignValueObject( ad ) );
         }
         return r;
-    }
-
-    @Override
-    public int compareTo( ArrayDesignValueObject arg0 ) {
-        if ( arg0.getId() == null || this.getId() == null )
-            return 0;
-        return arg0.getId().compareTo( this.getId() );
     }
 
     @Override

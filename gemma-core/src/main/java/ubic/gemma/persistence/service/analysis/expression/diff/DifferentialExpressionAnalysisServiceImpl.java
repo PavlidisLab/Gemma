@@ -26,10 +26,7 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
@@ -250,15 +247,15 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     @Override
     @Transactional(readOnly = true)
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+    public Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids ) {
         Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
                 .getAnalysesByExperimentIds( ids );
 
-        Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils
-                .getIdMap( expressionExperimentDao.loadValueObjects( analysesByExperimentIds.keySet(), false ) );
+        Map<Long, ExpressionExperimentDetailsValueObject> idMap = EntityUtils
+                .getIdMap( expressionExperimentDao.loadDetailsValueObjects( null, false, analysesByExperimentIds.keySet(), null, 0, 0));
 
-        Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>>();
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
 
         for ( Long id : analysesByExperimentIds.keySet() ) {
             if ( !idMap.containsKey( id ) )

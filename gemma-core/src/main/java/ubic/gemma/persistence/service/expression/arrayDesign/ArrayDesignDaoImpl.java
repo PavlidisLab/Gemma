@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -598,9 +597,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
-        ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_AD_ALIAS ) ;
-        Query queryObject = this
-                .getLoadValueObjectsQueryString( ObjectFilter.singleFilter( filter ), null, false );
+        ObjectFilter filter = new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_AD_ALIAS );
+        Query queryObject = this.getLoadValueObjectsQueryString( ObjectFilter.singleFilter( filter ), null, false );
 
         return processADValueObjectQueryResults( eeCounts, queryObject );
     }
@@ -1098,47 +1096,27 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      * Process query results for LoadAllValueObjects or LoadValueObjects
      */
     private Collection<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
-            final Query queryObject ) {
-        Collection<ArrayDesignValueObject> result = new ArrayList<>();
+            final Query query ) {
+        query.setCacheable( true );
 
-        queryObject.setCacheable( true );
-        ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        if ( list != null ) {
-            while ( list.next() ) {
-                ArrayDesignValueObject v = new ArrayDesignValueObject( list.getLong( 0 ) );
-                v.setName( list.getString( 1 ) );
-                v.setShortName( list.getString( 2 ) );
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+        Collection<ArrayDesignValueObject> vos = new ArrayList<>( list.size() );
 
-                TechnologyType color = ( TechnologyType ) list.get( 3 );
-                if ( color != null ) {
-                    v.setTechnologyType( color.toString() );
-                    v.setColor( color.getValue() );
-                }
+        for ( Object[] row : list ) {
+            ArrayDesignValueObject vo = new ArrayDesignValueObject( row );
 
-                v.setDescription( list.getString( 4 ) );
-                v.setIsMergee( list.get( 5 ) != null );
-
-                v.setLastUpdated( list.getDate( 6 ) );
-                v.setTroubled( list.getBoolean( 7 ) );
-                v.setNeedsAttention( list.getBoolean( 8 ) );
-                v.setCurationNote( list.getString( 9 ) );
-
-                v.setTaxon( list.getString( 10 ) );
-
-                if ( eeCounts == null || !eeCounts.containsKey( v.getId() ) ) {
-                    v.setExpressionExperimentCount( 0 );
-                } else {
-                    v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );
-                }
-
-                // Curation events
-                this.addCurationEvents( v, ( AuditEvent ) list.get( 11 ), ( AuditEvent ) list.get( 12 ),
-                        ( AuditEvent ) list.get( 13 ) );
-
-                result.add( v );
+            Long id = ( Long ) row[0];
+            if ( eeCounts == null || !eeCounts.containsKey( id ) ) {
+                vo.setExpressionExperimentCount( 0 );
+            } else {
+                vo.setExpressionExperimentCount( eeCounts.get( id ) );
             }
+
+            vos.add( vo );
         }
-        return result;
+
+        return vos;
     }
 
     private List thawBatchOfProbes( Collection<CompositeSequence> batch ) {

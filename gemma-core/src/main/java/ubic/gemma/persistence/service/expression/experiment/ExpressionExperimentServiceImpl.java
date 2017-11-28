@@ -749,7 +749,7 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField,
-            boolean descending, List<Long> ids, Taxon taxon, int limit, int start ) {
+            boolean descending, Collection<Long> ids, Taxon taxon, int limit, int start ) {
         return this.expressionExperimentDao.loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 

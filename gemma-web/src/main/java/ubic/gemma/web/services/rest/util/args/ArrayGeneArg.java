@@ -31,7 +31,7 @@ public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneValueObject, GeneServ
      * input String can not be converted into an array of Gene identifiers.
      */
     @SuppressWarnings("unused")
-    public static ArrayStringArg valueOf( final String s ) {
+    public static ArrayGeneArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
             return new ArrayGeneArg( String.format( ERROR_MSG, s ), new IllegalArgumentException( ERROR_MSG_DETAIL ) );
         }

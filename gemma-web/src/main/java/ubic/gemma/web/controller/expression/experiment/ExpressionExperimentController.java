@@ -658,8 +658,8 @@ public class ExpressionExperimentController {
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
         ExpressionExperiment ee = this.getEESafely( id );
-        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService
-                .loadValueObjects( Collections.singleton( ee.getId() ), false );
+        Collection<ExpressionExperimentDetailsValueObject> initialResults =
+                expressionExperimentService.loadDetailsValueObjects( null, false, Collections.singleton( id ), null, 0,0 );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -935,10 +935,6 @@ public class ExpressionExperimentController {
     public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
 
         Collection<ExpressionExperiment> outlierEEs = expressionExperimentService.getExperimentsWithOutliers();
-
-        // List<ExpressionExperimentValueObject> batchEffectEEs =
-        // expressionExperimentService.getExperimentsWithBatchEffect();
-        // List<ExpressionExperimentValueObject> batchEffectEEs = new ArrayList<ExpressionExperimentValueObject>();
 
         Collection<ExpressionExperiment> ees = new HashSet<>();
         ees.addAll( outlierEEs );
@@ -1834,7 +1830,7 @@ public class ExpressionExperimentController {
                 }
             }
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject(
-                    expressionExperiment.getId() );
+                    expressionExperiment );
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             publication = bibliographicReferenceService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( publication ) );

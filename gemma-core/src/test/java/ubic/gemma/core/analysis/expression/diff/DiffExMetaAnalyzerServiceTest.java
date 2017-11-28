@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -469,11 +470,11 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                     .find( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
             assertTrue( !differentialExpressionResultService.find( g, 0.05, 10 ).isEmpty() );
 
-            Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
+            Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
                     .getAnalysesByExperiment( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
 
             Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
-            for ( ExpressionExperimentValueObject evo : analysesByExperiment.keySet() ) {
+            for ( ExpressionExperimentDetailsValueObject evo : analysesByExperiment.keySet() ) {
                 for ( DifferentialExpressionAnalysisValueObject deavo : analysesByExperiment.get( evo ) ) {
                     resultSets.addAll( deavo.getResultSets() );
                 }

@@ -6,7 +6,7 @@ import ubic.gemma.model.common.Identifiable;
  * Created by tesarst on 31/05/17.
  * Interface for value objects representing persistent objects
  */
-public abstract class IdentifiableValueObject<O extends Identifiable> {
+public abstract class IdentifiableValueObject<O extends Identifiable> implements Identifiable {
 
     protected Long id = null;
 
@@ -25,6 +25,7 @@ public abstract class IdentifiableValueObject<O extends Identifiable> {
         this.id = id;
     }
 
+    @Override
     final public Long getId() {
         return id;
     }

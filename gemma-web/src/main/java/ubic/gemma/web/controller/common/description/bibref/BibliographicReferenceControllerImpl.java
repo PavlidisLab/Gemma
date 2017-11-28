@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -55,13 +56,15 @@ import java.util.Map.Entry;
 public class BibliographicReferenceControllerImpl extends BaseController implements BibliographicReferenceController {
 
     private final String messagePrefix = "Reference with PubMed Id";
-    private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+    private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;
     @Autowired
     private Persister persisterHelper;
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     @Override
     public ModelAndView add( HttpServletRequest request, HttpServletResponse response ) {
@@ -99,7 +102,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
                 .getRelatedExperiments( records );
 
-        List<BibliographicReferenceValueObject> valueObjects = new ArrayList<BibliographicReferenceValueObject>();
+        List<BibliographicReferenceValueObject> valueObjects = new ArrayList<>();
 
         for ( BibliographicReference ref : records ) {
 
@@ -107,12 +110,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( ref );
 
             if ( relatedExperiments.containsKey( ref ) ) {
-                vo.setExperiments(
-                        ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments.get( ref ) ) );
+                vo.setExperiments(expressionExperimentService.loadValueObjects( relatedExperiments.get( ref ) ) );
             }
             valueObjects.add( vo );
 
-            // adding phenotype informations to the Bibliographic Reference
+            // adding phenotype information to the Bibliographic Reference
 
             Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
                     .findPhenotypesForBibliographicReference( vo.getPubAccession() );
@@ -123,9 +125,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
         }
 
-        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
-                valueObjects, count.intValue() );
-        return returnVal;
+        return new JsonReaderResponse<>( valueObjects, count );
     }
 
     @Override
@@ -152,7 +152,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         if ( id == null ) {
             throw new IllegalArgumentException( "ID cannot be null" );
         }
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         ids.add( id );
         JsonReaderResponse<BibliographicReferenceValueObject> returnVal = this.loadMultiple( ids );
         if ( returnVal.getRecords() != null && !returnVal.getRecords().isEmpty() ) {
@@ -167,10 +167,9 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
                 .getAllExperimentLinkedReferences();
         Collection<BibliographicReference> bibRefs = eeToBibRefs.values();
-        Collection<BibliographicReferenceValueObject> bibRefVOs = BibliographicReferenceValueObject
-                .convert2ValueObjects( bibRefs );
 
-        return bibRefVOs;
+        return BibliographicReferenceValueObject
+                .convert2ValueObjects( bibRefs );
     }
 
     @Override
@@ -185,18 +184,14 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         bss = bibliographicReferenceService.thaw( bss );
         Collection<BibliographicReferenceValueObject> bibRefs = bibliographicReferenceService.loadValueObjects( bss );
 
-        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
-                new ArrayList<BibliographicReferenceValueObject>( bibRefs ), bibRefs.size() );
-        return returnVal;
+        return new JsonReaderResponse<>( new ArrayList<>( bibRefs ), bibRefs.size() );
     }
 
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings );
 
-        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
-                vos, vos.size() );
-        return returnVal;
+        return new JsonReaderResponse<>( vos, vos.size() );
     }
 
     @Override
@@ -255,7 +250,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 .getAllExperimentLinkedReferences();
 
         // map sorted in natural order of the keys
-        SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<CitationValueObject, Collection<ExpressionExperimentValueObject>>();
+        SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<>();
         for ( Entry<ExpressionExperiment, BibliographicReference> entry : eeToBibRefs.entrySet() ) {
             if ( entry.getValue().getTitle() == null || entry.getValue().getTitle().isEmpty()
                     || entry.getValue().getAuthorList() == null || entry.getValue().getAuthorList().isEmpty() ) {
@@ -265,7 +260,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             if ( !citationToEEs.containsKey( cvo ) ) {
                 citationToEEs.put( cvo, new ArrayList<ExpressionExperimentValueObject>() );
             }
-            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey(), true ) );
+            ExpressionExperiment ee = entry.getKey();
+            ee.setBioAssays( null );
+            ee.setAccession( null );
+            ee.setExperimentalDesign( null );
+            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( ee ) );
 
         }
 
@@ -295,17 +294,22 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
             String o = batch.getSort();
 
-            String orderBy = "";
-            if ( o.equals( "title" ) ) {
-                orderBy = "title";
-            } else if ( o.equals( "publicationDate" ) ) {
-                orderBy = "publicationDate";
-            } else if ( o.equals( "publication" ) ) {
-                orderBy = "publication";
-            } else if ( o.equals( "authorList" ) ) {
-                orderBy = "authorList";
-            } else {
-                throw new IllegalArgumentException( "Unknown sort field: " + o );
+            String orderBy;
+            switch ( o ) {
+                case "title":
+                    orderBy = "title";
+                    break;
+                case "publicationDate":
+                    orderBy = "publicationDate";
+                    break;
+                case "publication":
+                    orderBy = "publication";
+                    break;
+                case "authorList":
+                    orderBy = "authorList";
+                    break;
+                default:
+                    throw new IllegalArgumentException( "Unknown sort field: " + o );
             }
 
             boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
