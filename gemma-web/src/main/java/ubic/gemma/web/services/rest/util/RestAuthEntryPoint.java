@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint {
 
-    private static final String MESSAGE_401 = "This endpoint requires authorized access.";
+    private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
 
     @Override
     public void commence( final HttpServletRequest request, final HttpServletResponse response,
