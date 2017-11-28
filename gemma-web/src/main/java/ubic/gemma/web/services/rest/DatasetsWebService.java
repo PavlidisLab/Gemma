@@ -16,6 +16,7 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,6 +58,7 @@ public class DatasetsWebService extends
     private BioAssayService bioAssayService;
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private GeneService geneService;
+    private SVDService svdService;
 
     /**
      * Required by spring
@@ -72,7 +74,7 @@ public class DatasetsWebService extends
             ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
-            GeneService geneService ) {
+            GeneService geneService, SVDService svdService ) {
         super( expressionExperimentService );
         this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
@@ -81,6 +83,7 @@ public class DatasetsWebService extends
         this.bioAssayService = bioAssayService;
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
         this.geneService = geneService;
+        this.svdService = svdService;
     }
 
     /**
@@ -240,6 +243,24 @@ public class DatasetsWebService extends
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
         return outputDesignFile( ee );
+    }
+
+    /**
+     * Retrieves the design for the given dataset.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/svd")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetSVD( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        return Responder
+                .autoCode( svdService.getSvd( datasetArg.getPersistentObject( expressionExperimentService ).getId() ), sr );
     }
 
     /**
