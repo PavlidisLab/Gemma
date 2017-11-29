@@ -107,7 +107,6 @@ public interface PhenotypeAssociationService {
 
     Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
 
-    @Secured({ "GROUP_AGENT" })
     Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName, Integer limit,
             int start );
 
