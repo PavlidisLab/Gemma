@@ -16,7 +16,9 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -259,8 +261,10 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder
-                .autoCode( svdService.getSvd( datasetArg.getPersistentObject( expressionExperimentService ).getId() ), sr );
+        SVDValueObject svd = svdService.getSvd( datasetArg.getPersistentObject( expressionExperimentService ).getId() );
+        return Responder.autoCode( svd == null ?
+                null :
+                new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() ), sr );
     }
 
     /**
@@ -418,6 +422,38 @@ public class DatasetsWebService extends
             errorBody.addErrorsField( "error", e.getMessage() );
 
             throw new GemmaApiException( errorBody );
+        }
+    }
+
+    @SuppressWarnings("unused") // Used for json serialization
+    private class SimpleSVDValueObject {
+        /**
+         * Order same as the rows of the v matrix.
+         */
+        private Long[] bioMaterialIds;
+
+        /**
+         * An array of values representing the fraction of the variance each component accounts for
+         */
+        private Double[] variances = null;
+        private DoubleMatrix<Long, Integer> vMatrix = null;
+
+        SimpleSVDValueObject( Long[] bioMaterialIds, Double[] variances, DoubleMatrix<Long, Integer> vMatrix ) {
+            this.bioMaterialIds = bioMaterialIds;
+            this.variances = variances;
+            this.vMatrix = vMatrix;
+        }
+
+        public Long[] getBioMaterialIds() {
+            return bioMaterialIds;
+        }
+
+        public Double[] getVariances() {
+            return variances;
+        }
+
+        public DoubleMatrix<Long, Integer> getvMatrix() {
+            return vMatrix;
         }
     }
 
