@@ -390,7 +390,6 @@ public class ExpressionExperimentDaoImpl
     @Override
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderBy, boolean descending,
             Collection<Long> ids, Taxon taxon, int limit, int start ) {
-        //System.out.println(limit +"/"+start);
         final ObjectFilter[] filters = new ObjectFilter[taxon != null ? 2 : 1];
         if ( ids != null ) {
             if ( ids.isEmpty() )

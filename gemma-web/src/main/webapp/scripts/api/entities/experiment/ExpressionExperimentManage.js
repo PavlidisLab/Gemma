@@ -571,6 +571,7 @@ Gemma.EEReportGridColumnRenderers = {
 
         if (diffIsPossible(record)) {
 
+            console.log(record);
             if (record.get('dateDifferentialAnalysis')) {
                 var type = record.get('differentialAnalysisEventType');
 
@@ -581,7 +582,7 @@ Gemma.EEReportGridColumnRenderers = {
                 if (type == 'FailedDifferentialExpressionAnalysisEvent') {
                     color = 'red';
                     qtip = 'ext:qtip="Failed"';
-                } else if (record.get('differentialExpressionAnalyses').length == 0) {
+                } else if (record.get('hasDifferentialExpressionAnalysis')) {
                     // we ran it, but the analyses were apparently deleted.
                     return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
                 }
