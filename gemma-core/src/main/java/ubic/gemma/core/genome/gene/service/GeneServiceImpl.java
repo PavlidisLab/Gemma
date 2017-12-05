@@ -62,14 +62,24 @@ import java.util.Map.Entry;
 public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> implements GeneService {
 
     private final GeneDao geneDao;
+
+    @Autowired
     private AnnotationAssociationService annotationAssociationService;
+    @Autowired
     private CoexpressionService coexpressionService;
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
+    @Autowired
     private GeneOntologyService geneOntologyService;
+    @Autowired
     private GeneSetSearch geneSetSearch;
+    @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
+    @Autowired
     private HomologeneService homologeneService;
+    @Autowired
     private SearchService searchService;
+    @Autowired
     private TaxonService taxonService;
 
     @Autowired
@@ -469,51 +479,6 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     public Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids ) {
         Collection<Gene> g = this.geneDao.loadThawedLiter( ids );
         return this.loadValueObjects( g );
-    }
-
-    @Autowired
-    public void setAnnotationAssociationService( AnnotationAssociationService annotationAssociationService ) {
-        this.annotationAssociationService = annotationAssociationService;
-    }
-
-    @Autowired
-    public void setCoexpressionService( CoexpressionService coexpressionService ) {
-        this.coexpressionService = coexpressionService;
-    }
-
-    @Autowired
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    @Autowired
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
-    }
-
-    @Autowired
-    public void setGeneSetSearch( GeneSetSearch geneSetSearch ) {
-        this.geneSetSearch = geneSetSearch;
-    }
-
-    @Autowired
-    public void setGeneSetValueObjectHelper( GeneSetValueObjectHelper geneSetValueObjectHelper ) {
-        this.geneSetValueObjectHelper = geneSetValueObjectHelper;
-    }
-
-    @Autowired
-    public void setHomologeneService( HomologeneService homologeneService ) {
-        this.homologeneService = homologeneService;
-    }
-
-    @Autowired
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    @Autowired
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     @Override

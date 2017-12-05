@@ -59,7 +59,6 @@ public class SignupControllerTest extends BaseSpringWebTest {
 
         when(mockReCaptcha.validateRequest(any(HttpServletRequest.class))).thenReturn(new ReCaptchaResponse(true, ""));
 
-
         suc.setRecaptchaTester( mockReCaptcha );
     }
 
