@@ -19,27 +19,24 @@
 
 package ubic.gemma.web.controller;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.mail.SimpleMailMessage;
-
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.persistence.util.MailEngine;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.MessageUtil;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Extend this to create a simple Single or MultiActionController; includes configuration for sending email and setting
  * messages in the session. Use the \@Controller and \@RequestMapping annotations to configure subclasses.
- * 
+ *
  * @author keshav
  */
 public abstract class BaseController {
@@ -64,13 +61,6 @@ public abstract class BaseController {
     }
 
     /**
-     * @param messageUtil the messageUtil to set
-     */
-    public void setMessageUtil( MessageUtil messageUtil ) {
-        this.messageUtil = messageUtil;
-    }
-
-    /**
      * @param messageCode - if no message is found, this is used to form the message (instead of throwing an exception).
      */
     protected void addMessage( HttpServletRequest request, String messageCode, Object[] parameters ) {
@@ -87,6 +77,13 @@ public abstract class BaseController {
      */
     protected MessageUtil getMessageUtil() {
         return this.messageUtil;
+    }
+
+    /**
+     * @param messageUtil the messageUtil to set
+     */
+    public void setMessageUtil( MessageUtil messageUtil ) {
+        this.messageUtil = messageUtil;
     }
 
     /**
@@ -108,15 +105,16 @@ public abstract class BaseController {
         this.messageUtil.saveMessage( request, key, parameter, defaultMessage );
     }
 
-    protected void sendConfirmationEmail(HttpServletRequest request, String token, String username, String email, Map<String, Object> model, String templateName ){
-        try{
+    protected void sendConfirmationEmail( HttpServletRequest request, String token, String username, String email,
+            Map<String, Object> model, String templateName ) {
+        try {
             model.put( "username", username );
-            model.put( "confirmLink", Settings.getBaseUrl() + "confirmRegistration.html?key=" + token
-                    + "&username=" + username );
+            model.put( "confirmLink",
+                    Settings.getBaseUrl() + "confirmRegistration.html?key=" + token + "&username=" + username );
 
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setFrom( Settings.getAdminEmailAddress() );
-            mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() )  );
+            mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() ) );
             mailMessage.setTo( username + "<" + email + ">" );
             mailEngine.sendMessage( mailMessage, templateName, model );
 

@@ -669,28 +669,17 @@ public class ExpressionExperimentController {
         expressionExperimentReportService.getAnnotationInformation( initialResults );
         expressionExperimentReportService.getEventInformation( initialResults );
 
-        ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
-        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject(
-                initialResult );
+        ExpressionExperimentDetailsValueObject finalResult = initialResults.iterator().next();
         // Most of DetailsVO values are set automatically through the constructor.
         // We only need to set the additional values:
-
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        Collection<Long> adids = new HashSet<>();
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            adids.add( ad.getId() );
-        }
-        finalResult.setArrayDesigns( arrayDesignService.loadValueObjectsByIds( adids ) );
 
         finalResult.setQChtml( getQCTagHTML( ee ) );
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
         finalResult = this.setPrefferedAndReprocessed( finalResult, ee );
         finalResult = this.setMutipleTechTypes( finalResult, ee );
-        finalResult = this.setParentTaxon( finalResult, initialResult.getTaxonId() );
-        // this should be taken care of by the security interceptor. See bug 4373
-        finalResult.setUserCanWrite( securityService.isEditable( ee ) );
-        finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
+        finalResult = this.setParentTaxon( finalResult, finalResult.getTaxonId() );
+
         finalResult = this.setPublicationAndAuthor( finalResult, ee );
         finalResult = this.setBatchInfo( finalResult, ee );
 

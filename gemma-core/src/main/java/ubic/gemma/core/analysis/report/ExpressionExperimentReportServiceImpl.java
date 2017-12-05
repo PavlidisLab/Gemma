@@ -269,7 +269,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateDifferentialAnalysis( date );
-
                 }
             }
 

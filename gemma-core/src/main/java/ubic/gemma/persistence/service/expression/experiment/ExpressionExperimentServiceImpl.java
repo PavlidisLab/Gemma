@@ -86,21 +86,38 @@ public class ExpressionExperimentServiceImpl
     private static final double BATCH_EFFECT_THRESHOLD = 0.01;
 
     private final ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
     private AuditEventDao auditEventDao;
+    @Autowired
     private BioAssayDimensionDao bioAssayDimensionDao;
+    @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    @Autowired
     private ExperimentalFactorDao experimentalFactorDao;
+    @Autowired
     private FactorValueDao factorValueDao;
+    @Autowired
     private RawExpressionDataVectorDao rawExpressionDataVectorDao;
+    @Autowired
     private OntologyService ontologyService;
+    @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
+    @Autowired
     private ProcessedExpressionDataVectorService processedVectorService;
+    @Autowired
     private QuantitationTypeService quantitationTypeDao;
+    @Autowired
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
+    @Autowired
     private SearchService searchService;
+    @Autowired
     private SecurityService securityService;
+    @Autowired
     private SVDService svdService;
 
     @Autowired
@@ -956,89 +973,6 @@ public class ExpressionExperimentServiceImpl
         for ( Characteristic characteristic : vc ) {
             saveExpressionExperimentStatement( characteristic, ee );
         }
-    }
-
-    @Autowired
-    public void setAuditEventDao( AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
-    }
-
-    @Autowired
-    public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
-        this.bioAssayDimensionDao = bioAssayDimensionDao;
-    }
-
-    @Autowired
-    public void setDifferentialExpressionAnalysisDao(
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
-    }
-
-    @Autowired
-    public void setExperimentalFactorDao( ExperimentalFactorDao experimentalFactorDao ) {
-        this.experimentalFactorDao = experimentalFactorDao;
-    }
-
-    @Autowired
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
-    }
-
-    @Autowired
-    public void setExpressionExperimentSubSetService(
-            ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
-        this.expressionExperimentSubSetService = expressionExperimentSubSetService;
-    }
-
-    @Autowired
-    public void setFactorValueDao( FactorValueDao factorValueDao ) {
-        this.factorValueDao = factorValueDao;
-    }
-
-    @Autowired
-    public void setOntologyService( OntologyService ontologyService ) {
-        this.ontologyService = ontologyService;
-    }
-
-    @Autowired
-    public void setPrincipalComponentAnalysisService(
-            PrincipalComponentAnalysisService principalComponentAnalysisService ) {
-        this.principalComponentAnalysisService = principalComponentAnalysisService;
-    }
-
-    @Autowired
-    public void setProcessedVectorService( ProcessedExpressionDataVectorService processedVectorService ) {
-        this.processedVectorService = processedVectorService;
-    }
-
-    @Autowired
-    public void setQuantitationTypeDao( QuantitationTypeService quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    @Autowired
-    public void setRawExpressionDataVectorDao( RawExpressionDataVectorDao rawExpressionDataVectorDao ) {
-        this.rawExpressionDataVectorDao = rawExpressionDataVectorDao;
-    }
-
-    @Autowired
-    public void setSampleCoexpressionAnalysisDao( SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao ) {
-        this.sampleCoexpressionAnalysisDao = sampleCoexpressionAnalysisDao;
-    }
-
-    @Autowired
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    @Autowired
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
-    @Autowired
-    public void setSvdService( SVDService svdService ) {
-        this.svdService = svdService;
     }
 
     @Override

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -28,14 +29,14 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -45,18 +46,117 @@ import java.util.Map;
  * @see BibliographicReferenceService
  */
 @Service
-public class BibliographicReferenceServiceImpl extends BibliographicReferenceServiceBase {
+public class BibliographicReferenceServiceImpl
+        extends VoEnabledService<BibliographicReference, BibliographicReferenceValueObject>
+        implements BibliographicReferenceService {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
     private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+    private final BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
     private SearchService searchService;
 
     @Autowired
-    public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao,
-            PhenotypeAssociationService phenotypeAssociationService, ExpressionExperimentService expressionExperimentService ) {
-        super( bibliographicReferenceDao, phenotypeAssociationService, expressionExperimentService);
+    private PhenotypeAssociationService phenotypeAssociationService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao ) {
+        super( bibliographicReferenceDao );
+        this.bibliographicReferenceDao = bibliographicReferenceDao;
+    }
+
+    /**
+     * @see BibliographicReferenceService#addPDF(LocalFile, BibliographicReference)
+     */
+    @Override
+    @Transactional
+    public void addPDF( final LocalFile pdfFile, final BibliographicReference bibliographicReference ) {
+        try {
+            this.handleAddPDF( pdfFile, bibliographicReference );
+        } catch ( Throwable th ) {
+            throw new BibliographicReferenceServiceException(
+                    "Error performing 'BibliographicReferenceService.addPDF(LocalFile pdfFile, BibliographicReference bibliographicReference)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see BibliographicReferenceService#findByExternalId(String)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public BibliographicReference findByExternalId( final String id ) {
+        try {
+            return this.handleFindByExternalId( id );
+        } catch ( Throwable th ) {
+            throw new BibliographicReferenceServiceException(
+                    "Error performing 'BibliographicReferenceService.findByExternalId(String id)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see BibliographicReferenceService#findByExternalId(String, String)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public BibliographicReference findByExternalId( final String id, final String databaseName ) {
+        try {
+            return this.handleFindByExternalId( id, databaseName );
+        } catch ( Throwable th ) {
+            throw new BibliographicReferenceServiceException(
+                    "Error performing 'BibliographicReferenceService.findByExternalId(String id, String databaseName)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see BibliographicReferenceService#findVOByExternalId(String)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public BibliographicReferenceValueObject findVOByExternalId( final String id ) {
+        try {
+            BibliographicReference bibref = this.handleFindByExternalId( id );
+            if ( bibref == null ) {
+                return null;
+            }
+            BibliographicReferenceValueObject bibrefVO = new BibliographicReferenceValueObject( bibref );
+            this.populateBibliographicPhenotypes( bibrefVO );
+            this.populateRelatedExperiments( bibref, bibrefVO );
+            return bibrefVO;
+        } catch ( Throwable th ) {
+            throw new BibliographicReferenceServiceException(
+                    "Error performing 'BibliographicReferenceService.findByExternalId(String id)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see BibliographicReferenceService#getAllExperimentLinkedReferences()
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
+        try {
+            return this.handleGetAllExperimentLinkedReferences();
+        } catch ( Throwable th ) {
+            throw new BibliographicReferenceServiceException(
+                    "Error performing 'BibliographicReferenceService.getAllExperimentLinkedReferences()' --> " + th,
+                    th );
+        }
+    }
+
+    @Override
+    public BibliographicReferenceValueObject loadValueObject( BibliographicReference entity ) {
+        return this.loadMultipleValueObjectsFromObjects( Collections.singleton( entity ) ).iterator().next();
+    }
+
+    @Override
+    public Collection<BibliographicReferenceValueObject> loadAllValueObjects() {
+        return this.loadMultipleValueObjectsFromObjects( this.loadAll() );
     }
 
     @Override
@@ -80,14 +180,20 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
-        Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
-        records.add( bibRef );
-        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.bibliographicReferenceDao
-                .getRelatedExperiments( records );
-        if ( map.containsKey( bibRef ) ) {
-            return map.get( bibRef );
+        try {
+            Collection<BibliographicReference> records = new ArrayList<>();
+            records.add( bibRef );
+            Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.bibliographicReferenceDao
+                    .getRelatedExperiments( records );
+            if ( map.containsKey( bibRef ) ) {
+                return map.get( bibRef );
+            }
+            return new ArrayList<>();
+        } catch ( Throwable th ) {
+            throw new BibliographicReferenceServiceException(
+                    "Error performing 'BibliographicReferenceService.getRelatedExperiments(BibliographicReference bibliographicReference)' --> "
+                            + th, th );
         }
-        return new ArrayList<ExpressionExperiment>();
     }
 
     @Override
@@ -165,7 +271,7 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
                 .search( ss, BibliographicReference.class );
 
-        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
+        List<BibliographicReferenceValueObject> results = new ArrayList<>();
 
         // only return associations with the selected entity types.
         for ( BibliographicReference entity : resultEntities ) {
@@ -200,7 +306,7 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
         //noinspection unchecked
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
                 .search( SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
-        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
+        List<BibliographicReferenceValueObject> results = new ArrayList<>();
         for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
             this.populateBibliographicPhenotypes( vo );
@@ -212,41 +318,23 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
 
     }
 
-    @Override
-    protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) {
-        bibliographicReference.setFullTextPdf( pdfFile );
-        this.bibliographicReferenceDao.update( bibliographicReference );
+    @Transactional(readOnly = true)
+    public Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
+            Collection<BibliographicReference> bibRefs ) {
+        if ( bibRefs.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Map<Long, BibliographicReferenceValueObject> idToBibRefVO = new HashMap<>();
 
-    }
+        for ( BibliographicReference bibref : bibRefs ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
+            idToBibRefVO.put( bibref.getId(), vo );
+        }
 
-    /**
-     * @see BibliographicReferenceService#findByExternalId(String)
-     */
-    @Override
-    protected BibliographicReference handleFindByExternalId( String id ) {
+        this.populateRelatedExperiments( bibRefs, idToBibRefVO );
+        this.populateBibliographicPhenotypes( idToBibRefVO );
 
-        return this.bibliographicReferenceDao.findByExternalId( id, PUB_MED_DATABASE_NAME );
-
-    }
-
-    /**
-     * @see BibliographicReferenceService#findByExternalId(String, String)
-     */
-    @Override
-    protected BibliographicReference handleFindByExternalId( String id, String databaseName ) {
-
-        return this.bibliographicReferenceDao.findByExternalId( id, databaseName );
-    }
-
-    @Override
-    protected Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
-        return this.bibliographicReferenceDao.getAllExperimentLinkedReferences();
-    }
-
-    @Override
-    protected Collection<ExpressionExperiment> handleGetRelatedExperiments(
-            BibliographicReference bibliographicReference ) {
-        return this.bibliographicReferenceDao.getRelatedExperiments( bibliographicReference );
+        return idToBibRefVO.values();
     }
 
     @Override
@@ -259,6 +347,66 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     @Transactional(readOnly = true)
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
         return this.bibliographicReferenceDao.thaw( bibliographicReferences );
+    }
+
+    private void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) {
+        bibliographicReference.setFullTextPdf( pdfFile );
+        this.bibliographicReferenceDao.update( bibliographicReference );
+
+    }
+
+    private BibliographicReference handleFindByExternalId( String id ) {
+
+        return this.bibliographicReferenceDao.findByExternalId( id, PUB_MED_DATABASE_NAME );
+
+    }
+
+    private BibliographicReference handleFindByExternalId( String id, String databaseName ) {
+
+        return this.bibliographicReferenceDao.findByExternalId( id, databaseName );
+    }
+
+    private Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
+        return this.bibliographicReferenceDao.getAllExperimentLinkedReferences();
+    }
+
+    private void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {
+
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
+                .findPhenotypesForBibliographicReference( bibRefVO.getPubAccession() );
+        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+                .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
+        bibRefVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
+    }
+
+    private void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idToBibRefVO ) {
+
+        for ( BibliographicReferenceValueObject vo : idToBibRefVO.values() ) {
+            this.populateBibliographicPhenotypes( vo );
+        }
+    }
+
+    private void populateRelatedExperiments( BibliographicReference bibRef,
+            BibliographicReferenceValueObject bibRefVO ) {
+        Collection<ExpressionExperiment> relatedExperiments = this.getRelatedExperiments( bibRef );
+        if ( relatedExperiments.isEmpty() ) {
+            bibRefVO.setExperiments( new ArrayList<ExpressionExperimentValueObject>() );
+        } else {
+            bibRefVO.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments ) );
+        }
+
+    }
+
+    private void populateRelatedExperiments( Collection<BibliographicReference> bibRefs,
+            Map<Long, BibliographicReferenceValueObject> idToBibRefVO ) {
+        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this
+                .getRelatedExperiments( bibRefs );
+        for ( BibliographicReference bibref : bibRefs ) {
+            BibliographicReferenceValueObject vo = idToBibRefVO.get( bibref.getId() );
+            if ( relatedExperiments.containsKey( bibref ) ) {
+                vo.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments.get( bibref ) ) );
+            }
+        }
     }
 
 }

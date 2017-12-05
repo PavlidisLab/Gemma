@@ -16,6 +16,9 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,6 +60,7 @@ public class DatasetsWebService extends
     private BioAssayService bioAssayService;
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private GeneService geneService;
+    private SVDService svdService;
 
     /**
      * Required by spring
@@ -72,7 +76,7 @@ public class DatasetsWebService extends
             ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
-            GeneService geneService ) {
+            GeneService geneService, SVDService svdService ) {
         super( expressionExperimentService );
         this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
@@ -81,6 +85,7 @@ public class DatasetsWebService extends
         this.bioAssayService = bioAssayService;
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
         this.geneService = geneService;
+        this.svdService = svdService;
     }
 
     /**
@@ -243,6 +248,26 @@ public class DatasetsWebService extends
     }
 
     /**
+     * Retrieves the design for the given dataset.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient. Only datasets that user has access to will be available.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/svd")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetSVD( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        SVDValueObject svd = svdService.getSvd( datasetArg.getPersistentObject( expressionExperimentService ).getId() );
+        return Responder.autoCode( svd == null ?
+                null :
+                new SimpleSVDValueObject( svd.getBioMaterialIds(), svd.getVariances(), svd.getvMatrix() ), sr );
+    }
+
+    /**
      * Retrieves the expression levels of given genes on given datasets.
      *
      * @param datasets        a list of dataset identifiers separated by commas (','). The identifiers can either be the
@@ -397,6 +422,38 @@ public class DatasetsWebService extends
             errorBody.addErrorsField( "error", e.getMessage() );
 
             throw new GemmaApiException( errorBody );
+        }
+    }
+
+    @SuppressWarnings("unused") // Used for json serialization
+    private class SimpleSVDValueObject {
+        /**
+         * Order same as the rows of the v matrix.
+         */
+        private Long[] bioMaterialIds;
+
+        /**
+         * An array of values representing the fraction of the variance each component accounts for
+         */
+        private Double[] variances = null;
+        private DoubleMatrix<Long, Integer> vMatrix = null;
+
+        SimpleSVDValueObject( Long[] bioMaterialIds, Double[] variances, DoubleMatrix<Long, Integer> vMatrix ) {
+            this.bioMaterialIds = bioMaterialIds;
+            this.variances = variances;
+            this.vMatrix = vMatrix;
+        }
+
+        public Long[] getBioMaterialIds() {
+            return bioMaterialIds;
+        }
+
+        public Double[] getVariances() {
+            return variances;
+        }
+
+        public DoubleMatrix<Long, Integer> getvMatrix() {
+            return vMatrix;
         }
     }
 
