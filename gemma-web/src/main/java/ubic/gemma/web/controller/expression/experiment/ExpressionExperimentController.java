@@ -574,18 +574,20 @@ public class ExpressionExperimentController {
             // Get count for new assays
             int newAssayCount = wn.getNewAssayCount();
 
-            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ?
-                    EntityUtils.getIds( wn.getNewExpressionExperiments() ) :
+            Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
+            Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ?
+                    EntityUtils.getIds( newExpressionExperiments ) :
                     new ArrayList<Long>();
-            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ?
-                    EntityUtils.getIds( wn.getUpdatedExpressionExperiments() ) :
+            Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
+            Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ?
+                    EntityUtils.getIds( updatedExpressionExperiments ) :
                     new ArrayList<Long>();
 
-            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ?
-                    wn.getNewExpressionExperiments().size() :
+            int newExpressionExperimentCount = ( newExpressionExperiments != null ) ?
+                    newExpressionExperiments.size() :
                     0;
-            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null ) ?
-                    wn.getUpdatedExpressionExperiments().size() :
+            int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ?
+                    updatedExpressionExperiments.size() :
                     0;
 
             /* Store counts for new and updated experiments by taxonId */
@@ -611,8 +613,10 @@ public class ExpressionExperimentController {
             summary.element( "sortedCountsPerTaxon", taxonEntries );
 
             // Get count for new and updated array designs
-            int newArrayCount = ( wn.getNewArrayDesigns() != null ) ? wn.getNewArrayDesigns().size() : 0;
-            int updatedArrayCount = ( wn.getUpdatedArrayDesigns() != null ) ? wn.getUpdatedArrayDesigns().size() : 0;
+            Collection<ArrayDesign> newArrayDesigns = wn.getNewArrayDesigns();
+            int newArrayCount = ( newArrayDesigns != null ) ? newArrayDesigns.size() : 0;
+            Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
+            int updatedArrayCount = ( updatedArrayDesigns != null ) ? updatedArrayDesigns.size() : 0;
 
             boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 );
             boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
