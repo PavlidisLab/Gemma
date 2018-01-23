@@ -853,6 +853,7 @@ public class ExpressionExperimentServiceImpl
 
         /*
          * FIXME: delete probe coexpression analysis; gene coexpression will linger.
+         * this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
          */
 
         /*
