@@ -474,6 +474,11 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public String getBatchConfound( ExpressionExperiment ee ) {
         ee = thawBioAssays( ee );
+
+        if (!this.checkHasBatchInfo( ee )){
+            return null;
+        }
+
         Collection<BatchConfoundValueObject> confounds;
         try {
             confounds = BatchConfound.test( ee );
@@ -501,6 +506,11 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
         ee = this.thawLiter( ee );
+
+        if (!this.checkHasBatchInfo( ee )){
+            return null;
+        }
+
         BatchEffectDetails details = new BatchEffectDetails();
 
         details.setDataWasBatchCorrected( false );
@@ -553,6 +563,32 @@ public class ExpressionExperimentServiceImpl
             }
         }
         return Strings.emptyToNull( result );
+    }
+
+    @Override
+    public boolean checkHasBatchInfo(ExpressionExperiment ee){
+        boolean hasBatchInformation = false;
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+        if ( !hasBatchInformation ) {
+            boolean allBAsHaveDate = true;
+            ee = this.thawBioAssays( ee );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( ba.getProcessingDate() == null ) {
+                    allBAsHaveDate = false;
+                    break;
+                }
+            }
+            if ( allBAsHaveDate ) {
+                hasBatchInformation = true;
+            }
+        }
+        return hasBatchInformation;
     }
 
     @Override

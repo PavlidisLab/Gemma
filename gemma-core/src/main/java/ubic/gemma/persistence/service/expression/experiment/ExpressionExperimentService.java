@@ -483,4 +483,6 @@ public interface ExpressionExperimentService
      * @param ee the experiment to add the characteristics to.
      */
     void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
+
+    boolean checkHasBatchInfo( ExpressionExperiment ee );
 }

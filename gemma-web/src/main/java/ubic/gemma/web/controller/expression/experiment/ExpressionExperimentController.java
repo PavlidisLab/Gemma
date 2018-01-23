@@ -716,27 +716,7 @@ public class ExpressionExperimentController {
      */
     private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
             ExpressionExperiment ee ) {
-        boolean hasBatchInformation = false;
-
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                hasBatchInformation = true;
-                break;
-            }
-        }
-        if ( !hasBatchInformation ) {
-            boolean allBAsHaveDate = true;
-            ee = expressionExperimentService.thawBioAssays( ee );
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( ba.getProcessingDate() == null ) {
-                    allBAsHaveDate = false;
-                    break;
-                }
-            }
-            if ( allBAsHaveDate ) {
-                hasBatchInformation = true;
-            }
-        }
+        boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
 
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
