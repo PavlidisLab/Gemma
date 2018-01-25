@@ -475,7 +475,7 @@ public class ExpressionExperimentServiceImpl
     public String getBatchConfound( ExpressionExperiment ee ) {
         ee = thawBioAssays( ee );
 
-        if (!this.checkHasBatchInfo( ee )){
+        if ( !this.checkHasBatchInfo( ee ) ) {
             return null;
         }
 
@@ -507,7 +507,7 @@ public class ExpressionExperimentServiceImpl
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
         ee = this.thawLiter( ee );
 
-        if (!this.checkHasBatchInfo( ee )){
+        if ( !this.checkHasBatchInfo( ee ) ) {
             return null;
         }
 
@@ -566,7 +566,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    public boolean checkHasBatchInfo(ExpressionExperiment ee){
+    public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
         boolean hasBatchInformation = false;
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
