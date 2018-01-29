@@ -77,7 +77,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         final String queryString = "select et, trail, event from AuditTrailImpl trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
-                + "and et.class in (:classes) order by event.date,event.id desc ";
+                + "and et.class in (:classes) order by event.date desc, event.id desc ";
 
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "trails", atMap.keySet() );
@@ -186,7 +186,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         final String queryString = "select trail, ae from AuditTrailImpl trail "
                 + "inner join trail.events ae inner join ae.eventType et inner join fetch ae.performer where trail in (:trails) "
-                + "and et.class in (:classes) order by ae.date,ae.id desc ";
+                + "and et.class in (:classes) order by ae.date desc, ae.id desc ";
 
         StopWatch timer = new StopWatch();
         timer.start();
