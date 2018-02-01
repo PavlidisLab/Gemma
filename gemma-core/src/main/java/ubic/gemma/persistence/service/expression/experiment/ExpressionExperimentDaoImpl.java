@@ -1580,6 +1580,7 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getBioAssays() );
         Hibernate.initialize( result.getAuditTrail() );
+        Hibernate.initialize( result.getGeeq() );
         if ( result.getAuditTrail() != null )
             Hibernate.initialize( result.getAuditTrail().getEvents() );
         Hibernate.initialize( result.getCurationDetails() );

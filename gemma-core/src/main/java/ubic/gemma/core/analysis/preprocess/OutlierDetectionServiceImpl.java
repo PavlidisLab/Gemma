@@ -286,7 +286,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return cors;
     }
 
-    private DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression ) {
+    @Override
+    public DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression ) {
         /*
          * Get the experimental design
          */
@@ -395,8 +396,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     /**
      * Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range
+     * This is exposed for efficiency in geeq score calculation, use this#identifyOutliers(ExpressionExperiment, boolean, boolean)
+     * to have the correlation matrix computed correctly for you.
      */
-    private Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
+    @Override
+    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
             DoubleMatrix<BioAssay, BioAssay> cormat ) {
 
         List<OutlierDetails> allSamples = new ArrayList<>();

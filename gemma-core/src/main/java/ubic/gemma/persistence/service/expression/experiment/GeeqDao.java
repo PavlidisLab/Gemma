@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
- * Copyright (c) 2015 University of British Columbia
- * 
+ *
+ * Copyright (c) 2018 University of British Columbia
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,23 +19,9 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.expression.experiment.Geeq;
+import ubic.gemma.model.expression.experiment.GeeqValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import org.springframework.stereotype.Repository;
-import ubic.gemma.model.expression.experiment.GeeqImpl;
-import ubic.gemma.persistence.service.AbstractDao;
-import ubic.gemma.persistence.service.BaseDao;
-
-/**
- * 
- * @author paul
- */
-@Repository
-public class GeeqDao extends AbstractDao<GeeqImpl> implements BaseDao<GeeqImpl> {
-
-    @Autowired
-    public GeeqDao( SessionFactory sessionFactory ) {
-        super( GeeqImpl.class, sessionFactory );
-    }
+public interface GeeqDao extends BaseVoEnabledDao<Geeq, GeeqValueObject> {
 }

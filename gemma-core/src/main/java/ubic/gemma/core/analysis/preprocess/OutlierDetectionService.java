@@ -63,4 +63,8 @@ public interface OutlierDetectionService {
     Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, DoubleMatrix<BioAssay, BioAssay> cormat,
             int quantileThreshold, double fractionThreshold );
 
+    DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression );
+
+    Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
+            DoubleMatrix<BioAssay, BioAssay> cormat );
 }

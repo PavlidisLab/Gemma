@@ -78,7 +78,7 @@
 					<column name="BATCH_CONFOUND" not-null="false" unique="true"
 							sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 				</property>
-				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.GeeqImpl" cascade="all"
+				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.Geeq" cascade="all"
 					lazy="proxy" fetch="select">
 					<column name="GEEQ_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
