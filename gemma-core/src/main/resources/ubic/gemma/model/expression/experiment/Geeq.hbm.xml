@@ -1,57 +1,121 @@
-<?xml version='1.0' encoding='utf-8'?>
-<!DOCTYPE hibernate-mapping PUBLIC
-    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<hibernate-mapping>
+<?xml version="1.0" encoding="UTF-8"?>
 
-    <class name="ubic.gemma.model.expression.experiment.Geeq" table="GEEQ" schema="gemdtest">
-        <cache usage="read-write" />
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="ubic.gemma.model.expression.experiment.Geeq" table="GEEQ">
+        <cache usage="read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
-            <column name="ID" sql-type="BIGINT" />
+            <column name="ID" sql-type="BIGINT"/>
             <generator class="native">
             </generator>
         </id>
-        <property name="detectedQualityScore" column="DETECTED_QUALITY_SCORE"/>
-        <property name="manualQualityScore" column="MANUAL_QUALITY_SCORE"/>
-        <property name="manualQualityOverride" column="MANUAL_QUALITY_OVERRIDE"/>
-        <property name="detectedSuitabilityScore" column="DETECTED_SUITABILITY_SCORE"/>
-        <property name="manualSuitabilityScore" column="MANUAL_SUITABILITY_SCORE"/>
-        <property name="manualSuitabilityOverride" column="MANUAL_SUITABILITY_OVERRIDE"/>
-        <property name="SScorePublication" column="SCORE_PUBLICATION"/>
-        <property name="SScorePlatformAmount" column="SCORE_PLATFORM_AMOUNT"/>
-        <property name="SScorePlatformsTechMulti" column="SCORE_PLATFORMS_TECH_MULTI"/>
-        <property name="SScoreAvgPlatformPopularity" column="SCORE_PLATFORM_POPULARITY"/>
-        <property name="SScoreAvgPlatformSize" column="SCORE_AVG_PLATFORM_SIZE"/>
-        <property name="SScoreSampleSize" column="SCORE_SAMPLE_SIZE"/>
-        <property name="SScoreRawData" column="SCORE_RAW_DATA"/>
-        <property name="SScoreMissingValues" column="SCORE_MISSING_VALUES"/>
-        <property name="QScoreOutliers" column="SCORE_OUTLIERS"/>
-        <property name="QScoreSampleMeanCorrelation" column="SCORE_SAMPLE_MEAN_CORRELATION"/>
-        <property name="QScoreSampleMedianCorrelation" column="SCORE_SAMPLE_MEDIAN_CORRELATION"/>
-        <property name="QScoreSampleCorrelationVariance" column="SCORE_SAMPLE_CORRELATION_VARIANCE"/>
-        <property name="QScorePlatformsTech" column="SCORE_PLATFORMS_TECH"/>
-        <property name="QScoreReplicates" column="SCORE_REPLICATES"/>
-        <property name="QScoreBatchInfo" column="SCORE_BATCH_INFO"/>
-        <property name="QScoreBatchEffect" column="SCORE_BATCH_EFFECT"/>
-        <property name="QScoreBatchConfound" column="SCORE_BATCH_CONFOUND"/>
-        <property name="manualHasStrongBatchEffect" column="MANUAL_HAS_STRONG_BATCH_EFFECT"/>
-        <property name="manualHasNoBatchEffect" column="MANUAL_HAS_NO_BATCH_EFFECT"/>
-        <property name="manualBatchEffectActive" column="MANUAL_BATCH_EFFECT_ACTIVE"/>
-        <property name="manualHasBatchConfound" column="MANUAL_HAS_BATCH_CONFOUND"/>
-        <property name="manualBatchConfoundActive" column="MANUAL_BATCH_CONFOUND_ACTIVE"/>
+        <property name="detectedQualityScore" type="double">
+            <column name="DETECTED_QUALITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="manualQualityScore" type="double">
+            <column name="MANUAL_QUALITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="manualQualityOverride" type="boolean">
+            <column name="MANUAL_QUALITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BOOLEAN"/>
+        </property>
+        <property name="detectedSuitabilityScore" type="double">
+            <column name="DETECTED_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="manualSuitabilityScore" type="double">
+            <column name="MANUAL_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="manualSuitabilityOverride" type="boolean">
+            <column name="MANUAL_SUITABILITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BOOLEAN"/>
+        </property>
+        <property name="SScorePublication" type="double">
+            <column name="SCORE_PUBLICATION" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="SScorePlatformAmount" type="double">
+            <column name="SCORE_PLATFORM_AMOUNT" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="SScorePlatformsTechMulti" type="double">
+            <column name="SCORE_PLATFORMS_TECH_MULTI" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="SScoreAvgPlatformPopularity" type="double">
+            <column name="SCORE_PLATFORM_POPULARITY" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="SScoreAvgPlatformSize" type="double">
+            <column name="SCORE_AVG_PLATFORM_SIZE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="SScoreSampleSize" type="double">
+            <column name="SCORE_SAMPLE_SIZE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="SScoreRawData" type="double">
+            <column name="SCORE_RAW_DATA" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="SScoreMissingValues" type="double">
+            <column name="SCORE_MISSING_VALUES" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreOutliers" type="double">
+            <column name="SCORE_OUTLIERS" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreSampleMeanCorrelation" type="double">
+            <column name="SCORE_SAMPLE_MEAN_CORRELATION" not-null="true" unique="false" default="0.0"
+                    sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreSampleMedianCorrelation" type="double">
+            <column name="SCORE_SAMPLE_MEDIAN_CORRELATION" not-null="true" unique="false" default="0.0"
+                    sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreSampleCorrelationVariance" type="double">
+            <column name="SCORE_SAMPLE_CORRELATION_VARIANCE" not-null="true" unique="false" default="0.0"
+                    sql-type="DOUBLE"/>
+        </property>
+        <property name="QScorePlatformsTech" type="double">
+            <column name="SCORE_PLATFORMS_TECH" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreReplicates" type="double">
+            <column name="SCORE_REPLICATES" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreBatchInfo" type="double">
+            <column name="SCORE_BATCH_INFO" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreBatchEffect" type="double">
+            <column name="SCORE_BATCH_EFFECT" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="QScoreBatchConfound" type="double">
+            <column name="SCORE_BATCH_CONFOUND" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+        </property>
+        <property name="manualHasStrongBatchEffect" type="boolean">
+            <column name="MANUAL_HAS_STRONG_BATCH_EFFECT" not-null="true" unique="false" default="0.0"
+                    sql-type="DOUBLE"/>
+        </property>
+        <property name="manualHasNoBatchEffect" type="boolean">
+            <column name="MANUAL_HAS_NO_BATCH_EFFECT" not-null="true" unique="false" default="0.0" sql-type="BOOLEAN"/>
+        </property>
+        <property name="manualBatchEffectActive" type="boolean">
+            <column name="MANUAL_BATCH_EFFECT_ACTIVE" not-null="true" unique="false" default="0.0" sql-type="BOOLEAN"/>
+        </property>
+        <property name="manualHasBatchConfound" type="boolean">
+            <column name="MANUAL_HAS_BATCH_CONFOUND" not-null="true" unique="false" default="0.0" sql-type="BOOLEAN"/>
+        </property>
+        <property name="manualBatchConfoundActive" type="boolean">
+            <column name="MANUAL_BATCH_CONFOUND_ACTIVE" not-null="true" unique="false" default="0.0"
+                    sql-type="BOOLEAN"/>
+        </property>
 
-        <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false" fetch="select">
+        <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"
+                     fetch="select">
             <column name="LAST_RUN_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="lastManualOverride" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false" fetch="select">
+        <many-to-one name="lastManualOverride" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"
+                     fetch="select">
             <column name="LAST_MANUAL_OVERRIDE_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="lastBatchEffectChange" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false" fetch="select">
+        <many-to-one name="lastBatchEffectChange" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
+                     lazy="false" fetch="select">
             <column name="LAST_BATCH_EFFECT_CHANGE_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="lastBatchConfoundChange" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false" fetch="select">
+        <many-to-one name="lastBatchConfoundChange" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"
+                     lazy="false" fetch="select">
             <column name="LAST_BATCH_CONFOUND_CHANGE_EVENT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-
     </class>
 </hibernate-mapping>
