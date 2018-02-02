@@ -150,6 +150,7 @@ public class Geeq implements Identifiable, Serializable {
      * +1.0 if ratio = 0%
      * extra:
      * -0.0001 if the correlation matrix is empty
+     * +0.0002 if the correlation matrix has NaN values
      */
     private double qScoreOutliers;
 

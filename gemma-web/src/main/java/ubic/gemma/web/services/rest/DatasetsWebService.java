@@ -40,6 +40,7 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashMap;
 
 /**
  * RESTful interface for datasets.
@@ -62,6 +63,7 @@ public class DatasetsWebService extends
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private GeneService geneService;
     private SVDService svdService;
+    private GeeqService geeqService;
 
     /**
      * Required by spring
@@ -77,7 +79,7 @@ public class DatasetsWebService extends
             ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
-            GeneService geneService, SVDService svdService ) {
+            GeneService geneService, SVDService svdService, GeeqService geeqService ) {
         super( expressionExperimentService );
         this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
@@ -87,6 +89,7 @@ public class DatasetsWebService extends
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
         this.geneService = geneService;
         this.svdService = svdService;
+        this.geeqService = geeqService;
     }
 
     /**
@@ -149,6 +152,22 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
+        HashMap<Long, Exception> problems = new HashMap<>(  );
+        long max = 11000L;
+        for ( long i = 250L; i < max; i++ ) {
+            try {
+                geeqService.calculateScore( i );
+            }catch(Exception e){
+                System.out.println(i+" failed: "+e.getMessage());
+                problems.put(i, e);
+            }
+        }
+
+        for(Long id : problems.keySet()){
+            System.out.println(id+" GEEQ FAILED: "+problems.get( id ).getMessage());
+        }
+
+
         return Responder.autoCode( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ), sr );
     }
 
@@ -166,6 +185,8 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
+        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
+        expressionExperimentService.getBioAssayDimensions( ee );
         return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService ), sr );
     }
 

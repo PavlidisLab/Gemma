@@ -20,6 +20,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import com.google.common.base.Stopwatch;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.StatUtils;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +138,11 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
      */
     private ExpressionExperiment doScoring( Long eeId, scoringMode mode ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+        if ( ee == null ) {
+            return null;
+        }
+
         ensureEeHasGeeq( ee );
         Geeq gq = ee.getGeeq();
 
@@ -205,10 +211,8 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         scoreMissingValues( ee, gq, hasRawData );
 
         // Quality score calculation
-        DoubleMatrix<BioAssay, BioAssay> cormat = outlierDetectionService.getCorrelationMatrix( ee, true );
-        double[] cormatLTri = ( cormat == null || cormat.rows() == 0 ) ?
-                new double[] {} :
-                getLowerTriangle( cormat.getRawMatrix() );
+        DoubleMatrix<BioAssay, BioAssay> cormat = getCormat( ee );
+        double[] cormatLTri = getLowerTriCormat( cormat );
 
         scoreOutliers( ee, gq, cormat );
         scoreSampleMeanCorrelation( gq, cormatLTri );
@@ -383,20 +387,30 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
     private void scoreOutliers( ExpressionExperiment ee, Geeq gq, DoubleMatrix<BioAssay, BioAssay> cormat ) {
         double score;
         boolean hasCorrMat = true;
+        boolean hasNaNs = false;
+        float outliers;
+        float samples;
+        float percentage = 100f;
 
         if ( cormat == null || cormat.rows() == 0 ) {
             hasCorrMat = false;
+        } else {
+            // Check if cormat has NaNs (diagonal is not checked, but there really should not be NaNs on the diagonal)
+            Double[] doubleArray = ArrayUtils.toObject( getLowerTriangle(cormat.getRawMatrix()) );
+            List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
+            hasNaNs = list.contains( Double.NaN );
+
+            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee, cormat ).size();
+            samples = ee.getBioAssays().size();
+            percentage = outliers / samples * 100f;
         }
 
-        float outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee, cormat ).size();
-        float samples = ee.getBioAssays().size();
-        float percentage = outliers / samples * 100f;
-
-        score = !hasCorrMat ? INFO_1 : //
+        score = ( !hasCorrMat ? INFO_1 : //
                 percentage > 5f ? N_10 : //
                         percentage > 2f ? N_05 : //
                                 percentage > 0.1f ? P_00 : //
-                                        percentage > P_00 ? P_05 : P_10;
+                                        percentage > P_00 ? P_05 : P_10 ) //
+                + ( hasNaNs ? -INFO_2 : 0.0 ); // info negated so it can be detected on top of other values
         gq.setQScoreOutliers( score );
     }
 
@@ -482,7 +496,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         }
 
         score = ( !infoDetected || !hasInfo ? P_00 : hasStrong ? N_10 : hasNone ? P_10 : P_00 ) //\n
-                + ( corrected ? -INFO_1 : P_00 ); //info negated so it can be detected on top of other values
+                + ( corrected ? -INFO_1 : P_00 ); // info negated so it can be detected on top of other values
         gq.setQScoreBatchEffect( score );
     }
 
@@ -506,8 +520,6 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         score = !infoDetected ? P_00 : hasConfound ? N_10 : P_10;
         gq.setQScoreBatchConfound( score );
     }
-
-
 
     /*
      * Support methods and other stuff
@@ -567,6 +579,33 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         Collections.sort( counts );
 
         return ( totalSize < 1 ? -1 : counts.size() > 0 ? counts.get( 0 ) : 1 );
+    }
+
+    private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee ) {
+        DoubleMatrix<BioAssay, BioAssay> cormat = null;
+        try {
+            cormat = outlierDetectionService.getCorrelationMatrix( ee, true );
+        } catch ( IllegalStateException e ) {
+            Log.warn( this.getClass(),
+                    LOG_PREFIX + " cormat retrieval failed because of missing missing values for ee id " + ee.getId() );
+        }
+        return cormat;
+    }
+
+    private double[] getLowerTriCormat( DoubleMatrix<BioAssay, BioAssay> cormat ) {
+        if ( cormat == null || cormat.rows() == 0 ) {
+            return new double[] {};
+        }
+        double[] corTri = getLowerTriangle( cormat.getRawMatrix() );
+
+        // We have to remove NaNs, some cormats have them (we notify user about this in the outlier score)
+        // this is not very efficient, but the DoubleMatrix does not have a method to get an array of Doubles (not doubles)
+        Double[] doubleArray = ArrayUtils.toObject( corTri );
+        List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
+        //noinspection StatementWithEmptyBody // because java stardard libraries suck
+        while(list.remove( Double.NaN )){}
+
+        return ArrayUtils.toPrimitive( list.toArray( new Double[list.size()] ) );
     }
 
     private void cormatOps( Geeq gq, double[] cormatLTri, cormatOpsType type ) {
