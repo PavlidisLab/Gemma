@@ -22,13 +22,15 @@ package ubic.gemma.model.expression.experiment;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.
  * The score has two components: Quality and Suitability. See the variables javadoc for further description.
- * See <a href="https://wiki.pavlab.msl.ubc.ca/pages/viewpage.action?pageId=36372526">the wiki</a> for project description.
+ * The scoring rules are implemented in the GeeqServiceImpl, which also exposes public methods for experiment
+ * scoring.
  *
  * @author paul, tesarst
  */
@@ -70,7 +72,7 @@ public class Geeq implements Identifiable, Serializable {
      * -0.7 - if date not filled in
      * -0.5 if date < 2006
      * -0.3 if date < 2009
-     * +0.0 otherwise
+     * +1.0 otherwise
      */
     private double sScorePublication;
 
@@ -78,14 +80,14 @@ public class Geeq implements Identifiable, Serializable {
      * The amount of platforms the experiment uses:
      * -1.0 if amount > 2
      * -0.5 if amount > 1
-     * +0.0 otherwise
+     * +1.0 otherwise
      */
     private double sScorePlatformAmount;
 
     /**
      * Extra punishment for platform technology inconsistency
      * -1.0 if platforms amount > 1 and platforms do not have the same technology type
-     * +0.0 otherwise
+     * +1.0 otherwise
      */
     private double sScorePlatformsTechMulti;
 
@@ -113,22 +115,23 @@ public class Geeq implements Identifiable, Serializable {
      * The amount of samples in the experiment
      * -1.0 if sample size < 20
      * -0.5 if sample size < 50
-     * +0.0 otherwise
+     * +0.0 if sample size < 100
+     * +0.5 if sample size < 200
+     * +1.0 otherwise
      */
     private double sScoreSampleSize;
 
     /**
      * Raw data availability (shows also as the 'external' badge)
      * -1.0 if no raw data available
-     * +0.0 otherwise
+     * +1.0 otherwise
      */
     private double sScoreRawData;
 
     /**
      * Missing values
      * -1.0 if experiment has any missing values
-     * +0.0 otherwise (also assumed if experiment has raw data available)
-     *
+     * +1.0 otherwise (also assumed if experiment has raw data available)
      * extra:
      * -0.0001 if experiment has no computed vectors
      */
@@ -139,9 +142,12 @@ public class Geeq implements Identifiable, Serializable {
      */
 
     /**
-     * Ratio of detected outliers vs sample size:
+     * Ratio of detected (non-removed) outliers vs sample size:
      * -1.0 if ratio > 5%
-     *
+     * -0.5 if ratio > 2%
+     * +0.0 if ratio > 0.1%
+     * +0.5 if ratio > 0% small punishment for very large experiments with one bad apple
+     * +1.0 if ratio = 0%
      * extra:
      * -0.0001 if the correlation matrix is empty
      */
@@ -150,7 +156,6 @@ public class Geeq implements Identifiable, Serializable {
     /**
      * Using the mean sample correlation r:
      * +r use the computed value
-     *
      * extra
      * -0.0001 if the correlation matrix is empty
      */
@@ -159,7 +164,6 @@ public class Geeq implements Identifiable, Serializable {
     /**
      * Using the median sample correlation m:
      * +m use the computed value
-     *
      * extra
      * -0.0001 if the correlation matrix is empty
      */
@@ -168,7 +172,6 @@ public class Geeq implements Identifiable, Serializable {
     /**
      * Using the sample correlation variance v:
      * +v use the computed value
-     *
      * extra
      * -0.0001 if the correlation matrix is empty
      */
@@ -176,16 +179,16 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * Platform technologies
-     * -0.5 if any platform is two-color
+     * -1.0 if any platform is two-color
+     * +1.0 otherwise
      */
     private double qScorePlatformsTech;
 
     /**
      * Number of replicates - ee has to have design and more than one condition
      * -1.0 if lowest replicate amount < 4 & !=1
-     * +0.0 if lowest replicate amount < 11 & !=1
+     * +0.0 if lowest replicate amount < 10 & !=1
      * +1.0 otherwise
-     *
      * extra:
      * -0.0001 if the experiment has no design
      * -0.0002 if there were no factor values found
@@ -197,15 +200,17 @@ public class Geeq implements Identifiable, Serializable {
     /**
      * State of batch info
      * -1.0 if no batch info available
-     * +0.0 otherwise
+     * +1.0 otherwise
      */
     private double qScoreBatchInfo;
 
     /**
      * Batch effect without batch correction. Can ve overridden.
-     * -0.5 if batch pVal < 0.0001 or (manualHasStrongBatchEffect & manualBatchEffectActive);
+     * -1.0 if batch pVal < 0.0001 or (manualHasStrongBatchEffect & manualBatchEffectActive);
      * +1.0 if batch pVal > 0.1 or (!manualHasNoBatchEffect & manualBatchEffectActive);
      * +0.0 otherwise
+     * extra:
+     * +0.0001 if data was batch-corrected
      */
     private double qScoreBatchEffect;
 
@@ -215,8 +220,8 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * Batch confound
-     * -0.5 if data confound detected or (manualHasBatchConfound & manualBatchConfoundActive)
-     * +0.0 otherwise
+     * -1.0 if data confound detected or (manualHasBatchConfound & manualBatchConfoundActive)
+     * +1.0 otherwise
      */
     private double qScoreBatchConfound;
 
@@ -254,6 +259,30 @@ public class Geeq implements Identifiable, Serializable {
      */
     private void setId( Long id ) {
         this.id = id;
+    }
+
+    @Transient
+    public double[] getSuitabilityScoreArray() {
+        return new double[] { this.sScorePublication, this.sScorePlatformAmount, this.sScorePlatformsTechMulti,
+                this.sScoreAvgPlatformPopularity, this.sScoreAvgPlatformSize, this.sScoreSampleSize, this.sScoreRawData,
+                this.sScoreMissingValues };
+    }
+
+    @Transient
+    public double[] getQualityScoreArray() {
+        return new double[] { this.qScoreOutliers, this.qScoreSampleMeanCorrelation, this.qScoreSampleMedianCorrelation,
+                this.qScoreSampleCorrelationVariance, this.qScorePlatformsTech, this.qScoreReplicates,
+                this.qScoreBatchInfo, this.qScoreBatchEffect, this.qScoreBatchConfound };
+    }
+
+    @Transient
+    public double[] getSuitabilityScoreWeightsArray() {
+        return new double[] { 1, 1, 1, 1, 1, 1, 1, 1 };
+    }
+
+    @Transient
+    public double[] getQualityScoreWeightsArray() {
+        return new double[] { 1, 0, 1, 0, 1, 1, 1, 1, 1 };
     }
 
     public double getDetectedQualityScore() {

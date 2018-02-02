@@ -1578,6 +1578,7 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( result.getCharacteristics() );
         Hibernate.initialize( result.getRawDataFile() );
         Hibernate.initialize( result.getPrimaryPublication() );
+        Hibernate.initialize( result.getOtherRelevantPublications() );
         Hibernate.initialize( result.getBioAssays() );
         Hibernate.initialize( result.getAuditTrail() );
         Hibernate.initialize( result.getGeeq() );
@@ -1849,10 +1850,10 @@ public class ExpressionExperimentDaoImpl
 
             if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
                 /*
-                * This could be a dual-mode array, or it could be mis-labeled as two-color; or this might actually
-                * be ratios. In either case, we should flag it; as it stands we shouldn't use two-channel missing
-                * value analysis on it.
-                */
+                 * This could be a dual-mode array, or it could be mis-labeled as two-color; or this might actually
+                 * be ratios. In either case, we should flag it; as it stands we shouldn't use two-channel missing
+                 * value analysis on it.
+                 */
                 mayBeOneChannel = true;
             }
             if ( ChannelUtils.isSignalChannelA( qt.getName() ) ) {

@@ -363,8 +363,8 @@ public interface ExpressionExperimentService
     Taxon getTaxon( BioAssaySet bioAssaySet );
 
     @Override
-    @Monitored
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    //@Monitored
+    //@Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment load( Long id );
 
     @Override
@@ -460,7 +460,7 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    @Secured({ "GROUP_AGENT" })
+    //@Secured({ "GROUP_AGENT" })
     void update( ExpressionExperiment expressionExperiment );
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );

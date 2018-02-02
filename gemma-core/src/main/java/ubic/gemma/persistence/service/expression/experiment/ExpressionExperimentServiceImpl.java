@@ -514,11 +514,9 @@ public class ExpressionExperimentServiceImpl
         BatchEffectDetails details = new BatchEffectDetails();
 
         details.setDataWasBatchCorrected( false );
-        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
-                details.setDataWasBatchCorrected( true );
-                details.setHasBatchInformation( true );
-            }
+        if ( getHasBeenBatchCorrected( ee ) ) {
+            details.setDataWasBatchCorrected( true );
+            details.setHasBatchInformation( true );
         }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -545,6 +543,15 @@ public class ExpressionExperimentServiceImpl
             }
         }
         return details;
+    }
+
+    private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
+        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
+            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

@@ -28,6 +28,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -61,11 +62,12 @@ public class DatasetsWebService extends
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private GeneService geneService;
     private SVDService svdService;
+    private GeeqService geeqService;
 
     /**
      * Required by spring
      */
-    public DatasetsWebService() {
+    public DatasetsWebService( ) {
     }
 
     /**
@@ -76,7 +78,7 @@ public class DatasetsWebService extends
             ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
-            GeneService geneService, SVDService svdService ) {
+            GeneService geneService, SVDService svdService, GeeqService geeqService ) {
         super( expressionExperimentService );
         this.differentialExpressionResultService = differentialExpressionResultService;
         this.expressionExperimentService = expressionExperimentService;
@@ -86,6 +88,7 @@ public class DatasetsWebService extends
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
         this.geneService = geneService;
         this.svdService = svdService;
+        this.geeqService = geeqService;
     }
 
     /**
@@ -148,6 +151,7 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
+        geeqService.calculateScore(datasetArg.getPersistentObject( expressionExperimentService ).getId());
         return Responder.autoCode( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ), sr );
     }
 

@@ -1,4 +1,6 @@
 alter table GEEQ
+drop column `SUITABILITY`,
+drop column `QUALITY`,
 add column `LAST_RUN_EVENT_FK` BIGINT(20) default null,
 add column `LAST_MANUAL_OVERRIDE_EVENT_FK` BIGINT(20) default null,
 add column `LAST_BATCH_EFFECT_CHANGE_EVENT_FK` BIGINT(20) default null,

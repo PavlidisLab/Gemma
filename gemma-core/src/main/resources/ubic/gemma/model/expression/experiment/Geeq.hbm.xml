@@ -39,7 +39,7 @@
             <column name="SCORE_PLATFORMS_TECH_MULTI" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
         <property name="SScoreAvgPlatformPopularity" type="double">
-            <column name="SCORE_PLATFORM_POPULARITY" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
+            <column name="SCORE_AVG_PLATFORM_POPULARITY" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
         <property name="SScoreAvgPlatformSize" type="double">
             <column name="SCORE_AVG_PLATFORM_SIZE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
