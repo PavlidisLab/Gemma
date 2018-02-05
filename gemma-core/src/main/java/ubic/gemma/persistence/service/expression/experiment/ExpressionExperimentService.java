@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -202,7 +202,7 @@ public interface ExpressionExperimentService
      * Returns a collection of ArrayDesigns referenced by any of the BioAssays that make up the given
      * ExpressionExperiment.
      */
-//    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
     /**
@@ -363,8 +363,8 @@ public interface ExpressionExperimentService
     Taxon getTaxon( BioAssaySet bioAssaySet );
 
     @Override
-//    @Monitored
-//    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    @Monitored
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment load( Long id );
 
     @Override
@@ -375,6 +375,7 @@ public interface ExpressionExperimentService
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
      * description (no but seriously do look it might not work as you would expect).
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
             boolean asc, ArrayList<ObjectFilter[]> filter );
@@ -445,7 +446,7 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExpressionExperiment replaceVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> vectors );
 
-//    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
@@ -460,7 +461,8 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
-//    @Secured({ "GROUP_AGENT" })
+    @Override
+    @Secured({ "GROUP_AGENT" })
     void update( ExpressionExperiment expressionExperiment );
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );

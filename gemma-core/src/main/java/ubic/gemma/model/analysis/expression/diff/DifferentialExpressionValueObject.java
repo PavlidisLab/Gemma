@@ -19,10 +19,12 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -51,7 +53,6 @@ public class DifferentialExpressionValueObject {
     public DifferentialExpressionValueObject( DifferentialExpressionAnalysisResult o ) {
         this.p = o.getPvalue();
         this.corrP = o.getCorrectedPvalue();
-        // this.direction = o.get
         this.probe = o.getProbe().getName();
         this.probeId = o.getProbe().getId();
         this.resultSetId = o.getResultSet().getId();
