@@ -81,4 +81,7 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
      * to be called from a method that replaces the keys with experiments or valueobjects for security filtering.
      */
     Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds( Collection<Long> ids );
+
+    Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
+            Collection<Long> expressionExperimentIds, int offset, int limit );
 }

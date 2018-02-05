@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -112,6 +113,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
+
     /**
      * Given a set of ids, find experiments or experimentsubsets that have differential expression analyses. Subsets are
      * handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets. In the
@@ -123,5 +125,9 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids, int offset, int limit );
 
 }

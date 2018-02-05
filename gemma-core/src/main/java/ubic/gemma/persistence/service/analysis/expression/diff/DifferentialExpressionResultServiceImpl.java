@@ -54,13 +54,6 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee,
-            double qValueThreshold, int offset, int limit ) {
-        return this.DERDao.getVOsForExperiment( ee, qValueThreshold, offset, limit );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
             Collection<Long> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.DERDao.find( experimentsAnalyzed, threshold, limit );
