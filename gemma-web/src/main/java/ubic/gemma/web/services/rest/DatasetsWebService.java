@@ -164,7 +164,7 @@ public class DatasetsWebService extends
     @Path("/geeq")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @PreAuthorize( "hasRole('GROUP_ADMIN')" ) // TODO remove, left here for reference before it is actually used somewhere.
+    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
     public ResponseDataObject datasetGeeq( // Params:
             @QueryParam("start") IntArg startArg, // Required
             @QueryParam("stop") IntArg stopArg, // Required

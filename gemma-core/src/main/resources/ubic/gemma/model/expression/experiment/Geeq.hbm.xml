@@ -18,7 +18,7 @@
             <column name="MANUAL_QUALITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
         <property name="manualQualityOverride" type="boolean">
-            <column name="MANUAL_QUALITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BOOLEAN"/>
+            <column name="MANUAL_QUALITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BIT"/>
         </property>
         <property name="detectedSuitabilityScore" type="double">
             <column name="DETECTED_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
@@ -27,7 +27,7 @@
             <column name="MANUAL_SUITABILITY_SCORE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
         <property name="manualSuitabilityOverride" type="boolean">
-            <column name="MANUAL_SUITABILITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BOOLEAN"/>
+            <column name="MANUAL_SUITABILITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BIT"/>
         </property>
         <property name="SScorePublication" type="double">
             <column name="SCORE_PUBLICATION" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
@@ -84,21 +84,38 @@
             <column name="SCORE_BATCH_CONFOUND" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
         <property name="manualHasStrongBatchEffect" type="boolean">
-            <column name="MANUAL_HAS_STRONG_BATCH_EFFECT" not-null="true" unique="false" default="0.0"
-                    sql-type="DOUBLE"/>
+            <column name="MANUAL_HAS_STRONG_BATCH_EFFECT" not-null="true" unique="false" default="0"
+                    sql-type="BIT"/>
         </property>
         <property name="manualHasNoBatchEffect" type="boolean">
-            <column name="MANUAL_HAS_NO_BATCH_EFFECT" not-null="true" unique="false" default="0.0" sql-type="BOOLEAN"/>
+            <column name="MANUAL_HAS_NO_BATCH_EFFECT" not-null="true" unique="false" default="0" sql-type="BIT"/>
         </property>
         <property name="manualBatchEffectActive" type="boolean">
-            <column name="MANUAL_BATCH_EFFECT_ACTIVE" not-null="true" unique="false" default="0.0" sql-type="BOOLEAN"/>
+            <column name="MANUAL_BATCH_EFFECT_ACTIVE" not-null="true" unique="false" default="0" sql-type="BIT"/>
         </property>
         <property name="manualHasBatchConfound" type="boolean">
-            <column name="MANUAL_HAS_BATCH_CONFOUND" not-null="true" unique="false" default="0.0" sql-type="BOOLEAN"/>
+            <column name="MANUAL_HAS_BATCH_CONFOUND" not-null="true" unique="false" default="0" sql-type="BIT"/>
         </property>
         <property name="manualBatchConfoundActive" type="boolean">
-            <column name="MANUAL_BATCH_CONFOUND_ACTIVE" not-null="true" unique="false" default="0.0"
-                    sql-type="BOOLEAN"/>
+            <column name="MANUAL_BATCH_CONFOUND_ACTIVE" not-null="true" unique="false" default="0"
+                    sql-type="BIT"/>
+        </property>
+
+        <property name="noVectors" type="boolean">
+            <column name="NO_VECTORS" not-null="true" unique="false" default="0"
+                    sql-type="BIT"/>
+        </property>
+        <property name="corrMatIssues" type="byte">
+            <column name="CORRMAT_ISSUES" not-null="true" unique="false" default="0"
+                    sql-type="TINYINT"/>
+        </property>
+        <property name="replicatesIssues" type="byte">
+            <column name="REPLICATES_ISSUES" not-null="true" unique="false" default="0"
+                    sql-type="TINYINT"/>
+        </property>
+        <property name="batchCorrected" type="boolean">
+            <column name="BATCH_CORRECTED" not-null="true" unique="false" default="0"
+                    sql-type="BIT"/>
         </property>
 
         <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"

@@ -47,8 +47,8 @@ import java.util.concurrent.TimeUnit;
 public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> implements GeeqService {
     private static final int MAX_EFS_REPLICATE_CHECK = 2;
     private static final String LOG_PREFIX = "|G|E|E|Q|";
-    private static final String ERR_WMEAN_BAD_ARGS = "Can not calculate weighted arithmetic mean from null or unequal length arrays.";
-    private static final String ERR_BEFFECT_BAD_STATE =
+    private static final String ERR_W_MEAN_BAD_ARGS = "Can not calculate weighted arithmetic mean from null or unequal length arrays.";
+    private static final String ERR_B_EFFECT_BAD_STATE =
             "Batch effect scoring in odd state - null batch effect, but batch info should be present."
                     + "The same problem will be present for batch confound as well.";
 
@@ -62,11 +62,6 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     private static final int PUB_LOW_YEAR = 2006;
     private static final int PUB_MID_YEAR = 2009;
-
-    private static final double INFO_1 = -0.0001;
-    private static final double INFO_2 = -0.0002;
-    private static final double INFO_3 = -0.0003;
-    private static final double INFO_4 = -0.0004;
 
     private ExpressionExperimentService expressionExperimentService;
     private ArrayDesignService arrayDesignService;
@@ -376,7 +371,8 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             }
         }
 
-        score = !hasRawData ? !hasProcessedVectors ? INFO_1 : hasMissingValues ? N_10 : P_10 : P_10;
+        score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? P_10 : N_10;
+        gq.setNoVectors( !hasProcessedVectors );
         gq.setSScoreMissingValues( score );
     }
 
@@ -396,7 +392,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             hasCorrMat = false;
         } else {
             // Check if cormat has NaNs (diagonal is not checked, but there really should not be NaNs on the diagonal)
-            Double[] doubleArray = ArrayUtils.toObject( getLowerTriangle(cormat.getRawMatrix()) );
+            Double[] doubleArray = ArrayUtils.toObject( getLowerTriangle( cormat.getRawMatrix() ) );
             List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
             hasNaNs = list.contains( Double.NaN );
 
@@ -405,12 +401,11 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             percentage = outliers / samples * 100f;
         }
 
-        score = ( !hasCorrMat ? INFO_1 : //
-                percentage > 5f ? N_10 : //
-                        percentage > 2f ? N_05 : //
-                                percentage > 0.1f ? P_00 : //
-                                        percentage > P_00 ? P_05 : P_10 ) //
-                + ( hasNaNs ? -INFO_2 : 0.0 ); // info negated so it can be detected on top of other values
+        score = percentage > 5f ? N_10 : //
+                percentage > 2f ? N_05 : //
+                        percentage > 0.1f ? P_00 : //
+                                percentage > P_00 ? P_05 : P_10; //
+        gq.setCorrMatIssues( ( byte ) ( !hasCorrMat ? 1 : hasNaNs ? 2 : 0 ) );
         gq.setQScoreOutliers( score );
     }
 
@@ -451,13 +446,14 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             replicates = leastReplicates( ee );
         }
 
-        score = !hasDesign ? INFO_1 : //
-                replicates == -1 ? INFO_2 : //
-                        replicates == 1 ? INFO_3 : //
-                                replicates == 0 ? INFO_4 : //
-                                        replicates < 4 ? N_10 : //
-                                                replicates < 10 ? P_00 : +P_10;
+        score = replicates < 4 ? N_10 : //
+                replicates < 10 ? P_00 : P_10;
 
+        gq.setReplicatesIssues( ( byte ) ( //
+                !hasDesign ? 1 : //
+                        replicates == -1 ? 2 : //
+                                replicates == 1 ? 3 : //
+                                        replicates == 0 ? 4 : 0 ) );
         gq.setQScoreReplicates( score );
     }
 
@@ -482,7 +478,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             if ( !manual ) {
                 BatchEffectDetails be = expressionExperimentService.getBatchEffect( ee );
                 if ( be == null ) {
-                    Log.warn( this.getClass(), ERR_BEFFECT_BAD_STATE );
+                    Log.warn( this.getClass(), ERR_B_EFFECT_BAD_STATE );
                     hasInfo = false;
                 } else {
                     hasStrong = be.getPvalue() < 0.0001;
@@ -495,8 +491,8 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             }
         }
 
-        score = ( !infoDetected || !hasInfo ? P_00 : hasStrong ? N_10 : hasNone ? P_10 : P_00 ) //\n
-                + ( corrected ? -INFO_1 : P_00 ); // info negated so it can be detected on top of other values
+        score = ( !infoDetected || !hasInfo ? P_00 : hasStrong ? N_10 : hasNone ? P_10 : P_00 );
+        gq.setBatchCorrected( corrected );
         gq.setQScoreBatchEffect( score );
     }
 
@@ -603,7 +599,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         Double[] doubleArray = ArrayUtils.toObject( corTri );
         List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
         //noinspection StatementWithEmptyBody // because java stardard libraries suck
-        while(list.remove( Double.NaN )){}
+        while ( list.remove( Double.NaN ) ) {}
 
         return ArrayUtils.toPrimitive( list.toArray( new Double[list.size()] ) );
     }
@@ -629,7 +625,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             }
         }
 
-        score = !hasCorrMat ? INFO_1 : value;
+        score = !hasCorrMat ? P_00 : value;
         switch ( type ) {
             case mean:
                 gq.setQScoreSampleMeanCorrelation( score );
@@ -645,7 +641,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     private double getWeightedMean( double[] vals, double[] weights ) {
         if ( vals == null || weights == null || vals.length != weights.length ) {
-            throw new IllegalArgumentException( ERR_WMEAN_BAD_ARGS );
+            throw new IllegalArgumentException( ERR_W_MEAN_BAD_ARGS );
         }
         double sum = P_00;
         double wSum = P_00;

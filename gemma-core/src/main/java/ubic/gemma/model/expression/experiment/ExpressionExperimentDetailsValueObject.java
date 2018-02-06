@@ -108,7 +108,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
                 vo.getBioMaterialCount(), vo.getCurrentUserHasWritePermission(), vo.getCurrentUserIsOwner(),
                 vo.getIsPublic(), vo.getIsShared(), vo.getLastUpdated(), vo.getTroubled(), vo.getLastTroubledEvent(),
                 vo.getNeedsAttention(), vo.getLastNeedsAttentionEvent(), vo.getCurationNote(),
-                vo.getLastNoteUpdateEvent() );
+                vo.getLastNoteUpdateEvent(), vo.getGeeq() );
     }
 
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {

@@ -53,7 +53,7 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
     public Collection<GeeqValueObject> loadValueObjects( Collection<Geeq> entities ) {
         //noinspection unchecked
         List<Object[]> rows = getSessionFactory().getCurrentSession()
-                .createQuery( "" + "select GQ from Geeq as GQ where GQ.id in (:ids) " )
+                .createQuery( "select GQ from Geeq as GQ where GQ.id in (:ids) " )
                 .setParameterList( "ids", EntityUtils.getIds( entities ) ).list();
 
         return createVosFromRows( rows );
@@ -62,8 +62,7 @@ public class GeeqDaoImpl extends AbstractDao<Geeq> implements GeeqDao {
     @Override
     public Collection<GeeqValueObject> loadAllValueObjects() {
         //noinspection unchecked
-        List<Object[]> rows = getSessionFactory().getCurrentSession().createQuery( "" + "select GQ from Geeq as GQ" )
-                .list();
+        List<Object[]> rows = getSessionFactory().getCurrentSession().createQuery( "select GQ from Geeq as GQ" ).list();
 
         return createVosFromRows( rows );
     }

@@ -8,11 +8,11 @@ add column `LAST_BATCH_CONFOUND_CHANGE_EVENT_FK` BIGINT(20) default null,
 
 add column `DETECTED_QUALITY_SCORE` DOUBLE default 0.0,
 add column `MANUAL_QUALITY_SCORE` DOUBLE default 0.0,
-add column `MANUAL_QUALITY_OVERRIDE` BOOL default false,
+add column `MANUAL_QUALITY_OVERRIDE` BIT default 0,
 
 add column `DETECTED_SUITABILITY_SCORE` DOUBLE default 0.0,
 add column `MANUAL_SUITABILITY_SCORE` DOUBLE default 0.0,
-add column `MANUAL_SUITABILITY_OVERRIDE` BOOL default false,
+add column `MANUAL_SUITABILITY_OVERRIDE` BIT default 0,
 
 add column `SCORE_PUBLICATION` DOUBLE default 0.0,
 add column `SCORE_PLATFORM_AMOUNT` DOUBLE default 0.0,
@@ -33,12 +33,17 @@ add column `SCORE_BATCH_INFO` DOUBLE default 0.0,
 add column `SCORE_BATCH_EFFECT` DOUBLE default 0.0,
 add column `SCORE_BATCH_CONFOUND` DOUBLE default 0.0,
 
-add column `MANUAL_HAS_STRONG_BATCH_EFFECT` BOOL default false,
-add column `MANUAL_HAS_NO_BATCH_EFFECT` BOOL default false,
-add column `MANUAL_BATCH_EFFECT_ACTIVE` BOOL default false,
+add column `MANUAL_HAS_STRONG_BATCH_EFFECT` BIT default 0,
+add column `MANUAL_HAS_NO_BATCH_EFFECT` BIT default 0,
+add column `MANUAL_BATCH_EFFECT_ACTIVE` BIT default 0,
 
-add column `MANUAL_HAS_BATCH_CONFOUND` BOOL default false,
-add column `MANUAL_BATCH_CONFOUND_ACTIVE` BOOL default false;
+add column `MANUAL_HAS_BATCH_CONFOUND` BIT default 0,
+add column `MANUAL_BATCH_CONFOUND_ACTIVE` BIT default 0,
+
+add column `NO_VECTORS` BIT default 0,
+add column `CORRMAT_ISSUES` TINYINT default 0,
+add column `REPLICATES_ISSUES` TINYINT default 0,
+add column `BATCH_CORRECTED` BIT default 0;
 
 alter table GEEQ
 add constraint FK_1LAST_RUN_EVENT FOREIGN KEY(`LAST_RUN_EVENT_FK`) REFERENCES `AUDIT_EVENT`(`ID`),

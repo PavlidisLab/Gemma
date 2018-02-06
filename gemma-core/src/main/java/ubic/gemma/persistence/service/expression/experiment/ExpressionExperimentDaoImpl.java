@@ -1735,7 +1735,8 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_EE_ALIAS + ".batchConfound, " // 26
                 + "eNote, "  //27
                 + "eAttn, " //28
-                + "eTrbl " //29
+                + "eTrbl, " //29
+                + ObjectFilter.DAO_EE_ALIAS + ".geeq " //30
                 + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
                 + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
                 + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "

@@ -130,12 +130,13 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * Missing values
-     * -1.0 if experiment has any missing values
-     * +1.0 otherwise (also assumed if experiment has raw data available)
+     * -1.0 if experiment has any missing values or there are no computed vectors
+     * +1.0 otherwise (assumed if experiment has raw data available)
      * extra:
-     * -0.0001 if experiment has no computed vectors
+     * noVectors = true, if experiment has no computed vectors
      */
     private double sScoreMissingValues;
+    private boolean noVectors;
 
     /*
      * Quality score factors
@@ -148,33 +149,31 @@ public class Geeq implements Identifiable, Serializable {
      * +0.0 if ratio > 0.1%
      * +0.5 if ratio > 0% small punishment for very large experiments with one bad apple
      * +1.0 if ratio = 0%
-     * extra:
-     * -0.0001 if the correlation matrix is empty
-     * +0.0002 if the correlation matrix has NaN values
+     * extra (in corrMatIssues):
+     * 1 if the correlation matrix is empty
+     * 2 if the correlation matrix has NaN values
      */
     private double qScoreOutliers;
+    private byte corrMatIssues;
 
     /**
      * Using the mean sample correlation r:
      * +r use the computed value
-     * extra
-     * -0.0001 if the correlation matrix is empty
+     * +0.0 if correlation matrix is empty
      */
     private double qScoreSampleMeanCorrelation;
 
     /**
      * Using the median sample correlation m:
      * +m use the computed value
-     * extra
-     * -0.0001 if the correlation matrix is empty
+     * +0.0 if correlation matrix is empty
      */
     private double qScoreSampleMedianCorrelation;
 
     /**
      * Using the sample correlation variance v:
      * +v use the computed value
-     * extra
-     * -0.0001 if the correlation matrix is empty
+     * +0.0 if correlation matrix is empty
      */
     private double qScoreSampleCorrelationVariance;
 
@@ -187,16 +186,17 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * Number of replicates - ee has to have design and more than one condition
-     * -1.0 if lowest replicate amount < 4 & !=1
+     * -1.0 if lowest replicate amount < 4 & !=1 or if there are problems
      * +0.0 if lowest replicate amount < 10 & !=1
      * +1.0 otherwise
-     * extra:
-     * -0.0001 if the experiment has no design
-     * -0.0002 if there were no factor values found
-     * -0.0003 if all replicate amounts were 1
-     * -0.0004 if lowest replicate was 0 (that really should not happen though)
+     * extra (in replicatesIssues):
+     * 1 if the experiment has no design
+     * 2 if there were no factor values found
+     * 3 if all replicate amounts were 1
+     * 4 if lowest replicate was 0 (that really should not happen though)
      */
     private double qScoreReplicates;
+    private byte replicatesIssues;
 
     /**
      * State of batch info
@@ -211,9 +211,10 @@ public class Geeq implements Identifiable, Serializable {
      * +1.0 if batch pVal > 0.1 or (!manualHasNoBatchEffect & manualBatchEffectActive);
      * +0.0 otherwise
      * extra:
-     * +0.0001 if data was batch-corrected
+     * batchCorrected = true, if data was batch-corrected
      */
     private double qScoreBatchEffect;
+    private boolean batchCorrected;
 
     private boolean manualHasStrongBatchEffect;
     private boolean manualHasNoBatchEffect;
@@ -540,5 +541,37 @@ public class Geeq implements Identifiable, Serializable {
 
     public void setLastBatchConfoundChange( AuditEvent lastBatchConfoundChange ) {
         this.lastBatchConfoundChange = lastBatchConfoundChange;
+    }
+
+    public boolean isNoVectors() {
+        return noVectors;
+    }
+
+    public void setNoVectors( boolean noVectors ) {
+        this.noVectors = noVectors;
+    }
+
+    public byte getCorrMatIssues() {
+        return corrMatIssues;
+    }
+
+    public void setCorrMatIssues( byte corrMatIssues ) {
+        this.corrMatIssues = corrMatIssues;
+    }
+
+    public byte getReplicatesIssues() {
+        return replicatesIssues;
+    }
+
+    public void setReplicatesIssues( byte replicatesIssues ) {
+        this.replicatesIssues = replicatesIssues;
+    }
+
+    public boolean isBatchCorrected() {
+        return batchCorrected;
+    }
+
+    public void setBatchCorrected( boolean batchCorrected ) {
+        this.batchCorrected = batchCorrected;
     }
 }

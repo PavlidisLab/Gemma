@@ -69,6 +69,15 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private boolean manualHasBatchConfound;
     private boolean manualBatchConfoundActive;
 
+    /*
+     * Problem/info flags
+     */
+
+    private boolean noVectors;
+    private byte corrMatIssues;
+    private byte replicatesIssues;
+    private boolean batchCorrected;
+
     /**
      * Required when using the class as a spring bean
      */
@@ -105,6 +114,10 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScoreBatchConfound = ( double ) row[27];
         this.manualHasBatchConfound = ( boolean ) row[28];
         this.manualBatchConfoundActive = ( boolean ) row[29];
+        this.noVectors = ( boolean ) row[30];
+        this.corrMatIssues = ( byte ) row[31];
+        this.replicatesIssues = ( byte ) row[32];
+        this.batchCorrected = ( boolean ) row[33];
     }
 
     public GeeqValueObject( Geeq g ) {
@@ -137,6 +150,10 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScoreBatchConfound = g.getQScoreBatchConfound();
         this.manualHasBatchConfound = g.getManualHasBatchConfound();
         this.manualBatchConfoundActive = g.getManualBatchConfoundActive();
+        this.noVectors = g.isNoVectors();
+        this.batchCorrected = g.isBatchCorrected();
+        this.corrMatIssues = g.getCorrMatIssues();
+        this.replicatesIssues = g.getReplicatesIssues();
     }
 
     public GeeqValueObject( Long id, double detectedQualityScore, double manualQualityScore,
@@ -394,5 +411,37 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     public void setqScoreSampleCorrelationVariance( double qScoreSampleCorrelationVariance ) {
         this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
+    }
+
+    public boolean isNoVectors() {
+        return noVectors;
+    }
+
+    public void setNoVectors( boolean noVectors ) {
+        this.noVectors = noVectors;
+    }
+
+    public byte getCorrMatIssues() {
+        return corrMatIssues;
+    }
+
+    public void setCorrMatIssues( byte corrMatIssues ) {
+        this.corrMatIssues = corrMatIssues;
+    }
+
+    public byte getReplicatesIssues() {
+        return replicatesIssues;
+    }
+
+    public void setReplicatesIssues( byte replicatesIssues ) {
+        this.replicatesIssues = replicatesIssues;
+    }
+
+    public boolean isBatchCorrected() {
+        return batchCorrected;
+    }
+
+    public void setBatchCorrected( boolean batchCorrected ) {
+        this.batchCorrected = batchCorrected;
     }
 }
