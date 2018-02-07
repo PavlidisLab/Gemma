@@ -679,7 +679,7 @@ public class ExpressionExperimentController {
         finalResult.setQChtml( getQCTagHTML( ee ) );
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
-        finalResult = this.setPrefferedAndReprocessed( finalResult, ee );
+        finalResult = this.setPreferredAndReprocessed( finalResult, ee );
         finalResult = this.setMutipleTechTypes( finalResult, ee );
         finalResult = this.setParentTaxon( finalResult, finalResult.getTaxonId() );
 
@@ -811,7 +811,7 @@ public class ExpressionExperimentController {
      * @param finalResult result
      * @return ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setPrefferedAndReprocessed(
+    private ExpressionExperimentDetailsValueObject setPreferredAndReprocessed(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );

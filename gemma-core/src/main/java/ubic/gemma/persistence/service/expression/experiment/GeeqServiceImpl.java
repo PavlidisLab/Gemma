@@ -352,7 +352,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             }
         }
 
-        score = !dataReprocessedFromRaw ? N_10 : P_10;
+        score = dataReprocessedFromRaw ? P_10 : N_10;
         gq.setSScoreRawData( score );
         return dataReprocessedFromRaw;
     }
