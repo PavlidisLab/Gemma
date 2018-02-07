@@ -361,7 +361,6 @@ public class ExpressionExperimentDaoImpl
 
         // Compose query
         Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
-
         query.setCacheable( true );
         query.setMaxResults( limit > 0 ? limit : -1 );
         query.setFirstResult( offset );
@@ -1736,7 +1735,7 @@ public class ExpressionExperimentDaoImpl
                 + "eNote, "  //27
                 + "eAttn, " //28
                 + "eTrbl, " //29
-                + ObjectFilter.DAO_EE_ALIAS + ".geeq " //30
+                + ObjectFilter.DAO_GEEQ_ALIAS + " " //30
                 + "from ExpressionExperiment as " + ObjectFilter.DAO_EE_ALIAS + " " + "inner join "
                 + ObjectFilter.DAO_EE_ALIAS + ".bioAssays as BA  " + "left join " + ObjectFilter.DAO_EE_ALIAS
                 + ".quantitationTypes as qts left join BA.sampleUsed as SU left join BA.arrayDesignUsed as "
@@ -1744,7 +1743,8 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_EE_ALIAS + ".accession acc "
                 + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax " + "left join "
                 + ObjectFilter.DAO_EE_ALIAS + ".experimentalDesign as EDES " + "join " + ObjectFilter.DAO_EE_ALIAS
-                + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn "
+                + ".curationDetails as s left join s.lastNeedsAttentionEvent as eAttn " + "left join "
+                + ObjectFilter.DAO_EE_ALIAS + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
                 + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
 
         queryString += formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,

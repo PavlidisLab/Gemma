@@ -60,6 +60,13 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
     private static final double N_07 = -0.7;
     private static final double N_10 = -P_10;
 
+    public static final double BATCH_EFF_NONE = P_10;
+    public static final double BATCH_EFF_STRONG = N_10;
+    public static final double BATCH_EFF_WEAK = P_00;
+
+    public static final double BATCH_CONF_HAS = N_10;
+    public static final double BATCH_CONF_NOHAS = P_10;
+
     private static final int PUB_LOW_YEAR = 2006;
     private static final int PUB_MID_YEAR = 2009;
 
@@ -95,7 +102,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
     }
 
     @Override
-    public ExpressionExperiment setManualOverrides( Long eeId, GeeqValueObject gqVo ) {
+    public ExpressionExperiment setManualOverrides( Long eeId, GeeqAdminValueObject gqVo ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         Geeq gq = ee.getGeeq();
 
@@ -491,7 +498,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             }
         }
 
-        score = ( !infoDetected || !hasInfo ? P_00 : hasStrong ? N_10 : hasNone ? P_10 : P_00 );
+        score =  !infoDetected || !hasInfo ? P_00 : hasStrong ? BATCH_EFF_STRONG : hasNone ? BATCH_EFF_NONE : BATCH_EFF_WEAK ;
         gq.setBatchCorrected( corrected );
         gq.setQScoreBatchEffect( score );
     }
@@ -513,7 +520,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             }
         }
 
-        score = !infoDetected ? P_00 : hasConfound ? N_10 : P_10;
+        score = !infoDetected ? P_00 : hasConfound ? BATCH_CONF_HAS : BATCH_CONF_NOHAS;
         gq.setQScoreBatchConfound( score );
     }
 

@@ -20,22 +20,17 @@
 package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
 /**
- * Simplified representation of Geeq
+ * Represents publicly available geeq information
  *
  * @author paul, tesarst
  */
-@SuppressWarnings("unused") // Used in front end
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
-    private double detectedQualityScore;
-    private double manualQualityScore;
-    private boolean manualQualityOverride;
-
-    private double detectedSuitabilityScore;
-    private double manualSuitabilityScore;
-    private boolean manualSuitabilityOverride;
+    private double publicQualityScore;
+    private double publicSuitabilityScore;
 
     /*
      * Suitability score factors
@@ -61,13 +56,8 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private double qScorePlatformsTech;
     private double qScoreReplicates;
     private double qScoreBatchInfo;
-    private double qScoreBatchEffect;
-    private boolean manualHasStrongBatchEffect;
-    private boolean manualHasNoBatchEffect;
-    private boolean manualBatchEffectActive;
-    private double qScoreBatchConfound;
-    private boolean manualHasBatchConfound;
-    private boolean manualBatchConfoundActive;
+    private double qScorePublicBatchEffect;
+    private double qScorePublicBatchConfound;
 
     /*
      * Problem/info flags
@@ -86,12 +76,10 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     public GeeqValueObject( Object[] row ) {
         super( ( Long ) row[0] );
-        this.detectedQualityScore = ( double ) row[1];
-        this.manualQualityScore = ( double ) row[2];
-        this.manualQualityOverride = ( boolean ) row[3];
-        this.detectedSuitabilityScore = ( double ) row[4];
-        this.manualSuitabilityScore = ( double ) row[5];
-        this.manualSuitabilityOverride = ( boolean ) row[6];
+
+        this.setPublicQualityScore( ( double ) row[1], ( double ) row[2], ( boolean ) row[3] );
+        this.setPublicSuitabilityScore( ( double ) row[4], ( double ) row[5], ( boolean ) row[6] );
+
         this.sScorePublication = ( double ) row[7];
         this.sScorePlatformAmount = ( double ) row[8];
         this.sScorePlatformsTechMulti = ( double ) row[9];
@@ -107,13 +95,9 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScorePlatformsTech = ( double ) row[19];
         this.qScoreReplicates = ( double ) row[20];
         this.qScoreBatchInfo = ( double ) row[21];
-        this.qScoreBatchEffect = ( double ) row[23];
-        this.manualHasStrongBatchEffect = ( boolean ) row[24];
-        this.manualHasNoBatchEffect = ( boolean ) row[25];
-        this.manualBatchEffectActive = ( boolean ) row[26];
-        this.qScoreBatchConfound = ( double ) row[27];
-        this.manualHasBatchConfound = ( boolean ) row[28];
-        this.manualBatchConfoundActive = ( boolean ) row[29];
+        this.setqScorePublicBatchEffect( ( double ) row[23], ( boolean ) row[24], ( boolean ) row[25],
+                ( boolean ) row[26] );
+        this.setqScorePublicBatchConfound( ( double ) row[27], ( boolean ) row[28], ( boolean ) row[29] );
         this.noVectors = ( boolean ) row[30];
         this.corrMatIssues = ( byte ) row[31];
         this.replicatesIssues = ( byte ) row[32];
@@ -122,12 +106,10 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     public GeeqValueObject( Geeq g ) {
         super( g.getId() );
-        this.detectedQualityScore = g.getDetectedQualityScore();
-        this.manualQualityScore = g.getManualQualityScore();
-        this.manualQualityOverride = g.getManualQualityOverride();
-        this.detectedSuitabilityScore = g.getDetectedSuitabilityScore();
-        this.manualSuitabilityScore = g.getManualSuitabilityScore();
-        this.manualSuitabilityOverride = g.getManualSuitabilityOverride();
+        this.setPublicQualityScore( g.getDetectedQualityScore(), g.getManualQualityScore(),
+                g.getManualQualityOverride() );
+        this.setPublicSuitabilityScore( g.getDetectedSuitabilityScore(), g.getManualSuitabilityScore(),
+                g.getManualSuitabilityOverride() );
         this.sScorePublication = g.getSScorePublication();
         this.sScorePlatformAmount = g.getSScorePlatformAmount();
         this.sScorePlatformsTechMulti = g.getSScorePlatformsTechMulti();
@@ -143,13 +125,10 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScorePlatformsTech = g.getQScorePlatformsTech();
         this.qScoreReplicates = g.getQScoreReplicates();
         this.qScoreBatchInfo = g.getQScoreBatchInfo();
-        this.qScoreBatchEffect = g.getQScoreBatchEffect();
-        this.manualHasStrongBatchEffect = g.getManualHasStrongBatchEffect();
-        this.manualHasNoBatchEffect = g.getManualHasNoBatchEffect();
-        this.manualBatchEffectActive = g.getManualBatchEffectActive();
-        this.qScoreBatchConfound = g.getQScoreBatchConfound();
-        this.manualHasBatchConfound = g.getManualHasBatchConfound();
-        this.manualBatchConfoundActive = g.getManualBatchConfoundActive();
+        this.setqScorePublicBatchEffect( g.getQScoreBatchEffect(), g.getManualHasStrongBatchEffect(),
+                g.getManualHasNoBatchEffect(), g.getManualBatchEffectActive() );
+        this.setqScorePublicBatchConfound( g.getQScoreBatchConfound(), g.getManualHasBatchConfound(),
+                g.getManualBatchConfoundActive() );
         this.noVectors = g.isNoVectors();
         this.batchCorrected = g.isBatchCorrected();
         this.corrMatIssues = g.getCorrMatIssues();
@@ -167,12 +146,8 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
             boolean manualHasNoBatchEffect, boolean manualBatchEffectActive, double qScoreBatchConfound,
             boolean manualHasBatchConfound, boolean manualBatchConfoundActive ) {
         super( id );
-        this.detectedQualityScore = detectedQualityScore;
-        this.manualQualityScore = manualQualityScore;
-        this.manualQualityOverride = manualQualityOverride;
-        this.detectedSuitabilityScore = detectedSuitabilityScore;
-        this.manualSuitabilityScore = manualSuitabilityScore;
-        this.manualSuitabilityOverride = manualSuitabilityOverride;
+        this.setPublicQualityScore( detectedQualityScore, manualQualityScore, manualQualityOverride );
+        this.setPublicSuitabilityScore( detectedSuitabilityScore, manualSuitabilityScore, manualSuitabilityOverride );
         this.sScorePublication = sScorePublication;
         this.sScorePlatformAmount = sScorePlatformAmount;
         this.sScorePlatformsTechMulti = sScorePlatformsTechMulti;
@@ -188,53 +163,63 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScorePlatformsTech = qScorePlatformsTech;
         this.qScoreReplicates = qScoreReplicates;
         this.qScoreBatchInfo = qScoreBatchInfo;
-        this.qScoreBatchEffect = qScoreBatchEffect;
-        this.manualHasStrongBatchEffect = manualHasStrongBatchEffect;
-        this.manualHasNoBatchEffect = manualHasNoBatchEffect;
-        this.manualBatchEffectActive = manualBatchEffectActive;
-        this.qScoreBatchConfound = qScoreBatchConfound;
-        this.manualHasBatchConfound = manualHasBatchConfound;
-        this.manualBatchConfoundActive = manualBatchConfoundActive;
+        this.setqScorePublicBatchEffect( qScoreBatchEffect, manualHasStrongBatchEffect, manualHasNoBatchEffect,
+                manualBatchEffectActive );
+        this.setqScorePublicBatchConfound( qScoreBatchConfound, manualHasBatchConfound, manualBatchConfoundActive );
     }
 
-    public double getDetectedQualityScore() {
-        return detectedQualityScore;
+    private void setPublicQualityScore( double detected, double manual, boolean override ) {
+        this.publicQualityScore = override ? manual : detected;
     }
 
-    public double getDetectedSuitabilityScore() {
-        return detectedSuitabilityScore;
+    private void setPublicSuitabilityScore( double detected, double manual, boolean override ) {
+        this.publicSuitabilityScore = override ? manual : detected;
     }
 
-    public double getManualQualityScore() {
-        return manualQualityScore;
+    private void setqScorePublicBatchEffect( double detected, boolean manualStrong, boolean manualNone,
+            boolean override ) {
+        this.qScorePublicBatchEffect = //
+                !override ? detected : //
+                        manualStrong ? GeeqServiceImpl.BATCH_EFF_STRONG : //
+                                manualNone ? GeeqServiceImpl.BATCH_EFF_NONE : GeeqServiceImpl.BATCH_EFF_WEAK;
     }
 
-    public void setManualQualityScore( double manualQualityScore ) {
-        this.manualQualityScore = manualQualityScore;
+    private void setqScorePublicBatchConfound( double detected, boolean manualHasConfound, boolean override ) {
+        this.qScorePublicBatchConfound = //
+                !override ? detected : //
+                        manualHasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NOHAS;
     }
 
-    public boolean getManualQualityOverride() {
-        return manualQualityOverride;
+    public double getPublicQualityScore() {
+        return publicQualityScore;
     }
 
-    public void setManualQualityOverride( boolean manualQualityOverride ) {
-        this.manualQualityOverride = manualQualityOverride;
+    public void setPublicQualityScore( double publicQualityScore ) {
+        this.publicQualityScore = publicQualityScore;
     }
 
-    public double getManualSuitabilityScore() {
-        return manualSuitabilityScore;
+    public double getPublicSuitabilityScore() {
+        return publicSuitabilityScore;
     }
 
-    public void setManualSuitabilityScore( double manualSuitabilityScore ) {
-        this.manualSuitabilityScore = manualSuitabilityScore;
+    public void setPublicSuitabilityScore( double publicSuitabilityScore ) {
+        this.publicSuitabilityScore = publicSuitabilityScore;
     }
 
-    public boolean getManualSuitabilityOverride() {
-        return manualSuitabilityOverride;
+    public double getqScorePublicBatchEffect() {
+        return qScorePublicBatchEffect;
     }
 
-    public void setManualSuitabilityOverride( boolean manualSuitabilityOverride ) {
-        this.manualSuitabilityOverride = manualSuitabilityOverride;
+    public void setqScorePublicBatchEffect( double qScorePublicBatchEffect ) {
+        this.qScorePublicBatchEffect = qScorePublicBatchEffect;
+    }
+
+    public double getqScorePublicBatchConfound() {
+        return qScorePublicBatchConfound;
+    }
+
+    public void setqScorePublicBatchConfound( double qScorePublicBatchConfound ) {
+        this.qScorePublicBatchConfound = qScorePublicBatchConfound;
     }
 
     public double getsScorePublication() {
@@ -339,62 +324,6 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     public void setqScoreBatchInfo( double qScoreBatchInfo ) {
         this.qScoreBatchInfo = qScoreBatchInfo;
-    }
-
-    public double getqScoreBatchEffect() {
-        return qScoreBatchEffect;
-    }
-
-    public void setqScoreBatchEffect( double qScoreBatchEffect ) {
-        this.qScoreBatchEffect = qScoreBatchEffect;
-    }
-
-    public boolean getManualHasStrongBatchEffect() {
-        return manualHasStrongBatchEffect;
-    }
-
-    public void setManualHasStrongBatchEffect( boolean manualHasStrongBatchEffect ) {
-        this.manualHasStrongBatchEffect = manualHasStrongBatchEffect;
-    }
-
-    public boolean getManualHasNoBatchEffect() {
-        return manualHasNoBatchEffect;
-    }
-
-    public void setManualHasNoBatchEffect( boolean manualHasNoBatchEffect ) {
-        this.manualHasNoBatchEffect = manualHasNoBatchEffect;
-    }
-
-    public boolean getManualBatchEffectActive() {
-        return manualBatchEffectActive;
-    }
-
-    public void setManualBatchEffectActive( boolean manualBatchEffectActive ) {
-        this.manualBatchEffectActive = manualBatchEffectActive;
-    }
-
-    public double getqScoreBatchConfound() {
-        return qScoreBatchConfound;
-    }
-
-    public void setqScoreBatchConfound( double qScoreBatchConfound ) {
-        this.qScoreBatchConfound = qScoreBatchConfound;
-    }
-
-    public boolean getManualHasBatchConfound() {
-        return manualHasBatchConfound;
-    }
-
-    public void setManualHasBatchConfound( boolean manualHasBatchConfound ) {
-        this.manualHasBatchConfound = manualHasBatchConfound;
-    }
-
-    public boolean getManualBatchConfoundActive() {
-        return manualBatchConfoundActive;
-    }
-
-    public void setManualBatchConfoundActive( boolean manualBatchConfoundActive ) {
-        this.manualBatchConfoundActive = manualBatchConfoundActive;
     }
 
     public double getqScoreSampleMedianCorrelation() {

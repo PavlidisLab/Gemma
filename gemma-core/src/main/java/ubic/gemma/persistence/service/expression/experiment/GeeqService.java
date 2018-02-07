@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.Geeq;
+import ubic.gemma.model.expression.experiment.GeeqAdminValueObject;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
@@ -55,6 +56,6 @@ public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject>
      * @param eeId the id of the experiment to update the geeq information for.
      * @return the updated experiment.
      */
-    ExpressionExperiment setManualOverrides( Long eeId, GeeqValueObject gqVo );
+    ExpressionExperiment setManualOverrides( Long eeId, GeeqAdminValueObject gqVo );
 
 }
