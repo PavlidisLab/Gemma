@@ -110,10 +110,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
 
-        /*
-         * See bug 2085
-         */
-
         for ( ExpressionAnalysisResultSet ears : results ) {
             sortedFirstColumnOfResults = analysisResultSetToString( ears, geneAnnotations, buf, probe2String,
                     sortedFirstColumnOfResults );
@@ -333,11 +329,21 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         String filename = getDiffExArchiveFileName( analysis );
         File f = getOutputFile( filename );
 
+        // Force create if file is older than one year
+        if ( !forceCreate && f.canRead() ) {
+            Date d = new Date( f.lastModified() );
+            Calendar calendar = Calendar.getInstance();
+            calendar.add( Calendar.YEAR, -1 );
+            forceCreate = d.before( new Date( calendar.getTimeInMillis() ) );
+        }
+
+        // If not force create and the file exists (can be read from), return the existing file.
         if ( !forceCreate && f.canRead() ) {
             log.info( f + " exists, not regenerating" );
             return f;
         }
 
+        // (Re-)create the file
         analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
         BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
 
