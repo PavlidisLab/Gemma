@@ -66,6 +66,7 @@ public interface DifferentialExpressionAnalyzerService {
      * @param persist whether to persist when done
      * @param copyMe  analysis to base new one on
      *                whether the results should be persisted
+     * @return DEAs
      */
     Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe, boolean persist );

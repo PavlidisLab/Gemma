@@ -18,7 +18,9 @@ public interface ProbeMapper {
      * settings (ProbeMapperConfig) are used.
      * This is a major entry point for this API.
      *
-     * @return A map of sequence names to collections of blat associations for each sequence.
+     * @param goldenPathDb golden path db
+     * @param blatResults  blat results
+     * @return map
      * @see ProbeMapperConfig
      */
     Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
@@ -30,6 +32,9 @@ public interface ProbeMapper {
      * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
      * This is a major entry point for this API.
      *
+     * @param goldenPathDb golden path db
+     * @param config       config
+     * @param blatResults  blat results
      * @return A map of sequence names to collections of blat associations for each sequence.
      */
     Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
@@ -37,6 +42,10 @@ public interface ProbeMapper {
 
     /**
      * Given a genbank accession (for a mRNA or EST), find alignment data from GoldenPath.
+     *
+     * @param goldenPathDb Gp analysis
+     * @param genbankId    gene bank id
+     * @return map
      */
     Map<String, Collection<BlatAssociation>> processGbId( GoldenPathSequenceAnalysis goldenPathDb, String genbankId );
 
@@ -46,6 +55,10 @@ public interface ProbeMapper {
     /**
      * Get BlatAssociation results for a single sequence. If you have multiple sequences to run it is always better to
      * use processSequences();
+     *
+     * @param sequence   sequence
+     * @param goldenPath golden path analysis
+     * @return blat associations
      */
     Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence );
 
@@ -53,6 +66,9 @@ public interface ProbeMapper {
      * Given a collection of sequences, blat them against the selected genome.
      *
      * @param goldenpath for the genome to be used.
+     * @param sequences  sequences
+     * @param config     config
+     * @return map
      */
     Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
             Collection<BioSequence> sequences, ProbeMapperConfig config );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,6 +72,9 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
     /**
      * Remove file separators (e.g., "/") from the file names.
+     *
+     * @param fileBaseName file base name
+     * @return munged name
      */
     public static String mungeFileName( String fileBaseName ) {
         if ( fileBaseName == null ) {
@@ -81,6 +84,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     }
 
     /**
+     * @param arrayDesign array design
      * @return Map of composite sequence ids and transient (incomplete) genes. The genes only have the symbol filled in.
      */
     public static Map<Long, Collection<Gene>> readAnnotationFile( ArrayDesign arrayDesign ) {
@@ -106,6 +110,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      * This tries to read one of the annotation files (noparents, bioprocess or regular) to get the gene information -
      * GO annotations are not part of the result.
      *
+     * @param arrayDesign array design
      * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol, gene Name,
      * gemma gene id, ncbi id] for a given probe id. format of string is geneSymbol then geneNames same as found
      * in annotation file.

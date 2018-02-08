@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,9 @@ public class BlatResult2Psl {
 
     /**
      * See <a href='http://genome.ucsc.edu/goldenPath/help/customTrack.html'>golden path custom track help</a>.
+     *
+     * @param blatResult blat result
+     * @return psl
      */
     public static String blatResult2Psl( BlatResult blatResult ) {
         StringBuilder buf = new StringBuilder();
@@ -70,6 +73,9 @@ public class BlatResult2Psl {
     /**
      * Creates text that can be displayed directly as a track in UCSC, using their hgTracks program.
      * <a href='http://genome.ucsc.edu/goldenPath/help/customTrack.html'>golden path custom track help</a>.
+     *
+     * @param blatResult blat result
+     * @return psl track
      */
     public static String blatResult2PslTrack( BlatResult blatResult ) {
 

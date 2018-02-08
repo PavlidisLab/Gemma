@@ -194,7 +194,7 @@ public class SVDValueObject implements Serializable {
     }
 
     /**
-     * Row names: biomaterial ids; column names: eigengene number (from 0)
+     * @return Row names: biomaterial ids; column names: eigengene number (from 0)
      */
     public DoubleMatrix<Long, Integer> getvMatrix() {
         return vMatrix;

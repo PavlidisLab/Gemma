@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -200,6 +200,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     }
 
     /**
+     * @param geneId gene id
      * @return true if this involves the gene provided (either as query or found gene)
      */
     public boolean involves( Long geneId ) {
@@ -207,6 +208,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     }
 
     /**
+     * @param geneIds gene ids
      * @return true if this involves any of the genes provided
      */
     public boolean involvesAny( Set<Long> geneIds ) {

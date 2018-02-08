@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,12 +39,14 @@ import java.util.Set;
 @Deprecated
 @Component
 public class CompositeSequenceGeneMapperService {
+    private final Log log = LogFactory.getLog( this.getClass() );
     @Autowired
     GeneService geneService;
-    private final Log log = LogFactory.getLog( this.getClass() );
 
     /**
-     * @param arrayDesigns to look in
+     * @param arrayDesigns    to look in
+     * @param officialSymbols official symbols
+     * @return map of gene to composite sequences
      */
     public LinkedHashMap<Gene, Collection<CompositeSequence>> getGene2ProbeMapByOfficialSymbols(
             Collection<String> officialSymbols, Collection<ArrayDesign> arrayDesigns ) {
@@ -75,6 +77,9 @@ public class CompositeSequenceGeneMapperService {
 
     /**
      * Returns a map of gene collections, each keyed by a gene official symbol.
+     *
+     * @param officialSymbols official symbols
+     * @return map of genes
      */
     private LinkedHashMap<String, Collection<Gene>> findGenesByOfficialSymbols( Collection<String> officialSymbols ) {
 
