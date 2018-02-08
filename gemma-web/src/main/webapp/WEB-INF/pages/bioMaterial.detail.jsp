@@ -133,7 +133,7 @@
 	
 	<input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
 	<input type="hidden" name="bmClass" id="bmClass"
-		value="${bioMaterial.class.name}" />
+		value="${bioMaterial['class'].name}" />
 		
 	<br>
 
