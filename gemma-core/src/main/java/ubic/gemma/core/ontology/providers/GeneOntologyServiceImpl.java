@@ -1,8 +1,8 @@
 /*
 
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -96,6 +96,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private OntModel model;
 
     /**
+     * @param term the term
      * @return Usual formatted GO id, e.g., GO:0039392
      */
     public static String asRegularGoId( Characteristic term ) {

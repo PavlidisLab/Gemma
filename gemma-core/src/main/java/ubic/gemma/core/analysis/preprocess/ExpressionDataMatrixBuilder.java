@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -105,6 +105,7 @@ public class ExpressionDataMatrixBuilder {
 
     /**
      * @param expressionExperiment (should be lightly thawed)
+     * @return a collection of QTs
      */
     public static Collection<QuantitationType> getMissingValueQuantitationTypes(
             ExpressionExperiment expressionExperiment ) {
@@ -157,6 +158,7 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
+     * @param eeQtTypes the QTs
      * @return just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
      * from both channels (if present).
      */
@@ -199,6 +201,7 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
+     * @param expressionExperiment the EE to get the QTs for
      * @return just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
      * from both channels (if present).
      */

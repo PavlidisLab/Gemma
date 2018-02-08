@@ -70,53 +70,53 @@ public class Geeq implements Identifiable, Serializable {
     /**
      * -1.0 - if experiment has no publication
      * -0.7 - if date not filled in
-     * -0.5 if date < 2006
-     * -0.3 if date < 2009
+     * -0.5 if date &lt; 2006
+     * -0.3 if date &lt; 2009
      * +1.0 otherwise
      */
     private double sScorePublication;
 
     /**
      * The amount of platforms the experiment uses:
-     * -1.0 if amount > 2
-     * -0.5 if amount > 1
+     * -1.0 if amount &gt; 2
+     * -0.5 if amount &gt; 1
      * +1.0 otherwise
      */
     private double sScorePlatformAmount;
 
     /**
      * Extra punishment for platform technology inconsistency
-     * -1.0 if platforms amount > 1 and platforms do not have the same technology type
+     * -1.0 if platforms amount &gt; 1 and platforms do not have the same technology type
      * +1.0 otherwise
      */
     private double sScorePlatformsTechMulti;
 
     /**
      * Score for each platforms popularity: (final score is average of scores for all used platforms)
-     * -1.0 if used in < 10 EEs
-     * -0.5 if used in < 20 EEs
-     * +0.0 if used in < 50 EEs
-     * +0.5 if used in < 100 EEs
+     * -1.0 if used in &lt; 10 EEs
+     * -0.5 if used in &lt; 20 EEs
+     * +0.0 if used in &lt; 50 EEs
+     * +0.5 if used in &lt; 100 EEs
      * +1.0 otherwise
      */
     private double sScoreAvgPlatformPopularity;
 
     /**
      * Score for each platforms size: (final score is average of scores for all used platforms)
-     * -1.0 if gene count < 5k
-     * -0.5 if gene count < 10k
-     * +0.0 if gene count < 15k
-     * +0.5 if gene count < 18k
+     * -1.0 if gene count &lt; 5k
+     * -0.5 if gene count &lt; 10k
+     * +0.0 if gene count &lt; 15k
+     * +0.5 if gene count &lt; 18k
      * +1.0 otherwise
      */
     private double sScoreAvgPlatformSize;
 
     /**
      * The amount of samples in the experiment
-     * -1.0 if sample size < 20
-     * -0.5 if sample size < 50
-     * +0.0 if sample size < 100
-     * +0.5 if sample size < 200
+     * -1.0 if sample size &lt; 20
+     * -0.5 if sample size &lt; 50
+     * +0.0 if sample size &lt; 100
+     * +0.5 if sample size &lt; 200
      * +1.0 otherwise
      */
     private double sScoreSampleSize;
@@ -144,10 +144,10 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * Ratio of detected (non-removed) outliers vs sample size:
-     * -1.0 if ratio > 5%
-     * -0.5 if ratio > 2%
-     * +0.0 if ratio > 0.1%
-     * +0.5 if ratio > 0% small punishment for very large experiments with one bad apple
+     * -1.0 if ratio &gt; 5%
+     * -0.5 if ratio &gt; 2%
+     * +0.0 if ratio &gt; 0.1%
+     * +0.5 if ratio &gt; 0% small punishment for very large experiments with one bad apple
      * +1.0 if ratio = 0%
      * extra (in corrMatIssues):
      * 1 if the correlation matrix is empty
@@ -186,8 +186,8 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * Number of replicates - ee has to have design and more than one condition
-     * -1.0 if lowest replicate amount < 4 & !=1 or if there are problems
-     * +0.0 if lowest replicate amount < 10 & !=1
+     * -1.0 if lowest replicate amount &lt; 4 & !=1 or if there are problems
+     * +0.0 if lowest replicate amount &lt; 10 & !=1
      * +1.0 otherwise
      * extra (in replicatesIssues):
      * 1 if the experiment has no design
@@ -207,8 +207,8 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * Batch effect without batch correction. Can ve overridden.
-     * -1.0 if batch pVal < 0.0001 or (manualHasStrongBatchEffect & manualBatchEffectActive);
-     * +1.0 if batch pVal > 0.1 or (!manualHasNoBatchEffect & manualBatchEffectActive);
+     * -1.0 if batch pVal &lt; 0.0001 or (manualHasStrongBatchEffect & manualBatchEffectActive);
+     * +1.0 if batch pVal &gt; 0.1 or (!manualHasNoBatchEffect & manualBatchEffectActive);
      * +0.0 otherwise
      * extra:
      * batchCorrected = true, if data was batch-corrected

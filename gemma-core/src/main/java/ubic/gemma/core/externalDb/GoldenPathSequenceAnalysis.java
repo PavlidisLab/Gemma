@@ -88,6 +88,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param sizes      Sizes of alignment blocks (comma-delimited from blat)
      * @param strand     Either + or - indicating the strand to look on, or null to search both strands.
      * @param method     The constant representing the method to use to locate the 3' distance.
+     * @param config     configuration
      * @return A list of BioSequence2GeneProduct objects. The distance stored by a ThreePrimeData will be 0 if the
      * sequence overhangs the found genes (rather than providing a negative distance). If no genes are found,
      * the result is null; These are transient instances, not from Gemma's database
@@ -204,6 +205,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param chromosome  chromosome
      * @param regionStart the region to be checked
      * @param regionEnd   end
+     * @param strand      the strand
      * @return The ESTs which overlap the query region. (using the all_est table)
      */
     public Collection<Gene> findESTs( final String chromosome, Long regionStart, Long regionEnd, String strand ) {
@@ -364,6 +366,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param chromosome  chromosome
      * @param regionStart the region to be checked
      * @param regionEnd   end
+     * @param strand      the strand
      * @return The mRNAs which overlap the query region.
      */
     public Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd, String strand ) {
@@ -464,6 +467,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      *
      * @param br     BlatResult holding the parameters needed.
      * @param method The constant representing the method to use to locate the 3' distance.
+     * @return a collection of distances
      */
     public Collection<? extends BioSequence2GeneProduct> getThreePrimeDistances( BlatResult br,
             ThreePrimeDistanceMethod method ) {
@@ -475,6 +479,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * Uses default mapping settings
      *
      * @param identifier identifier
+     * @param method     the method
      * @return bio seq 2 gene producs
      */
     public Collection<BioSequence2GeneProduct> getThreePrimeDistances( String identifier,

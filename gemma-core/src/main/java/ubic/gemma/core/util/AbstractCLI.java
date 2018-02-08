@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -119,6 +119,7 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * @param group the option group
      * @return see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
      */
     public final Options addOptionGroup( OptionGroup group ) {
@@ -141,6 +142,7 @@ public abstract class AbstractCLI {
     public abstract String getCommandName();
 
     /**
+     * @param opt the option identifier
      * @return see org.apache.commons.cli.Options#getOption(java.lang.String)
      */
     public final Option getOption( String opt ) {

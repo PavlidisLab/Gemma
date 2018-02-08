@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,18 +18,15 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import java.util.Collection;
 
 /**
  * I made a wrapper class to OutlierDetectionServiceImpl so that I could write transactional methods
- * 
- *
  */
 @Service
 public class OutlierDetectionServiceWrapperImpl implements OutlierDetectionServiceWrapper {

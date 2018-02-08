@@ -15,7 +15,6 @@
 package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -31,7 +30,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.web.services.rest.util.*;
 import ubic.gemma.web.services.rest.util.args.*;
 
@@ -45,7 +43,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -68,7 +65,6 @@ public class DatasetsWebService extends
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private GeneService geneService;
     private SVDService svdService;
-    private GeeqService geeqService;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     /**
@@ -84,7 +80,7 @@ public class DatasetsWebService extends
     public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
             ExpressionDataFileService expressionDataFileService, ArrayDesignService arrayDesignService,
             BioAssayService bioAssayService, ProcessedExpressionDataVectorService processedExpressionDataVectorService,
-            GeneService geneService, SVDService svdService, GeeqService geeqService,
+            GeneService geneService, SVDService svdService,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         super( expressionExperimentService );
         this.expressionExperimentService = expressionExperimentService;
@@ -94,7 +90,6 @@ public class DatasetsWebService extends
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
         this.geneService = geneService;
         this.svdService = svdService;
-        this.geeqService = geeqService;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 

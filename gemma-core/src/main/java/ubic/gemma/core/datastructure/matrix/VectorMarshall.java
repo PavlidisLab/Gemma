@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public class VectorMarshall {
      * Convert the data in a DataVector into a List of Objects of the appropriate type for the representation
      * (Boolean,Double,String,Integer,Long,Character);
      *
-     * @param vector
+     * @param vector the data vector
      * @return objects
      */
     public static List<Object> marshall( DataVector vector ) {
@@ -75,9 +76,7 @@ public class VectorMarshall {
             }
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
             String[] convertedDat = converter.byteArrayToStrings( rawDat );
-            for ( String b : convertedDat ) {
-                data.add( b );
-            }
+            data.addAll( Arrays.asList( convertedDat ) );
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );
         }
