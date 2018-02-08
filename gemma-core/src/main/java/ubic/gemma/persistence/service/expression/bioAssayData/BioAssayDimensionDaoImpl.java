@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,7 +68,7 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
 
         queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
-        Collection<String> names = new HashSet<String>();
+        Collection<String> names = new HashSet<>();
         assert bioAssayDimension.getBioAssays().size() > 0;
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             names.add( bioAssay.getName() );
@@ -115,8 +115,10 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
 
     @Override
     public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null ) return null;
-        if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
+        if ( bioAssayDimension == null )
+            return null;
+        if ( bioAssayDimension.getId() == null )
+            return bioAssayDimension;
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -126,16 +128,18 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
                 Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
                 for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    session.buildLockRequest( LockOptions.NONE ).lock( ba );
-                    Hibernate.initialize( ba );
-                    Hibernate.initialize( ba.getSampleUsed() );
-                    Hibernate.initialize( ba.getArrayDesignUsed() );
-                    BioMaterial bm = ba.getSampleUsed();
-                    session.buildLockRequest( LockOptions.NONE ).lock( bm );
-                    Hibernate.initialize( bm );
-                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                    Hibernate.initialize( bm.getFactorValues() );
-
+                    if ( ba != null ) {
+                        //FIXME for EE 6236 hibernate returns a list with a lot of nulls in it, so this is a workaround as I do not currently have time to properly investigate root cause
+                        session.buildLockRequest( LockOptions.NONE ).lock( ba );
+                        Hibernate.initialize( ba );
+                        Hibernate.initialize( ba.getSampleUsed() );
+                        Hibernate.initialize( ba.getArrayDesignUsed() );
+                        BioMaterial bm = ba.getSampleUsed();
+                        session.buildLockRequest( LockOptions.NONE ).lock( bm );
+                        Hibernate.initialize( bm );
+                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                        Hibernate.initialize( bm.getFactorValues() );
+                    }
                 }
                 return null;
             }
@@ -169,7 +173,7 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
 
     @Override
     public Collection<BioAssayDimensionValueObject> loadValueObjects( Collection<BioAssayDimension> entities ) {
-        Collection<BioAssayDimensionValueObject> vos = new LinkedHashSet<BioAssayDimensionValueObject>();
+        Collection<BioAssayDimensionValueObject> vos = new LinkedHashSet<>();
         for ( BioAssayDimension e : entities ) {
             vos.add( loadValueObject( e ) );
         }

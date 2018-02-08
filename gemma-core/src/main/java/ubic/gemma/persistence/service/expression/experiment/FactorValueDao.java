@@ -30,15 +30,9 @@ import java.util.Collection;
  */
 public interface FactorValueDao extends BaseVoEnabledDao<FactorValue, FactorValueValueObject> {
 
-    @Override
-    FactorValue find( FactorValue factorValue );
-
     /**
      * Locate based on string value of the value.
      */
     Collection<FactorValue> findByValue( String valuePrefix );
-
-    @Override
-    FactorValue findOrCreate( FactorValue factorValue );
 
 }

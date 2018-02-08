@@ -42,6 +42,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Boolean currentUserIsOwner = null;
     private Boolean isPublic = false;
     private Boolean isShared = false;
+    private GeeqValueObject geeq;
 
     /**
      * Required when using the class as a spring bean.
@@ -137,6 +138,13 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         // Batch info
         batchEffect = ( String ) row[25];
         batchConfound = ( String ) row[26];
+
+        // Geeq
+        geeq = row[30] == null ?
+                null :
+                SecurityUtil.isUserAdmin() ?
+                        new GeeqAdminValueObject( ( Geeq ) row[30] ) :
+                        new GeeqValueObject( ( Geeq ) row[30] );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,
@@ -147,7 +155,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             Boolean currentUserIsOwner, Boolean isPublic, Boolean isShared, Date lastUpdated, Boolean troubled,
             AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
             AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
-            AuditEventValueObject lastNoteUpdateEvent ) {
+            AuditEventValueObject lastNoteUpdateEvent, GeeqValueObject geeqValueObject ) {
         super( id, lastUpdated, troubled, lastTroubledEvent, needsAttention, lastNeedsAttentionEvent, curationNote,
                 lastNoteUpdateEvent );
         this.name = name;
@@ -173,7 +181,16 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.currentUserIsOwner = currentUserIsOwner;
         this.isPublic = isPublic;
         this.isShared = isShared;
+        this.geeq = geeqValueObject;
 
+    }
+
+    public GeeqValueObject getGeeq() {
+        return geeq;
+    }
+
+    public void setGeeq( GeeqValueObject geeq ) {
+        this.geeq = geeq;
     }
 
     public String getName() {

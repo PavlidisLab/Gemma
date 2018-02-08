@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -64,7 +63,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> results = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> results = new HashMap<>();
         if ( auditables.size() == 0 )
             return results;
 
@@ -78,7 +77,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         final String queryString = "select et, trail, event from AuditTrailImpl trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
-                + "and et.class in (:classes) order by event.date,event.id desc ";
+                + "and et.class in (:classes) order by event.date desc, event.id desc ";
 
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "trails", atMap.keySet() );
@@ -166,7 +165,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
     @Override
     public Collection<AuditEventValueObject> loadValueObjects( Collection<AuditEvent> entities ) {
-        Collection<AuditEventValueObject> vos = new LinkedHashSet<AuditEventValueObject>();
+        Collection<AuditEventValueObject> vos = new LinkedHashSet<>();
         for ( AuditEvent e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }
@@ -177,7 +176,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     protected Map<Auditable, AuditEvent> handleGetLastEvent( final Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type ) {
 
-        Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
+        Map<Auditable, AuditEvent> result = new HashMap<>();
         if ( auditables.size() == 0 )
             return result;
 
@@ -187,12 +186,12 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         final String queryString = "select trail, ae from AuditTrailImpl trail "
                 + "inner join trail.events ae inner join ae.eventType et inner join fetch ae.performer where trail in (:trails) "
-                + "and et.class in (:classes) order by ae.date,ae.id desc ";
+                + "and et.class in (:classes) order by ae.date desc, ae.id desc ";
 
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<AuditTrail> batch = new ArrayList<AuditTrail>();
+        Collection<AuditTrail> batch = new ArrayList<>();
         int batchSize = 100;
 
         for ( AuditTrail at : atMap.keySet() ) {
@@ -247,7 +246,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      */
     @Override
     protected Collection<Auditable> handleGetNewSinceDate( Date date ) {
-        Collection<Auditable> result = new HashSet<Auditable>();
+        Collection<Auditable> result = new HashSet<>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATS_NEW ) {
             String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
@@ -286,7 +285,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      */
     @Override
     protected Collection<Auditable> handleGetUpdatedSinceDate( Date date ) {
-        Collection<Auditable> result = new HashSet<Auditable>();
+        Collection<Auditable> result = new HashSet<>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATS_NEW ) {
             String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
@@ -371,8 +370,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
          * is not mapped, we have to query for each class separately ... just in case the user has passed a
          * heterogeneous collection.
          */
-        final Map<AuditTrail, Auditable> atMap = new HashMap<AuditTrail, Auditable>();
-        Map<String, Collection<Auditable>> classMap = new HashMap<String, Collection<Auditable>>();
+        final Map<AuditTrail, Auditable> atMap = new HashMap<>();
+        Map<String, Collection<Auditable>> classMap = new HashMap<>();
         for ( Auditable a : auditables ) {
             Class<? extends Auditable> clazz = a.getClass();
 
@@ -427,7 +426,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @return A List of class names, including the given type.
      */
     private List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
-        List<String> classes = new ArrayList<String>();
+        List<String> classes = new ArrayList<>();
         classes.add( type.getSimpleName() );
 
         // how to determine subclasses? There is no way to do this but the hibernate way.
@@ -444,7 +443,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given classes)
      */
     private List<String> getClassHierarchy( Collection<Class<? extends AuditEventType>> types ) {
-        List<String> classes = new ArrayList<String>();
+        List<String> classes = new ArrayList<>();
         for ( Class<? extends AuditEventType> t : types ) {
             classes.addAll( getClassHierarchy( t ) );
         }

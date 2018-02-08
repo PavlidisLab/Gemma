@@ -212,10 +212,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         });
     },
     makeDesignTab: function (experimentDetails) {
-        var batchInfo = '';
-        if (experimentDetails.hasBatchInformation && (experimentDetails.batchConfound !== null || experimentDetails.batchEffect !== null)) {
-            batchInfo = '<div class="ed-batch-info">' + getBatchInfoBadges(experimentDetails) + '</div>';
-        }
+        var batchInfo = '<div class="ed-batch-info">' + getBatchInfoBadges(experimentDetails) + '</div>';
 
         return {
             title: 'Experimental Design',

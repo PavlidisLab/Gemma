@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -164,7 +164,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         for ( Object o : qResult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperimentValueObject ee = (( BioAssaySet ) oa[0]).createValueObject();
+            ExpressionExperimentValueObject ee = ( ( BioAssaySet ) oa[0] ).createValueObject();
             DifferentialExpressionValueObject probeResult = new DifferentialExpressionValueObject(
                     ( DifferentialExpressionAnalysisResult ) oa[1] );
 
@@ -222,27 +222,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee,
-            double qValueThreshold, int offset, int limit ) {
-        //noinspection unchecked
-        List<Object[]> rows = this.getSessionFactory().getCurrentSession().createQuery( fetchResultsByExperimentsQuery )
-                .setParameterList( "experimentsAnalyzed", Collections.singleton( ee.getId() ) )
-                .setParameter( "threshold", qValueThreshold ).setFirstResult( offset )
-                .setMaxResults( limit > 0 ? limit : -1 ).list();
-
-        Collection<DifferentialExpressionValueObject> vos = new ArrayList<>( rows.size() );
-
-        for ( Object[] row : rows ) {
-            DifferentialExpressionValueObject vo = new DifferentialExpressionValueObject(
-                    ( DifferentialExpressionAnalysisResult ) row[1] );
-            if ( !vos.contains( vo ) ) {
-                vos.add( vo );
-            }
-        }
-        return vos;
-    }
-
-    @Override
     public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
             Collection<Long> experiments, double qvalueThreshold, Integer limit ) {
 
@@ -272,7 +251,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
             Object[] oa = ( Object[] ) o;
             DifferentialExpressionAnalysisResult probeResult = ( DifferentialExpressionAnalysisResult ) oa[1];
-            ExpressionExperimentValueObject eevo = (( BioAssaySet ) oa[0]).createValueObject();
+            ExpressionExperimentValueObject eevo = ( ( BioAssaySet ) oa[0] ).createValueObject();
             if ( !results.containsKey( eevo ) ) {
                 results.put( eevo, new ArrayList<DifferentialExpressionValueObject>() );
             }
@@ -379,7 +358,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
          */
         for ( Object[] oa : ees ) {
             ExpressionAnalysisResultSet rs = ( ExpressionAnalysisResultSet ) oa[1];
-            ExpressionExperimentValueObject evo = (( BioAssaySet ) oa[0]).createValueObject();
+            ExpressionExperimentValueObject evo = ( ( BioAssaySet ) oa[0] ).createValueObject();
 
             if ( !results.containsKey( evo ) ) {
                 results.put( evo, new ArrayList<DifferentialExpressionValueObject>() );
@@ -447,7 +426,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         for ( Object o : qResult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperimentValueObject ee = (( BioAssaySet ) oa[0]).createValueObject();
+            ExpressionExperimentValueObject ee = ( ( BioAssaySet ) oa[0] ).createValueObject();
             DifferentialExpressionAnalysisResult probeResult = ( DifferentialExpressionAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {

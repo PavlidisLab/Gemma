@@ -17,7 +17,7 @@
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <list name="bioAssays" table="BIO_ASSAY_DIMENSIONS2BIO_ASSAYS"  lazy="false" fetch="select" inverse="false">
+      <list name="bioAssays" table="BIO_ASSAY_DIMENSIONS2BIO_ASSAYS" lazy="false" fetch="select" inverse="false">
          <key foreign-key="BIO_ASSAY_BIO_ASSAY_DIMENSIONS_FKC">
             <column name="BIO_ASSAY_DIMENSIONS_FK" sql-type="BIGINT"/>
          </key>

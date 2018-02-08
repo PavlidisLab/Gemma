@@ -33,21 +33,11 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
         b.doWork( args );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLIContextCLI#getCommandGroup()
-     */
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "fillBatchInfo";
@@ -58,22 +48,12 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
         return "Populate the batch information for experiments (if possible)";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ExpressionExperimentManipulatingCLI#buildOptions()
-     */
     @Override
     protected void buildOptions() {
         super.buildOptions();
         addForceOption();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
 

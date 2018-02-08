@@ -36,7 +36,6 @@ import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -274,7 +273,7 @@ public class ExpressionExperimentController {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
             return new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) )
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
                     .addObject( "message", "No search criteria provided" );
         }
 
@@ -283,16 +282,16 @@ public class ExpressionExperimentController {
         if ( ids.isEmpty() ) {
 
             return new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) )
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
                     .addObject( "message", "Your search yielded no results." );
 
         }
 
         if ( ids.size() == 1 ) {
-            return new ModelAndView( new RedirectView(
-                    "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(), true ) )
-                    .addObject( "message",
-                            "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+            return new ModelAndView(
+                    new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(),
+                            true ) ).addObject( "message",
+                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
         StringBuilder list = new StringBuilder();
@@ -301,7 +300,7 @@ public class ExpressionExperimentController {
         }
 
         return new ModelAndView(
-                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list , true) )
+                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list, true ) )
                 .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
@@ -363,8 +362,8 @@ public class ExpressionExperimentController {
         if ( efs.size() < 1 )
             return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
-        String efUri = "&nbsp;<a target='_blank' href='" + Settings.getRootContext() + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee
-                .getId() + "'>(details)</a >";
+        String efUri = "&nbsp;<a target='_blank' href='" + Settings.getRootContext()
+                + "/experimentalDesign/showExperimentalDesign.html?eeid=" + ee.getId() + "'>(details)</a >";
         int MAX_TAGS_TO_SHOW = 15;
         Collection<Characteristic> tags = ee.getCharacteristics();
         if ( tags.size() > 0 ) {
@@ -574,18 +573,20 @@ public class ExpressionExperimentController {
             // Get count for new assays
             int newAssayCount = wn.getNewAssayCount();
 
-            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ?
-                    EntityUtils.getIds( wn.getNewExpressionExperiments() ) :
+            Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
+            Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ?
+                    EntityUtils.getIds( newExpressionExperiments ) :
                     new ArrayList<Long>();
-            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ?
-                    EntityUtils.getIds( wn.getUpdatedExpressionExperiments() ) :
+            Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
+            Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ?
+                    EntityUtils.getIds( updatedExpressionExperiments ) :
                     new ArrayList<Long>();
 
-            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ?
-                    wn.getNewExpressionExperiments().size() :
+            int newExpressionExperimentCount = ( newExpressionExperiments != null ) ?
+                    newExpressionExperiments.size() :
                     0;
-            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null ) ?
-                    wn.getUpdatedExpressionExperiments().size() :
+            int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ?
+                    updatedExpressionExperiments.size() :
                     0;
 
             /* Store counts for new and updated experiments by taxonId */
@@ -611,8 +612,10 @@ public class ExpressionExperimentController {
             summary.element( "sortedCountsPerTaxon", taxonEntries );
 
             // Get count for new and updated array designs
-            int newArrayCount = ( wn.getNewArrayDesigns() != null ) ? wn.getNewArrayDesigns().size() : 0;
-            int updatedArrayCount = ( wn.getUpdatedArrayDesigns() != null ) ? wn.getUpdatedArrayDesigns().size() : 0;
+            Collection<ArrayDesign> newArrayDesigns = wn.getNewArrayDesigns();
+            int newArrayCount = ( newArrayDesigns != null ) ? newArrayDesigns.size() : 0;
+            Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
+            int updatedArrayCount = ( updatedArrayDesigns != null ) ? updatedArrayDesigns.size() : 0;
 
             boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 );
             boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 );
@@ -658,8 +661,8 @@ public class ExpressionExperimentController {
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
         ExpressionExperiment ee = this.getEESafely( id );
-        Collection<ExpressionExperimentDetailsValueObject> initialResults =
-                expressionExperimentService.loadDetailsValueObjects( null, false, Collections.singleton( id ), null, 0,0 );
+        Collection<ExpressionExperimentDetailsValueObject> initialResults = expressionExperimentService
+                .loadDetailsValueObjects( null, false, Collections.singleton( id ), null, 0, 0 );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -676,7 +679,7 @@ public class ExpressionExperimentController {
         finalResult.setQChtml( getQCTagHTML( ee ) );
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
-        finalResult = this.setPrefferedAndReprocessed( finalResult, ee );
+        finalResult = this.setPreferredAndReprocessed( finalResult, ee );
         finalResult = this.setMutipleTechTypes( finalResult, ee );
         finalResult = this.setParentTaxon( finalResult, finalResult.getTaxonId() );
 
@@ -712,27 +715,7 @@ public class ExpressionExperimentController {
      */
     private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
             ExpressionExperiment ee ) {
-        boolean hasBatchInformation = false;
-
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                hasBatchInformation = true;
-                break;
-            }
-        }
-        if ( !hasBatchInformation ) {
-            boolean allBAsHaveDate = true;
-            ee = expressionExperimentService.thawBioAssays( ee );
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( ba.getProcessingDate() == null ) {
-                    allBAsHaveDate = false;
-                    break;
-                }
-            }
-            if ( allBAsHaveDate ) {
-                hasBatchInformation = true;
-            }
-        }
+        boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
 
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
@@ -828,7 +811,7 @@ public class ExpressionExperimentController {
      * @param finalResult result
      * @return ee details vo
      */
-    private ExpressionExperimentDetailsValueObject setPrefferedAndReprocessed(
+    private ExpressionExperimentDetailsValueObject setPreferredAndReprocessed(
             ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
 
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
@@ -1329,7 +1312,7 @@ public class ExpressionExperimentController {
         updateCorrelationMatrixFile( id );
         updateMV( id );
         return new ModelAndView(
-                new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + id , true) );
+                new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + id, true ) );
     }
 
     /**
@@ -1722,7 +1705,7 @@ public class ExpressionExperimentController {
             expressionExperimentService.remove( ee );
 
             return new TaskResult( taskCommand, new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) )
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) )
                     .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,18 +18,16 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
@@ -60,26 +58,21 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> findByAccession( String accession );
 
-
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     BioAssay findOrCreate( BioAssay bioAssay );
-
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     BioAssay load( Long id );
 
-
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> loadAll();
 
-
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> load( Collection<Long> ids );
-
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -93,7 +86,6 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     void thaw( BioAssay bioAssay );
 
@@ -101,7 +93,7 @@ public interface BioAssayService extends BaseVoEnabledService<BioAssay, BioAssay
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
     @Override
-    //@Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioAssay bioAssay );
 
     Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );

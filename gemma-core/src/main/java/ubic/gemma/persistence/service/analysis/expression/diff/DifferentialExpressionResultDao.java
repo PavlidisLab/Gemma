@@ -45,9 +45,6 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
 
-    Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee, double qValueThreshold,
-            int offset, int limit );
-
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
      * experiments

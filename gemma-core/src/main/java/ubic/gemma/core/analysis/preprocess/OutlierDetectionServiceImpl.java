@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -26,12 +26,12 @@ import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
 
@@ -267,8 +267,9 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         Arrays.sort( sortedCors );
 
         // Get the correlations from the sorted array. Use -1 b/c rank indices start at 1 but array entries start at 0
-        lowerQuantileValue = sortedCors[( int ) ( Math.floor( desiredQuantileIndex ) - 1 )];
-        upperQuantileValue = sortedCors[( int ) Math.floor( desiredQuantileIndex )];
+        int up = ( int ) ( Math.floor( desiredQuantileIndex ) );
+        lowerQuantileValue = sortedCors[up - 1];
+        upperQuantileValue = sortedCors[up < sortedCors.length ? up : up - 1];
 
         return ( lowerQuantileValue + ( ( desiredQuantileIndex - Math.floor( desiredQuantileIndex ) ) * (
                 upperQuantileValue - lowerQuantileValue ) ) );
@@ -286,7 +287,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return cors;
     }
 
-    private DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression ) {
+    @Override
+    public DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression ) {
         /*
          * Get the experimental design
          */
@@ -395,8 +397,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     /**
      * Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range
+     * This is exposed for efficiency in geeq score calculation, use this#identifyOutliers(ExpressionExperiment, boolean, boolean)
+     * to have the correlation matrix computed correctly for you.
      */
-    private Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
+    @Override
+    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
             DoubleMatrix<BioAssay, BioAssay> cormat ) {
 
         List<OutlierDetails> allSamples = new ArrayList<>();

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -213,6 +213,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     @Override
     public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds ) {
+        return this.getAnalysesByExperimentIds( expressionExperimentIds, 0, -1 );
+    }
+
+    @Override
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
+            Collection<Long> expressionExperimentIds, int offset, int limit ) {
 
         /*
          * There are three cases to consider: the ids are experiments; the ids are experimentsubsets; the ids are
@@ -226,18 +232,24 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         /*
          * Fetch analyses of experiments or subsets.
          */
+        //noinspection unchecked
         Collection<DifferentialExpressionAnalysis> hits = this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct a from DifferentialExpressionAnalysis a join fetch a.experimentAnalyzed e join"
                         + " fetch a.resultSets rs join fetch rs.hitListSizes where e.id in (:eeids)" )
-                .setParameterList( "eeids", expressionExperimentIds ).list();
+                .setParameterList( "eeids", expressionExperimentIds )
+                .setFirstResult( offset )
+                .setMaxResults( limit > 0 ? limit : -1 )
+                .list();
 
         Map<Long, Collection<FactorValue>> ee2fv = new HashMap<>();
         List<Object[]> fvs;
 
         if ( !hits.isEmpty() ) {
             // factor values for the experiments.
-            fvs = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, fv from " + "ExpressionExperiment"
-                    + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+            //noinspection unchecked
+            fvs = this.getSessionFactory().getCurrentSession().createQuery(
+                    "select distinct ee.id, fv from " + "ExpressionExperiment"
+                            + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", expressionExperimentIds ).list();
             for ( Object[] oa : fvs ) {
                 if ( !ee2fv.containsKey( oa[0] ) ) {
@@ -253,8 +265,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             }
             Collection<Long> probableSubSetIds = ListUtils.removeAll( used, ee2fv.keySet() );
             if ( !probableSubSetIds.isEmpty() ) {
-                fvs = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                        + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                //noinspection unchecked
+                fvs = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
+                                + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                         .setParameterList( "ees", probableSubSetIds ).list();
 
                 for ( Object[] oa : fvs ) {
@@ -270,9 +284,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         /*
          * Subsets of those same experiments (there might not be any)
          */
-        List<DifferentialExpressionAnalysis> analysesofSubsets = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from " + "ExpressionExperimentSubSet" + " ee, DifferentialExpressionAnalysis a"
-                        + " join ee.sourceExperiment see "
+        //noinspection unchecked
+        List<DifferentialExpressionAnalysis> analysesofSubsets = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct a from " + "ExpressionExperimentSubSet"
+                        + " ee, DifferentialExpressionAnalysis a" + " join ee.sourceExperiment see "
                         + " join fetch a.experimentAnalyzed eeanalyzed where see.id in (:eeids) and ee=eeanalyzed" )
                 .setParameterList( "eeids", expressionExperimentIds ).list();
 
@@ -287,8 +302,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
             // factor value information for the subset. The key output is the ID of the subset, not of the source
             // experiment.
-            fvs = this.getSessionFactory().getCurrentSession().createQuery( "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                    + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+            //noinspection unchecked
+            fvs = this.getSessionFactory().getCurrentSession().createQuery(
+                    "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
+                            + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", experimentSubsetIds ).list();
             for ( Object[] oa : fvs ) {
                 if ( !ee2fv.containsKey( oa[0] ) ) {
@@ -483,7 +500,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSessionFactory().getCurrentSession() );
+        Collection<CompositeSequence> probes = CommonQueries
+                .getCompositeSequences( gene, this.getSessionFactory().getCurrentSession() );
         Collection<BioAssaySet> result = new HashSet<BioAssaySet>();
         if ( probes.size() == 0 ) {
             return result;
@@ -700,7 +718,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      */
     private void populateWhichFactorValuesUsed( DifferentialExpressionAnalysisValueObject avo,
             Collection<FactorValue> fvs ) {
-        if( fvs == null || fvs.isEmpty()){
+        if ( fvs == null || fvs.isEmpty() ) {
             return;
         }
         ExperimentalFactorValueObject subsetFactor = avo.getSubsetFactor();

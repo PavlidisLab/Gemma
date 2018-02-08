@@ -59,12 +59,14 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var batchInfo = this.batchPanelRenderer(this.experimentDetails, manager);
         this.add(batchInfo);
 
+        var batchInfoMissingPanel = this.batchInfoMissingRenderer(this.experimentDetails, manager);
         var batchConfoundPanel = this.batchConfoundRenderer(this.experimentDetails, manager);
         var batchEffectPanel = this.batchEffectRenderer(this.experimentDetails, manager);
-        if(batchConfoundPanel !== null || batchEffectPanel !== null){
-            this.add({html: "<br/><h4>Batch problems:</h4>"});
-            if(batchConfoundPanel !== null) this.add(batchConfoundPanel);
-            if(batchEffectPanel !== null) this.add(batchEffectPanel);
+        if (batchConfoundPanel !== null || batchEffectPanel !== null || batchInfoMissingPanel !== null) {
+            this.add({html: "<br/><h4>Batch info quality:</h4>"});
+            if (batchInfoMissingPanel !== null) this.add(batchInfoMissingPanel);
+            if (batchConfoundPanel !== null) this.add(batchConfoundPanel);
+            if (batchEffectPanel !== null) this.add(batchEffectPanel);
         }
 
         this.add({html: "<br/><h4>Analyses:</h4>"});
@@ -76,90 +78,113 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
     },
 
-    batchEffectRenderer: function(ee, mgr){
-        if (ee.batchEffect !== null && ee.batchEffect !== "") {
+    batchInfoMissingRenderer: function (ee, mgr) {
 
-            var panelBC = new Ext.Panel({
-                layout: 'hbox',
-                defaults: {
-                    border: false,
-                    padding: 2
-                },
-                items: []
-            });
+        var panelBC = new Ext.Panel({
+            layout: 'hbox',
+            defaults: {
+                border: false,
+                padding: 2
+            },
+            items: []
+        });
 
-            var be = {
+        var be = (ee.hasBatchInformation === false)
+            ? {
                 html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
-                + ee.batchEffect
+                + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.noBatchInfo
+            }
+            : {
+                html: '<i class="green fa fa-check-square-o fa-lg" ></i>&nbsp;Experiment does have batch information'
             };
 
-            panelBC.add(be);
+        panelBC.add(be);
 
-            var recalculateBCBtn = new Ext.Button({
-                tooltip: 'Recalculate batch effect',
-                handler: function(b, e) {
-                    ExpressionExperimentController.recalculateBatchEffect(ee.id, {
-                        callback: function () {
-                            window.location.reload();
-                        }
-                    });
-                    b.setIconClass("btn-loading");
-                },
-                scope: this,
-                cls: 'transparent-btn'
-            });
-
-            recalculateBCBtn.setIconClass('btn-not-loading');
-
-            panelBC.add(recalculateBCBtn);
-            return panelBC;
-
-        } else {
-            return null;
-        }
+        return panelBC;
     },
 
-    batchConfoundRenderer: function(ee, mgr){
-        if (ee.batchConfound !== null && ee.batchConfound !== "") {
+    batchEffectRenderer: function (ee, mgr) {
 
-            var panelBC = new Ext.Panel({
-                layout: 'hbox',
-                defaults: {
-                    border: false,
-                    padding: 2
-                },
-                items: []
-            });
+        var panelBC = new Ext.Panel({
+            layout: 'hbox',
+            defaults: {
+                border: false,
+                padding: 2
+            },
+            items: []
+        });
 
-            var be = {
+        var be = (ee.batchEffect !== null && ee.batchEffect !== "")
+            ? {
                 html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
-                + ee.batchConfound + " (batch confound)"
+                + ee.batchEffect
+            }
+            : {
+                html: '<i class="' + ((ee.hasBatchInformation === false) ? 'dark-gray' : 'green') + ' fa fa-check-square-o fa-lg" ></i>&nbsp;Batch effect not detected'
             };
 
-            panelBC.add(be);
+        panelBC.add(be);
 
-            var recalculateBCBtn = new Ext.Button({
-                tooltip: 'Recalculate batch confound',
-                handler: function(b, e) {
-                    ExpressionExperimentController.recalculateBatchConfound(ee.id, {
-                        callback: function () {
-                            window.location.reload();
-                        }
-                    });
-                    b.setIconClass("btn-loading");
-                    },
-                scope: this,
-                cls: 'transparent-btn'
-            });
+        var recalculateBCBtn = new Ext.Button({
+            tooltip: 'Recalculate batch effect',
+            handler: function (b, e) {
+                ExpressionExperimentController.recalculateBatchEffect(ee.id, {
+                    callback: function () {
+                        window.location.reload();
+                    }
+                });
+                b.setIconClass("btn-loading");
+            },
+            scope: this,
+            cls: 'transparent-btn'
+        });
 
-            recalculateBCBtn.setIconClass('btn-not-loading');
+        recalculateBCBtn.setIconClass('btn-not-loading');
 
-            panelBC.add(recalculateBCBtn);
-            return panelBC;
+        panelBC.add(recalculateBCBtn);
+        return panelBC;
+    },
 
-        } else {
-            return null;
-        }
+    batchConfoundRenderer: function (ee, mgr) {
+
+        var panelBC = new Ext.Panel({
+            layout: 'hbox',
+            defaults: {
+                border: false,
+                padding: 2
+            },
+            items: []
+        });
+
+        var be = (ee.batchConfound !== null && ee.batchConfound !== "")
+            ? {
+                html: '<i class="dark-yellow fa fa-exclamation-triangle fa-lg" ></i>&nbsp;'
+                + ee.batchConfound + " (batch confound)"
+            }
+            : {
+                html: '<i class="' + ((ee.hasBatchInformation === false) ? 'dark-gray' : 'green') + ' fa fa-check-square-o fa-lg" ></i>&nbsp;Batch confound not detected'
+            };
+
+        panelBC.add(be);
+
+        var recalculateBCBtn = new Ext.Button({
+            tooltip: 'Recalculate batch confound',
+            handler: function (b, e) {
+                ExpressionExperimentController.recalculateBatchConfound(ee.id, {
+                    callback: function () {
+                        window.location.reload();
+                    }
+                });
+                b.setIconClass("btn-loading");
+            },
+            scope: this,
+            cls: 'transparent-btn'
+        });
+
+        recalculateBCBtn.setIconClass('btn-not-loading');
+
+        panelBC.add(recalculateBCBtn);
+        return panelBC;
     },
 
     linkAnalysisPanelRenderer: function (ee, manager) {

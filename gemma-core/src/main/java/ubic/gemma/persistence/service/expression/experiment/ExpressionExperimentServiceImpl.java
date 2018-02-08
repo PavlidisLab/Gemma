@@ -474,6 +474,11 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public String getBatchConfound( ExpressionExperiment ee ) {
         ee = thawBioAssays( ee );
+
+        if ( !this.checkHasBatchInfo( ee ) ) {
+            return null;
+        }
+
         Collection<BatchConfoundValueObject> confounds;
         try {
             confounds = BatchConfound.test( ee );
@@ -501,14 +506,17 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
         ee = this.thawLiter( ee );
+
+        if ( !this.checkHasBatchInfo( ee ) ) {
+            return null;
+        }
+
         BatchEffectDetails details = new BatchEffectDetails();
 
         details.setDataWasBatchCorrected( false );
-        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
-                details.setDataWasBatchCorrected( true );
-                details.setHasBatchInformation( true );
-            }
+        if ( getHasBeenBatchCorrected( ee ) ) {
+            details.setDataWasBatchCorrected( true );
+            details.setHasBatchInformation( true );
         }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -537,6 +545,15 @@ public class ExpressionExperimentServiceImpl
         return details;
     }
 
+    private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
+        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
+            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
@@ -553,6 +570,32 @@ public class ExpressionExperimentServiceImpl
             }
         }
         return Strings.emptyToNull( result );
+    }
+
+    @Override
+    public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
+        boolean hasBatchInformation = false;
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+        if ( !hasBatchInformation ) {
+            boolean allBAsHaveDate = true;
+            ee = this.thawBioAssays( ee );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( ba.getProcessingDate() == null ) {
+                    allBAsHaveDate = false;
+                    break;
+                }
+            }
+            if ( allBAsHaveDate ) {
+                hasBatchInformation = true;
+            }
+        }
+        return hasBatchInformation;
     }
 
     @Override
@@ -853,6 +896,7 @@ public class ExpressionExperimentServiceImpl
 
         /*
          * FIXME: delete probe coexpression analysis; gene coexpression will linger.
+         * this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
          */
 
         /*

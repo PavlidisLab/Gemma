@@ -93,7 +93,7 @@ public class DatasetsRestTest extends BaseSpringWebTest {
         //noinspection unchecked
         ResponseDataObject response = service.datasetDiffAnalysis( // Params:
                 DatasetArg.valueOf( String.valueOf( ees.get( 1 ).getId() ) ), // Required
-                DoubleArg.valueOf( "1" ), IntArg.valueOf( "0" ), IntArg.valueOf( "1" ), new MockHttpServletResponse() );
+                IntArg.valueOf( "0" ), IntArg.valueOf( "1" ), new MockHttpServletResponse() );
 
         assertNotNull( response.getData() );
         assertTrue( response.getData() instanceof Collection<?> );

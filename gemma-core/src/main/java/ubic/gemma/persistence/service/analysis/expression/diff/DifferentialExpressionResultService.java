@@ -39,9 +39,6 @@ import java.util.Map;
  */
 public interface DifferentialExpressionResultService extends BaseService<DifferentialExpressionAnalysisResult> {
 
-    Collection<DifferentialExpressionValueObject> getVOsForExperiment( ExpressionExperiment ee, double qValueThreshold,
-            int offset, int limit );
-
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
      * experiments
