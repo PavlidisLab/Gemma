@@ -153,52 +153,12 @@ public class DatasetsWebService extends
     @Path("/{datasetArg: [a-zA-Z0-9\\.-]+}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    //    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
     public ResponseDataObject datasetPlatforms( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode( datasetArg.getPlatforms( expressionExperimentService, arrayDesignService ), sr );
-    }
-
-    @GET
-    @Path("/geeq")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @PreAuthorize( "hasRole('GROUP_ADMIN')" )
-    public ResponseDataObject datasetGeeq( // Params:
-            @QueryParam("start") IntArg startArg, // Required
-            @QueryParam("stop") IntArg stopArg, // Required
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-    ) {
-        HashMap<Long, Exception> problems = new HashMap<>();
-        long max = 11000L;
-        long start = startArg.getValue();
-        long stop = stopArg.getValue();
-        String msg = "Success, no problems";
-        int ran = 0;
-
-        for ( long i = start; i < stop; i++ ) {
-            if ( i > max ) {
-                msg = "Success, max ID reached before getting to stop arg: " + max;
-                break;
-            }
-            try {
-                ExpressionExperiment ee = expressionExperimentService.load( i );
-                if ( ee != null ) {
-                    geeqService.calculateScore( i );
-                    ran++;
-                }
-            } catch ( Exception e ) {
-                System.out.println( i + " failed: " + e.getMessage() );
-                problems.put( i, e );
-            }
-        }
-
-        for ( Long id : problems.keySet() ) {
-            System.out.println( id + " GEEQ FAILED: " + problems.get( id ).getMessage() );
-        }
-
-        return Responder.autoCode( problems.size() > 0 ? problems : msg + " Ran ees: " + ran, sr );
     }
 
     /**
