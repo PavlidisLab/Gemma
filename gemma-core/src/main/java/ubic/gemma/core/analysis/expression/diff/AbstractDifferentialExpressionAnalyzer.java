@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006-2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,6 +123,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     /**
      * Debugging tool. For example, if qvalue failed, save the pvalues to a temporary file for inspection.
      *
+     * @param pvaluesToUse p values to use
      * @return path to file where the pvalues were saved (a temporary file)
      */
     protected String savePvaluesForDebugging( double[] pvaluesToUse ) {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,8 +46,9 @@ public class DifferentialExpressionAnalysisUtil {
      * false otherwise. When determining completeness, a biomaterial's factor values are only considered if they are
      * equivalent to one of the input experimental factors.
      *
-     * @param factors to consider completeness for.
-     * @return boolean
+     * @param factors              to consider completeness for.
+     * @param expressionExperiment the experiment
+     * @return true if block complete
      */
     public static boolean blockComplete( BioAssaySet expressionExperiment, Collection<ExperimentalFactor> factors ) {
 
@@ -68,6 +69,10 @@ public class DifferentialExpressionAnalysisUtil {
 
     /**
      * See if there are at least two samples for each factor value combination.
+     *
+     * @param expressionExperiment the experiment
+     * @param factors              factors
+     * @return true if there are replicates
      */
     protected static boolean checkBiologicalReplicates( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
@@ -105,8 +110,12 @@ public class DifferentialExpressionAnalysisUtil {
     }
 
     /**
-     * Check that <em>at least one</em> of the given factors is valid: the factorvalues are measurements, or that there
+     * Check that <em>at least one</em> of the given factors is valid: the factor values are measurements, or that there
      * are at least two assays for at least one factor value.
+     *
+     * @param experimentalFactors  exp. factors
+     * @param expressionExperiment the experiment
+     * @return true if valid
      */
     public static boolean checkValidForLm( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
@@ -122,6 +131,8 @@ public class DifferentialExpressionAnalysisUtil {
      * Check that the factorValues are measurements, or that there are at least two assays for at least one factor
      * value. Otherwise the model fit will be perfect and pvalues will not be returned.
      *
+     * @param experimentalFactor   exp. factor
+     * @param expressionExperiment the experiment
      * @return true if it's okay, false otherwise.
      */
     public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
@@ -170,6 +181,9 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Returns a List of all the different types of biomaterials across all bioassays in the experiment. If there is
      * more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
+     *
+     * @param matrix matrix
+     * @return list of biomaterials
      */
     public static List<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix<?> matrix ) {
 
@@ -201,6 +215,8 @@ public class DifferentialExpressionAnalysisUtil {
      * experimental factor.
      * FIXME use the ExperimentalFactor as the input, not the FactorValues.
      *
+     * @param factorValues factor values
+     * @param samplesUsed  samples used
      * @return list of strings representing the factor, in the same order as the supplied samplesUsed.
      */
     public static List<String> getRFactorsFromFactorValuesForOneWayAnova( Collection<FactorValue> factorValues,
@@ -253,7 +269,8 @@ public class DifferentialExpressionAnalysisUtil {
      * Returns the factors that can be used by R for a two way anova. Each sample must have a factor value equal to one
      * of the supplied factor values. This assumes that "equals" works correctly on the factor values.
      *
-     * @param samplesUsed the samples we want to assign to the various factors
+     * @param samplesUsed        the samples we want to assign to the various factors
+     * @param experimentalFactor exp. factor
      * @return R factor representation, in the same order as the given samplesUsed.
      */
     public static List<String> getRFactorsFromFactorValuesForTwoWayAnova( ExperimentalFactor experimentalFactor,
@@ -288,6 +305,8 @@ public class DifferentialExpressionAnalysisUtil {
      * factors, and all factor values from 1 factor have been paired with all factor values from the other factors,
      * across all biomaterials.
      *
+     * @param biomaterials        biomaterials
+     * @param experimentalFactors exp. factors
      * @return false if not a complete block design.
      */
     protected static boolean checkBlockDesign( Collection<BioMaterial> biomaterials,
@@ -342,6 +361,7 @@ public class DifferentialExpressionAnalysisUtil {
     /**
      * Generates all possible factor value pairings for the given experimental factors.
      *
+     * @param experimentalFactors exp. factors
      * @return A collection of hashSets, where each hashSet is a pairing.
      */
     protected static Collection<Set<FactorValue>> generateFactorValuePairings(

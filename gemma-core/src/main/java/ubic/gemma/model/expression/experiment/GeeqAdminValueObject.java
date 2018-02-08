@@ -20,7 +20,8 @@
 package ubic.gemma.model.expression.experiment;
 
 /**
- * Represents administrative geeq information
+ * Represents administrative geeq information. On top of the classic VO, this one also exposes
+ * the underlying variables behind the public scores for suitability, quality, batch effect and batch confound.
  *
  * @author paul, tesarst
  */

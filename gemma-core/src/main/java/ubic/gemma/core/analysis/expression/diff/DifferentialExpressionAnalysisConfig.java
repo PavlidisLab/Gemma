@@ -135,9 +135,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         this.baseLineFactorValues = baseLineFactorValues;
     }
 
-    /**
-     * @param factorsToInclude
-     */
+
     public void setFactorsToInclude( Collection<ExperimentalFactor> factorsToInclude ) {
         if ( factorsToInclude instanceof List<?> ) {
             this.factorsToInclude = ( List<ExperimentalFactor> ) factorsToInclude;
@@ -159,16 +157,12 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         this.interactionsToInclude = interactionsToInclude;
     }
 
-    /**
-     * @param ebayes
-     */
+
     public void setModerateStatistics( boolean ebayes ) {
         this.ebayes = ebayes;
     }
 
-    /**
-     * @param persist
-     */
+
     public void setPersist( boolean persist ) {
         this.persist = persist;
 
@@ -181,9 +175,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         this.subsetFactor = subsetFactor;
     }
 
-    /**
-     * @param subsetFactorValue
-     */
+
     public void setSubsetFactorValue( FactorValue subsetFactorValue ) {
         this.subsetFactorValue = subsetFactorValue;
     }
@@ -207,11 +199,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         return analysis;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
 

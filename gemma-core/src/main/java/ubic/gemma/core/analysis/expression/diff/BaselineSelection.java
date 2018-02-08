@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2015 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -143,6 +143,9 @@ public class BaselineSelection {
 
     /**
      * Check if this factor value is the baseline, overriding other possible baselines.
+     *
+     * @param fv factor value
+     * @return true if given fv is forced baseline
      */
     public static boolean isForcedBaseline( FactorValue fv ) {
         if ( fv.getMeasurement() != null || fv.getCharacteristics().isEmpty() ) {
