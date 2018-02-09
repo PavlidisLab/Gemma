@@ -128,8 +128,8 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         return detectedQualityScore;
     }
 
-    public double getDetectedSuitabilityScore() {
-        return detectedSuitabilityScore;
+    public void setDetectedQualityScore( double detectedQualityScore ) {
+        this.detectedQualityScore = detectedQualityScore;
     }
 
     public double getManualQualityScore() {
@@ -140,12 +140,20 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualQualityScore = manualQualityScore;
     }
 
-    public boolean getManualQualityOverride() {
+    public boolean isManualQualityOverride() {
         return manualQualityOverride;
     }
 
     public void setManualQualityOverride( boolean manualQualityOverride ) {
         this.manualQualityOverride = manualQualityOverride;
+    }
+
+    public double getDetectedSuitabilityScore() {
+        return detectedSuitabilityScore;
+    }
+
+    public void setDetectedSuitabilityScore( double detectedSuitabilityScore ) {
+        this.detectedSuitabilityScore = detectedSuitabilityScore;
     }
 
     public double getManualSuitabilityScore() {
@@ -156,7 +164,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualSuitabilityScore = manualSuitabilityScore;
     }
 
-    public boolean getManualSuitabilityOverride() {
+    public boolean isManualSuitabilityOverride() {
         return manualSuitabilityOverride;
     }
 
@@ -172,7 +180,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.qScoreBatchEffect = qScoreBatchEffect;
     }
 
-    public boolean getManualHasStrongBatchEffect() {
+    public boolean isManualHasStrongBatchEffect() {
         return manualHasStrongBatchEffect;
     }
 
@@ -180,7 +188,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasStrongBatchEffect = manualHasStrongBatchEffect;
     }
 
-    public boolean getManualHasNoBatchEffect() {
+    public boolean isManualHasNoBatchEffect() {
         return manualHasNoBatchEffect;
     }
 
@@ -188,7 +196,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasNoBatchEffect = manualHasNoBatchEffect;
     }
 
-    public boolean getManualBatchEffectActive() {
+    public boolean isManualBatchEffectActive() {
         return manualBatchEffectActive;
     }
 
@@ -204,7 +212,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.qScoreBatchConfound = qScoreBatchConfound;
     }
 
-    public boolean getManualHasBatchConfound() {
+    public boolean isManualHasBatchConfound() {
         return manualHasBatchConfound;
     }
 
@@ -212,7 +220,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasBatchConfound = manualHasBatchConfound;
     }
 
-    public boolean getManualBatchConfoundActive() {
+    public boolean isManualBatchConfoundActive() {
         return manualBatchConfoundActive;
     }
 

@@ -115,20 +115,20 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
         // Update manual quality score
         gq.setManualQualityScore( gqVo.getManualQualityScore() );
-        gq.setManualQualityOverride( gqVo.getManualQualityOverride() );
+        gq.setManualQualityOverride( gqVo.isManualQualityOverride() );
 
         // Update manual suitability score
         gq.setManualSuitabilityScore( gqVo.getManualSuitabilityScore() );
-        gq.setManualSuitabilityOverride( gqVo.getManualSuitabilityOverride() );
+        gq.setManualSuitabilityOverride( gqVo.isManualSuitabilityOverride() );
 
         // Set manual batch confound
-        gq.setManualHasBatchConfound( gqVo.getManualHasBatchConfound() );
-        gq.setManualBatchConfoundActive( gqVo.getManualBatchConfoundActive() );
+        gq.setManualHasBatchConfound( gqVo.isManualHasBatchConfound() );
+        gq.setManualBatchConfoundActive( gqVo.isManualBatchConfoundActive() );
 
         // Set manual batch effect
-        gq.setManualHasStrongBatchEffect( gqVo.getManualHasStrongBatchEffect() );
-        gq.setManualHasNoBatchEffect( gqVo.getManualHasNoBatchEffect() );
-        gq.setManualBatchEffectActive( gqVo.getManualBatchEffectActive() );
+        gq.setManualHasStrongBatchEffect( gqVo.isManualHasStrongBatchEffect() );
+        gq.setManualHasNoBatchEffect( gqVo.isManualHasNoBatchEffect() );
+        gq.setManualBatchEffectActive( gqVo.isManualBatchEffectActive() );
 
         this.update( gq );
         return ee;
