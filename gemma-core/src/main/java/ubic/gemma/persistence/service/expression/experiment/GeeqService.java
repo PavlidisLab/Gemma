@@ -43,11 +43,20 @@ public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject>
 
     /**
      * Calculates the GEEQ scores for the experiment with the given id.
+     * Runs all scoring.
      *
      * @param eeId the id of the experiment to calculate the scores for.
      * @return the updated experiment.
      */
     ExpressionExperiment calculateScore( Long eeId );
+
+    /**
+     * Calculates the GEEQ score in the given mode for the experiment with the given id.
+     * @param eeId the id of the experiment to calculate the scores for.
+     * @param mode either run all scores, or only re-score batch effect, batch confound or replicates.
+     * @return the updated experiment.
+     */
+    ExpressionExperiment calculateScore( Long eeId, GeeqServiceImpl.ScoringMode mode );
 
     /**
      * Reads manual override info from the given GEEQ Value Object and stores them with the experiment

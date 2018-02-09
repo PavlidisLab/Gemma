@@ -93,6 +93,8 @@ public class Geeq implements Identifiable, Serializable {
     private boolean manualHasBatchConfound;
     private boolean manualBatchConfoundActive;
 
+    private String otherIssues;
+
     public static long getSerialVersionUID() {
         return serialVersionUID;
     }
@@ -562,5 +564,17 @@ public class Geeq implements Identifiable, Serializable {
 
     public void setBatchCorrected( boolean batchCorrected ) {
         this.batchCorrected = batchCorrected;
+    }
+
+    public String getOtherIssues() {
+        return otherIssues;
+    }
+
+    public void setOtherIssues( String otherIssues ) {
+        this.otherIssues = otherIssues;
+    }
+
+    public void addOtherIssues (String otherIssues){
+        this.otherIssues += otherIssues+"\n";
     }
 }

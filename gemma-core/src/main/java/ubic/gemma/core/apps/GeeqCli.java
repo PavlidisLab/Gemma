@@ -7,13 +7,19 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
 public class GeeqCli extends AbstractCLIContextCLI {
 
+    private static final String OPT_MODE_ALL = "all";
+    private static final String OPT_MODE_B_EFFECT = "beff";
+    private static final String OPT_MODE_B_CONFOUND = "bcnf";
+    private static final String OPT_MODE_REPS = "reps";
     private ExpressionExperimentService eeService;
     private GeeqService geeqService;
     private String startArg;
     private String stopArg;
+    private GeeqServiceImpl.ScoringMode mode = GeeqServiceImpl.ScoringMode.all;
 
     public static void main( String[] args ) {
         GeeqCli p = new GeeqCli();
@@ -47,6 +53,15 @@ public class GeeqCli extends AbstractCLIContextCLI {
                 .withDescription( "The ID of the last experiment to generate GEEQ for, i.e the end of the ID range." )
                 .isRequired().create( "stop" );
         addOption( stopOption );
+
+        Option modeOption = OptionBuilder.hasArg()
+                .withDescription( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
+                        + "\n Possible values are:" //
+                        + "\n " + OPT_MODE_ALL + " - runs all scoring" //
+                        + "\n " + OPT_MODE_B_EFFECT + "- recalcualtes batch effect score" //
+                        + "\n " + OPT_MODE_B_CONFOUND + " - recalculates batch confound score" //
+                        + "\n " + OPT_MODE_REPS + " - recalculates replicates score" ).isRequired().create( 'm' );
+        addOption( modeOption );
     }
 
     @Override
@@ -62,6 +77,24 @@ public class GeeqCli extends AbstractCLIContextCLI {
         if ( this.hasOption( "stop" ) ) {
             this.stopArg = this.getOptionValue( "stop" );
         }
+        if ( this.hasOption( 'm' ) ) {
+            String m = this.getOptionValue( 'm' );
+            switch ( m ) {
+                default:
+                case OPT_MODE_ALL:
+                    this.mode = GeeqServiceImpl.ScoringMode.all;
+                    break;
+                case OPT_MODE_B_EFFECT:
+                    this.mode = GeeqServiceImpl.ScoringMode.batchEffect;
+                    break;
+                case OPT_MODE_B_CONFOUND:
+                    this.mode = GeeqServiceImpl.ScoringMode.batchConfound;
+                    break;
+                case OPT_MODE_REPS:
+                    this.mode = GeeqServiceImpl.ScoringMode.replicates;
+                    break;
+            }
+        }
     }
 
     @Override
@@ -72,11 +105,12 @@ public class GeeqCli extends AbstractCLIContextCLI {
 
         Exception lastE = null;
         // Loads the EE with largest ID.
-        long max = eeService.loadValueObjectsPreFilter( 0,1, "id", false, null ).iterator().next().getId();
+        long max = eeService.loadValueObjectsPreFilter( 0, 1, "id", false, null ).iterator().next().getId();
         long start = Long.parseLong( startArg );
-        long stop = Long.parseLong( stopArg )+1;
+        long stop = Long.parseLong( stopArg ) + 1;
         String msg = "Success, no problems";
         int ran = 0;
+        int errorred = 0;
 
         for ( long i = start; i < stop; i++ ) {
             if ( i > max ) {
@@ -86,17 +120,19 @@ public class GeeqCli extends AbstractCLIContextCLI {
             try {
                 ExpressionExperiment ee = eeService.load( i );
                 if ( ee != null ) {
-                    geeqService.calculateScore( i );
+                    geeqService.calculateScore( i, mode );
                     ran++;
                 }
             } catch ( Exception e ) {
                 System.out.println( i + " failed: " + e.getMessage() );
+                errorred++;
                 lastE = e;
             }
         }
 
         if ( lastE != null ) {
-            Log.info( this.getClass(), "Geeq for some EEs failed, only ran " + ran + " EEs." );
+            Log.info( this.getClass(),
+                    "Geeq for some EEs failed, only ran " + ran + " EEs. Error on " + errorred + " EEs." );
             return lastE;
         }
 

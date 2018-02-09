@@ -22,6 +22,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import com.google.common.base.Stopwatch;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.StatUtils;
+import org.hibernate.Hibernate;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +48,10 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> implements GeeqService {
     private static final int MAX_EFS_REPLICATE_CHECK = 2;
-    private static final String LOG_PREFIX = "|G|E|E|Q|";
+    private static final String LOG_PREFIX = "|G|E|E|Q| ";
+    private static final String ERR_MSG_MISSING_VALS = "Can not calculate missing values: ";
+    private static final String ERR_MSG_CORMAT = "Can not create cormat: ";
+    private static final String ERR_MSG_CORMAT_MISSING_VALS = "Cormat retrieval failed because of missing missing values for ee id ";
     private static final String ERR_W_MEAN_BAD_ARGS = "Can not calculate weighted arithmetic mean from null or unequal length arrays.";
     private static final String ERR_B_EFFECT_BAD_STATE =
             "Batch effect scoring in odd state - null batch effect, but batch info should be present."
@@ -54,19 +59,16 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     private static final double P_05 = 0.5;
     private static final double P_10 = 1.0;
+    public static final double BATCH_EFF_NONE = P_10;
+    public static final double BATCH_CONF_NOHAS = P_10;
     private static final double P_00 = 0.0;
+    public static final double BATCH_EFF_WEAK = P_00;
     private static final double N_03 = -0.3;
     private static final double N_05 = -P_05;
     private static final double N_07 = -0.7;
     private static final double N_10 = -P_10;
-
-    public static final double BATCH_EFF_NONE = P_10;
     public static final double BATCH_EFF_STRONG = N_10;
-    public static final double BATCH_EFF_WEAK = P_00;
-
     public static final double BATCH_CONF_HAS = N_10;
-    public static final double BATCH_CONF_NOHAS = P_10;
-
     private static final int PUB_LOW_YEAR = 2006;
     private static final int PUB_MID_YEAR = 2009;
 
@@ -88,17 +90,22 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     @Override
     public ExpressionExperiment resetBatchConfound( Long eeId ) {
-        return doScoring( eeId, scoringMode.batchConfound );
+        return doScoring( eeId, ScoringMode.batchConfound );
     }
 
     @Override
     public ExpressionExperiment resetBatchEffect( Long eeId ) {
-        return doScoring( eeId, scoringMode.batchEffect );
+        return doScoring( eeId, ScoringMode.batchEffect );
     }
 
     @Override
     public ExpressionExperiment calculateScore( Long eeId ) {
-        return doScoring( eeId, scoringMode.all );
+        return doScoring( eeId, ScoringMode.all );
+    }
+
+    @Override
+    public ExpressionExperiment calculateScore( Long eeId, ScoringMode mode ) {
+        return doScoring( eeId, mode );
     }
 
     @Override
@@ -138,7 +145,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
      *             depending on the experiment.
      * @return the updated experiment.
      */
-    private ExpressionExperiment doScoring( Long eeId, scoringMode mode ) {
+    private ExpressionExperiment doScoring( Long eeId, ScoringMode mode ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
         if ( ee == null ) {
@@ -164,6 +171,10 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             case batchConfound:
                 Log.info( this.getClass(), LOG_PREFIX + " Starting batch confound geeq re-scoring for ee id " + eeId );
                 gq = scoreOnlyBatchConfound( ee );
+                break;
+            case replicates:
+                Log.info( this.getClass(), LOG_PREFIX + " Starting replicates geeq re-scoring for ee id " + eeId );
+                gq = scoreOnlyReplicates( ee );
                 break;
         }
         Log.info( this.getClass(), LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId + ", saving results..." );
@@ -202,6 +213,9 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         Geeq gq = ee.getGeeq();
         Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
 
+        // Reset description of scoring problems
+        gq.setOtherIssues( "" );
+
         // Suitability score calculation
         scorePublication( ee, gq );
         scorePlatformAmount( ads, gq );
@@ -213,7 +227,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         scoreMissingValues( ee, gq, hasRawData );
 
         // Quality score calculation
-        DoubleMatrix<BioAssay, BioAssay> cormat = getCormat( ee );
+        DoubleMatrix<BioAssay, BioAssay> cormat = getCormat( ee, gq );
         double[] cormatLTri = getLowerTriCormat( cormat );
 
         scoreOutliers( ee, gq, cormat );
@@ -231,13 +245,22 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     private Geeq scoreOnlyBatchEffect( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
+        Hibernate.initialize( gq );
         scoreBatchEffect( ee, gq, scoreBatchInfo( ee, gq ) );
         return gq;
     }
 
     private Geeq scoreOnlyBatchConfound( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
+        Hibernate.initialize( gq );
         scoreBatchConfound( ee, gq, scoreBatchInfo( ee, gq ) );
+        return gq;
+    }
+
+    private Geeq scoreOnlyReplicates( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thaw( ee );
+        Geeq gq = ee.getGeeq();
+        scoreReplicates( ee, gq );
         return gq;
     }
 
@@ -368,6 +391,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         double score;
         boolean hasProcessedVectors = true;
         boolean hasMissingValues = false;
+        String problems = "";
 
         if ( !hasRawData ) {
             try {
@@ -375,11 +399,15 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                 hasMissingValues = dmatrix.hasMissingValues();
             } catch ( IllegalArgumentException e ) {
                 hasProcessedVectors = false;
+            } catch ( Exception e ) {
+                hasProcessedVectors = false;
+                problems = ERR_MSG_MISSING_VALS + e.getMessage();
             }
         }
 
         score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? P_10 : N_10;
         gq.setNoVectors( !hasProcessedVectors );
+        gq.addOtherIssues( problems );
         gq.setSScoreMissingValues( score );
     }
 
@@ -498,7 +526,9 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             }
         }
 
-        score =  !infoDetected || !hasInfo ? P_00 : hasStrong ? BATCH_EFF_STRONG : hasNone ? BATCH_EFF_NONE : BATCH_EFF_WEAK ;
+        score = !infoDetected || !hasInfo ?
+                P_00 :
+                hasStrong ? BATCH_EFF_STRONG : hasNone ? BATCH_EFF_NONE : BATCH_EFF_WEAK;
         gq.setBatchCorrected( corrected );
         gq.setQScoreBatchEffect( score );
     }
@@ -539,7 +569,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
      * begin with.
      */
     private int leastReplicates( ExpressionExperiment ee ) {
-        HashMap<FactorValue[], Integer> factors = new HashMap<>();
+        HashMap<String, Integer> factors = new HashMap<>();
         Collection<BioAssay> bas = ee.getBioAssays();
         List<ExperimentalFactor> keepEfs = new ArrayList<>( MAX_EFS_REPLICATE_CHECK );
 
@@ -553,7 +583,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                 if ( ExperimentalDesignUtils.isBatch( ef ) ) {
                     removeFvs.add( fv ); // always remove batch factor values
                 } else {
-                    if ( keepEfs.size() <= MAX_EFS_REPLICATE_CHECK ) {
+                    if ( !keepEfs.contains( ef ) && keepEfs.size() <= MAX_EFS_REPLICATE_CHECK ) {
                         keepEfs.add( ef ); // keep first two encountered factors
                     } else if ( !keepEfs.contains( ef ) ) {
                         removeFvs.add( fv ); // if from different factor, remove the value
@@ -563,12 +593,14 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             fvs.removeAll( removeFvs );
 
             // sort so the keys in the hash map are consistent
-            FactorValue[] arr = fvs.toArray( new FactorValue[fvs.size()] );
-            Arrays.sort( arr, new FactorValueComparator() );
+            Collection<Long> ids = EntityUtils.getIds( fvs );
+            Long[] arr = ids.toArray( new Long[ids.size()] );
+            Arrays.sort( arr );
+            String key = Arrays.toString( arr );
 
             // add new key or increment counter of existing one
-            Integer cnt = factors.get( arr );
-            factors.put( arr, cnt == null ? 1 : ++cnt );
+            Integer cnt = factors.get( key );
+            factors.put( key, cnt == null ? 1 : ++cnt );
         }
 
         // Hash-maps value collection can be almost anything
@@ -577,20 +609,24 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                 new ArrayList<>( factors.values() );
 
         int totalSize = counts.size();
-        // ignore size-1s
-        counts.remove( 1 );
+        // ignore size-1
+        // noinspection StatementWithEmptyBody // because java standard libraries suck
+        while ( counts.remove( ( Integer ) 1 ) ) {}
         Collections.sort( counts );
 
         return ( totalSize < 1 ? -1 : counts.size() > 0 ? counts.get( 0 ) : 1 );
     }
 
-    private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee ) {
+    private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
             cormat = outlierDetectionService.getCorrelationMatrix( ee, true );
         } catch ( IllegalStateException e ) {
-            Log.warn( this.getClass(),
-                    LOG_PREFIX + " cormat retrieval failed because of missing missing values for ee id " + ee.getId() );
+            Log.warn( this.getClass(), LOG_PREFIX + ERR_MSG_CORMAT_MISSING_VALS + ee.getId() );
+        } catch ( Exception e ) {
+            String err = ERR_MSG_CORMAT + e.getMessage();
+            Log.warn( this.getClass(), LOG_PREFIX + err );
+            gq.addOtherIssues( err );
         }
         return cormat;
     }
@@ -605,7 +641,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         // this is not very efficient, but the DoubleMatrix does not have a method to get an array of Doubles (not doubles)
         Double[] doubleArray = ArrayUtils.toObject( corTri );
         List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
-        //noinspection StatementWithEmptyBody // because java stardard libraries suck
+        //noinspection StatementWithEmptyBody // because java standard libraries suck
         while ( list.remove( Double.NaN ) ) {}
 
         return ArrayUtils.toPrimitive( list.toArray( new Double[list.size()] ) );
@@ -697,16 +733,8 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         mean, median, variance
     }
 
-    private enum scoringMode {
-        all, batchEffect, batchConfound
-    }
-
-    private class FactorValueComparator implements Comparator<FactorValue> {
-
-        @Override
-        public int compare( FactorValue factorValue, FactorValue t1 ) {
-            return factorValue.getId().compareTo( t1.getId() );
-        }
+    public enum ScoringMode {
+        all, batchEffect, batchConfound, replicates
     }
 
 }
