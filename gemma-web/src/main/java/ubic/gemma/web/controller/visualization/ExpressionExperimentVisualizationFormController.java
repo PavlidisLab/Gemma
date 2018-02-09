@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -167,12 +167,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
             if ( id != null ) {
                 return new ModelAndView(
-                        new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + id , true) );
+                        new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + id, true ) );
             }
 
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
             return new ModelAndView(
-                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html" , true) );
+                    new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) );
 
         }
 

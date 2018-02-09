@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,21 +18,19 @@
  */
 package ubic.gemma.core.analysis.util;
 
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.IOException;
+
 /**
  * A class that encapsulates a connection to R
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public abstract class RCommander {
 
@@ -42,8 +40,8 @@ public abstract class RCommander {
 
     /**
      * Gets a connection using configured host (default is localhost). Modify by setting gemma.rserve.hostname.
-     * 
-     * @throws IOException
+     *
+     * @throws IOException when there was an IO error
      */
     public RCommander() throws IOException {
         String hostname = Settings.getString( "gemma.rserve.hostname", "localhost" );
@@ -51,8 +49,8 @@ public abstract class RCommander {
     }
 
     /**
-     * @param hostName
-     * @throws IOException
+     * @param hostName the host name
+     * @throws IOException when there was an IO error
      */
     protected void init( String hostName ) throws IOException {
         rc = RConnectionFactory.getRConnection( hostName );

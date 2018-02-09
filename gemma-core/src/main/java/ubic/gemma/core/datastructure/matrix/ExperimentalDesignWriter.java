@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +46,7 @@ public class ExperimentalDesignWriter {
      * @param writer       writer
      * @param ee           ee
      * @param writeHeader  writer header
+     * @throws IOException when the write failed
      */
     public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader, boolean sortByDesign )
             throws IOException {
@@ -62,6 +63,7 @@ public class ExperimentalDesignWriter {
      * @param ee              ee
      * @param bioAssays       bas
      * @param writer          writer
+     * @throws IOException when the write failed
      */
     public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader,
             boolean writeHeader, boolean sortByDesign ) throws IOException {

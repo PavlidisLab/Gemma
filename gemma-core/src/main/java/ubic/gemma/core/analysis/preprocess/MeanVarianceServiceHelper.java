@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,19 +24,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author ptan
- *
  */
 public interface MeanVarianceServiceHelper {
 
     /**
-     * @param ee
-     * @param mvr
+     * @param ee  the experiment
+     * @param mvr the relation
      */
-    public abstract void createMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr );
+    void createMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr );
 
     /**
-     * @param ee
+     * @param ee the experiment
      * @return ExpressionDataDoubleMatrix of expression intensities
      */
-    public abstract ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee );
+    ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee );
 }

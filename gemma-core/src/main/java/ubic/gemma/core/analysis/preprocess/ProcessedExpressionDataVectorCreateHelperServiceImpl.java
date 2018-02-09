@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,23 +30,25 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.core.datastructure.matrix.*;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
 
@@ -258,8 +260,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
                     }
 
                     /*
-                         * 
-                         */
+                     *
+                     */
                     // log.info( oldIndex + " ---> " + newIndex );
                     indexes.put( oldIndex, newIndex );
 

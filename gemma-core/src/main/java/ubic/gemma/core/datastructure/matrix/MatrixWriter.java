@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,7 +47,13 @@ public class MatrixWriter {
     /**
      * Alternate method that uses annotations in string form (e.g., read from another file).
      *
-     * @param geneAnnotations Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
+     * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
+     *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
+     *                        files.
+     * @param matrix          the matrix to write
+     * @param writeHeader     the writer header
+     * @param writer          the writer to use
+     * @throws IOException when the write failed
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<?> matrix,
@@ -59,6 +65,14 @@ public class MatrixWriter {
      * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
      *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
      *                        files.
+     * @param writeHeader     the writer header
+     * @param matrix          the matrix
+     * @param orderByDesign   if true, the columns are in the order defined by
+     *                        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @param writeGeneInfo   whether to write gene info
+     * @param writer          the writer to use
+     * @param writeSequence   whether to write sequence
+     * @throws IOException when the write failed
      */
     @SuppressWarnings("WeakerAccess") // possible external use
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<?> matrix,
@@ -106,8 +120,17 @@ public class MatrixWriter {
     }
 
     /**
-     * @param orderByDesign if true, the columns are in the order defined by
-     *                      ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @param orderByDesign   if true, the columns are in the order defined by
+     *                        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
+     * @param writeSequence   whether to write sequence
+     * @param writer          the writer to use
+     * @param writeGeneInfo   whether to write gene info
+     * @param matrix          the matrix
+     * @param writeHeader     the writer header
+     * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
+     *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
+     *                        files.
+     * @throws IOException when the write failed
      */
     public void write( Writer writer, ExpressionDataMatrix<?> matrix,
             Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean writeSequence,

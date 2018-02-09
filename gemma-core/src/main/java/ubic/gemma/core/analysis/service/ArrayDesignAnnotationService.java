@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -64,6 +64,11 @@ public interface ArrayDesignAnnotationService {
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
      * available.
+     *
+     * @param writer the writer
+     * @param genes  genes
+     * @param type   the type
+     * @return code
      */
     int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type );
 
@@ -83,7 +88,9 @@ public interface ArrayDesignAnnotationService {
      * @param genesWithSpecificity map of cs -&gt;* physical location -&gt;* ( blat association -&gt;* gene product -&gt; gene)
      * @param ty                   whether to include parents (OutputType.LONG); only use biological process (OutputType.BIOPROCESS) or
      *                             'standard' output (OutputType.SHORT).
+     * @param writer               the writer
      * @return number processed.
+     * @throws IOException when there is an IO error
      */
     int generateAnnotationFile( Writer writer,
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty )
@@ -94,7 +101,9 @@ public interface ArrayDesignAnnotationService {
      *
      * @param fileBaseName if Null, output will be written to standard output.
      * @param overWrite    clobber existing file. Otherwise returns null.
+     * @param arrayDesign  array design
      * @return writer to use
+     * @throws IOException when there is an IO error
      */
     Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite ) throws IOException;
 

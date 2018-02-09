@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,7 +45,13 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      * Apply a normalization method from the marray BioConductor package. This method yields normalized log ratios, so
      * the summarization step is included as well.
      *
-     * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
+     * @param method               Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
+     * @param channelOneBackground channel one background
+     * @param channelTwoBackground channel two background
+     * @param weights              weights
+     * @param channelOneSignal     channel one signal
+     * @param channelTwoSignal     channel two signal
+     * @return the normalized double matrix
      */
     protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
@@ -73,7 +79,10 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      * Apply a normalization method from the marray BioConductor package, disregarding background. This method yields
      * normalized log ratios, so the summarization step is included as well.
      *
-     * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
+     * @param method           Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
+     * @param channelOneSignal channel one signal
+     * @param channelTwoSignal channel two signal
+     * @return the normalized double matrix
      */
     protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, String method ) {

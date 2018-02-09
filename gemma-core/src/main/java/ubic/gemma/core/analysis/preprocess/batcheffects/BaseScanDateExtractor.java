@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,8 +48,12 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
      * This method should be generic for GenePix/GPR/ATR file formats. Has DateType at the top formatted with quotes:
      * "DateTime=2005/11/09 11:36:27". Example GSE15739
      * For more information see <a href='http://mdc.custhelp.com/app/answers/detail/a_id/18886'>here</a>.
+     *
+     * @param reader the reader
+     * @return date
+     * @throws IOException when there was a read error
      */
-    protected Date extractGenePix( BufferedReader reader ) throws IOException, ParseException {
+    protected Date extractGenePix( BufferedReader reader ) throws IOException {
         String line;
         // GPR/ATF file. Read a few lines to find the datetime (the header tells us how long the header is, but
         // this is probably okay)
@@ -71,6 +75,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
     /**
      * @param line like "DateTime=2005/11/09 11:36:27" (with the quotes) possibly with trailing whitespace.
+     * @return date
      */
     protected Date parseGenePixDateTime( String line ) {
         String dateString = line.trim().replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
@@ -94,8 +99,9 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     }
 
     /**
-     * ISO 8601 date time in WSTRING format based on Universal Time Clock UTC (UTC is also known as GMT, or Greenwich
-     * Mean Time) E.g. "2005-11-23T13:45:53Z"
+     * @param string ISO 8601 date time in WSTRING format based on Universal Time Clock UTC (UTC is also known as GMT, or Greenwich
+     *               Mean Time) E.g. "2005-11-23T13:45:53Z"
+     * @return date
      */
     protected Date parseISO8601( String string ) {
         try {
@@ -109,8 +115,9 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     }
 
     /**
-     * E.g. "Mon Jun 17 21:26:34 CST 2002", but line has to have Date at start (possibly white-space padded) Shows up in
-     * Imagene files.
+     * @param string E.g. "Mon Jun 17 21:26:34 CST 2002", but line has to have Date at start (possibly white-space padded) Shows up in
+     *               Imagene files.
+     * @return date
      */
     protected Date parseLongFormat( String string ) {
         // // FIXME time-zone dependent.
@@ -132,8 +139,9 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     }
 
     /**
-     * Parse a common format, "MM[/-]dd[/-]yy hh:mm:ss", found for example in the "DatHeader" line from a CEL file and
-     * extract the date found there.
+     * @param string Parse a common format, "MM[/-]dd[/-]yy hh:mm:ss", found for example in the "DatHeader" line from a CEL file and
+     *               extract the date found there.
+     * @return date
      */
     protected Date parseStandardFormat( String string ) {
 

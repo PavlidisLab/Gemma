@@ -73,6 +73,11 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
      * Note that the events can still be null, as the value-change events they represent might have not occurred since
      * the curatable object was created, and they are not initialised with a creation event.
      *
+     * @param id             the id of the curatable object this VO represents
+     * @param curationNote   the curation note attached to the curation details
+     * @param lastUpdated    the date the curatable object was last updated
+     * @param needsAttention whether the object requires curators attention
+     * @param troubled       whether the object is troubled
      * @param troubleEvent   the last event that updated the troubled property
      * @param attentionEvent the last event that updated the needs attention property
      * @param noteEvent      the last event that updated the curation note property

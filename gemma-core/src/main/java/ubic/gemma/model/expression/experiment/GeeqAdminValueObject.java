@@ -20,7 +20,8 @@
 package ubic.gemma.model.expression.experiment;
 
 /**
- * Represents administrative geeq information
+ * Represents administrative geeq information. On top of the classic VO, this one also exposes
+ * the underlying variables behind the public scores for suitability, quality, batch effect and batch confound.
  *
  * @author paul, tesarst
  */
@@ -34,10 +35,6 @@ public class GeeqAdminValueObject extends GeeqValueObject {
     private double manualSuitabilityScore;
     private boolean manualSuitabilityOverride;
 
-    /*
-     * Quality score factors
-     */
-
     private double qScoreBatchEffect;
     private boolean manualHasStrongBatchEffect;
     private boolean manualHasNoBatchEffect;
@@ -45,6 +42,8 @@ public class GeeqAdminValueObject extends GeeqValueObject {
     private double qScoreBatchConfound;
     private boolean manualHasBatchConfound;
     private boolean manualBatchConfoundActive;
+
+    private String otherIssues;
 
     /**
      * Required when using the class as a spring bean
@@ -68,6 +67,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.qScoreBatchConfound = ( double ) row[27];
         this.manualHasBatchConfound = ( boolean ) row[28];
         this.manualBatchConfoundActive = ( boolean ) row[29];
+        this.otherIssues = ( String ) row[34];
     }
 
     public GeeqAdminValueObject( Geeq g ) {
@@ -86,6 +86,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.qScoreBatchConfound = g.getQScoreBatchConfound();
         this.manualHasBatchConfound = g.getManualHasBatchConfound();
         this.manualBatchConfoundActive = g.getManualBatchConfoundActive();
+        this.otherIssues = g.getOtherIssues();
     }
 
     public GeeqAdminValueObject( Long id, double detectedQualityScore, double manualQualityScore,
@@ -97,7 +98,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
             double qScoreSampleCorrelationVariance, double qScorePlatformsTech, double qScoreReplicates,
             double qScoreBatchInfo, double qScoreBatchEffect, boolean manualHasStrongBatchEffect,
             boolean manualHasNoBatchEffect, boolean manualBatchEffectActive, double qScoreBatchConfound,
-            boolean manualHasBatchConfound, boolean manualBatchConfoundActive ) {
+            boolean manualHasBatchConfound, boolean manualBatchConfoundActive, String otherIssues ) {
         super( id, detectedQualityScore, manualQualityScore, manualQualityOverride, detectedSuitabilityScore,
                 manualSuitabilityScore, manualSuitabilityOverride, sScorePublication, sScorePlatformAmount,
                 sScorePlatformsTechMulti, sScoreAvgPlatformPopularity, sScoreAvgPlatformSize, sScoreSampleSize,
@@ -119,14 +120,16 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.qScoreBatchConfound = qScoreBatchConfound;
         this.manualHasBatchConfound = manualHasBatchConfound;
         this.manualBatchConfoundActive = manualBatchConfoundActive;
+
+        this.otherIssues = otherIssues;
     }
 
     public double getDetectedQualityScore() {
         return detectedQualityScore;
     }
 
-    public double getDetectedSuitabilityScore() {
-        return detectedSuitabilityScore;
+    public void setDetectedQualityScore( double detectedQualityScore ) {
+        this.detectedQualityScore = detectedQualityScore;
     }
 
     public double getManualQualityScore() {
@@ -137,12 +140,20 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualQualityScore = manualQualityScore;
     }
 
-    public boolean getManualQualityOverride() {
+    public boolean isManualQualityOverride() {
         return manualQualityOverride;
     }
 
     public void setManualQualityOverride( boolean manualQualityOverride ) {
         this.manualQualityOverride = manualQualityOverride;
+    }
+
+    public double getDetectedSuitabilityScore() {
+        return detectedSuitabilityScore;
+    }
+
+    public void setDetectedSuitabilityScore( double detectedSuitabilityScore ) {
+        this.detectedSuitabilityScore = detectedSuitabilityScore;
     }
 
     public double getManualSuitabilityScore() {
@@ -153,7 +164,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualSuitabilityScore = manualSuitabilityScore;
     }
 
-    public boolean getManualSuitabilityOverride() {
+    public boolean isManualSuitabilityOverride() {
         return manualSuitabilityOverride;
     }
 
@@ -169,7 +180,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.qScoreBatchEffect = qScoreBatchEffect;
     }
 
-    public boolean getManualHasStrongBatchEffect() {
+    public boolean isManualHasStrongBatchEffect() {
         return manualHasStrongBatchEffect;
     }
 
@@ -177,7 +188,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasStrongBatchEffect = manualHasStrongBatchEffect;
     }
 
-    public boolean getManualHasNoBatchEffect() {
+    public boolean isManualHasNoBatchEffect() {
         return manualHasNoBatchEffect;
     }
 
@@ -185,7 +196,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasNoBatchEffect = manualHasNoBatchEffect;
     }
 
-    public boolean getManualBatchEffectActive() {
+    public boolean isManualBatchEffectActive() {
         return manualBatchEffectActive;
     }
 
@@ -201,7 +212,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.qScoreBatchConfound = qScoreBatchConfound;
     }
 
-    public boolean getManualHasBatchConfound() {
+    public boolean isManualHasBatchConfound() {
         return manualHasBatchConfound;
     }
 
@@ -209,7 +220,7 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasBatchConfound = manualHasBatchConfound;
     }
 
-    public boolean getManualBatchConfoundActive() {
+    public boolean isManualBatchConfoundActive() {
         return manualBatchConfoundActive;
     }
 
@@ -217,4 +228,11 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualBatchConfoundActive = manualBatchConfoundActive;
     }
 
+    public String getOtherIssues() {
+        return otherIssues;
+    }
+
+    public void setOtherIssues( String otherIssues ) {
+        this.otherIssues = otherIssues;
+    }
 }

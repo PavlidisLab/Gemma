@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,9 @@ public class SequenceManipulation {
 
     /**
      * Puts "chr" prefix on the chromosome name, if need be.
+     *
+     * @param chromosome chromosome
+     * @return formatted name
      */
     public static String blatFormatChromosomeName( String chromosome ) {
         String searchChromosome = chromosome;
@@ -52,7 +55,9 @@ public class SequenceManipulation {
     /**
      * Remove a 3' polyA or 5' polyT tail. The entire tail is removed.
      *
+     * @param sequence        sequence
      * @param thresholdLength to trigger removal.
+     * @return processed sequence
      */
     @SuppressWarnings("Annotator") // Annotator not working properly with the string concat
     public static String stripPolyAorT( String sequence, int thresholdLength ) {
@@ -62,6 +67,9 @@ public class SequenceManipulation {
 
     /**
      * Convert a psl-formatted list (comma-delimited) to an int[].
+     *
+     * @param blatLocations locations
+     * @return locations
      */
     public static int[] blatLocationsToIntArray( String blatLocations ) {
         if ( blatLocations == null )
@@ -83,6 +91,7 @@ public class SequenceManipulation {
      * Convert a CompositeSequence's immobilizedCharacteristics into a single sequence, using a simple merge-join
      * strategy.
      *
+     * @param sequences sequences
      * @return BioSequence. Not all fields are filled in and must be set by the caller.
      */
     public static BioSequence collapse( Collection<Reporter> sequences ) {
@@ -110,6 +119,9 @@ public class SequenceManipulation {
 
     /**
      * Removes "chr" prefix from the chromosome name, if it is there.
+     *
+     * @param chromosome chromosome
+     * @return formatted name
      */
     public static String deBlatFormatChromosomeName( String chromosome ) {
         String searchChromosome = chromosome;
@@ -121,6 +133,10 @@ public class SequenceManipulation {
     /**
      * Find where the center of a query location is in a gene. This is defined as the location of the center base of the
      * query sequence relative to the 3' end of the gene.
+     *
+     * @param sizes  sizes
+     * @param starts starts
+     * @return center
      */
     public static int findCenter( String starts, String sizes ) {
 
@@ -230,9 +246,9 @@ public class SequenceManipulation {
     /**
      * Compute just any overlap the compare sequence has with the target on the right side.
      *
-     * @return The index of the end of the overlap. If zero, there is no overlap. In other words, this is the amount
-     * that needs to be trimmed off the compare sequence if we are going to join it on to the target without
-     * generating redundancy.
+     * @param query  query
+     * @param target target
+     * @return right overlap
      */
     @SuppressWarnings("WeakerAccess") // Possible external use
     public static int rightHandOverlap( BioSequence target, BioSequence query ) {
@@ -274,6 +290,9 @@ public class SequenceManipulation {
 
     /**
      * See for example http://www.bio-soft.net/sms/iupac.html
+     *
+     * @param baseLetter letter
+     * @return complement letter
      */
     private static char complement( char baseLetter ) {
 
@@ -336,6 +355,7 @@ public class SequenceManipulation {
 
     /**
      * @param sizes Blat-formatted string of sizes (comma-delimited)
+     * @return total size
      */
     public static int totalSize( String sizes ) {
         return totalSize( blatLocationsToIntArray( sizes ) );
@@ -344,6 +364,10 @@ public class SequenceManipulation {
     /**
      * Compute the overlap between two physical locations. If both do not have a length the overlap is zero unless they
      * point to exactly the same nucleotide location, in which case the overlap is 1.
+     *
+     * @param a a
+     * @param b b
+     * @return overlap
      */
     @SuppressWarnings("WeakerAccess") // Possible external use
     public static int computeOverlap( PhysicalLocation a, PhysicalLocation b ) {

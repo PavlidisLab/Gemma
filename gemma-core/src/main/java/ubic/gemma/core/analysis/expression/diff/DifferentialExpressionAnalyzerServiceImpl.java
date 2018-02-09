@@ -18,21 +18,12 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
@@ -44,15 +35,15 @@ import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -65,28 +56,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 @Component
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
-    /**
-     * Defines the different types of analyses our linear modeling framework supports:
-     * <ul>
-     * <li>GENERICLM - generic linear regression (interactions are omitted, but this could change)
-     * <li>OSTTEST - one sample t-test
-     * <li>OWA - one-way ANOVA
-     * <li>TTEST - two sample t-test
-     * <li>TWO_WAY_ANOVA_WITH_INTERACTION
-     * <li>TWO_WAY_ANOVA_NO_INTERACTION
-     * </ul>
-     *
-     * @author Paul
-     */
-    public enum AnalysisType {
-        GENERICLM, //
-        OSTTEST, //one-sample
-        OWA, //one-way ANOVA
-        TTEST, //
-        TWO_WAY_ANOVA_WITH_INTERACTION, //with interactions
-        TWO_WAY_ANOVA_NO_INTERACTION //no interactions
-    }
-
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
@@ -98,10 +67,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
-
     @Autowired
     private DifferentialExpressionAnalysisHelperService helperService;
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -146,37 +113,23 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     /**
      * Remove old files which will otherwise be cruft.
+     *
+     * @param ee       the experiment
+     * @param analysis analysis
      */
     public void deleteStatistics( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
 
         File f = prepareDirectoryForDistributions( ee );
 
-        String histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "pvalues"
-                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String histFileName =
+                FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "pvalues"
+                        + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         File oldf = new File( f, histFileName );
         if ( oldf.exists() && oldf.canWrite() ) {
             if ( !oldf.delete() ) {
                 log.warn( "Could not remove: " + oldf );
             }
         }
-
-        // histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "qvalues"
-        // + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        // oldf = new File( f, histFileName );
-        // if ( oldf.exists() && oldf.canWrite() ) {
-        // if ( !oldf.remove() ) {
-        // log.warn( "Could not remove: " + oldf );
-        // }
-        // }
-        //
-        // histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "scores"
-        // + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        // oldf = new File( f, histFileName );
-        // if ( oldf.exists() && oldf.canWrite() ) {
-        // if ( !oldf.remove() ) {
-        // log.warn( "Could not remove: " + oldf );
-        // }
-        // }
     }
 
     @Override
@@ -211,6 +164,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     /**
      * Made public for testing purposes only.
+     *
+     * @param config               config
+     * @param analysis             analysis
+     * @param expressionExperiment the experiment
+     * @return DEA
      */
     @Override
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
@@ -353,7 +311,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private boolean configsAreEqual( ExpressionAnalysisResultSet temprs, ExpressionAnalysisResultSet oldrs ) {
         return temprs.getBaselineGroup().equals( oldrs.getBaselineGroup() )
                 && temprs.getExperimentalFactors().size() == oldrs.getExperimentalFactors().size() && temprs
-                        .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
+                .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
     }
 
     private DifferentialExpressionAnalysisConfig copyConfig( DifferentialExpressionAnalysis copyMe ) {
@@ -423,8 +381,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             /*
              * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
              */
-            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors )
-                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting
+            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors ) && (
+                    subsetFactorValueForExisting == null || subsetFactorValueForExisting
                             .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
 
                 log.info( "Deleting analysis with ID=" + existingAnalysis.getId() );
@@ -559,6 +517,28 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         return results;
+    }
+
+    /**
+     * Defines the different types of analyses our linear modeling framework supports:
+     * <ul>
+     * <li>GENERICLM - generic linear regression (interactions are omitted, but this could change)
+     * <li>OSTTEST - one sample t-test
+     * <li>OWA - one-way ANOVA
+     * <li>TTEST - two sample t-test
+     * <li>TWO_WAY_ANOVA_WITH_INTERACTION
+     * <li>TWO_WAY_ANOVA_NO_INTERACTION
+     * </ul>
+     *
+     * @author Paul
+     */
+    public enum AnalysisType {
+        GENERICLM, //
+        OSTTEST, //one-sample
+        OWA, //one-way ANOVA
+        TTEST, //
+        TWO_WAY_ANOVA_WITH_INTERACTION, //with interactions
+        TWO_WAY_ANOVA_NO_INTERACTION //no interactions
     }
 
 }

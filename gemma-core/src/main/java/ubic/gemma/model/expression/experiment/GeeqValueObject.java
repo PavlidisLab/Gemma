@@ -194,32 +194,8 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         return publicQualityScore;
     }
 
-    public void setPublicQualityScore( double publicQualityScore ) {
-        this.publicQualityScore = publicQualityScore;
-    }
-
     public double getPublicSuitabilityScore() {
         return publicSuitabilityScore;
-    }
-
-    public void setPublicSuitabilityScore( double publicSuitabilityScore ) {
-        this.publicSuitabilityScore = publicSuitabilityScore;
-    }
-
-    public double getqScorePublicBatchEffect() {
-        return qScorePublicBatchEffect;
-    }
-
-    public void setqScorePublicBatchEffect( double qScorePublicBatchEffect ) {
-        this.qScorePublicBatchEffect = qScorePublicBatchEffect;
-    }
-
-    public double getqScorePublicBatchConfound() {
-        return qScorePublicBatchConfound;
-    }
-
-    public void setqScorePublicBatchConfound( double qScorePublicBatchConfound ) {
-        this.qScorePublicBatchConfound = qScorePublicBatchConfound;
     }
 
     public double getsScorePublication() {
@@ -302,6 +278,22 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScoreSampleMeanCorrelation = qScoreSampleMeanCorrelation;
     }
 
+    public double getqScoreSampleMedianCorrelation() {
+        return qScoreSampleMedianCorrelation;
+    }
+
+    public void setqScoreSampleMedianCorrelation( double qScoreSampleMedianCorrelation ) {
+        this.qScoreSampleMedianCorrelation = qScoreSampleMedianCorrelation;
+    }
+
+    public double getqScoreSampleCorrelationVariance() {
+        return qScoreSampleCorrelationVariance;
+    }
+
+    public void setqScoreSampleCorrelationVariance( double qScoreSampleCorrelationVariance ) {
+        this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
+    }
+
     public double getqScorePlatformsTech() {
         return qScorePlatformsTech;
     }
@@ -326,20 +318,20 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         this.qScoreBatchInfo = qScoreBatchInfo;
     }
 
-    public double getqScoreSampleMedianCorrelation() {
-        return qScoreSampleMedianCorrelation;
+    public double getqScorePublicBatchEffect() {
+        return qScorePublicBatchEffect;
     }
 
-    public void setqScoreSampleMedianCorrelation( double qScoreSampleMedianCorrelation ) {
-        this.qScoreSampleMedianCorrelation = qScoreSampleMedianCorrelation;
+    public void setqScorePublicBatchEffect( double qScorePublicBatchEffect ) {
+        this.qScorePublicBatchEffect = qScorePublicBatchEffect;
     }
 
-    public double getqScoreSampleCorrelationVariance() {
-        return qScoreSampleCorrelationVariance;
+    public double getqScorePublicBatchConfound() {
+        return qScorePublicBatchConfound;
     }
 
-    public void setqScoreSampleCorrelationVariance( double qScoreSampleCorrelationVariance ) {
-        this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
+    public void setqScorePublicBatchConfound( double qScorePublicBatchConfound ) {
+        this.qScorePublicBatchConfound = qScorePublicBatchConfound;
     }
 
     public boolean isNoVectors() {

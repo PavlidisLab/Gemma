@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -178,6 +178,14 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
      * missing background intensity information or one intensity channel, though obviously it is better to have all four
      * sets of values.
      *
+     * @param bkgChannelA                 background channel A
+     * @param bkgChannelB                 background channel B
+     * @param extraMissingValueIndicators extra missing value indicators
+     * @param preferred                   preferred matrix
+     * @param signalChannelA              signal channel A
+     * @param signalChannelB              signal channel B
+     * @param signalToNoiseThreshold      noise threshold
+     * @param source                      the source
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the design elements and
      * biomaterial dimension represented in the inputs.
      */

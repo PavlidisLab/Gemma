@@ -117,6 +117,10 @@
             <column name="BATCH_CORRECTED" not-null="true" unique="false" default="0"
                     sql-type="BIT"/>
         </property>
+        <property name="otherIssues" type="java.lang.String">
+            <column name="OTHER_ISSUES" not-null="false" unique="false" default="null"
+                    sql-type="VARCHAR"/>
+        </property>
 
         <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"
                      fetch="select">

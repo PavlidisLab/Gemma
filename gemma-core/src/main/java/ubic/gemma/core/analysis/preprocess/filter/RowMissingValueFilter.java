@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -142,6 +142,8 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
     /**
      * Supply a separate matrix of booleans. This is not necessary if the input matrix is already 'masked' for missing
      * values.
+     *
+     * @param absentPresentCalls new value
      */
     public void setAbsentPresentCalls( ExpressionDataBooleanMatrix absentPresentCalls ) {
         this.absentPresentCalls = absentPresentCalls;

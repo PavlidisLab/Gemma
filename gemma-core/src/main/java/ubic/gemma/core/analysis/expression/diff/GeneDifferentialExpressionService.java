@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -46,6 +46,7 @@ public interface GeneDifferentialExpressionService {
      *
      * @param gene : gene of interest
      * @param ees  : set of experiments to search
+     * @return DEA VOs
      */
     Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<BioAssaySet> ees );
 
@@ -56,6 +57,7 @@ public interface GeneDifferentialExpressionService {
      * @param ees       : set of experiments to search
      * @param threshold : the cutoff to determine if diff expressed
      * @param limit     : the maximum number of results to return (null for all)
+     * @return DEA VOs
      */
     Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<BioAssaySet> ees,
             double threshold, Integer limit );
@@ -63,18 +65,34 @@ public interface GeneDifferentialExpressionService {
     /**
      * Get differential expression for a gene, constrained to a specific set of factors. Note that interactions are
      * ignored, only main effects (the factorMap can only have one factor per experiment)
+     *
+     * @param gene      gene
+     * @param threshold threshold
+     * @param factorMap factor map
+     * @return DEA VOs
      */
     Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold,
             Collection<DiffExpressionSelectedFactorCommand> factorMap );
 
     /**
      * Get the differential expression results for the given gene across all datasets.
+     *
+     * @param threshold threshold
+     * @param gene      gene
+     * @param limit     limit
+     * @return DEA VOs
      */
     Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold,
             Integer limit );
 
     /**
      * Get the differential expression analysis results for the gene in the activeExperiments.
+     *
+     * @param activeExperiments active ees
+     * @param eeFactorsMap      factor map
+     * @param g                 gene
+     * @param threshold         threshold
+     * @return diff exp. analysis meta VO
      */
     DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( double threshold, Gene g,
             Map<Long, Long> eeFactorsMap, Collection<BioAssaySet> activeExperiments );

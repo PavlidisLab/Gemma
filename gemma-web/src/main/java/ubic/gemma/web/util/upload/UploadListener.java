@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,18 +23,17 @@
  */
 package ubic.gemma.web.util.upload;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * This is created when a multipart request is received (via the CommonsMultipartMonitoredResolver). It starts of a
  * 'progress job',
- * 
+ *
  * @author Original : plosson
  * @author pavlidis
- *
  */
 public class UploadListener implements OutputStreamListener {
 
@@ -56,19 +55,14 @@ public class UploadListener implements OutputStreamListener {
     }
 
     /**
-     * @param request
-     * @param debugDelay
+     * @param request    request
+     * @param debugDelay debug delay
      */
     public UploadListener( HttpServletRequest request, long debugDelay ) {
         this( request );
         this.delay = debugDelay;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.upload.OutputStreamListener#bytesRead(int)
-     */
     @Override
     public void bytesRead( int bytesRead ) {
         totalBytesRead = totalBytesRead + bytesRead;
@@ -86,31 +80,16 @@ public class UploadListener implements OutputStreamListener {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.upload.OutputStreamListener#done()
-     */
     @Override
     public void done() {
         updateUploadInfo( "done" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.upload.OutputStreamListener#error(java.lang.String)
-     */
     @Override
     public void error( String message ) {
         log.error( "There was an error in uploading a file in " + this );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.upload.OutputStreamListener#start()
-     */
     @Override
     public void start() {
         updateUploadInfo( "Start" );
@@ -118,8 +97,8 @@ public class UploadListener implements OutputStreamListener {
     }
 
     private void updateUploadInfo( String status ) {
-        request.getSession().setAttribute( "uploadInfo",
-                new UploadInfo( totalFiles, totalToRead, totalBytesRead, status ) );
+        request.getSession()
+                .setAttribute( "uploadInfo", new UploadInfo( totalFiles, totalToRead, totalBytesRead, status ) );
     }
 
 }

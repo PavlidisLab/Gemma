@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -75,6 +75,7 @@ public class OutlierDetails {
      * Alternative constructor to be used when detecting outliers by median correlation value
      *
      * @param medianCorrelation the median correlation value
+     * @param bioAssay          the bio assay
      */
     public OutlierDetails( BioAssay bioAssay, double medianCorrelation ) {
         super();
@@ -86,6 +87,7 @@ public class OutlierDetails {
     /**
      * @param score                fraction of correlations this bioAssay has that are lower than the threshold
      * @param thresholdCorrelation correlation at the quantile that was set.
+     * @param bioAssay             the bio assay
      */
     public OutlierDetails( BioAssay bioAssay, double score, double thresholdCorrelation ) {
         super();

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,6 +65,8 @@ public class ExpressionDataSVD {
 
     /**
      * Does normalization.
+     *
+     * @param expressionData expression data
      */
     public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData ) {
         this( expressionData, true );
@@ -171,6 +173,7 @@ public class ExpressionDataSVD {
     }
 
     /**
+     * @param i which eigengene
      * @return the ith eigengene (column of V)
      */
     public Double[] getEigenGene( int i ) {
@@ -178,6 +181,7 @@ public class ExpressionDataSVD {
     }
 
     /**
+     * @param i which eigensample
      * @return the ith eigensample (column of U)
      */
     public Double[] getEigenSample( int i ) {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,18 +18,17 @@
  */
 package ubic.gemma.core.analysis.preprocess.background;
 
-import java.io.IOException;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.util.AffyBatch;
 import ubic.gemma.core.analysis.util.RCommander;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.io.IOException;
+
 /**
  * Class to perform background adjustment for Affymetrix arrays, RMA-style.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjuster<String, String> {
 
@@ -43,20 +42,20 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
 
     /**
      * You must call setArrayDesign before using this method.
-     * <p>
      * This is equivalent to running bg.correct.rma(affybatch).
-     * 
-     * @param signal The CEL matrix. The MM values are not changed by this algorithm.
+     *
+     * @param signal     The CEL matrix. The MM values are not changed by this algorithm.
      * @param background - not used by this method.
-     * @see ubic.gemma.core.analysis.preprocess.background.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
-     *      baseCode.dataStructure.matrix.DoubleMatrix)
+     * @return adjusted double matrix
+     * @see ubic.gemma.core.analysis.preprocess.background.BackgroundAdjuster#adjust(DoubleMatrix, DoubleMatrix)
      */
     @Override
     public DoubleMatrix<String, String> adjust( DoubleMatrix<String, String> signal,
             DoubleMatrix<String, String> background ) {
         log.debug( "Background correcting..." );
 
-        if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
+        if ( arrayDesign == null )
+            throw new IllegalStateException( "Must set arrayDesign first" );
         String abName = ab.makeAffyBatch( signal, arrayDesign );
 
         rc.voidEval( "m<-exprs(bg.correct.rma(" + abName + " ))" );
@@ -73,10 +72,11 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
     }
 
     /**
-     * @param arrayDesign2
+     * @param arrayDesign2 the array design
      */
     public void setArrayDesign( ArrayDesign arrayDesign2 ) {
-        if ( arrayDesign2 == null ) throw new IllegalArgumentException( "arrayDesign must not be null" );
+        if ( arrayDesign2 == null )
+            throw new IllegalArgumentException( "arrayDesign must not be null" );
         this.arrayDesign = arrayDesign2;
     }
 

@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -27,6 +27,9 @@ public interface OutlierDetectionService {
 
     /**
      * Use default settings.
+     *
+     * @param ee the experiment
+     * @return collection of outlier details
      */
     Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee );
 
@@ -42,6 +45,8 @@ public interface OutlierDetectionService {
      *                          cause more outlier calls, not fewer)
      * @param quantileThreshold which quantile the correlation has to be in before it's considered potentially outlying (suggestion: 15)
      * @param fractionThreshold what fraction of samples have to have a correlation lower than the quantile for a sample, for that sample
+     * @param ee                the experiment
+     * @return collection of outlier details
      */
     Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, boolean useRegression, int quantileThreshold,
             double fractionThreshold );
@@ -49,6 +54,9 @@ public interface OutlierDetectionService {
     Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee, boolean useRegression );
 
     /**
+     * @param ee     the experiment
+     * @param cormat the correlation matrix
+     * @return collection of outlier details
      * @see OutlierDetectionService#identifyOutliers(ExpressionExperiment, DoubleMatrix, int, double) with default
      * thresholds
      */
@@ -59,6 +67,8 @@ public interface OutlierDetectionService {
      * @param quantileThreshold which quantile the correlation has to be in before it's considered potentially outlying
      *                          (suggestion: 15)
      * @param fractionThreshold what fraction of samples have to have a correlation lower than the quantile for a
+     * @param ee                the experiment
+     * @return collection of outlier details
      */
     Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, DoubleMatrix<BioAssay, BioAssay> cormat,
             int quantileThreshold, double fractionThreshold );

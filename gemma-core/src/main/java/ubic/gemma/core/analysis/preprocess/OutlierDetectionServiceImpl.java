@@ -72,6 +72,10 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     /**
      * Calculate index (rank) of desired quantile using R's method #8
+     *
+     * @param numCors           n
+     * @param quantileThreshold quantile threshold
+     * @return index (rank) of desired quantile using R's method #8
      */
     public double findDesiredQuantileIndex( int numCors, int quantileThreshold ) {
 

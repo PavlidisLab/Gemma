@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,9 +23,8 @@ import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix;
 
 /**
  * Implements simplest background subtraction, with the option to set small values to a preset value.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class SimpleBackgroundSubtraction<R, C> implements BackgroundAdjuster<R, C> {
 
@@ -34,7 +33,7 @@ public class SimpleBackgroundSubtraction<R, C> implements BackgroundAdjuster<R, 
     /**
      * Set a lower limit to the value that can be obtained. This can be used to prevent negative values (set to zero),
      * or to set values less than 10 to be 10 (set this to 10), for example.
-     * 
+     *
      * @param lowerLimit The lowerLimit to set.
      */
     public void setLowerLimit( double lowerLimit ) {
@@ -44,17 +43,21 @@ public class SimpleBackgroundSubtraction<R, C> implements BackgroundAdjuster<R, 
     /**
      * The values of the background matrix are subtracted from the signal, element-wise, subject to any constraint
      * supplied by the lowerlimit.
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.background.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
-     *      baseCode.dataStructure.matrix.DoubleMatrix)
+     *
+     * @param background background
+     * @param signal     signal
+     * @return adjusted double matrix
+     * @see ubic.gemma.core.analysis.preprocess.background.BackgroundAdjuster#adjust(DoubleMatrix, DoubleMatrix)
      * @see #setLowerLimit(double)
      */
     @Override
     public DoubleMatrix<R, C> adjust( DoubleMatrix<R, C> signal, DoubleMatrix<R, C> background ) {
         int rows = signal.rows();
         int cols = signal.columns();
-        if ( rows != background.rows() ) throw new IllegalArgumentException();
-        if ( cols != background.columns() ) throw new IllegalArgumentException();
+        if ( rows != background.rows() )
+            throw new IllegalArgumentException();
+        if ( cols != background.columns() )
+            throw new IllegalArgumentException();
 
         DoubleMatrix<R, C> result = new FastRowAccessDoubleMatrix<R, C>( rows, cols );
 

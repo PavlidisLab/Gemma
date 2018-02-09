@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,42 +21,25 @@ package ubic.gemma.core.analysis.preprocess;
 
 /**
  * This exception gets thrown when the log scale is unknown or ambiguous.
- * 
- * @author ptan
  *
+ * @author ptan
  */
 public class UnknownLogScaleException extends UnsupportedOperationException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -8809686106256692856L;
 
-    /**
-     * 
-     */
     public UnknownLogScaleException() {
         super();
     }
 
-    /**
-     * @param message
-     */
     public UnknownLogScaleException( String message ) {
         super( message );
     }
 
-    /**
-     * @param message
-     * @param cause
-     */
     public UnknownLogScaleException( String message, Throwable cause ) {
         super( message, cause );
     }
 
-    /**
-     * @param cause
-     */
     public UnknownLogScaleException( Throwable cause ) {
         super( cause );
     }
