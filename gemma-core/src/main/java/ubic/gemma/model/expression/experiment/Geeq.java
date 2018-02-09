@@ -43,22 +43,10 @@ public class Geeq implements Identifiable, Serializable {
     private AuditEvent lastBatchEffectChange;
     private AuditEvent lastBatchConfoundChange;
 
-    /**
-     * Quality refers to data quality, wherein the same study could have been done twice with the same technical
-     * parameters and in one case yield bad quality data, and in another high quality data.
-     * The quality score can be overridden. The manual value is stored in manualQualityScore, while
-     * manualQualityOverride boolean value denotes whether the manual value should be used.
-     */
     private double detectedQualityScore;
     private double manualQualityScore;
     private boolean manualQualityOverride;
 
-    /**
-     * Suitability mostly refers to technical aspects which, if we were doing the study ourselves, we would have
-     * altered to make it optimal for analyses of the sort used in Gemma.
-     * The suitability score can be overridden. The manual value is stored in manualSuitabilityScore, while
-     * manualSuitabilityOverride boolean value denotes whether the manual value should be used.
-     */
     private double detectedSuitabilityScore;
     private double manualSuitabilityScore;
     private boolean manualSuitabilityOverride;
@@ -67,74 +55,14 @@ public class Geeq implements Identifiable, Serializable {
      * Suitability score factors
      */
 
-    /**
-     * -1.0 - if experiment has no publication
-     * -0.7 - if date not filled in
-     * -0.5 if date &lt; 2006
-     * -0.3 if date &lt; 2009
-     * +1.0 otherwise
-     */
     private double sScorePublication;
-
-    /**
-     * The amount of platforms the experiment uses:
-     * -1.0 if amount &gt; 2
-     * -0.5 if amount &gt; 1
-     * +1.0 otherwise
-     */
     private double sScorePlatformAmount;
-
-    /**
-     * Extra punishment for platform technology inconsistency
-     * -1.0 if platforms amount &gt; 1 and platforms do not have the same technology type
-     * +1.0 otherwise
-     */
     private double sScorePlatformsTechMulti;
-
-    /**
-     * Score for each platforms popularity: (final score is average of scores for all used platforms)
-     * -1.0 if used in &lt; 10 EEs
-     * -0.5 if used in &lt; 20 EEs
-     * +0.0 if used in &lt; 50 EEs
-     * +0.5 if used in &lt; 100 EEs
-     * +1.0 otherwise
-     */
     private double sScoreAvgPlatformPopularity;
-
-    /**
-     * Score for each platforms size: (final score is average of scores for all used platforms)
-     * -1.0 if gene count &lt; 5k
-     * -0.5 if gene count &lt; 10k
-     * +0.0 if gene count &lt; 15k
-     * +0.5 if gene count &lt; 18k
-     * +1.0 otherwise
-     */
     private double sScoreAvgPlatformSize;
-
-    /**
-     * The amount of samples in the experiment
-     * -1.0 if sample size &lt; 20
-     * -0.5 if sample size &lt; 50
-     * +0.0 if sample size &lt; 100
-     * +0.5 if sample size &lt; 200
-     * +1.0 otherwise
-     */
     private double sScoreSampleSize;
-
-    /**
-     * Raw data availability (shows also as the 'external' badge)
-     * -1.0 if no raw data available
-     * +1.0 otherwise
-     */
     private double sScoreRawData;
 
-    /**
-     * Missing values
-     * -1.0 if experiment has any missing values or there are no computed vectors
-     * +1.0 otherwise (assumed if experiment has raw data available)
-     * extra:
-     * noVectors = true, if experiment has no computed vectors
-     */
     private double sScoreMissingValues;
     private boolean noVectors;
 
@@ -142,91 +70,26 @@ public class Geeq implements Identifiable, Serializable {
      * Quality score factors
      */
 
-    /**
-     * Ratio of detected (non-removed) outliers vs sample size:
-     * -1.0 if ratio &gt; 5%
-     * -0.5 if ratio &gt; 2%
-     * +0.0 if ratio &gt; 0.1%
-     * +0.5 if ratio &gt; 0% small punishment for very large experiments with one bad apple
-     * +1.0 if ratio = 0%
-     * extra (in corrMatIssues):
-     * 1 if the correlation matrix is empty
-     * 2 if the correlation matrix has NaN values
-     */
     private double qScoreOutliers;
     private byte corrMatIssues;
 
-    /**
-     * Using the mean sample correlation r:
-     * +r use the computed value
-     * +0.0 if correlation matrix is empty
-     */
     private double qScoreSampleMeanCorrelation;
-
-    /**
-     * Using the median sample correlation m:
-     * +m use the computed value
-     * +0.0 if correlation matrix is empty
-     */
     private double qScoreSampleMedianCorrelation;
-
-    /**
-     * Using the sample correlation variance v:
-     * +v use the computed value
-     * +0.0 if correlation matrix is empty
-     */
     private double qScoreSampleCorrelationVariance;
-
-    /**
-     * Platform technologies
-     * -1.0 if any platform is two-color
-     * +1.0 otherwise
-     */
     private double qScorePlatformsTech;
 
-    /**
-     * Number of replicates - ee has to have design and more than one condition
-     * -1.0 if lowest replicate amount &lt; 4 &amp; !=1 or if there are problems
-     * +0.0 if lowest replicate amount &lt; 10 &amp; !=1
-     * +1.0 otherwise
-     * extra (in replicatesIssues):
-     * 1 if the experiment has no design
-     * 2 if there were no factor values found
-     * 3 if all replicate amounts were 1
-     * 4 if lowest replicate was 0 (that really should not happen though)
-     */
     private double qScoreReplicates;
     private byte replicatesIssues;
 
-    /**
-     * State of batch info
-     * -1.0 if no batch info available
-     * +1.0 otherwise
-     */
     private double qScoreBatchInfo;
-
-    /**
-     * Batch effect without batch correction. Can ve overridden.
-     * -1.0 if batch pVal &lt; 0.0001 or (manualHasStrongBatchEffect &amp; manualBatchEffectActive)
-     * +1.0 if batch pVal &gt; 0.1 or (!manualHasNoBatchEffect &amp; manualBatchEffectActive)
-     * +0.0 otherwise
-     * extra:
-     * batchCorrected = true, if data was batch-corrected
-     */
-    private double qScoreBatchEffect;
     private boolean batchCorrected;
 
+    private double qScoreBatchEffect;
     private boolean manualHasStrongBatchEffect;
     private boolean manualHasNoBatchEffect;
     private boolean manualBatchEffectActive;
 
-    /**
-     * Batch confound
-     * -1.0 if data confound detected or (manualHasBatchConfound &amp; manualBatchConfoundActive)
-     * +1.0 otherwise
-     */
     private double qScoreBatchConfound;
-
     private boolean manualHasBatchConfound;
     private boolean manualBatchConfoundActive;
 
@@ -287,6 +150,12 @@ public class Geeq implements Identifiable, Serializable {
         return new double[] { 1, 0, 1, 0, 1, 1, 1, 1, 1 };
     }
 
+    /**
+     * @return Quality refers to data quality, wherein the same study could have been done twice with the same technical
+     * parameters and in one case yield bad quality data, and in another high quality data.
+     * The quality score can be overridden. The manual value is stored in manualQualityScore, while
+     * manualQualityOverride boolean value denotes whether the manual value should be used.
+     */
     public double getDetectedQualityScore() {
         return detectedQualityScore;
     }
@@ -311,6 +180,12 @@ public class Geeq implements Identifiable, Serializable {
         this.manualQualityOverride = manualQualityOverride;
     }
 
+    /**
+     * @return Suitability mostly refers to technical aspects which, if we were doing the study ourselves, we would have
+     * altered to make it optimal for analyses of the sort used in Gemma.
+     * The suitability score can be overridden. The manual value is stored in manualSuitabilityScore, while
+     * manualSuitabilityOverride boolean value denotes whether the manual value should be used.
+     */
     public double getDetectedSuitabilityScore() {
         return detectedSuitabilityScore;
     }
@@ -335,6 +210,13 @@ public class Geeq implements Identifiable, Serializable {
         this.manualSuitabilityOverride = manualSuitabilityOverride;
     }
 
+    /**
+     * @return -1.0 - if experiment has no publication
+     * -0.7 - if date not filled in
+     * -0.5 if date &lt; 2006
+     * -0.3 if date &lt; 2009
+     * +1.0 otherwise
+     */
     public double getSScorePublication() {
         return sScorePublication;
     }
@@ -343,6 +225,12 @@ public class Geeq implements Identifiable, Serializable {
         this.sScorePublication = sScorePublicationDate;
     }
 
+    /**
+     * @return The amount of platforms the experiment uses:
+     * -1.0 if amount &gt; 2
+     * -0.5 if amount &gt; 1
+     * +1.0 otherwise
+     */
     public double getSScorePlatformAmount() {
         return sScorePlatformAmount;
     }
@@ -351,6 +239,11 @@ public class Geeq implements Identifiable, Serializable {
         this.sScorePlatformAmount = sScorePlatformAmount;
     }
 
+    /**
+     * @return Extra punishment for platform technology inconsistency
+     * -1.0 if platforms amount &gt; 1 and platforms do not have the same technology type
+     * +1.0 otherwise
+     */
     public double getSScorePlatformsTechMulti() {
         return sScorePlatformsTechMulti;
     }
@@ -359,6 +252,14 @@ public class Geeq implements Identifiable, Serializable {
         this.sScorePlatformsTechMulti = sScorePlatformsTechMulti;
     }
 
+    /**
+     * @return Score for each platforms popularity: (final score is average of scores for all used platforms)
+     * -1.0 if used in &lt; 10 EEs
+     * -0.5 if used in &lt; 20 EEs
+     * +0.0 if used in &lt; 50 EEs
+     * +0.5 if used in &lt; 100 EEs
+     * +1.0 otherwise
+     */
     public double getSScoreAvgPlatformPopularity() {
         return sScoreAvgPlatformPopularity;
     }
@@ -367,6 +268,14 @@ public class Geeq implements Identifiable, Serializable {
         this.sScoreAvgPlatformPopularity = sScoreAvgPlatformPopularity;
     }
 
+    /**
+     * @return Score for each platforms size: (final score is average of scores for all used platforms)
+     * -1.0 if gene count &lt; 5k
+     * -0.5 if gene count &lt; 10k
+     * +0.0 if gene count &lt; 15k
+     * +0.5 if gene count &lt; 18k
+     * +1.0 otherwise
+     */
     public double getSScoreAvgPlatformSize() {
         return sScoreAvgPlatformSize;
     }
@@ -375,6 +284,14 @@ public class Geeq implements Identifiable, Serializable {
         this.sScoreAvgPlatformSize = sScoreAvgPlatformSize;
     }
 
+    /**
+     * @return The amount of samples in the experiment
+     * -1.0 if sample size &lt; 20
+     * -0.5 if sample size &lt; 50
+     * +0.0 if sample size &lt; 100
+     * +0.5 if sample size &lt; 200
+     * +1.0 otherwise
+     */
     public double getSScoreSampleSize() {
         return sScoreSampleSize;
     }
@@ -383,6 +300,11 @@ public class Geeq implements Identifiable, Serializable {
         this.sScoreSampleSize = sScoreSampleSize;
     }
 
+    /**
+     * @return Raw data availability (shows also as the 'external' badge in Gemma web UI)
+     * -1.0 if no raw data available
+     * +1.0 otherwise
+     */
     public double getSScoreRawData() {
         return sScoreRawData;
     }
@@ -391,6 +313,13 @@ public class Geeq implements Identifiable, Serializable {
         this.sScoreRawData = sScoreRawData;
     }
 
+    /**
+     * @return Missing values
+     * -1.0 if experiment has any missing values or there are no computed vectors
+     * +1.0 otherwise (assumed if experiment has raw data available)
+     * extra:
+     * noVectors = true, if experiment has no computed vectors
+     */
     public double getSScoreMissingValues() {
         return sScoreMissingValues;
     }
@@ -399,6 +328,17 @@ public class Geeq implements Identifiable, Serializable {
         this.sScoreMissingValues = sScoreMissingValues;
     }
 
+    /**
+     * @return Ratio of detected (non-removed) outliers vs sample size:
+     * -1.0 if ratio &gt; 5%
+     * -0.5 if ratio &gt; 2%
+     * +0.0 if ratio &gt; 0.1%
+     * +0.5 if ratio &gt; 0% small punishment for very large experiments with one bad apple
+     * +1.0 if ratio = 0%
+     * extra (in corrMatIssues):
+     * 1 if the correlation matrix is empty
+     * 2 if the correlation matrix has NaN values
+     */
     public double getQScoreOutliers() {
         return qScoreOutliers;
     }
@@ -407,6 +347,11 @@ public class Geeq implements Identifiable, Serializable {
         this.qScoreOutliers = qScoreOutliers;
     }
 
+    /**
+     * @return Platform technologies
+     * -1.0 if any platform is two-color
+     * +1.0 otherwise
+     */
     public double getQScorePlatformsTech() {
         return qScorePlatformsTech;
     }
@@ -415,6 +360,17 @@ public class Geeq implements Identifiable, Serializable {
         this.qScorePlatformsTech = qScorePlatformsTech;
     }
 
+    /**
+     * @return Number of replicates - ee has to have design and more than one condition
+     * -1.0 if lowest replicate amount &lt; 4 &amp; !=1 or if there are problems
+     * +0.0 if lowest replicate amount &lt; 10 &amp; !=1
+     * +1.0 otherwise
+     * extra (in replicatesIssues):
+     * 1 if the experiment has no design
+     * 2 if there were no factor values found
+     * 3 if all replicate amounts were 1
+     * 4 if lowest replicate was 0 (that really should not happen though)
+     */
     public double getQScoreReplicates() {
         return qScoreReplicates;
     }
@@ -423,6 +379,11 @@ public class Geeq implements Identifiable, Serializable {
         this.qScoreReplicates = qScoreReplicates;
     }
 
+    /**
+     * @return State of batch info
+     * -1.0 if no batch info available
+     * +1.0 otherwise
+     */
     public double getQScoreBatchInfo() {
         return qScoreBatchInfo;
     }
@@ -431,6 +392,14 @@ public class Geeq implements Identifiable, Serializable {
         this.qScoreBatchInfo = qScoreBatchInfo;
     }
 
+    /**
+     * @return Batch effect without batch correction. Can ve overridden.
+     * -1.0 if batch pVal &lt; 0.0001 or (manualHasStrongBatchEffect &amp; manualBatchEffectActive)
+     * +1.0 if batch pVal &gt; 0.1 or (!manualHasNoBatchEffect &amp; manualBatchEffectActive)
+     * +0.0 otherwise
+     * extra:
+     * batchCorrected = true, if data was batch-corrected
+     */
     public double getQScoreBatchEffect() {
         return qScoreBatchEffect;
     }
@@ -463,6 +432,11 @@ public class Geeq implements Identifiable, Serializable {
         this.manualBatchEffectActive = manualBatchEffectOverride;
     }
 
+    /**
+     * @return Batch confound
+     * -1.0 if data confound detected or (manualHasBatchConfound &amp; manualBatchConfoundActive)
+     * +1.0 otherwise
+     */
     public double getQScoreBatchConfound() {
         return qScoreBatchConfound;
     }
@@ -487,6 +461,11 @@ public class Geeq implements Identifiable, Serializable {
         this.manualBatchConfoundActive = manualBatchConfoundActive;
     }
 
+    /**
+     * @return Using the mean sample correlation r:
+     * +r use the computed value
+     * +0.0 if correlation matrix is empty
+     */
     public double getQScoreSampleMeanCorrelation() {
         return qScoreSampleMeanCorrelation;
     }
@@ -495,6 +474,11 @@ public class Geeq implements Identifiable, Serializable {
         this.qScoreSampleMeanCorrelation = qScoreSampleMeanCorrelation;
     }
 
+    /**
+     * @return Using the median sample correlation m:
+     * +m use the computed value
+     * +0.0 if correlation matrix is empty
+     */
     public double getQScoreSampleMedianCorrelation() {
         return qScoreSampleMedianCorrelation;
     }
@@ -503,6 +487,11 @@ public class Geeq implements Identifiable, Serializable {
         this.qScoreSampleMedianCorrelation = qScoreSampleMedianCorrelation;
     }
 
+    /**
+     * @return Using the sample correlation variance v:
+     * +v use the computed value
+     * +0.0 if correlation matrix is empty
+     */
     public double getQScoreSampleCorrelationVariance() {
         return qScoreSampleCorrelationVariance;
     }
