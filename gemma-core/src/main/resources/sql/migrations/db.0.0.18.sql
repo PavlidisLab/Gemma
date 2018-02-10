@@ -45,7 +45,7 @@ add column `CORRMAT_ISSUES` TINYINT default 0,
 add column `REPLICATES_ISSUES` TINYINT default 0,
 add column `BATCH_CORRECTED` BIT default 0,
 
-add column `OTHER_ISSUES` VARCHAR(500) default null;
+add column `OTHER_ISSUES` VARCHAR(500);
 
 alter table GEEQ
 add constraint FK_1LAST_RUN_EVENT FOREIGN KEY(`LAST_RUN_EVENT_FK`) REFERENCES `AUDIT_EVENT`(`ID`),

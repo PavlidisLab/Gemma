@@ -118,8 +118,7 @@
                     sql-type="BIT"/>
         </property>
         <property name="otherIssues" type="java.lang.String">
-            <column name="OTHER_ISSUES" not-null="false" unique="false" default="null"
-                    sql-type="VARCHAR"/>
+            <column name="OTHER_ISSUES" not-null="false" unique="false" sql-type="VARCHAR(500)"/>
         </property>
 
         <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"
