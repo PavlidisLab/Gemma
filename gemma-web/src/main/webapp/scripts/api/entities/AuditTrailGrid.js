@@ -191,7 +191,7 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
         forceFit: true
     },
 
-    title: this.comment ? "Add a comment" : "Change troubled status",
+    title: this.comment ? "Add a comment" : "Change usability status",
 
     /**
      * @memberOf Gemma.AddAuditEventDialog
@@ -207,8 +207,8 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
             fields: ['type', 'description', 'icon'],
             data: this.comment
                 ? [['CommentedEvent', 'Comment', 'pencil-square-o']]
-                : [['TroubledStatusFlagEvent', 'Mark as troubled', 'exclamation-triangle'],
-                  ['NotTroubledStatusFlagEvent', 'Mark as NOT troubled', 'check-circle']]
+                : [['TroubledStatusFlagEvent', 'Mark as unusable', 'exclamation-triangle'],
+                  ['NotTroubledStatusFlagEvent', 'Mark as usable', 'check-circle']]
         });
 
         var self = this;

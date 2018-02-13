@@ -636,7 +636,7 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         dataIndex: 'troubled',
         sortable: true,
         renderer: Gemma.Renderers.troubleRenderer,
-        tooltip: 'Shows a warning icon for troubled experiments.',
+        tooltip: 'Shows a warning icon for unusable experiments.',
         width: 15
     }, {
         header: '<i class="fa-custom-exc"></i>',
@@ -883,7 +883,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                     fields: ['filterType', 'displayText'],
                     data: [[0, 'No filter'], [1, 'Need diff. expression analysis'],
                         [2, 'Need coexpression analysis'], [3, 'Has diff. expression analysis'],
-                        [4, 'Has coexpression analysis'], [5, 'Troubled'], [13, 'Not troubled'], [6, 'No factors'], [7, 'No tags'],
+                        [4, 'Has coexpression analysis'], [5, 'Unusable'], [13, 'Usable'], [6, 'No factors'], [7, 'No tags'],
                         [8, 'Needs batch info'], [9, 'Has batch info'], [10, 'Needs PCA'], [11, 'Has PCA'],
                         [12, 'Needs curators attention']]
                 }),

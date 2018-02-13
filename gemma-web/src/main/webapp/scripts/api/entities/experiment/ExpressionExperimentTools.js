@@ -120,7 +120,8 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 + ee.batchEffect
             }
             : {
-                html: '<i class="' + ((ee.hasBatchInformation === false) ? 'dark-gray' : 'green') + ' fa fa-check-square-o fa-lg" ></i>&nbsp;Batch effect not detected'
+                html: '<i class="' + ((ee.hasBatchInformation === false) ? 'dark-gray' : 'green') +
+                ' fa fa-check-square-o fa-lg" ></i>&nbsp;Batch effect not detected'
             };
 
         panelBC.add(be);

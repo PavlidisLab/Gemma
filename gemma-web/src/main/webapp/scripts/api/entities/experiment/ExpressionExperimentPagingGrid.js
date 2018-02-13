@@ -182,7 +182,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
             {
                 header: "Status",
                 tooltip: "D = has differential expression analysis, C = has coexpression analysis. " +
-                "If experiment is troubled, a warning will be displayed instead of D or C.",
+                "If experiment is unusable, a warning will be displayed instead of D or C.",
                 dataIndex: 'troubled',
                 sortable: true,
                 width: 0.05,

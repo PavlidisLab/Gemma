@@ -25,6 +25,7 @@ package ubic.gemma.model.expression.experiment;
  *
  * @author paul, tesarst
  */
+@SuppressWarnings("unused") // Used in frontend
 public class GeeqAdminValueObject extends GeeqValueObject {
 
     private double detectedQualityScore;
@@ -87,41 +88,6 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.manualHasBatchConfound = g.getManualHasBatchConfound();
         this.manualBatchConfoundActive = g.getManualBatchConfoundActive();
         this.otherIssues = g.getOtherIssues();
-    }
-
-    public GeeqAdminValueObject( Long id, double detectedQualityScore, double manualQualityScore,
-            boolean manualQualityOverride, double detectedSuitabilityScore, double manualSuitabilityScore,
-            boolean manualSuitabilityOverride, double sScorePublication, double sScorePlatformAmount,
-            double sScorePlatformsTechMulti, double sScoreAvgPlatformPopularity, double sScoreAvgPlatformSize,
-            double sScoreSampleSize, double sScoreRawData, double sScoreMissingValues, double qScoreOutliers,
-            double qScoreSampleMeanCorrelation, double qScoreSampleMedianCorrelation,
-            double qScoreSampleCorrelationVariance, double qScorePlatformsTech, double qScoreReplicates,
-            double qScoreBatchInfo, double qScoreBatchEffect, boolean manualHasStrongBatchEffect,
-            boolean manualHasNoBatchEffect, boolean manualBatchEffectActive, double qScoreBatchConfound,
-            boolean manualHasBatchConfound, boolean manualBatchConfoundActive, String otherIssues ) {
-        super( id, detectedQualityScore, manualQualityScore, manualQualityOverride, detectedSuitabilityScore,
-                manualSuitabilityScore, manualSuitabilityOverride, sScorePublication, sScorePlatformAmount,
-                sScorePlatformsTechMulti, sScoreAvgPlatformPopularity, sScoreAvgPlatformSize, sScoreSampleSize,
-                sScoreRawData, sScoreMissingValues, qScoreOutliers, qScoreSampleMeanCorrelation,
-                qScoreSampleMedianCorrelation, qScoreSampleCorrelationVariance, qScorePlatformsTech, qScoreReplicates,
-                qScoreBatchInfo, qScoreBatchEffect, manualHasStrongBatchEffect, manualHasNoBatchEffect,
-                manualBatchEffectActive, qScoreBatchConfound, manualHasBatchConfound, manualBatchConfoundActive );
-        this.detectedQualityScore = detectedQualityScore;
-        this.manualQualityScore = manualQualityScore;
-        this.manualQualityOverride = manualQualityOverride;
-        this.detectedSuitabilityScore = detectedSuitabilityScore;
-        this.manualSuitabilityScore = manualSuitabilityScore;
-        this.manualSuitabilityOverride = manualSuitabilityOverride;
-
-        this.qScoreBatchEffect = qScoreBatchEffect;
-        this.manualHasStrongBatchEffect = manualHasStrongBatchEffect;
-        this.manualHasNoBatchEffect = manualHasNoBatchEffect;
-        this.manualBatchEffectActive = manualBatchEffectActive;
-        this.qScoreBatchConfound = qScoreBatchConfound;
-        this.manualHasBatchConfound = manualHasBatchConfound;
-        this.manualBatchConfoundActive = manualBatchConfoundActive;
-
-        this.otherIssues = otherIssues;
     }
 
     public double getDetectedQualityScore() {
