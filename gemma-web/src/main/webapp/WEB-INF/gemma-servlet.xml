@@ -748,6 +748,10 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
 			javascript="ExpressionExperimentValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.GeeqValueObject"
+					 javascript="GeeqValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.GeeqAdminValueObject"
+					 javascript="GeeqAdminValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject"
 			javascript="PhenotypeValueObject" />
 		<dwr:convert type="bean"
