@@ -32,6 +32,8 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         manager.on('reportUpdated', function () {
             this.fireEvent('reloadNeeded');
         }, this);
+
+
         var refreshButton = new Ext.Button({
             text: 'Refresh',
             icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
@@ -42,40 +44,74 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             scope: this
 
         });
-
         this.getTopToolbar().addButton(refreshButton);
 
-        this.add({
-            html: '<hr class="normal"/><h4>Preprocessing:<br></h4>'
+        var eeRow = new Ext.Panel({
+            cls: 'ee-tool-row',
+            defaults: {
+                width: '100%',
+                border: false,
+                padding: 2
+            }
         });
-        var missingValueInfo = this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager);
-        this.add(missingValueInfo);
-        var processedVectorInfo = this.processedVectorCreatePanelRenderer(this.experimentDetails, manager);
-        this.add(processedVectorInfo);
+
+        eeRow.add({
+            html: '<hr class="normal"/>'
+        });
+
+        var leftPanel = new Ext.Panel({
+            cls: 'ee-tool-left',
+            defaults: {
+                border: false,
+                padding: 2
+            }
+        });
+
+        leftPanel.add({
+            html: '<h4>Preprocessing:</h4>'
+        });
+        leftPanel.add(this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager));
+        leftPanel.add(this.processedVectorCreatePanelRenderer(this.experimentDetails, manager));
         // PCA analysis
-        var pcaInfo = this.pcaPanelRenderer(this.experimentDetails, manager);
-        this.add(pcaInfo);
+        leftPanel.add(this.pcaPanelRenderer(this.experimentDetails, manager));
         // Batch information
-        var batchInfo = this.batchPanelRenderer(this.experimentDetails, manager);
-        this.add(batchInfo);
+        leftPanel.add(this.batchPanelRenderer(this.experimentDetails, manager));
 
         var batchInfoMissingPanel = this.batchInfoMissingRenderer(this.experimentDetails, manager);
         var batchConfoundPanel = this.batchConfoundRenderer(this.experimentDetails, manager);
         var batchEffectPanel = this.batchEffectRenderer(this.experimentDetails, manager);
         if (batchConfoundPanel !== null || batchEffectPanel !== null || batchInfoMissingPanel !== null) {
-            this.add({html: "<br/><h4>Batch info quality:</h4>"});
-            if (batchInfoMissingPanel !== null) this.add(batchInfoMissingPanel);
-            if (batchConfoundPanel !== null) this.add(batchConfoundPanel);
-            if (batchEffectPanel !== null) this.add(batchEffectPanel);
+            leftPanel.add({html: "<br/><h4>Batch info quality:</h4>"});
+            if (batchInfoMissingPanel !== null) leftPanel.add(batchInfoMissingPanel);
+            if (batchConfoundPanel !== null) leftPanel.add(batchConfoundPanel);
+            if (batchEffectPanel !== null) leftPanel.add(batchEffectPanel);
         }
 
-        this.add({html: "<br/><h4>Analyses:</h4>"});
-        var differentialAnalysisInfo = this.differentialAnalysisPanelRenderer(this.experimentDetails, manager);
-        this.add(differentialAnalysisInfo);
-        var linkAnalysisInfo = this.linkAnalysisPanelRenderer(this.experimentDetails, manager);
-        this.add(linkAnalysisInfo);
-        this.add({html: "<br/><hr class='normal'>"});
+        leftPanel.add({html: "<br/><h4>Analyses:</h4>"});
+        leftPanel.add(this.differentialAnalysisPanelRenderer(this.experimentDetails, manager));
+        leftPanel.add(this.linkAnalysisPanelRenderer(this.experimentDetails, manager));
 
+        eeRow.add(leftPanel);
+
+        var rightPanel = new Ext.Panel({
+            cls: 'ee-tool-right',
+            defaults: {
+                border: false,
+                padding: 2
+            }
+        });
+
+        rightPanel.add({
+            html: '<h3>Quality</h3>'
+        });
+
+        rightPanel.add({
+            html: '<h3>Suitability</h3>'
+        });
+
+        eeRow.add(rightPanel);
+
+        this.add(eeRow);
     },
 
     batchInfoMissingRenderer: function (ee, mgr) {
@@ -237,6 +273,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         }
 
     },
+
     missingValueAnalysisPanelRenderer: function (ee, manager) {
         var panel = new Ext.Panel({
             layout: 'hbox',

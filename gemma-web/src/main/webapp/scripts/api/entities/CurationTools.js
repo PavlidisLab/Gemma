@@ -58,10 +58,9 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
      */
     createTroublePanel: function () {
         var panelTrouble = new Ext.Panel({
-            layout: 'hbox',
+            cls: 'ee-tool-left',
             buttonAlign: 'left',
             defaults: {
-                width: '100%',
                 border: false,
                 padding: 0
             }
@@ -117,10 +116,9 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
      */
     createCurationPanel: function () {
         var panelCuration = new Ext.Panel({
-            layout: 'hbox',
+            cls: 'ee-tool-left',
             buttonAlign: 'left',
             defaults: {
-                width: '100%',
                 border: false,
                 padding: 0
             }
@@ -128,7 +126,8 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         // Status and input elements
         panelCuration.add({
-            html: '<div class="v-padded">' +
+            html: '<hr class="normal"/>' +
+            '<div class="v-padded">' +
             '<span class="bold width130">Curation status: </span>' + this.getNeedsAttentionStatusHtml() +
             '<span class="v-padded"><span class="chb-correction"><input type="checkbox" id="needsAttention"></span> Needs Attention</span>' +
             '</div>' +
