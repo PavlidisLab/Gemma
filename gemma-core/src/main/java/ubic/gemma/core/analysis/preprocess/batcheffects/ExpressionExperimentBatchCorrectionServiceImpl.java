@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -17,7 +17,6 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 import cern.colt.matrix.DoubleMatrix2D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -91,6 +90,11 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     @Override
     public boolean checkCorrectability( ExpressionExperiment ee ) {
+        return this.checkCorrectability( ee, false );
+    }
+
+    @Override
+    public boolean checkCorrectability( ExpressionExperiment ee, boolean force ) {
 
         for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
             if ( qt.getIsBatchCorrected() ) {
@@ -104,23 +108,13 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             log.warn( "No batch factor found: " + ee );
             return false;
         }
-        try {
 
-            Collection<BatchConfoundValueObject> test = BatchConfound.test( ee );
-
-            for ( BatchConfoundValueObject batchConfoundValueObject : test ) {
-                if ( batchConfoundValueObject.getP() < 1e-4 ) {
-                    log.warn( "Batch confound detected on " + ee.getShortName() + ", p=" + batchConfoundValueObject.getP() );
-                    /*
-                     * How bad is it ... note that if it is really bad but miss it here, we won't be able to correct so will
-                     * get an exception later.
-                     */
-                    return false;
-                }
-            }
-
-        } catch ( NotStrictlyPositiveException e ) {
-            log.error( "Batch confound test threw a NonStrictlyPositiveException! Skipping." );
+        String bConf = expressionExperimentService.getBatchConfound( ee );
+        if ( bConf != null && !force ) {
+            log.warn( "Experiment can not be batch corrected: " + bConf );
+            log.info(
+                    "To force batch-correction of a confounded experiment, use the force option (note, that this option also allows outliers while batch correcting)." );
+            return false;
         }
 
         /*

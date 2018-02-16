@@ -29,10 +29,20 @@ public interface ExpressionExperimentBatchCorrectionService {
      * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
      * least two samples per batch?
      *
-     * @param ee the experiment
+     * @param ee    the experiment
      * @return whether it is correctable
      */
     boolean checkCorrectability( ExpressionExperiment ee );
+
+    /**
+     * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
+     * least two samples per batch?
+     *
+     * @param ee    the experiment
+     * @param force whether the correctability should ignore detected batch confound
+     * @return whether it is correctable
+     */
+    boolean checkCorrectability( ExpressionExperiment ee, boolean force );
 
     /**
      * Run ComBat using default settings (parametric)
