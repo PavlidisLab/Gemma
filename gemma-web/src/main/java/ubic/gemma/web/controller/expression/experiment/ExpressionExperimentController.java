@@ -707,17 +707,12 @@ public class ExpressionExperimentController {
         expressionExperimentService.update( ee );
     }
 
-    public void runGeeq( Long id, String modeArg ) {
-        GeeqServiceImpl.ScoringMode mode;
-        switch(modeArg){
-            default:
-            case OPT_MODE_ALL: mode = GeeqServiceImpl.ScoringMode.all; break;
-            case OPT_MODE_B_EFFECT: mode = GeeqServiceImpl.ScoringMode.batchEffect; break;
-            case OPT_MODE_B_CONFOUND: mode = GeeqServiceImpl.ScoringMode.batchEffect; break;
-            case OPT_MODE_REPS: mode = GeeqServiceImpl.ScoringMode.batchEffect; break;
-            case OPT_MODE_PUB: mode = GeeqServiceImpl.ScoringMode.publication; break;
-        }
+    public void runGeeq( Long id, String mode ) {
         geeqService.calculateScore( id, mode );
+    }
+
+    public void setGeeqManualSettings(long id, GeeqAdminValueObject vo){
+        geeqService.setManualOverrides( id, vo );
     }
 
     /**

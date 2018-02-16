@@ -109,28 +109,28 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     public GeeqValueObject( Geeq g ) {
         super( g.getId() );
         this.setPublicQualityScore( g.getDetectedQualityScore(), g.getManualQualityScore(),
-                g.getManualQualityOverride() );
+                g.isManualQualityOverride() );
         this.setPublicSuitabilityScore( g.getDetectedSuitabilityScore(), g.getManualSuitabilityScore(),
-                g.getManualSuitabilityOverride() );
-        this.sScorePublication = g.getSScorePublication();
-        this.sScorePlatformAmount = g.getSScorePlatformAmount();
-        this.sScorePlatformsTechMulti = g.getSScorePlatformsTechMulti();
-        this.sScoreAvgPlatformPopularity = g.getSScoreAvgPlatformPopularity();
-        this.sScoreAvgPlatformSize = g.getSScoreAvgPlatformSize();
-        this.sScoreSampleSize = g.getSScoreSampleSize();
-        this.sScoreRawData = g.getSScoreRawData();
-        this.sScoreMissingValues = g.getSScoreMissingValues();
-        this.qScoreOutliers = g.getQScoreOutliers();
-        this.qScoreSampleMeanCorrelation = g.getQScoreSampleMeanCorrelation();
-        this.qScoreSampleMedianCorrelation = g.getQScoreSampleMedianCorrelation();
-        this.qScoreSampleCorrelationVariance = g.getQScoreSampleCorrelationVariance();
-        this.qScorePlatformsTech = g.getQScorePlatformsTech();
-        this.qScoreReplicates = g.getQScoreReplicates();
-        this.qScoreBatchInfo = g.getQScoreBatchInfo();
-        this.setqScorePublicBatchEffect( g.getQScoreBatchEffect(), g.getManualHasStrongBatchEffect(),
-                g.getManualHasNoBatchEffect(), g.getManualBatchEffectActive() );
-        this.setqScorePublicBatchConfound( g.getQScoreBatchConfound(), g.getManualHasBatchConfound(),
-                g.getManualBatchConfoundActive() );
+                g.isManualSuitabilityOverride() );
+        this.sScorePublication = g.getsScorePublication();
+        this.sScorePlatformAmount = g.getsScorePlatformAmount();
+        this.sScorePlatformsTechMulti = g.getsScorePlatformsTechMulti();
+        this.sScoreAvgPlatformPopularity = g.getsScoreAvgPlatformPopularity();
+        this.sScoreAvgPlatformSize = g.getsScoreAvgPlatformSize();
+        this.sScoreSampleSize = g.getsScoreSampleSize();
+        this.sScoreRawData = g.getsScoreRawData();
+        this.sScoreMissingValues = g.getsScoreMissingValues();
+        this.qScoreOutliers = g.getqScoreOutliers();
+        this.qScoreSampleMeanCorrelation = g.getqScoreSampleMeanCorrelation();
+        this.qScoreSampleMedianCorrelation = g.getqScoreSampleMedianCorrelation();
+        this.qScoreSampleCorrelationVariance = g.getqScoreSampleCorrelationVariance();
+        this.qScorePlatformsTech = g.getqScorePlatformsTech();
+        this.qScoreReplicates = g.getqScoreReplicates();
+        this.qScoreBatchInfo = g.getqScoreBatchInfo();
+        this.setqScorePublicBatchEffect( g.getqScoreBatchEffect(), g.isManualHasStrongBatchEffect(),
+                g.isManualHasNoBatchEffect(), g.isManualBatchEffectActive() );
+        this.setqScorePublicBatchConfound( g.getqScoreBatchConfound(), g.isManualHasBatchConfound(),
+                g.isManualBatchConfoundActive() );
         this.noVectors = g.isNoVectors();
         this.batchCorrected = g.isBatchCorrected();
         this.corrMatIssues = g.getCorrMatIssues();
@@ -156,15 +156,33 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private void setqScorePublicBatchConfound( double detected, boolean manualHasConfound, boolean override ) {
         this.qScorePublicBatchConfound = //
                 !override ? detected : //
-                        manualHasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NOHAS;
+                        manualHasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NO_HAS;
     }
 
     public double getPublicQualityScore() {
         return publicQualityScore;
     }
 
+    /**
+     * Only for DWR serializer, do not use to manually set the score.
+     *
+     * @param publicQualityScore the new score
+     */
+    public void setPublicQualityScore( double publicQualityScore ) {
+        this.publicQualityScore = publicQualityScore;
+    }
+
     public double getPublicSuitabilityScore() {
         return publicSuitabilityScore;
+    }
+
+    /**
+     * Only for DWR serializer, do not use to manually set the score.
+     *
+     * @param publicSuitabilityScore the new score
+     */
+    public void setPublicSuitabilityScore( double publicSuitabilityScore ) {
+        this.publicSuitabilityScore = publicSuitabilityScore;
     }
 
     public double getsScorePublication() {

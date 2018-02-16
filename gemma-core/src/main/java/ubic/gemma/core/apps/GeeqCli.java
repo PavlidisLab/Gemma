@@ -16,7 +16,7 @@ public class GeeqCli extends AbstractCLIContextCLI {
     private GeeqService geeqService;
     private String startArg;
     private String stopArg;
-    private GeeqServiceImpl.ScoringMode mode = GeeqServiceImpl.ScoringMode.all;
+    private String mode = GeeqService.OPT_MODE_ALL;
 
     public static void main( String[] args ) {
         GeeqCli p = new GeeqCli();
@@ -58,7 +58,7 @@ public class GeeqCli extends AbstractCLIContextCLI {
                         + "\n " + OPT_MODE_B_EFFECT + "- recalcualtes batch effect score" //
                         + "\n " + OPT_MODE_B_CONFOUND + " - recalculates batch confound score" //
                         + "\n " + OPT_MODE_REPS + " - recalculates score for replicates" //
-                        + "\n " + OPT_MODE_PUB + " - recalculates score for publication").isRequired().create( 'm' );
+                        + "\n " + OPT_MODE_PUB + " - recalculates score for publication").create( 'm' );
         addOption( modeOption );
     }
 
@@ -77,21 +77,7 @@ public class GeeqCli extends AbstractCLIContextCLI {
         }
         if ( this.hasOption( 'm' ) ) {
             String m = this.getOptionValue( 'm' );
-            switch ( m ) {
-                default:
-                case OPT_MODE_ALL:
-                    this.mode = GeeqServiceImpl.ScoringMode.all;
-                    break;
-                case OPT_MODE_B_EFFECT:
-                    this.mode = GeeqServiceImpl.ScoringMode.batchEffect;
-                    break;
-                case OPT_MODE_B_CONFOUND:
-                    this.mode = GeeqServiceImpl.ScoringMode.batchConfound;
-                    break;
-                case OPT_MODE_REPS:
-                    this.mode = GeeqServiceImpl.ScoringMode.replicates;
-                    break;
-            }
+            this.mode = m;
         }
     }
 

@@ -75,18 +75,18 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         super( g );
         this.detectedQualityScore = g.getDetectedQualityScore();
         this.manualQualityScore = g.getManualQualityScore();
-        this.manualQualityOverride = g.getManualQualityOverride();
+        this.manualQualityOverride = g.isManualQualityOverride();
         this.detectedSuitabilityScore = g.getDetectedSuitabilityScore();
         this.manualSuitabilityScore = g.getManualSuitabilityScore();
-        this.manualSuitabilityOverride = g.getManualSuitabilityOverride();
+        this.manualSuitabilityOverride = g.isManualSuitabilityOverride();
 
-        this.qScoreBatchEffect = g.getQScoreBatchEffect();
-        this.manualHasStrongBatchEffect = g.getManualHasStrongBatchEffect();
-        this.manualHasNoBatchEffect = g.getManualHasNoBatchEffect();
-        this.manualBatchEffectActive = g.getManualBatchEffectActive();
-        this.qScoreBatchConfound = g.getQScoreBatchConfound();
-        this.manualHasBatchConfound = g.getManualHasBatchConfound();
-        this.manualBatchConfoundActive = g.getManualBatchConfoundActive();
+        this.qScoreBatchEffect = g.getqScoreBatchEffect();
+        this.manualHasStrongBatchEffect = g.isManualHasStrongBatchEffect();
+        this.manualHasNoBatchEffect = g.isManualHasNoBatchEffect();
+        this.manualBatchEffectActive = g.isManualBatchEffectActive();
+        this.qScoreBatchConfound = g.getqScoreBatchConfound();
+        this.manualHasBatchConfound = g.isManualHasBatchConfound();
+        this.manualBatchConfoundActive = g.isManualBatchConfoundActive();
         this.otherIssues = g.getOtherIssues();
     }
 

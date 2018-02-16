@@ -238,6 +238,10 @@ hr.normal {
     height: 1px;
 }
 
+.nobreak {
+    display: inline-block;
+}
+
 .curation-tool h4 {
     font-size: 120%;
 }
@@ -259,6 +263,23 @@ hr.normal {
     float: left;
 }
 
+.btn-refresh {
+    border-radius: 10px;
+    background-color: whitesmoke !important;
+}
+
+.btn-refresh:hover {
+    background-color: lightgray !important;
+}
+
+.btn-refresh * {
+    font-weight: bold;
+    background: transparent !important;
+    cursor: pointer;
+    font-size: 106% !important;
+    color: royalblue !important;
+}
+
 .gq-head {
     font-size: 120%;
 }
@@ -268,18 +289,69 @@ hr.normal {
     font-weight: bold;
 }
 
+.gq-head .gq-extra .gq-btn {
+    top: -10px;
+}
+
 .gq-body {
     filter: saturate(70%);
+    margin: 0;
+    background: whitesmoke !important;
+    border-left: 1px solid lightgray;
+    border-bottom: 1px solid lightgray;
+    border-right: 1px solid lightgray;
 }
 
 .gq-btn {
     width: 100% !important;
     padding: 5px;
+    background: whitesmoke;
+}
+
+.gq-btn:hover {
+    filter: brightness(90%);
 }
 
 .gq-btn * {
     font-size: 106% !important;
     cursor: pointer;
+    background: transparent !important;
+}
+
+.extjs-sucks {
+    margin: 0;
+    text-align: center !important;
+}
+
+.extjs-sucks * {
+    text-align: center !important;
+}
+
+.gq-btn-details {
+    text-align: left !important;
+    margin: 0 !important;
+    width: 100% !important;
+    background: whitesmoke !important;
+    /*Looks better when the manual score override UI is enabled*/
+    /*border-left: 1px solid lightgray;*/
+    /*border-bottom: 1px solid lightgray;*/
+    /*border-right: 1px solid lightgray;*/
+}
+
+.gq-btn-details:hover {
+    background: lightgray !important;
+    filter: none;
+}
+
+.gq-btn-details * {
+    text-align: center !important;
+    display: inline-block !important;
+    background: whitesmoke !important;
+}
+
+.gq-btn-details:hover * {
+    background: lightgray !important;
+    filter: none;
 }
 
 .gq-btn-save {
@@ -301,15 +373,32 @@ hr.normal {
     background: whitesmoke !important;
 }
 
+.gq-btn-recalc-all {
+    text-align: center !important;
+    font-size: 90% !important;
+    font-weight: 900 !important;
+    display: inline-block !important;
+    padding: 10px;
+    margin: 20px 0 !important;
+    width: 90% !important;
+}
+
+.gq-btn-recalc-all * {
+    text-align: center !important;
+    display: inline-block !important;
+    cursor: pointer !important;
+}
+
+.gq-btn-recalc-all.x-item-disabled {
+    color: darkgray !important;
+    background-color: lightgray !important;
+}
+
 .gq-row {
-    border-radius: 5px;
     padding: 2px;
-    margin: 1px;
 }
 
 .gq-row.has-extra {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
     margin-bottom: 0;
 }
 
@@ -353,9 +442,7 @@ hr.normal {
     box-shadow: inset 0 10px 10px -10px #585858;
     text-align: center;
     background: lightgray !important;
-    border-bottom-right-radius: 5px;
-    border-bottom-left-radius: 5px;
-    margin: 0 1px;
+    margin: 0;
     padding: 0 5px 5px 5px;
 }
 
@@ -376,6 +463,11 @@ hr.normal {
 
 .gq-extra .gq-btn * {
     color: #747474;
+}
+
+.gq-subscore-refresh-btn {
+    margin-right: 10px;
+    padding: 5px;
 }
 
 .gq-override-value-slider {
@@ -419,6 +511,27 @@ hr.normal {
 
 .gq-override-value[disabled] {
     filter: grayscale(100%);
+}
+
+.gq-notif, .gq-notif * {
+    vertical-align: text-bottom !important;
+    display: inline-block !important;
+}
+
+.gq-notif span {
+    padding: 5px 10px;
+    border-radius: 10px;
+    background-color: royalblue;
+    color: white;
+}
+
+.gq-notif span:not([hidden]) {
+    opacity: 1;
+}
+
+.gq-notif span[hidden] {
+    opacity: 0;
+    transition: opacity 1s linear;
 }
 
 .folded {
@@ -584,14 +697,6 @@ i[class*=qtp] {
 
 .bold {
     font-weight: bold;
-}
-
-.btn-not-loading {
-    background: url("../../images/icons/control_play_blue.png") no-repeat center;
-}
-
-.btn-loading {
-    background: url("../../images/loading.gif") no-repeat center;
 }
 
 .ee-status-badge {

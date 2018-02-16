@@ -82,6 +82,8 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
             ret = '<i class="gold fa fa-exclamation-circle fa-lg fa-fw"></i>' + ret;
         }else if (value.indexOf("CurationNote") !== -1) {
             ret = '<i class="dark-gray fa fa-pencil-square-o fa-lg fa-fw"></i>' + ret;
+        }else if (value.indexOf("Geeq") !== -1) {
+            ret = '<i class="gray-blue fa fa-star fa-lg fa-fw"></i>' + ret;
         }
         return ret;
     },

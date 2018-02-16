@@ -288,6 +288,8 @@
 			<dwr:include method="clearFromCaches" />
 			<dwr:include method="recalculateBatchConfound" />
 			<dwr:include method="recalculateBatchEffect" />
+			<dwr:include method="runGeeq" />
+			<dwr:include method="setGeeqManualSettings" />
 		</dwr:remote>
 	</bean>
 

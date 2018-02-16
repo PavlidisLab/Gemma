@@ -13,6 +13,7 @@ Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
  */
 Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
+    allowScoreOverride: false,
     experimentDetails: null,
     tbar: new Ext.Toolbar(),
     bconfFolded: true,
@@ -37,18 +38,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             this.fireEvent('reloadNeeded');
         }, this);
 
-
-        var refreshButton = new Ext.Button({
-            text: 'Refresh',
-            icon: ctxBasePath + '/images/icons/arrow_refresh_small.png',
-            tooltip: 'Refresh statistics (not including the differential expression ones)',
-            handler: function () {
-                manager.updateEEReport(this.experimentDetails.id);
-            },
-            scope: this
-
-        });
-        this.getTopToolbar().addButton(refreshButton);
+        var self = this;
 
         var eeRow = new Ext.Panel({
             cls: 'ee-tool-row',
@@ -63,6 +53,16 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             html: '<hr class="normal"/>'
         });
 
+        var refreshButton = new Ext.Button({
+            text: '<i title="Refresh preprocessing statistics" class="fa fa-refresh fa-fw"/>',
+            cls: 'btn-refresh nobreak',
+            tooltip: 'Refresh preprocessing statistics',
+            handler: function () {
+                manager.updateEEReport(this.experimentDetails.id);
+            },
+            scope: this
+        });
+
         var leftPanel = new Ext.Panel({
             cls: 'ee-tool-left',
             defaults: {
@@ -71,7 +71,8 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
         });
 
-        leftPanel.add({html: '<h4>Preprocessing:</h4>'});
+        leftPanel.add({cls: 'nobreak', html: '<h4>Preprocessing:</h4>'});
+        leftPanel.add(refreshButton);
         leftPanel.add(this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager));
         leftPanel.add(this.processedVectorCreatePanelRenderer(this.experimentDetails, manager));
         leftPanel.add(this.pcaPanelRenderer(this.experimentDetails, manager));
@@ -119,12 +120,40 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             rightPanel.add(this.suitabilityRenderer(this.experimentDetails, manager));
         } else {
             rightPanel.add({
-                //TODO add calculation task submit button (see batch confound and effect buttons on the left)
                 html:
                 '<h4>Quality / Suitability</h4>' +
                 '<div>Quality and Suitability not calculated for this experiment</div>'
             })
         }
+
+        var gqRecalcButton = new Ext.Button({
+            text: "<i class='fa fa-refresh fa-fw'></i>Recalculate score and refresh page (takes a minute)",
+            tooltip:
+            'Runs full scoring. This usually takes around 1 minute to complete, but can take up to several minutes for large experiments.\n' +
+            'Page will refresh after this task has been finished',
+            cls: 'gq-btn btn-refresh gq-btn-recalc-all',
+            handler: function (b, e) {
+                b.setText("<i class='fa fa-refresh fa-fw fa-spin'></i>Recalculate score and refresh page (takes a minute)");
+                b.setDisabled(true);
+                ExpressionExperimentController.runGeeq(self.experimentDetails.id, "all", {
+                    callback: function () {
+                        window.location.reload();
+                    }
+                });
+            },
+            scope: this
+        });
+
+        var recalcButtonWrap = new Ext.Panel({
+            cls: 'extjs-sucks',
+            defaults: {
+                border: false,
+                padding: 0
+            }
+        });
+
+        recalcButtonWrap.add(gqRecalcButton);
+        rightPanel.add(recalcButtonWrap);
 
         eeRow.add(rightPanel);
 
@@ -135,7 +164,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var panel = new Ext.Panel({
             defaults: {
                 border: false,
-                padding: 2
+                padding: 0
             },
             items: [{
                 html: '<h4>Suitability</h4>'
@@ -153,8 +182,8 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var suitExtra = this.suitExtraRendeder(ee);
         sHead.add(this.geeqRowRenderer("Public suitability score", ee.geeq.publicSuitabilityScore,
             "This is the suitability score that is currently publicly displayed.", "", 2, null, suitExtra));
-        sHead.add(suitExtra);
-        this.allowSuitInput(ee.geeq.manualQualityOverride);
+        if (this.allowScoreOverride) sHead.add(suitExtra);
+        this.allowSuitInput(ee.geeq.manualSuitabilityOverride);
 
 
         panel.add(sHead);
@@ -167,59 +196,63 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
         });
 
-        var detailsButton = new Ext.Button({
-            text: 'Quality scoring details <i class=\'fa fa-chevron-circle-down fa\'></i>',
-            cls: 'gq-btn',
-            handler: function () {
-                this.showPanel(sBody, !sBody.isVisible())
-            },
-            scope: this
+        var detailsButtonWrap = new Ext.Panel({
+            cls: 'extjs-sucks',
+            defaults: {
+                border: false,
+                padding: 0
+            }
         });
 
-        panel.add(detailsButton);
+        var detailsButton = this.detailsButtonRenderer(sBody);
+
+        detailsButtonWrap.add(detailsButton);
+        panel.add(detailsButtonWrap);
 
         var sPubDesc =
             Number(ee.geeq.sScorePublication) === -1 ? "Experiment has no publication, try filling it in." :
-                "";
+                "Experiment does have a publication filled in properly.";
 
         var sPlatfAmntDesc =
             Number(ee.geeq.sScorePlatformAmount) === -1 ? "Experiment is on more than 2 platforms. Consider splitting the experiment." :
                 Number(ee.geeq.sScorePlatformAmount) === -0.5 ? "Experiment has 2 platforms. Consider splitting the experiment." :
-                    "";
+                    "Experiment is on a single platform.";
 
         var sPlatfTechDesc =
-            Number(ee.geeq.sScorePlatformsTechMulti) === -1 ? "Experiment has two or more platforms that use different technologies. Experiment should be split." : "";
+            Number(ee.geeq.sScorePlatformsTechMulti) === -1 ? "Experiment has two or more platforms that use different technologies. Experiment should be split." : "" +
+                "All used platforms use the same technology.";
 
         var sPlatfPopDesc =
             Number(ee.geeq.sScoreAvgPlatformPopularity) === -1 ? "Platform(s) used (on average) by less than 10 experiments." :
                 Number(ee.geeq.sScoreAvgPlatformPopularity) === -0.5 ? "Platform(s) used (on average) by less than 20 experiments." :
                     Number(ee.geeq.sScoreAvgPlatformPopularity) === 0.0 ? "Platform(s) used (on average) by less than 50 experiments." :
                         Number(ee.geeq.sScoreAvgPlatformPopularity) === 0.5 ? "Platform(s) used (on average) by less than 100 experiments." :
-                            "";
+                            "Platform(s) used (on average) by at least 100 experiments.";
 
         var sPlatfSizeDesc =
             Number(ee.geeq.sScoreAvgPlatformSize) === -1 ? "Platform has (or all platforms have on average) less than 5k elements." :
                 Number(ee.geeq.sScoreAvgPlatformSize) === -0.5 ? "Platform has (or all platforms have on average) less than 10k elements." :
                     Number(ee.geeq.sScoreAvgPlatformSize) === 0.0 ? "Platform has (or all platforms have on average) less than 15k elements." :
                         Number(ee.geeq.sScoreAvgPlatformSize) === 0.5 ? "Platform has (or all platforms have on average) less than 18k elements." :
-                            "";
+                            "Platform has (or all paltforms have on average) at least 18k elements.";
 
         var sSizeDesc =
             Number(ee.geeq.sScoreSampleSize) === -1 ? "The experiment has less than 20 samples. Experiments this size are no longer accepted in Gemma." :
                 Number(ee.geeq.sScoreSampleSize) === -0.5 ? "The experiment has less than 50 samples." :
                     Number(ee.geeq.sScoreSampleSize) === 0.0 ? "The experiment has less than 100 samples." :
                         Number(ee.geeq.sScoreSampleSize) === 0.5 ? "The experiment has less than 200 samples." :
-                            "";
+                            "The experiment has at least 200 samples.";
 
         var sRawDesc =
-            Number(ee.geeq.sScoreRawData) === -1 ? "Experiment has no raw data available (data are from external source). Try obtaining the raw data." : "";
+            Number(ee.geeq.sScoreRawData) === -1 ? "Experiment has no raw data available (data are from external source). Try obtaining the raw data."
+                : "We do have raw data available for this experiment.";
 
         var sMissErr =
             ee.geeq.noVectors === true ? "Experiment has no computed vectors, run the vector computation!" : "";
         var sMissDesc =
             ee.geeq.noVectors === true ? "There are no computed vectors." :
                 Number(ee.geeq.sScoreMissingValues) === -1 ? "Experiment has missing values. Try filling them in, ideally by obtaining raw data." :
-                    "";
+                    "There are no missing values.";
 
         sBody.add(this.geeqRowRenderer('Publication', ee.geeq.sScorePublication,
             "Checks whether the experiment has a publication, and how old the publication is.", sPubDesc));
@@ -258,7 +291,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var panel = new Ext.Panel({
             defaults: {
                 border: false,
-                padding: 2
+                padding: 0
             },
             items: [{
                 html: '<h4>Quality</h4>'
@@ -276,7 +309,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var qualExtra = this.qualExtraRendeder(ee);
         qHead.add(this.geeqRowRenderer("Public quality score", ee.geeq.publicQualityScore,
             "This is the quality score that is currently publicly displayed.", "", 2, null, qualExtra));
-        qHead.add(qualExtra);
+        if (this.allowScoreOverride) qHead.add(qualExtra);
         this.allowQualInput(ee.geeq.manualQualityOverride);
 
         panel.add(qHead);
@@ -289,16 +322,18 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
         });
 
-        var detailsButton = new Ext.Button({
-            text: 'Quality scoring details <i class=\'fa fa-chevron-circle-down fa\'></i>',
-            cls: 'gq-btn',
-            handler: function () {
-                this.showPanel(qBody, !qBody.isVisible())
-            },
-            scope: this
+        var detailsButtonWrap = new Ext.Panel({
+            cls: 'extjs-sucks',
+            defaults: {
+                border: false,
+                padding: 0
+            }
         });
 
-        panel.add(detailsButton);
+        var detailsButton = this.detailsButtonRenderer(qBody);
+
+        detailsButtonWrap.add(detailsButton);
+        panel.add(detailsButtonWrap);
 
         var qOutlErr =
             Number(ee.geeq.corrMatIssues) === 1 ? "The correlation matrix is empty!" :
@@ -311,10 +346,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 Number(ee.geeq.qScoreOutliers) === -0.5 ? "More than 2% of samples are detected as outliers. " + qODAdv :
                     Number(ee.geeq.qScoreOutliers) === 0.0 ? "More than 0.01% of samples are detected as outliers. " + qODAdv :
                         Number(ee.geeq.qScoreOutliers) === 0.5 ? "More than 0% of samples are detected as outliers. " + qODAdv :
-                            "";
+                            "No outliers were detected.";
 
         var qPlatfTechMultiDesc =
-            Number(ee.geeq.qScorePlatformsTech) === -1 ? "The experiment is on a two-color platform." : "";
+            Number(ee.geeq.qScorePlatformsTech) === -1 ? "The experiment is on a two-color platform." : "" +
+                "The experiment is NOT on a two-color platform.";
 
         var qReplErr =
             Number(ee.geeq.replicatesIssues) === 1 ? "There is no experimental design for this experiment!" :
@@ -326,10 +362,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var qReplDesc =
             Number(ee.geeq.qScoreReplicates) === -1 ? "There is a factor-value combination that has less than 4 replicates." :
                 Number(ee.geeq.qScoreReplicates) === 0.0 ? "There is a factor-value combination that has less than 10 replicates. " :
-                    "";
+                    "All factor-value combinations have at least 10 replicates";
 
         var qBatchInfoDesc =
-            Number(ee.geeq.qScoreBatchInfo) === -1 ? "The experiment has no batch info. Try filling it in." : "";
+            Number(ee.geeq.qScoreBatchInfo) === -1 ? "The experiment has no batch info. Try filling it in." : "" +
+                "Batch information provided.";
 
         var qBatchEffErr =
             Number(ee.geeq.qScoreBatchInfo) === -1 ? "There is no batch information" :
@@ -347,9 +384,10 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 "";
 
         var qBatchConfDesc =
-            Number(ee.geeq.qScoreBatchConfound) === -1 ? "Batch confound has been detected." :
-                Number(ee.geeq.qScoreBatchConfound) === 0.0 ? "There were problems when checking for batch confound." :
-                    "";
+            ee.geeq.manualBatchConfoundActive === true ? "Manually set value, detected score was: " + ee.geeq.qScoreBatchConfound :
+                Number(ee.geeq.qScoreBatchConfound) === -1 ? "Batch confound has been detected." :
+                    Number(ee.geeq.qScoreBatchConfound) === 0.0 ? "There were problems when checking for batch confound." :
+                        "The experiment does not seem to be confounded with the batches.";
 
         var bconfExtra = this.bconfExtraRendeder(ee);
         var beffExtra = this.beffExtraRendeder(ee);
@@ -357,17 +395,17 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         this.allowBconfRadios(ee.geeq.manualBatchConfoundActive);
         this.allowBeffRadios(ee.geeq.manualBatchEffectActive);
 
-        qBody.add(this.geeqRowRenderer('Outliers', ee.geeq.qScoreOutliers,
-            "Depends on the ratio of detected (non-removed) outliers vs sample size. The lower the ratio, the better the score.", qOutlierDesc, 1, qOutlErr));
+        qBody.add(this.geeqRowRenderer('<span style="text-decoration: line-through">Mean sample corr.</span>', ee.geeq.qScoreSampleMeanCorrelation,
+            "[Not included in final score] The actual mean correlation of samples.", "Not included in final score", 4, qOutlErr));
 
-        qBody.add(this.geeqRowRenderer('Mean sample corr.', ee.geeq.qScoreSampleMeanCorrelation,
-            "[Not included in final score] The actual mean correlation of samples.", null, 4, qOutlErr));
+        qBody.add(this.geeqRowRenderer('<span style="text-decoration: line-through">Sample corr. variance</span>', ee.geeq.qScoreSampleCorrelationVariance,
+            "[Not included in final score] The actual variance of sample correlation.", "Not included in final score", 4, qOutlErr));
 
         qBody.add(this.geeqRowRenderer('Median sample corr.', ee.geeq.qScoreSampleMedianCorrelation,
-            "The actual median correlation of samples.", null, 4, qOutlErr));
+            "The actual median correlation of samples.", "Included in the final score. Can be somewhat improved by removing outliers.", 4, qOutlErr));
 
-        qBody.add(this.geeqRowRenderer('Sample corr. variance', ee.geeq.qScoreSampleCorrelationVariance,
-            "[Not included in final score] The actual variance of sample correlation.", null, 4, qOutlErr));
+        qBody.add(this.geeqRowRenderer('Outliers', ee.geeq.qScoreOutliers,
+            "Depends on the ratio of detected (non-removed) outliers vs sample size. The lower the ratio, the better the score.", qOutlierDesc, 1, qOutlErr));
 
         qBody.add(this.geeqRowRenderer('Platform technology', ee.geeq.qScorePlatformsTech,
             "Checks whether the experiments platform (any one, if there are multiple) is two-color.", qPlatfTechMultiDesc));
@@ -395,9 +433,20 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         return panel;
     },
 
+    detailsButtonRenderer: function (panel) {
+        return new Ext.Button({
+            text: '<i class=\'fa fa-bars fa-fw\'></i> Show score breakdown and details',
+            cls: 'gq-btn gq-btn-details',
+            handler: function () {
+                this.showPanel(panel, !panel.isVisible())
+            },
+            scope: this
+        });
+    },
+
     bconfExtraRendeder: function (ee) {
 
-        this.beffFolded = !ee.geeq.manualBatchConfoundActive;
+        this.bconfFolded = !ee.geeq.manualBatchConfoundActive;
 
         var bconfExtra = new Ext.Panel({
             cls: 'gq-extra' + (this.bconfFolded ? ' folded' : ''),
@@ -419,6 +468,22 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         bconfExtra.add(foldButton);
 
+        bconfExtra.add(new Ext.Button({
+            text: '<i class="fa fa-refresh fa-fw"></i>Re-score batch confound',
+            tooltip: 'Run geeq only for the batch confound sub-score (refreshes page).',
+            handler: function (b, e) {
+                b.setText("<i class='fa fa-refresh fa-fw fa-spin'></i>Re-score batch confound");
+                b.setDisabled(true);
+                ExpressionExperimentController.runGeeq(self.experimentDetails.id, "bconf", {
+                    callback: function () {
+                        window.location.reload();
+                    }
+                });
+            },
+            scope: this,
+            cls: 'btn-refresh gq-subscore-refresh-btn'
+        }));
+
         bconfExtra.add(new Ext.form.Checkbox({
             xtype: 'checkbox',
             id: 'gq-bconf-override',
@@ -427,6 +492,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             checked: ee.geeq.manualBatchConfoundActive,
             handler: function (el, value) {
                 self.allowBconfRadios(value);
+                ee.geeq.manualBatchConfoundActive = value;
+                document.getElementById('bconf-notification').removeAttribute("hidden");
+                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
+                    callback: self.bconfNotifySaved
+                });
             }
         }));
 
@@ -436,7 +506,14 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             name: 'gq-bconf-override-value',
             boxLabel: 'Confounded',
             hideLabel: false,
-            checked: ee.geeq.manualHasBatchConfound
+            checked: ee.geeq.manualHasBatchConfound,
+            handler: function (el, value) {
+                ee.geeq.manualHasBatchConfound = value;
+                document.getElementById('bconf-notification').removeAttribute("hidden");
+                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
+                    callback: self.bconfNotifySaved
+                });
+            }
         }));
 
         bconfExtra.add(new Ext.form.Radio({
@@ -447,7 +524,17 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             hideLabel: false,
             checked: !ee.geeq.manualHasBatchConfound
         }));
+
+        bconfExtra.add({cls: 'gq-notif hidden', html: '<span id="bconf-notification" hidden>Saving</span>'});
+
         return bconfExtra;
+    },
+
+    bconfNotifySaved: function () {
+        var nr = document.getElementById('bconf-notification');
+        if (nr) {
+            nr.setAttribute("hidden", "true");
+        }
     },
 
     beffExtraRendeder: function (ee) {
@@ -474,6 +561,22 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
         beffExtra.add(foldButton);
 
+        beffExtra.add(new Ext.Button({
+            text: '<i class="fa fa-refresh fa-fw"></i>Re-score batch effect',
+            tooltip: 'Run geeq only for the batch effect sub-score (refreshes page).',
+            handler: function (b, e) {
+                b.setText("<i class='fa fa-refresh fa-fw fa-spin'></i>Re-score batch effect");
+                b.setDisabled(true);
+                ExpressionExperimentController.runGeeq(self.experimentDetails.id, "beff", {
+                    callback: function () {
+                        window.location.reload();
+                    }
+                });
+            },
+            scope: this,
+            cls: 'btn-refresh gq-subscore-refresh-btn'
+        }));
+
         beffExtra.add(new Ext.form.Checkbox({
             xtype: 'checkbox',
             id: 'gq-beff-override',
@@ -482,6 +585,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             checked: ee.geeq.manualBatchEffectActive,
             handler: function (el, value) {
                 self.allowBeffRadios(value);
+                self.experimentDetails.geeq.manualBatchEffectActive = value;
+                document.getElementById('beff-notification').removeAttribute("hidden");
+                ExpressionExperimentController.setGeeqManualSettings(self.experimentDetails.id, self.experimentDetails.geeq, {
+                    callback: self.beffNotifySaved
+                });
             }
         }));
 
@@ -491,7 +599,16 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             name: 'gq-beff-override-value',
             boxLabel: 'Strong',
             hideLabel: false,
-            checked: ee.geeq.manualHasStrongBatchEffect
+            checked: ee.geeq.manualHasStrongBatchEffect,
+            handler: function (el, value) {
+                if (!value) return; // since we have 3 radios, we wil only process the one that was selected
+                ee.geeq.manualHasStrongBatchEffect = value;
+                ee.geeq.manualHasNoBatchEffect = !value;
+                document.getElementById('beff-notification').removeAttribute("hidden");
+                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
+                    callback: self.beffNotifySaved
+                });
+            }
         }));
 
         beffExtra.add(new Ext.form.Radio({
@@ -500,7 +617,16 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             name: 'gq-beff-override-value',
             boxLabel: 'Weak',
             hideLabel: false,
-            checked: !ee.geeq.manualHasStrongBatchEffect && !ee.geeq.manualHasNoBatchEffect
+            checked: !ee.geeq.manualHasStrongBatchEffect && !ee.geeq.manualHasNoBatchEffect,
+            handler: function (el, value) {
+                if (!value) return; // since we have 3 radios, we wil only process the one that was selected
+                ee.geeq.manualHasStrongBatchEffect = !value;
+                ee.geeq.manualHasNoBatchEffect = !value;
+                document.getElementById('beff-notification').removeAttribute("hidden");
+                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
+                    callback: self.beffNotifySaved
+                });
+            }
         }));
 
         beffExtra.add(new Ext.form.Radio({
@@ -509,10 +635,28 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             name: 'gq-beff-override-value',
             boxLabel: 'No batch effect',
             hideLabel: false,
-            checked: ee.geeq.manualHasNoBatchEffect
+            checked: ee.geeq.manualHasNoBatchEffect,
+            handler: function (el, value) {
+                if (!value) return; // since we have 3 radios, we wil only process the one that was selected
+                ee.geeq.manualHasStrongBatchEffect = !value;
+                ee.geeq.manualHasNoBatchEffect = value;
+                document.getElementById('beff-notification').removeAttribute("hidden");
+                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
+                    callback: self.beffNotifySaved
+                });
+            }
         }));
 
+        beffExtra.add({cls: 'gq-notif hidden', html: '<span id="beff-notification" hidden>Saving</span>'});
+
         return beffExtra;
+    },
+
+    beffNotifySaved: function () {
+        var nr = document.getElementById('beff-notification');
+        if (nr) {
+            nr.setAttribute("hidden", "true");
+        }
     },
 
     qualExtraRendeder: function (ee) {
@@ -520,7 +664,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         this.qualFolded = !ee.geeq.manualQualityOverride;
 
         var qualExtra = new Ext.Panel({
-            cls: 'gq-extra' + (this.beffFolded ? ' folded' : ''),
+            cls: 'gq-extra' + (this.qualFolded ? ' folded' : ''),
             defaults: {
                 border: false,
                 padding: 0
@@ -569,14 +713,19 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             checked: ee.geeq.manualQualityOverride,
             handler: function (el, value) {
                 self.allowQualInput(value);
+                ee.geeq.manualQualityOverride = value;
+                if (value) ee.geeq.manualQualityScore = Number(document.getElementById('gq-qual-override-value').value);
             }
         }));
 
+        var qval = (ee.geeq.manualQualityScore ? ee.geeq.manualQualityScore : ee.geeq.detectedQualityScore);
         qualExtra.add({
             cls: "gq-override-value-wrap",
             html:
-            "<input id='gq-qual-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' readonly " + (!ee.geeq.manualQualityOverride ? "disabled" : "") +
-            "   value='" + (ee.geeq.manualQualityScore ? ee.geeq.manualQualityScore : ee.geeq.detectedQualityScore) +
+            "<input id='gq-qual-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' " +
+            "   style='background-color: " + self.scoreToColor(Number(qval)) + "'" +
+            "   readonly " + (!ee.geeq.manualQualityOverride ? "disabled" : "") +
+            "   value='" + qval +
             "'/> "
         });
 
@@ -596,6 +745,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                     var nr = document.getElementById('gq-qual-override-value');
                     nr.value = (Math.round(val) / 10 - 1).toFixed(1);
                     nr.style.background = self.scoreToColor(Number(nr.value));
+                    ee.geeq.manualQualityScore = nr.value;
                 }
             }
         }));
@@ -603,8 +753,12 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var saveButton = new Ext.Button({
             text: '<i class="fa-cloud-upload fa"></i> Save changes',
             cls: 'gq-btn-save',
-            handler: function () {
-                console.log('saving')
+            handler: function (el, value) {
+                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
+                    callback: function () {
+                        window.location.reload();
+                    }
+                });
             },
             scope: this
         });
@@ -618,7 +772,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         this.suitFolded = !ee.geeq.manualSuitabilityOverride;
 
         var suitExtra = new Ext.Panel({
-            cls: 'gq-extra' + (this.beffFolded ? ' folded' : ''),
+            cls: 'gq-extra' + (this.suitFolded ? ' folded' : ''),
             defaults: {
                 border: false,
                 padding: 0
@@ -667,14 +821,19 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             checked: ee.geeq.manualSuitabilityOverride,
             handler: function (el, value) {
                 self.allowSuitInput(value);
+                ee.geeq.manualSuitabilityOverride = value;
+                if (value) ee.geeq.manualSuitabilityScore = Number(document.getElementById('gq-suit-override-value').value);
             }
         }));
 
+        var sval = (ee.geeq.manualSuitabilityScore ? ee.geeq.manualSuitabilityScore : ee.geeq.detectedSuitabilityScore);
         suitExtra.add({
             cls: "gq-override-value-wrap",
             html:
-            "<input id='gq-suit-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' readonly " + (!ee.geeq.manualSuitabilityOverride ? "disabled" : "") +
-            "   value='" + (ee.geeq.manualSuitabilityScore ? ee.geeq.manualSuitabilityScore : ee.geeq.detectedSuitabilityScore) +
+            "<input id='gq-suit-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' " +
+            "   style='background-color: " + self.scoreToColor(Number(sval)) + "'" +
+            "   readonly " + (!ee.geeq.manualSuitabilityOverride ? "disabled" : "") +
+            "   value='" + sval +
             "'/> "
         });
 
@@ -694,6 +853,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                     var nr = document.getElementById('gq-suit-override-value');
                     nr.value = (Math.round(val) / 10 - 1).toFixed(1);
                     nr.style.background = self.scoreToColor(Number(nr.value));
+                    ee.geeq.manualSuitabilityScore = nr.value;
                 }
             }
         }));
@@ -702,7 +862,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             text: '<i class="fa-cloud-upload fa"></i> Save changes',
             cls: 'gq-btn-save',
             handler: function () {
-                console.log('saving suitability')
+                ExpressionExperimentController.setGeeqManualSettings(ee.id, ee.geeq, {
+                    callback: function () {
+                        window.location.reload();
+                    }
+                });
             },
             scope: this
         });
@@ -835,20 +999,20 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         panelBC.add(be);
 
         var recalculateBCBtn = new Ext.Button({
-            tooltip: 'Recalculate batch effect',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: "Recalculate batch effect (refreshes page)",
             handler: function (b, e) {
                 ExpressionExperimentController.recalculateBatchEffect(ee.id, {
                     callback: function () {
                         window.location.reload();
                     }
                 });
-                b.setIconClass("btn-loading");
+                b.setText('<i class="fa fa-refresh fa-fw fa-spin"/>');
+                b.setDisabled(true);
             },
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
-
-        recalculateBCBtn.setIconClass('btn-not-loading');
 
         panelBC.add(recalculateBCBtn);
         return panelBC;
@@ -875,22 +1039,21 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             };
 
         panelBC.add(be);
-
         var recalculateBCBtn = new Ext.Button({
-            tooltip: 'Recalculate batch confound',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: 'Recalculate batch confound (refreshes page)',
             handler: function (b, e) {
                 ExpressionExperimentController.recalculateBatchConfound(ee.id, {
                     callback: function () {
                         window.location.reload();
                     }
                 });
-                b.setIconClass("btn-loading");
+                b.setText('<i class="fa fa-refresh fa-fw fa-spin"/>');
+                b.setDisabled(true);
             },
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
-
-        recalculateBCBtn.setIconClass('btn-not-loading');
 
         panelBC.add(recalculateBCBtn);
         return panelBC;
@@ -909,11 +1072,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: ctxBasePath + '/images/icons/control_play_blue.png',
-            tooltip: 'missing value computation',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: 'Missing value computation (popup, refreshes page)',
             handler: manager.doLinks.createDelegate(this, [id]),
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
         if (ee.dateLinkAnalysis) {
             var type = ee.linkAnalysisEventType;
@@ -959,11 +1122,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: ctxBasePath + '/images/icons/control_play_blue.png',
-            tooltip: 'missing value computation',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: 'Missing value computation (popup, refreshes page)',
             handler: manager.doMissingValues.createDelegate(this, [id]),
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
         /*
          * Offer missing value analysis if it's possible (this might need tweaking).
@@ -1019,11 +1182,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: ctxBasePath + '/images/icons/control_play_blue.png',
-            tooltip: 'processed vector computation',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: 'Processed vector computation (popup, refreshes page)',
             handler: manager.doProcessedVectors.createDelegate(this, [id]),
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
         if (ee.dateProcessedDataVectorComputation) {
             var type = ee.processedDataVectorComputationEventType;
@@ -1068,11 +1231,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: ctxBasePath + '/images/icons/control_play_blue.png',
-            tooltip: 'differential expression analysis',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: 'Differential expression analysis (popup, refreshes page)',
             handler: manager.doDifferential.createDelegate(this, [id]),
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
         if (ee.numPopulatedFactors > 0) {
             if (ee.dateDifferentialAnalysis) {
@@ -1133,12 +1296,12 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         });
         var id = ee.id;
         var runBtn = new Ext.Button({
-            icon: ctxBasePath + '/images/icons/control_play_blue.png',
-            tooltip: 'principal component analysis',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: 'Principal component analysis (popup, refreshes page)',
             // See EEManger.js doPca(id, hasPca)
             handler: manager.doPca.createDelegate(this, [id, true]),
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
 
         // Get date and info
@@ -1185,12 +1348,12 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         var hasBatchInformation = ee.hasBatchInformation;
         var technologyType = ee.technologyType;
         var runBtn = new Ext.Button({
-            icon: ctxBasePath + '/images/icons/control_play_blue.png',
-            tooltip: 'batch information',
+            text: '<i class="fa fa-refresh fa-fw"/>',
+            tooltip: 'Batch information (popup, refreshes page)',
             // See EEManager.js doBatchInfoFetch(id)
             handler: manager.doBatchInfoFetch.createDelegate(this, [id]),
             scope: this,
-            cls: 'transparent-btn'
+            cls: 'btn-refresh'
         });
 
         // Batch info fetching not allowed for RNA seq and other non-microarray data

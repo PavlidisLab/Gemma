@@ -95,8 +95,13 @@ public class Geeq implements Identifiable, Serializable {
 
     private String otherIssues;
 
-    public static long getSerialVersionUID() {
+    public static long getserialVersionUID() {
         return serialVersionUID;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( getId() );
     }
 
     @Override
@@ -107,11 +112,6 @@ public class Geeq implements Identifiable, Serializable {
             return false;
         Geeq geeq = ( Geeq ) o;
         return Objects.equals( getId(), geeq.getId() );
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash( getId() );
     }
 
     @Override
@@ -174,7 +174,7 @@ public class Geeq implements Identifiable, Serializable {
         this.manualQualityScore = manualQualityScore;
     }
 
-    public boolean getManualQualityOverride() {
+    public boolean isManualQualityOverride() {
         return manualQualityOverride;
     }
 
@@ -204,7 +204,7 @@ public class Geeq implements Identifiable, Serializable {
         this.manualSuitabilityScore = manualSuitabilityScore;
     }
 
-    public boolean getManualSuitabilityOverride() {
+    public boolean isManualSuitabilityOverride() {
         return manualSuitabilityOverride;
     }
 
@@ -216,11 +216,11 @@ public class Geeq implements Identifiable, Serializable {
      * @return -1.0 - if experiment has no publication
      * +1.0 otherwise
      */
-    public double getSScorePublication() {
+    public double getsScorePublication() {
         return sScorePublication;
     }
 
-    public void setSScorePublication( double sScorePublicationDate ) {
+    public void setsScorePublication( double sScorePublicationDate ) {
         this.sScorePublication = sScorePublicationDate;
     }
 
@@ -230,11 +230,11 @@ public class Geeq implements Identifiable, Serializable {
      * -0.5 if amount &gt; 1
      * +1.0 otherwise
      */
-    public double getSScorePlatformAmount() {
+    public double getsScorePlatformAmount() {
         return sScorePlatformAmount;
     }
 
-    public void setSScorePlatformAmount( double sScorePlatformAmount ) {
+    public void setsScorePlatformAmount( double sScorePlatformAmount ) {
         this.sScorePlatformAmount = sScorePlatformAmount;
     }
 
@@ -243,11 +243,11 @@ public class Geeq implements Identifiable, Serializable {
      * -1.0 if platforms amount &gt; 1 and platforms do not have the same technology type
      * +1.0 otherwise
      */
-    public double getSScorePlatformsTechMulti() {
+    public double getsScorePlatformsTechMulti() {
         return sScorePlatformsTechMulti;
     }
 
-    public void setSScorePlatformsTechMulti( double sScorePlatformsTechMulti ) {
+    public void setsScorePlatformsTechMulti( double sScorePlatformsTechMulti ) {
         this.sScorePlatformsTechMulti = sScorePlatformsTechMulti;
     }
 
@@ -259,11 +259,11 @@ public class Geeq implements Identifiable, Serializable {
      * +0.5 if used in &lt; 100 EEs
      * +1.0 otherwise
      */
-    public double getSScoreAvgPlatformPopularity() {
+    public double getsScoreAvgPlatformPopularity() {
         return sScoreAvgPlatformPopularity;
     }
 
-    public void setSScoreAvgPlatformPopularity( double sScoreAvgPlatformPopularity ) {
+    public void setsScoreAvgPlatformPopularity( double sScoreAvgPlatformPopularity ) {
         this.sScoreAvgPlatformPopularity = sScoreAvgPlatformPopularity;
     }
 
@@ -275,11 +275,11 @@ public class Geeq implements Identifiable, Serializable {
      * +0.5 if gene count &lt; 18k
      * +1.0 otherwise
      */
-    public double getSScoreAvgPlatformSize() {
+    public double getsScoreAvgPlatformSize() {
         return sScoreAvgPlatformSize;
     }
 
-    public void setSScoreAvgPlatformSize( double sScoreAvgPlatformSize ) {
+    public void setsScoreAvgPlatformSize( double sScoreAvgPlatformSize ) {
         this.sScoreAvgPlatformSize = sScoreAvgPlatformSize;
     }
 
@@ -291,11 +291,11 @@ public class Geeq implements Identifiable, Serializable {
      * +0.5 if sample size &lt; 200
      * +1.0 otherwise
      */
-    public double getSScoreSampleSize() {
+    public double getsScoreSampleSize() {
         return sScoreSampleSize;
     }
 
-    public void setSScoreSampleSize( double sScoreSampleSize ) {
+    public void setsScoreSampleSize( double sScoreSampleSize ) {
         this.sScoreSampleSize = sScoreSampleSize;
     }
 
@@ -304,11 +304,11 @@ public class Geeq implements Identifiable, Serializable {
      * -1.0 if no raw data available
      * +1.0 otherwise
      */
-    public double getSScoreRawData() {
+    public double getsScoreRawData() {
         return sScoreRawData;
     }
 
-    public void setSScoreRawData( double sScoreRawData ) {
+    public void setsScoreRawData( double sScoreRawData ) {
         this.sScoreRawData = sScoreRawData;
     }
 
@@ -319,11 +319,11 @@ public class Geeq implements Identifiable, Serializable {
      * extra:
      * noVectors = true, if experiment has no computed vectors
      */
-    public double getSScoreMissingValues() {
+    public double getsScoreMissingValues() {
         return sScoreMissingValues;
     }
 
-    public void setSScoreMissingValues( double sScoreMissingValues ) {
+    public void setsScoreMissingValues( double sScoreMissingValues ) {
         this.sScoreMissingValues = sScoreMissingValues;
     }
 
@@ -338,11 +338,11 @@ public class Geeq implements Identifiable, Serializable {
      * 1 if the correlation matrix is empty
      * 2 if the correlation matrix has NaN values
      */
-    public double getQScoreOutliers() {
+    public double getqScoreOutliers() {
         return qScoreOutliers;
     }
 
-    public void setQScoreOutliers( double qScoreOutliers ) {
+    public void setqScoreOutliers( double qScoreOutliers ) {
         this.qScoreOutliers = qScoreOutliers;
     }
 
@@ -351,11 +351,11 @@ public class Geeq implements Identifiable, Serializable {
      * -1.0 if any platform is two-color
      * +1.0 otherwise
      */
-    public double getQScorePlatformsTech() {
+    public double getqScorePlatformsTech() {
         return qScorePlatformsTech;
     }
 
-    public void setQScorePlatformsTech( double qScorePlatformsTech ) {
+    public void setqScorePlatformsTech( double qScorePlatformsTech ) {
         this.qScorePlatformsTech = qScorePlatformsTech;
     }
 
@@ -370,11 +370,11 @@ public class Geeq implements Identifiable, Serializable {
      * 3 if all replicate amounts were 1
      * 4 if lowest replicate was 0 (that really should not happen though)
      */
-    public double getQScoreReplicates() {
+    public double getqScoreReplicates() {
         return qScoreReplicates;
     }
 
-    public void setQScoreReplicates( double qScoreReplicates ) {
+    public void setqScoreReplicates( double qScoreReplicates ) {
         this.qScoreReplicates = qScoreReplicates;
     }
 
@@ -383,11 +383,11 @@ public class Geeq implements Identifiable, Serializable {
      * -1.0 if no batch info available
      * +1.0 otherwise
      */
-    public double getQScoreBatchInfo() {
+    public double getqScoreBatchInfo() {
         return qScoreBatchInfo;
     }
 
-    public void setQScoreBatchInfo( double qScoreBatchInfo ) {
+    public void setqScoreBatchInfo( double qScoreBatchInfo ) {
         this.qScoreBatchInfo = qScoreBatchInfo;
     }
 
@@ -399,15 +399,15 @@ public class Geeq implements Identifiable, Serializable {
      * extra:
      * batchCorrected = true, if data was batch-corrected
      */
-    public double getQScoreBatchEffect() {
+    public double getqScoreBatchEffect() {
         return qScoreBatchEffect;
     }
 
-    public void setQScoreBatchEffect( double qScoreBatchEffect ) {
+    public void setqScoreBatchEffect( double qScoreBatchEffect ) {
         this.qScoreBatchEffect = qScoreBatchEffect;
     }
 
-    public boolean getManualHasStrongBatchEffect() {
+    public boolean isManualHasStrongBatchEffect() {
         return manualHasStrongBatchEffect;
     }
 
@@ -415,7 +415,7 @@ public class Geeq implements Identifiable, Serializable {
         this.manualHasStrongBatchEffect = manualHasStrongBatchEffect;
     }
 
-    public boolean getManualHasNoBatchEffect() {
+    public boolean isManualHasNoBatchEffect() {
         return manualHasNoBatchEffect;
     }
 
@@ -423,7 +423,7 @@ public class Geeq implements Identifiable, Serializable {
         this.manualHasNoBatchEffect = manualHasNoBatchEffect;
     }
 
-    public boolean getManualBatchEffectActive() {
+    public boolean isManualBatchEffectActive() {
         return manualBatchEffectActive;
     }
 
@@ -436,15 +436,15 @@ public class Geeq implements Identifiable, Serializable {
      * -1.0 if data confound detected or (manualHasBatchConfound &amp; manualBatchConfoundActive)
      * +1.0 otherwise
      */
-    public double getQScoreBatchConfound() {
+    public double getqScoreBatchConfound() {
         return qScoreBatchConfound;
     }
 
-    public void setQScoreBatchConfound( double qScoreBatchConfound ) {
+    public void setqScoreBatchConfound( double qScoreBatchConfound ) {
         this.qScoreBatchConfound = qScoreBatchConfound;
     }
 
-    public boolean getManualHasBatchConfound() {
+    public boolean isManualHasBatchConfound() {
         return manualHasBatchConfound;
     }
 
@@ -452,7 +452,7 @@ public class Geeq implements Identifiable, Serializable {
         this.manualHasBatchConfound = manualHasBatchConfound;
     }
 
-    public boolean getManualBatchConfoundActive() {
+    public boolean isManualBatchConfoundActive() {
         return manualBatchConfoundActive;
     }
 
@@ -465,11 +465,11 @@ public class Geeq implements Identifiable, Serializable {
      * +r use the computed value
      * +0.0 if correlation matrix is empty
      */
-    public double getQScoreSampleMeanCorrelation() {
+    public double getqScoreSampleMeanCorrelation() {
         return qScoreSampleMeanCorrelation;
     }
 
-    public void setQScoreSampleMeanCorrelation( double qScoreSampleMeanCorrelation ) {
+    public void setqScoreSampleMeanCorrelation( double qScoreSampleMeanCorrelation ) {
         this.qScoreSampleMeanCorrelation = qScoreSampleMeanCorrelation;
     }
 
@@ -478,11 +478,11 @@ public class Geeq implements Identifiable, Serializable {
      * +m use the computed value
      * +0.0 if correlation matrix is empty
      */
-    public double getQScoreSampleMedianCorrelation() {
+    public double getqScoreSampleMedianCorrelation() {
         return qScoreSampleMedianCorrelation;
     }
 
-    public void setQScoreSampleMedianCorrelation( double qScoreSampleMedianCorrelation ) {
+    public void setqScoreSampleMedianCorrelation( double qScoreSampleMedianCorrelation ) {
         this.qScoreSampleMedianCorrelation = qScoreSampleMedianCorrelation;
     }
 
@@ -491,11 +491,11 @@ public class Geeq implements Identifiable, Serializable {
      * +v use the computed value
      * +0.0 if correlation matrix is empty
      */
-    public double getQScoreSampleCorrelationVariance() {
+    public double getqScoreSampleCorrelationVariance() {
         return qScoreSampleCorrelationVariance;
     }
 
-    public void setQScoreSampleCorrelationVariance( double qScoreSampleCorrelationVariance ) {
+    public void setqScoreSampleCorrelationVariance( double qScoreSampleCorrelationVariance ) {
         this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
     }
 
@@ -571,7 +571,8 @@ public class Geeq implements Identifiable, Serializable {
         this.otherIssues = otherIssues;
     }
 
-    public void addOtherIssues (String otherIssues){
-        this.otherIssues += otherIssues+"\n";
+    public void addOtherIssues( String otherIssues ) {
+        this.otherIssues += otherIssues + "\n";
     }
+
 }
