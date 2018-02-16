@@ -71,10 +71,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
@@ -92,6 +89,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.*;
+
+import static ubic.gemma.persistence.service.expression.experiment.GeeqService.*;
 
 /**
  * @author keshav
@@ -155,6 +154,8 @@ public class ExpressionExperimentController {
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private GeeqService geeqService;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -704,6 +705,19 @@ public class ExpressionExperimentController {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         ee.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
         expressionExperimentService.update( ee );
+    }
+
+    public void runGeeq( Long id, String modeArg ) {
+        GeeqServiceImpl.ScoringMode mode;
+        switch(modeArg){
+            default:
+            case OPT_MODE_ALL: mode = GeeqServiceImpl.ScoringMode.all; break;
+            case OPT_MODE_B_EFFECT: mode = GeeqServiceImpl.ScoringMode.batchEffect; break;
+            case OPT_MODE_B_CONFOUND: mode = GeeqServiceImpl.ScoringMode.batchEffect; break;
+            case OPT_MODE_REPS: mode = GeeqServiceImpl.ScoringMode.batchEffect; break;
+            case OPT_MODE_PUB: mode = GeeqServiceImpl.ScoringMode.publication; break;
+        }
+        geeqService.calculateScore( id, mode );
     }
 
     /**

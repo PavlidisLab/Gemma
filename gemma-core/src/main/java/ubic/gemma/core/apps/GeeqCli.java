@@ -9,12 +9,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
-public class GeeqCli extends AbstractCLIContextCLI {
+import static ubic.gemma.persistence.service.expression.experiment.GeeqService.*;
 
-    private static final String OPT_MODE_ALL = "all";
-    private static final String OPT_MODE_B_EFFECT = "beff";
-    private static final String OPT_MODE_B_CONFOUND = "bcnf";
-    private static final String OPT_MODE_REPS = "reps";
+public class GeeqCli extends AbstractCLIContextCLI {
     private ExpressionExperimentService eeService;
     private GeeqService geeqService;
     private String startArg;
@@ -60,7 +57,8 @@ public class GeeqCli extends AbstractCLIContextCLI {
                         + "\n " + OPT_MODE_ALL + " - runs all scoring" //
                         + "\n " + OPT_MODE_B_EFFECT + "- recalcualtes batch effect score" //
                         + "\n " + OPT_MODE_B_CONFOUND + " - recalculates batch confound score" //
-                        + "\n " + OPT_MODE_REPS + " - recalculates replicates score" ).isRequired().create( 'm' );
+                        + "\n " + OPT_MODE_REPS + " - recalculates score for replicates" //
+                        + "\n " + OPT_MODE_PUB + " - recalculates score for publication").isRequired().create( 'm' );
         addOption( modeOption );
     }
 

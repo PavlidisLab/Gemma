@@ -176,6 +176,13 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                 Log.info( this.getClass(), LOG_PREFIX + " Starting replicates geeq re-scoring for ee id " + eeId );
                 gq = scoreOnlyReplicates( ee );
                 break;
+            case publication:
+                Log.info( this.getClass(), LOG_PREFIX + " Starting publication geeq re-scoring for ee id " + eeId );
+                gq = scoreOnlyPublication( ee );
+                break;
+            default:
+                Log.warn( this.getClass(),
+                        LOG_PREFIX + " Did not recognize the given mode " + mode + " for ee id " + eeId );
         }
         Log.info( this.getClass(), LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId + ", saving results..." );
 
@@ -264,6 +271,13 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         return gq;
     }
 
+    private Geeq scoreOnlyPublication( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawLiter( ee );
+        Geeq gq = ee.getGeeq();
+        scorePublication( ee, gq );
+        return gq;
+    }
+
     private void ensureEeHasGeeq( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
         if ( gq == null ) {
@@ -280,32 +294,18 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     private void scorePublication( ExpressionExperiment ee, Geeq gq ) {
         double score;
-        boolean hasBib = true;
-        boolean hasDate;
+        boolean hasBib;
         BibliographicReference bib = null;
-        Date date = null;
 
         if ( ee.getPrimaryPublication() != null ) {
             bib = ee.getPrimaryPublication();
         } else if ( ee.getOtherRelevantPublications() != null && ee.getOtherRelevantPublications().size() > 0 ) {
             bib = ee.getOtherRelevantPublications().iterator().next();
-        } else {
-            hasBib = false;
         }
 
-        if ( hasBib ) {
-            date = bib.getPublicationDate();
-        }
+        hasBib = bib != null;
 
-        hasDate = date != null;
-
-        Calendar cal = Calendar.getInstance();
-        cal.set( PUB_LOW_YEAR + 1900, Calendar.JANUARY, 1 );
-        Date d2006 = cal.getTime();
-        cal.set( PUB_MID_YEAR + 1900, Calendar.JANUARY, 1 );
-        Date d2009 = cal.getTime();
-
-        score = !hasBib ? N_10 : !hasDate ? N_07 : date.before( d2006 ) ? N_05 : date.before( d2009 ) ? N_03 : P_10;
+        score = !hasBib ? N_10 : P_10;
         gq.setSScorePublication( score );
 
     }
@@ -734,7 +734,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
     }
 
     public enum ScoringMode {
-        all, batchEffect, batchConfound, replicates
+        all, batchEffect, batchConfound, replicates, publication
     }
 
 }

@@ -19,6 +19,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         border: false
     },
     padding: 15,
+    cls: 'curation-tool',
 
     emptyEvent: {
         performer: "--",

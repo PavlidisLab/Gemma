@@ -214,9 +214,6 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * @return -1.0 - if experiment has no publication
-     * -0.7 - if date not filled in
-     * -0.5 if date &lt; 2006
-     * -0.3 if date &lt; 2009
      * +1.0 otherwise
      */
     public double getSScorePublication() {

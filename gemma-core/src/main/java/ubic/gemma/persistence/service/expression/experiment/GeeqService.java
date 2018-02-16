@@ -26,6 +26,11 @@ import ubic.gemma.model.expression.experiment.GeeqValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject> {
+    String OPT_MODE_ALL = "all";
+    String OPT_MODE_B_EFFECT = "beff";
+    String OPT_MODE_B_CONFOUND = "bcnf";
+    String OPT_MODE_REPS = "reps";
+    String OPT_MODE_PUB = "pub";
 
     /**
      * Resets the manual override of batch confound to false and recalculates the score.
