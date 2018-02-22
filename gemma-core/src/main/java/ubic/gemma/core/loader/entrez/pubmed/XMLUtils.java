@@ -108,8 +108,10 @@ public class XMLUtils {
     /**
      * Make the horrible DOM API slightly more bearable: get the text value we know this element contains.
      * Borrowed from the Spring API.
-     * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
-     * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
+     * Using Node.getTextContent() to fix failing tests, if there is a problem, see history before Feb 22. 2018
+     * Also, this is the previous note (related to the code I removed):
+     * * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
+     * * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
      *
      * @throws IOException IO problems
      */
@@ -120,14 +122,7 @@ public class XMLUtils {
         org.w3c.dom.NodeList nl = ele.getChildNodes();
         for ( int i = 0; i < nl.getLength(); i++ ) {
             org.w3c.dom.Node item = nl.item( i );
-            if ( item instanceof org.w3c.dom.CharacterData ) {
-                if ( !( item instanceof org.w3c.dom.Comment ) ) {
-                    value.append( item.getNodeValue() );
-                }
-            } else {
-                throw new IOException(
-                        "element is just allowed to have text and comment nodes, not: " + item.getClass().getName() );
-            }
+            value.append( item.getTextContent().trim() );
         }
         return value.toString();
     }
