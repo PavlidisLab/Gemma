@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.loader.entrez;
 
+import org.apache.tools.ant.filters.StringInputStream;
+import org.openjena.atlas.logging.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -38,7 +40,7 @@ import java.net.URLConnection;
 /**
  * @author paul
  */
-@SuppressWarnings("FieldCanBeLocal") // Constants are better for readability
+// Constants are better for readability
 public class EutilFetch {
 
     static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -48,7 +50,7 @@ public class EutilFetch {
     private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
 
     public static String fetch( String db, String searchString, int limit ) throws IOException {
-        return fetch( db, searchString, Mode.TEXT, limit );
+        return EutilFetch.fetch( db, searchString, Mode.TEXT, limit );
     }
 
     /**
@@ -63,17 +65,15 @@ public class EutilFetch {
      */
     public static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
 
-        URL searchUrl = new URL( ESEARCH + db + "&usehistory=y&term=" + searchString );
+        URL searchUrl = new URL( EutilFetch.ESEARCH + db + "&usehistory=y&term=" + searchString );
         URLConnection conn = searchUrl.openConnection();
-        conn.connect();
 
-        try (InputStream is = conn.getInputStream()) {
+        try {
 
-            factory.setIgnoringComments( true );
-            factory.setValidating( false );
+            EutilFetch.factory.setIgnoringComments( true );
+            EutilFetch.factory.setValidating( false );
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse( is );
+            Document document = EutilFetch.parseSUrlInputStream( searchUrl );
 
             NodeList countNode = document.getElementsByTagName( "Count" );
             Node countEl = countNode.item( 0 );
@@ -99,8 +99,8 @@ public class EutilFetch {
             String cookie = XMLUtils.getTextValue( cookieEl );
 
             URL fetchUrl = new URL(
-                    EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId + "&WebEnv="
-                            + cookie + "&retmax=" + limit );
+                    EutilFetch.EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId
+                            + "&WebEnv=" + cookie + "&retmax=" + limit );
 
             conn = fetchUrl.openConnection();
             conn.connect();
@@ -124,6 +124,59 @@ public class EutilFetch {
             }
         }
 
+    }
+
+    public static Document parseStringInputStream( String details )
+            throws SAXException, IOException, ParserConfigurationException {
+        DocumentBuilder builder = EutilFetch.factory.newDocumentBuilder();
+        int tries = 0;
+
+        while ( true ) {
+            try (InputStream is = new StringInputStream( details )) {
+                return builder.parse( is );
+            } catch ( IOException e ) {
+                tries = EutilFetch.tryAgainOrFail( tries, e );
+            }
+        }
+    }
+
+    private static Document parseSUrlInputStream( URL url )
+            throws SAXException, IOException, ParserConfigurationException {
+        DocumentBuilder builder = EutilFetch.factory.newDocumentBuilder();
+        int tries = 0;
+
+        while ( true ) {
+            URLConnection conn = url.openConnection();
+            conn.connect();
+            try (InputStream is = conn.getInputStream()) {
+                return builder.parse( is );
+            } catch ( IOException e ) {
+                tries = EutilFetch.tryAgainOrFail( tries, e );
+            }
+        }
+    }
+
+    private static int tryAgainOrFail( int tries, IOException e ) throws IOException {
+        if ( e.getMessage().contains( "429" ) ) {
+            tries++;
+            if ( tries > 5 ) {
+                Log.fatal( EutilFetch.class, "Got HTTP 429 5 times" );
+                throw e;
+            }
+            Log.warn( EutilFetch.class, "got HTTP 429 " + tries + " time(s), letting the server rest for a second." );
+            EutilFetch.trySleep( 500 * tries );
+        } else {
+            throw e;
+        }
+        return tries;
+    }
+
+    private static void trySleep( int milliseconds ) {
+        try {
+            Thread.sleep( milliseconds );
+        } catch ( InterruptedException e1 ) {
+            e1.printStackTrace(); // Log and try to continue
+        }
     }
 
     static void printElements( Document doc ) {

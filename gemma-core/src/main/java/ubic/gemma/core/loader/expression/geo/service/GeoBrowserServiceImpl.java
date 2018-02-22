@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -41,8 +40,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.PostConstruct;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
@@ -57,7 +54,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     private static final int MIN_SAMPLES = 5;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
-    private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
     @Autowired
     protected ExpressionExperimentService expressionExperimentService;
 
@@ -297,10 +294,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          */
         details = details.replaceAll( "encoding=\"UTF-8\"", "" );
 
-        try (StringInputStream is = new StringInputStream( details )) {
-            DocumentBuilder builder = GeoBrowserServiceImpl.factory.newDocumentBuilder();
-
-            Document document = builder.parse( is );
+        try {
+            Document document = EutilFetch.parseStringInputStream( details );
 
             // NodeList samples = ( NodeList ) xsamples.evaluate( document, XPathConstants.NODESET );
             // String gds = ( String ) xgds.evaluate( document, XPathConstants.STRING ); // FIXME, use this.

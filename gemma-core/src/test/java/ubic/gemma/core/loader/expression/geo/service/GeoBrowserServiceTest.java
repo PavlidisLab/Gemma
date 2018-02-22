@@ -35,30 +35,20 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
     @Autowired
     GeoBrowserService gbs;
 
-    /**
-     * Added Thread.sleep( 100 ) to fix the test failing on HTTP 429 - too many requests
-     *
-     * @throws Exception when there is a problem
-     */
     @Test
     public final void testGetDetails() throws Exception {
 
         try {
-            Thread.sleep( 100 );
             String details = gbs.getDetails( "GSE15904" );
             assertTrue( "Got: " + details, details.contains( "GSE15904" ) );
 
-            Thread.sleep( 100 );
             details = gbs.getDetails( "GSE1295" );
             assertTrue( "Got: " + details, details.contains( "GSE1295" ) );
 
             // log.info( details );
-
-            Thread.sleep( 100 );
             details = gbs.getDetails( "GSE2565" );
             assertTrue( "Got: " + details, details.contains( "GSE2565" ) );
 
-            Thread.sleep( 100 );
             // occurs in a "accessioned in GEO as..."
             assertFalse( "Got: " + details, details.contains( "<strong>GPL8321" ) );
         } catch ( Exception e ) {

@@ -106,14 +106,8 @@ public class DatasetCombinerTest {
         assertEquals( 33, numBioMaterials ); // used to be 28
     }
 
-    /**
-     * Added Thread.sleep( 100 ) to fix the test failing on HTTP 429 - too many requests
-     *
-     * @throws InterruptedException when the sleep is interrupted
-     */
     @Test
     public void testFindGSE267() throws InterruptedException {
-        Thread.sleep( 100 );
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
         assertEquals( 0, result.size() );
     }
