@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,54 +18,58 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.net.UnknownHostException;
 import java.util.List;
 
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.*;
 
 /**
  * @author paul
- *
  */
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
     @Autowired
     GeoBrowserService gbs;
 
+    /**
+     * Added Thread.sleep( 100 ) to fix the test failing on HTTP 429 - too many requests
+     *
+     * @throws Exception when there is a problem
+     */
     @Test
     public final void testGetDetails() throws Exception {
 
         try {
+            Thread.sleep( 100 );
             String details = gbs.getDetails( "GSE15904" );
             assertTrue( "Got: " + details, details.contains( "GSE15904" ) );
 
+            Thread.sleep( 100 );
             details = gbs.getDetails( "GSE1295" );
             assertTrue( "Got: " + details, details.contains( "GSE1295" ) );
 
             // log.info( details );
 
+            Thread.sleep( 100 );
             details = gbs.getDetails( "GSE2565" );
             assertTrue( "Got: " + details, details.contains( "GSE2565" ) );
 
+            Thread.sleep( 100 );
             // occurs in a "accessioned in GEO as..."
             assertFalse( "Got: " + details, details.contains( "<strong>GPL8321" ) );
         } catch ( Exception e ) {
-            if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" )
-                    || e.getMessage().contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {
+            if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" ) || e.getMessage()
+                    .contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
-            if ( e.getCause() != null
-                    && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
-                            || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage()
-                            .contains( "503" ) ) ) {
+            if ( e.getCause() != null && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage()
+                    .contains( "500" ) || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage()
+                    .contains( "503" ) ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
@@ -114,15 +118,14 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
             assertEquals( oldCount + 1, newCount );
         } catch ( Exception e ) {
-            if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" )
-                    || e.getMessage().contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {
+            if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" ) || e.getMessage()
+                    .contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
-            if ( e.getCause() != null
-                    && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
-                            || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage()
-                            .contains( "503" ) ) ) {
+            if ( e.getCause() != null && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage()
+                    .contains( "500" ) || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage()
+                    .contains( "503" ) ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
