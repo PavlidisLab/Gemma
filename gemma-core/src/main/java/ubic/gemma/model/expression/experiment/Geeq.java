@@ -28,7 +28,7 @@ import java.util.Objects;
 
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.
- * The score has two components: Quality and Suitability. See the variables javadoc for further description.
+ * The score has two components: Quality and Suitability. See the variables getters javadoc for further description.
  * The scoring rules are implemented in the GeeqServiceImpl, which also exposes public methods for experiment
  * scoring.
  *
@@ -96,12 +96,12 @@ public class Geeq implements Identifiable, Serializable {
     private String otherIssues;
 
     public static long getserialVersionUID() {
-        return serialVersionUID;
+        return Geeq.serialVersionUID;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash( getId() );
+        return Objects.hash( this.getId() );
     }
 
     @Override
@@ -111,7 +111,7 @@ public class Geeq implements Identifiable, Serializable {
         if ( !( o instanceof Geeq ) )
             return false;
         Geeq geeq = ( Geeq ) o;
-        return Objects.equals( getId(), geeq.getId() );
+        return Objects.equals( this.getId(), geeq.getId() );
     }
 
     @Override
