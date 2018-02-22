@@ -26,20 +26,11 @@ import ubic.gemma.model.expression.experiment.GeeqValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject> {
-
-    /**
-     * Resets the manual override of batch confound to false and recalculates the score.
-     * @param eeId the id of the experiment to do this for.
-     * @return the updated experiment
-     */
-    ExpressionExperiment resetBatchConfound( Long eeId );
-
-    /**
-     * Resets the manual override of batch effect to false and recalculates the score.
-     * @param eeId the id of the experiment to do this for.
-     * @return the updated experiment
-     */
-    ExpressionExperiment resetBatchEffect( Long eeId );
+    String OPT_MODE_ALL = "all";
+    String OPT_MODE_B_EFFECT = "beff";
+    String OPT_MODE_B_CONFOUND = "bconf";
+    String OPT_MODE_REPS = "reps";
+    String OPT_MODE_PUB = "pub";
 
     /**
      * Calculates the GEEQ scores for the experiment with the given id.
@@ -56,7 +47,7 @@ public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject>
      * @param mode either run all scores, or only re-score batch effect, batch confound or replicates.
      * @return the updated experiment.
      */
-    ExpressionExperiment calculateScore( Long eeId, GeeqServiceImpl.ScoringMode mode );
+    ExpressionExperiment calculateScore( Long eeId, String mode );
 
     /**
      * Reads manual override info from the given GEEQ Value Object and stores them with the experiment

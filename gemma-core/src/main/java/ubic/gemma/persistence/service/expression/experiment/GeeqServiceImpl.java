@@ -22,7 +22,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import com.google.common.base.Stopwatch;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.StatUtils;
-import org.hibernate.Hibernate;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +31,8 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -39,6 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -57,80 +59,112 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             "Batch effect scoring in odd state - null batch effect, but batch info should be present."
                     + "The same problem will be present for batch confound as well.";
 
+    private static final double P_00 = 0.0;
     private static final double P_05 = 0.5;
     private static final double P_10 = 1.0;
-    public static final double BATCH_EFF_NONE = P_10;
-    public static final double BATCH_CONF_NOHAS = P_10;
-    private static final double P_00 = 0.0;
-    public static final double BATCH_EFF_WEAK = P_00;
-    private static final double N_03 = -0.3;
     private static final double N_05 = -P_05;
-    private static final double N_07 = -0.7;
     private static final double N_10 = -P_10;
-    public static final double BATCH_EFF_STRONG = N_10;
+
     public static final double BATCH_CONF_HAS = N_10;
-    private static final int PUB_LOW_YEAR = 2006;
-    private static final int PUB_MID_YEAR = 2009;
+    public static final double BATCH_CONF_NO_HAS = P_10;
+    public static final double BATCH_EFF_STRONG = N_10;
+    public static final double BATCH_EFF_WEAK = P_00;
+    public static final double BATCH_EFF_NONE = P_10;
 
     private ExpressionExperimentService expressionExperimentService;
     private ArrayDesignService arrayDesignService;
     private ExpressionDataMatrixService expressionDataMatrixService;
     private OutlierDetectionService outlierDetectionService;
+    private AuditTrailService auditTrailService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
-            OutlierDetectionService outlierDetectionService ) {
+            OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
         this.expressionDataMatrixService = expressionDataMatrixService;
         this.outlierDetectionService = outlierDetectionService;
-    }
-
-    @Override
-    public ExpressionExperiment resetBatchConfound( Long eeId ) {
-        return doScoring( eeId, ScoringMode.batchConfound );
-    }
-
-    @Override
-    public ExpressionExperiment resetBatchEffect( Long eeId ) {
-        return doScoring( eeId, ScoringMode.batchEffect );
+        this.auditTrailService = auditTrailService;
     }
 
     @Override
     public ExpressionExperiment calculateScore( Long eeId ) {
-        return doScoring( eeId, ScoringMode.all );
+        return doScoring( eeId, OPT_MODE_ALL );
     }
 
     @Override
-    public ExpressionExperiment calculateScore( Long eeId, ScoringMode mode ) {
+    public ExpressionExperiment calculateScore( Long eeId, String mode ) {
         return doScoring( eeId, mode );
     }
 
     @Override
     public ExpressionExperiment setManualOverrides( Long eeId, GeeqAdminValueObject gqVo ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        ee = expressionExperimentService.thawLiter( ee );
         Geeq gq = ee.getGeeq();
 
-        // Update manual quality score
-        gq.setManualQualityScore( gqVo.getManualQualityScore() );
-        gq.setManualQualityOverride( gqVo.isManualQualityOverride() );
+        // Update manual quality score value
+        if ( gq.getManualQualityScore() != gqVo.getManualQualityScore() ) {
+            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score value changed",
+                    fromTo( gq.getManualQualityScore(), gqVo.getManualQualityScore() ) ) );
+            gq.setManualQualityScore( gqVo.getManualQualityScore() );
+        }
+        // Update manual quality score override
+        if ( gq.isManualQualityOverride() != gqVo.isManualQualityOverride() ) {
+            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual quality score override changed",
+                    fromTo( gq.isManualQualityOverride(), gqVo.isManualQualityOverride() ) ) );
+            gq.setManualQualityOverride( gqVo.isManualQualityOverride() );
+        }
 
-        // Update manual suitability score
-        gq.setManualSuitabilityScore( gqVo.getManualSuitabilityScore() );
-        gq.setManualSuitabilityOverride( gqVo.isManualSuitabilityOverride() );
+        // Update manual suitability score value
+        if ( gq.getManualSuitabilityScore() != gqVo.getManualSuitabilityScore() ) {
+            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score value changed",
+                    fromTo( gq.getManualSuitabilityScore(), gqVo.getManualSuitabilityScore() ) ) );
+            gq.setManualSuitabilityScore( gqVo.getManualSuitabilityScore() );
+        }
+        // Update manual suitability score override
+        if ( gq.isManualSuitabilityOverride() != gqVo.isManualSuitabilityOverride() ) {
+            gq.setLastManualOverride( this.createGeeqEvent( ee, "Manual suitability score override changed",
+                    fromTo( gq.isManualSuitabilityOverride(), gqVo.isManualSuitabilityOverride() ) ) );
+            gq.setManualSuitabilityOverride( gqVo.isManualSuitabilityOverride() );
+        }
 
-        // Set manual batch confound
-        gq.setManualHasBatchConfound( gqVo.isManualHasBatchConfound() );
-        gq.setManualBatchConfoundActive( gqVo.isManualBatchConfoundActive() );
+        // Update manual batch confound value
+        if ( gq.isManualHasBatchConfound() != gqVo.isManualHasBatchConfound() ) {
+            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound value changed",
+                    fromTo( gq.isManualHasBatchConfound(), gqVo.isManualHasBatchConfound() ) ) );
+            gq.setManualHasBatchConfound( gqVo.isManualHasBatchConfound() );
+        }
+        // Update manual batch confound override
+        if ( gq.isManualBatchConfoundActive() != gqVo.isManualBatchConfoundActive() ) {
+            gq.setLastBatchConfoundChange( this.createGeeqEvent( ee, "Manual batch confound override changed",
+                    fromTo( gq.isManualBatchConfoundActive(), gqVo.isManualBatchConfoundActive() ) ) );
+            gq.setManualBatchConfoundActive( gqVo.isManualBatchConfoundActive() );
+        }
 
-        // Set manual batch effect
-        gq.setManualHasStrongBatchEffect( gqVo.isManualHasStrongBatchEffect() );
-        gq.setManualHasNoBatchEffect( gqVo.isManualHasNoBatchEffect() );
-        gq.setManualBatchEffectActive( gqVo.isManualBatchEffectActive() );
+        // Update manual batch effect strong value
+        if ( gq.isManualHasStrongBatchEffect() != gqVo.isManualHasStrongBatchEffect() ) {
+            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual strong batch effect value changed",
+                    fromTo( gq.isManualHasStrongBatchEffect(), gqVo.isManualHasStrongBatchEffect() ) ) );
+            gq.setManualHasStrongBatchEffect( gqVo.isManualHasStrongBatchEffect() );
+        }
+        // Update manual batch effect no value
+        if ( gq.isManualHasNoBatchEffect() != gqVo.isManualHasNoBatchEffect() ) {
+            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual no batch effect value changed",
+                    fromTo( gq.isManualHasNoBatchEffect(), gqVo.isManualHasNoBatchEffect() ) ) );
+            gq.setManualHasNoBatchEffect( gqVo.isManualHasNoBatchEffect() );
+        }
+        // Update manual batch effect override
+        if ( gq.isManualBatchEffectActive() != gqVo.isManualBatchEffectActive() ) {
+            gq.setLastBatchEffectChange( this.createGeeqEvent( ee, "Manual batch effect override changed",
+                    fromTo( gq.isManualBatchEffectActive(), gqVo.isManualBatchEffectActive() ) ) );
+            gq.setManualBatchEffectActive( gqVo.isManualBatchEffectActive() );
+        }
 
         this.update( gq );
+        Log.info( this.getClass(), LOG_PREFIX + " Updated manual override settings for ee id " + eeId );
         return ee;
     }
 
@@ -145,7 +179,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
      *             depending on the experiment.
      * @return the updated experiment.
      */
-    private ExpressionExperiment doScoring( Long eeId, ScoringMode mode ) {
+    private ExpressionExperiment doScoring( Long eeId, String mode ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
         if ( ee == null ) {
@@ -158,34 +192,54 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
 
-        // Update score values
-        switch ( mode ) {
-            case all:
-                Log.info( this.getClass(), LOG_PREFIX + " Starting full geeq scoring for ee id " + eeId );
-                gq = scoreAll( ee );
-                break;
-            case batchEffect:
-                Log.info( this.getClass(), LOG_PREFIX + " Starting batch effect geeq re-scoring for ee id " + eeId );
-                gq = scoreOnlyBatchEffect( ee );
-                break;
-            case batchConfound:
-                Log.info( this.getClass(), LOG_PREFIX + " Starting batch confound geeq re-scoring for ee id " + eeId );
-                gq = scoreOnlyBatchConfound( ee );
-                break;
-            case replicates:
-                Log.info( this.getClass(), LOG_PREFIX + " Starting replicates geeq re-scoring for ee id " + eeId );
-                gq = scoreOnlyReplicates( ee );
-                break;
+        try {
+            // Update score values
+            switch ( mode ) {
+                case OPT_MODE_ALL:
+                    Log.info( this.getClass(), LOG_PREFIX + " Starting full geeq scoring for ee id " + eeId );
+                    gq = scoreAll( ee );
+                    break;
+                case OPT_MODE_B_EFFECT:
+                    Log.info( this.getClass(),
+                            LOG_PREFIX + " Starting batch effect geeq re-scoring for ee id " + eeId );
+                    gq = scoreOnlyBatchEffect( ee );
+                    break;
+                case OPT_MODE_B_CONFOUND:
+                    Log.info( this.getClass(),
+                            LOG_PREFIX + " Starting batch confound geeq re-scoring for ee id " + eeId );
+                    gq = scoreOnlyBatchConfound( ee );
+                    break;
+                case OPT_MODE_REPS:
+                    Log.info( this.getClass(), LOG_PREFIX + " Starting replicates geeq re-scoring for ee id " + eeId );
+                    gq = scoreOnlyReplicates( ee );
+                    break;
+                case OPT_MODE_PUB:
+                    Log.info( this.getClass(), LOG_PREFIX + " Starting publication geeq re-scoring for ee id " + eeId );
+                    gq = scoreOnlyPublication( ee );
+                    break;
+                default:
+                    Log.warn( this.getClass(),
+                            LOG_PREFIX + " Did not recognize the given mode " + mode + " for ee id " + eeId );
+            }
+            Log.info( this.getClass(),
+                    LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId + ", saving results..." );
+        } catch ( Exception e ) {
+            Log.info( this.getClass(),
+                    LOG_PREFIX + " Major problem encountered, scoring did not finish for ee id " + eeId + "." );
+            gq.addOtherIssues( e.getMessage() );
+            e.printStackTrace();
         }
-        Log.info( this.getClass(), LOG_PREFIX + " Finished geeq re-scoring for ee id " + eeId + ", saving results..." );
 
         // Recalculate final scores
         gq = updateQualityScore( gq );
         gq = updateSuitabilityScore( gq );
 
-        this.update( gq );
-
         stopwatch.stop();
+        gq.setLastRun( this.createGeeqEvent( ee, "Re-ran geeq scoring (mode: " + mode + ")",
+                "Took " + stopwatch.elapsedMillis() + "ms.\nUnexpected problems encountered: \n" + gq
+                        .getOtherIssues() ) );
+
+        this.update( gq );
         Log.info( this.getClass(), LOG_PREFIX + " took " + ( ( float ) stopwatch.elapsedTime( TimeUnit.SECONDS ) / 60f )
                 + " minutes to process ee id " + eeId );
 
@@ -244,15 +298,15 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
     }
 
     private Geeq scoreOnlyBatchEffect( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawLiter( ee );
         Geeq gq = ee.getGeeq();
-        Hibernate.initialize( gq );
         scoreBatchEffect( ee, gq, scoreBatchInfo( ee, gq ) );
         return gq;
     }
 
     private Geeq scoreOnlyBatchConfound( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawLiter( ee );
         Geeq gq = ee.getGeeq();
-        Hibernate.initialize( gq );
         scoreBatchConfound( ee, gq, scoreBatchInfo( ee, gq ) );
         return gq;
     }
@@ -261,6 +315,13 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         ee = expressionExperimentService.thaw( ee );
         Geeq gq = ee.getGeeq();
         scoreReplicates( ee, gq );
+        return gq;
+    }
+
+    private Geeq scoreOnlyPublication( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thawLiter( ee );
+        Geeq gq = ee.getGeeq();
+        scorePublication( ee, gq );
         return gq;
     }
 
@@ -280,40 +341,26 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     private void scorePublication( ExpressionExperiment ee, Geeq gq ) {
         double score;
-        boolean hasBib = true;
-        boolean hasDate;
+        boolean hasBib;
         BibliographicReference bib = null;
-        Date date = null;
 
         if ( ee.getPrimaryPublication() != null ) {
             bib = ee.getPrimaryPublication();
         } else if ( ee.getOtherRelevantPublications() != null && ee.getOtherRelevantPublications().size() > 0 ) {
             bib = ee.getOtherRelevantPublications().iterator().next();
-        } else {
-            hasBib = false;
         }
 
-        if ( hasBib ) {
-            date = bib.getPublicationDate();
-        }
+        hasBib = bib != null;
 
-        hasDate = date != null;
-
-        Calendar cal = Calendar.getInstance();
-        cal.set( PUB_LOW_YEAR + 1900, Calendar.JANUARY, 1 );
-        Date d2006 = cal.getTime();
-        cal.set( PUB_MID_YEAR + 1900, Calendar.JANUARY, 1 );
-        Date d2009 = cal.getTime();
-
-        score = !hasBib ? N_10 : !hasDate ? N_07 : date.before( d2006 ) ? N_05 : date.before( d2009 ) ? N_03 : P_10;
-        gq.setSScorePublication( score );
+        score = !hasBib ? N_10 : P_10;
+        gq.setsScorePublication( score );
 
     }
 
     private void scorePlatformAmount( Collection<ArrayDesign> ads, Geeq gq ) {
         double score;
         score = ads.size() > 2 ? N_10 : ads.size() > 1 ? N_05 : P_10;
-        gq.setSScorePlatformAmount( score );
+        gq.setsScorePlatformAmount( score );
     }
 
     private void scorePlatformsTechMulti( Collection<ArrayDesign> ads, Geeq gq ) {
@@ -330,7 +377,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         }
 
         score = mismatch ? N_10 : P_10;
-        gq.setSScorePlatformsTechMulti( score );
+        gq.setsScorePlatformsTechMulti( score );
     }
 
     private void scoreAvgPlatformPopularity( Collection<ArrayDesign> ads, Geeq gq ) {
@@ -344,7 +391,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         }
 
         score = getMean( scores );
-        gq.setSScoreAvgPlatformPopularity( score );
+        gq.setsScoreAvgPlatformPopularity( score );
     }
 
     private void scoreAvgPlatformSize( Collection<ArrayDesign> ads, Geeq gq ) {
@@ -358,7 +405,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         }
 
         score = getMean( scores );
-        gq.setSScoreAvgPlatformSize( score );
+        gq.setsScoreAvgPlatformSize( score );
     }
 
     private void scoreSampleSize( ExpressionExperiment ee, Geeq gq ) {
@@ -367,7 +414,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         int cnt = ee.getBioAssays().size();
 
         score = cnt < 20 ? N_10 : cnt < 50 ? N_05 : cnt < 100 ? P_00 : cnt < 200 ? P_05 : P_10;
-        gq.setSScoreSampleSize( score );
+        gq.setsScoreSampleSize( score );
     }
 
     private boolean scoreRawData( ExpressionExperiment ee, Geeq gq ) {
@@ -383,7 +430,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         }
 
         score = dataReprocessedFromRaw ? P_10 : N_10;
-        gq.setSScoreRawData( score );
+        gq.setsScoreRawData( score );
         return dataReprocessedFromRaw;
     }
 
@@ -408,7 +455,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? P_10 : N_10;
         gq.setNoVectors( !hasProcessedVectors );
         gq.addOtherIssues( problems );
-        gq.setSScoreMissingValues( score );
+        gq.setsScoreMissingValues( score );
     }
 
     /*
@@ -441,7 +488,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                         percentage > 0.1f ? P_00 : //
                                 percentage > P_00 ? P_05 : P_10; //
         gq.setCorrMatIssues( ( byte ) ( !hasCorrMat ? 1 : hasNaNs ? 2 : 0 ) );
-        gq.setQScoreOutliers( score );
+        gq.setqScoreOutliers( score );
     }
 
     private void scoreSampleMeanCorrelation( Geeq gq, double[] cormatLTri ) {
@@ -468,7 +515,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         }
 
         score = twoColor ? N_10 : P_10;
-        gq.setQScorePlatformsTech( score );
+        gq.setqScorePlatformsTech( score );
     }
 
     private void scoreReplicates( ExpressionExperiment ee, Geeq gq ) {
@@ -489,7 +536,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                         replicates == -1 ? 2 : //
                                 replicates == 1 ? 3 : //
                                         replicates == 0 ? 4 : 0 ) );
-        gq.setQScoreReplicates( score );
+        gq.setqScoreReplicates( score );
     }
 
     private boolean scoreBatchInfo( ExpressionExperiment ee, Geeq gq ) {
@@ -497,7 +544,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         boolean hasInfo = expressionExperimentService.checkHasBatchInfo( ee );
 
         score = !hasInfo ? N_10 : P_10;
-        gq.setQScoreBatchInfo( score );
+        gq.setqScoreBatchInfo( score );
         return hasInfo;
     }
 
@@ -509,7 +556,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         boolean corrected = false;
 
         if ( infoDetected ) {
-            boolean manual = gq.getManualBatchEffectActive();
+            boolean manual = gq.isManualBatchEffectActive();
             if ( !manual ) {
                 BatchEffectDetails be = expressionExperimentService.getBatchEffect( ee );
                 if ( be == null ) {
@@ -521,8 +568,8 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                     corrected = be.getDataWasBatchCorrected();
                 }
             } else {
-                hasStrong = gq.getManualHasStrongBatchEffect();
-                hasNone = gq.getManualHasNoBatchEffect();
+                hasStrong = gq.isManualHasStrongBatchEffect();
+                hasNone = gq.isManualHasNoBatchEffect();
             }
         }
 
@@ -530,7 +577,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                 P_00 :
                 hasStrong ? BATCH_EFF_STRONG : hasNone ? BATCH_EFF_NONE : BATCH_EFF_WEAK;
         gq.setBatchCorrected( corrected );
-        gq.setQScoreBatchEffect( score );
+        gq.setqScoreBatchEffect( score );
     }
 
     private void scoreBatchConfound( ExpressionExperiment ee, Geeq gq, boolean infoDetected ) {
@@ -538,7 +585,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         boolean hasConfound = false;
 
         if ( infoDetected ) {
-            boolean manual = gq.getManualBatchConfoundActive();
+            boolean manual = gq.isManualBatchConfoundActive();
             if ( !manual ) {
                 String confInfo = expressionExperimentService.getBatchConfound( ee );
                 if ( confInfo != null ) {
@@ -546,17 +593,25 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                     hasConfound = true;
                 }
             } else {
-                hasConfound = gq.getManualHasBatchConfound();
+                hasConfound = gq.isManualHasBatchConfound();
             }
         }
 
-        score = !infoDetected ? P_00 : hasConfound ? BATCH_CONF_HAS : BATCH_CONF_NOHAS;
-        gq.setQScoreBatchConfound( score );
+        score = !infoDetected ? P_00 : hasConfound ? BATCH_CONF_HAS : BATCH_CONF_NO_HAS;
+        gq.setqScoreBatchConfound( score );
     }
 
     /*
      * Support methods and other stuff
      */
+
+    private AuditEvent createGeeqEvent( ExpressionExperiment ee, String note, String details ) {
+        return auditTrailService.addUpdateEvent( ee, GeeqEvent.class, note, details );
+    }
+
+    private String fromTo( Object from, Object to ) {
+        return "From: " + from + " To: " + to;
+    }
 
     /**
      * Checks for all combinations of factor values in the experiments bio assays, and counts the amount of
@@ -671,13 +726,13 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         score = !hasCorrMat ? P_00 : value;
         switch ( type ) {
             case mean:
-                gq.setQScoreSampleMeanCorrelation( score );
+                gq.setqScoreSampleMeanCorrelation( score );
                 break;
             case median:
-                gq.setQScoreSampleMedianCorrelation( score );
+                gq.setqScoreSampleMedianCorrelation( score );
                 break;
             case variance:
-                gq.setQScoreSampleCorrelationVariance( score );
+                gq.setqScoreSampleCorrelationVariance( score );
                 break;
         }
     }
@@ -731,10 +786,6 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
     private enum cormatOpsType {
         mean, median, variance
-    }
-
-    public enum ScoringMode {
-        all, batchEffect, batchConfound, replicates
     }
 
 }

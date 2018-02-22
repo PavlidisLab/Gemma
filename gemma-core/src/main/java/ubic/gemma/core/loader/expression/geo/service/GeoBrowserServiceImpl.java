@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -41,8 +40,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
 
 import javax.annotation.PostConstruct;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
@@ -57,7 +54,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     private static final int MIN_SAMPLES = 5;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
-    private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
     @Autowired
     protected ExpressionExperimentService expressionExperimentService;
 
@@ -79,7 +76,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     @PostConstruct
     public void afterPropertiesSet() throws Exception {
-        initializeLocalInfo();
+        this.initializeLocalInfo();
 
         XPathFactory xf = XPathFactory.newInstance();
         XPath xpath = xf.newXPath();
@@ -99,16 +96,16 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          */
         String details = EutilFetch.fetch( "gds", accession, 25 );
 
-        initLocalRecord( accession );
+        this.initLocalRecord( accession );
 
         /*
          * increment click counts.
          */
         localInfo.get( accession ).setPreviousClicks( localInfo.get( accession ).getPreviousClicks() + 1 );
 
-        saveLocalInfo();
+        this.saveLocalInfo();
 
-        return formatDetails( details );
+        return this.formatDetails( details );
 
     }
 
@@ -120,7 +117,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         if ( records.isEmpty() )
             return records;
 
-        return filterGeoRecords( records );
+        return this.filterGeoRecords( records );
     }
 
     @Override
@@ -130,7 +127,19 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         // Change this method to browser.getGeoRecordsBySearchTerm when implemented in GeoBrowser.java
         List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count );
 
-        return filterGeoRecords( records );
+        return this.filterGeoRecords( records );
+    }
+
+    @Override
+    public boolean toggleUsability( String accession ) {
+
+        this.initLocalRecord( accession );
+
+        localInfo.get( accession ).setUsable( !localInfo.get( accession ).isUsable() );
+
+        this.saveLocalInfo();
+
+        return localInfo.get( accession ).isUsable();
     }
 
     private List<GeoRecord> filterGeoRecords( List<GeoRecord> records ) {
@@ -140,7 +149,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         rec:
         for ( GeoRecord record : records ) {
 
-            if ( record.getNumSamples() < MIN_SAMPLES ) {
+            if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {
                 toRemove.add( record );
             }
 
@@ -186,18 +195,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     }
 
-    @Override
-    public boolean toggleUsability( String accession ) {
-
-        initLocalRecord( accession );
-
-        localInfo.get( accession ).setUsable( !localInfo.get( accession ).isUsable() );
-
-        saveLocalInfo();
-
-        return localInfo.get( accession ).isUsable();
-    }
-
     private void formatArrayDetails( NodeList gpls, StringBuilder buf ) {
         Set<String> seenGpl = new HashSet<>();
         for ( int i = 0; i < gpls.getLength(); i++ ) {
@@ -215,15 +212,15 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                 if ( arrayDesign.getCurationDetails().getTroubled() ) {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
-                        trouble =
-                                "&nbsp;<img src='" + Settings.getRootContext() + "/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
-                                        + lastTroubleEvent.getNote() + "\"/>";
+                        trouble = "&nbsp;<img src='" + Settings.getRootContext()
+                                + "/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
+                                + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
                 buf.append(
-                        "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" + Settings.getRootContext() + "/arrays/showArrayDesign.html?id=" )
-                        .append( arrayDesign.getId() ).append( "\">" ).append( gpl ).append( "</a></strong>" )
-                        .append( trouble );
+                        "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" + Settings.getRootContext()
+                                + "/arrays/showArrayDesign.html?id=" ).append( arrayDesign.getId() ).append( "\">" )
+                        .append( gpl ).append( "</a></strong>" ).append( trouble );
             } else {
                 buf.append( "<p><strong>" ).append( gpl ).append( " [New to Gemma]</strong>" );
             }
@@ -232,15 +229,14 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     private File getInfoStoreFile() {
         String path = Settings.getDownloadPath();
-        return new File( path + File.separatorChar + GEO_DATA_STORE_FILE_NAME );
+        return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
     /**
      *
      */
-    @SuppressWarnings("unchecked")
     private void initializeLocalInfo() {
-        File f = getInfoStoreFile();
+        File f = this.getInfoStoreFile();
         if ( f.exists() ) {
             try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
 
@@ -249,9 +245,10 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                 fis.close();
 
             } catch ( Exception e ) {
-                log.error( "Failed to load local GEO info from " + f.getAbsolutePath() + ", reinitializing..." );
+                GeoBrowserServiceImpl.log
+                        .error( "Failed to load local GEO info from " + f.getAbsolutePath() + ", reinitializing..." );
                 this.localInfo = new HashMap<>();
-                saveLocalInfo(); // ensure this gets initilized even if unused
+                this.saveLocalInfo(); // ensure this gets initilized even if unused
             }
         } else {
             this.localInfo = new HashMap<>();
@@ -273,14 +270,14 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     private void saveLocalInfo() {
         if ( this.localInfo == null )
             return;
-        try (FileOutputStream fos = new FileOutputStream( getInfoStoreFile() );
+        try (FileOutputStream fos = new FileOutputStream( this.getInfoStoreFile() );
                 ObjectOutputStream oos = new ObjectOutputStream( fos )) {
 
             oos.writeObject( this.localInfo );
             oos.flush();
             oos.close();
         } catch ( Exception e ) {
-            log.error( "Failed to save local GEO info", e );
+            GeoBrowserServiceImpl.log.error( "Failed to save local GEO info", e );
         }
     }
 
@@ -297,10 +294,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
          */
         details = details.replaceAll( "encoding=\"UTF-8\"", "" );
 
-        try (StringInputStream is = new StringInputStream( details )) {
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            Document document = builder.parse( is );
+        try {
+            Document document = EutilFetch.parseStringInputStream( details );
 
             // NodeList samples = ( NodeList ) xsamples.evaluate( document, XPathConstants.NODESET );
             // String gds = ( String ) xgds.evaluate( document, XPathConstants.STRING ); // FIXME, use this.
@@ -315,9 +310,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
             if ( ee != null ) {
-                buf.append(
-                        "\n<p><strong><a target=\"_blank\" href=\"" + Settings.getRootContext() + "/expressionExperiment/showExpressionExperiment.html?id=" )
-                        .append( ee.getId() ).append( "\">" ).append( gse ).append( "</a></strong>" );
+                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" + Settings.getRootContext()
+                        + "/expressionExperiment/showExpressionExperiment.html?id=" ).append( ee.getId() )
+                        .append( "\">" ).append( gse ).append( "</a></strong>" );
             } else {
                 buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
             }
@@ -325,7 +320,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             buf.append( "<p>" ).append( title ).append( "</p>\n" );
             buf.append( "<p>" ).append( summary ).append( "</p>\n" );
 
-            formatArrayDetails( gpls, buf );
+            this.formatArrayDetails( gpls, buf );
 
             //for ( int i = 0; i < samples.getLength(); i++ ) {
             // samples.item( i )

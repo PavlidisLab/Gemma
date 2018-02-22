@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,7 +41,7 @@ import java.util.List;
  *
  * @author pavlidis
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+// Possible external use
 public class XMLUtils {
 
     private static final Log log = LogFactory.getLog( XMLUtils.class );
@@ -56,7 +56,7 @@ public class XMLUtils {
                 continue;
             }
             if ( jitem.getNodeName().equals( elementName ) ) {
-                r.add( getTextValue( ( Element ) jitem ) );
+                r.add( XMLUtils.getTextValue( ( Element ) jitem ) );
             }
         }
         return r;
@@ -70,7 +70,7 @@ public class XMLUtils {
                 continue;
             }
             if ( jitem.getNodeName().equals( elementName ) ) {
-                return getTextValue( ( Element ) jitem );
+                return XMLUtils.getTextValue( ( Element ) jitem );
             }
         }
         return null;
@@ -88,14 +88,14 @@ public class XMLUtils {
             return result;
         NodeList idList = doc.getElementsByTagName( tag );
         assert idList != null;
-        log.debug( "Got " + idList.getLength() );
+        XMLUtils.log.debug( "Got " + idList.getLength() );
         // NodeList idNodes = idList.item( 0 ).getChildNodes();
         // Node ids = idList.item( 0 );
         try {
             for ( int i = 0; i < idList.getLength(); i++ ) {
                 Node item = idList.item( i );
                 String value = XMLUtils.getTextValue( ( Element ) item );
-                log.debug( "Got " + value );
+                XMLUtils.log.debug( "Got " + value );
                 result.add( value );
             }
         } catch ( IOException e ) {
@@ -108,8 +108,10 @@ public class XMLUtils {
     /**
      * Make the horrible DOM API slightly more bearable: get the text value we know this element contains.
      * Borrowed from the Spring API.
-     * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
-     * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
+     * Using Node.getTextContent() to fix failing tests, if there is a problem, see history before Feb 22. 2018
+     * Also, this is the previous note (related to the code I removed):
+     * * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
+     * * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
      *
      * @throws IOException IO problems
      */
@@ -120,14 +122,7 @@ public class XMLUtils {
         org.w3c.dom.NodeList nl = ele.getChildNodes();
         for ( int i = 0; i < nl.getLength(); i++ ) {
             org.w3c.dom.Node item = nl.item( i );
-            if ( item instanceof org.w3c.dom.CharacterData ) {
-                if ( !( item instanceof org.w3c.dom.Comment ) ) {
-                    value.append( item.getNodeValue() );
-                }
-            } else {
-                throw new IOException(
-                        "element is just allowed to have text and comment nodes, not: " + item.getClass().getName() );
-            }
+            value.append( item.getTextContent().trim() );
         }
         return value.toString();
     }

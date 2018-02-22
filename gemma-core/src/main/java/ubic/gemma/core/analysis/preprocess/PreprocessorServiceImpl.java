@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -105,8 +105,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private OutlierDetectionService outlierDetectionService;
 
     @Override
-    public ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean allowOutliers )
-            throws PreprocessingException {
+    public ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
+        String note = "ComBat batch correction";
+        String detail = null;
 
         /*
          * This leaves the raw data alone; it updates the processed data.
@@ -116,15 +117,18 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        this.checkCorrectable( ee );
+        this.checkCorrectable( ee, force );
+
 
         /*
          * If there are predicted outliers, but which we decide are okay, we just go ahead.
          */
-        if ( !allowOutliers ) {
+        if ( !force ) {
             this.checkOutliers( ee );
         } else {
-            log.warn( "Batch correction is proceeding without checking for outliers" );
+            note = "[Forced]" + note;
+            detail = "Batch correction skipped outlier check.";
+            log.warn( detail );
         }
 
         try {
@@ -138,7 +142,14 @@ public class PreprocessorServiceImpl implements PreprocessorService {
                     .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
             AuditEventType eventType = BatchCorrectionEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent( ee, eventType, "ComBat batch correction" );
+
+            String bConf = expressionExperimentService.getBatchConfound( ee );
+            if ( bConf != null && force ) {
+                String add = "Batch correction forced over a detected confound: " + bConf;
+                //noinspection ConstantConditions // That is simply false.
+                detail = (detail == null) ? add : detail + "\n" + add;
+            }
+            auditTrailService.addUpdateEvent( ee, eventType, note, detail );
 
             removeInvalidatedData( ee );
             return processExceptForVectorCreate( ee );
@@ -349,8 +360,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         return vecs;
     }
 
-    private void checkCorrectable( ExpressionExperiment ee ) throws PreprocessingException {
-        boolean correctable = expressionExperimentBatchCorrectionService.checkCorrectability( ee );
+    private void checkCorrectable( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
+        boolean correctable = expressionExperimentBatchCorrectionService.checkCorrectability( ee, force );
 
         if ( !correctable ) {
             // throwing exception kind of annoying but not a big deal.

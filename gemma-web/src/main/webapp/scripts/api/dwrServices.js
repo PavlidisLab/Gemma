@@ -606,6 +606,14 @@ ExpressionExperimentController.recalculateBatchEffect = function( p0, callback )
     dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
         'recalculateBatchEffect', p0, callback );
 };
+ExpressionExperimentController.runGeeq = function( p0, p1, callback ) {
+    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
+        'runGeeq', p0, p1, callback );
+};
+ExpressionExperimentController.setGeeqManualSettings = function( p0, p1, callback ) {
+    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
+        'setGeeqManualSettings', p0, p1, callback );
+};
 
 // ====================================================================================
 if ( typeof ExpressionExperimentDataFetchController === 'undefined' ) {

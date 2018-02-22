@@ -1662,6 +1662,7 @@ public class ExpressionExperimentDaoImpl
         ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getCurationDetails() );
+        Hibernate.initialize( result.getGeeq() );
 
         ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
         if ( experimentalDesign != null ) {

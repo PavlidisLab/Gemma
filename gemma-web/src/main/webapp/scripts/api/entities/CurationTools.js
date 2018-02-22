@@ -19,6 +19,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         border: false
     },
     padding: 15,
+    cls: 'curation-tool',
 
     emptyEvent: {
         performer: "--",
@@ -58,10 +59,9 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
      */
     createTroublePanel: function () {
         var panelTrouble = new Ext.Panel({
-            layout: 'hbox',
+            cls: 'ee-tool-left',
             buttonAlign: 'left',
             defaults: {
-                width: '100%',
                 border: false,
                 padding: 0
             }
@@ -69,13 +69,13 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         // Status and input elements
         panelTrouble.add({
             html: '<hr class="normal"/>' +
-            '<div class="v-padded"><span class="bold width130">Troubled status: </span>' + this.getTroubleStatusHtml() +
+            '<div class="v-padded"><span class="bold width130">Usability: </span>' + this.getTroubleStatusHtml() +
             '</div>'
         });
 
         var changeTroubleButton = new Ext.Button({
-            text: 'Change troubled status',
-            tooltip: 'Create new event to change the trouble status. ',
+            text: 'Change usability status',
+            tooltip: 'Create new event to change the usability status. ',
             handler: this.showAddTroubleEventDialog,
             scope: this,
             cls: 'default-button'
@@ -117,10 +117,9 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
      */
     createCurationPanel: function () {
         var panelCuration = new Ext.Panel({
-            layout: 'hbox',
+            cls: 'ee-tool-left',
             buttonAlign: 'left',
             defaults: {
-                width: '100%',
                 border: false,
                 padding: 0
             }
@@ -128,7 +127,8 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         // Status and input elements
         panelCuration.add({
-            html: '<div class="v-padded">' +
+            html: '<hr class="normal"/>' +
+            '<div class="v-padded">' +
             '<span class="bold width130">Curation status: </span>' + this.getNeedsAttentionStatusHtml() +
             '<span class="v-padded"><span class="chb-correction"><input type="checkbox" id="needsAttention"></span> Needs Attention</span>' +
             '</div>' +
@@ -200,13 +200,13 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         // whether the trouble comes from the EE itself, or its platform.
         var str = (this.isExperiment() && this.curatable.actuallyTroubled === true)
         || (!this.isExperiment() && this.curatable.troubled)
-            ? '<span class="red width190"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>' + this.entityType + ' Troubled</span>'
-            : '<span class="green width190"><i class="fa fa-check-circle fa-lg fa-fw"></i>' + this.entityType + ' Not Troubled</span>';
+            ? '<span class="red width190"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>' + this.entityType + ' Unusable</span>'
+            : '<span class="green width190"><i class="fa fa-check-circle fa-lg fa-fw"></i>' + this.entityType + ' Usable</span>';
 
         if (this.isExperiment()
             && this.curatable.platformTroubled) {
             str += '<span class="gray-red">' +
-                ' <i class="fa fa-exclamation-triangle"></i> Platform troubled ' +
+                ' <i class="fa fa-exclamation-triangle"></i> Platform unusable ' +
                 '</span>';
         }
 

@@ -27,6 +27,7 @@ import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
  *
  * @author paul, tesarst
  */
+@SuppressWarnings("unused") // Used in frontend
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     private double publicQualityScore;
@@ -71,6 +72,7 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     /**
      * Required when using the class as a spring bean
      */
+    @SuppressWarnings("WeakerAccess") //Spring needs it to be public
     public GeeqValueObject() {
     }
 
@@ -107,65 +109,32 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     public GeeqValueObject( Geeq g ) {
         super( g.getId() );
         this.setPublicQualityScore( g.getDetectedQualityScore(), g.getManualQualityScore(),
-                g.getManualQualityOverride() );
+                g.isManualQualityOverride() );
         this.setPublicSuitabilityScore( g.getDetectedSuitabilityScore(), g.getManualSuitabilityScore(),
-                g.getManualSuitabilityOverride() );
-        this.sScorePublication = g.getSScorePublication();
-        this.sScorePlatformAmount = g.getSScorePlatformAmount();
-        this.sScorePlatformsTechMulti = g.getSScorePlatformsTechMulti();
-        this.sScoreAvgPlatformPopularity = g.getSScoreAvgPlatformPopularity();
-        this.sScoreAvgPlatformSize = g.getSScoreAvgPlatformSize();
-        this.sScoreSampleSize = g.getSScoreSampleSize();
-        this.sScoreRawData = g.getSScoreRawData();
-        this.sScoreMissingValues = g.getSScoreMissingValues();
-        this.qScoreOutliers = g.getQScoreOutliers();
-        this.qScoreSampleMeanCorrelation = g.getQScoreSampleMeanCorrelation();
-        this.qScoreSampleMedianCorrelation = g.getQScoreSampleMedianCorrelation();
-        this.qScoreSampleCorrelationVariance = g.getQScoreSampleCorrelationVariance();
-        this.qScorePlatformsTech = g.getQScorePlatformsTech();
-        this.qScoreReplicates = g.getQScoreReplicates();
-        this.qScoreBatchInfo = g.getQScoreBatchInfo();
-        this.setqScorePublicBatchEffect( g.getQScoreBatchEffect(), g.getManualHasStrongBatchEffect(),
-                g.getManualHasNoBatchEffect(), g.getManualBatchEffectActive() );
-        this.setqScorePublicBatchConfound( g.getQScoreBatchConfound(), g.getManualHasBatchConfound(),
-                g.getManualBatchConfoundActive() );
+                g.isManualSuitabilityOverride() );
+        this.sScorePublication = g.getsScorePublication();
+        this.sScorePlatformAmount = g.getsScorePlatformAmount();
+        this.sScorePlatformsTechMulti = g.getsScorePlatformsTechMulti();
+        this.sScoreAvgPlatformPopularity = g.getsScoreAvgPlatformPopularity();
+        this.sScoreAvgPlatformSize = g.getsScoreAvgPlatformSize();
+        this.sScoreSampleSize = g.getsScoreSampleSize();
+        this.sScoreRawData = g.getsScoreRawData();
+        this.sScoreMissingValues = g.getsScoreMissingValues();
+        this.qScoreOutliers = g.getqScoreOutliers();
+        this.qScoreSampleMeanCorrelation = g.getqScoreSampleMeanCorrelation();
+        this.qScoreSampleMedianCorrelation = g.getqScoreSampleMedianCorrelation();
+        this.qScoreSampleCorrelationVariance = g.getqScoreSampleCorrelationVariance();
+        this.qScorePlatformsTech = g.getqScorePlatformsTech();
+        this.qScoreReplicates = g.getqScoreReplicates();
+        this.qScoreBatchInfo = g.getqScoreBatchInfo();
+        this.setqScorePublicBatchEffect( g.getqScoreBatchEffect(), g.isManualHasStrongBatchEffect(),
+                g.isManualHasNoBatchEffect(), g.isManualBatchEffectActive() );
+        this.setqScorePublicBatchConfound( g.getqScoreBatchConfound(), g.isManualHasBatchConfound(),
+                g.isManualBatchConfoundActive() );
         this.noVectors = g.isNoVectors();
         this.batchCorrected = g.isBatchCorrected();
         this.corrMatIssues = g.getCorrMatIssues();
         this.replicatesIssues = g.getReplicatesIssues();
-    }
-
-    public GeeqValueObject( Long id, double detectedQualityScore, double manualQualityScore,
-            boolean manualQualityOverride, double detectedSuitabilityScore, double manualSuitabilityScore,
-            boolean manualSuitabilityOverride, double sScorePublication, double sScorePlatformAmount,
-            double sScorePlatformsTechMulti, double sScoreAvgPlatformPopularity, double sScoreAvgPlatformSize,
-            double sScoreSampleSize, double sScoreRawData, double sScoreMissingValues, double qScoreOutliers,
-            double qScoreSampleMeanCorrelation, double qScoreSampleMedianCorrelation,
-            double qScoreSampleCorrelationVariance, double qScorePlatformsTech, double qScoreReplicates,
-            double qScoreBatchInfo, double qScoreBatchEffect, boolean manualHasStrongBatchEffect,
-            boolean manualHasNoBatchEffect, boolean manualBatchEffectActive, double qScoreBatchConfound,
-            boolean manualHasBatchConfound, boolean manualBatchConfoundActive ) {
-        super( id );
-        this.setPublicQualityScore( detectedQualityScore, manualQualityScore, manualQualityOverride );
-        this.setPublicSuitabilityScore( detectedSuitabilityScore, manualSuitabilityScore, manualSuitabilityOverride );
-        this.sScorePublication = sScorePublication;
-        this.sScorePlatformAmount = sScorePlatformAmount;
-        this.sScorePlatformsTechMulti = sScorePlatformsTechMulti;
-        this.sScoreAvgPlatformPopularity = sScoreAvgPlatformPopularity;
-        this.sScoreAvgPlatformSize = sScoreAvgPlatformSize;
-        this.sScoreSampleSize = sScoreSampleSize;
-        this.sScoreRawData = sScoreRawData;
-        this.sScoreMissingValues = sScoreMissingValues;
-        this.qScoreOutliers = qScoreOutliers;
-        this.qScoreSampleMeanCorrelation = qScoreSampleMeanCorrelation;
-        this.qScoreSampleMedianCorrelation = qScoreSampleMedianCorrelation;
-        this.qScoreSampleCorrelationVariance = qScoreSampleCorrelationVariance;
-        this.qScorePlatformsTech = qScorePlatformsTech;
-        this.qScoreReplicates = qScoreReplicates;
-        this.qScoreBatchInfo = qScoreBatchInfo;
-        this.setqScorePublicBatchEffect( qScoreBatchEffect, manualHasStrongBatchEffect, manualHasNoBatchEffect,
-                manualBatchEffectActive );
-        this.setqScorePublicBatchConfound( qScoreBatchConfound, manualHasBatchConfound, manualBatchConfoundActive );
     }
 
     private void setPublicQualityScore( double detected, double manual, boolean override ) {
@@ -187,15 +156,33 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private void setqScorePublicBatchConfound( double detected, boolean manualHasConfound, boolean override ) {
         this.qScorePublicBatchConfound = //
                 !override ? detected : //
-                        manualHasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NOHAS;
+                        manualHasConfound ? GeeqServiceImpl.BATCH_CONF_HAS : GeeqServiceImpl.BATCH_CONF_NO_HAS;
     }
 
     public double getPublicQualityScore() {
         return publicQualityScore;
     }
 
+    /**
+     * Only for DWR serializer, do not use to manually set the score.
+     *
+     * @param publicQualityScore the new score
+     */
+    public void setPublicQualityScore( double publicQualityScore ) {
+        this.publicQualityScore = publicQualityScore;
+    }
+
     public double getPublicSuitabilityScore() {
         return publicSuitabilityScore;
+    }
+
+    /**
+     * Only for DWR serializer, do not use to manually set the score.
+     *
+     * @param publicSuitabilityScore the new score
+     */
+    public void setPublicSuitabilityScore( double publicSuitabilityScore ) {
+        this.publicSuitabilityScore = publicSuitabilityScore;
     }
 
     public double getsScorePublication() {

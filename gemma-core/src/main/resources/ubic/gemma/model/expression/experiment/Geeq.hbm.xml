@@ -29,58 +29,58 @@
         <property name="manualSuitabilityOverride" type="boolean">
             <column name="MANUAL_SUITABILITY_OVERRIDE" not-null="true" unique="false" default="0" sql-type="BIT"/>
         </property>
-        <property name="SScorePublication" type="double">
+        <property name="sScorePublication" type="double">
             <column name="SCORE_PUBLICATION" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="SScorePlatformAmount" type="double">
+        <property name="sScorePlatformAmount" type="double">
             <column name="SCORE_PLATFORM_AMOUNT" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="SScorePlatformsTechMulti" type="double">
+        <property name="sScorePlatformsTechMulti" type="double">
             <column name="SCORE_PLATFORMS_TECH_MULTI" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="SScoreAvgPlatformPopularity" type="double">
+        <property name="sScoreAvgPlatformPopularity" type="double">
             <column name="SCORE_AVG_PLATFORM_POPULARITY" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="SScoreAvgPlatformSize" type="double">
+        <property name="sScoreAvgPlatformSize" type="double">
             <column name="SCORE_AVG_PLATFORM_SIZE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="SScoreSampleSize" type="double">
+        <property name="sScoreSampleSize" type="double">
             <column name="SCORE_SAMPLE_SIZE" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="SScoreRawData" type="double">
+        <property name="sScoreRawData" type="double">
             <column name="SCORE_RAW_DATA" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="SScoreMissingValues" type="double">
+        <property name="sScoreMissingValues" type="double">
             <column name="SCORE_MISSING_VALUES" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreOutliers" type="double">
+        <property name="qScoreOutliers" type="double">
             <column name="SCORE_OUTLIERS" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreSampleMeanCorrelation" type="double">
+        <property name="qScoreSampleMeanCorrelation" type="double">
             <column name="SCORE_SAMPLE_MEAN_CORRELATION" not-null="true" unique="false" default="0.0"
                     sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreSampleMedianCorrelation" type="double">
+        <property name="qScoreSampleMedianCorrelation" type="double">
             <column name="SCORE_SAMPLE_MEDIAN_CORRELATION" not-null="true" unique="false" default="0.0"
                     sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreSampleCorrelationVariance" type="double">
+        <property name="qScoreSampleCorrelationVariance" type="double">
             <column name="SCORE_SAMPLE_CORRELATION_VARIANCE" not-null="true" unique="false" default="0.0"
                     sql-type="DOUBLE"/>
         </property>
-        <property name="QScorePlatformsTech" type="double">
+        <property name="qScorePlatformsTech" type="double">
             <column name="SCORE_PLATFORMS_TECH" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreReplicates" type="double">
+        <property name="qScoreReplicates" type="double">
             <column name="SCORE_REPLICATES" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreBatchInfo" type="double">
+        <property name="qScoreBatchInfo" type="double">
             <column name="SCORE_BATCH_INFO" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreBatchEffect" type="double">
+        <property name="qScoreBatchEffect" type="double">
             <column name="SCORE_BATCH_EFFECT" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
-        <property name="QScoreBatchConfound" type="double">
+        <property name="qScoreBatchConfound" type="double">
             <column name="SCORE_BATCH_CONFOUND" not-null="true" unique="false" default="0.0" sql-type="DOUBLE"/>
         </property>
         <property name="manualHasStrongBatchEffect" type="boolean">
@@ -118,8 +118,7 @@
                     sql-type="BIT"/>
         </property>
         <property name="otherIssues" type="java.lang.String">
-            <column name="OTHER_ISSUES" not-null="false" unique="false" default="null"
-                    sql-type="VARCHAR"/>
+            <column name="OTHER_ISSUES" not-null="false" unique="false" sql-type="VARCHAR(500)"/>
         </property>
 
         <many-to-one name="lastRun" class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" lazy="false"

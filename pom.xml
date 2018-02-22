@@ -5,7 +5,7 @@
     <name>Gemma</name>
     <groupId>gemma</groupId>
     <artifactId>gemma</artifactId>
-    <version>1.22.2</version>
+    <version>1.22.3</version>
     <inceptionYear>2005</inceptionYear>
     <description>
         The Gemma Project for meta-analysis of genomics data
@@ -288,7 +288,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.7</version>
+            <version>4.10</version>
             <scope>test</scope>
             <type>jar</type>
         </dependency>

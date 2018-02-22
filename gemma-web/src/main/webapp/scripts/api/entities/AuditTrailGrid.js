@@ -82,6 +82,8 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
             ret = '<i class="gold fa fa-exclamation-circle fa-lg fa-fw"></i>' + ret;
         }else if (value.indexOf("CurationNote") !== -1) {
             ret = '<i class="dark-gray fa fa-pencil-square-o fa-lg fa-fw"></i>' + ret;
+        }else if (value.indexOf("Geeq") !== -1) {
+            ret = '<i class="gray-blue fa fa-star fa-lg fa-fw"></i>' + ret;
         }
         return ret;
     },
@@ -191,7 +193,7 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
         forceFit: true
     },
 
-    title: this.comment ? "Add a comment" : "Change troubled status",
+    title: this.comment ? "Add a comment" : "Change usability status",
 
     /**
      * @memberOf Gemma.AddAuditEventDialog
@@ -207,8 +209,8 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
             fields: ['type', 'description', 'icon'],
             data: this.comment
                 ? [['CommentedEvent', 'Comment', 'pencil-square-o']]
-                : [['TroubledStatusFlagEvent', 'Mark as troubled', 'exclamation-triangle'],
-                  ['NotTroubledStatusFlagEvent', 'Mark as NOT troubled', 'check-circle']]
+                : [['TroubledStatusFlagEvent', 'Mark as unusable', 'exclamation-triangle'],
+                  ['NotTroubledStatusFlagEvent', 'Mark as usable', 'check-circle']]
         });
 
         var self = this;
