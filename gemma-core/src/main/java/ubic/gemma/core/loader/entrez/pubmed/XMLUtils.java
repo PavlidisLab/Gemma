@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,7 +41,7 @@ import java.util.List;
  *
  * @author pavlidis
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+// Possible external use
 public class XMLUtils {
 
     private static final Log log = LogFactory.getLog( XMLUtils.class );
@@ -56,7 +56,7 @@ public class XMLUtils {
                 continue;
             }
             if ( jitem.getNodeName().equals( elementName ) ) {
-                r.add( getTextValue( ( Element ) jitem ) );
+                r.add( XMLUtils.getTextValue( ( Element ) jitem ) );
             }
         }
         return r;
@@ -70,7 +70,7 @@ public class XMLUtils {
                 continue;
             }
             if ( jitem.getNodeName().equals( elementName ) ) {
-                return getTextValue( ( Element ) jitem );
+                return XMLUtils.getTextValue( ( Element ) jitem );
             }
         }
         return null;
@@ -88,14 +88,14 @@ public class XMLUtils {
             return result;
         NodeList idList = doc.getElementsByTagName( tag );
         assert idList != null;
-        log.debug( "Got " + idList.getLength() );
+        XMLUtils.log.debug( "Got " + idList.getLength() );
         // NodeList idNodes = idList.item( 0 ).getChildNodes();
         // Node ids = idList.item( 0 );
         try {
             for ( int i = 0; i < idList.getLength(); i++ ) {
                 Node item = idList.item( i );
                 String value = XMLUtils.getTextValue( ( Element ) item );
-                log.debug( "Got " + value );
+                XMLUtils.log.debug( "Got " + value );
                 result.add( value );
             }
         } catch ( IOException e ) {
