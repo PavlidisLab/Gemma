@@ -82,7 +82,7 @@ public class GeeqCli extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = this.processCommandLine( args );
+        Exception err = super.processCommandLine( args );
         if ( err != null )
             return err;
 
