@@ -255,7 +255,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                     "There are no missing values.";
 
         sBody.add(this.geeqRowRenderer('Publication', ee.geeq.sScorePublication,
-            "Checks whether the experiment has a publication, and how old the publication is.", sPubDesc));
+            "Checks whether the experiment has a publication.", sPubDesc));
 
         sBody.add(this.geeqRowRenderer('Platforms used', ee.geeq.sScorePlatformAmount,
             "The amount of platforms the experiment uses.", sPlatfAmntDesc));
