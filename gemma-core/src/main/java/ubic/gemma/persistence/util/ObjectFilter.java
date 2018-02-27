@@ -120,7 +120,7 @@ public class ObjectFilter {
             }
         } else if ( String.class.isAssignableFrom( propertyType ) ) {
             return requiredValue;
-        } else if ( Boolean.class.isAssignableFrom( propertyType ) ) {
+        } else if ( Boolean.class.isAssignableFrom( propertyType ) || boolean.class.isAssignableFrom( propertyType ) ) {
             return Boolean.parseBoolean( ( String ) requiredValue );
         } else if ( Integer.class.isAssignableFrom( propertyType ) || int.class.isAssignableFrom( propertyType ) ) {
             return Integer.valueOf( ( String ) requiredValue );
@@ -148,8 +148,8 @@ public class ObjectFilter {
                         "requiredValue for operator " + operator + " has to be an Iterable Object." );
             }
         } else if ( propertyType != null && !( requiredValue == null || requiredValue.getClass()
-                .isAssignableFrom( propertyType ) || ( this.isSameNumberType( requiredValue.getClass(),
-                propertyType ) ) ) // Check the type matches, special case for numbers
+                .isAssignableFrom( propertyType ) || ( this
+                .isSameOrWrapperType( requiredValue.getClass(), propertyType ) ) ) // Check the type matches
                 ) {
             throw new IllegalArgumentException(
                     "requiredValue for property " + propertyName + " has to be assignable from " + propertyType
@@ -185,25 +185,27 @@ public class ObjectFilter {
     }
 
     /**
-     * Checks whether the two given classes are representing the same number type, regardless of whether it is a Wrapper class or a primitive type.
-     * The types checked are double, integer, float, long, short and byte.
+     * Checks whether the two given classes are representing the same data type, regardless of whether it is a Wrapper class or a primitive type.
+     * The types checked are double, integer, float, long, short, boolean and byte.
      *
      * @param cls1 the first class to compare
      * @param cls2 the second class to compare
      * @return true, if the two given classes represent the same number type.
      */
-    private boolean isSameNumberType( Class cls1, Class cls2 ) {
-        return ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) ) && (
-                Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) )  // double
-                || ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) ) && (
-                Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) )  // integer
-                || ( Float.class.isAssignableFrom( cls1 ) || float.class.isAssignableFrom( cls1 ) ) && (
-                Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) )  // float
-                || ( Long.class.isAssignableFrom( cls1 ) || long.class.isAssignableFrom( cls1 ) ) && (
-                Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) )  // long
-                || ( Short.class.isAssignableFrom( cls1 ) || short.class.isAssignableFrom( cls1 ) ) && (
-                Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) )  // short
-                || ( Byte.class.isAssignableFrom( cls1 ) || byte.class.isAssignableFrom( cls1 ) ) && (
-                Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) );  // byte
+    private boolean isSameOrWrapperType( Class cls1, Class cls2 ) {
+        return ( ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) ) && (
+                Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) ) ) // double
+                || ( ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) ) && (
+                Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) ) )  // integer
+                || ( ( Float.class.isAssignableFrom( cls1 ) || float.class.isAssignableFrom( cls1 ) ) && (
+                Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) ) )  // float
+                || ( ( Long.class.isAssignableFrom( cls1 ) || long.class.isAssignableFrom( cls1 ) ) && (
+                Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) ) )  // long
+                || ( ( Short.class.isAssignableFrom( cls1 ) || short.class.isAssignableFrom( cls1 ) ) && (
+                Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) ) )  // short
+                || ( ( Byte.class.isAssignableFrom( cls1 ) || byte.class.isAssignableFrom( cls1 ) ) && (
+                Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) ) ) // byte
+                || ( ( Boolean.class.isAssignableFrom( cls1 ) || boolean.class.isAssignableFrom( cls1 ) ) && (
+                Boolean.class.isAssignableFrom( cls2 ) || boolean.class.isAssignableFrom( cls2 ) ) ); // boolean
     }
 }
