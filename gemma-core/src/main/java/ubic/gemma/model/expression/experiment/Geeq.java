@@ -285,10 +285,9 @@ public class Geeq implements Identifiable, Serializable {
 
     /**
      * @return The amount of samples in the experiment
-     * -1.0 if sample size &lt; 20
-     * -0.5 if sample size &lt; 50
-     * +0.0 if sample size &lt; 100
-     * +0.5 if sample size &lt; 200
+     * -1.0 if sample size &lt; 10
+     * -0.3 if sample size &lt; 20
+     * +0.3 if sample size &lt; 50
      * +1.0 otherwise
      */
     public double getsScoreSampleSize() {
@@ -328,11 +327,8 @@ public class Geeq implements Identifiable, Serializable {
     }
 
     /**
-     * @return Ratio of detected (non-removed) outliers vs sample size:
-     * -1.0 if ratio &gt; 5%
-     * -0.5 if ratio &gt; 2%
-     * +0.0 if ratio &gt; 0.1%
-     * +0.5 if ratio &gt; 0% small punishment for very large experiments with one bad apple
+     * @return Presence of non-removed outliers:
+     * -1.0 if ratio &gt; 0%
      * +1.0 if ratio = 0%
      * extra (in corrMatIssues):
      * 1 if the correlation matrix is empty

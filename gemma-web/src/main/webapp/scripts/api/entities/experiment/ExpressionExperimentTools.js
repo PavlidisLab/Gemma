@@ -255,7 +255,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                     "There are no missing values.";
 
         sBody.add(this.geeqRowRenderer('Publication', ee.geeq.sScorePublication,
-            "Checks whether the experiment has a publication, and how old the publication is.", sPubDesc));
+            "Checks whether the experiment has a publication.", sPubDesc));
 
         sBody.add(this.geeqRowRenderer('Platforms used', ee.geeq.sScorePlatformAmount,
             "The amount of platforms the experiment uses.", sPlatfAmntDesc));
@@ -340,13 +340,9 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 Number(ee.geeq.corrMatIssues) === 2 ? "There are NaN values in the correlation matrix." :
                     "";
 
-        var qODAdv = "Removing detected outliers will improve the score.";
         var qOutlierDesc =
-            Number(ee.geeq.qScoreOutliers) === -1 ? "More than 5% of samples are detected as outliers. " + qODAdv :
-                Number(ee.geeq.qScoreOutliers) === -0.5 ? "More than 2% of samples are detected as outliers. " + qODAdv :
-                    Number(ee.geeq.qScoreOutliers) === 0.0 ? "More than 0.01% of samples are detected as outliers. " + qODAdv :
-                        Number(ee.geeq.qScoreOutliers) === 0.5 ? "More than 0% of samples are detected as outliers. " + qODAdv :
-                            "No outliers were detected.";
+            Number(ee.geeq.qScoreOutliers) === -1 ? "There are detected, non-removed outliers. Removing detected outliers will improve the score." :
+                "No outliers were detected.";
 
         var qPlatfTechMultiDesc =
             Number(ee.geeq.qScorePlatformsTech) === -1 ? "The experiment is on a two-color platform." : "" +
@@ -405,7 +401,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             "The actual median correlation of samples.", "Included in the final score. Can be somewhat improved by removing outliers.", 4, qOutlErr));
 
         qBody.add(this.geeqRowRenderer('Outliers', ee.geeq.qScoreOutliers,
-            "Depends on the ratio of detected (non-removed) outliers vs sample size. The lower the ratio, the better the score.", qOutlierDesc, 1, qOutlErr));
+            "Depends on the presence of detected (non-removed) outliers. If there are any outliers, the score will be low.", qOutlierDesc, 1, qOutlErr));
 
         qBody.add(this.geeqRowRenderer('Platform technology', ee.geeq.qScorePlatformsTech,
             "Checks whether the experiments platform (any one, if there are multiple) is two-color.", qPlatfTechMultiDesc));
