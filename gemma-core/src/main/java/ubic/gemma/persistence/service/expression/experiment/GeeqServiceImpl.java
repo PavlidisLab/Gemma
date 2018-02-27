@@ -60,8 +60,10 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                     + "The same problem will be present for batch confound as well.";
 
     private static final double P_00 = 0.0;
+    private static final double P_03 = 0.3;
     private static final double P_05 = 0.5;
     private static final double P_10 = 1.0;
+    private static final double N_03 = -P_03;
     private static final double N_05 = -P_05;
     private static final double N_10 = -P_10;
 
@@ -429,13 +431,12 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
         int cnt = ee.getBioAssays().size();
 
-        score = cnt < 20 ?
+        score = cnt < 10 ?
                 GeeqServiceImpl.N_10 :
-                cnt < 50 ?
-                        GeeqServiceImpl.N_05 :
-                        cnt < 100 ? GeeqServiceImpl.P_00 : cnt < 200 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
+                cnt < 20 ? GeeqServiceImpl.N_03 : cnt < 50 ? GeeqServiceImpl.P_03 : GeeqServiceImpl.P_10;
         gq.setsScoreSampleSize( score );
     }
+
 
     private boolean scoreRawData( ExpressionExperiment ee, Geeq gq ) {
         double score;
@@ -488,9 +489,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         double score;
         boolean hasCorrMat = true;
         boolean hasNaNs = false;
-        float outliers;
-        float samples;
-        float percentage = 100f;
+        boolean outliers = true;
 
         if ( cormat == null || cormat.rows() == 0 ) {
             hasCorrMat = false;
@@ -500,15 +499,10 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
             hasNaNs = list.contains( Double.NaN );
 
-            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee, cormat ).size();
-            samples = ee.getBioAssays().size();
-            percentage = outliers / samples * 100f;
+            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee, cormat ).size() > 0;
         }
 
-        score = percentage > 5f ? GeeqServiceImpl.N_10 : //
-                percentage > 2f ? GeeqServiceImpl.N_05 : //
-                        percentage > 0.1f ? GeeqServiceImpl.P_00 : //
-                                percentage > GeeqServiceImpl.P_00 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10; //
+        score = outliers ? GeeqServiceImpl.N_10 : GeeqServiceImpl.P_10; //
         gq.setCorrMatIssues( ( byte ) ( !hasCorrMat ? 1 : hasNaNs ? 2 : 0 ) );
         gq.setqScoreOutliers( score );
     }
