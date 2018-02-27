@@ -544,7 +544,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             replicates = this.leastReplicates( ee );
         }
 
-        score = replicates < 4 ? GeeqServiceImpl.N_10 : //
+        score = !hasDesign || replicates < 4 ? GeeqServiceImpl.N_10 : //
                 replicates < 10 ? GeeqServiceImpl.P_00 : GeeqServiceImpl.P_10;
 
         gq.setReplicatesIssues( ( byte ) ( //
