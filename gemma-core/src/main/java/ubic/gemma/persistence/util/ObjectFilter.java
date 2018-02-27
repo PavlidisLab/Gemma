@@ -44,11 +44,11 @@ public class ObjectFilter {
             String objectAlias ) throws ParseException {
         this.propertyName = propertyName;
         this.propertyType = propertyType;
-        this.requiredValue = convertToParamType( requiredValue, propertyType );
+        this.requiredValue = this.convertToParamType( requiredValue, propertyType );
         this.operator = operator;
         this.objectAlias = objectAlias;
 
-        checkTypeCorrect();
+        this.checkTypeCorrect();
     }
 
     /**
@@ -76,7 +76,7 @@ public class ObjectFilter {
         this.requiredValue = requiredValue;
         this.operator = operator;
         this.objectAlias = objectAlias;
-        checkTypeCorrect();
+        this.checkTypeCorrect();
     }
 
     /**
@@ -90,6 +90,14 @@ public class ObjectFilter {
         return filters;
     }
 
+    /**
+     * Converts the given value to be of the given property type. For primitive number types, the wrapper class is used.
+     *
+     * @param requiredValue the Object to be converted into the desired type.
+     * @param propertyType  the type that the given value should be converted to.
+     * @return and Object of requested type, containing the given value converted to the new type.
+     * @throws ParseException when there was a problem converting the given value into the requested type.
+     */
     private Object convertToParamType( Object requiredValue, Class propertyType ) throws ParseException {
         if ( Iterable.class.isAssignableFrom( requiredValue.getClass() ) ) {
             // We got a collection
@@ -112,31 +120,42 @@ public class ObjectFilter {
             }
         } else if ( String.class.isAssignableFrom( propertyType ) ) {
             return requiredValue;
-        } else if ( Number.class.isAssignableFrom( propertyType ) ) {
-            return NumberFormat.getInstance().parse( ( String ) requiredValue );
         } else if ( Boolean.class.isAssignableFrom( propertyType ) ) {
             return Boolean.parseBoolean( ( String ) requiredValue );
+        } else if ( Integer.class.isAssignableFrom( propertyType ) || int.class.isAssignableFrom( propertyType ) ) {
+            return Integer.valueOf( ( String ) requiredValue );
+        } else if ( Double.class.isAssignableFrom( propertyType ) || double.class.isAssignableFrom( propertyType ) ) {
+            return Double.valueOf( ( String ) requiredValue );
+        } else if ( Long.class.isAssignableFrom( propertyType ) || long.class.isAssignableFrom( propertyType ) ) {
+            return Long.valueOf( ( String ) requiredValue );
+        } else if ( Short.class.isAssignableFrom( propertyType ) || short.class.isAssignableFrom( propertyType ) ) {
+            return Short.valueOf( ( String ) requiredValue );
+        } else if ( Byte.class.isAssignableFrom( propertyType ) || byte.class.isAssignableFrom( propertyType ) ) {
+            return Byte.valueOf( ( String ) requiredValue );
         }
         throw new IllegalArgumentException( "Property type not supported (" + propertyType + ")." );
     }
 
     private void checkTypeCorrect() {
         if ( requiredValue == null && ( // Check null for disallowed operators
-                operator.equals( greaterThan ) || // gt
-                        operator.equals( lessThan ) ) // lt
+                operator.equals( ObjectFilter.greaterThan ) || // gt
+                        operator.equals( ObjectFilter.lessThan ) ) // lt
                 ) {
             throw new IllegalArgumentException( "requiredValue for operator " + operator + " can not be null." );
-        } else if ( operator.equals( in ) ) { // Check 'in' conditions
+        } else if ( operator.equals( ObjectFilter.in ) ) { // Check 'in' conditions
             if ( requiredValue == null || !( requiredValue instanceof Collection<?> ) ) { // Check value is iterable
                 throw new IllegalArgumentException(
                         "requiredValue for operator " + operator + " has to be an Iterable Object." );
             }
         } else if ( propertyType != null && !( requiredValue == null || requiredValue.getClass()
-                .isAssignableFrom( propertyType ) ) ) { // Check the type matches
+                .isAssignableFrom( propertyType ) || ( this.isSameNumberType( requiredValue.getClass(),
+                propertyType ) ) ) // Check the type matches, special case for numbers
+                ) {
             throw new IllegalArgumentException(
                     "requiredValue for property " + propertyName + " has to be assignable from " + propertyType
-                            .getName() + " or null." );
-        } else if ( operator.equals( like ) && ( propertyType == null || !String.class
+                            .getName() + " or null, but the requiredValue class is  " + requiredValue.getClass()
+                            .getName() + "." );
+        } else if ( operator.equals( ObjectFilter.like ) && ( propertyType == null || !String.class
                 .isAssignableFrom( propertyType ) ) ) {
             throw new IllegalArgumentException(
                     "requiredValue for operator " + operator + " has to be a non null String." );
@@ -148,7 +167,7 @@ public class ObjectFilter {
     }
 
     public Object getRequiredValue() {
-        if ( this.operator.equals( like ) )
+        if ( this.operator.equals( ObjectFilter.like ) )
             return "%" + requiredValue + "%";
         return requiredValue;
     }
@@ -163,5 +182,28 @@ public class ObjectFilter {
 
     public Class getPropertyType() {
         return propertyType;
+    }
+
+    /**
+     * Checks whether the two given classes are representing the same number type, regardless of whether it is a Wrapper class or a primitive type.
+     * The types checked are double, integer, float, long, short and byte.
+     *
+     * @param cls1 the first class to compare
+     * @param cls2 the second class to compare
+     * @return true, if the two given classes represent the same number type.
+     */
+    private boolean isSameNumberType( Class cls1, Class cls2 ) {
+        return ( Double.class.isAssignableFrom( cls1 ) || double.class.isAssignableFrom( cls1 ) ) && (
+                Double.class.isAssignableFrom( cls2 ) || double.class.isAssignableFrom( cls2 ) )  // double
+                || ( Integer.class.isAssignableFrom( cls1 ) || int.class.isAssignableFrom( cls1 ) ) && (
+                Integer.class.isAssignableFrom( cls2 ) || int.class.isAssignableFrom( cls2 ) )  // integer
+                || ( Float.class.isAssignableFrom( cls1 ) || float.class.isAssignableFrom( cls1 ) ) && (
+                Float.class.isAssignableFrom( cls2 ) || float.class.isAssignableFrom( cls2 ) )  // float
+                || ( Long.class.isAssignableFrom( cls1 ) || long.class.isAssignableFrom( cls1 ) ) && (
+                Long.class.isAssignableFrom( cls2 ) || long.class.isAssignableFrom( cls2 ) )  // long
+                || ( Short.class.isAssignableFrom( cls1 ) || short.class.isAssignableFrom( cls1 ) ) && (
+                Short.class.isAssignableFrom( cls2 ) || short.class.isAssignableFrom( cls2 ) )  // short
+                || ( Byte.class.isAssignableFrom( cls1 ) || byte.class.isAssignableFrom( cls1 ) ) && (
+                Byte.class.isAssignableFrom( cls2 ) || byte.class.isAssignableFrom( cls2 ) );  // byte
     }
 }
