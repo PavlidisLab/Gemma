@@ -28,7 +28,7 @@ public class Responder {
             HttpServletResponse servletResponse ) {
 
         // Handle error codes
-        if ( isCodeAnError( code ) ) {
+        if ( Responder.isCodeAnError( code ) ) {
             if ( toReturn instanceof WellComposedErrorBody ) {
                 throw new GemmaApiException( ( WellComposedErrorBody ) toReturn );
             } else {
@@ -37,7 +37,7 @@ public class Responder {
         }
 
         // non-error codes
-        sendHeaders( code, servletResponse );
+        Responder.sendHeaders( code, servletResponse );
         return new ResponseDataObject( toReturn );
     }
 
@@ -49,7 +49,7 @@ public class Responder {
      * @return always null, as the response payload for code 204 has to be empty.
      */
     public static ResponseDataObject code200( Object toReturn, HttpServletResponse servletResponse ) {
-        return code( Response.Status.OK, toReturn, servletResponse );
+        return Responder.code( Response.Status.OK, toReturn, servletResponse );
     }
 
     /**
@@ -69,7 +69,7 @@ public class Responder {
     // Same return value: Intentional behavior - has to be consistent with other methods.
     // Weaker access, unused - we currently only have GET methods, none of which uses 204. Keeping the method for future use.
     public static ResponseDataObject code204( HttpServletResponse servletResponse ) {
-        sendHeaders( Response.Status.NO_CONTENT, servletResponse );
+        Responder.sendHeaders( Response.Status.NO_CONTENT, servletResponse );
         return null;
     }
 
@@ -88,25 +88,7 @@ public class Responder {
      */
     public static ResponseDataObject code400( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.BAD_REQUEST;
-        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
-    }
-
-    /**
-     * <p>
-     * Creates a new 401 response object. Use this method when the client .
-     * </p>
-     * <a href="https://tools.ietf.org/html/rfc7235#section-3.1">HTTP RFC</a>:
-     * <pre>The 401 (Unauthorized) status code indicates that the request has not
-     * been applied because it lacks valid authentication credentials for
-     * the target resource.</pre>
-     *
-     * @param message         A String that will be used in the ResponseErrorObject as a message describing the problem.
-     * @param servletResponse the object to set the appropriate response code on
-     * @return response data object
-     */
-    public static ResponseDataObject code401( String message, HttpServletResponse servletResponse ) {
-        Response.Status code = Response.Status.BAD_REQUEST;
-        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
+        return Responder.code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
 
     /**
@@ -125,7 +107,7 @@ public class Responder {
      */
     public static ResponseDataObject code404( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.NOT_FOUND;
-        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
+        return Responder.code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
 
     /**
@@ -138,7 +120,7 @@ public class Responder {
     @SuppressWarnings("unused") // Keeping the method in case we need it handy on short notice.
     public static ResponseDataObject code503( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.SERVICE_UNAVAILABLE;
-        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
+        return Responder.code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
 
     /**
@@ -155,19 +137,19 @@ public class Responder {
      */
     public static ResponseDataObject autoCode( Object toReturn, HttpServletResponse servletResponse ) {
         if ( toReturn == null ) { // object is null.
-            return code404( DEFAULT_ERR_MSG_NULL_OBJECT, servletResponse );
+            return Responder.code404( Responder.DEFAULT_ERR_MSG_NULL_OBJECT, servletResponse );
 
         } else if (  // empty collection/array.
                 ( toReturn instanceof Collection<?> && ( ( Collection<?> ) toReturn ).isEmpty() ) //
                         || ( toReturn.getClass().isArray() && Array.getLength( toReturn ) == 0 )  //
                 ) {
             // Keeping this as a special case, in case we decide to handle it differently.
-            return code200( toReturn, servletResponse );
+            return Responder.code200( toReturn, servletResponse );
         } else if ( toReturn instanceof WellComposedErrorBody ) { // pre-prepared error body.
-            return code( ( ( WellComposedErrorBody ) toReturn ).getStatus(), toReturn, servletResponse );
+            return Responder.code( ( ( WellComposedErrorBody ) toReturn ).getStatus(), toReturn, servletResponse );
         }
 
-        return code200( toReturn, servletResponse );
+        return Responder.code200( toReturn, servletResponse );
     }
 
     /**

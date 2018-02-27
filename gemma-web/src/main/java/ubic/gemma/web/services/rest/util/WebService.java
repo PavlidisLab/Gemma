@@ -34,8 +34,8 @@ public abstract class WebService {
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested
     ) {
-        log.warn( "Someone attempted a GET on " + uriInfo.getAbsolutePath() );
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+        WebService.log.warn( "Someone attempted a GET on " + uriInfo.getAbsolutePath() );
+        return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     /**
@@ -49,8 +49,8 @@ public abstract class WebService {
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested
     ) {
-        log.warn( "Someone attempted a POST on " + uriInfo.getAbsolutePath() );
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+        WebService.log.warn( "Someone attempted a POST on " + uriInfo.getAbsolutePath() );
+        return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     /**
@@ -64,8 +64,8 @@ public abstract class WebService {
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested
     ) {
-        log.warn( "Someone attempted a DELETE on " + uriInfo.getAbsolutePath() );
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+        WebService.log.warn( "Someone attempted a DELETE on " + uriInfo.getAbsolutePath() );
+        return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     /**
@@ -79,12 +79,12 @@ public abstract class WebService {
             @Context final HttpServletResponse sr, // The servlet response, needed for response code setting.
             @Context UriInfo uriInfo // The information about the URI that was requested
     ) {
-        log.warn( "Someone attempted a PUT on " + uriInfo.getAbsolutePath() );
-        return Responder.code404( ERROR_MSG_UNMAPPED_PATH, sr );
+        WebService.log.warn( "Someone attempted a PUT on " + uriInfo.getAbsolutePath() );
+        return Responder.code404( WebService.ERROR_MSG_UNMAPPED_PATH, sr );
     }
 
     protected void checkReqArg( Object arg, String name ) {
-        if ( arg == null || arg.toString().isEmpty()) {
+        if ( arg == null || arg.toString().isEmpty() ) {
             Response.Status code = Response.Status.BAD_REQUEST;
             WellComposedErrorBody errorBody = new WellComposedErrorBody( code,
                     String.format( "Value for required parameter '%s' not found.", name ) );

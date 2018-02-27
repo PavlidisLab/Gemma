@@ -5,7 +5,7 @@ import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueO
 import ubic.gemma.web.services.rest.util.GemmaApiException;
 
 /**
- * Class representing an API argument that should be a boolean.
+ * Class representing an API argument that should be one of the expression level consolidation options.
  *
  * @author tesarst
  */
@@ -35,10 +35,11 @@ public class ExpLevelConsolidationArg extends MalformableArg {
         if ( !( s.equals( ExperimentExpressionLevelsValueObject.OPT_PICK_MAX ) || s
                 .equals( ExperimentExpressionLevelsValueObject.OPT_PICK_VAR ) || s
                 .equals( ExperimentExpressionLevelsValueObject.OPT_AVG ) ) ) {
-            return new ExpLevelConsolidationArg( String.format( ERROR_MSG, s ), new IllegalArgumentException(
-                    "The consolidate option has to be one of: " + ExperimentExpressionLevelsValueObject.OPT_AVG + ", "
-                            + ExperimentExpressionLevelsValueObject.OPT_PICK_MAX + ", "
-                            + ExperimentExpressionLevelsValueObject.OPT_PICK_VAR ) );
+            return new ExpLevelConsolidationArg( String.format( ExpLevelConsolidationArg.ERROR_MSG, s ),
+                    new IllegalArgumentException(
+                            "The consolidate option has to be one of: " + ExperimentExpressionLevelsValueObject.OPT_AVG
+                                    + ", " + ExperimentExpressionLevelsValueObject.OPT_PICK_MAX + ", "
+                                    + ExperimentExpressionLevelsValueObject.OPT_PICK_VAR ) );
         }
         return new ExpLevelConsolidationArg( s );
     }
