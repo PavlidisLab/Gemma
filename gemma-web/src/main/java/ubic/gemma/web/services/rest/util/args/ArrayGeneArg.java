@@ -42,7 +42,7 @@ public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneValueObject, GeneServ
     @Override
     protected String getPropertyName( GeneService service ) {
         String value = this.getValue().get( 0 );
-        GeneArg arg = GeneArg.valueOf( value );
+        MutableArg<?, Gene, GeneValueObject, GeneService> arg = GeneArg.valueOf( value );
         return this.checkPropertyNameString( arg, value, service );
     }
 

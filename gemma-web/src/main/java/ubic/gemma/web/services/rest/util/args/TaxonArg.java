@@ -37,7 +37,7 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject,
      * @return instance of appropriate implementation of TaxonArg based on the actual Type the argument represents.
      */
     @SuppressWarnings("unused")
-    public static TaxonArg valueOf( final String s ) {
+    public static MutableArg<?, Taxon, TaxonValueObject, TaxonService> valueOf( final String s ) {
         try {
             Long id = Long.parseLong( s.trim() );
             return id < TaxonArg.MIN_NCBI_ID ? new TaxonIdArg( id ) : new TaxonNcbiIdArg( id );

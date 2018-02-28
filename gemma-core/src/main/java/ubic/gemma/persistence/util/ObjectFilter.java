@@ -10,7 +10,6 @@ import java.util.Collection;
  * Provides necessary information to filter a database query by a value of a specific object property.
  */
 public class ObjectFilter {
-    // FIXME these might be better placed in their respective DAOs, since they are used mostly there.
     public static final String DAO_EE_ALIAS = "ee";
     public static final String DAO_AD_ALIAS = "ad";
     public static final String DAO_TAXON_ALIAS = "taxon";

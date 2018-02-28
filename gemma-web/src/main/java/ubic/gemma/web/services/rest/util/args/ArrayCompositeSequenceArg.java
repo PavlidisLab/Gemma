@@ -65,7 +65,8 @@ public class ArrayCompositeSequenceArg
     @Override
     protected String getPropertyName( CompositeSequenceService service ) {
         String value = this.getValue().get( 0 );
-        CompositeSequenceArg arg = CompositeSequenceArg.valueOf( value );
+        MutableArg<?, CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> arg = CompositeSequenceArg
+                .valueOf( value );
         return this.checkPropertyNameString( arg, value, service );
     }
 
@@ -73,7 +74,6 @@ public class ArrayCompositeSequenceArg
     protected String getObjectDaoAlias() {
         return ObjectFilter.DAO_PROBE_ALIAS;
     }
-    // TODO finish adding S parameter to the ArrayEntityArg implementations
 
 }
 

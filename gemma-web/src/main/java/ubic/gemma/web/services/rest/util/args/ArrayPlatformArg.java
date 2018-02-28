@@ -42,7 +42,7 @@ public class ArrayPlatformArg extends ArrayEntityArg<ArrayDesign, ArrayDesignVal
     @Override
     protected String getPropertyName( ArrayDesignService service ) {
         String value = this.getValue().get( 0 );
-        PlatformArg arg = PlatformArg.valueOf( value );
+        MutableArg<?, ArrayDesign, ArrayDesignValueObject, ArrayDesignService> arg = PlatformArg.valueOf( value );
         return this.checkPropertyNameString( arg, value, service );
     }
 

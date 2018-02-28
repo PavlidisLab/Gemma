@@ -5,11 +5,13 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 import ubic.gemma.core.testing.BaseSpringWebTest;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.args.*;
+import ubic.gemma.web.services.rest.util.args.ArrayDatasetArg;
+import ubic.gemma.web.services.rest.util.args.DatasetFilterArg;
+import ubic.gemma.web.services.rest.util.args.IntArg;
+import ubic.gemma.web.services.rest.util.args.SortArg;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,13 +30,13 @@ public class DatasetsRestTest extends BaseSpringWebTest {
 
     @Before
     public void setUp() throws Exception {
-        if ( loaded ) {
+        if ( DatasetsRestTest.loaded ) {
             return;
         }
         for ( int i = 0; i < 10; i++ ) {
-            ees.add( getNewTestPersistentCompleteExpressionExperiment() );
+            DatasetsRestTest.ees.add( this.getNewTestPersistentCompleteExpressionExperiment() );
         }
-        loaded = true;
+        DatasetsRestTest.loaded = true;
     }
 
     @Test
@@ -52,63 +54,15 @@ public class DatasetsRestTest extends BaseSpringWebTest {
 
     @Test
     public void testSome() throws Exception {
-        ResponseDataObject response = service.datasets(
-                ArrayDatasetArg.valueOf( ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 ).getShortName() ),
-                DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "0" ), IntArg.valueOf( "10" ), SortArg.valueOf( "+id" ),
-                new MockHttpServletResponse() );
+        ResponseDataObject response = service.datasets( ArrayDatasetArg.valueOf(
+                DatasetsRestTest.ees.get( 0 ).getShortName() + ", BAD_NAME, " + DatasetsRestTest.ees.get( 2 )
+                        .getShortName() ), DatasetFilterArg.valueOf( "" ), IntArg.valueOf( "0" ),
+                IntArg.valueOf( "10" ), SortArg.valueOf( "+id" ), new MockHttpServletResponse() );
 
         assertNotNull( response.getData() );
         assertTrue( response.getData() instanceof Collection<?> );
         assertEquals( 2, ( ( Collection ) response.getData() ).size() );
         assertTrue(
                 ( ( Collection ) response.getData() ).iterator().next() instanceof ExpressionExperimentValueObject );
-    }
-
-    @Test
-    public void testPlatforms() throws Exception {
-        //noinspection unchecked
-        ResponseDataObject response = service
-                .datasetPlatforms( DatasetArg.valueOf( String.valueOf( ees.get( 1 ).getId() ) ),
-                        new MockHttpServletResponse() );
-
-        assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
-        assertTrue( ( ( Collection ) response.getData() ).iterator().next() instanceof ArrayDesignValueObject );
-    }
-
-    @Test
-    public void testSamples() throws Exception {
-        //noinspection unchecked
-        ResponseDataObject response = service
-                .datasetPlatforms( DatasetArg.valueOf( String.valueOf( ees.get( 1 ).getId() ) ),
-                        new MockHttpServletResponse() );
-
-        assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
-        // since we are using mock ees, the bioassays array will likely be empty.
-    }
-
-    @Test
-    public void testDiffEx() throws Exception {
-        //noinspection unchecked
-        ResponseDataObject response = service.datasetDiffAnalysis( // Params:
-                DatasetArg.valueOf( String.valueOf( ees.get( 1 ).getId() ) ), // Required
-                IntArg.valueOf( "0" ), IntArg.valueOf( "1" ), new MockHttpServletResponse() );
-
-        assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
-        // since we are using mock ees, the diffex array will likely be empty.
-    }
-
-    @Test
-    public void testAnnotations() throws Exception {
-        //noinspection unchecked
-        ResponseDataObject response = service
-                .datasetAnnotations( DatasetArg.valueOf( String.valueOf( ees.get( 1 ).getId() ) ),
-                        new MockHttpServletResponse() );
-
-        assertNotNull( response.getData() );
-        assertTrue( response.getData() instanceof Collection<?> );
-        // since we are using mock ees, the annotations array will likely be empty.
     }
 }
