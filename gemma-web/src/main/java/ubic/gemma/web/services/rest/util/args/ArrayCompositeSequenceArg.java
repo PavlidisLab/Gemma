@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
@@ -42,10 +41,10 @@ public class ArrayCompositeSequenceArg
     @SuppressWarnings("unused")
     public static ArrayCompositeSequenceArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayCompositeSequenceArg( String.format( ERROR_MSG, s ),
-                    new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+            return new ArrayCompositeSequenceArg( String.format( ArrayCompositeSequenceArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( ArrayCompositeSequenceArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayCompositeSequenceArg( Arrays.asList( splitString( s ) ) );
+        return new ArrayCompositeSequenceArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
     }
 
     public void setPlatform( ArrayDesign arrayDesign ) {
@@ -55,24 +54,24 @@ public class ArrayCompositeSequenceArg
     public ArrayList<ObjectFilter[]> getPlatformFilter() {
         ObjectFilter filter;
         try {
-            filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId().toString(), ObjectFilter.is,
-                    ObjectFilter.DAO_PROBE_ALIAS );
+            filter = new ObjectFilter( "arrayDesign.id", Long.class, this.arrayDesign.getId().toString(),
+                    ObjectFilter.is, ObjectFilter.DAO_PROBE_ALIAS );
         } catch ( ParseException e ) {
-            throw convertParseException( e );
+            throw this.convertParseException( e );
         }
         return ObjectFilter.singleFilter( filter );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_PROBE_ALIAS;
     }
 
     @Override
     protected String getPropertyName( CompositeSequenceService service ) {
         String value = this.getValue().get( 0 );
         CompositeSequenceArg arg = CompositeSequenceArg.valueOf( value );
-        return checkPropertyNameString( arg, value, service );
+        return this.checkPropertyNameString( arg, value, service );
+    }
+
+    @Override
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_PROBE_ALIAS;
     }
     // TODO finish adding S parameter to the ArrayEntityArg implementations
 

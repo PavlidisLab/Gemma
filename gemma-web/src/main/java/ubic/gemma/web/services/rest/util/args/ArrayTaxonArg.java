@@ -35,14 +35,10 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
     @SuppressWarnings("unused")
     public static ArrayTaxonArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayTaxonArg( String.format( ERROR_MSG, s ), new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+            return new ArrayTaxonArg( String.format( ArrayTaxonArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( ArrayTaxonArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayTaxonArg( Arrays.asList( splitString( s ) ) );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_TAXON_ALIAS;
+        return new ArrayTaxonArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
     }
 
     @Override
@@ -52,7 +48,7 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
             try {
                 String value = this.getValue().get( i );
                 TaxonArg arg = TaxonArg.valueOf( value );
-                propertyName = checkPropertyNameString( arg, value, service );
+                propertyName = this.checkPropertyNameString( arg, value, service );
                 return propertyName;
             } catch ( GemmaApiException e ) {
                 if ( i == this.getValue().size() - 1 ) {
@@ -62,6 +58,11 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
         }
         // should never happen as the catch will rethrow at the end of the loop
         return null;
+    }
+
+    @Override
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_TAXON_ALIAS;
     }
 
 }

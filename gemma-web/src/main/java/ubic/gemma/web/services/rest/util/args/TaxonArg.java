@@ -40,7 +40,7 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject,
     public static TaxonArg valueOf( final String s ) {
         try {
             Long id = Long.parseLong( s.trim() );
-            return id < MIN_NCBI_ID ? new TaxonIdArg( id ) : new TaxonNcbiIdArg( id );
+            return id < TaxonArg.MIN_NCBI_ID ? new TaxonIdArg( id ) : new TaxonNcbiIdArg( id );
         } catch ( NumberFormatException e ) {
             return new TaxonStringArg( s );
         }
@@ -86,7 +86,7 @@ public abstract class TaxonArg<T> extends MutableArg<T, Taxon, TaxonValueObject,
             ChromosomeService chromosomeService, GeneService geneService, String chromosomeName, long start,
             int size ) {
         // Taxon argument
-        Taxon taxon = getPersistentObject( taxonService );
+        Taxon taxon = this.getPersistentObject( taxonService );
 
         //Chromosome argument
         Collection<Chromosome> chromosomes = chromosomeService.find( chromosomeName, taxon );

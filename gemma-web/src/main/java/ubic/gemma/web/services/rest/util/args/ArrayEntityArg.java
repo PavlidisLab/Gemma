@@ -83,9 +83,9 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
         }
         ObjectFilter filter;
         try {
-            filter = new ObjectFilter( name, type, this.getValue(), ObjectFilter.in, getObjectDaoAlias() );
+            filter = new ObjectFilter( name, type, this.getValue(), ObjectFilter.in, this.getObjectDaoAlias() );
         } catch ( ParseException e ) {
-            throw convertParseException( e );
+            throw this.convertParseException( e );
         }
         filters.add( new ObjectFilter[] { filter } );
         return filters;
@@ -99,8 +99,8 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
     }
 
     public Collection<O> getPersistentObjects( S service ) {
-        Collection<O> ees = new ArrayList<>( getValue().size() );
-        for ( String s : getValue() ) {
+        Collection<O> ees = new ArrayList<>( this.getValue().size() );
+        for ( String s : this.getValue() ) {
             try {
                 MutableArg<?, O, VO, S> arg;
                 // noinspection unchecked, JavaReflectionMemberAccess

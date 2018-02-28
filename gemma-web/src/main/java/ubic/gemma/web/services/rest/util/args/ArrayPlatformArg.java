@@ -3,15 +3,10 @@ package ubic.gemma.web.services.rest.util.args;
 import com.google.common.base.Strings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.ObjectFilter;
 import ubic.gemma.web.services.rest.util.GemmaApiException;
-import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
 
-import javax.ws.rs.core.Response;
-import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,22 +33,22 @@ public class ArrayPlatformArg extends ArrayEntityArg<ArrayDesign, ArrayDesignVal
     @SuppressWarnings("unused")
     public static ArrayPlatformArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayPlatformArg( String.format( ERROR_MSG, s ),
-                    new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+            return new ArrayPlatformArg( String.format( ArrayPlatformArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( ArrayPlatformArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayPlatformArg( Arrays.asList( splitString( s ) ) );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_AD_ALIAS;
+        return new ArrayPlatformArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
     }
 
     @Override
     protected String getPropertyName( ArrayDesignService service ) {
         String value = this.getValue().get( 0 );
         PlatformArg arg = PlatformArg.valueOf( value );
-        return checkPropertyNameString( arg, value, service );
+        return this.checkPropertyNameString( arg, value, service );
+    }
+
+    @Override
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_AD_ALIAS;
     }
 
 }
