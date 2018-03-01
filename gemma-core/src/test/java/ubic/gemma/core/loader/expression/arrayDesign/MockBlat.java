@@ -1,50 +1,40 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-
 import ubic.gemma.core.apps.Blat;
 import ubic.gemma.core.apps.ShellDelegatingBlat.BlattableGenome;
+import ubic.gemma.core.testing.PersistentDummyObjectHelper;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.core.testing.PersistentDummyObjectHelper;
+
+import java.io.InputStream;
+import java.util.*;
 
 class MockBlat implements Blat {
 
     private static final Random RANDOM = new Random();
-    private Taxon taxon;
+    private final Taxon taxon;
 
-    public MockBlat( Taxon t ) {
+    MockBlat( Taxon t ) {
         this.taxon = t;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Blat#blatQuery(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
     @Override
-    public Collection<BlatResult> blatQuery( BioSequence b ) throws IOException {
+    public Collection<BlatResult> blatQuery( BioSequence b ) {
         Collection<BlatResult> result = new HashSet<>();
         BioSequence chromseq = PersistentDummyObjectHelper.getTestNonPersistentBioSequence( taxon );
         chromseq.setLength( ( long ) 1e7 );
         BlatResult br = BlatResult.Factory.newInstance();
 
-        Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null, chromseq, taxon );
+        Chromosome chromosome = new Chromosome( "XXX", null, chromseq, taxon );
         br.setTargetChromosome( chromosome );
         assert br.getTargetChromosome().getSequence() != null;
-        long targetstart = RANDOM.nextInt( chromseq.getLength().intValue() );
+        long targetStart = MockBlat.RANDOM.nextInt( chromseq.getLength().intValue() );
         br.setQuerySequence( b );
-        br.setTargetStart( targetstart );
-        br.setTargetEnd( targetstart + b.getLength() );
+        br.setTargetStart( targetStart );
+        br.setTargetEnd( targetStart + b.getLength() );
         br.setMatches( ( int ) ( b.getLength() - 1 ) );
         br.setMismatches( 1 );
         br.setRepMatches( 0 );
@@ -56,7 +46,7 @@ class MockBlat implements Blat {
         br.setTargetGapCount( 0 );
         PhysicalLocation targetAlignedRegion = PhysicalLocation.Factory.newInstance();
         targetAlignedRegion.setChromosome( br.getTargetChromosome() );
-        targetAlignedRegion.setNucleotide( targetstart );
+        targetAlignedRegion.setNucleotide( targetStart );
         targetAlignedRegion.setNucleotideLength( b.getLength().intValue() );
         targetAlignedRegion.setStrand( "+" );
 
@@ -66,29 +56,33 @@ class MockBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> blatQuery( BioSequence b, Taxon t, boolean sensitive ) throws IOException {
-        return blatQuery( b );
+    public Collection<BlatResult> blatQuery( BioSequence b, Taxon t, boolean sensitive ) {
+        return this.blatQuery( b );
     }
 
     @Override
     public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
-            Taxon t ) throws IOException {
-        Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
+            Taxon t ) {
+        Map<BioSequence, Collection<BlatResult>> results = new HashMap<>();
         for ( BioSequence bioSequence : sequences ) {
-            results.put( bioSequence, blatQuery( bioSequence ) );
+            results.put( bioSequence, this.blatQuery( bioSequence ) );
         }
         return results;
     }
 
     @Override
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon t )
-            throws IOException {
-        return blatQuery( sequences, false, t );
+    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon t ) {
+        return this.blatQuery( sequences, false, t );
     }
 
     @Override
     public double getBlatScoreThreshold() {
         return 0;
+    }
+
+    @Override
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+
     }
 
     @Override
@@ -132,17 +126,12 @@ class MockBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon t ) throws IOException {
+    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon t ) {
         return null;
     }
 
     @Override
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-
-    }
-
-    @Override
-    public void startServer( BlattableGenome genome, int port ) throws IOException {
+    public void startServer( BlattableGenome genome, int port ) {
 
     }
 

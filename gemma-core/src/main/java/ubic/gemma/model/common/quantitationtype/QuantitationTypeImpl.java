@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -23,14 +23,6 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
 
     public QuantitationTypeImpl() {
         super();
-        // // set some default so we don't have to remember to do this.
-        // this.setIsPreferred( false );
-        // this.setIsBatchCorrected( false );
-        // this.setIsNormalized( false );
-        // this.setIsBackgroundSubtracted( false );
-        // this.setIsBackground( false );
-        // this.setIsRatio( false );
-        // this.setIsMaskedPreferred( false );
     }
 
     @Override
@@ -71,27 +63,24 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
             return false;
         }
 
-        if ( this.getGeneralType() != null && that.getGeneralType() != null
-                && !this.getGeneralType().equals( that.getGeneralType() ) ) {
+        if ( this.getGeneralType() != null && that.getGeneralType() != null && !this.getGeneralType()
+                .equals( that.getGeneralType() ) ) {
             return false;
         }
 
-        if ( this.getRepresentation() != null && that.getRepresentation() != null
-                && !this.getRepresentation().equals( that.getRepresentation() ) ) {
+        //noinspection SimplifiableIfStatement // Better readability
+        if ( this.getRepresentation() != null && that.getRepresentation() != null && !this.getRepresentation()
+                .equals( that.getRepresentation() ) ) {
             return false;
         }
 
-        if ( this.getType() != null && that.getRepresentation() != null && !this.getType().equals( that.getType() ) ) {
-            return false;
-        }
-
-        return true;
+        return this.getType() == null || that.getRepresentation() == null || this.getType().equals( that.getType() );
     }
 
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29 * hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() );
+        hashCode = 29 * hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() );
         return hashCode;
     }
 
@@ -112,11 +101,16 @@ public class QuantitationTypeImpl extends ubic.gemma.model.common.quantitationty
         if ( this.getScale() != null ) {
             hashCode = hashCode + this.getScale().hashCode();
         }
-        if ( this.getIsBackground() != null ) hashCode += this.getIsBackground().hashCode();
-        if ( this.getIsBackgroundSubtracted() != null ) hashCode += this.getIsBackgroundSubtracted().hashCode();
-        if ( this.getIsNormalized() != null ) hashCode += this.getIsNormalized().hashCode();
-        if ( this.getIsPreferred() != null ) hashCode += this.getIsPreferred().hashCode();
-        if ( this.getIsRatio() != null ) hashCode += this.getIsRatio().hashCode();
+        if ( this.getIsBackground() != null )
+            hashCode += this.getIsBackground().hashCode();
+        if ( this.getIsBackgroundSubtracted() != null )
+            hashCode += this.getIsBackgroundSubtracted().hashCode();
+        if ( this.getIsNormalized() != null )
+            hashCode += this.getIsNormalized().hashCode();
+        if ( this.getIsPreferred() != null )
+            hashCode += this.getIsPreferred().hashCode();
+        if ( this.getIsRatio() != null )
+            hashCode += this.getIsRatio().hashCode();
 
         return hashCode;
     }

@@ -18,12 +18,12 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.coexpression;
 
-import java.util.Collection;
-
-import ubic.gemma.persistence.service.analysis.AnalysisDao;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.AnalysisDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis

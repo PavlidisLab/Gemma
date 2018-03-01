@@ -103,8 +103,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
                     phenotypesGenesAssociations.get( getValueUri() )
                             .addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
                 } else {
-                    HashSet<Integer> genesNBCI = new HashSet<>();
-                    genesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+                    HashSet<Integer> genesNBCI = new HashSet<>( phenotypesGenesAssociations.get( tc.getValueUri() ) );
                     phenotypesGenesAssociations.put( getValueUri(), genesNBCI );
                 }
             }
@@ -134,8 +133,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
                     phenotypesGenesAssociations.get( getValueUri() )
                             .addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
                 } else {
-                    Set<Integer> genesNBCI = new HashSet<>();
-                    genesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
+                    Set<Integer> genesNBCI = new HashSet<>( phenotypesGenesAssociations.get( tc.getValueUri() ) );
                     phenotypesGenesAssociations.put( getValueUri(), genesNBCI );
                 }
             }

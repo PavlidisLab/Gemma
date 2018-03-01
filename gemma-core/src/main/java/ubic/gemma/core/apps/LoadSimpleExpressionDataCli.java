@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -48,23 +49,23 @@ import java.util.HashSet;
  * @author xiangwan
  */
 public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
-    final static String SPLITCHAR = "\t{1}";
-    final static int NAMEI = 0;
-    final static int SHORTNAMEI = NAMEI + 1;
-    final static int DESCRIPTIONI = SHORTNAMEI + 1;
-    final static int AD_SHORT_NAME_I = DESCRIPTIONI + 1; // The short name of the arrayDesign
-    final static int DATAFILEI = AD_SHORT_NAME_I + 1;
-    final static int SPECIESI = DATAFILEI + 1;
-    final static int QNAMEI = SPECIESI + 1;
-    final static int QDESCRIPTIONI = QNAMEI + 1;
-    final static int QTYPEI = QDESCRIPTIONI + 1;
-    final static int QSCALEI = QTYPEI + 1;
-    final static int PUBMEDI = QSCALEI + 1;
-    final static int SOURCEI = PUBMEDI + 1;
-    final static int ARRAYDESIGNNAMEI = SOURCEI + 1;
-    final static int TECHNOLOGYTYPEI = ARRAYDESIGNNAMEI + 1;
-    // final static int IMAGECLONEI = QSCALEI + 1;
-    final static int TOTALFIELDS = TECHNOLOGYTYPEI + 1;
+    private final static String SPLIT_CHAR = "\t";
+    private final static int NAME_I = 0;
+    private final static int SHORT_NAME_I = LoadSimpleExpressionDataCli.NAME_I + 1;
+    private final static int DESCRIPTION_I = LoadSimpleExpressionDataCli.SHORT_NAME_I + 1;
+    private final static int AD_SHORT_NAME_I =
+            LoadSimpleExpressionDataCli.DESCRIPTION_I + 1; // The short name of the arrayDesign
+    private final static int DATA_FILE_I = LoadSimpleExpressionDataCli.AD_SHORT_NAME_I + 1;
+    private final static int SPECIES_I = LoadSimpleExpressionDataCli.DATA_FILE_I + 1;
+    private final static int Q_NAME_I = LoadSimpleExpressionDataCli.SPECIES_I + 1;
+    private final static int Q_DESCRIPTION_I = LoadSimpleExpressionDataCli.Q_NAME_I + 1;
+    private final static int Q_TYPE_I = LoadSimpleExpressionDataCli.Q_DESCRIPTION_I + 1;
+    private final static int Q_SCALE_I = LoadSimpleExpressionDataCli.Q_TYPE_I + 1;
+    private final static int PUBMED_I = LoadSimpleExpressionDataCli.Q_SCALE_I + 1;
+    private final static int SOURCE_I = LoadSimpleExpressionDataCli.PUBMED_I + 1;
+    private final static int ARRAY_DESIGN_NAME_I = LoadSimpleExpressionDataCli.SOURCE_I + 1;
+    private final static int TECHNOLOGY_TYPE_I = LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I + 1;
+    private final static int TOTAL_FIELDS = LoadSimpleExpressionDataCli.TECHNOLOGY_TYPE_I + 1;
     private ExpressionExperimentService eeService;
     private ArrayDesignService adService = null;
     private String dirName = "./";
@@ -82,9 +83,9 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
                 ex.printStackTrace();
             }
             watch.stop();
-            log.info( watch.getTime() );
+            AbstractCLI.log.info( watch.getTime() );
         } catch ( Exception e ) {
-            log.fatal( e, e );
+            AbstractCLI.log.fatal( e, e );
             throw new RuntimeException( e );
         }
     }
@@ -100,6 +101,18 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'f' ) ) {
+            fileName = this.getOptionValue( 'f' );
+        }
+
+        if ( this.hasOption( 'd' ) ) {
+            dirName = this.getOptionValue( 'd' );
+        }
+    }
+
+    @Override
     public String getCommandName() {
         return "addTSVData";
     }
@@ -109,17 +122,17 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     protected void buildOptions() {
         Option fileOption = OptionBuilder.isRequired().hasArg().withArgName( "File Name" )
                 .withDescription( "the list of experiments in flat file" ).withLongOpt( "file" ).create( 'f' );
-        addOption( fileOption );
+        this.addOption( fileOption );
 
         Option dirOption = OptionBuilder.hasArg().withArgName( "File Folder" )
                 .withDescription( "The folder for containing the experiment files" ).withLongOpt( "dir" ).create( 'd' );
-        addOption( dirOption );
+        this.addOption( dirOption );
 
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
+        Exception err = this.processCommandLine( args );
         if ( err != null ) {
             return err;
         }
@@ -129,10 +142,10 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
             this.adService = this.getBean( ArrayDesignService.class );
             this.taxonService = this.getBean( TaxonService.class );
             if ( this.fileName != null ) {
-                log.info( "Loading experiments from " + this.fileName );
+                AbstractCLI.log.info( "Loading experiments from " + this.fileName );
                 InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
-                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
-                    String conf = null;
+                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+                    String conf;
                     while ( ( conf = br.readLine() ) != null ) {
 
                         if ( StringUtils.isBlank( conf ) ) {
@@ -143,19 +156,19 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
                         if ( conf.startsWith( "#" ) )
                             continue;
 
-                        String expName = conf.split( SPLITCHAR )[0];
+                        String expName = conf.split( LoadSimpleExpressionDataCli.SPLIT_CHAR )[0];
 
                         try {
                             this.loadExperiment( conf );
-                            log.info( "Successfully Loaded " + expName );
+                            AbstractCLI.log.info( "Successfully Loaded " + expName );
                             successObjects.add( expName );
                         } catch ( Exception e ) {
                             errorObjects.add( expName + ": " + e.getMessage() );
-                            log.error( "Failure loading " + expName, e );
+                            AbstractCLI.log.error( "Failure loading " + expName, e );
                         }
                     }
                 }
-                summarizeProcessing();
+                this.summarizeProcessing();
             }
         } catch ( IOException e ) {
             return e;
@@ -163,48 +176,36 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         return null;
     }
 
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( hasOption( 'f' ) ) {
-            fileName = getOptionValue( 'f' );
-        }
-
-        if ( hasOption( 'd' ) ) {
-            dirName = getOptionValue( 'd' );
-        }
-    }
-
     private void checkForArrayDesignName( String[] fields ) {
-        if ( StringUtils.isBlank( fields[ARRAYDESIGNNAMEI] ) ) {
+        if ( StringUtils.isBlank( fields[LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I] ) ) {
             throw new IllegalArgumentException( "Array design must be given if array design is new." );
         }
     }
 
     private void configureArrayDesigns( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
         int i;
-        TechnologyType techType = TechnologyType.fromString( fields[TECHNOLOGYTYPEI] );
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        if ( StringUtils.isBlank( fields[AD_SHORT_NAME_I] ) ) {
+        TechnologyType techType = TechnologyType.fromString( fields[LoadSimpleExpressionDataCli.TECHNOLOGY_TYPE_I] );
+        Collection<ArrayDesign> ads = new HashSet<>();
+        if ( StringUtils.isBlank( fields[LoadSimpleExpressionDataCli.AD_SHORT_NAME_I] ) ) {
             // that's okay, so long as we get an array design name
-            ArrayDesign ad = getNewArrayDesignFromName( fields );
+            ArrayDesign ad = this.getNewArrayDesignFromName( fields );
             ad.setTechnologyType( techType );
             ad.setPrimaryTaxon( metaData.getTaxon() );
             ads.add( ad );
-        } else if ( fields[AD_SHORT_NAME_I].trim().equals( "IMAGE" ) ) {
-            ArrayDesign ad = getNewArrayDesignFromName( fields );
+        } else if ( fields[LoadSimpleExpressionDataCli.AD_SHORT_NAME_I].trim().equals( "IMAGE" ) ) {
+            ArrayDesign ad = this.getNewArrayDesignFromName( fields );
             ad.setTechnologyType( techType );
             ad.setPrimaryTaxon( metaData.getTaxon() );
             ads.add( ad );
             metaData.setProbeIdsAreImageClones( true );
-        } else if ( StringUtils.isNotBlank( fields[ARRAYDESIGNNAMEI] ) ) {
+        } else if ( StringUtils.isNotBlank( fields[LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I] ) ) {
             // allow for the case where there is an additional new array design to be added.
-            ArrayDesign ad = getNewArrayDesignFromName( fields );
+            ArrayDesign ad = this.getNewArrayDesignFromName( fields );
             ad.setTechnologyType( techType );
             ad.setPrimaryTaxon( metaData.getTaxon() );
             ads.add( ad );
         } else {
-            String allADs[] = fields[AD_SHORT_NAME_I].split( "\\+" );
+            String allADs[] = fields[LoadSimpleExpressionDataCli.AD_SHORT_NAME_I].split( "\\+" );
 
             for ( i = 0; i < allADs.length; i++ ) {
                 ArrayDesign ad = adService.findByShortName( allADs[i] );
@@ -231,38 +232,40 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     }
 
     private void configureQuantitationType( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
-        metaData.setQuantitationTypeName( fields[QNAMEI] );
-        metaData.setQuantitationTypeDescription( fields[QDESCRIPTIONI] );
+        metaData.setQuantitationTypeName( fields[LoadSimpleExpressionDataCli.Q_NAME_I] );
+        metaData.setQuantitationTypeDescription( fields[LoadSimpleExpressionDataCli.Q_DESCRIPTION_I] );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
 
-        StandardQuantitationType sQType = StandardQuantitationType.fromString( fields[QTYPEI] );
+        StandardQuantitationType sQType = StandardQuantitationType
+                .fromString( fields[LoadSimpleExpressionDataCli.Q_TYPE_I] );
         metaData.setType( sQType );
 
-        ScaleType sType = ScaleType.fromString( fields[QSCALEI] );
+        ScaleType sType = ScaleType.fromString( fields[LoadSimpleExpressionDataCli.Q_SCALE_I] );
         metaData.setScale( sType );
     }
 
     private void configureTaxon( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
-        Taxon existing = taxonService.findByCommonName( fields[SPECIESI] );
+        Taxon existing = taxonService.findByCommonName( fields[LoadSimpleExpressionDataCli.SPECIES_I] );
         if ( existing == null ) {
-            throw new IllegalArgumentException( "There is no taxon with scientific name " + fields[SPECIESI]
-                    + " in the system; please add it first before loading data." );
+            throw new IllegalArgumentException(
+                    "There is no taxon with scientific name " + fields[LoadSimpleExpressionDataCli.SPECIES_I]
+                            + " in the system; please add it first before loading data." );
         }
         metaData.setTaxon( existing );
     }
 
     private ArrayDesign getNewArrayDesignFromName( String[] fields ) {
-        checkForArrayDesignName( fields );
+        this.checkForArrayDesignName( fields );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( fields[ARRAYDESIGNNAMEI] );
+        ad.setName( fields[LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I] );
         ad.setShortName( ad.getName() );
         return ad;
     }
 
     private void loadExperiment( String configurationLine ) throws Exception {
-        int i = 0;
-        String fields[] = configurationLine.split( SPLITCHAR );
-        if ( fields.length != TOTALFIELDS ) {
+        int i;
+        String fields[] = configurationLine.split( LoadSimpleExpressionDataCli.SPLIT_CHAR );
+        if ( fields.length != LoadSimpleExpressionDataCli.TOTAL_FIELDS ) {
             throw new IllegalArgumentException( "Field Missing Got[" + fields.length + "]: " + configurationLine );
         }
         for ( i = 0; i < fields.length; i++ )
@@ -270,7 +273,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        String shortName = fields[SHORTNAMEI];
+        String shortName = fields[LoadSimpleExpressionDataCli.SHORT_NAME_I];
 
         ExpressionExperiment existing = eeService.findByShortName( shortName );
 
@@ -279,29 +282,29 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
                     + "; please choose something unique." );
         }
 
-        metaData.setName( fields[NAMEI] );
+        metaData.setName( fields[LoadSimpleExpressionDataCli.NAME_I] );
 
         metaData.setShortName( shortName );
-        metaData.setDescription( fields[DESCRIPTIONI] );
+        metaData.setDescription( fields[LoadSimpleExpressionDataCli.DESCRIPTION_I] );
 
-        configureTaxon( fields, metaData );
+        this.configureTaxon( fields, metaData );
 
-        configureArrayDesigns( fields, metaData );
+        this.configureArrayDesigns( fields, metaData );
 
-        try (InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );) {
+        try (InputStream data = new FileInputStream(
+                new File( this.dirName, fields[LoadSimpleExpressionDataCli.DATA_FILE_I] ) )) {
 
-            metaData.setSourceUrl( fields[SOURCEI] );
+            metaData.setSourceUrl( fields[LoadSimpleExpressionDataCli.SOURCE_I] );
 
-            String pubMedId = fields[PUBMEDI];
+            String pubMedId = fields[LoadSimpleExpressionDataCli.PUBMED_I];
             if ( StringUtils.isNotBlank( pubMedId ) ) {
                 metaData.setPubMedId( Integer.parseInt( pubMedId ) );
             }
 
-            configureQuantitationType( fields, metaData );
+            this.configureQuantitationType( fields, metaData );
 
             ExpressionExperiment ee = eeLoaderService.create( metaData, data );
-
-            ee = this.eeService.thawLite( ee );
+            this.eeService.thawLite( ee );
         }
     }
 

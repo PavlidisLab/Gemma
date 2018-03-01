@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -40,7 +40,7 @@ import java.util.List;
  * @see ubic.gemma.model.common.quantitationtype.QuantitationType
  */
 @Repository
-public class QuantitationTypeDaoImpl extends VoEnabledDao<QuantitationType, QuantitationTypeValueObject>
+public class QuantitationTypeDaoImpl extends AbstractVoEnabledDao<QuantitationType, QuantitationTypeValueObject>
         implements QuantitationTypeDao {
 
     @Autowired

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,6 @@ import ubic.gemma.core.infrastructure.common.MessageSender;
 import ubic.gemma.core.infrastructure.jms.JMSHelper;
 import ubic.gemma.core.infrastructure.jms.JmsMessageReceiver;
 import ubic.gemma.core.infrastructure.jms.JmsMessageSender;
-import ubic.gemma.core.job.ConflictingTaskException;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -54,12 +53,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author pavlidis
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+// Valid, inspection is not parsing the context file for some reason
 @Component
 public class TaskRunningServiceImpl implements TaskRunningService {
     private static final Log log = LogFactory.getLog( TaskRunningServiceImpl.class );
     private final ListeningExecutorService executorService = MoreExecutors
             .listeningDecorator( Executors.newFixedThreadPool( 20 ) );
-    private final Map<String, SubmittedTask<? extends TaskResult>> submittedTasks = new ConcurrentHashMap<String, SubmittedTask<? extends TaskResult>>();
+    private final Map<String, SubmittedTask<? extends TaskResult>> submittedTasks = new ConcurrentHashMap<>();
     @Autowired
     private TaskCommandToTaskMatcher taskCommandToTaskMatcher;
     @Autowired
@@ -84,25 +85,25 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     }
 
     @Override
-    public <C extends TaskCommand> String submitLocalTask( C taskCommand ) throws ConflictingTaskException {
-        checkTaskCommand( taskCommand );
+    public <C extends TaskCommand> String submitLocalTask( C taskCommand ) {
+        this.checkTaskCommand( taskCommand );
 
-        final Task task = taskCommandToTaskMatcher.match( taskCommand );
+        final Task<? extends TaskResult, ? extends TaskCommand> task = taskCommandToTaskMatcher.match( taskCommand );
 
-        return submitLocalTask( task );
+        return this.submitLocalTask( task );
     }
 
     @Override
-    public <T extends Task> String submitLocalTask( T task ) throws ConflictingTaskException {
-        checkTask( task );
+    public <T extends Task> String submitLocalTask( T task ) {
+        this.checkTask( task );
 
         TaskCommand taskCommand = task.getTaskCommand();
-        checkTaskCommand( taskCommand );
+        this.checkTaskCommand( taskCommand );
 
         final String taskId = task.getTaskCommand().getTaskId();
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Submitting local task with id: " + taskId );
+        if ( TaskRunningServiceImpl.log.isDebugEnabled() ) {
+            TaskRunningServiceImpl.log.debug( "Submitting local task with id: " + taskId );
         }
 
         final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing );
@@ -112,7 +113,7 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
             @Override
             public void onFailure( Throwable e ) {
-                log.error( e, e );
+                TaskRunningServiceImpl.log.error( e, e );
                 submittedTask.updateStatus( SubmittedTask.Status.FAILED, new Date() );
             }
 
@@ -152,16 +153,15 @@ public class TaskRunningServiceImpl implements TaskRunningService {
     /**
      * We check if there are listeners on task submission queue to decide if remote tasks can be served.
      */
-    // TODO: throw exception if remote worker is unavailable and allow client to submit locally? Or rename the method.
     @Override
-    public <C extends TaskCommand> String submitRemoteTask( final C taskCommand ) throws ConflictingTaskException {
+    public <C extends TaskCommand> String submitRemoteTask( final C taskCommand ) {
         String taskId = taskCommand.getTaskId();
         assert ( taskId != null );
 
         if ( Settings.isRemoteTasksEnabled() && jmsBrokerMonitor.canServiceRemoteTasks() ) {
             jmsHelper.sendMessage( taskSubmissionQueue, taskCommand );
 
-            SubmittedTask submittedTask = constructSubmittedTaskProxy( taskCommand, taskId );
+            SubmittedTask<TaskResult> submittedTask = this.constructSubmittedTaskProxy( taskCommand, taskId );
             submittedTasks.put( taskId, submittedTask );
         } else {
             if ( taskCommand.isRemoteOnly() ) {
@@ -187,14 +187,13 @@ public class TaskRunningServiceImpl implements TaskRunningService {
         String statusQueueName = Settings.getString( "gemma.remoteTasks.lifeCycleQueuePrefix" ) + taskId;
         String progressQueueName = Settings.getString( "gemma.remoteTasks.progressUpdatesQueuePrefix" ) + taskId;
 
-        MessageReceiver<TaskResult> resultReceiver = new JmsMessageReceiver<TaskResult>( jmsHelper, resultQueueName );
+        MessageReceiver<TaskResult> resultReceiver = new JmsMessageReceiver<>( jmsHelper, resultQueueName );
 
-        MessageReceiver<TaskStatusUpdate> statusUpdateReceiver = new JmsMessageReceiver<TaskStatusUpdate>( jmsHelper,
-                statusQueueName );
+        MessageReceiver<TaskStatusUpdate> statusUpdateReceiver = new JmsMessageReceiver<>( jmsHelper, statusQueueName );
 
-        MessageReceiver<String> progressUpdateReceiver = new JmsMessageReceiver<String>( jmsHelper, progressQueueName );
+        MessageReceiver<String> progressUpdateReceiver = new JmsMessageReceiver<>( jmsHelper, progressQueueName );
 
-        MessageSender<TaskControl> taskControlSender = new JmsMessageSender<TaskControl>( jmsHelper, taskControlQueue );
+        MessageSender<TaskControl> taskControlSender = new JmsMessageSender<>( jmsHelper, taskControlQueue );
 
         return new SubmittedTaskProxy( taskCommand, resultReceiver, statusUpdateReceiver, progressUpdateReceiver,
                 taskControlSender );

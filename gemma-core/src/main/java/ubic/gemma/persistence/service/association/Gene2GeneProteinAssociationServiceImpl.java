@@ -1,57 +1,43 @@
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.AbstractService;
+
+import java.util.Collection;
 
 /**
  * Gene2GeneProteinAssociationService class providing functionality for handling Gene2geneProteinAssociations
- * 
- * @author ldonnison
  *
+ * @author ldonnison
  */
 @Service
-public class Gene2GeneProteinAssociationServiceImpl
-        extends Gene2GeneProteinAssociationServiceBase {
+public class Gene2GeneProteinAssociationServiceImpl extends AbstractService<Gene2GeneProteinAssociation>
+        implements Gene2GeneProteinAssociationService {
 
-    @Override
-    protected Gene2GeneProteinAssociation handleCreate( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        return this.gene2GeneProteinAssociationDao().create( gene2GeneProteinAssociation );
+    private final Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
+
+    @Autowired
+    public Gene2GeneProteinAssociationServiceImpl( Gene2GeneProteinAssociationDao mainDao ) {
+        super( mainDao );
+        this.gene2GeneProteinAssociationDao = mainDao;
     }
 
     @Override
-    protected void handleDelete( Gene2GeneProteinAssociation association ) {
-        this.gene2GeneProteinAssociationDao().remove( association );
-
+    public void removeAll( Collection<Gene2GeneProteinAssociation> associations ) {
+        this.gene2GeneProteinAssociationDao.remove( associations );
     }
 
     @Override
-    protected void handleDeleteAll( Collection<Gene2GeneProteinAssociation> associations ) {
-        this.gene2GeneProteinAssociationDao().remove( associations );
+    public void thaw( Gene2GeneProteinAssociation association ) {
+        this.gene2GeneProteinAssociationDao.thaw( association );
     }
 
     @Override
-    protected Gene2GeneProteinAssociation handleFind( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        return this.gene2GeneProteinAssociationDao().find( gene2GeneProteinAssociation );
-    }
-
-    @Override
-    protected Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene ) {
-        return this.gene2GeneProteinAssociationDao().findProteinInteractionsForGene( gene );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<Gene2GeneProteinAssociation> handleLoadAll() {
-        return ( Collection<Gene2GeneProteinAssociation> ) this.gene2GeneProteinAssociationDao().loadAll();
-    }
-
-    @Override
-    protected void handleThaw( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        this.gene2GeneProteinAssociationDao().thaw( gene2GeneProteinAssociation );
+    public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
+        return this.gene2GeneProteinAssociationDao.findProteinInteractionsForGene( gene );
     }
 
 }

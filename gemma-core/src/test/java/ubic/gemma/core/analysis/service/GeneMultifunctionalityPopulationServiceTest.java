@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,6 @@ import ubic.gemma.model.genome.gene.Multifunctionality;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
@@ -48,21 +47,17 @@ import static org.junit.Assert.assertTrue;
  */
 public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringContextTest {
 
+    private final String[] goTerms = new String[] { "GO_0047500", "GO_0051530", "GO_0051724", "GO_0004118",
+            "GO_0005324" };
     @Autowired
     private GeneMultifunctionalityPopulationService s;
-
     @Autowired
     private Gene2GOAssociationService gene2GoService;
-
     @Autowired
     private GeneOntologyService goService;
-
     @Autowired
     private GeneService geneService;
-
     private Taxon testTaxon;
-
-    private String[] goTerms = new String[] { "GO_0047500", "GO_0051530", "GO_0051724", "GO_0004118", "GO_0005324" };
 
     @After
     public void tearDown() {
@@ -71,7 +66,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         for ( Gene gene : genes ) {
             try {
                 geneService.remove( gene );
-            } catch ( Exception e ) {
+            } catch ( Exception ignored ) {
             }
         }
 
@@ -96,10 +91,8 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         /*
          * Create genes
          */
-        Collection<Gene> genes = new HashSet<>();
         for ( int i = 0; i < 120; i++ ) {
-            Gene gene = getTestPersistentGene( testTaxon );
-            genes.add( gene );
+            Gene gene = this.getTestPersistentGene( testTaxon );
 
             // Some genes get no terms.
             if ( i >= 100 )

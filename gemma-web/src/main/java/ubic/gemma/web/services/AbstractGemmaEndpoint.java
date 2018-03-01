@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,13 +80,14 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return Function to handle construction of output in xml for a bad response
      */
     protected Element buildBadResponse( Document document, String msg ) {
-        Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
-        Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
+        Element responseWrapper = document.createElementNS( AbstractGemmaEndpoint.NAMESPACE_URI, localName );
+        Element responseElement = document
+                .createElementNS( AbstractGemmaEndpoint.NAMESPACE_URI, localName + AbstractGemmaEndpoint.RESPONSE );
         responseWrapper.appendChild( responseElement );
 
         responseElement.appendChild( document.createTextNode( msg ) );
 
-        log.warn( localName + ": " + msg );
+        AbstractGemmaEndpoint.log.warn( localName + ": " + msg );
         return responseWrapper;
     }
 
@@ -103,8 +104,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      */
     protected Element buildWrapper( Document document, Collection<String> values, String elementName ) {
 
-        Element responseWrapper = document.createElementNS( NAMESPACE_URI, localName );
-        Element responseElement = document.createElementNS( NAMESPACE_URI, localName + RESPONSE );
+        Element responseWrapper = document.createElementNS( AbstractGemmaEndpoint.NAMESPACE_URI, localName );
+        Element responseElement = document
+                .createElementNS( AbstractGemmaEndpoint.NAMESPACE_URI, localName + AbstractGemmaEndpoint.RESPONSE );
         responseWrapper.appendChild( responseElement );
 
         if ( values == null || values.isEmpty() )
@@ -131,7 +133,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             if ( i == 0 )
                 result.append( data[i] );
             else
-                result.append( DELIMITER ).append( data[i] );
+                result.append( AbstractGemmaEndpoint.DELIMITER ).append( data[i] );
         }
 
         return result.toString();
@@ -144,9 +146,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * Arrays and Horizontal Arrays from MATLAB both work, but it must be passed in directly (i.e. EEArray.ee_ids)
      */
     protected Collection<String> getArrayValues( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( AbstractGemmaEndpoint.NAMESPACE_URI.equals( requestElement.getNamespaceURI() ),
+                "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
+        this.authenticate();
 
         Collection<String> value = new HashSet<>();
         String node;
@@ -204,9 +207,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      * @return last value
      */
     protected String getLastSingleNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( AbstractGemmaEndpoint.NAMESPACE_URI.equals( requestElement.getNamespaceURI() ),
+                "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
+        this.authenticate();
         String lastValue = null;
         String node;
         // get the Element with name = tagName
@@ -226,9 +230,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     }
 
     protected String getNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( AbstractGemmaEndpoint.NAMESPACE_URI.equals( requestElement.getNamespaceURI() ),
+                "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
+        this.authenticate();
 
         Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
 
@@ -236,9 +241,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     }
 
     protected String getOptionalNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( AbstractGemmaEndpoint.NAMESPACE_URI.equals( requestElement.getNamespaceURI() ),
+                "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
+        this.authenticate();
 
         Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
         if ( node == null )
@@ -250,20 +256,21 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     /**
      * Function that handles the retrieval of xml input. Use this method if there is only one value in the input but
      * generically, this method can also store multiple input values as well. This will depend on how the xml is parsed
-     * by the client. TODO Still need to test on different types of client requests.
+     * by the client. OLDTODO Still need to test on different types of client requests.
      *
      * @param requestElement - xml request in node hierarchy
      * @param tagName        tag name
      * @return a collection contain one string element
      */
     /*
-     * TODO return value should be single string object. Note that many services will be affected should we make this
+     * OLDTODO return value should be single string object. Note that many services will be affected should we make this
      * change.
      */
     protected Collection<String> getSingleNodeValue( Element requestElement, String tagName ) {
-        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( AbstractGemmaEndpoint.NAMESPACE_URI.equals( requestElement.getNamespaceURI() ),
+                "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        authenticate();
+        this.authenticate();
         Collection<String> value = new HashSet<>();
         String node;
         // get the Element with name = tagName
@@ -300,10 +307,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             DocumentBuilder builder = factory.newDocumentBuilder();
             document = builder.parse( is );
         } catch ( ParserConfigurationException pce ) {
-            log.error( "Could not configure parser for reading report.  Error is: " + pce );
+            AbstractGemmaEndpoint.log.error( "Could not configure parser for reading report.  Error is: " + pce );
             throw ( new RuntimeException( pce ) );
         } catch ( SAXException se ) {
-            log.error( "Could not parse report Error is: " + se );
+            AbstractGemmaEndpoint.log.error( "Could not parse report Error is: " + se );
             throw ( new RuntimeException( se ) );
 
         }
@@ -321,7 +328,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
      */
     protected Document readReport( String filename ) throws IOException {
         String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
-        return readReport( path, filename );
+        return this.readReport( path, filename );
 
     }
 
@@ -332,9 +339,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         if ( !file.exists() )
             return null;
 
-        // TODO: only load file if it is not out of date
+        // OLDTODO: only load file if it is not out of date
         try (InputStream is = new FileInputStream( path + fileName )) {
-            return readReport( is );
+            return this.readReport( is );
         }
     }
 
@@ -370,13 +377,13 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
                     XMLSerializer serializer = new XMLSerializer( out, null );
                     serializer.serialize( responseWrapper );
                 }
-                log.info( "A report with the filename, " + fullFileName + ", has been created in path, " + path );
+                AbstractGemmaEndpoint.log
+                        .info( "A report with the filename, " + fullFileName + ", has been created in path, " + path );
             } else
-                log.info( "A report with the filename, " + fullFileName
+                AbstractGemmaEndpoint.log.info( "A report with the filename, " + fullFileName
                         + ", already exists.  A new report was not created." );
 
         } catch ( IOException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 

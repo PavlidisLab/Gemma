@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,13 +35,13 @@ import static org.junit.Assert.assertNotNull;
 public class GenomePersisterTest extends BaseSpringContextTest {
 
     @Test
-    public void testPersistGene() throws Exception {
+    public void testPersistGene() {
 
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.randomNumeric( 8 ) ) );
 
-        Collection<GeneProduct> gps = new HashSet<GeneProduct>();
+        Collection<GeneProduct> gps = new HashSet<>();
         for ( int i = 0; i < 10; i++ ) {
             GeneProduct gp = GeneProduct.Factory.newInstance();
             gp.setName( RandomStringUtils.randomAlphabetic( 10 ) );
@@ -68,7 +68,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
      *
      */
     @Test
-    public void testPersistGeneProduct() throws Exception {
+    public void testPersistGeneProduct() {
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.randomNumeric( 8 ) ) );

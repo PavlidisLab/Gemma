@@ -18,22 +18,21 @@
  */
 package ubic.gemma.core.loader.genome.taxon;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.InputStream;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import java.io.InputStream;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author pavlidis
  *
  */
 public class TaxonLoaderTest extends BaseSpringContextTest {
-    InputStream is;
+    private InputStream is;
 
     @After
     public void onTearDownInTransaction() throws Exception {

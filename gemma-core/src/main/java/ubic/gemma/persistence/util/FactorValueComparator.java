@@ -1,17 +1,17 @@
 package ubic.gemma.persistence.util;
 
-import java.util.Comparator;
-
 import ubic.gemma.model.expression.experiment.FactorValue;
+
+import java.util.Comparator;
 
 /**
  * @author luke
  */
 public class FactorValueComparator implements Comparator<FactorValue> {
-    private static FactorValueComparator _instance = new FactorValueComparator();
+    private static final FactorValueComparator _instance = new FactorValueComparator();
 
     public static FactorValueComparator getInstance() {
-        return _instance;
+        return FactorValueComparator._instance;
     }
 
     @Override

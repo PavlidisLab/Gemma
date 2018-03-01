@@ -143,6 +143,6 @@ Gemma.CreateSetDetailsWindow = Ext.extend( Ext.Window, {
          } );
          this.hide();
       }
-      return;
+
    }
 } );

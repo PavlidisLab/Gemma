@@ -56,7 +56,7 @@ function handleReportLoadSuccess( data, callerScope ) {
       }
    } catch (e) {
       handleFailure( data, e );
-      return;
+
    }
 }
 

@@ -46,7 +46,6 @@ public class GeoPlatform extends GeoData {
     private static final Log log = LogFactory.getLog( GeoPlatform.class.getName() );
 
     static {
-        assert exonPlatformGeoIds != null;
         try (BufferedReader in = new BufferedReader( new InputStreamReader(
                 GeoPlatform.class.getResourceAsStream( "/ubic/gemma/core/affy.exonarrays.txt" ) ) )) {
             while ( in.ready() ) {
@@ -54,10 +53,10 @@ public class GeoPlatform extends GeoData {
                 if ( geoId.startsWith( "#" ) ) {
                     continue;
                 }
-                exonPlatformGeoIds.add( geoId );
+                GeoPlatform.exonPlatformGeoIds.add( geoId );
             }
         } catch ( Exception e ) {
-            log.warn( "List of exon array IDs could not be loaded: " + e.getMessage() );
+            GeoPlatform.log.warn( "List of exon array IDs could not be loaded: " + e.getMessage() );
         }
     }
 
@@ -95,7 +94,7 @@ public class GeoPlatform extends GeoData {
     private Collection<String> webLinks = new HashSet<>();
 
     public static boolean isAffymetrixExonArray( String geoPlatformId ) {
-        return exonPlatformGeoIds.contains( geoPlatformId );
+        return GeoPlatform.exonPlatformGeoIds.contains( geoPlatformId );
     }
 
     /**
@@ -106,8 +105,8 @@ public class GeoPlatform extends GeoData {
      */
     public void addToColumnData( String columnName, String value ) {
         if ( !platformInformation.containsKey( columnName ) ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
+            if ( GeoPlatform.log.isDebugEnabled() )
+                GeoPlatform.log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
             platformInformation.put( columnName, new ArrayList<String>() );
         }
 
@@ -129,7 +128,7 @@ public class GeoPlatform extends GeoData {
             designElements.add( value );
         }
 
-        List<String> columnData = getColumnData( columnName );
+        List<String> columnData = this.getColumnData( columnName );
         if ( columnData == null ) {
             return;
         }
@@ -195,7 +194,7 @@ public class GeoPlatform extends GeoData {
 
     public List<String> getColumnData( String columnName ) {
         if ( !platformInformation.containsKey( columnName ) ) {
-            log.warn( "No platform information for column=" + columnName );
+            GeoPlatform.log.warn( "No platform information for column=" + columnName );
             return null;
         }
         // assert platformInformation.size() != 0 : this + " has no platformInformation at all!";
@@ -266,7 +265,7 @@ public class GeoPlatform extends GeoData {
         int index = 0;
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyId( string ) ) {
-                log.debug( string + " appears to indicate the array element identifier in column " + index
+                GeoPlatform.log.debug( string + " appears to indicate the array element identifier in column " + index
                         + " for platform " + this );
                 return string;
             }
@@ -444,14 +443,14 @@ public class GeoPlatform extends GeoData {
             throw new IllegalStateException( "Don't call until the technology type is filled in" );
         }
 
-        if ( DISTRIBUTION_VIRTUAL.equals( this.distribution ) || technology.equals( PlatformType.MPSS ) || technology
-                .equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
+        if ( GeoPlatform.DISTRIBUTION_VIRTUAL.equals( this.distribution ) || technology.equals( PlatformType.MPSS )
+                || technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
                 .equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) || technology
                 .equals( PlatformType.other ) ) {
             return false;
         }
 
-        if ( StringUtils.isBlank( getTitle() ) ) {
+        if ( StringUtils.isBlank( this.getTitle() ) ) {
             throw new IllegalStateException(
                     "Can't figure out suitability of data until platform title is filled in." );
         }
@@ -459,9 +458,10 @@ public class GeoPlatform extends GeoData {
         // these are the three gene-level representations of affy exon platforms. We can use these data, even if we replace it, eventually. However, the data aren't always there.
         // See also DataUpdater.prepareTargetPlatformForExonArrays
         // Sometimes the data are there, sometimes it isn't.
-        return !technology.equals( PlatformType.inSituOligonucleotide ) || ( !isAffymetrixExonArray( getGeoAccession() )
-                && !getTitle().toLowerCase().contains( "exon" ) ) || getGeoAccession().equals( "GPL6096" )
-                || getGeoAccession().equals( "GPL6244" ) || getGeoAccession().equals( "GPL6247" );
+        return !technology.equals( PlatformType.inSituOligonucleotide ) || (
+                !GeoPlatform.isAffymetrixExonArray( this.getGeoAccession() ) && !this.getTitle().toLowerCase()
+                        .contains( "exon" ) ) || this.getGeoAccession().equals( "GPL6096" ) || this.getGeoAccession()
+                .equals( "GPL6244" ) || this.getGeoAccession().equals( "GPL6247" );
 
     }
 }

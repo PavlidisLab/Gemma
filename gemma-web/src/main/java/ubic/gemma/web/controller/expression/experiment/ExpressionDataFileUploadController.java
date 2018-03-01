@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,7 +86,7 @@ public class ExpressionDataFileUploadController {
         return new ModelAndView( "dataUpload" );
     }
 
-    public String validate( SimpleExpressionExperimentLoadTaskCommand command ) throws Exception {
+    public String validate( SimpleExpressionExperimentLoadTaskCommand command ) {
         assert command != null;
         command.setValidateOnly( true );
         return taskRunningService.submitLocalTask( new SimpleEEValidateLocalTask( command ) );
@@ -95,11 +95,11 @@ public class ExpressionDataFileUploadController {
     private SimpleExpressionExperimentCommandValidation doValidate(
             SimpleExpressionExperimentLoadTaskCommand command ) {
 
-        scrub( command );
+        this.scrub( command );
         ExpressionExperiment existing = expressionExperimentService.findByShortName( command.getShortName() );
         SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
 
-        log.info( "Checking for valid name and files" );
+        ExpressionDataFileUploadController.log.info( "Checking for valid name and files" );
 
         result.setShortNameIsUnique( existing == null );
 
@@ -146,7 +146,7 @@ public class ExpressionDataFileUploadController {
 
         if ( parse != null ) {
 
-            log.info( "Checking if probe labels match design" );
+            ExpressionDataFileUploadController.log.info( "Checking if probe labels match design" );
 
             result.setNumRows( parse.rows() );
             result.setNumColumns( parse.columns() );
@@ -160,7 +160,7 @@ public class ExpressionDataFileUploadController {
             int numRowsMatchingArrayDesign = 0;
             int numRowsNotMatchingArrayDesign = 0;
             int i = 0;
-            List<String> mismatches = new ArrayList<String>();
+            List<String> mismatches = new ArrayList<>();
             for ( CompositeSequence cs : design.getCompositeSequences() ) {
                 if ( parse.containsRowName( cs.getName() ) ) {
                     numRowsMatchingArrayDesign++;
@@ -169,7 +169,8 @@ public class ExpressionDataFileUploadController {
                     mismatches.add( cs.getName() );
                 }
                 if ( ++i % 2000 == 0 ) {
-                    log.info( i + " probes checked, " + numRowsMatchingArrayDesign + " match" );
+                    ExpressionDataFileUploadController.log
+                            .info( i + " probes checked, " + numRowsMatchingArrayDesign + " match" );
                 }
             }
 
@@ -202,9 +203,9 @@ public class ExpressionDataFileUploadController {
     }
 
     private void scrub( SimpleExpressionExperimentLoadTaskCommand o ) {
-        o.setName( scrub( o.getName() ) );
-        o.setDescription( scrub( o.getDescription() ) );
-        o.setShortName( scrub( o.getShortName() ) );
+        o.setName( this.scrub( o.getName() ) );
+        o.setDescription( this.scrub( o.getDescription() ) );
+        o.setShortName( this.scrub( o.getShortName() ) );
     }
 
     private String scrub( String s ) {
@@ -219,11 +220,11 @@ public class ExpressionDataFileUploadController {
 
         @Override
         public TaskResult execute() {
-            File file = getFile( taskCommand );
+            File file = ExpressionDataFileUploadController.this.getFile( taskCommand );
 
-            try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
+            try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
 
-                populateCommandObject( taskCommand );
+                this.populateCommandObject( taskCommand );
 
                 if ( stream == null ) {
                     throw new IllegalStateException( "Could not read from file " + file );
@@ -232,15 +233,15 @@ public class ExpressionDataFileUploadController {
                 /*
                  * Main action here!
                  */
-                scrub( taskCommand );
+                ExpressionDataFileUploadController.this.scrub( taskCommand );
                 ExpressionExperiment result = simpleExpressionDataLoaderService.create( taskCommand, stream );
                 stream.close();
 
-                log.info( "Preprocessing the data for analysis" );
+                ExpressionDataFileUploadController.log.info( "Preprocessing the data for analysis" );
                 try {
                     preprocessorService.process( result );
                 } catch ( PreprocessingException e ) {
-                    log.error( "Error during postprocessing", e );
+                    ExpressionDataFileUploadController.log.error( "Error during postprocessing", e );
                 }
                 // In theory we could do the link analysis right away. However, when a data set has new array designs,
                 // we won't be ready yet.
@@ -283,7 +284,8 @@ public class ExpressionDataFileUploadController {
                     arrayDesigns.add( arrayDesignService.load( adid ) );
                 }
             } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
-                log.info( "Platform " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                ExpressionDataFileUploadController.log
+                        .info( "Platform " + commandObject.getArrayDesignName() + " is new, will create from data." );
                 ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
                 arrayDesign.setName( commandObject.getArrayDesignName() );
                 arrayDesign.setPrimaryTaxon( commandObject.getTaxon() );
@@ -305,7 +307,8 @@ public class ExpressionDataFileUploadController {
 
         @Override
         public TaskResult execute() {
-            SimpleExpressionExperimentCommandValidation result = doValidate( taskCommand );
+            SimpleExpressionExperimentCommandValidation result = ExpressionDataFileUploadController.this
+                    .doValidate( taskCommand );
             return new TaskResult( taskCommand, result );
         }
     }

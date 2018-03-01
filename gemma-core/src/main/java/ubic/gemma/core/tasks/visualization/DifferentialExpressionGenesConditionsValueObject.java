@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
     private final List<Condition> conditions;
     private final List<DiffExGene> genes;
 
+    @SuppressWarnings("WeakerAccess") // Front end use
     public DifferentialExpressionGenesConditionsValueObject() {
         cellData = new HashMap<>();
         conditions = new ArrayList<>();
@@ -62,7 +63,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
         cell.numberOfProbes = numProbes;
         cell.numberOfProbesDiffExpressed = numProbesDiffExpressed;
 
-        addCell( geneId, conditionId, cell );
+        this.addCell( geneId, conditionId, cell );
     }
 
     public void addCell( Long geneId, String conditionId, Double correctedPValue, Double foldChange, Integer numProbes,
@@ -76,7 +77,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
         cell.numberOfProbes = numProbes;
         cell.numberOfProbesDiffExpressed = numProbesDiffExpressed;
 
-        addCell( geneId, conditionId, cell );
+        this.addCell( geneId, conditionId, cell );
     }
 
     /**
@@ -130,38 +131,17 @@ public class DifferentialExpressionGenesConditionsValueObject {
             cell.numberOfProbes = 0;
             cell.numberOfProbesDiffExpressed = 0;
             cell.direction = 0;
-            addCell( geneId, c.getId(), cell );
+            this.addCell( geneId, c.getId(), cell );
         }
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public List<Condition> getConditions() {
         return conditions;
     }
 
     public List<DiffExGene> getGenes() {
         return genes;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( "\nCorner" );
-
-        for ( Condition c : conditions ) {
-            buf.append( "\t" ).append( c.getId() );
-        }
-        buf.append( "\n" );
-
-        for ( DiffExGene g : genes ) {
-            buf.append( g.getName() );
-            for ( Condition c : conditions ) {
-                buf.append( String.format( "\t%.2f", cellData.get( c.getId() ).get( g.getId() ).getpValue() ) );
-            }
-            buf.append( "\n" );
-        }
-
-        return buf.toString();
     }
 
     private void addCell( Long geneId, String conditionId, Cell cell ) {
@@ -176,7 +156,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
     private void addProbeMissingCell( Long geneId, String conditionId ) {
         Cell cell = new Cell();
         cell.isProbeMissing = true;
-        addCell( geneId, conditionId, cell );
+        this.addCell( geneId, conditionId, cell );
     }
 
     // The details of the result for a gene x condition combination.
@@ -237,7 +217,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
     /**
      * Represents one column in the differential expression view; one contrast in a resultset in an experiment.
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // frontend use
     public class Condition {
         private String baselineFactorValue;
         private String contrastFactorValue;
@@ -283,8 +263,8 @@ public class DifferentialExpressionGenesConditionsValueObject {
             analysisId = analysis.getId();
             baselineFactorValueId = resultSet.getBaselineGroup().getId();
             factorName = factorValue.getFactorValue();
-            contrastFactorValue = getFactorValueString( factorValue );
-            baselineFactorValue = getFactorValueString( resultSet.getBaselineGroup() );
+            contrastFactorValue = this.getFactorValueString( factorValue );
+            baselineFactorValue = this.getFactorValueString( resultSet.getBaselineGroup() );
             factorDescription = resultSet.getExperimentalFactors().iterator().next().getDescription();
             factorId = factorValue.getFactorId();
 
@@ -301,26 +281,8 @@ public class DifferentialExpressionGenesConditionsValueObject {
         public Condition( Long resultSetId, Long factorValueId ) {
             this.resultSetId = resultSetId;
             this.factorValueId = factorValueId;
-            this.id = constructConditionId( resultSetId, factorValueId );
-        }
-
-        @Override
-        public boolean equals( Object obj ) {
-            if ( this == obj )
-                return true;
-            if ( obj == null )
-                return false;
-            if ( getClass() != obj.getClass() )
-                return false;
-            Condition other = ( Condition ) obj;
-            if ( !getOuterType().equals( other.getOuterType() ) )
-                return false;
-            if ( id == null ) {
-                if ( other.id != null )
-                    return false;
-            } else if ( !id.equals( other.id ) )
-                return false;
-            return true;
+            this.id = DifferentialExpressionGenesConditionsValueObject
+                    .constructConditionId( resultSetId, factorValueId );
         }
 
         public long getAnalysisId() {
@@ -435,13 +397,14 @@ public class DifferentialExpressionGenesConditionsValueObject {
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + getOuterType().hashCode();
+            result = prime * result + this.getOuterType().hashCode();
             result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
             return result;
         }
 
         /*
-         * Helper method to get factor values. TODO: Fix FactorValue class to return correct factor value in the first
+         * Helper method to get factor values.
+         * TODO: Fix FactorValue class to return correct factor value in the first -> Use FactorValueBasicValueObject
          * place.
          */
         private String getFactorValueString( FactorValueValueObject fv ) {
@@ -456,38 +419,39 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return DifferentialExpressionGenesConditionsValueObject.this;
         }
 
-    }
-
-    // A Gene Value object specialized to hold differential expression results.
-    public class DiffExGene {
-        private Long id;
-        private String name;
-        private String fullName;
-        private double specificityScore;
-        private String groupName;
-        private boolean isSelected = false;
-
-        public DiffExGene( long id, String name, String fullName ) {
-            this.id = id;
-            this.name = name;
-            this.fullName = fullName;
-        }
-
         @Override
         public boolean equals( Object obj ) {
             if ( this == obj )
                 return true;
             if ( obj == null )
                 return false;
-            if ( getClass() != obj.getClass() )
+            if ( this.getClass() != obj.getClass() )
                 return false;
-            DiffExGene other = ( DiffExGene ) obj;
-            if ( !getOuterType().equals( other.getOuterType() ) )
+            Condition other = ( Condition ) obj;
+            if ( !this.getOuterType().equals( other.getOuterType() ) )
                 return false;
-            //noinspection RedundantIfStatement // Better readability
-            if ( !Objects.equals( id, other.id ) )
-                return false;
-            return true;
+            if ( id == null ) {
+                return other.id == null;
+            } else
+                return id.equals( other.id );
+        }
+
+    }
+
+    // A Gene Value object specialized to hold differential expression results.
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Frontend use
+    public class DiffExGene {
+        private final boolean isSelected = false;
+        private Long id;
+        private String name;
+        private String fullName;
+        private double specificityScore;
+        private String groupName;
+
+        public DiffExGene( long id, String name, String fullName ) {
+            this.id = id;
+            this.name = name;
+            this.fullName = fullName;
         }
 
         public String getFullName() {
@@ -534,19 +498,58 @@ public class DifferentialExpressionGenesConditionsValueObject {
             this.specificityScore = specificityScore;
         }
 
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getOuterType().hashCode();
-            result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
-            return result;
-        }
-
         private DifferentialExpressionGenesConditionsValueObject getOuterType() {
             return DifferentialExpressionGenesConditionsValueObject.this;
         }
 
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj )
+                return true;
+            if ( obj == null )
+                return false;
+            if ( this.getClass() != obj.getClass() )
+                return false;
+            DiffExGene other = ( DiffExGene ) obj;
+            if ( !this.getOuterType().equals( other.getOuterType() ) )
+                return false;
+            //noinspection RedundantIfStatement // Better readability
+            if ( !Objects.equals( id, other.id ) )
+                return false;
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + this.getOuterType().hashCode();
+            result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
+            return result;
+        }
+
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( "\nCorner" );
+
+        for ( Condition c : conditions ) {
+            buf.append( "\t" ).append( c.getId() );
+        }
+        buf.append( "\n" );
+
+        for ( DiffExGene g : genes ) {
+            buf.append( g.getName() );
+            for ( Condition c : conditions ) {
+                buf.append( String.format( "\t%.2f", cellData.get( c.getId() ).get( g.getId() ).getpValue() ) );
+            }
+            buf.append( "\n" );
+        }
+
+        return buf.toString();
     }
 
 }

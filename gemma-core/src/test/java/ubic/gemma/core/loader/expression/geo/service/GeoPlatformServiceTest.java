@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,15 +20,13 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 
 /**
  * Tests of GeoPlatformService
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
 
@@ -41,7 +39,8 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadGPL101Short() throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
-        geoService.fetchAndLoad( "GPL101", true, true, false, false );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "platform" ) ) );
+        geoService.fetchAndLoad( "GPL101", true, true, false );
     }
 }

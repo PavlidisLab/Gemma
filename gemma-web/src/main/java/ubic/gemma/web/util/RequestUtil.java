@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,17 +63,17 @@ public class RequestUtil {
             Object o = aEntry.getValue();
 
             if ( o == null ) {
-                append( aEntry.getKey(), "", aReturn, ampersand );
+                RequestUtil.append( aEntry.getKey(), "", aReturn, ampersand );
             } else if ( o instanceof String ) {
-                append( aEntry.getKey(), o, aReturn, ampersand );
+                RequestUtil.append( aEntry.getKey(), o, aReturn, ampersand );
             } else if ( o instanceof String[] ) {
                 String[] aValues = ( String[] ) o;
 
                 for ( String aValue : aValues ) {
-                    append( aEntry.getKey(), aValue, aReturn, ampersand );
+                    RequestUtil.append( aEntry.getKey(), aValue, aReturn, ampersand );
                 }
             } else {
-                append( aEntry.getKey(), o, aReturn, ampersand );
+                RequestUtil.append( aEntry.getKey(), o, aReturn, ampersand );
             }
         }
 
@@ -84,7 +84,7 @@ public class RequestUtil {
      * Convenience method for deleting a cookie by name
      *
      * @param response the current web response
-     * @param cookie   the cookie to delete
+     * @param cookie   the cookie to remove
      * @param path     the path on which the cookie was set (i.e. /appfuse)
      */
     public static void deleteCookie( HttpServletResponse response, Cookie cookie, String path ) {
@@ -159,7 +159,7 @@ public class RequestUtil {
         // ALGORITHM = (String) aRequest.getAttribute(Constants.ENC_ALGORITHM);
         Map<String, Object> m = aRequest.getParameterMap();
 
-        return createQueryStringFromMap( m, "&" ).toString();
+        return RequestUtil.createQueryStringFromMap( m, "&" ).toString();
     }
 
     /**
@@ -169,7 +169,7 @@ public class RequestUtil {
      */
     public static void reclaimRequestAttributes( HttpServletRequest aRequest ) {
         @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) aRequest.getSession()
-                .getAttribute( STOWED_REQUEST_ATTRIBS );
+                .getAttribute( RequestUtil.STOWED_REQUEST_ATTRIBS );
 
         if ( map == null ) {
             return;
@@ -179,12 +179,12 @@ public class RequestUtil {
             aRequest.setAttribute( name, map.get( name ) );
         }
 
-        aRequest.getSession().removeAttribute( STOWED_REQUEST_ATTRIBS );
+        aRequest.getSession().removeAttribute( RequestUtil.STOWED_REQUEST_ATTRIBS );
     }
 
     public static void setCookie( HttpServletResponse response, String name, String value, String path ) {
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Setting cookie '" + name + "' on path '" + path + "'" );
+        if ( RequestUtil.log.isDebugEnabled() ) {
+            RequestUtil.log.debug( "Setting cookie '" + name + "' on path '" + path + "'" );
         }
 
         Cookie cookie = new Cookie( name, value );
@@ -201,7 +201,7 @@ public class RequestUtil {
      * @param aRequest the current request
      */
     public static void stowRequestAttributes( HttpServletRequest aRequest ) {
-        if ( aRequest.getSession().getAttribute( STOWED_REQUEST_ATTRIBS ) != null ) {
+        if ( aRequest.getSession().getAttribute( RequestUtil.STOWED_REQUEST_ATTRIBS ) != null ) {
             return;
         }
 
@@ -213,7 +213,7 @@ public class RequestUtil {
             map.put( name, aRequest.getAttribute( name ) );
         }
 
-        aRequest.getSession().setAttribute( STOWED_REQUEST_ATTRIBS, map );
+        aRequest.getSession().setAttribute( RequestUtil.STOWED_REQUEST_ATTRIBS, map );
     }
 
     /**

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ import static org.junit.Assert.*;
  * @author pavlidis
  */
 public class PubMedXMLFetcherTest {
-    private static Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
+    private static final Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
     private PubMedXMLFetcher pmf;
 
     @Test
@@ -51,8 +51,7 @@ public class PubMedXMLFetcherTest {
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
-            checkCause( e );
-            return;
+            this.checkCause( e );
         }
     }
 
@@ -70,8 +69,7 @@ public class PubMedXMLFetcherTest {
             assertEquals( "J Virol", br.getPublication() );
 
         } catch ( RuntimeException e ) {
-            checkCause( e );
-            return;
+            this.checkCause( e );
         }
     }
 
@@ -79,7 +77,7 @@ public class PubMedXMLFetcherTest {
      * 23865096 is a NCBI bookshelf article, not a paper
      */
     @Test
-    public final void testRetrieveByHTTPBookshelf() throws Exception {
+    public final void testRetrieveByHTTPBookshelf() {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 23865096 );
 
@@ -93,8 +91,7 @@ public class PubMedXMLFetcherTest {
             SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
             assertEquals( "2013", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
-            checkCause( e );
-            return;
+            this.checkCause( e );
         }
     }
 
@@ -104,34 +101,29 @@ public class PubMedXMLFetcherTest {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
             assertNull( br );
         } catch ( RuntimeException e ) {
-            checkCause( e );
-            return;
+            this.checkCause( e );
         }
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         pmf = new PubMedXMLFetcher();
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         pmf = null;
     }
 
     private void checkCause( RuntimeException e ) {
         if ( e.getCause() instanceof java.net.ConnectException ) {
-            log.warn( "Test skipped due to connection exception" );
-            return;
+            PubMedXMLFetcherTest.log.warn( "Test skipped due to connection exception" );
         } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-            log.warn( "Test skipped due to unknown host exception" );
-            return;
+            PubMedXMLFetcherTest.log.warn( "Test skipped due to unknown host exception" );
         } else if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
-            log.warn( "Test skipped due to a 503 error from NCBI" );
-            return;
+            PubMedXMLFetcherTest.log.warn( "Test skipped due to a 503 error from NCBI" );
         } else if ( e.getCause() instanceof IOException && e.getMessage().contains( "502" ) ) {
-            log.warn( "Test skipped due to a 502 error from NCBI" );
-            return;
+            PubMedXMLFetcherTest.log.warn( "Test skipped due to a 502 error from NCBI" );
         } else {
             throw ( e );
         }

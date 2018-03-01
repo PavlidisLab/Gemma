@@ -338,7 +338,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
     },
 
     /**
-     * FIXME make sure this returns something easy to work with.
      *
      * @returns
      */

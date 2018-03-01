@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,7 +36,19 @@ public abstract class Describable implements Identifiable, Serializable {
      *
      * @author Paul
      */
+    @SuppressWarnings("WeakerAccess") // Required by spring
     public Describable() {
+    }
+
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
     }
 
     /**
@@ -53,17 +65,6 @@ public abstract class Describable implements Identifiable, Serializable {
         }
         final Describable that = ( Describable ) object;
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
     }
 
     /**

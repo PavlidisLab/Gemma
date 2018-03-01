@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,25 +19,19 @@
 
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import java.util.Collection;
-
 /**
  * Important: this is slightly misnamed, since it potentially includes links that have support of zero. <strong>It
  * cannot be used to get coexpression information for genes</strong>. It is only used to speed up analysis of data sets,
  * when deciding which links are new and which are updated. See CoexpressionDaoImpl.
- * 
- * @author Paul
  *
+ * @author Paul
  */
 public class GeneCoexpressedGenes extends IdArray {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 6715464097628664297L;
     private Long geneId;
 
-    // needed to fulfil javabean contract
+    // Required by spring
     public GeneCoexpressedGenes() {
     }
 
@@ -45,48 +39,40 @@ public class GeneCoexpressedGenes extends IdArray {
         this.geneId = geneId;
     }
 
-    @Override
-    public synchronized void addEntities( Collection<Long> ds ) {
-        super.addEntities( ds );
-    }
-
-    @Override
-    public synchronized void addEntity( Long ds ) {
-        super.addEntity( ds );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        GeneCoexpressedGenes other = ( GeneCoexpressedGenes ) obj;
-
-        if ( geneId != null ) return this.geneId.equals( other.geneId );
-
-        // really the geneId has to be non-null
-        if ( geneId == null ) {
-            if ( other.geneId != null ) return false;
-        }
-
-        return true;
-    }
-
     public Long getGeneId() {
         return geneId;
+    }
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public void setGeneId( Long geneId ) {
+        this.geneId = geneId;
     }
 
     @Override
     public int hashCode() {
         int result = 1;
 
-        if ( geneId != null ) return geneId.hashCode();
+        if ( geneId != null )
+            return geneId.hashCode();
 
         return result;
     }
 
-    public void setGeneId( Long geneId ) {
-        this.geneId = geneId;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        GeneCoexpressedGenes other = ( GeneCoexpressedGenes ) obj;
+
+        if ( geneId != null )
+            return this.geneId.equals( other.geneId );
+
+        // really the geneId has to be non-null
+        return other.geneId == null;
     }
 
 }

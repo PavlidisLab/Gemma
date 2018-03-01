@@ -79,17 +79,20 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         int result = 0;
         if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
-            log.debug( "No differential expression analyses to remove for " + expressionExperiment.getShortName() );
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .debug( "No differential expression analyses to remove for " + expressionExperiment
+                            .getShortName() );
             return result;
         }
 
         for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
-            log.info( "Deleting old differential expression analysis for experiment " + expressionExperiment
-                    .getShortName() + ": Analysis ID=" + de.getId() );
-            differentialExpressionAnalysisService.delete( de );
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
+                            .getShortName() + ": Analysis ID=" + de.getId() );
+            differentialExpressionAnalysisService.remove( de );
 
-            deleteStatistics( expressionExperiment, de );
-            deleteAnalysisFiles( de );
+            this.deleteStatistics( expressionExperiment, de );
+            this.deleteAnalysisFiles( de );
             result++;
         }
 
@@ -99,37 +102,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis ) {
-        log.info( "Deleting old differential expression analysis for experiment " + expressionExperiment.getShortName()
-                + " Analysis ID=" + existingAnalysis.getId() );
-        differentialExpressionAnalysisService.delete( existingAnalysis );
+        DifferentialExpressionAnalyzerServiceImpl.log
+                .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
+                        .getShortName() + " Analysis ID=" + existingAnalysis.getId() );
+        differentialExpressionAnalysisService.remove( existingAnalysis );
 
-        deleteStatistics( expressionExperiment, existingAnalysis );
-        try {
-            expressionDataFileService.deleteDiffExArchiveFile( existingAnalysis );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Remove old files which will otherwise be cruft.
-     *
-     * @param ee       the experiment
-     * @param analysis analysis
-     */
-    public void deleteStatistics( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
-
-        File f = prepareDirectoryForDistributions( ee );
-
-        String histFileName =
-                FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "pvalues"
-                        + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        File oldf = new File( f, histFileName );
-        if ( oldf.exists() && oldf.canWrite() ) {
-            if ( !oldf.delete() ) {
-                log.warn( "Could not remove: " + oldf );
-            }
-        }
+        this.deleteStatistics( expressionExperiment, existingAnalysis );
+        expressionDataFileService.deleteDiffExArchiveFile( existingAnalysis );
     }
 
     @Override
@@ -141,15 +120,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
          * match. But that requires matching up old and new result sets.
          */
         differentialExpressionAnalysisService.thaw( toUpdate );
-        DifferentialExpressionAnalysisConfig config = copyConfig( toUpdate );
+        DifferentialExpressionAnalysisConfig config = this.copyConfig( toUpdate );
 
-        Collection<DifferentialExpressionAnalysis> results = redoWithoutSave( ee, toUpdate, config );
+        Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, toUpdate, config );
 
         /*
          * Match up old and new...
          */
 
-        extendResultSets( results, toUpdate.getResultSets() );
+        this.extendResultSets( results, toUpdate.getResultSets() );
         return toUpdate.getResultSets();
 
     }
@@ -160,6 +139,62 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 .getAnalyses( expressionExperiment );
         differentialExpressionAnalysisService.thaw( expressionAnalyses );
         return expressionAnalyses;
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis copyMe, boolean persist ) {
+
+        if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
+            throw new IllegalArgumentException(
+                    "Cannot redo the analysis because it is included in a meta-analysis (or something). "
+                            + "Delete the constraining entity first." );
+        }
+
+        differentialExpressionAnalysisService.thaw( copyMe );
+
+        DifferentialExpressionAnalyzerServiceImpl.log.info( "Will base analysis on old one: " + copyMe );
+        DifferentialExpressionAnalysisConfig config = this.copyConfig( copyMe );
+        boolean rnaSeq = this.expressionExperimentService.isRNASeq( ee );
+        config.setUseWeights( rnaSeq );
+        Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, copyMe, config );
+
+        if ( persist ) {
+            return this.persistAnalyses( ee, results, config );
+        }
+        return results;
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
+            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
+        try {
+            // This might be redundant in some cases.
+            boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
+            config.setUseWeights( rnaSeq );
+
+            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
+                    .analyze( expressionExperiment, config );
+
+            if ( config.getPersist() ) {
+                diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
+            } else {
+                DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
+            }
+
+            return diffExpressionAnalyses;
+        } catch ( Exception e ) {
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .error( "Error during differential expression analysis: " + e.getMessage(), e );
+            try {
+                auditTrailService.addUpdateEvent( expressionExperiment,
+                        FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
+                        ExceptionUtils.getStackTrace( e ) );
+            } catch ( Exception e2 ) {
+                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event" );
+            }
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -174,7 +209,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
 
-        deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
+        this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
@@ -197,12 +232,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             analysis.getResultSets().add( prs );
             rs.getResults().addAll( results );
 
-            addPvalueDistribution( prs );
+            this.addPvalueDistribution( prs );
 
         }
 
         // third transaction - add results.
-        log.info( "Saving results" );
+        DifferentialExpressionAnalyzerServiceImpl.log.info( "Saving results" );
         helperService.addResults( persistentAnalysis, resultSets );
 
         // get a clean copy of the analysis object from the DB.
@@ -211,7 +246,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         try {
             expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
         } catch ( IOException e ) {
-            log.error( "Unable to save the data to a file: " + e.getMessage() );
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .error( "Unable to save the data to a file: " + e.getMessage() );
         }
 
         // final transaction: audit.
@@ -220,77 +256,45 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                     .addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory.newInstance(),
                             persistentAnalysis.getDescription() + "; analysis id=" + persistentAnalysis.getId() );
         } catch ( Exception e ) {
-            log.error( "Error while trying to add audit event: " + e.getMessage(), e );
-            log.error( "Continuing ..." );
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .error( "Error while trying to add audit event: " + e.getMessage(), e );
+            DifferentialExpressionAnalyzerServiceImpl.log.error( "Continuing ..." );
             /*
              * We shouldn't fail completely due to this.
              */
         }
 
         if ( timer.getTime() > 5000 ) {
-            log.info( "Save results: " + timer.getTime() + "ms" );
+            DifferentialExpressionAnalyzerServiceImpl.log.info( "Save results: " + timer.getTime() + "ms" );
         }
 
         return persistentAnalysis;
 
     }
 
-    @Override
-    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe, boolean persist ) {
+    /**
+     * Remove old files which will otherwise be cruft.
+     *
+     * @param ee       the experiment
+     * @param analysis analysis
+     */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public void deleteStatistics( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
 
-        if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
-            throw new IllegalArgumentException(
-                    "Cannot redo the analysis because it is included in a meta-analysis (or something). "
-                            + "Delete the constraining entity first." );
-        }
+        File f = this.prepareDirectoryForDistributions( ee );
 
-        differentialExpressionAnalysisService.thaw( copyMe );
-
-        log.info( "Will base analysis on old one: " + copyMe );
-        DifferentialExpressionAnalysisConfig config = copyConfig( copyMe );
-        boolean rnaSeq = this.expressionExperimentService.isRNASeq( ee );
-        config.setUseWeights( rnaSeq );
-        Collection<DifferentialExpressionAnalysis> results = redoWithoutSave( ee, copyMe, config );
-
-        if ( persist ) {
-            return persistAnalyses( ee, results, config );
-        }
-        return results;
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
-            ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        try {
-            // This might be redundant in some cases.
-            boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
-            config.setUseWeights( rnaSeq );
-
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
-                    .analyze( expressionExperiment, config );
-
-            if ( config.getPersist() ) {
-                diffExpressionAnalyses = persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
-            } else {
-                log.info( "Will not persist results" );
+        String histFileName =
+                FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "pvalues"
+                        + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        File oldf = new File( f, histFileName );
+        if ( oldf.exists() && oldf.canWrite() ) {
+            if ( !oldf.delete() ) {
+                DifferentialExpressionAnalyzerServiceImpl.log.warn( "Could not remove: " + oldf );
             }
-
-            return diffExpressionAnalyses;
-        } catch ( Exception e ) {
-            log.error( "Error during differential expression analysis: " + e.getMessage(), e );
-            try {
-                auditTrailService.addUpdateEvent( expressionExperiment,
-                        FailedDifferentialExpressionAnalysisEvent.Factory.newInstance(),
-                        ExceptionUtils.getStackTrace( e ) );
-            } catch ( Exception e2 ) {
-                log.error( "Could not attach failure audit event" );
-            }
-            throw new RuntimeException( e );
         }
     }
 
-    private Histogram addPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
+    private void addPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
         Histogram pvalHist = new Histogram( "", 100, 0.0, 1.0 );
 
         for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
@@ -305,7 +309,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         ByteArrayConverter bac = new ByteArrayConverter();
         pvd.setBinCounts( bac.doubleArrayToBytes( pvalHist.getArray() ) );
         resultSet.setPvalueDistribution( pvd ); // do not save yet.
-        return pvalHist;
     }
 
     private boolean configsAreEqual( ExpressionAnalysisResultSet temprs, ExpressionAnalysisResultSet oldrs ) {
@@ -331,7 +334,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
              * If we included the interaction before, include it again.
              */
             if ( oldfactors.size() == 2 ) {
-                log.info( "Including interaction term" );
+                DifferentialExpressionAnalyzerServiceImpl.log.info( "Including interaction term" );
                 config.getInteractionsToInclude().add( oldfactors );
             }
 
@@ -349,21 +352,18 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * Delete any flat files that might have been generated.
      */
     private void deleteAnalysisFiles( DifferentialExpressionAnalysis analysis ) {
-        try {
-            expressionDataFileService.deleteDiffExArchiveFile( analysis );
-        } catch ( IOException e ) {
-            log.error( "Error during deletion of old files for analyses to be deleted: " + e.getMessage() );
-        }
+        expressionDataFileService.deleteDiffExArchiveFile( analysis );
     }
 
-    private int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
+    private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
         int numDeleted = 0;
         if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
-            log.info( "No differential expression analyses to remove for " + expressionExperiment.getShortName() );
-            return numDeleted;
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .info( "No differential expression analyses to remove for " + expressionExperiment.getShortName() );
+            return;
         }
 
         this.differentialExpressionAnalysisService.thaw( diffAnalyses );
@@ -385,17 +385,18 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                     subsetFactorValueForExisting == null || subsetFactorValueForExisting
                             .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
 
-                log.info( "Deleting analysis with ID=" + existingAnalysis.getId() );
-                deleteAnalysis( expressionExperiment, existingAnalysis );
+                DifferentialExpressionAnalyzerServiceImpl.log
+                        .info( "Deleting analysis with ID=" + existingAnalysis.getId() );
+                this.deleteAnalysis( expressionExperiment, existingAnalysis );
 
                 numDeleted++;
             }
         }
 
         if ( numDeleted == 0 ) {
-            log.info( "None of the other existing analyses were eligible for deletion" );
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .info( "None of the other existing analyses were eligible for deletion" );
         }
-        return numDeleted;
     }
 
     private void extendResultSet( ExpressionAnalysisResultSet oldrs, ExpressionAnalysisResultSet temprs ) {
@@ -420,9 +421,10 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         if ( toAdd.isEmpty() ) {
-            log.warn( "Somewhat surprisingly, no new results were added" );
+            DifferentialExpressionAnalyzerServiceImpl.log.warn( "Somewhat surprisingly, no new results were added" );
         } else {
-            log.info( toAdd.size() + " transient results added to the old analysis result set: " + oldrs.getId() );
+            DifferentialExpressionAnalyzerServiceImpl.log
+                    .info( toAdd.size() + " transient results added to the old analysis result set: " + oldrs.getId() );
         }
 
         boolean added = oldrs.getResults().addAll( toAdd );
@@ -446,10 +448,10 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                     /*
                      * Compare the config
                      */
-                    if ( configsAreEqual( temprs, oldrs ) ) {
+                    if ( this.configsAreEqual( temprs, oldrs ) ) {
                         found = true;
 
-                        extendResultSet( oldrs, temprs );
+                        this.extendResultSet( oldrs, temprs );
 
                         break;
                     }
@@ -468,8 +470,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
-            DifferentialExpressionAnalysis persistentAnalysis = persistAnalysis( expressionExperiment, analysis,
-                    config );
+            DifferentialExpressionAnalysis persistentAnalysis = this
+                    .persistAnalysis( expressionExperiment, analysis, config );
             results.add( persistentAnalysis );
         }
         return results;

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,12 +26,6 @@ import ubic.gemma.persistence.service.BaseDao;
  */
 public interface ExternalDatabaseDao extends BaseDao<ExternalDatabase> {
 
-    ExternalDatabase find( ExternalDatabase externalDatabase );
-
-    java.util.Collection<ExternalDatabase> findByLocalDbInstallName( java.lang.String localInstallDBName );
-
-    ExternalDatabase findByName( java.lang.String name );
-
-    ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
+    ExternalDatabase findByName( String name );
 
 }

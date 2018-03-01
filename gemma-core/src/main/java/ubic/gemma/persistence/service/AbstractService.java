@@ -18,9 +18,9 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
-    private BaseDao<O> mainDao;
+    private final BaseDao<O> mainDao;
 
-    public AbstractService( BaseDao<O> mainDao ) {
+    protected AbstractService( BaseDao<O> mainDao ) {
         this.mainDao = mainDao;
     }
 

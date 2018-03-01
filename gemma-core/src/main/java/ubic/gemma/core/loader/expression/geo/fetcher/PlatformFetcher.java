@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,39 +20,27 @@ package ubic.gemma.core.loader.expression.geo.fetcher;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.persistence.util.Settings;
 
 /**
  * Fetch GEO "GPLXXX_family.soft.gz" files
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class PlatformFetcher extends GeoFetcher {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
-     */
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + identifier + "/" + identifier + "_family" + SOFT_GZ;
+        return remoteBaseDir + identifier + "/" + identifier + "_family" + GeoFetcher.SOFT_GZ;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.fetcher.AbstractFetcher#initConfig()
-     */
     @Override
     protected void initConfig() {
         this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );
         this.remoteBaseDir = Settings.getString( "geo.remote.platformDir" );
         if ( StringUtils.isBlank( remoteBaseDir ) ) {
-            throw new RuntimeException( new ConfigurationException(
-                    "geo.remote.platformDir was not defined in resource bundle" ) );
+            throw new RuntimeException(
+                    new ConfigurationException( "geo.remote.platformDir was not defined in resource bundle" ) );
         }
 
     }

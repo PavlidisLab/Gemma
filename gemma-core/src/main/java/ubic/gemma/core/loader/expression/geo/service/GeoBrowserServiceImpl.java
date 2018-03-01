@@ -72,7 +72,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     private XPathExpression xtitle;
     private XPathExpression xgpls;
     private XPathExpression xsummary;
-    private XPathExpression xsamples;
 
     @PostConstruct
     public void afterPropertiesSet() throws Exception {
@@ -85,7 +84,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
         xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
         xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
-        xsamples = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"Samples\"]/text()" );
     }
 
     @Override
@@ -121,8 +119,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     }
 
     @Override
-    public List<GeoRecord> searchGeoRecords( String searchString, int start, int count )
-            throws IOException, ParseException {
+    public List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException {
         GeoBrowser browser = new GeoBrowser();
         // Change this method to browser.getGeoRecordsBySearchTerm when implemented in GeoBrowser.java
         List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count );
@@ -142,8 +139,58 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         return localInfo.get( accession ).isUsable();
     }
 
+    /**
+     * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
+     *
+     * @param details XML from eSummary
+     * @return HTML-formatted
+     */
+    String formatDetails( String details ) throws IOException {
+
+        /*
+         * Bug 2690. There must be a better way.
+         */
+        details = details.replaceAll( "encoding=\"UTF-8\"", "" );
+
+        try {
+            Document document = EutilFetch.parseStringInputStream( details );
+
+            String gse = "GSE" + xgse.evaluate( document, XPathConstants.STRING );
+            String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
+            NodeList gpls = ( NodeList ) xgpls.evaluate( document, XPathConstants.NODESET );
+            String summary = ( String ) xsummary.evaluate( document, XPathConstants.STRING );
+
+            StringBuilder buf = new StringBuilder();
+            buf.append( "<div class=\"small\">" );
+
+            ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
+
+            if ( ee != null ) {
+                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" ).append( Settings.getRootContext() )
+                        .append( "/expressionExperiment/showExpressionExperiment.html?id=" ).append( ee.getId() )
+                        .append( "\">" ).append( gse ).append( "</a></strong>" );
+            } else {
+                buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
+            }
+
+            buf.append( "<p>" ).append( title ).append( "</p>\n" );
+            buf.append( "<p>" ).append( summary ).append( "</p>\n" );
+
+            this.formatArrayDetails( gpls, buf );
+
+            buf.append( "</div>" );
+            details = buf.toString();
+
+            // }
+        } catch ( ParserConfigurationException | SAXException | XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
+
+        return details;
+    }
+
     private List<GeoRecord> filterGeoRecords( List<GeoRecord> records ) {
-        ExternalDatabase geo = externalDatabaseService.find( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         Collection<GeoRecord> toRemove = new HashSet<>();
         assert geo != null;
         rec:
@@ -217,10 +264,10 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                                 + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
-                buf.append(
-                        "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" + Settings.getRootContext()
-                                + "/arrays/showArrayDesign.html?id=" ).append( arrayDesign.getId() ).append( "\">" )
-                        .append( gpl ).append( "</a></strong>" ).append( trouble );
+                buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" )
+                        .append( Settings.getRootContext() ).append( "/arrays/showArrayDesign.html?id=" )
+                        .append( arrayDesign.getId() ).append( "\">" ).append( gpl ).append( "</a></strong>" )
+                        .append( trouble );
             } else {
                 buf.append( "<p><strong>" ).append( gpl ).append( " [New to Gemma]</strong>" );
             }
@@ -232,9 +279,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
-    /**
-     *
-     */
     private void initializeLocalInfo() {
         File f = this.getInfoStoreFile();
         if ( f.exists() ) {
@@ -279,63 +323,6 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
         } catch ( Exception e ) {
             GeoBrowserServiceImpl.log.error( "Failed to save local GEO info", e );
         }
-    }
-
-    /**
-     * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
-     *
-     * @param details XML from eSummary
-     * @return HTML-formatted
-     */
-    String formatDetails( String details ) throws IOException {
-
-        /*
-         * Bug 2690. There must be a better way.
-         */
-        details = details.replaceAll( "encoding=\"UTF-8\"", "" );
-
-        try {
-            Document document = EutilFetch.parseStringInputStream( details );
-
-            // NodeList samples = ( NodeList ) xsamples.evaluate( document, XPathConstants.NODESET );
-            // String gds = ( String ) xgds.evaluate( document, XPathConstants.STRING ); // FIXME, use this.
-            String gse = "GSE" + xgse.evaluate( document, XPathConstants.STRING );
-            String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
-            NodeList gpls = ( NodeList ) xgpls.evaluate( document, XPathConstants.NODESET ); // FIXME get description.
-            String summary = ( String ) xsummary.evaluate( document, XPathConstants.STRING );
-
-            StringBuilder buf = new StringBuilder();
-            buf.append( "<div class=\"small\">" );
-
-            ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
-
-            if ( ee != null ) {
-                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" + Settings.getRootContext()
-                        + "/expressionExperiment/showExpressionExperiment.html?id=" ).append( ee.getId() )
-                        .append( "\">" ).append( gse ).append( "</a></strong>" );
-            } else {
-                buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
-            }
-
-            buf.append( "<p>" ).append( title ).append( "</p>\n" );
-            buf.append( "<p>" ).append( summary ).append( "</p>\n" );
-
-            this.formatArrayDetails( gpls, buf );
-
-            //for ( int i = 0; i < samples.getLength(); i++ ) {
-            // samples.item( i )
-            // FIXME use this.
-            //}
-
-            buf.append( "</div>" );
-            details = buf.toString();
-
-            // }
-        } catch ( ParserConfigurationException | SAXException | XPathExpressionException e ) {
-            throw new RuntimeException( e );
-        }
-
-        return details;
     }
 
 }

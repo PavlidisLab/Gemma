@@ -1,215 +1,215 @@
-<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st November 2004//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd">
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st November 2004//EN"
+        "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd">
 <PubmedArticleSet>
-	<PubmedArticle>
-		<MedlineCitation Owner="NLM" Status="MEDLINE">
-			<PMID>17203180</PMID>
-			<DateCreated>
-				<Year>2007</Year>
-				<Month>01</Month>
-				<Day>04</Day>
-			</DateCreated>
-			<DateCompleted>
-				<Year>2007</Year>
-				<Month>03</Month>
-				<Day>29</Day>
-			</DateCompleted>
-			<Article PubModel="Print">
-				<Journal>
-					<ISSN IssnType="Print">1021-335X</ISSN>
-					<JournalIssue CitedMedium="Print">
-						<Volume>17</Volume>
-						<Issue>2</Issue>
-						<PubDate>
-							<Year>2007</Year>
-							<Month>Feb</Month>
-						</PubDate>
-					</JournalIssue>
-					<Title>Oncology reports</Title>
-					<ISOAbbreviation>Oncol. Rep.</ISOAbbreviation>
-				</Journal>
-				<ArticleTitle>
-					Expression analysis of pancreatic cancer cell lines reveals association of enhanced gene
-					transcription and genomic amplifications at the 8q22.1 and 8q24.22 loci.
-				</ArticleTitle>
-				<Pagination>
-					<MedlinePgn>399-407</MedlinePgn>
-				</Pagination>
-				<Abstract>
-					<AbstractText>
-						Despite tremendous effort and progress in the diagnostics of pancreatic cancer with respect to
-						imaging techniques and molecular genetics, only very few patients can be cured by surgery
-						leading to a 5-year survival rate of only 3%. Especially the lack of chemotherapeutical options
-						in this entity requires a better understanding of the molecular mechanisms leading to pancreatic
-						carcinoma growth and progression in order to develop novel treatment regimens. To identify
-						signaling pathways that are critical for this tumor entity, we compared six well-established
-						pancreatic cancer cell lines (Capan-1, Capan-2, HUP-T3, HUP-T4, KCL-MOH, PaTu-8903) with colon
-						cancer cell lines and tumor cell lines of non-epithelial origin by expression profiling. For
-						this purpose we employed Human Genome Focus Arrays representing about 8500 well annotated human
-						genes. We identified 353 genes with significantly high expression in the group of pancreatic
-						carcinomas. Based on Gene Ontology annotations these genes are especially involved in Rho
-						protein signal transduction, proteasome activator activity, cell motility, apoptotic program,
-						and cell-cell adhesion processes indicating these pathways to be interesting candidates for the
-						design of targeted therapies. Most pancreatic carcinomas are characterized by mutations in the
-						TP53 and the KRAS genes and the absence of microsatellite instability, which could also be
-						confirmed for our panel of pancreatic carcinoma cell lines. Looking for individual differences
-						within this group that may be responsible for more or less aggressive behavior, we identified
-						genomic amplifications at the 8q22.1 and the 8q24.22 loci to be associated with enhanced gene
-						transcription. Because we have previously shown that gains of genomic material from the long arm
-						of chromosome 8 have an adverse effect on the outcome of pancreatic carcinoma patients, we
-						conclude that functional analysis of amplified genes at 8q22 and/or 8q24 may lead to an improved
-						understanding of pancreatic carcinoma progression.
-					</AbstractText>
-				</Abstract>
-				<Affiliation>
-					Department of Medicine B, Interdisciplinary Center for Clinical Research, University of Muenster,
-					Muenster, Germany, and Childrens Hospital of Los Angeles, CA, USA.
-				</Affiliation>
-				<AuthorList CompleteYN="Y">
-					<Author ValidYN="Y">
-						<LastName>Domagk</LastName>
-						<ForeName>Dirk</ForeName>
-						<Initials>D</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Schaefer</LastName>
-						<ForeName>Karl-Ludwig</ForeName>
-						<Initials>KL</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Eisenacher</LastName>
-						<ForeName>Martin</ForeName>
-						<Initials>M</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Braun</LastName>
-						<ForeName>Yvonne</ForeName>
-						<Initials>Y</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Wai</LastName>
-						<ForeName>Daniel H</ForeName>
-						<Initials>DH</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Schleicher</LastName>
-						<ForeName>Christina</ForeName>
-						<Initials>C</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Diallo-Danebrock</LastName>
-						<ForeName>Raihanatou</ForeName>
-						<Initials>R</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Bojar</LastName>
-						<ForeName>Hans</ForeName>
-						<Initials>H</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Roeder</LastName>
-						<ForeName>Gernot</ForeName>
-						<Initials>G</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Gabbert</LastName>
-						<ForeName>Helmut E</ForeName>
-						<Initials>HE</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Domschke</LastName>
-						<ForeName>Wolfram</ForeName>
-						<Initials>W</Initials>
-					</Author>
-					<Author ValidYN="Y">
-						<LastName>Poremba</LastName>
-						<ForeName>Christopher</ForeName>
-						<Initials>C</Initials>
-					</Author>
-				</AuthorList>
-				<Language>eng</Language>
-				<PublicationTypeList>
-					<PublicationType>Journal Article</PublicationType>
-				</PublicationTypeList>
-			</Article>
-			<MedlineJournalInfo>
-				<Country>Greece</Country>
-				<MedlineTA>Oncol Rep</MedlineTA>
-				<NlmUniqueID>9422756</NlmUniqueID>
-			</MedlineJournalInfo>
-			<CitationSubset>IM</CitationSubset>
-			<MeshHeadingList>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Apoptosis</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Cell Line, Tumor</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Chromosome Mapping</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="Y">Chromosomes, Human, Pair 8</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Disease Progression</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Female</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="Y">Gene Expression Regulation, Neoplastic</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Genes, p53</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Genes, ras</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="Y">Genome, Human</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Humans</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Microsatellite Repeats</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="Y">Mutation</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Oligonucleotide Array Sequence Analysis</DescriptorName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Pancreatic Neoplasms</DescriptorName>
-					<QualifierName MajorTopicYN="Y">metabolism</QualifierName>
-				</MeshHeading>
-				<MeshHeading>
-					<DescriptorName MajorTopicYN="N">Transcription, Genetic</DescriptorName>
-				</MeshHeading>
-			</MeshHeadingList>
-		</MedlineCitation>
-		<PubmedData>
-			<History>
-				<PubMedPubDate PubStatus="pubmed">
-					<Year>2007</Year>
-					<Month>1</Month>
-					<Day>5</Day>
-					<Hour>9</Hour>
-					<Minute>0</Minute>
-				</PubMedPubDate>
-				<PubMedPubDate PubStatus="medline">
-					<Year>2007</Year>
-					<Month>3</Month>
-					<Day>30</Day>
-					<Hour>9</Hour>
-					<Minute>0</Minute>
-				</PubMedPubDate>
-			</History>
-			<PublicationStatus>ppublish</PublicationStatus>
-			<ArticleIdList>
-				<ArticleId IdType="pubmed">17203180</ArticleId>
-			</ArticleIdList>
-		</PubmedData>
-	</PubmedArticle>
+    <PubmedArticle>
+        <MedlineCitation Status="MEDLINE">
+            <PMID>17203180</PMID>
+            <DateCreated>
+                <Year>2007</Year>
+                <Month>01</Month>
+                <Day>04</Day>
+            </DateCreated>
+            <DateCompleted>
+                <Year>2007</Year>
+                <Month>03</Month>
+                <Day>29</Day>
+            </DateCompleted>
+            <Article PubModel="Print">
+                <Journal>
+                    <JournalIssue>
+                        <Volume>17</Volume>
+                        <Issue>2</Issue>
+                        <PubDate>
+                            <Year>2007</Year>
+                            <Month>Feb</Month>
+                        </PubDate>
+                    </JournalIssue>
+                    <Title>Oncology reports</Title>
+                    <ISOAbbreviation>Oncol. Rep.</ISOAbbreviation>
+                </Journal>
+                <ArticleTitle>
+                    Expression analysis of pancreatic cancer cell lines reveals association of enhanced gene
+                    transcription and genomic amplifications at the 8q22.1 and 8q24.22 loci.
+                </ArticleTitle>
+                <Pagination>
+                    <MedlinePgn>399-407</MedlinePgn>
+                </Pagination>
+                <Abstract>
+                    <AbstractText>
+                        Despite tremendous effort and progress in the diagnostics of pancreatic cancer with respect to
+                        imaging techniques and molecular genetics, only very few patients can be cured by surgery
+                        leading to a 5-year survival rate of only 3%. Especially the lack of chemotherapeutical options
+                        in this entity requires a better understanding of the molecular mechanisms leading to pancreatic
+                        carcinoma growth and progression in order to develop novel treatment regimens. To identify
+                        signaling pathways that are critical for this tumor entity, we compared six well-established
+                        pancreatic cancer cell lines (Capan-1, Capan-2, HUP-T3, HUP-T4, KCL-MOH, PaTu-8903) with colon
+                        cancer cell lines and tumor cell lines of non-epithelial origin by expression profiling. For
+                        this purpose we employed Human Genome Focus Arrays representing about 8500 well annotated human
+                        genes. We identified 353 genes with significantly high expression in the group of pancreatic
+                        carcinomas. Based on Gene Ontology annotations these genes are especially involved in Rho
+                        protein signal transduction, proteasome activator activity, cell motility, apoptotic program,
+                        and cell-cell adhesion processes indicating these pathways to be interesting candidates for the
+                        design of targeted therapies. Most pancreatic carcinomas are characterized by mutations in the
+                        TP53 and the KRAS genes and the absence of microsatellite instability, which could also be
+                        confirmed for our panel of pancreatic carcinoma cell lines. Looking for individual differences
+                        within this group that may be responsible for more or less aggressive behavior, we identified
+                        genomic amplifications at the 8q22.1 and the 8q24.22 loci to be associated with enhanced gene
+                        transcription. Because we have previously shown that gains of genomic material from the long arm
+                        of chromosome 8 have an adverse effect on the outcome of pancreatic carcinoma patients, we
+                        conclude that functional analysis of amplified genes at 8q22 and/or 8q24 may lead to an improved
+                        understanding of pancreatic carcinoma progression.
+                    </AbstractText>
+                </Abstract>
+                <Affiliation>
+                    Department of Medicine B, Interdisciplinary Center for Clinical Research, University of Muenster,
+                    Muenster, Germany, and Childrens Hospital of Los Angeles, CA, USA.
+                </Affiliation>
+                <AuthorList>
+                    <Author>
+                        <LastName>Domagk</LastName>
+                        <ForeName>Dirk</ForeName>
+                        <Initials>D</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Schaefer</LastName>
+                        <ForeName>Karl-Ludwig</ForeName>
+                        <Initials>KL</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Eisenacher</LastName>
+                        <ForeName>Martin</ForeName>
+                        <Initials>M</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Braun</LastName>
+                        <ForeName>Yvonne</ForeName>
+                        <Initials>Y</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Wai</LastName>
+                        <ForeName>Daniel H</ForeName>
+                        <Initials>DH</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Schleicher</LastName>
+                        <ForeName>Christina</ForeName>
+                        <Initials>C</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Diallo-Danebrock</LastName>
+                        <ForeName>Raihanatou</ForeName>
+                        <Initials>R</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Bojar</LastName>
+                        <ForeName>Hans</ForeName>
+                        <Initials>H</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Roeder</LastName>
+                        <ForeName>Gernot</ForeName>
+                        <Initials>G</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Gabbert</LastName>
+                        <ForeName>Helmut E</ForeName>
+                        <Initials>HE</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Domschke</LastName>
+                        <ForeName>Wolfram</ForeName>
+                        <Initials>W</Initials>
+                    </Author>
+                    <Author>
+                        <LastName>Poremba</LastName>
+                        <ForeName>Christopher</ForeName>
+                        <Initials>C</Initials>
+                    </Author>
+                </AuthorList>
+                <Language>eng</Language>
+                <PublicationTypeList>
+                    <PublicationType>Journal Article</PublicationType>
+                </PublicationTypeList>
+            </Article>
+            <MedlineJournalInfo>
+                <Country>Greece</Country>
+                <MedlineTA>Oncol Rep</MedlineTA>
+                <NlmUniqueID>9422756</NlmUniqueID>
+            </MedlineJournalInfo>
+            <CitationSubset>IM</CitationSubset>
+            <MeshHeadingList>
+                <MeshHeading>
+                    <DescriptorName>Apoptosis</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Cell Line, Tumor</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Chromosome Mapping</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName MajorTopicYN="Y">Chromosomes, Human, Pair 8</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Disease Progression</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Female</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName MajorTopicYN="Y">Gene Expression Regulation, Neoplastic</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Genes, p53</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Genes, ras</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName MajorTopicYN="Y">Genome, Human</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Humans</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Microsatellite Repeats</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName MajorTopicYN="Y">Mutation</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Oligonucleotide Array Sequence Analysis</DescriptorName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Pancreatic Neoplasms</DescriptorName>
+                    <QualifierName MajorTopicYN="Y">metabolism</QualifierName>
+                </MeshHeading>
+                <MeshHeading>
+                    <DescriptorName>Transcription, Genetic</DescriptorName>
+                </MeshHeading>
+            </MeshHeadingList>
+        </MedlineCitation>
+        <PubmedData>
+            <History>
+                <PubMedPubDate PubStatus="pubmed">
+                    <Year>2007</Year>
+                    <Month>1</Month>
+                    <Day>5</Day>
+                    <Hour>9</Hour>
+                    <Minute>0</Minute>
+                </PubMedPubDate>
+                <PubMedPubDate PubStatus="medline">
+                    <Year>2007</Year>
+                    <Month>3</Month>
+                    <Day>30</Day>
+                    <Hour>9</Hour>
+                    <Minute>0</Minute>
+                </PubMedPubDate>
+            </History>
+            <PublicationStatus>ppublish</PublicationStatus>
+            <ArticleIdList>
+                <ArticleId>17203180</ArticleId>
+            </ArticleIdList>
+        </PubmedData>
+    </PubmedArticle>
 </PubmedArticleSet>

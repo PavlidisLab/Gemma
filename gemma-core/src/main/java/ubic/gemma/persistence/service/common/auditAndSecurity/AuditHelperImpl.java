@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -32,7 +32,7 @@ import java.util.Date;
 @Component
 public class AuditHelperImpl implements AuditHelper {
 
-    private static Log log = LogFactory.getLog( AuditHelperImpl.class );
+    private static final Log log = LogFactory.getLog( AuditHelperImpl.class );
 
     @Autowired
     private AuditTrailDao auditTrailDao;
@@ -60,21 +60,19 @@ public class AuditHelperImpl implements AuditHelper {
         try {
             return this.auditTrailDao.addEvent( auditable, auditEvent );
         } catch ( Exception e ) {
-            log.warn( ">>>>>>> AUDIT ERROR >>>>>>>>  " + e.getMessage() );
+            AuditHelperImpl.log.warn( ">>>>>>> AUDIT ERROR >>>>>>>>  " + e.getMessage() );
             throw e;
         }
     }
 
-    private AuditTrail addAuditTrailIfNeeded( Auditable auditable ) {
-
-        if ( auditable.getAuditTrail() != null )
-            return auditable.getAuditTrail();
-
+    private void addAuditTrailIfNeeded( Auditable auditable ) {
+        if ( auditable.getAuditTrail() != null ) {
+            auditable.getAuditTrail();
+            return;
+        }
         // no need to persist it here
         AuditTrail auditTrail = AuditTrail.Factory.newInstance();
         auditable.setAuditTrail( auditTrail );
-
-        return auditable.getAuditTrail();
     }
 
 }

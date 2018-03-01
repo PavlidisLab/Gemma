@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,9 @@
  */
 package ubic.gemma.persistence.model.usertypes;
 
+import org.hibernate.HibernateException;
+import org.hibernate.usertype.UserType;
+
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -26,35 +29,73 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
-import org.hibernate.usertype.UserType;
-
 /**
  * Converts strings in the database into java.net.URL objects.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class HibernateURLType implements UserType {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#assemble(java.io.Serializable, java.lang.Object)
-     */
     @Override
-    public Object assemble( Serializable cached, Object owner ) throws HibernateException {
-        return this.deepCopy( cached );
+    public int[] sqlTypes() {
+        return new int[] { Types.CLOB };
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#deepCopy(java.lang.Object)
-     */
+    @Override
+    public Class returnedClass() {
+        return java.net.URL.class;
+    }
+
+    @SuppressWarnings("SimplifiableIfStatement") // Better readability
+    @Override
+    public boolean equals( Object x, Object y ) throws HibernateException {
+        boolean equal;
+        if ( x == null || y == null ) {
+            equal = false;
+        } else if ( !( x instanceof java.net.URL ) || !( y instanceof java.net.URL ) ) {
+            equal = false;
+        } else {
+            equal = x.equals( y );
+        }
+        return equal;
+    }
+
+    @Override
+    public int hashCode( Object x ) throws HibernateException {
+        return x.hashCode();
+    }
+
+    @Override
+    public Object nullSafeGet( ResultSet rs, String[] names, Object owner ) throws HibernateException, SQLException {
+        String s = rs.getString( names[0] );
+        if ( s == null || s.length() == 0 ) {
+            return null;
+        }
+        try {
+            return new java.net.URL( s );
+        } catch ( MalformedURLException e ) {
+            throw new HibernateException( "Malformed url", e );
+        }
+    }
+
+    @Override
+    public void nullSafeSet( PreparedStatement preparedStatement, Object data, int index )
+            throws HibernateException, SQLException {
+        if ( data == null ) {
+            preparedStatement.setString( index, null );
+        } else {
+            java.net.URL in = ( java.net.URL ) data;
+            String s = in.toString();
+            byte[] buf = s.getBytes();
+            int len = buf.length;
+            ByteArrayInputStream bais = new ByteArrayInputStream( buf );
+            preparedStatement.setAsciiStream( index, bais, len );
+        }
+    }
+
     @Override
     public Object deepCopy( Object value ) throws HibernateException {
-        String ret = null;
+        String ret;
         if ( value == null ) {
             return null;
         }
@@ -76,120 +117,24 @@ public class HibernateURLType implements UserType {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#disassemble(java.lang.Object)
-     */
-    @Override
-    public Serializable disassemble( Object value ) throws HibernateException {
-        return ( java.io.Serializable ) value;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#equals(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public boolean equals( Object x, Object y ) throws HibernateException {
-        boolean equal = false;
-        if ( x == null || y == null ) {
-            equal = false;
-        } else if ( !( x instanceof java.net.URL ) || !( y instanceof java.net.URL ) ) {
-            equal = false;
-        } else {
-            equal = ( ( java.net.URL ) x ).equals( y );
-        }
-        return equal;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#hashCode(java.lang.Object)
-     */
-    @Override
-    public int hashCode( Object x ) throws HibernateException {
-        return x.hashCode();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#isMutable()
-     */
     @Override
     public boolean isMutable() {
         return false;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
-     */
     @Override
-    public Object nullSafeGet( ResultSet rs, String[] names, Object owner ) throws HibernateException, SQLException {
-        String s = rs.getString( names[0] );
-        if ( s == null || s.length() == 0 ) {
-            return null;
-        }
-        try {
-            return new java.net.URL( s );
-        } catch ( MalformedURLException e ) {
-            throw new HibernateException( "Malformed url", e );
-        }
+    public Serializable disassemble( Object value ) throws HibernateException {
+        return ( java.io.Serializable ) value;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, java.lang.Object, int)
-     */
     @Override
-    public void nullSafeSet( PreparedStatement preparedStatement, Object data, int index ) throws HibernateException,
-            SQLException {
-        if ( data == null ) {
-            preparedStatement.setString( index, null );
-        } else {
-            java.net.URL in = ( java.net.URL ) data;
-            String s = in.toString();
-            byte[] buf = s.getBytes();
-            int len = buf.length;
-            ByteArrayInputStream bais = new ByteArrayInputStream( buf );
-            preparedStatement.setAsciiStream( index, bais, len );
-        }
+    public Object assemble( Serializable cached, Object owner ) throws HibernateException {
+        return this.deepCopy( cached );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#replace(java.lang.Object, java.lang.Object, java.lang.Object)
-     */
     @Override
     public Object replace( Object original, Object target, Object owner ) throws HibernateException {
         return this.deepCopy( original );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#returnedClass()
-     */
-    @Override
-    public Class returnedClass() {
-        return java.net.URL.class;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.hibernate.usertype.UserType#sqlTypes()
-     */
-    @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.CLOB };
     }
 
 }

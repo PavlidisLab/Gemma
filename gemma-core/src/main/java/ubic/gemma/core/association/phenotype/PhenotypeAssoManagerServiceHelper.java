@@ -1,63 +1,38 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.association.phenotype;
 
-import java.util.Collection;
-import java.util.Set;
-
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 
 /**
  * Convert all types of EvidenceValueObjects to their corresponding entity
- * 
- * @author nicolas
  *
+ * @author nicolas
  */
 public interface PhenotypeAssoManagerServiceHelper {
-
-    /** Ontology term to CharacteristicValueObject */
-    Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
-            String ontologyUsed );
 
     /**
      * load evidence from the database and populate it with the updated information
      */
-    void populateModifiedValues( EvidenceValueObject<? extends PhenotypeAssociation> evidenceValueObject, PhenotypeAssociation phenotypeAssociation );
-
-    /**
-     * Sets the fields that are the same for any evidence. Doesn't populate phenotypes
-     * 
-     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
-     * @param evidenceValueObject the value object representing a phenotype
-     */
-    void populatePheAssoWithoutPhenotypes( PhenotypeAssociation phe, EvidenceValueObject<? extends PhenotypeAssociation> evidenceValueObject );
-
-    /**
-     * Sets the fields that are the same for any evidence.
-     * 
-     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
-     * @param evidenceValueObject the value object representing a phenotype
-     */
-    void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject<? extends PhenotypeAssociation> evidenceValueObject );
+    void populateModifiedValues( EvidenceValueObject<? extends PhenotypeAssociation> evidenceValueObject,
+            PhenotypeAssociation phenotypeAssociation );
 
     /**
      * Changes all type of evidenceValueObject to their corresponding entities
-     * 
+     *
      * @param evidence the value object to change in an entity
      * @return PhenotypeAssociation the entity created from the ValueObject
      */

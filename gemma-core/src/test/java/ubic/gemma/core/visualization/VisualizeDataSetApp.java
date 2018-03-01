@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,16 +48,17 @@ import java.util.List;
 /**
  * @author keshav
  */
+@SuppressWarnings({ "SameParameterValue", "WeakerAccess", "unused" }) // Possible external use
 public class VisualizeDataSetApp {
     private static final Log log = LogFactory.getLog( VisualizeDataSetApp.class );
     private static final int DEFAULT_MAX_SIZE = 3;
-    private String filePath = "aov.results-2-monocyte-data-bytime.bypat.data.sort";
+    private static final String FILE_PATH = "aov.results-2-monocyte-data-bytime.bypat.data.sort";
 
     public static void main( String[] args ) {
 
         VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
 
-        DoubleMatrix<String, String> matrix = null;
+        DoubleMatrix<String, String> matrix;
         try {
             matrix = visualizeDataSet.parseData( true );
         } catch ( IOException e ) {
@@ -67,7 +68,7 @@ public class VisualizeDataSetApp {
         ColorMatrix<String, String> colorMatrix = ColorMatrix.newInstance( matrix );
         visualizeDataSet.showDataMatrix( "A heat map", MatrixDisplay.newInstance( colorMatrix ) );
 
-        List<double[]> data = new ArrayList<double[]>();
+        List<double[]> data = new ArrayList<>();
 
         data.add( matrix.getRow( 4 ) );
         data.add( matrix.getRow( 16 ) );
@@ -100,7 +101,7 @@ public class VisualizeDataSetApp {
 
     public void showDataMatrix( String title, MatrixDisplay<String, String> matrixDisplay ) {
 
-        JFrame frame = createGui( title );
+        JFrame frame = VisualizeDataSetApp.createGui( title );
         frame.add( matrixDisplay );
 
         // Display the window.
@@ -123,7 +124,7 @@ public class VisualizeDataSetApp {
 
         ChartFrame frame = new ChartFrame( title, chart, true );
 
-        showWindow( frame );
+        this.showWindow( frame );
     }
 
     public void showProfilesLineChartView( String title, Collection<double[]> dataCol, int numProfiles ) {
@@ -132,15 +133,15 @@ public class VisualizeDataSetApp {
             throw new RuntimeException( "dataCol cannot be " + null );
 
         if ( dataCol.size() < numProfiles ) {
-            log.info( "Collection smaller than number of elements.  Will display first " + DEFAULT_MAX_SIZE
-                    + " profiles." );
-            numProfiles = DEFAULT_MAX_SIZE;
+            VisualizeDataSetApp.log.info( "Collection smaller than number of elements.  Will display first "
+                    + VisualizeDataSetApp.DEFAULT_MAX_SIZE + " profiles." );
+            numProfiles = VisualizeDataSetApp.DEFAULT_MAX_SIZE;
         }
 
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         Iterator<double[]> iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
-            XYSeries series = getSeries( j, iter.next() );
+            XYSeries series = this.getSeries( j, iter.next() );
             xySeriesCollection.addSeries( series );
         }
 
@@ -153,7 +154,7 @@ public class VisualizeDataSetApp {
 
         ChartFrame frame = new ChartFrame( title, chart, true );
 
-        showWindow( frame );
+        this.showWindow( frame );
     }
 
     public void showProfilesPolarView( String title, Collection<double[]> dataCol, int numProfiles ) {
@@ -164,20 +165,21 @@ public class VisualizeDataSetApp {
         JFreeChart chart = ChartFactory.createPolarChart( title, null, false, false, false );
 
         if ( dataCol.size() < numProfiles ) {
-            log.info( "Collection smaller than number of elements. Will display " + DEFAULT_MAX_SIZE + " profiles." );
-            numProfiles = DEFAULT_MAX_SIZE;
+            VisualizeDataSetApp.log.info( "Collection smaller than number of elements. Will display "
+                    + VisualizeDataSetApp.DEFAULT_MAX_SIZE + " profiles." );
+            numProfiles = VisualizeDataSetApp.DEFAULT_MAX_SIZE;
         }
 
         Iterator<double[]> iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
-            XYSeries series = getSeries( j, iter.next() );
+            XYSeries series = this.getSeries( j, iter.next() );
             PolarPlot plot = ( PolarPlot ) chart.getPlot();
             plot.setDataset( new XYSeriesCollection( series ) );
         }
 
         ChartFrame frame = new ChartFrame( title, chart, true );
 
-        showWindow( frame );
+        this.showWindow( frame );
     }
 
     private XYSeries getSeries( Comparable<Integer> key, double[] data ) {
@@ -189,7 +191,7 @@ public class VisualizeDataSetApp {
     }
 
     private DoubleMatrix<String, String> parseData( boolean headerExists ) throws IOException {
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );) {
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + VisualizeDataSetApp.FILE_PATH )) {
             if ( is == null )
                 throw new RuntimeException( "could not load data" );
             DoubleMatrixReader reader = new DoubleMatrixReader();

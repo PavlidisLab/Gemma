@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,27 +22,27 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * A class that represents the ImageSeries information gotten from the alan brain atals
- * 
- *  @author kelsey
+ * A class that represents the ImageSeries information gotten from the alan brain atlas
+ *
+ * @author kelsey
  */
 
 public class ImageSeries {
 
-    Integer imageSeriesId;
-    String plane;
-    Collection<Image> images;
+    private Integer imageSeriesId;
+    private String plane;
+    private Collection<Image> images;
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public ImageSeries( Integer imageSeriesId, String plane ) {
         this.imageSeriesId = imageSeriesId;
         this.plane = plane;
-
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public void addImage( Image image ) {
-
-        if ( this.images == null ) this.images = new HashSet<Image>();
-
+        if ( this.images == null )
+            this.images = new HashSet<>();
         this.images.add( image );
     }
 
@@ -50,22 +50,24 @@ public class ImageSeries {
         return images;
     }
 
+    public void setImages( Collection<Image> images ) {
+        this.images = images;
+    }
+
     public Integer getImageSeriesId() {
         return imageSeriesId;
+    }
+
+    @SuppressWarnings("unused") // Possible external use
+    public void setImageSeriesId( Integer imageSeriesId ) {
+        this.imageSeriesId = imageSeriesId;
     }
 
     public String getPlane() {
         return plane;
     }
 
-    public void setImages( Collection<Image> images ) {
-        this.images = images;
-    }
-
-    public void setImageSeriesId( Integer imageSeriesId ) {
-        this.imageSeriesId = imageSeriesId;
-    }
-
+    @SuppressWarnings("unused") // Possible external use
     public void setPlane( String plane ) {
         this.plane = plane;
     }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@ package ubic.gemma.model.analysis.expression.diff;
 
 /**
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
- *
  */
 public class DifferentialExpressionAnalysisResultImpl extends DifferentialExpressionAnalysisResult {
     /**
@@ -33,47 +32,55 @@ public class DifferentialExpressionAnalysisResultImpl extends DifferentialExpres
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
+
+        if ( this.getId() == null ) {
+            result = prime * result + ( ( this.getResultSet() == null ) ? 0 : this.getResultSet().hashCode() );
+            result = prime * result + ( ( this.getProbe() == null ) ? 0 : this.getProbe().hashCode() );
+        }
+        return result;
+    }
+
+    @SuppressWarnings("SimplifiableIfStatement") // Better readability
+    @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
         DifferentialExpressionAnalysisResult other = ( DifferentialExpressionAnalysisResult ) obj;
 
         if ( this.getId() == null ) {
-            if ( other.getId() != null ) return false;
-        } else if ( !getId().equals( other.getId() ) ) {
+            if ( other.getId() != null )
+                return false;
+        } else if ( !this.getId().equals( other.getId() ) ) {
             return false;
         } else {
-            return getId().equals( other.getId() );
+            return this.getId().equals( other.getId() );
         }
 
         // fallback.
         if ( this.getResultSet() == null ) {
-            if ( other.getResultSet() != null ) return false;
-        } else if ( !getResultSet().equals( other.getResultSet() ) ) return false;
+            if ( other.getResultSet() != null )
+                return false;
+        } else if ( !this.getResultSet().equals( other.getResultSet() ) )
+            return false;
         if ( this.getProbe() == null ) {
-            if ( other.getProbe() != null ) return false;
-        } else if ( !getProbe().equals( other.getProbe() ) ) return false;
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( getId() == null ) ? 0 : getId().hashCode() );
-
-        if ( getId() == null ) {
-            result = prime * result + ( ( getResultSet() == null ) ? 0 : getResultSet().hashCode() );
-            result = prime * result + ( ( getProbe() == null ) ? 0 : getProbe().hashCode() );
-        }
-        return result;
+            return other.getProbe() == null;
+        } else
+            return this.getProbe().equals( other.getProbe() );
     }
 
     @Override
     public void setCorrectedPvalue( Double correctedPvalue ) {
 
-        if ( correctedPvalue == null ) return;
+        if ( correctedPvalue == null )
+            return;
 
         super.setCorrectedPvalue( correctedPvalue );
 
@@ -82,7 +89,7 @@ public class DifferentialExpressionAnalysisResultImpl extends DifferentialExpres
          * than 10e-5. 0.1-1 -> 0; 0.01-0.099 -> 1; 0.001-0.00999 -> 2; 0.0001- 0.000999 -> 3 etc. Thus "p<0.01" is
          * equivalent to "bin >=2"
          */
-        this.setCorrectedPValueBin( getBin( correctedPvalue ) );
+        this.setCorrectedPValueBin( DifferentialExpressionAnalysisResultImpl.getBin( correctedPvalue ) );
     }
 
     @Override

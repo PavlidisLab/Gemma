@@ -27,6 +27,7 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface AnalysisSelectionAndExecutionService extends ApplicationContextAware {
 
     Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,

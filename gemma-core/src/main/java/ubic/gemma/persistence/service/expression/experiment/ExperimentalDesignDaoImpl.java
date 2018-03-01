@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -61,11 +61,6 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
         }
         return ( ExperimentalDesign ) result;
 
-    }
-
-    @Override
-    public ExperimentalDesign findByName( String name ) {
-        return this.findOneByProperty( "name", name );
     }
 
     /**

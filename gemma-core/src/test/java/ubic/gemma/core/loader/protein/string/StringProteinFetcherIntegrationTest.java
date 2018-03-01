@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,16 +36,15 @@ import static org.junit.Assert.*;
  */
 public class StringProteinFetcherIntegrationTest {
 
-    StringProteinFileFetcher stringProteinLinksDetailedFetcher = null;
     // String testFileName = "http://string.embl.de/newstring_download/species.mappings.v8.2.txt.gz";
-    String testFileName = "http://string82.embl.de/newstring_download/species.mappings.v8.2.txt.gz";
-    String archiveMethod = "gz";
+    private final String testFileName = "http://string82.embl.de/newstring_download/species.mappings.v8.2.txt.gz";
+    private StringProteinFileFetcher stringProteinLinksDetailedFetcher = null;
 
     /*
      * Set up the fetcher passing in the file to test
      */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         stringProteinLinksDetailedFetcher = new StringProteinFileFetcher();
         stringProteinLinksDetailedFetcher.setStringProteinLinksDetailedFileName( testFileName );
 
@@ -57,8 +56,8 @@ public class StringProteinFetcherIntegrationTest {
     @Test
     public void testDownloadProteinAliasFile() {
         Collection<LocalFile> localFile = stringProteinLinksDetailedFetcher.fetch( testFileName );
-        String outputfilenamegzip = "";
-        String outputfilename = "";
+        String outputfilenamegzip;
+        String outputfilename;
 
         stringProteinLinksDetailedFetcher.unPackFile( localFile );
 
@@ -66,6 +65,7 @@ public class StringProteinFetcherIntegrationTest {
             outputfilenamegzip = file.getLocalURL().getFile();
             assertNotNull( outputfilenamegzip );
 
+            String archiveMethod = "gz";
             int lastIndexOf = outputfilenamegzip.lastIndexOf( "." + archiveMethod );
             if ( lastIndexOf != -1 ) {
                 outputfilename = outputfilenamegzip.substring( 0, lastIndexOf );

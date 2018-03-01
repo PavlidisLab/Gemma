@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,7 +73,7 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
                 ex.printStackTrace();
             }
             watch.stop();
-            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
+            AbstractCLI.log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -103,11 +103,14 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         }
     }
 
+    @SuppressWarnings("unused") // Possible external use
+    public abstract CommandGroup getCommandGroup();
+
     protected Taxon setTaxonByName( TaxonService taxonService ) {
-        String taxonName = getOptionValue( 't' );
+        String taxonName = this.getOptionValue( 't' );
         ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
-            log.error( "ERROR: Cannot find taxon " + taxonName );
+            AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
         }
         return taxon;
     }
@@ -133,13 +136,11 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         }
 
         if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + name + " found" );
-            bail( ErrorCode.INVALID_OPTION );
+            AbstractCLI.log.error( "No arrayDesign " + name + " found" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return arrayDesign;
     }
-
-    public abstract CommandGroup getCommandGroup();
 
     @Override
     protected String[] getAdditionalSpringConfigLocations() {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,17 +53,18 @@ public class TaxonLoader {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
         try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
-            return load( stream );
+            return this.load( stream );
         }
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public int load( String filename ) throws IOException {
         if ( StringUtils.isBlank( filename ) ) {
             throw new IllegalArgumentException( "No filename provided" );
         }
-        log.info( "Parsing " + filename );
+        TaxonLoader.log.info( "Parsing " + filename );
         File infile = new File( filename );
-        return load( infile );
+        return this.load( infile );
     }
 
     public int load( final InputStream inputStream ) throws IOException {
@@ -75,14 +76,14 @@ public class TaxonLoader {
 
         for ( Taxon taxon : results ) {
 
-            if ( log.isDebugEnabled() )
-                log.debug( "Loading " + taxon );
+            if ( TaxonLoader.log.isDebugEnabled() )
+                TaxonLoader.log.debug( "Loading " + taxon );
             persisterHelper.persist( taxon );
             count++;
 
         }
 
-        log.info( "Persisted " + count + " taxa" );
+        TaxonLoader.log.info( "Persisted " + count + " taxa" );
         return count;
     }
 

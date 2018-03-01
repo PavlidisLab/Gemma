@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -38,39 +39,19 @@ import java.util.List;
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResultSetDaoBase {
+public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAnalysisResultSet>
+        implements ExpressionAnalysisResultSetDao {
 
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
-    }
-
-    @Override
-    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                "select a from GeneDifferentialExpressionMetaAnalysis a"
-                        + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
-                .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
-    }
-
-    @Override
-    public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
-        for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-            Hibernate.initialize( factor );
-        }
-
-        Hibernate.initialize( resultSet.getAnalysis() );
-        Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
+        super( ExpressionAnalysisResultSet.class, sessionFactory );
     }
 
     /**
      * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
      */
     @Override
-    protected ExpressionAnalysisResultSet handleThaw( final ExpressionAnalysisResultSet resultSet ) {
+    public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
         StopWatch timer = new StopWatch();
         timer.start();
         this.thawLite( resultSet );
@@ -90,6 +71,43 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
 
         return res.get( 0 );
 
+    }
+
+    @Override
+    public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
+        Session session = this.getSessionFactory().getCurrentSession();
+
+        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
+        for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
+            Hibernate.initialize( factor );
+        }
+
+        Hibernate.initialize( resultSet.getAnalysis() );
+        Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
+    }
+
+    @Override
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select a from GeneDifferentialExpressionMetaAnalysis a"
+                        + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" )
+                .setParameter( "an", differentialExpressionAnalysis ).list().isEmpty();
+    }
+
+    @Override
+    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession()
+                .load( DifferentialExpressionAnalysis.class, differentialExpressionAnalysis.getId() );
+        Collection<ExpressionAnalysisResultSet> thawed = new HashSet<>();
+        for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
+            thawed.add( this.thaw( rs ) );
+        }
+        boolean changed = differentialExpressionAnalysis.getResultSets().addAll( thawed );
+        assert !changed; // they are the same objects, just updated.
+        return differentialExpressionAnalysis;
     }
 
     /**
@@ -116,21 +134,5 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
 
         return res.get( 0 );
 
-    }
-
-    @Override
-    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession()
-                .load( DifferentialExpressionAnalysis.class, differentialExpressionAnalysis.getId() );
-        Collection<ExpressionAnalysisResultSet> thawed = new HashSet<ExpressionAnalysisResultSet>();
-        for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
-            thawed.add( this.thaw( rs ) );
-        }
-        boolean changed = differentialExpressionAnalysis.getResultSets().addAll( thawed );
-        assert !changed; // they are the same objects, just updated.
-        return differentialExpressionAnalysis;
     }
 }

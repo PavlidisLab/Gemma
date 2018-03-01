@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,16 +22,16 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.util.*;
 
@@ -57,42 +57,35 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     private ExpressionExperiment ee;
     private Characteristic eeChar1;
     private Characteristic eeChar2;
-    private BioMaterial bm;
-    private FactorValue fv;
-    private boolean setupDone = false;
-
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
-        if ( !setupDone ) {
-            ee = this.getTestPersistentBasicExpressionExperiment();
-            ee.setCharacteristics( getTestPersistentCharacteristics( 2 ) );
-            Characteristic[] eeChars = ee.getCharacteristics().toArray( new Characteristic[0] );
-            eeChar1 = eeChars[0];
-            eeChar2 = eeChars[1];
-            eeService.update( ee );
+        ee = this.getTestPersistentBasicExpressionExperiment();
+        ee.setCharacteristics( this.getTestPersistentCharacteristics( 2 ) );
+        Characteristic[] eeChars = ee.getCharacteristics().toArray( new Characteristic[0] );
+        eeChar1 = eeChars[0];
+        eeChar2 = eeChars[1];
+        eeService.update( ee );
 
-            BioAssay ba = ee.getBioAssays().toArray( new BioAssay[0] )[0];
-            bm = ba.getSampleUsed();
-            bm.setCharacteristics( getTestPersistentCharacteristics( 1 ) );
-            bmService.update( bm );
+        BioAssay ba = ee.getBioAssays().toArray( new BioAssay[0] )[0];
+        BioMaterial bm = ba.getSampleUsed();
+        bm.setCharacteristics( this.getTestPersistentCharacteristics( 1 ) );
+        bmService.update( bm );
 
-            for ( ExperimentalFactor ef : testHelper.getExperimentalFactors( ee.getExperimentalDesign() ) ) {
-                eeService.addFactor( ee, ef );
-            }
-
-            ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
-
-            for ( FactorValue f : testHelper.getFactorValues( ef ) ) {
-                eeService.addFactorValue( ee, f );
-            }
-
-            fv = ef.getFactorValues().iterator().next();
-            fv.setCharacteristics( getTestPersistentCharacteristics( 1 ) );
-            fvService.update( fv );
+        for ( ExperimentalFactor ef : testHelper.getExperimentalFactors( ee.getExperimentalDesign() ) ) {
+            eeService.addFactor( ee, ef );
         }
 
+        ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+
+        for ( FactorValue f : testHelper.getFactorValues( ef ) ) {
+            eeService.addFactorValue( ee, f );
+        }
+
+        FactorValue fv = ef.getFactorValues().iterator().next();
+        fv.setCharacteristics( this.getTestPersistentCharacteristics( 1 ) );
+        fvService.update( fv );
     }
 
     @Test
@@ -117,7 +110,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );
-            c.setValue( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+            c.setValue( RandomStringUtils.randomNumeric( BaseSpringContextTest.RANDOM_STRING_LENGTH ) );
             characteristicService.create( c );
             chars.add( c );
         }

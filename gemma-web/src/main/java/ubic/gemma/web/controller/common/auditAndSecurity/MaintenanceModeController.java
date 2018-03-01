@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,7 @@ public class MaintenanceModeController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ModelAndView setMode( String stop, String start, HttpServletRequest request ) throws Exception {
+    public ModelAndView setMode( String stop, String start, HttpServletRequest request ) {
 
         @SuppressWarnings("unchecked") Map<String, Object> config = ( Map<String, Object> ) request.getSession()
                 .getServletContext().getAttribute( Constants.CONFIG );

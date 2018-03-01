@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,11 +19,13 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.AnalysisService;
 
@@ -33,6 +35,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
+@SuppressWarnings("unused") // Possible external use
 public interface DifferentialExpressionAnalysisService extends AnalysisService<DifferentialExpressionAnalysis> {
 
     /**
@@ -57,6 +60,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
+    @SuppressWarnings("UnusedReturnValue") // Consistent with other services
     @Secured({ "GROUP_USER" })
     DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
@@ -69,10 +73,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds( Collection<Long> investigationIds );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    java.util.Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -112,7 +112,6 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
 
     /**
      * Given a set of ids, find experiments or experimentsubsets that have differential expression analyses. Subsets are

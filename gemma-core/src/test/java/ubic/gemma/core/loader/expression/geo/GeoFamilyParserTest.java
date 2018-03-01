@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,8 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
@@ -30,38 +31,39 @@ import java.util.zip.GZIPInputStream;
 /**
  * @author pavlidis
  */
-public class GeoFamilyParserTest extends TestCase {
+public class GeoFamilyParserTest {
 
-    InputStream is;
-    GeoFamilyParser parser;
+    private InputStream is;
+    private GeoFamilyParser parser;
 
     @Test
     public void testParseBigA() throws Exception {
         is = new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
         parser.parse( is );
-        assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
+        Assert.assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
+    @Test
     public void testParseBigBPlatformOnly() throws Exception {
         is = new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
         parser.setProcessPlatformsOnly( true );
         parser.parse( is );
-        assertEquals( 0, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
-        assertEquals( 0, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeries().size() );
-        assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatforms().size() );
+        Assert.assertEquals( 0, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
+        Assert.assertEquals( 0, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeries().size() );
+        Assert.assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatforms().size() );
         GeoPlatform p = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatforms().values().iterator()
                 .next();
-        assertEquals( 12488, p.getColumnData( "GB_ACC" ).size() );
+        Assert.assertEquals( 12488, p.getColumnData( "GB_ACC" ).size() );
     }
 
+    @Test
     public void testParseDataset() throws Exception {
         is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GDS100.soft.txt.gz" ) );
-        assert is != null;
         parser.parse( is );
-        assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
+        Assert.assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
     @Test
@@ -71,8 +73,8 @@ public class GeoFamilyParserTest extends TestCase {
         parser.parse( is );
         GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values().iterator()
                 .next();
-        assertTrue( sample.isGenePix() );
-        assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
+        Assert.assertTrue( sample.isGenePix() );
+        Assert.assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
     }
 
     /*
@@ -87,15 +89,7 @@ public class GeoFamilyParserTest extends TestCase {
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap()
                 .get( "GSE29014" );
 
-        assertEquals( 78, series.getSamples().size() );
-        //
-        // GeoPlatform platform = series.getSamples().iterator().next().getPlatforms().iterator().next();
-        // /*
-        // * However, 3 of those samples have no data.
-        // */
-        // GeoValues values = series.getValues();
-        // System.err.println( values );
-
+        Assert.assertEquals( 78, series.getSamples().size() );
     }
 
     /*
@@ -106,10 +100,6 @@ public class GeoFamilyParserTest extends TestCase {
         is = new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
         parser.parse( is );
-        // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE432"
-        // );
-        // GeoValues values = series.getValues();
-        // System.err.print( values );
     }
 
     @Test
@@ -119,13 +109,12 @@ public class GeoFamilyParserTest extends TestCase {
         parser.parse( is );
         GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values().iterator()
                 .next();
-        assertTrue( !sample.hasUsableData() );
-        assertEquals( 4, sample.getColumnNames().size() ); // includes ones we aren't using.
+        Assert.assertTrue( !sample.hasUsableData() );
+        Assert.assertEquals( 4, sample.getColumnNames().size() ); // includes ones we aren't using.
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() {
         parser = new GeoFamilyParser();
     }
 

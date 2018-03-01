@@ -39,12 +39,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class DatasetCombinerTest {
 
-    private static Log log = LogFactory.getLog( DatasetCombinerTest.class.getName() );
-    Collection<GeoDataset> gds;
-    private boolean skipSlowTests = true;
+    private static final Log log = LogFactory.getLog( DatasetCombinerTest.class.getName() );
+    private Collection<GeoDataset> gds;
 
     @Test
-    public void testFindGDSGrouping() throws Exception {
+    public void testFindGDSGrouping() {
         try {
             Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674" );
             assertEquals( 2, result.size() );
@@ -64,8 +63,6 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGSE13() throws Exception {
-        if ( this.skipSlowTests )
-            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         try (InputStream is = new GZIPInputStream(
@@ -107,7 +104,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
-    public void testFindGSE267() throws InterruptedException {
+    public void testFindGSE267() {
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
         assertEquals( 0, result.size() );
     }
@@ -117,8 +114,6 @@ public class DatasetCombinerTest {
      */
     @Test
     public void testFindGSE3193() throws Exception {
-        if ( this.skipSlowTests )
-            return;
 
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -146,12 +141,8 @@ public class DatasetCombinerTest {
         assertEquals( 57, numBioMaterials ); // note, i'm not at all sure these are right! this used to be 60.
     }
 
-    // todo: add test of findGSECorrespondence( GeoSeries series ) when there is no dataset.
-
     @Test
     public void testFindGSE469() throws Exception {
-        if ( this.skipSlowTests )
-            return;
         GeoFamilyParser parser = new GeoFamilyParser();
         try (InputStream is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE469Short/GDS233.soft.gz" ) )) {
@@ -191,8 +182,6 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGSE493() throws Exception {
-        if ( this.skipSlowTests )
-            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         try (InputStream is = new GZIPInputStream(
@@ -316,8 +305,6 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGSE91() throws Exception {
-        if ( this.skipSlowTests )
-            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         try (InputStream is = new GZIPInputStream(
@@ -392,9 +379,8 @@ public class DatasetCombinerTest {
                 "GSM10370", "GSM10374", "GSM10375", "GSM10376", "GSM10377", "GSM10378", "GSM10379", "GSM10380",
                 "GSM10381", "GSM10382", "GSM10383", "GSM10384", "GSM10385", "GSM10386", "GSM10387", "GSM10388" };
 
-        for ( int i = 0; i < keys.length; i++ ) {
-            String string = keys[i];
-            assertEquals( "Wrong result for " + keys[i] + ", expected 2", 2,
+        for ( String string : keys ) {
+            assertEquals( "Wrong result for " + string + ", expected 2", 2,
                     result.getCorrespondingSamples( string ).size() );
         }
         assertTrue( result.getCorrespondingSamples( "GSM10354" ).contains( "GSM10374" ) );
@@ -445,8 +431,6 @@ public class DatasetCombinerTest {
      */
     @Test
     public void testGSE465() throws Exception {
-        if ( this.skipSlowTests )
-            return;
         GeoFamilyParser parser = new GeoFamilyParser();
 
         try (InputStream is = new GZIPInputStream(

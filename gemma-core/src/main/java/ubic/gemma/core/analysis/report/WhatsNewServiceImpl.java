@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,13 +31,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
@@ -49,6 +49,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Component
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     private static final String WHATS_NEW_CACHE = "WhatsNew";
@@ -69,18 +70,16 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     private Cache whatsNewCache;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         try {
 
-            if ( cacheManager.cacheExists( WHATS_NEW_CACHE ) ) {
+            if ( cacheManager.cacheExists( WhatsNewServiceImpl.WHATS_NEW_CACHE ) ) {
                 return;
             }
-
-            // last two values are timetolive and timetoidle.
-            whatsNewCache = new Cache( WHATS_NEW_CACHE, 1500, false, false, 12 * 3600, 12 * 3600 );
+            whatsNewCache = new Cache( WhatsNewServiceImpl.WHATS_NEW_CACHE, 1500, false, false, 12 * 3600, 12 * 3600 );
 
             cacheManager.addCache( whatsNewCache );
-            whatsNewCache = cacheManager.getCache( WHATS_NEW_CACHE );
+            whatsNewCache = cacheManager.getCache( WhatsNewServiceImpl.WHATS_NEW_CACHE );
 
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
@@ -93,7 +92,17 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         date = DateUtils.addDays( date, -7 );
-        saveReport( date );
+        this.saveReport( date );
+    }
+
+    /**
+     * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
+     */
+    @Override
+    public void saveReport( Date date ) {
+        WhatsNew wn = this.getReport( date );
+        this.initDirectories();
+        this.saveFile( wn );
     }
 
     @Override
@@ -110,26 +119,26 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
         Collection<Auditable> updatedObjects = auditEventService.getUpdatedSinceDate( date );
         wn.setUpdatedObjects( updatedObjects );
-        log.info( wn.getUpdatedObjects().size() + " updated objects since " + date );
+        WhatsNewServiceImpl.log.info( wn.getUpdatedObjects().size() + " updated objects since " + date );
 
         Collection<Auditable> newObjects = auditEventService.getNewSinceDate( date );
         wn.setNewObjects( newObjects );
-        log.info( wn.getNewObjects().size() + " new objects since " + date );
+        WhatsNewServiceImpl.log.info( wn.getNewObjects().size() + " new objects since " + date );
 
-        Collection<ExpressionExperiment> updatedExpressionExperiments = getExpressionExperiments( updatedObjects );
-        Collection<ExpressionExperiment> newExpressionExperiments = getExpressionExperiments( newObjects );
-        Collection<ArrayDesign> updatedArrayDesigns = getArrayDesigns( updatedObjects );
-        Collection<ArrayDesign> newArrayDesigns = getArrayDesigns( newObjects );
+        Collection<ExpressionExperiment> updatedExpressionExperiments = this.getExpressionExperiments( updatedObjects );
+        Collection<ExpressionExperiment> newExpressionExperiments = this.getExpressionExperiments( newObjects );
+        Collection<ArrayDesign> updatedArrayDesigns = this.getArrayDesigns( updatedObjects );
+        Collection<ArrayDesign> newArrayDesigns = this.getArrayDesigns( newObjects );
 
         // don't show things that are "new" as "updated" too (if they were updated after being loaded)
         updatedExpressionExperiments.removeAll( newExpressionExperiments );
         updatedArrayDesigns.removeAll( newArrayDesigns );
 
         // build total, new and updated counts by taxon to display in data summary widget on front page
-        wn.setNewEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( newExpressionExperiments ) );
-        wn.setUpdatedEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( updatedExpressionExperiments ) );
+        wn.setNewEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( newExpressionExperiments ) );
+        wn.setUpdatedEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( updatedExpressionExperiments ) );
 
-        wn.setNewAssayCount( getAssayCount( newExpressionExperiments ) );
+        wn.setNewAssayCount( this.getAssayCount( newExpressionExperiments ) );
 
         return wn;
     }
@@ -144,25 +153,27 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         WhatsNew wn = new WhatsNew();
         try {
             File newObjects = new File(
-                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".new" );
+                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
+                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".new" );
             File updatedObjects = new File(
-                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".updated" );
+                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
+                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".updated" );
             if ( !newObjects.exists() && !updatedObjects.exists() ) {
                 return null;
             }
 
             // load up all new objects
             if ( newObjects.exists() ) {
-                Collection<AuditableObject> aos = loadAuditableObjects( newObjects );
+                Collection<AuditableObject> aos = this.loadAuditableObjects( newObjects );
 
                 for ( AuditableObject object : aos ) {
-                    Auditable auditable = fetch( wn, object );
+                    Auditable auditable = this.fetch( object );
 
                     if ( auditable == null )
                         continue;
 
                     wn.addNewObjects( auditable );
-                    updateDate( wn, object );
+                    this.updateDate( wn, object );
                 }
 
             }
@@ -170,51 +181,42 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             // load up all updated objects
             if ( updatedObjects.exists() ) {
 
-                Collection<AuditableObject> aos = loadAuditableObjects( updatedObjects );
+                Collection<AuditableObject> aos = this.loadAuditableObjects( updatedObjects );
                 for ( AuditableObject object : aos ) {
 
                     /*
                      * This call takes ~ 15-20 ms but it can be called many times if there are a lot of updated
                      * experiments, meaning this loop can take >8500 ms (over tunnel for ~450 experiments).
-                     * 
+                     *
                      * Loading objects could be avoided since we only need ids on the front end, but we would need to
                      * refactor the cache, because object-type is used to calculate counts for updated array design
                      * objects vs updated experiments
-                     * 
+                     *
                      * This is probably not necessary because usually the number of updated or new experiments will be
                      * much lower than 450.
                      */
 
-                    Auditable auditable = fetch( wn, object );
+                    Auditable auditable = this.fetch( object );
 
                     if ( auditable == null )
                         continue;
 
                     wn.addUpdatedObjects( auditable );
 
-                    updateDate( wn, object );
+                    this.updateDate( wn, object );
 
                 }
             }
             // build total, new and updated counts by taxon to display in data summary widget on front page
-            wn.setNewEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( wn.getNewExpressionExperiments() ) );
-            wn.setUpdatedEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( wn.getUpdatedExpressionExperiments() ) );
+            wn.setNewEEIdsPerTaxon( this.getExpressionExperimentIdsByTaxon( wn.getNewExpressionExperiments() ) );
+            wn.setUpdatedEEIdsPerTaxon(
+                    this.getExpressionExperimentIdsByTaxon( wn.getUpdatedExpressionExperiments() ) );
 
         } catch ( Throwable e ) {
-            log.error( e, e );
+            WhatsNewServiceImpl.log.error( e, e );
             return null;
         }
         return wn;
-    }
-
-    /**
-     * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
-     */
-    @Override
-    public void saveReport( Date date ) {
-        WhatsNew wn = getReport( date );
-        initDirectories( true );
-        saveFile( wn );
     }
 
     /**
@@ -249,7 +251,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         this.securityService = securityService;
     }
 
-    private Auditable fetch( WhatsNew wn, AuditableObject object ) {
+    private Auditable fetch( AuditableObject object ) {
 
         if ( object == null )
             return null;
@@ -373,28 +375,25 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         Collection<ExpressionExperiment> ees = new HashSet<>();
         for ( Auditable auditable : items ) {
             if ( auditable instanceof ExpressionExperiment ) {
-                // if ( securityService.isPrivate( ( ExpressionExperiment ) auditable ) ) {
-                // continue;
-                // }
                 ees.add( ( ExpressionExperiment ) auditable );
             }
         }
         return ees;
     }
 
-    private void initDirectories( boolean deleteFiles ) {
+    private void initDirectories() {
         // check to see if the home directory exists. If it doesn't, create it.
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + WHATS_NEW_DIR );
-        File f = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR );
+        FileTools.createDir( HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR );
+        File f = new File( HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR );
         Collection<File> files = new ArrayList<>();
         File[] fileArray = f.listFiles();
-        Collections.addAll( files, fileArray );
-        // clear out all files
-        if ( deleteFiles ) {
-            FileTools.deleteFiles( files );
+        if ( fileArray != null ) {
+            Collections.addAll( files, fileArray );
         }
+        // clear out all files
+        FileTools.deleteFiles( files );
     }
 
     private Collection<AuditableObject> loadAuditableObjects( File newObjects )
@@ -407,18 +406,24 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         }
     }
 
-    private boolean saveFile( WhatsNew wn ) {
+    private void saveFile( WhatsNew wn ) {
         try {
             // remove file first
             File newOutput = new File(
-                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".new" );
+                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
+                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".new" );
             File updatedOutput = new File(
-                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".updated" );
+                    HOME_DIR + File.separatorChar + WhatsNewServiceImpl.WHATS_NEW_DIR + File.separatorChar
+                            + WhatsNewServiceImpl.WHATS_NEW_FILE + ".updated" );
             if ( newOutput.exists() ) {
-                newOutput.delete();
+                if ( !newOutput.delete() ) {
+                    WhatsNewServiceImpl.log.error( "Could not delete " + newOutput.getName() );
+                }
             }
             if ( updatedOutput.exists() ) {
-                updatedOutput.delete();
+                if ( !updatedOutput.delete() ) {
+                    WhatsNewServiceImpl.log.error( "Could not delete " + updatedOutput.getName() );
+                }
             }
             Calendar c = Calendar.getInstance();
             Date date = c.getTime();
@@ -427,16 +432,16 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             Collection<ExpressionExperiment> ees = wn.getNewExpressionExperiments();
             // save the IDs for new Auditables
             Collection<AuditableObject> newObjects = new ArrayList<>();
-            addAllADs( date, ads, newObjects );
-            addAllEEs( date, ees, newObjects );
+            this.addAllADs( date, ads, newObjects );
+            this.addAllEEs( date, ees, newObjects );
 
             // save the ids for updated Auditables
             ads = wn.getUpdatedArrayDesigns();
             ees = wn.getUpdatedExpressionExperiments();
             // save the IDs for new Auditables
             Collection<AuditableObject> updatedObjects = new ArrayList<>();
-            addAllADs( date, ads, updatedObjects );
-            addAllEEs( date, ees, updatedObjects );
+            this.addAllADs( date, ads, updatedObjects );
+            this.addAllEEs( date, ees, updatedObjects );
             try (FileOutputStream fos = new FileOutputStream( newOutput );
                     ObjectOutputStream oos = new ObjectOutputStream( fos )) {
                 oos.writeObject( newObjects );
@@ -448,10 +453,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             }
 
         } catch ( Throwable e ) {
-            return false;
+            e.printStackTrace();
         }
-
-        return true;
     }
 
     private void addAllADs( Date date, Collection<ArrayDesign> ads, Collection<AuditableObject> updatedObjects ) {

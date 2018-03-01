@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,8 +30,8 @@ import org.springframework.social.twitter.api.Tweet;
 import org.springframework.social.twitter.api.Twitter;
 import org.springframework.social.twitter.api.impl.TwitterTemplate;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
 
 import java.util.*;
@@ -43,9 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Component
 public class TwitterOutboundImpl implements TwitterOutbound {
-    /**
-     *
-     */
+
     private static final String EXPERIMENT_URI = "expressionExperiment/showExpressionExperiment.html?id=";
 
     private static final AtomicBoolean enabled = new AtomicBoolean(
@@ -60,24 +58,81 @@ public class TwitterOutboundImpl implements TwitterOutbound {
     @Autowired
     private WhatsNewService whatsNewService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.feed.TwitterOutbound#disable()
-     */
     @Override
     public void disable() {
-        enabled.set( false );
+        TwitterOutboundImpl.enabled.set( false );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.feed.TwitterOutbound#enable()
-     */
     @Override
     public void enable() {
-        enabled.set( true );
+        TwitterOutboundImpl.enabled.set( true );
+
+    }
+
+    @Override
+    @Secured({ "GROUP_AGENT" })
+    public void sendDailyFeed() {
+        TwitterOutboundImpl.log.debug( "Checking if Twitter is enabled" );
+        if ( !TwitterOutboundImpl.enabled.get() ) {
+            return;
+        }
+
+        String feed = this.generateDailyFeed();
+        TwitterOutboundImpl.log.info( "Twitter is enabled. Checking if Twitter feed is empty." );
+
+        if ( StringUtils.isNotBlank( feed ) ) {
+            TwitterOutboundImpl.log.info( "Sending out tweet: '" + feed + "'" );
+            String consumerKey = Settings.getString( "twitter.consumer-key" );
+            String consumerSecret = Settings.getString( "twitter.consumer-secret" );
+            String accessToken = Settings.getString( "twitter.access-token" );
+            String accessTokenSecret = Settings.getString( "twitter.access-token-secret" );
+
+            Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
+            StatusDetails metadata = new StatusDetails();
+            metadata.setWrapLinks( true );
+            try {
+                Tweet tweet = twitter.timelineOperations().updateStatus( feed, metadata );
+                TwitterOutboundImpl.log.info( "tweet info:" + tweet.toString() );
+            } catch ( Exception e ) {
+                TwitterOutboundImpl.log.info( e.toString() );
+            }
+        }
+
+    }
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    public void sendManualTweet( String feed ) {
+        TwitterOutboundImpl.log.debug( "Checking if Twitter is enabled" );
+        if ( !Settings.getBoolean( "gemma.twitter.enabled" ) ) {
+
+            TwitterOutboundImpl.log.info( "Twitter is disabled." );
+            return;
+        }
+
+        if ( StringUtils.isNotBlank( feed ) ) {
+            TwitterOutboundImpl.log.info( "Sending out tweet: '" + feed + "'" );
+
+            String consumerKey = Settings.getString( "twitter.consumer-key" );
+            String consumerSecret = Settings.getString( "twitter.consumer-secret" );
+            String accessToken = Settings.getString( "twitter.access-token" );
+            String accessTokenSecret = Settings.getString( "twitter.access-token-secret" );
+
+            Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
+            StatusDetails metadata = new StatusDetails();
+            metadata.setWrapLinks( true );
+
+            try {
+                Tweet tweet = twitter.timelineOperations().updateStatus( feed, metadata );
+                TwitterOutboundImpl.log.info( "tweet info:" + tweet.toString() );
+            } catch ( Exception e ) {
+
+                TwitterOutboundImpl.log.info( e.toString() );
+
+                e.printStackTrace();
+
+            }
+        }
 
     }
 
@@ -116,7 +171,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
             Collection<ExpressionExperiment> publicExperiments = securityService.choosePublic( latestExperiments );
 
             if ( publicExperiments.isEmpty() ) {
-                log.warn( "There are no valid experiments to tweet about" );
+                TwitterOutboundImpl.log.warn( "There are no valid experiments to tweet about" );
                 return null;
             }
 
@@ -124,7 +179,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
 
         } else {
             if ( experiments.isEmpty() ) {
-                log.warn( "There are no valid experiments to tweet about" );
+                TwitterOutboundImpl.log.warn( "There are no valid experiments to tweet about" );
                 return null;
             }
 
@@ -133,90 +188,18 @@ public class TwitterOutboundImpl implements TwitterOutbound {
 
         assert experiment != null;
 
-        String status = statusWithExperiment(
+        String status = this.statusWithExperiment(
                 StringUtils.abbreviate( experiment.getShortName() + ": " + experiment.getName(), 60 ),
-                formExperimentUrl( experiment ), updatedExperimentsCount, newExperimentsCount );
+                this.formExperimentUrl( experiment ), updatedExperimentsCount, newExperimentsCount );
 
         return StringUtils.abbreviate( status, 140 );
         // this will look a bit weird, and might chop off the url...but
         // have to ensure.
     }
 
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    public void sendDailyFeed() {
-        log.debug( "Checking if Twitter is enabled" );
-        if ( !enabled.get() ) {
-            return;
-        }
-
-        String feed = generateDailyFeed();
-        log.info( "Twitter is enabled. Checking if Twitter feed is empty." );
-
-        if ( StringUtils.isNotBlank( feed ) ) {
-            log.info( "Sending out tweet: '" + feed + "'" );
-            String consumerKey = Settings.getString( "twitter.consumer-key" );
-            String consumerSecret = Settings.getString( "twitter.consumer-secret" );
-            String accessToken = Settings.getString( "twitter.access-token" );
-            String accessTokenSecret = Settings.getString( "twitter.access-token-secret" );
-
-            Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
-            StatusDetails metadata = new StatusDetails();
-            metadata.setWrapLinks( true );
-            try {
-                Tweet tweet = twitter.timelineOperations().updateStatus( feed, metadata );
-                log.info( "tweet info:" + tweet.toString() );
-            } catch ( Exception e ) {
-                log.info( e.toString() );
-            }
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.feed.TwitterOutbound#sendManualTweet(java.lang.String)
-     */
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    public void sendManualTweet( String feed ) {
-        log.debug( "Checking if Twitter is enabled" );
-        if ( !Settings.getBoolean( "gemma.twitter.enabled" ) ) {
-
-            log.info( "Twitter is disabled." );
-            return;
-        }
-
-        if ( StringUtils.isNotBlank( feed ) ) {
-            log.info( "Sending out tweet: '" + feed + "'" );
-
-            String consumerKey = Settings.getString( "twitter.consumer-key" );
-            String consumerSecret = Settings.getString( "twitter.consumer-secret" );
-            String accessToken = Settings.getString( "twitter.access-token" );
-            String accessTokenSecret = Settings.getString( "twitter.access-token-secret" );
-
-            Twitter twitter = new TwitterTemplate( consumerKey, consumerSecret, accessToken, accessTokenSecret );
-            StatusDetails metadata = new StatusDetails();
-            metadata.setWrapLinks( true );
-
-            try {
-                Tweet tweet = twitter.timelineOperations().updateStatus( feed, metadata );
-                log.info( "tweet info:" + tweet.toString() );
-            } catch ( Exception e ) {
-
-                log.info( e.toString() );
-
-                e.printStackTrace();
-
-            }
-        }
-
-    }
-
     private String formExperimentUrl( ExpressionExperiment ee ) {
         // return shortenUrl( EXPERIMENT_URL_BASE + ee.getId() );
-        return Settings.getBaseUrl() + EXPERIMENT_URI + ee.getId();
+        return Settings.getBaseUrl() + TwitterOutboundImpl.EXPERIMENT_URI + ee.getId();
     }
 
     /**

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,24 +19,23 @@
 
 package ubic.gemma.model.analysis;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.testing.BaseSpringContextTest;
-import ubic.gemma.persistence.util.EntityUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author klc
@@ -49,16 +48,9 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    // Test Data
-    private DifferentialExpressionAnalysis eAnalysis1;
-    private DifferentialExpressionAnalysis eAnalysis2;
-    private DifferentialExpressionAnalysis eAnalysis3;
-    private DifferentialExpressionAnalysis eAnalysis4;
-
     private ExpressionExperiment e1;
     private ExpressionExperiment e2;
     private ExpressionExperiment e3;
-    private ExpressionExperiment e4;
 
     private String dea1_name;
     private String dea2_name;
@@ -82,49 +74,46 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         e3.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
         e3 = expressionExperimentService.create( e3 );
 
-        e4 = ExpressionExperiment.Factory.newInstance();
+        ExpressionExperiment e4 = ExpressionExperiment.Factory.newInstance();
         e4.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
-        e4 = expressionExperimentService.create( e4 );
+        expressionExperimentService.create( e4 );
 
         // //////////////////
-        eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
+        DifferentialExpressionAnalysis eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis1.setExperimentAnalyzed( e1 );
         dea1_name = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis1.setName( dea1_name );
         eAnalysis1.setDescription( "An analysis Test 1" );
-        eAnalysis1 = analysisService.create( eAnalysis1 );
+        analysisService.create( eAnalysis1 );
 
         // ///////////////
-        eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
+        DifferentialExpressionAnalysis eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis2.setExperimentAnalyzed( e2 );
         dea2_name = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis2.setName( dea2_name );
         eAnalysis2.setDescription( "An analysis Test 2" );
-        eAnalysis2 = analysisService.create( eAnalysis2 );
+        analysisService.create( eAnalysis2 );
 
         // /////////////
-        eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
+        DifferentialExpressionAnalysis eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis3.setExperimentAnalyzed( e3 );
         this.testAnalysisName = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis3.setName( testAnalysisName );
         eAnalysis3.setDescription( "An analysis Test 3" );
-        eAnalysis3 = analysisService.create( eAnalysis3 );
+        analysisService.create( eAnalysis3 );
 
         // ////
-        eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
+        DifferentialExpressionAnalysis eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis4.setExperimentAnalyzed( e3 );
         testEESetName = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis4.setName( testEESetName );
         eAnalysis4.setDescription( "An analysis Test 4" );
-        eAnalysis4 = analysisService.create( eAnalysis4 );
+        analysisService.create( eAnalysis4 );
 
     }
 
-    /**
-     * 
-     */
     @Test
     public void testFindByInvestigation() {
 
@@ -142,9 +131,6 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         assertEquals( 2, results.size() );
     }
 
-    /**
-     * 
-     */
     @Test
     public void testFindByInvestigations() {
         Collection<ExpressionExperiment> investigations = new ArrayList<>();
@@ -159,8 +145,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         assertEquals( 2, results.get( e3 ).size() );
 
         // also by ID
-        Map<Long, Collection<DifferentialExpressionAnalysis>> ees = analysisService.findByInvestigationIds( EntityUtils
-                .getIds( investigations ) );
+        Map<Long, Collection<DifferentialExpressionAnalysis>> ees = analysisService
+                .findByInvestigationIds( EntityUtils.getIds( investigations ) );
         assertEquals( 2, ees.size() );
 
         assertEquals( 1, ees.get( e1.getId() ).size() );

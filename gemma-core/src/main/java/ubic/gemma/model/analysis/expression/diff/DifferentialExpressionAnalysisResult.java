@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@ import java.util.HashSet;
  * factor. These statistics are based on ANOVA-style analysis, with a collection of ContrastResults storing the
  * associated contrasts.
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class DifferentialExpressionAnalysisResult implements Identifiable, Serializable {
 
     /**
@@ -54,9 +55,12 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     public DifferentialExpressionAnalysisResult() {
     }
 
-    /*
-     * TODO we should probably store information on F statistics and DOF.
-     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * ( hashCode + ( id == null ? 0 : id.hashCode() ) );
+        return hashCode;
+    }
 
     @Override
     public boolean equals( Object object ) {
@@ -67,17 +71,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
             return false;
         }
         final DifferentialExpressionAnalysisResult that = ( DifferentialExpressionAnalysisResult ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * ( hashCode + ( id == null ? 0 : id.hashCode() ) );
-        return hashCode;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
     /**
@@ -114,6 +108,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
         this.correctedPValueBin = correctedPValueBin;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }

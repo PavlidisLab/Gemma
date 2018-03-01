@@ -263,8 +263,6 @@ var LinePlot = (function() {
             return; // don't try ...
          }
 
-         // todo: vary colours
-
          var vid = "lineplotCanvas-" + Ext.id();
          Ext.DomHelper.append( container, {
             id : vid,

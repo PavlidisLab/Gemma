@@ -178,7 +178,7 @@ Gemma.GeneSearchAndPreview = Ext
             // if some genes weren't found
             // prepare a msg for the user
 
-            var msgMany = ""; // FIXME, don't use.
+            var msgMany = "";
             var msgNone = "";
 
             if ( queriesWithNoResults.length > 0 ) {
@@ -236,7 +236,6 @@ Gemma.GeneSearchAndPreview = Ext
 
             this.maskGenePreview();
 
-            // FIXME eventbus fire event instead?
             this.searchForm.taxonChanged( taxonId, taxonName );
 
             var queries = e.geneNames.split( '\n' );
@@ -274,7 +273,7 @@ Gemma.GeneSearchAndPreview = Ext
             this.maskGenePreview();
 
             var queries = urlparams.geneList.split( "," );
-            this.searchForm.taxonChanged( urlparams.taxon, urlparams.taxonName /* FIXME need the species name */);
+            this.searchForm.taxonChanged( urlparams.taxon, urlparams.taxonName);
 
             GenePickerController.searchMultipleGenesGetMap( queries, urlparams.taxon, {
                callback : function( queryToGenes ) {
@@ -395,7 +394,7 @@ Gemma.GeneSearchAndPreview = Ext
                }
 
                combo.disable().hide();
-               this.symbolListButton.hide(); // FIXME let them use it again.
+               this.symbolListButton.hide();
                this.helpBtn.hide();
 
                this.doLayout();
@@ -423,13 +422,12 @@ Gemma.GeneSearchAndPreview = Ext
             this.preview = new Gemma.GeneSetPreview();
 
             this.preview.on( 'geneListModified', function( newSet ) {
-               // FIXME why do we care about the name?
                if ( typeof newSet.geneIds !== 'undefined' && typeof newSet.name !== 'undefined' ) {
                   this.setSelectedGeneSetValueObject( newSet );
                }
 
                // currently the event 'geneSelected' is just used for GeneSetOverlayPicker
-               this.fireEvent( 'geneSelected' ); // FIXME why is this outside the condition?
+               this.fireEvent( 'geneSelected' );
 
             }, this );
 

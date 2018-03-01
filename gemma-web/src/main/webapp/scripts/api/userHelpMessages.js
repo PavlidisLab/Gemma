@@ -195,8 +195,7 @@ Gemma.HelpText.CommonWarnings = {
          + '<a href="http://www.google.com/chrome/" target="_blank">Chrome</a> or'
          + '<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>.',
 
-      // TODO this one should be looked into and maybe updated
-      ie7 : 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 8 or newer.'
+      ie7 : 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 9 or newer.'
    },
    Timeout : {
       title : 'Gemma is Busy',
@@ -539,7 +538,7 @@ Gemma.HelpText.WidgetDefaults = {
          sortAndFilterText : 'Change the layout of your data to clarify patterns.',
          downloadTitle : 'Download your Results',
          downloadText : 'Save an image of your chart or save a text version of the results.',
-         instructions : 'This tutorial will point out some features of the differential expression search interface.' // TODO
+         instructions : 'This tutorial will point out some features of the differential expression search interface.'
       // //
       // Click
       // the

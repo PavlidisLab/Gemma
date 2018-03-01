@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,8 +18,10 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.persistence.service.AbstractService;
 
 /**
  * @author keshav
@@ -27,30 +29,10 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
  * @see ContactService
  */
 @Service
-public class ContactServiceImpl extends ContactServiceBase {
+public class ContactServiceImpl extends AbstractService<Contact> implements ContactService {
 
-    protected Contact handleCreate( Contact contact ) {
-        return this.getContactDao().create( contact );
+    @Autowired
+    public ContactServiceImpl( ContactDao mainDao ) {
+        super( mainDao );
     }
-
-    @Override
-    protected Contact handleFind( Contact contact ) {
-        return this.getContactDao().find( contact );
-    }
-
-    @Override
-    protected Contact handleFindOrCreate( Contact contact ) {
-        return this.getContactDao().findOrCreate( contact );
-    }
-
-    @Override
-    protected void handleRemove( Contact contact ) {
-        this.getContactDao().remove( contact );
-    }
-
-    @Override
-    protected void handleUpdate( Contact contact ) {
-        this.getContactDao().update( contact );
-    }
-
 }

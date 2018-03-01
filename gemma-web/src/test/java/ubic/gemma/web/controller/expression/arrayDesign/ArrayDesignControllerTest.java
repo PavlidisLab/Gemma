@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,8 +22,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
@@ -43,7 +43,7 @@ public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testShowAllArrayDesigns() throws Exception {
-        request = newPost( Settings.getRootContext() + "/arrayDesign/showAllArrayDesigns.html" );
+        request = this.newPost( Settings.getRootContext() + "/arrayDesign/showAllArrayDesigns.html" );
 
         ModelAndView mav = arrayDesignController.showAllArrayDesigns( request, ( HttpServletResponse ) null );
         Collection<Object> c = mav.getModel().values();

@@ -21,11 +21,11 @@ package ubic.gemma.model.common.auditAndSecurity;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.util.Calendar;
 import java.util.Collection;

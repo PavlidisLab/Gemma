@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,11 +24,10 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @author pavlidis
- *
  */
 public class BlatResultTest extends TestCase {
 
-    BlatResult brtest = null;
+    private BlatResult brtest = null;
 
     public void testScore() {
         brtest.setRepMatches( 0 );
@@ -40,7 +39,7 @@ public class BlatResultTest extends TestCase {
         brtest.getQuerySequence().setLength( 50L );
         double actualReturn = brtest.score();
         double expectedReturn = 47.0 / 50.0;
-        assertEquals( expectedReturn, actualReturn, 0.001 );
+        TestCase.assertEquals( expectedReturn, actualReturn, 0.001 );
     }
 
     public void testScorewr() {
@@ -53,25 +52,14 @@ public class BlatResultTest extends TestCase {
         brtest.getQuerySequence().setLength( 50L );
         double actualReturn = brtest.score();
         double expectedReturn = 47.0 / 50.0;
-        assertEquals( expectedReturn, actualReturn, 0.001 );
+        TestCase.assertEquals( expectedReturn, actualReturn, 0.001 );
     }
 
-    /*
-     * @see TestCase#setUp()
-     */
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         brtest = BlatResult.Factory.newInstance();
 
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
 }

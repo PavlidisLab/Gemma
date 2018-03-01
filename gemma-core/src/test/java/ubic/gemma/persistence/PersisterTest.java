@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,23 +18,19 @@
  */
 package ubic.gemma.persistence;
 
-import static org.junit.Assert.assertNotNull;
-
 import org.junit.Test;
 import org.springframework.transaction.annotation.Transactional;
-
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author pavlidis
- *
  */
 public class PersisterTest extends BaseSpringContextTest {
 
-    /**
-     *  
-     */
+
     @Test
     @Transactional
     public void testPersistNewArrayDesign() {

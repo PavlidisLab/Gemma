@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,13 +40,18 @@ public class FastaParser extends RecordParser<BioSequence> {
 
     private static final String NIA_HEADER_REGEX = ">?H\\d{4}\\w\\d{2}-\\d.*";
 
-    Pattern pattern;
+    private final Pattern pattern;
 
-    private Collection<BioSequence> results = new ArrayList<BioSequence>();
+    private final Collection<BioSequence> results = new ArrayList<>();
 
     public FastaParser() {
         String patternStr = "^(.*)$";
         pattern = Pattern.compile( patternStr, Pattern.MULTILINE );
+    }
+
+    @Override
+    public Collection<BioSequence> getResults() {
+        return results;
     }
 
     @Override
@@ -57,7 +62,7 @@ public class FastaParser extends RecordParser<BioSequence> {
 
         Matcher matcher = pattern.matcher( record );
 
-        Collection<BioSequence> bioSequences = parseHeader( matcher );
+        Collection<BioSequence> bioSequences = this.parseHeader( matcher );
 
         if ( bioSequences.size() == 0 ) {
             return null;
@@ -77,7 +82,7 @@ public class FastaParser extends RecordParser<BioSequence> {
         }
 
         for ( BioSequence bioSequence : bioSequences ) {
-            bioSequence.setLength( new Long( sequence.length() ) );
+            bioSequence.setLength( ( long ) sequence.length() );
             bioSequence.setIsApproximateLength( false );
             bioSequence.setSequence( sequence.toString() );
         }
@@ -85,16 +90,24 @@ public class FastaParser extends RecordParser<BioSequence> {
 
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void addResult( Object obj ) {
+        results.addAll( ( Collection<BioSequence> ) obj );
+
+    }
+
     /**
-     * Recognizes Defline format as described at {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
-     * Our amendments: FIXME: recognize multi-line headers separated by ^A.(used for redundant sequences)
+     * Recognizes Defline format as described at <a href='http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers'>wikipedia</a>.
+     * Our amendments:
+     * FIXME: recognize multi-line headers separated by ^A.(used for redundant sequences)
      * FIXME: parsing of more obscure (to us) headers might not be complete.
      *
      * @param matcher matcher
      * @return BAs
      */
     private Collection<BioSequence> parseHeader( Matcher matcher ) {
-        Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
+        Collection<BioSequence> bioSequences = new HashSet<>();
         boolean gotSomething = matcher.find();
 
         if ( !gotSomething ) {
@@ -105,7 +118,7 @@ public class FastaParser extends RecordParser<BioSequence> {
 
         String[] recordHeaders = StringUtils.split( header, '>' );
 
-        boolean keep = false;
+        boolean keep;
         for ( String rheader : recordHeaders ) {
 
             BioSequence bioSequence = BioSequence.Factory.newInstance();
@@ -119,14 +132,14 @@ public class FastaParser extends RecordParser<BioSequence> {
             int firstColon = rheader.indexOf( ':' );
 
             if ( firstPipe > 0 && ( firstColon < 0 || firstPipe < firstColon ) ) {
-                keep = parseDeflineHeader( bioSequence, rheader );
+                keep = this.parseDeflineHeader( bioSequence, rheader );
             } else if ( firstColon > 0 ) {
-                keep = parseAffyHeader( bioSequence, rheader );
-            } else if ( rheader.matches( NIA_HEADER_REGEX ) ) {
-                keep = parseNIA( bioSequence, rheader );
+                keep = this.parseAffyHeader( bioSequence, rheader );
+            } else if ( rheader.matches( FastaParser.NIA_HEADER_REGEX ) ) {
+                keep = this.parseNIA( bioSequence, rheader );
             } else {
                 // just treat the whole header as the sequence name.
-                keep = parseDeflineHeader( bioSequence, rheader );
+                keep = this.parseDeflineHeader( bioSequence, rheader );
             }
 
             if ( keep )
@@ -146,31 +159,36 @@ public class FastaParser extends RecordParser<BioSequence> {
      *
      * @param bioSequence BA
      * @param header      header
-     * @return boolean
+     * @return boolean always true
      */
+    @SuppressWarnings("SameReturnValue") // Consistency with other similar methods
     private boolean parseAffyHeader( BioSequence bioSequence, String header ) {
         // affymetrix format
         String[] split = StringUtils.split( header, ":;" );
 
         String firstTag = StringUtils.removeStart( split[0], ">" );
-        if ( firstTag.equals( "probe" ) ) {
-            bioSequence.setName( split[1] + ":" + split[2] + ":" + split[3] + ":" + split[4] );
-        } else if ( firstTag.equals( "target" ) ) {
-            // split[1] = array name or probe name
-            // split[2] = probe name
-            if ( split.length > 2 ) {
-                bioSequence.setName( split[2] );
-            } else {
-                bioSequence.setName( split[1] );
-            }
+        switch ( firstTag ) {
+            case "probe":
+                bioSequence.setName( split[1] + ":" + split[2] + ":" + split[3] + ":" + split[4] );
+                break;
+            case "target":
+                // split[1] = array name or probe name
+                // split[2] = probe name
+                if ( split.length > 2 ) {
+                    bioSequence.setName( split[2] );
+                } else {
+                    bioSequence.setName( split[1] );
+                }
 
-        } else if ( firstTag.equals( "exemplar" ) ) {
-            bioSequence.setName( split[1] + ":" + split[2] );
-            bioSequence.setDescription( split[3] );
-        } else {
-            // This is the case if the xxxx:xxxx format is used on non-affy
-            bioSequence.setName( StringUtils.removeStart( header, ">" ) );
-            return true;
+                break;
+            case "exemplar":
+                bioSequence.setName( split[1] + ":" + split[2] );
+                bioSequence.setDescription( split[3] );
+                break;
+            default:
+                // This is the case if the xxxx:xxxx format is used on non-affy
+                bioSequence.setName( StringUtils.removeStart( header, ">" ) );
+                return true;
         }
 
         for ( String string : split ) {
@@ -184,8 +202,8 @@ public class FastaParser extends RecordParser<BioSequence> {
                 DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
                 bioSequence.setName( genbank.getAccession() );
                 bioSequence.setSequenceDatabaseEntry( genbank );
-                if ( log.isDebugEnabled() )
-                    log.debug( "Got genbank accession " + genbankAcc + " for " + bioSequence.getName() );
+                if ( RecordParser.log.isDebugEnabled() )
+                    RecordParser.log.debug( "Got genbank accession " + genbankAcc + " for " + bioSequence.getName() );
                 break;
             }
 
@@ -227,8 +245,6 @@ public class FastaParser extends RecordParser<BioSequence> {
         // assert firstTag.length() > 1;
         firstTag = StringUtils.removeStart( firstTag, ">" );
 
-        // FIXME check for array lengths, throw illegal argument exceptions.
-
         if ( firstTag.equals( "gi" ) ) {
             bioSequence.setDescription( split[4] );
             String genbankAcc = split[3]; // with version number, possibly
@@ -252,8 +268,8 @@ public class FastaParser extends RecordParser<BioSequence> {
             bioSequence.setName( split[2] );
         } else if ( firstTag.equals( "entry:chain" ) ) {
             bioSequence.setName( split[1] );
-        } else if ( firstTag.matches( NIA_HEADER_REGEX ) ) {
-            return parseNIA( bioSequence, header );
+        } else if ( firstTag.matches( FastaParser.NIA_HEADER_REGEX ) ) {
+            return this.parseNIA( bioSequence, header );
         } else {
             // generic.
             bioSequence.setName( split[0] );
@@ -275,7 +291,7 @@ public class FastaParser extends RecordParser<BioSequence> {
     private boolean parseNIA( BioSequence bioSequence, String header ) {
         String firstTag = StringUtils.removeStart( header, ">" );
         if ( firstTag.contains( "alternate" ) ) {
-            log.info( header + ": alternate sequence, skipping" );
+            RecordParser.log.info( header + ": alternate sequence, skipping" );
             return false;
         }
         String[] subFields = firstTag.split( "-" );
@@ -283,17 +299,5 @@ public class FastaParser extends RecordParser<BioSequence> {
         bioSequence.setDescription( "NIA sequence" );
         bioSequence.setType( SequenceType.EST );
         return true;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void addResult( Object obj ) {
-        results.addAll( ( Collection<BioSequence> ) obj );
-
-    }
-
-    @Override
-    public Collection<BioSequence> getResults() {
-        return results;
     }
 }

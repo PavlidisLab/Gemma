@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ import java.util.List;
  * @see QuantitationTypeService
  */
 @Service
-public class QuantitationTypeServiceImpl extends VoEnabledService<QuantitationType, QuantitationTypeValueObject>
+public class QuantitationTypeServiceImpl extends AbstractVoEnabledService<QuantitationType, QuantitationTypeValueObject>
         implements QuantitationTypeService {
 
     private final QuantitationTypeDao quantitationTypeDao;

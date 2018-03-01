@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,16 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
+import ubic.gemma.core.loader.util.parser.LineParser;
+import ubic.gemma.core.loader.util.parser.Parser;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.PolymerType;
+import ubic.gemma.model.genome.biosequence.SequenceType;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,15 +36,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
-
-import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.PolymerType;
-import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
  * Reads Affymetrix Probe files, including exon arrays.
@@ -45,64 +46,77 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * <p>
  * For 3' arrays, here is an example:
  * </p>
- * 
  * <pre>
  * 1494_f_at 1 325 359 1118 TCCCCATGAGTTTGGCCCGCAGAGT Antisense
  * </pre>
- * <p>
  * For exon arrays, we create the equivalent files from the GFF files provided by Affymetrix. The files are created
  * off-line using a PERL script.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Collection<Reporter>> {
 
+    private final Map<CompositeSequence, Collection<Reporter>> reporterMap = new HashMap<>();
     private int sequenceField = 4;
 
-    private Map<CompositeSequence, Collection<Reporter>> reporterMap = new HashMap<CompositeSequence, Collection<Reporter>>();
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.parser.BasicLineMapParser#parse(java.io.InputStream) I had to override this because
-     * we need to build up a collection for each key, since compositesequences don't have reporters any more.
+    /**
+     * Set the index (starting from zero) of the field where the sequence is found. This varies in the
+     * Affymetrix-provided files.
+     *
+     * @param sequenceField sequence field
      */
+    public void setSequenceField( int sequenceField ) {
+        this.sequenceField = sequenceField;
+    }
+
+    @Override
+    public boolean containsKey( CompositeSequence key ) {
+        return reporterMap.containsKey( key );
+    }
+
+    @Override
+    public Collection<Reporter> get( CompositeSequence key ) {
+        return reporterMap.get( key );
+    }
+
+    @Override
+    public Collection<CompositeSequence> getKeySet() {
+        return reporterMap.keySet();
+    }
+
+    @Override
+    public Collection<Collection<Reporter>> getResults() {
+        return reporterMap.values(); // make sure we don't get a HashMap$values
+    }
+
     @Override
     public void parse( InputStream is ) throws IOException {
-        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+        if ( is == null )
+            throw new IllegalArgumentException( "InputStream was null" );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
             StopWatch timer = new StopWatch();
             timer.start();
-            int nullLines = 0;
-            String line = null;
+            String line;
             int linesParsed = 0;
             while ( ( line = br.readLine() ) != null ) {
 
-                if ( line.startsWith( COMMENT_MARK ) ) {
+                if ( line.startsWith( BasicLineMapParser.COMMENT_MARK ) ) {
                     continue;
                 }
-                parseOneLine( line );
+                this.parseOneLine( line );
 
-                if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
+                if ( ++linesParsed % Parser.PARSE_ALERT_FREQUENCY == 0
+                        && timer.getTime() > LineParser.PARSE_ALERT_TIME_FREQUENCY_MS ) {
                     String message = "Parsed " + linesParsed + " lines...  ";
                     log.info( message );
                     timer.reset();
                     timer.start();
                 }
-
             }
-            log.info( "Parsed " + linesParsed + " lines. "
-                    + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
-
+            log.info( "Parsed " + linesParsed + " lines. " );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
-     */
     @Override
     public Collection<Reporter> parseOneLine( String line ) {
 
@@ -120,8 +134,9 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
         }
 
         if ( sArray.length < sequenceField + 1 ) {
-            throw new IllegalArgumentException( "Too few fields in line, expected at least " + ( sequenceField + 1 )
-                    + " but got " + sArray.length );
+            throw new IllegalArgumentException(
+                    "Too few fields in line, expected at least " + ( sequenceField + 1 ) + " but got "
+                            + sArray.length );
         }
 
         String sequence = sArray[sequenceField];
@@ -197,49 +212,14 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
-     */
     @Override
     protected CompositeSequence getKey( Collection<Reporter> newItem ) {
         return newItem.iterator().next().getCompositeSequence();
     }
 
-    /**
-     * Set the index (starting from zero) of the field where the sequence is found. This varies in the
-     * Affymetrix-provided files.
-     * 
-     * @param sequenceField
-     */
-    public void setSequenceField( int sequenceField ) {
-        this.sequenceField = sequenceField;
-    }
-
-    @Override
-    public Collection<Reporter> get( CompositeSequence key ) {
-        return reporterMap.get( key );
-    }
-
-    @Override
-    public Collection<Collection<Reporter>> getResults() {
-        return reporterMap.values(); // make sure we don't get a HashMap$values
-    }
-
     @Override
     protected void put( CompositeSequence key, Collection<Reporter> value ) {
         reporterMap.put( key, value );
-    }
-
-    @Override
-    public boolean containsKey( CompositeSequence key ) {
-        return reporterMap.containsKey( key );
-    }
-
-    @Override
-    public Collection<CompositeSequence> getKeySet() {
-        return reporterMap.keySet();
     }
 
 }

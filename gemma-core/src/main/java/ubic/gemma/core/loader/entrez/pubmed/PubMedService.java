@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,20 +41,10 @@ import java.util.Collection;
 
 public class PubMedService {
 
-    private static Log log = LogFactory.getLog( PubMedService.class.getName() );
+    private static final Log log = LogFactory.getLog( PubMedService.class.getName() );
 
     @Autowired
     private Persister persisterHelper;
-
-    /**
-     * @param f
-     */
-    public void loadFromFile( InputStream f ) {
-        PubMedXMLParser p = new PubMedXMLParser();
-        Collection<BibliographicReference> refs = p.parse( f );
-        log.info( "Persisting " + refs.size() );
-        persisterHelper.persist( refs );
-    }
 
     /**
      * @param directory of XML files
@@ -62,17 +52,25 @@ public class PubMedService {
     public void loadFromDirectory( File directory ) {
 
         File[] files = directory.listFiles();
+        assert files != null;
         for ( File file : files ) {
             if ( !file.getAbsolutePath().contains( ".xml" ) )
                 continue;
 
-            log.info( "Loading: " + file );
-            try (InputStream s = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
+            PubMedService.log.info( "Loading: " + file );
+            try (InputStream s = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
                 this.loadFromFile( s );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
         }
+    }
+
+    private void loadFromFile( InputStream f ) {
+        PubMedXMLParser p = new PubMedXMLParser();
+        Collection<BibliographicReference> refs = p.parse( f );
+        PubMedService.log.info( "Persisting " + refs.size() );
+        persisterHelper.persist( refs );
     }
 
 }

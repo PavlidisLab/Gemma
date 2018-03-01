@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007-2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,30 +18,28 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author paul
- *
  */
 public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 
@@ -57,7 +55,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
          * Five factors. Factor4 is a measurmeent.
          */
 
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> factors = new HashSet<>();
         for ( int i = 0; i < 5; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
             ef.setType( FactorType.CATEGORICAL );
@@ -121,7 +119,8 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
                     m++;
                 }
 
-                if ( toUse != null ) bm.getFactorValues().add( toUse );
+                if ( toUse != null )
+                    bm.getFactorValues().add( toUse );
                 // log.info( ba + " -> " + bm + " -> " + ef + " -> " + toUse );
             }
         }

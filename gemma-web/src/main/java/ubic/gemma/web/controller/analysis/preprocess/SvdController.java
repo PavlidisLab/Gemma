@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,18 +21,16 @@ package ubic.gemma.web.controller.analysis.preprocess;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.analysis.expression.SvdTaskCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * Run SVD on a data set.
- * 
- * @author paul
  *
+ * @author paul
  */
 @Controller
 public class SvdController {
@@ -47,10 +45,12 @@ public class SvdController {
     /**
      * AJAX entry point.
      */
-    public String run( Long id ) throws Exception {
-        if ( id == null ) throw new IllegalArgumentException( "ID cannot be null" );
+    public String run( Long id ) {
+        if ( id == null )
+            throw new IllegalArgumentException( "ID cannot be null" );
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+        if ( ee == null )
+            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
 
         ee = expressionExperimentService.thawLite( ee );
         experimentReportService.evictFromCache( id );

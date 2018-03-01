@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,34 +18,27 @@
  */
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Remove rows that have no BioSequence associated with the row.
- * 
- * @author paul
  *
+ * @author paul
  */
 public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatrix> {
 
-    private static Log log = LogFactory.getLog( RowsWithSequencesFilter.class.getName() );
+    private static final Log log = LogFactory.getLog( RowsWithSequencesFilter.class.getName() );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.filter.Filter#filter(ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix)
-     */
     @Override
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) {
 
-        List<CompositeSequence> kept = new ArrayList<CompositeSequence>();
+        List<CompositeSequence> kept = new ArrayList<>();
         int numRows = dataMatrix.rows();
         for ( int i = 0; i < numRows; i++ ) {
             CompositeSequence cs = dataMatrix.getDesignElementForRow( i );
@@ -54,7 +47,8 @@ public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatri
             }
         }
 
-        log.info( "Retaining " + kept.size() + "/" + numRows + " rows that have associated BioSequences" );
+        RowsWithSequencesFilter.log
+                .info( "Retaining " + kept.size() + "/" + numRows + " rows that have associated BioSequences" );
 
         return new ExpressionDataDoubleMatrix( dataMatrix, kept );
     }

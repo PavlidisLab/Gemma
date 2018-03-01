@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@ import java.util.Set;
  *
  * @author Paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class CoexpressionValueObject implements Comparable<CoexpressionValueObject> {
 
     private final Long coexGeneId;
@@ -62,7 +63,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     private int queryStringency = 1;
 
-    // initialize ...
+    @SuppressWarnings("UnusedAssignment") // Needed for frontend
     private Integer support = 1;
 
     private Long supportDetailsId;
@@ -98,10 +99,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         } else {
             throw new IllegalArgumentException( "Support was not available" );
         }
-
         // "testedin" is filled in later.
     }
 
+    @SuppressWarnings("WeakerAccess") // Consistency
     protected CoexpressionValueObject( Long queryGeneId, Long coexGeneId, Boolean positiveCorrelation, Integer support,
             Long supportDetailsId, Set<Long> supportingDatasets ) {
         super();
@@ -113,6 +114,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.supportingDatasets = supportingDatasets;
     }
 
+    @SuppressWarnings("WeakerAccess") // Consistency
     protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
             Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
             Collection<Long> supportingDatasets, Collection<Long> testedInDatasets ) {
@@ -145,28 +147,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     @Override
     public int compareTo( CoexpressionValueObject o ) {
-        return -new Integer( this.support ).compareTo( o.getNumDatasetsSupporting() );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        CoexpressionValueObject other = ( CoexpressionValueObject ) obj;
-        if ( positiveCorrelation != other.positiveCorrelation )
-            return false;
-
-        // we don't differentiate between the two genes (the "order")
-        if ( coexGeneId.equals( other.coexGeneId ) && queryGeneId.equals( other.queryGeneId ) )
-            return true;
-        if ( queryGeneId.equals( other.coexGeneId ) && coexGeneId.equals( other.queryGeneId ) )
-            return true;
-
-        return false;
+        return -this.support.compareTo( o.getNumDatasetsSupporting() );
     }
 
     public Long getCoexGeneId() {
@@ -276,6 +257,33 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return result;
     }
 
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        CoexpressionValueObject other = ( CoexpressionValueObject ) obj;
+        if ( positiveCorrelation != other.positiveCorrelation )
+            return false;
+
+        // we don't differentiate between the two genes (the "order")
+        return coexGeneId.equals( other.coexGeneId ) && queryGeneId.equals( other.queryGeneId )
+                || queryGeneId.equals( other.coexGeneId ) && coexGeneId.equals( other.queryGeneId );
+
+    }
+
+    @Override
+    public String toString() {
+        String[] fields = new String[] { queryGeneId.toString(), queryGeneSymbol, coexGeneId.toString(), coexGeneSymbol,
+                support.toString(),
+                ( this.testedInDatasets != null ? Integer.toString( this.testedInDatasets.size() ) : "?" ),
+                positiveCorrelation ? "+" : "-" };
+        return StringUtils.join( fields, "\t" );
+    }
+
     public boolean isEeConstraint() {
         return eeConstraint;
     }
@@ -298,15 +306,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     public boolean isPositiveCorrelation() {
         return positiveCorrelation;
-    }
-
-    @Override
-    public String toString() {
-        String[] fields = new String[] { queryGeneId.toString(), queryGeneSymbol, coexGeneId.toString(), coexGeneSymbol,
-                support.toString(),
-                ( this.testedInDatasets != null ? new Integer( this.testedInDatasets.size() ).toString() : "?" ),
-                positiveCorrelation ? "+" : "-" };
-        return StringUtils.join( fields, "\t" );
     }
 
     /**

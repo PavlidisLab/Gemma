@@ -81,11 +81,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Collection<AuditEventValueObject> sampleRemovedFlags;
     private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
 
-
-    /*
-     * TODO: add Geeq. Either just the scores, or a Geeq value object?
-     */
-
     /**
      * Required when using the class as a spring bean.
      */
@@ -376,10 +371,12 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         this.arrayDesigns = arrayDesigns;
     }
 
+    @Override
     public String getDescription() {
         return this.description;
     }
 
+    @Override
     public void setDescription( String description ) {
         this.description = description;
     }
@@ -482,6 +479,56 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
+     * @return html-escaped string with trouble info.
+     * @see #getTroubleDetails(boolean)
+     */
+    @Override
+    public String getTroubleDetails() {
+        return this.getTroubleDetails( true );
+    }
+
+    /**
+     * Checks trouble of this EE and all its Array Designs and returns compilation of trouble info.
+     * MAKE SURE to fill the Array Design variable first!
+     *
+     * @param htmlEscape whether to escape the returned string for html
+     * @return string with trouble info.
+     */
+    @Override
+    public String getTroubleDetails( boolean htmlEscape ) {
+        String eeTroubleDetails = null;
+        StringBuilder adTroubleDetails = null;
+        String finalTroubleDetails = "";
+        boolean adTroubled = false;
+
+        if ( super.getTroubled() )
+            eeTroubleDetails = super.getTroubleDetails( htmlEscape );
+
+        if ( this.arrayDesigns != null ) { // Just because dwr accesses this even when arrayDesigns is not set.
+            for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
+                if ( ad.getTroubled() ) {
+                    adTroubled = true;
+                    if ( adTroubleDetails == null ) {
+                        adTroubleDetails = new StringBuilder(
+                                ExpressionExperimentDetailsValueObject.TROUBLE_DETAIL_PLATF );
+                    } else {
+                        adTroubleDetails.append( ExpressionExperimentDetailsValueObject.TROUBLE_DETAIL_SEPARATOR );
+                    }
+                    adTroubleDetails.append( ad.getTroubleDetails( false ) );
+                }
+            }
+        }
+
+        if ( super.getTroubled() ) {
+            finalTroubleDetails += eeTroubleDetails;
+        } else if ( adTroubled ) {
+            finalTroubleDetails += adTroubleDetails;
+        }
+
+        return htmlEscape ? StringEscapeUtils.escapeHtml4( finalTroubleDetails ) : finalTroubleDetails;
+    }
+
+    /**
      * @return true if this EE is troubled, disregards any platform trouble that might be present.
      */
     @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
@@ -503,54 +550,5 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
             }
         }
         return false;
-    }
-
-    /**
-     * Checks trouble of this EE and all its Array Designs and returns compilation of trouble info.
-     * MAKE SURE to fill the Array Design variable first!
-     *
-     * @param htmlEscape whether to escape the returned string for html
-     * @return string with trouble info.
-     */
-    @Override
-    public String getTroubleDetails( boolean htmlEscape ) {
-        String eeTroubleDetails = null;
-        String adTroubleDetails = null;
-        String finalTroubleDetails = "";
-        boolean adTroubled = false;
-
-        if ( super.getTroubled() )
-            eeTroubleDetails = super.getTroubleDetails( htmlEscape );
-
-        if ( this.arrayDesigns != null ) { // Just because dwr accesses this even when arrayDesigns is not set.
-            for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
-                if ( ad.getTroubled() ) {
-                    adTroubled = true;
-                    if ( adTroubleDetails == null ) {
-                        adTroubleDetails = TROUBLE_DETAIL_PLATF;
-                    } else {
-                        adTroubleDetails += TROUBLE_DETAIL_SEPARATOR;
-                    }
-                    adTroubleDetails += ad.getTroubleDetails( false );
-                }
-            }
-        }
-
-        if ( super.getTroubled() ) {
-            finalTroubleDetails += eeTroubleDetails;
-        } else if ( adTroubled ) {
-            finalTroubleDetails += adTroubleDetails;
-        }
-
-        return htmlEscape ? StringEscapeUtils.escapeHtml4( finalTroubleDetails ) : finalTroubleDetails;
-    }
-
-    /**
-     * @return html-escaped string with trouble info.
-     * @see #getTroubleDetails(boolean)
-     */
-    @Override
-    public String getTroubleDetails() {
-        return this.getTroubleDetails( true );
     }
 }

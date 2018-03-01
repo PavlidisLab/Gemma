@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,14 +18,16 @@
  */
 package ubic.gemma.persistence.service.association.phenotype;
 
-import java.util.Collection;
-
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+
 public interface GenericExperimentDao extends BaseDao<GenericExperiment> {
 
-    /** Find all Investigations for a specific pubmed */
-    public Collection<GenericExperiment> findByPubmedID( String pubmed );
+    /**
+     * Find all Investigations for a specific pubmed
+     */
+    Collection<GenericExperiment> findByPubmedID( String pubmed );
 
 }

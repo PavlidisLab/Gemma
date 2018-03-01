@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.genome;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -28,22 +27,55 @@ import java.io.Serializable;
 /**
  * Immutable representation of a chromosome
  */
-public abstract class Chromosome implements Identifiable, Serializable {
+public class Chromosome implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -8353766718193697363L;
-    final private String name = null;
-    final private Long id = null;
-    final private ExternalDatabase assemblyDatabase = null;
-    final private BioSequence sequence = null;
-    final private Taxon taxon = null;
+    private static final long serialVersionUID = 7394734846565885136L;
+    final private String name;
+    final private ExternalDatabase assemblyDatabase;
+    final private BioSequence sequence;
+    final private Taxon taxon;
+    @SuppressWarnings("unused")// Hibernate sets it with reflection;
+    private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public Chromosome() {
+        this.name = null;
+        this.taxon = null;
+        this.assemblyDatabase = null;
+        this.sequence = null;
+
+    }
+
+    public Chromosome( String name, Taxon taxon ) {
+        this.name = name;
+        this.taxon = taxon;
+        this.assemblyDatabase = null;
+        this.sequence = null;
+    }
+
+    public Chromosome( String name, ExternalDatabase assemblyDatabase, BioSequence sequence, Taxon taxon ) {
+        this.name = name;
+        this.assemblyDatabase = assemblyDatabase;
+        this.sequence = sequence;
+        this.taxon = taxon;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+
+        assert this.getId() != null || this.getName() != null;
+
+        hashCode = 29 * hashCode + ( this.getId() == null ?
+                this.getName().hashCode() + ( this.getTaxon() != null ? this.getTaxon().hashCode() : 0 ) :
+                this.getId().hashCode() );
+
+        return hashCode;
     }
 
     @Override
@@ -62,19 +94,6 @@ public abstract class Chromosome implements Identifiable, Serializable {
     }
 
     @Override
-    public int hashCode() {
-        int hashCode = 0;
-
-        assert this.getId() != null || this.getName() != null;
-
-        hashCode = 29 * hashCode + ( this.getId() == null ?
-                this.getName().hashCode() + ( this.getTaxon() != null ? this.getTaxon().hashCode() : 0 ) :
-                this.getId().hashCode() );
-
-        return hashCode;
-    }
-
-    @Override
     public String toString() {
         return this.getTaxon().getScientificName() + " Chromosome " + this.getName();
     }
@@ -86,13 +105,13 @@ public abstract class Chromosome implements Identifiable, Serializable {
         return this.assemblyDatabase;
     }
 
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
     }
 
     /**
@@ -105,44 +124,6 @@ public abstract class Chromosome implements Identifiable, Serializable {
 
     public Taxon getTaxon() {
         return this.taxon;
-    }
-
-    public static final class Factory {
-
-        public static Chromosome newInstance() {
-            return new ChromosomeImpl();
-        }
-
-        public static Chromosome newInstance( String name, ExternalDatabase assemblyDatabase, BioSequence sequence,
-                ubic.gemma.model.genome.Taxon taxon ) {
-            final Chromosome entity = new ChromosomeImpl();
-            try {
-                if ( name != null )
-                    FieldUtils.writeField( entity, "name", name, true );
-                if ( assemblyDatabase != null )
-                    FieldUtils.writeField( entity, "assemblyDatabase", assemblyDatabase, true );
-                if ( sequence != null )
-                    FieldUtils.writeField( entity, "sequence", sequence, true );
-                if ( taxon != null )
-                    FieldUtils.writeField( entity, "taxon", taxon, true );
-            } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
-            }
-            return entity;
-        }
-
-        public static Chromosome newInstance( String name, Taxon taxon ) {
-            final Chromosome entity = new ChromosomeImpl();
-            try {
-                if ( name != null )
-                    FieldUtils.writeField( entity, "name", name, true );
-                if ( taxon != null )
-                    FieldUtils.writeField( entity, "taxon", taxon, true );
-            } catch ( IllegalAccessException e ) {
-                e.printStackTrace();
-            }
-            return entity;
-        }
     }
 
 }

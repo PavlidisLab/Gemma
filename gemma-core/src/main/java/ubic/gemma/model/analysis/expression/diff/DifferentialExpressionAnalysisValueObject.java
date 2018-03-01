@@ -1,19 +1,20 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
@@ -28,7 +29,9 @@ import java.util.Map;
  *
  * @author paul
  */
-public class DifferentialExpressionAnalysisValueObject implements Serializable {
+@SuppressWarnings("unused") // Used in frontend
+public class DifferentialExpressionAnalysisValueObject extends IdentifiableValueObject<DifferentialExpressionAnalysis>
+        implements Serializable {
 
     public static final double DEFAULT_THRESHOLD = 0.05; // should be one of the values stored in the HitListSizes
     private static final long serialVersionUID = 622877438067070041L;
@@ -37,13 +40,13 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
     private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
     private Collection<Long> arrayDesignsUsed = null;
     private Long bioAssaySetId;
-    private Long id;
     private Long sourceExperiment;
     private ExperimentalFactorValueObject subsetFactor = null;
     private FactorValueValueObject subsetFactorValue = null;
 
     /**
      * Does not populate the resultSets.
+     *
      * @param analysis the analysis to read the values from
      */
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
@@ -55,23 +58,6 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
                     analysis.getSubsetFactorValue().getExperimentalFactor() );
             // fill in the factorValuesUsed separately, needs access to details of the subset.
         }
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        DifferentialExpressionAnalysisValueObject other = ( DifferentialExpressionAnalysisValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        return true;
     }
 
     public Collection<Long> getArrayDesignsUsed() {
@@ -101,14 +87,6 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     public void setFactorValuesUsed( Map<Long, Collection<FactorValueValueObject>> factorValuesUsed ) {
         this.factorValuesUsed = factorValuesUsed;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public Collection<DiffExResultSetSummaryValueObject> getResultSets() {
@@ -157,13 +135,28 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         return result;
     }
 
-    public boolean isSubset() {
-        return this.subsetFactor != null;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        DifferentialExpressionAnalysisValueObject other = ( DifferentialExpressionAnalysisValueObject ) obj;
+        if ( id == null ) {
+            return other.id == null;
+        } else
+            return id.equals( other.id );
     }
 
     @Override
     public String toString() {
         return "DiffExAnalysisVO [id=" + id + ", bioAssaySetId=" + bioAssaySetId + "]";
+    }
+
+    public boolean isSubset() {
+        return this.subsetFactor != null;
     }
 
 }

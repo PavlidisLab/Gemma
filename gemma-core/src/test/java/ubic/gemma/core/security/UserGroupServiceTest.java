@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,20 +18,12 @@
  */
 package ubic.gemma.core.security;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.authentication.UserService;
 import gemma.gsec.model.UserGroup;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,47 +31,46 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests the Group facilities of the UserManager..
- * 
- * @author keshav, paul
  *
+ * @author keshav, paul
  */
 public class UserGroupServiceTest extends BaseSpringContextTest {
 
+    private final String userName1 = "jonesey";
+    private final String userName2 = "mark";
     @Autowired
     private UserManager userManager = null;
-
     @Autowired
     private UserService userService = null;
-
     @Autowired
     private SecurityService securityService = null;
-
     private String groupName = null;
 
-    private String userName1 = "jonesey";
-
-    private String userName2 = "mark";
-
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         this.groupName = RandomStringUtils.randomAlphabetic( 6 );
 
         /*
          * Create a user with default privileges.
          */
         if ( !userManager.userExists( userName1 ) )
-            this.userManager.createUser( new UserDetailsImpl( "foo", this.userName1, true, null, "foo@gmail.com",
-                    "key", new Date() ) );
+            this.userManager.createUser(
+                    new UserDetailsImpl( "foo", this.userName1, true, null, "foo@gmail.com", "key", new Date() ) );
 
         if ( !userManager.userExists( userName2 ) )
-            this.userManager.createUser( new UserDetailsImpl( "foo2", this.userName2, true, null, "foo2@gmail.com",
-                    "key2", new Date() ) );
+            this.userManager.createUser(
+                    new UserDetailsImpl( "foo2", this.userName2, true, null, "foo2@gmail.com", "key2", new Date() ) );
 
     }
 
@@ -89,7 +80,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     @Test
     public void testCreateUserGroup() {
 
-        List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
+        List<GrantedAuthority> authos = new ArrayList<>();
         authos.add( new SimpleGrantedAuthority( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
 
@@ -107,8 +98,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
     @Test
     public void testDeleteUserGroup() {
 
-        runAsAdmin();
-        List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
+        this.runAsAdmin();
+        List<GrantedAuthority> authos = new ArrayList<>();
         authos.add( new SimpleGrantedAuthority( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
 
@@ -117,13 +108,13 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         this.userManager.addUserToGroup( this.userName2, this.groupName );
 
         // grant read permission to group
-        ExpressionExperiment ee = getTestPersistentExpressionExperiment();
+        ExpressionExperiment ee = this.getTestPersistentExpressionExperiment();
         UserGroup group = this.userService.findGroupByName( this.groupName );
 
         this.securityService.makeOwnedByUser( ee, userName1 );
         this.securityService.makeOwnedByUser( group, userName1 );
 
-        runAsUser( userName1 );
+        this.runAsUser( userName1 );
         this.securityService.makePrivate( ee );
         this.securityService.makeReadableByGroup( ee, this.groupName );
 
@@ -137,7 +128,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testUpdateUserGroup() {
-        List<GrantedAuthority> authos = new ArrayList<GrantedAuthority>();
+        List<GrantedAuthority> authos = new ArrayList<>();
         authos.add( new SimpleGrantedAuthority( "GROUP_TESTING" ) );
         this.userManager.createGroup( this.groupName, authos );
 
@@ -185,8 +176,8 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
          * Can they elevate the group authority?
          */
         try {
-            this.userManager.addGroupAuthority( this.groupName, new SimpleGrantedAuthority(
-                    AuthorityConstants.ADMIN_GROUP_AUTHORITY ) );
+            this.userManager.addGroupAuthority( this.groupName,
+                    new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) );
             fail( "Should have gotten access denied when user tried to make group ADMIN" );
         } catch ( AccessDeniedException ok ) {
             // expected behaviour

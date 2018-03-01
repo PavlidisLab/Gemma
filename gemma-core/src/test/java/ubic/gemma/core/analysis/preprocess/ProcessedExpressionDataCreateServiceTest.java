@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,23 +23,25 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
 
@@ -57,16 +59,13 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     private GeoService geoService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
 
     @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private ExpressionExperimentReportService experimentReportService;
+    private ExpressionExperimentReportService expressionExperimentReportService;
 
     @Autowired
     private BioMaterialService bioMaterialService;
@@ -82,9 +81,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         try {
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE5949short" ) ) );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "GSE5949short" ) ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE5949", false, true, false, false );
+                    .fetchAndLoad( "GSE5949", false, true, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
@@ -92,7 +91,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ee = this.eeService.thawLite( ee );
 
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
@@ -106,11 +105,11 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         assertNotNull( ee.getNumberOfDataVectors() );
-        ExpressionExperimentValueObject s = experimentReportService.generateSummary( ee.getId() );
+        ExpressionExperimentValueObject s = expressionExperimentReportService.generateSummary( ee.getId() );
         assertNotNull( s );
         assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );
 
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         // repeat, make sure deleted old QTs.
         ee = eeService.load( ee.getId() );
         ee = this.eeService.thawLite( ee );
@@ -126,9 +125,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         try {
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse482short" ) ) );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse482short" ) ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE482", false, true, false, false );
+                    .fetchAndLoad( "GSE482", false, true, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
@@ -136,7 +135,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ee = this.eeService.thawLite( ee );
 
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
@@ -238,16 +237,16 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         try {
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse404Short" ) ) );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse404Short" ) ) );
             @SuppressWarnings("unchecked") Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE404", false, true, false, false );
+                    .fetchAndLoad( "GSE404", false, true, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
         ee = this.eeService.thawLite( ee );
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
         factor.setType( FactorType.CATEGORICAL );
@@ -278,7 +277,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         int i = 0;
         for ( BioAssay ba : basInOrder ) {
-            // bioAssayService.thaw( ba );
+            // bioAssayService.thawRawAndProcessed( ba );
             BioMaterial bm = ba.getSampleUsed();
             assert fv1.getId() != null;
             if ( !bm.getFactorValues().isEmpty() ) {
@@ -304,7 +303,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
          * All that was setup. Now do the interesting bit
          */
 
-        processedExpressionDataVectorCreateService.reorderByDesign( ee.getId() );
+        processedExpressionDataVectorService.reorderByDesign( ee.getId() );
 
         /*
          * Now check the vectors...

@@ -53,7 +53,7 @@ Ext.extend( Ext.data.ListRangeReader, Ext.data.JsonReader, {
    readRecords : function( o ) {
       if ( !o ) {
          console.log( "Invalid readRecords" );
-         return; // FIXME happens in Exp. Design editor on edit/add factor.
+         return;
       }
       this.jsonData = o;
       if ( o.metaData ) {

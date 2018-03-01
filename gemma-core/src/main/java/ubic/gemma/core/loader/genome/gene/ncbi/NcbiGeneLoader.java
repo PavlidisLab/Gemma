@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author jsantos, paul
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class NcbiGeneLoader {
     private static final int QUEUE_SIZE = 1000;
     private static final Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
@@ -73,6 +73,7 @@ public class NcbiGeneLoader {
         return loadedGeneCount;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     public boolean isLoaderDone() {
         return loaderDone.get();
     }
@@ -81,7 +82,7 @@ public class NcbiGeneLoader {
      * download the gene_info and gene2accession files, then call load
      */
     public void load( boolean filterTaxa ) {
-        load( "", "", "", "", filterTaxa );
+        this.load( "", "", "", "", filterTaxa );
     }
 
     /**
@@ -98,7 +99,7 @@ public class NcbiGeneLoader {
         if ( filterTaxa ) {
             supportedTaxa = this.taxonService.loadAll();
         }
-        load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, supportedTaxa );
+        this.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, supportedTaxa );
 
     }
 
@@ -113,7 +114,7 @@ public class NcbiGeneLoader {
     }
 
     public void load( Taxon t ) {
-        load( "", "", "", "", t );
+        this.load( "", "", "", "", t );
     }
 
     /**
@@ -141,7 +142,7 @@ public class NcbiGeneLoader {
             for ( Taxon taxon : taxaGenesLoaded ) {
 
                 if ( taxon == null ) {
-                    log.warn( "null taxon" );
+                    NcbiGeneLoader.log.warn( "null taxon" );
                     continue;
                 }
 
@@ -151,12 +152,13 @@ public class NcbiGeneLoader {
                     genesUsableParent = true;
                     taxon.setIsGenesUsable( false );
                     taxonService.update( taxon );
-                    log.debug( "Parent taxon found: " + parentTaxon + ": Not using genes from taxon: " + taxon );
+                    NcbiGeneLoader.log
+                            .debug( "Parent taxon found: " + parentTaxon + ": Not using genes from taxon: " + taxon );
                 }
                 if ( !taxon.getIsGenesUsable() && !genesUsableParent ) {
                     taxon.setIsGenesUsable( true );
                     taxonService.update( taxon );
-                    log.debug( "Updating taxon genes usable to true for taxon " + taxon );
+                    NcbiGeneLoader.log.debug( "Updating taxon genes usable to true for taxon " + taxon );
                 }
             }
         } else {
@@ -164,10 +166,28 @@ public class NcbiGeneLoader {
         }
     }
 
+    /**
+     * Set to true to avoid downloading the files, if copies already exist (not recommended if you want an update!)
+     *
+     * @param skipDownload skip download
+     */
+    public void setSkipDownload( boolean skipDownload ) {
+        this.doDownload = !skipDownload;
+
+    }
+
+    /**
+     * Indicate
+     *
+     * @param startNcbiid start ncbi id
+     */
+    public void setStartingNcbiId( Integer startNcbiid ) {
+        this.startingNcbiId = startNcbiid;
+    }
+
     void doLoad( final BlockingQueue<Gene> geneQueue ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        int skipped = 0;
         while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
             Gene gene = null;
             try {
@@ -177,30 +197,22 @@ public class NcbiGeneLoader {
                     continue;
                 }
 
-                if ( gene.getProducts().isEmpty() ) {
-                    // // log.warn( gene + " has no products, skipping" ); // common!!!
-                    // skipped++;
-                }
-
                 persisterHelper.persistOrUpdate( gene );
 
                 if ( ++loadedGeneCount % 1000 == 0 || timer.getTime() > 30 * 1000 ) {
-                    log.info( "Processed " + loadedGeneCount + " genes. Queue has " + geneQueue.size()
+                    NcbiGeneLoader.log.info( "Processed " + loadedGeneCount + " genes. Queue has " + geneQueue.size()
                             + " items; last gene: " + gene );
-                    if ( skipped > 0 ) {
-                        log.info( skipped + " skipped because they had no gene products." );
-                    }
                     timer.reset();
                     timer.start();
                 }
 
             } catch ( Exception e ) {
-                log.error( "Error while loading gene: " + gene + ": " + e.getMessage(), e );
+                NcbiGeneLoader.log.error( "Error while loading gene: " + gene + ": " + e.getMessage(), e );
                 loaderDone.set( true );
                 throw new RuntimeException( e );
             }
         }
-        log.info( "Loaded " + loadedGeneCount + " genes. " );
+        NcbiGeneLoader.log.info( "Loaded " + loadedGeneCount + " genes. " );
         loaderDone.set( true );
     }
 
@@ -215,7 +227,7 @@ public class NcbiGeneLoader {
             @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
-                doLoad( geneQueue );
+                NcbiGeneLoader.this.doLoad( geneQueue );
             }
 
         }, "Loading" );
@@ -249,8 +261,8 @@ public class NcbiGeneLoader {
         converter.setProducerDoneFlag( converterDone );
 
         // create queue for GeneInfo objects
-        final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
-        final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
+        final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<>( NcbiGeneLoader.QUEUE_SIZE );
+        final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<>( NcbiGeneLoader.QUEUE_SIZE );
 
         // Threaded producer - loading files into queue as GeneInfo objects
         if ( StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
@@ -270,25 +282,6 @@ public class NcbiGeneLoader {
         // update taxon table to indicate that now there are genes loaded for that taxa.
         // all or nothing so that if fails for some taxa then no taxa will be updated.
         this.updateTaxaWithGenesUsable( sdog.getSupportedTaxaWithNCBIGenes() );
-    }
-
-    /**
-     * Set to true to avoid downloading the files, if copies already exist (not recommended if you want an update!)
-     *
-     * @param skipDownload skip download
-     */
-    public void setSkipDownload( boolean skipDownload ) {
-        this.doDownload = !skipDownload;
-
-    }
-
-    /**
-     * Indicate
-     *
-     * @param startNcbiid start ncbi id
-     */
-    public void setStartingNcbiId( Integer startNcbiid ) {
-        this.startingNcbiId = startNcbiid;
     }
 
 }

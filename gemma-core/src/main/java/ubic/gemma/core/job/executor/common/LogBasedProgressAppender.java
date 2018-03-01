@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,20 +18,15 @@
  */
 package ubic.gemma.core.job.executor.common;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
+import org.apache.log4j.*;
 import org.apache.log4j.spi.LoggingEvent;
 
 /**
  * This appender is used by remote tasks to send progress notifications to the webapp. The information for these
  * notifications is retrieved from the {@link LoggingEvent}. This information comes from regular logging statements
  * inlined in the source code (ie. log.info("the text")).
- * 
- * @author keshav
  *
+ * @author keshav
  */
 public class LogBasedProgressAppender extends AppenderSkeleton implements ProgressUpdateAppender {
 
@@ -47,18 +42,6 @@ public class LogBasedProgressAppender extends AppenderSkeleton implements Progre
         this.progressUpdatesCallback = progressUpdatesCallback;
     }
 
-    /*
-     * @see org.apache.log4j.Appender#close()
-     */
-    @Override
-    public void close() {
-        Logger logger = LogManager.getLogger( "ubic.gemma" );
-        Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-        logger.removeAppender( this );
-        baseCodeLogger.removeAppender( this );
-        MDC.remove( "taskId" );
-    }
-
     @Override
     public void initialize() {
         MDC.put( "taskId", taskId );
@@ -68,17 +51,9 @@ public class LogBasedProgressAppender extends AppenderSkeleton implements Progre
         baseCodeLogger.addAppender( this );
     }
 
-    /*
-     * @see org.apache.log4j.Appender#requiresLayout()
-     */
-    @Override
-    public boolean requiresLayout() {
-        return true;
-    }
-
     @Override
     public void tearDown() {
-        close();
+        this.close();
     }
 
     @Override
@@ -91,5 +66,19 @@ public class LogBasedProgressAppender extends AppenderSkeleton implements Progre
         if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
             progressUpdatesCallback.addProgressUpdate( event.getMessage().toString() );
         }
+    }
+
+    @Override
+    public boolean requiresLayout() {
+        return true;
+    }
+
+    @Override
+    public void close() {
+        Logger logger = LogManager.getLogger( "ubic.gemma" );
+        Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+        logger.removeAppender( this );
+        baseCodeLogger.removeAppender( this );
+        MDC.remove( "taskId" );
     }
 }

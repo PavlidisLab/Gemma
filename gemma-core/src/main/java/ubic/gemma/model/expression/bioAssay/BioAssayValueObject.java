@@ -59,10 +59,6 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
         super( id );
     }
 
-    public BioAssayValueObject( BioAssay bioAssay ) {
-        this(bioAssay, false);
-    }
-
     public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
         super( bioAssay.getId() );
         this.name = bioAssay.getName();
@@ -99,7 +95,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
         Collection<BioAssayValueObject> result = new HashSet<>();
         for ( BioAssay bioAssay : bioAssays ) {
-            result.add( new BioAssayValueObject( bioAssay ) );
+            result.add( new BioAssayValueObject( bioAssay, false ) );
         }
         return result;
     }
@@ -110,7 +106,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         BioAssayValueObject other = ( BioAssayValueObject ) obj;
         if ( id == null ) {
@@ -120,11 +116,15 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
             return false;
 
         if ( name == null ) {
-            if ( other.name != null )
-                return false;
-        } else if ( !name.equals( other.name ) )
-            return false;
-        return true;
+            return other.name == null;
+        } else
+            return name.equals( other.name );
+    }
+
+    @Override
+    public String toString() {
+        return "BioAssayVO [" + ( id != null ? "id=" + id + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
+                + ( description != null ? "description=" + description : "" ) + "]";
     }
 
     public DatabaseEntryValueObject getAccession() {
@@ -232,12 +232,6 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
     public void setOutlier( boolean outlier ) {
         this.outlier = outlier;
-    }
-
-    @Override
-    public String toString() {
-        return "BioAssayVO [" + ( id != null ? "id=" + id + ", " : "" ) + ( name != null ? "name=" + name + ", " : "" )
-                + ( description != null ? "description=" + description : "" ) + "]";
     }
 
     public String getMetadata() {

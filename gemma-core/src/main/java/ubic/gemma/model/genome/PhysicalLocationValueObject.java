@@ -1,12 +1,14 @@
 package ubic.gemma.model.genome;
 
+import ubic.gemma.model.IdentifiableValueObject;
+
 import java.util.Objects;
 
 /**
  * A very simple value object to represent a physical location
  */
 @SuppressWarnings("unused") // Getters used by JSON serializer in the REST API
-public class PhysicalLocationValueObject {
+public class PhysicalLocationValueObject extends IdentifiableValueObject<PhysicalLocation> {
 
     private Long nucleotide;
     private Integer nucleotideLength;

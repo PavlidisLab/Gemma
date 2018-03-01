@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,17 +26,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.web.controller.BaseController;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * Allow users to search for and view PubMed abstracts from NCBI, or from Gemma.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 @Controller("/bibRefSearch.html")
 public class PubMedQueryControllerImpl extends BaseController implements PubMedQueryController {
@@ -48,24 +46,12 @@ public class PubMedQueryControllerImpl extends BaseController implements PubMedQ
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#getView()
-     */
     @Override
     @RequestMapping(method = RequestMethod.GET)
     public String getView() {
         return "bibRefSearch";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#onSubmit(javax.servlet.http.
-     * HttpServletRequest, ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand,
-     * org.springframework.validation.BindingResult, org.springframework.web.bind.support.SessionStatus)
-     */
     @Override
     @RequestMapping(method = RequestMethod.POST)
     public ModelAndView onSubmit( HttpServletRequest request, PubMedSearchCommand command, BindingResult result,

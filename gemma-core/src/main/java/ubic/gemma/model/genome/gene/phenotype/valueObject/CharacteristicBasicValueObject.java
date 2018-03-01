@@ -3,7 +3,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 
-@SuppressWarnings("WeakerAccess") // Required for UI and super class
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class CharacteristicBasicValueObject extends IdentifiableValueObject<Characteristic> {
     protected String value;
     protected String valueUri;

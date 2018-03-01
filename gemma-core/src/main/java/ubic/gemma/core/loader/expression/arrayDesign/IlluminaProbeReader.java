@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,22 +18,21 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
+import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-
 /**
  * Parse an Illumina "manifest.txt" file (tab-delimited). A one-line header is permitted.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
 
-    private Map<String, Reporter> results = new HashMap<String, Reporter>();
+    private final Map<String, Reporter> results = new HashMap<>();
 
     @Override
     public boolean containsKey( String key ) {
@@ -55,26 +54,26 @@ public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
         return results.values();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.BasicLineMapParser#parseOneLine(java.lang.String)
-     */
     @Override
     public Reporter parseOneLine( String line ) {
         String[] sArray = line.split( "\t" );
-        if ( sArray.length == 0 ) throw new IllegalArgumentException( "Line format is not valid" );
+        if ( sArray.length == 0 )
+            throw new IllegalArgumentException( "Line format is not valid" );
 
         String probeId = sArray[0];
 
-        if ( probeId == null || probeId.length() == 0 ) throw new IllegalArgumentException( "Probe id invalid" );
+        if ( probeId == null || probeId.length() == 0 )
+            throw new IllegalArgumentException( "Probe id invalid" );
 
-        if ( probeId.startsWith( "Search" ) ) return null;
+        if ( probeId.startsWith( "Search" ) )
+            return null;
 
-        if ( sArray.length < 10 ) throw new IllegalArgumentException( "Line format is not valid" );
+        if ( sArray.length < 10 )
+            throw new IllegalArgumentException( "Line format is not valid" );
 
         String sequence = sArray[9];
-        if ( sequence == null || sequence.length() == 0 ) throw new IllegalArgumentException( "Sequence is invalid" );
+        if ( sequence == null || sequence.length() == 0 )
+            throw new IllegalArgumentException( "Sequence is invalid" );
 
         Reporter ap = Reporter.Factory.newInstance();
 
@@ -86,11 +85,6 @@ public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
         return ap;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
-     */
     @Override
     protected String getKey( Reporter newItem ) {
         return newItem.getName();

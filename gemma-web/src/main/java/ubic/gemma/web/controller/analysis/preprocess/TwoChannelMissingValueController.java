@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,18 +20,16 @@ package ubic.gemma.web.controller.analysis.preprocess;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.analysis.expression.TwoChannelMissingValueTaskCommand;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * Run misssing value computation via web request.
- * 
- * @author paul
  *
+ * @author paul
  */
 @Controller
 public class TwoChannelMissingValueController {
@@ -45,9 +43,8 @@ public class TwoChannelMissingValueController {
 
     /**
      * AJAX entry point. -- uses default settings
-     *
      */
-    public String run( Long id ) throws Exception {
+    public String run( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
 
         if ( ee == null ) {

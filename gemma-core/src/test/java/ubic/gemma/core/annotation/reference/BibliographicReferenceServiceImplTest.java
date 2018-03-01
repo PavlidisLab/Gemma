@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,16 +20,11 @@ package ubic.gemma.core.annotation.reference;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import static org.easymock.EasyMock.*;
 
@@ -41,16 +36,15 @@ public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest
     private BibliographicReferenceServiceImpl svc = null;
     private BibliographicReferenceDao brdao = null;
     private DatabaseEntry de = null;
-    private ExternalDatabase extDB = null;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         brdao = createMock( BibliographicReferenceDao.class );
 
         svc = new BibliographicReferenceServiceImpl( brdao );
 
-        extDB = ExternalDatabase.Factory.newInstance();
+        ExternalDatabase extDB = ExternalDatabase.Factory.newInstance();
         extDB.setName( "PUBMED" );
 
         de = DatabaseEntry.Factory.newInstance();

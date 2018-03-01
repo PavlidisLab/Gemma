@@ -5,13 +5,11 @@ import org.hibernate.jdbc.Work;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -23,9 +21,9 @@ import java.util.Map;
  * @author tesarst
  */
 public abstract class AbstractCuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
-        extends VoEnabledDao<C, VO> implements CuratableDao<C, VO> {
+        extends AbstractVoEnabledDao<C, VO> implements CuratableDao<C, VO> {
 
-    public AbstractCuratableDao( Class<C> elementClass, SessionFactory sessionFactory ) {
+    protected AbstractCuratableDao( Class<C> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
     }
 
@@ -33,9 +31,9 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     public Collection<C> create( final Collection<C> entities ) {
         this.getSessionFactory().getCurrentSession().doWork( new Work() {
             @Override
-            public void execute( Connection connection ) throws SQLException {
+            public void execute( Connection connection ) {
                 for ( C entity : entities ) {
-                    create( entity );
+                    AbstractCuratableDao.this.create( entity );
                 }
             }
         } );
@@ -46,7 +44,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     public C create( final C entity ) {
         super.create( entity );
         if ( entity.getCurationDetails() == null ) {
-            CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( getSessionFactory() );
+            CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( this.getSessionFactory() );
             entity.setCurationDetails( curationDetailsDao.create() );
         }
         return entity;
@@ -73,10 +71,6 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     public C findByShortName( String name ) {
         return this.findOneByProperty( "shortName", name );
     }
-
-    public abstract Integer countNotTroubled();
-
-    public abstract Map<Taxon, Long> getPerTaxonCount();
 
     protected void addEventsToMap( Map<Long, Collection<AuditEvent>> eventMap, Long id, AuditEvent event ) {
         if ( eventMap.containsKey( id ) ) {

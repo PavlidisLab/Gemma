@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractService;
@@ -41,8 +40,8 @@ import java.util.Map;
 public class DifferentialExpressionResultServiceImpl extends AbstractService<DifferentialExpressionAnalysisResult>
         implements DifferentialExpressionResultService {
 
-    final DifferentialExpressionResultDao DERDao;
-    final ExpressionAnalysisResultSetDao EARDao;
+    private final DifferentialExpressionResultDao DERDao;
+    private final ExpressionAnalysisResultSetDao EARDao;
 
     @Autowired
     public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao,
@@ -120,11 +119,18 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
         return this.DERDao.getAnalysis( rs );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
-        return this.DERDao.load( ids );
+    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
+        return this.DERDao.getExperimentalFactors( differentialExpressionAnalysisResults );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExperimentalFactor> getExperimentalFactors(
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
+        return this.DERDao.getExperimentalFactors( differentialExpressionAnalysisResult );
     }
 
     @Override
@@ -165,14 +171,14 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
 
     @Override
     @Transactional(readOnly = true)
-    public void thawLite( ExpressionAnalysisResultSet resultSet ) {
-        this.EARDao.thawLite( resultSet );
+    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
+        return this.EARDao.thawWithoutContrasts( resultSet );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
-        return this.EARDao.thawWithoutContrasts( resultSet );
+    public void thawLite( ExpressionAnalysisResultSet resultSet ) {
+        this.EARDao.thawLite( resultSet );
     }
 
     @Override
@@ -181,18 +187,11 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
         this.EARDao.update( resultSet );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
-    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
-        return this.DERDao.getExperimentalFactors( differentialExpressionAnalysisResults );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExperimentalFactor> getExperimentalFactors(
-            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
-        return this.DERDao.getExperimentalFactors( differentialExpressionAnalysisResult );
+    public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
+        return this.DERDao.load( ids );
     }
 
 }

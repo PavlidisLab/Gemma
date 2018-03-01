@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -122,7 +122,7 @@ public class ExpressionExperimentDataFetchController {
      * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design
      * data file
      */
-    public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
+    public String getDataFile( ExpressionExperimentDataFetchCommand command ) {
         DataWriterJob job = new DataWriterJob( command );
         return taskRunningService.submitLocalTask( job );
     }
@@ -139,7 +139,7 @@ public class ExpressionExperimentDataFetchController {
     }
 
     public File getOutputFile( String filename ) {
-        String fullFilePath = DATA_DIR + filename;
+        String fullFilePath = ExpressionExperimentDataFetchController.DATA_DIR + filename;
         File f = new File( fullFilePath );
         File parentDir = f.getParentFile();
         if ( !parentDir.exists() )
@@ -317,7 +317,7 @@ public class ExpressionExperimentDataFetchController {
 
             StopWatch watch = new StopWatch();
             watch.start();
-            Collection<File> files = new HashSet<File>();
+            Collection<File> files = new HashSet<>();
 
             assert this.taskCommand != null;
 
@@ -358,7 +358,8 @@ public class ExpressionExperimentDataFetchController {
                 // "Sorry, you can't get multiple analyses at once using this method." );
             }
 
-            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + files.iterator().next().getName(), true ) );
+            ModelAndView mav = new ModelAndView(
+                    new RedirectView( "/getData.html?file=" + files.iterator().next().getName(), true ) );
             return new TaskResult( taskCommand, mav );
 
         }

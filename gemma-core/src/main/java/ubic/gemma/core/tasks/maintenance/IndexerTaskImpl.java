@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,8 @@ import ubic.gemma.persistence.util.MailEngine;
  *
  * @author klc
  */
-@SuppressWarnings("unused") // Possible external use
+@SuppressWarnings({ "unused", "SpringJavaInjectionPointsAutowiringInspection" })
+// Possible external use, compass qualifiers in unparsed context files
 @Component
 @Scope("prototype")
 public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskCommand> implements IndexerTask {
@@ -127,57 +128,57 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
         IndexerResult result = new IndexerResult( taskCommand );
 
         if ( taskCommand.isIndexEE() ) {
-            if ( rebuildIndex( expressionGps, "Expression Experiment index" ) )
-                result.setPathToExpressionIndex( getIndexPath( compassExpression ) );
+            if ( this.rebuildIndex( expressionGps, "Expression Experiment index" ) )
+                result.setPathToExpressionIndex( this.getIndexPath( compassExpression ) );
             else
                 result.setPathToExpressionIndex( null );
 
         }
         if ( taskCommand.isIndexAD() ) {
-            if ( rebuildIndex( arrayGps, "Platform/Array design index" ) )
-                result.setPathToArrayIndex( getIndexPath( compassArray ) );
+            if ( this.rebuildIndex( arrayGps, "Platform/Array design index" ) )
+                result.setPathToArrayIndex( this.getIndexPath( compassArray ) );
             else
                 result.setPathToArrayIndex( null );
 
         }
         if ( taskCommand.isIndexBibRef() ) {
-            if ( rebuildIndex( bibliographicGps, "Bibliographic Reference Index" ) )
-                result.setPathToBibliographicIndex( getIndexPath( compassBibliographic ) );
+            if ( this.rebuildIndex( bibliographicGps, "Bibliographic Reference Index" ) )
+                result.setPathToBibliographicIndex( this.getIndexPath( compassBibliographic ) );
             else
                 result.setPathToBibliographicIndex( null );
 
         }
         if ( taskCommand.isIndexBioSequence() ) {
-            if ( rebuildIndex( biosequenceGps, "Biosequence Reference Index" ) )
-                result.setPathToBiosequenceIndex( getIndexPath( compassBiosequence ) );
+            if ( this.rebuildIndex( biosequenceGps, "Biosequence Reference Index" ) )
+                result.setPathToBiosequenceIndex( this.getIndexPath( compassBiosequence ) );
             else
                 result.setPathToBiosequenceIndex( null );
         }
 
         if ( taskCommand.isIndexProbe() ) {
-            if ( rebuildIndex( probeGps, "Probe Reference Index" ) )
-                result.setPathToProbeIndex( getIndexPath( compassProbe ) );
+            if ( this.rebuildIndex( probeGps, "Probe Reference Index" ) )
+                result.setPathToProbeIndex( this.getIndexPath( compassProbe ) );
             else
                 result.setPathToProbeIndex( null );
         }
 
         if ( taskCommand.isIndexGene() ) {
-            if ( rebuildIndex( geneGps, "Gene index" ) )
-                result.setPathToGeneIndex( getIndexPath( compassGene ) );
+            if ( this.rebuildIndex( geneGps, "Gene index" ) )
+                result.setPathToGeneIndex( this.getIndexPath( compassGene ) );
             else
                 result.setPathToGeneIndex( null );
         }
 
         if ( taskCommand.isIndexGeneSet() ) {
-            if ( rebuildIndex( geneSetGps, "Gene set index" ) )
-                result.setPathToGeneSetIndex( getIndexPath( compassGeneSet ) );
+            if ( this.rebuildIndex( geneSetGps, "Gene set index" ) )
+                result.setPathToGeneSetIndex( this.getIndexPath( compassGeneSet ) );
             else
                 result.setPathToGeneSetIndex( null );
         }
 
         if ( taskCommand.isIndexExperimentSet() ) {
-            if ( rebuildIndex( experimentSetGps, "Experiment set index" ) )
-                result.setPathToExperimentSetIndex( getIndexPath( compassExperimentSet ) );
+            if ( this.rebuildIndex( experimentSetGps, "Experiment set index" ) )
+                result.setPathToExperimentSetIndex( this.getIndexPath( compassExperimentSet ) );
             else
                 result.setPathToExperimentSetIndex( null );
         }
@@ -309,7 +310,8 @@ public class IndexerTaskImpl extends AbstractTask<IndexerResult, IndexerTaskComm
     }
 
     private String getIndexPath( InternalCompass compass ) {
-        return compass.getSettings().getSetting( PATH_PROPERTY ).replaceFirst( FILE, "" ) + PATH_SUFFIX;
+        return compass.getSettings().getSetting( IndexerTaskImpl.PATH_PROPERTY )
+                .replaceFirst( IndexerTaskImpl.FILE, "" ) + IndexerTaskImpl.PATH_SUFFIX;
     }
 
     private Boolean rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {

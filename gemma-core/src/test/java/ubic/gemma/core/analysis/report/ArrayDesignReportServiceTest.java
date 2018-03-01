@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,53 +18,52 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author pavlidis
- *
  */
 public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
+    private static ArrayDesign ad;
+    private static boolean persisted = false;
     @Autowired
     AuditTrailService ads;
 
     @Autowired
-    ArrayDesignReportService adrs;
-
-    static ArrayDesign ad;
-    static boolean persisted = false;
+    ArrayDesignReportService arrayDesignReportService;
 
     @Before
     public void setup() throws Exception {
-        if ( !persisted ) {
-            ad = this.getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
+        if ( !ArrayDesignReportServiceTest.persisted ) {
+            ArrayDesignReportServiceTest.ad = this
+                    .getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
 
-            ads.addUpdateEvent( ad, new ArrayDesignSequenceUpdateEvent(), "sequences" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceUpdateEvent(), "sequences" );
 
-            ads.addUpdateEvent( ad, new ArrayDesignSequenceAnalysisEvent(), "alignment" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceAnalysisEvent(), "alignment" );
 
-            ads.addUpdateEvent( ad, new ArrayDesignGeneMappingEvent(), "mapping" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignGeneMappingEvent(), "mapping" );
 
             Thread.sleep( 100 );
 
-            ads.addUpdateEvent( ad, new ArrayDesignSequenceAnalysisEvent(), "alignment 2" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignSequenceAnalysisEvent(),
+                    "alignment 2" );
 
-            ads.addUpdateEvent( ad, new ArrayDesignGeneMappingEvent(), "mapping 2" );
+            ads.addUpdateEvent( ArrayDesignReportServiceTest.ad, new ArrayDesignGeneMappingEvent(), "mapping 2" );
             Thread.sleep( 100 );
-            persisted = true;
+            ArrayDesignReportServiceTest.persisted = true;
         }
 
     }
@@ -72,7 +71,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     @Test
     public void testGenerateArrayDesignGeneMappingEvent() {
 
-        String report = adrs.getLastGeneMappingEvent( ad.getId() );
+        String report = arrayDesignReportService.getLastGeneMappingEvent( ArrayDesignReportServiceTest.ad.getId() );
 
         log.info( report );
         assertTrue( !report.equals( "[None]" ) );
@@ -82,7 +81,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     @Test
     public void testGenerateArrayDesignSequenceAnalysisEvent() {
 
-        String report = adrs.getLastSequenceAnalysisEvent( ad.getId() );
+        String report = arrayDesignReportService.getLastSequenceAnalysisEvent( ArrayDesignReportServiceTest.ad.getId() );
 
         log.info( report );
         assertTrue( !report.equals( "[None]" ) );
@@ -92,7 +91,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     @Test
     public void testGenerateArrayDesignSequenceUpdateEvent() {
 
-        String report = adrs.getLastSequenceUpdateEvent( ad.getId() );
+        String report = arrayDesignReportService.getLastSequenceUpdateEvent( ArrayDesignReportServiceTest.ad.getId() );
 
         log.info( report );
         assertTrue( !report.equals( "[None]" ) );

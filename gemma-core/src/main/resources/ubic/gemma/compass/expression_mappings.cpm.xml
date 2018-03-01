@@ -9,7 +9,7 @@
       expression_mappings.cpm.xml,v 1.5 2008/07/14 06:25:05 paul Exp $
    -->
 <compass-core-mapping package="ubic.gemma.model">
-   <class name="expression.experiment.ExpressionExperiment" alias="expressionExperiment" root="true">
+   <class name="expression.experiment.ExpressionExperiment" alias="expressionExperiment">
       <id name="id" />
       <property name="name">
          <meta-data>name</meta-data>

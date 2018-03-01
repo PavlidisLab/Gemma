@@ -9,28 +9,26 @@ public class SFARIIntermediateFileParser {
 
     public static void main( String[] args ) throws Exception {
 
-        try (BufferedWriter outputSFARI = new BufferedWriter(
-                new FileWriter(
-                        "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/outputSFARI.tsv" ) );) {
+        try (BufferedWriter outputSFARI = new BufferedWriter( new FileWriter(
+                "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/outputSFARI.tsv" ) )) {
 
-            try (BufferedReader br = new BufferedReader(
-                    new FileReader(
-                            "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/autism-gene-dataset.csv" ) );) {
+            try (BufferedReader br = new BufferedReader( new FileReader(
+                    "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/autism-gene-dataset.csv" ) )) {
 
-                String headers = cvs2tsv( br.readLine() );
+                String headers = SFARIIntermediateFileParser.cvs2tsv( br.readLine() );
 
                 // define index of header
                 SFARILineInfo.setIndex( headers );
                 SFARILineInfo.writeFinalHeader( outputSFARI );
 
-                String line = "";
-                int lineNumer = 1;
+                String line;
+                int lineNumber = 1;
 
                 while ( ( line = br.readLine() ) != null ) {
 
-                    System.out.println( "Line: " + lineNumer++ );
+                    System.out.println( "Line: " + lineNumber++ );
 
-                    String finalLine = cvs2tsv( line ) + "\t end";
+                    String finalLine = SFARIIntermediateFileParser.cvs2tsv( line ) + "\t end";
 
                     SFARILineInfo sfariLineInfo = new SFARILineInfo( finalLine );
                     sfariLineInfo.writeFinalLine( outputSFARI );
@@ -41,9 +39,10 @@ public class SFARIIntermediateFileParser {
         }
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static String cvs2tsv( String line ) {
 
-        StringBuffer newLine = new StringBuffer( line );
+        StringBuilder newLine = new StringBuilder( line );
 
         boolean change = true;
 
@@ -53,11 +52,7 @@ public class SFARIIntermediateFileParser {
                 newLine.setCharAt( position, '\t' );
             } else if ( newLine.charAt( position ) == '"' ) {
 
-                if ( change ) {
-                    change = false;
-                } else {
-                    change = true;
-                }
+                change = !change;
             }
         }
 

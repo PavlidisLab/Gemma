@@ -1,4 +1,5 @@
-<!DOCTYPE eSearchResult PUBLIC "-//NLM//DTD eSearchResult, 11 May 2002//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSearch_020511.dtd">
+<!DOCTYPE eSearchResult PUBLIC "-//NLM//DTD eSearchResult, 11 May 2002//EN"
+        "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSearch_020511.dtd">
 <eSearchResult>
     <Count>4</Count>
     <RetMax>4</RetMax>
@@ -20,7 +21,9 @@
         </Translation>
         <Translation>
             <From>hippocampus brain</From>
-            <To>((&quot;hippocampus&quot;[TIAB] NOT Medline[SB]) OR &quot;hippocampus&quot;[MeSH Terms] OR hippocampus brain[Text Word])</To>
+            <To>((&quot;hippocampus&quot;[TIAB] NOT Medline[SB]) OR &quot;hippocampus&quot;[MeSH Terms] OR hippocampus
+                brain[Text Word])
+            </To>
         </Translation>
     </TranslationSet>
     <TranslationStack>
@@ -85,4 +88,6 @@
         <OP>AND</OP>
         <OP>GROUP</OP>
     </TranslationStack>
+    <QueryTranslation>
+    </QueryTranslation>
 </eSearchResult>

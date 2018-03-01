@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,13 +40,27 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
     final private Gene firstGene = null;
     final private Gene secondGene = null;
 
+    @SuppressWarnings("ConstantConditions")// Hibernate populates fields via reflection.
+    @Override
+    public int hashCode() {
+        if ( this.id != null )
+            return this.id.hashCode();
+
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( firstGene == null ) ? 0 : firstGene.hashCode() );
+        result = prime * result + ( ( secondGene == null ) ? 0 : secondGene.hashCode() );
+        return result;
+    }
+
+    @SuppressWarnings("ConstantConditions")// Hibernate populates fields via reflection.
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
 
         Gene2GeneAssociation other = ( Gene2GeneAssociation ) obj;
@@ -61,11 +75,9 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
             return false;
 
         if ( secondGene == null ) {
-            if ( other.secondGene != null )
-                return false;
-        } else if ( !secondGene.equals( other.secondGene ) )
-            return false;
-        return true;
+            return other.secondGene == null;
+        } else
+            return secondGene.equals( other.secondGene );
     }
 
     @Override
@@ -74,22 +86,11 @@ public abstract class Gene2GeneAssociation implements Identifiable, Serializable
                 + secondGene + "]";
     }
 
-    @Override
-    public int hashCode() {
-        if ( this.id != null )
-            return this.id.hashCode();
-
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( firstGene == null ) ? 0 : firstGene.hashCode() );
-        result = prime * result + ( ( secondGene == null ) ? 0 : secondGene.hashCode() );
-        return result;
-    }
-
     public Gene getFirstGene() {
         return this.firstGene;
     }
 
+    @Override
     public Long getId() {
         return id;
     }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -90,27 +90,38 @@ public class AuditAdvice {
         final String methodName = signature.getName();
         final Object[] args = pjp.getArgs();
 
-        Object object = getPersistentObject( retValue, methodName, args );
+        Object object = this.getPersistentObject( retValue, methodName, args );
 
         if ( object == null )
             return;
+
         User user = userManager.getCurrentUser();
 
         if ( user == null ) {
-            log.info( "User could not be determined (anonymous?), audit will be skipped." );
+            AuditAdvice.log.info( "User could not be determined (anonymous?), audit will be skipped." );
             return;
         }
-
-        assert user != null;
 
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {
                 if ( AbstractAuditable.class.isAssignableFrom( o.getClass() ) ) {
-                    process( methodName, ( AbstractAuditable ) o, user );
+                    this.process( methodName, ( AbstractAuditable ) o, user );
                 }
             }
         } else if ( ( AbstractAuditable.class.isAssignableFrom( object.getClass() ) ) ) {
-            process( methodName, ( AbstractAuditable ) object, user );
+            this.process( methodName, ( AbstractAuditable ) object, user );
+        }
+    }
+
+    @PostConstruct
+    protected void init() {
+
+        try {
+            AUDIT_UPDATE = Settings.getBoolean( "audit.update" );
+            AUDIT_DELETE = Settings.getBoolean( "audit.delete" );
+            AUDIT_CREATE = Settings.getBoolean( "audit.create" ) || AUDIT_UPDATE;
+        } catch ( NoSuchElementException e ) {
+            AuditAdvice.log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
         }
     }
 
@@ -122,7 +133,7 @@ public class AuditAdvice {
         if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && (
                 propertyName.equals( "rawExpressionDataVectors" ) || propertyName
                         .equals( "processedExpressionDataVectors" ) ) ) {
-            log.trace( "Skipping vectors" );
+            AuditAdvice.log.trace( "Skipping vectors" );
             return true;
         }
 
@@ -131,23 +142,11 @@ public class AuditAdvice {
          */
         if ( ArrayDesign.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "compositeSequences" )
                 || propertyName.equals( "reporters" ) ) ) {
-            log.trace( "Skipping probes" );
+            AuditAdvice.log.trace( "Skipping probes" );
             return true;
         }
 
         return false;
-    }
-
-    @PostConstruct
-    protected void init() {
-
-        try {
-            AUDIT_UPDATE = Settings.getBoolean( "audit.update" );
-            AUDIT_DELETE = Settings.getBoolean( "audit.delete" );
-            AUDIT_CREATE = Settings.getBoolean( "audit.create" ) || AUDIT_UPDATE;
-        } catch ( NoSuchElementException e ) {
-            log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
-        }
     }
 
     /**
@@ -160,17 +159,16 @@ public class AuditAdvice {
      * @return true if the association should be followed.
      * @see AclAdvice for similar code
      */
+    @SuppressWarnings("SimplifiableIfStatement") // Better readability
     private boolean specialCaseForAssociationFollow( Object object, String property ) {
 
         if ( BioAssay.class.isAssignableFrom( object.getClass() ) && ( property.equals( "samplesUsed" ) || property
                 .equals( "arrayDesignUsed" ) ) ) {
             return true;
-        } else if ( DesignElementDataVector.class.isAssignableFrom( object.getClass() ) && property
-                .equals( "bioAssayDimension" ) ) {
-            return true;
-        }
+        } else
+            return DesignElementDataVector.class.isAssignableFrom( object.getClass() ) && property
+                    .equals( "bioAssayDimension" );
 
-        return false;
     }
 
     /**
@@ -180,19 +178,20 @@ public class AuditAdvice {
      */
     private void addCreateAuditEvent( final AbstractAuditable auditable, User user, final String note ) {
 
-        if ( isNullOrTransient( auditable ) )
+        if ( this.isNullOrTransient( auditable ) )
             return;
 
         AuditTrail auditTrail = auditable.getAuditTrail();
 
-        ensureInSession( auditTrail );
+        this.ensureInSession( auditTrail );
 
         if ( auditTrail != null && !auditTrail.getEvents().isEmpty() ) {
             // This can happen when we persist objects and then let this interceptor look at them again
             // while persisting parent objects. That's okay.
-            if ( log.isDebugEnabled() )
-                log.debug( "Call to addCreateAuditEvent but the auditTrail already has events. AuditTrail id: "
-                        + auditTrail.getId() );
+            if ( AuditAdvice.log.isDebugEnabled() )
+                AuditAdvice.log
+                        .debug( "Call to addCreateAuditEvent but the auditTrail already has events. AuditTrail id: "
+                                + auditTrail.getId() );
             return;
         }
 
@@ -200,26 +199,28 @@ public class AuditAdvice {
 
         try {
             auditHelper.addCreateAuditEvent( auditable, details, user );
-            if ( log.isDebugEnabled() ) {
-                log.debug(
-                        "Audited event: " + ( note.length() > 0 ? note : "[no note]" ) + " on " + auditable.getClass()
-                                .getSimpleName() + ":" + auditable.getId() + " by " + user.getUserName() );
+            if ( AuditAdvice.log.isDebugEnabled() ) {
+                AuditAdvice.log
+                        .debug( "Audited event: " + ( note.length() > 0 ? note : "[no note]" ) + " on " + auditable
+                                .getClass().getSimpleName() + ":" + auditable.getId() + " by " + user.getUserName() );
             }
 
         } catch ( UsernameNotFoundException e ) {
-            log.warn( "No user, cannot add 'create' event" );
+            AuditAdvice.log.warn( "No user, cannot add 'create' event" );
         }
     }
 
     private void addDeleteAuditEvent( AbstractAuditable d, User user ) {
         assert d != null;
         // what else could we do? But need to keep this record in a good place. See log4j.properties.
-        if ( log.isInfoEnabled() ) {
+        if ( AuditAdvice.log.isInfoEnabled() ) {
             String un = "";
             if ( user != null ) {
                 un = "by " + user.getUserName();
             }
-            log.info( "Delete event on entity " + d.getClass().getName() + ":" + d.getId() + "  [" + d + "] " + un );
+            AuditAdvice.log
+                    .info( "Delete event on entity " + d.getClass().getName() + ":" + d.getId() + "  [" + d + "] "
+                            + un );
         }
     }
 
@@ -228,21 +229,22 @@ public class AuditAdvice {
 
         AuditTrail auditTrail = auditable.getAuditTrail();
 
-        ensureInSession( auditTrail );
+        this.ensureInSession( auditTrail );
 
         if ( auditTrail == null || auditTrail.getEvents().isEmpty() ) {
             /*
              * Note: This can happen for ExperimentalFactors when loading from GEO etc. because of the bidirectional
              * association and the way we persist them. See ExpressionPersister. (actually this seems to be fixed...)
              */
-            log.error( "No create event for update method call on " + auditable + ", performing 'create' instead" );
-            addCreateAuditEvent( auditable, user, " - Event added on update of existing object." );
+            AuditAdvice.log.error( "No create event for update method call on " + auditable
+                    + ", performing 'create' instead" );
+            this.addCreateAuditEvent( auditable, user, " - Event added on update of existing object." );
         } else {
             String note = "Updated " + auditable.getClass().getSimpleName() + " " + auditable.getId();
             auditHelper.addUpdateAuditEvent( auditable, note, user );
-            if ( log.isDebugEnabled() ) {
-                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":" + auditable
-                        .getId() + " by " + user.getUserName() );
+            if ( AuditAdvice.log.isDebugEnabled() ) {
+                AuditAdvice.log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
+                        + auditable.getId() + " by " + user.getUserName() );
             }
         }
     }
@@ -282,15 +284,11 @@ public class AuditAdvice {
      * calling update on a gene.
      */
     private void maybeAddCascadeCreateEvent( Object object, AbstractAuditable auditable, User user ) {
-        if ( log.isDebugEnabled() )
-            log.debug( "Checking for whether to cascade create event from " + auditable + " to " + object );
+        if ( AuditAdvice.log.isDebugEnabled() )
+            AuditAdvice.log.debug( "Checking for whether to cascade create event from " + auditable + " to " + object );
 
-        // TODO: I don't think we need this.
-        if ( !Hibernate.isInitialized( auditable ) ) {
-            return;
-        }
         if ( auditable.getAuditTrail() == null || auditable.getAuditTrail().getEvents().isEmpty() ) {
-            addCreateAuditEvent( auditable, user, " - created by cascade from " + object );
+            this.addCreateAuditEvent( auditable, user, " - created by cascade from " + object );
         }
     }
 
@@ -302,31 +300,32 @@ public class AuditAdvice {
         // do this here, when we are sure to be in a transaction. But might be repetitive when working on a collection.
         this.sessionFactory.getCurrentSession().setReadOnly( user, true );
 
-        if ( log.isTraceEnabled() ) {
-            log.trace( "***********  Start Audit of " + methodName + " on " + auditable + " *************" );
+        if ( AuditAdvice.log.isTraceEnabled() ) {
+            AuditAdvice.log
+                    .trace( "***********  Start Audit of " + methodName + " on " + auditable + " *************" );
         }
-        assert auditable != null : "Null entity passed to auditing [" + methodName + " on " + auditable + "]";
+        assert auditable != null : "Null entity passed to auditing [" + methodName + " on " + null + "]";
         assert auditable.getId() != null :
                 "Transient instance passed to auditing [" + methodName + " on " + auditable + "]";
 
         if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
-            addCreateAuditEvent( auditable, user, "" );
-            processAssociations( methodName, auditable, user );
+            this.addCreateAuditEvent( auditable, user, "" );
+            this.processAssociations( methodName, auditable, user );
         } else if ( AUDIT_UPDATE && CrudUtilsImpl.methodIsUpdate( methodName ) ) {
-            addUpdateAuditEvent( auditable, user );
+            this.addUpdateAuditEvent( auditable, user );
 
             /*
              * Do not process associations during an update except to add creates to new objects. Otherwise this would
              * result in update events getting added to all child objects, which is silly; and in any case they might be
              * proxies.
              */
-            processAssociations( methodName, auditable, user );
+            this.processAssociations( methodName, auditable, user );
         } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
-            addDeleteAuditEvent( auditable, user );
+            this.addDeleteAuditEvent( auditable, user );
         }
 
-        if ( log.isTraceEnabled() )
-            log.trace( "============  End Audit ==============" );
+        if ( AuditAdvice.log.isTraceEnabled() )
+            AuditAdvice.log.trace( "============  End Audit ==============" );
     }
 
     /**
@@ -346,7 +345,6 @@ public class AuditAdvice {
         if ( persister == null ) {
             throw new IllegalArgumentException( "No persister found for " + object.getClass().getName() );
         }
-        boolean hadErrors = false;
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
         String[] propertyNames = persister.getPropertyNames();
         try {
@@ -355,8 +353,8 @@ public class AuditAdvice {
 
                 String propertyName = propertyNames[j];
 
-                if ( !specialCaseForAssociationFollow( object, propertyName ) && (
-                        canSkipAssociationCheck( object, propertyName ) || !crudUtils
+                if ( !this.specialCaseForAssociationFollow( object, propertyName ) && (
+                        this.canSkipAssociationCheck( object, propertyName ) || !crudUtils
                                 .needCascade( methodName, cs ) ) ) {
                     continue;
                 }
@@ -374,15 +372,15 @@ public class AuditAdvice {
                     AbstractAuditable auditable = ( AbstractAuditable ) associatedObject;
                     try {
 
-                        maybeAddCascadeCreateEvent( object, auditable, user );
+                        this.maybeAddCascadeCreateEvent( object, auditable, user );
 
-                        processAssociations( methodName, auditable, user );
+                        this.processAssociations( methodName, auditable, user );
                     } catch ( LazyInitializationException e ) {
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
-                        if ( log.isDebugEnabled() )
-                            log.debug( "Caught lazy init error while processing " + auditable + ": " + e.getMessage()
-                                    + " - skipping creation of cascade event." );
+                        if ( AuditAdvice.log.isDebugEnabled() )
+                            AuditAdvice.log.debug( "Caught lazy init error while processing " + auditable + ": " + e
+                                    .getMessage() + " - skipping creation of cascade event." );
                     }
 
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
@@ -396,13 +394,14 @@ public class AuditAdvice {
                                 AbstractAuditable auditable = ( AbstractAuditable ) collectionMember;
                                 try {
                                     Hibernate.initialize( auditable );
-                                    maybeAddCascadeCreateEvent( object, auditable, user );
-                                    processAssociations( methodName, collectionMember, user );
+                                    this.maybeAddCascadeCreateEvent( object, auditable, user );
+                                    this.processAssociations( methodName, collectionMember, user );
                                 } catch ( LazyInitializationException e ) {
 
-                                    if ( log.isDebugEnabled() )
-                                        log.debug( "Caught lazy init error while processing " + auditable + ": " + e
-                                                .getMessage() + " - skipping creation of cascade event." );
+                                    if ( AuditAdvice.log.isDebugEnabled() )
+                                        AuditAdvice.log
+                                                .debug( "Caught lazy init error while processing " + auditable + ": "
+                                                        + e.getMessage() + " - skipping creation of cascade event." );
                                     // If this happens, it means the object can't be 'new' so adding audit trail can't
                                     // be necessary. But keep checking.
                                 }
@@ -413,9 +412,10 @@ public class AuditAdvice {
 
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
-                        if ( log.isDebugEnabled() )
-                            log.debug( "Caught lazy init error while processing " + object + ": " + e.getMessage()
-                                    + " - skipping creation of cascade event." );
+                        if ( AuditAdvice.log.isDebugEnabled() )
+                            AuditAdvice.log
+                                    .debug( "Caught lazy init error while processing " + object + ": " + e.getMessage()
+                                            + " - skipping creation of cascade event." );
                     }
 
                 }

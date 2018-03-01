@@ -3,10 +3,7 @@ package ubic.gemma.web.feed;
 import java.util.Date;
 
 /**
- * TODO Document Me
- * 
  * @author paul
- *
  */
 public class NewsItem {
 
@@ -22,28 +19,28 @@ public class NewsItem {
         return body;
     }
 
-    public Date getDate() {
-        return date;
-    }
-
-    public String getTeaser() {
-        return teaser;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
     public void setBody( String body ) {
         this.body = body;
+    }
+
+    public Date getDate() {
+        return date;
     }
 
     public void setDate( Date date ) {
         this.date = date;
     }
 
+    public String getTeaser() {
+        return teaser;
+    }
+
     public void setTeaser( String teaser ) {
         this.teaser = teaser;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public void setTitle( String title ) {

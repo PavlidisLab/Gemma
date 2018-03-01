@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -36,7 +37,6 @@ import java.io.*;
  */
 public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
 
-    private boolean dryRun = false;
     private ExpressionExperiment expressionExperiment;
     private InputStream inputStream;
 
@@ -44,7 +44,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         ExperimentalDesignImportCli e = new ExperimentalDesignImportCli();
         Exception ex = e.doWork( args );
         if ( ex != null ) {
-            log.fatal( ex, ex );
+            AbstractCLI.log.fatal( ex, ex );
         }
         System.exit( 0 );
     }
@@ -59,11 +59,6 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         return "importDesign";
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Import an experimental design";
-    }
-
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -74,23 +69,19 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
                                 + "and if this option is omitted, the tool will be applied to all expression experiments." )
                 .withLongOpt( "experiment" ).create( 'e' );
 
-        addOption( expOption );
+        this.addOption( expOption );
 
         Option designFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Design file" )
                 .withDescription( "Experimental design description file" ).withLongOpt( "designFile" ).create( 'f' );
-        addOption( designFileOption );
-
-        Option dryRunOption = OptionBuilder.create( "dryrun" );
-        addOption( dryRunOption );
+        this.addOption( designFileOption );
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception e = processCommandLine( args );
+        Exception e = this.processCommandLine( args );
         if ( e != null )
             return e;
 
-        // FIXME may need to load other ontologies?
         ExperimentalFactorOntologyService mos = this.getBean( OntologyService.class )
                 .getExperimentalFactorOntologyService();
         mos.startInitializationThread( true );
@@ -100,14 +91,14 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
             } catch ( InterruptedException e1 ) {
                 //
             }
-            log.info( "Waiting for EFO to load" );
+            AbstractCLI.log.info( "Waiting for EFO to load" );
         }
 
-        ExperimentalDesignImporter edimp = this.getBean( ExperimentalDesignImporter.class );
+        ExperimentalDesignImporter edImp = this.getBean( ExperimentalDesignImporter.class );
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         expressionExperiment = ees.thawBioAssays( expressionExperiment );
         try {
-            edimp.importDesign( expressionExperiment, inputStream, dryRun );
+            edImp.importDesign( expressionExperiment, inputStream );
         } catch ( IOException e1 ) {
             return e1;
         }
@@ -115,25 +106,9 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         return null;
     }
 
-    /**
-     * @param shortName short name of the experiment to find.
-     * @return experiment with the given short name, if it exists. Bails otherwise with {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
-     */
-    @SuppressWarnings("WeakerAccess") // Possible external use
-    protected ExpressionExperiment locateExpressionExperiment( String shortName ) {
-
-        if ( shortName == null ) {
-            errorObjects.add( "Expression experiment short name must be provided" );
-            return null;
-        }
-        ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
-        ExpressionExperiment experiment = eeService.findByShortName( shortName );
-
-        if ( experiment == null ) {
-            log.error( "No experiment " + shortName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return experiment;
+    @Override
+    public String getShortDesc() {
+        return "Import an experimental design";
     }
 
     @Override
@@ -141,7 +116,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         super.processOptions();
 
         String shortName = this.getOptionValue( 'e' );
-        this.expressionExperiment = locateExpressionExperiment( shortName );
+        this.expressionExperiment = this.locateExpressionExperiment( shortName );
         if ( this.expressionExperiment == null ) {
             throw new IllegalArgumentException( shortName + " not found" );
         }
@@ -157,10 +132,27 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
 
-        if ( this.hasOption( "dryrun" ) ) {
-            this.dryRun = true;
-        }
+    }
 
+    /**
+     * @param shortName short name of the experiment to find.
+     * @return experiment with the given short name, if it exists. Bails otherwise with {@link ubic.gemma.core.util.AbstractCLI.ErrorCode#INVALID_OPTION}.
+     */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    protected ExpressionExperiment locateExpressionExperiment( String shortName ) {
+
+        if ( shortName == null ) {
+            errorObjects.add( "Expression experiment short name must be provided" );
+            return null;
+        }
+        ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
+        ExpressionExperiment experiment = eeService.findByShortName( shortName );
+
+        if ( experiment == null ) {
+            AbstractCLI.log.error( "No experiment " + shortName + " found" );
+            this.bail( ErrorCode.INVALID_OPTION );
+        }
+        return experiment;
     }
 
 }

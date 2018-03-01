@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -74,10 +74,10 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     static {
         // these are 'NOT association' codes, or (ND) one that means "nothing known", which we don't use. See
         // http://www.geneontology.org/GO.evidence.shtml.
-        ignoredEvidenceCodes.add( "IMR" );
-        ignoredEvidenceCodes.add( "IKR" );
-        ignoredEvidenceCodes.add( "IRD" );
-        ignoredEvidenceCodes.add( "ND" );
+        NCBIGene2GOAssociationParser.ignoredEvidenceCodes.add( "IMR" );
+        NCBIGene2GOAssociationParser.ignoredEvidenceCodes.add( "IKR" );
+        NCBIGene2GOAssociationParser.ignoredEvidenceCodes.add( "IRD" );
+        NCBIGene2GOAssociationParser.ignoredEvidenceCodes.add( "ND" );
     }
 
     private final int TAX_ID = Settings.getInt( "gene2go.tax_id" );
@@ -87,7 +87,6 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     private BlockingQueue<Gene2GOAssociation> queue;
 
     private int count = 0;
-    private ExternalDatabase goDb;
 
     /**
      * NCBI Ids of available taxa.
@@ -98,7 +97,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
      * @param taxa to consider (usually we pass in all)
      */
     public NCBIGene2GOAssociationParser( Collection<Taxon> taxa ) {
-        goDb = ExternalDatabase.Factory.newInstance();
+        ExternalDatabase goDb = ExternalDatabase.Factory.newInstance();
         goDb.setName( "GO" );
         goDb.setType( DatabaseType.ONTOLOGY );
 
@@ -123,17 +122,23 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         return null;
     }
 
+    @Override
+    protected void addResult( Gene2GOAssociation obj ) {
+        count++;
+    }
+
     /**
      * Note that "-" means a missing value, which in practice only occurs in the "qualifier" and "pubmed" columns.
      *
      * @param line line
      * @return Object
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public Gene2GOAssociation mapFromGene2GO( String line ) {
 
         String[] values = StringUtils.splitPreserveAllTokens( line, "\t" );
 
-        if ( line.startsWith( COMMENT_INDICATOR ) )
+        if ( line.startsWith( NCBIGene2GOAssociationParser.COMMENT_INDICATOR ) )
             return null;
 
         if ( values.length < 8 )
@@ -166,7 +171,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
         if ( !( StringUtils.isBlank( evidenceCode ) || evidenceCode.equals( "-" ) ) ) {
 
-            if ( ignoredEvidenceCodes.contains( evidenceCode ) ) {
+            if ( NCBIGene2GOAssociationParser.ignoredEvidenceCodes.contains( evidenceCode ) ) {
                 return null;
             }
 
@@ -196,11 +201,6 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     @Override
     public Gene2GOAssociation parseOneLine( String line ) {
         return this.mapFromGene2GO( line );
-    }
-
-    @Override
-    protected void addResult( Gene2GOAssociation obj ) {
-        count++;
     }
 
 }

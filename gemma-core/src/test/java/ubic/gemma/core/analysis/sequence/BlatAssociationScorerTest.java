@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,15 +19,7 @@
 
 package ubic.gemma.core.analysis.sequence;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.junit.Test;
-
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -37,59 +29,26 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.util.ChromosomeUtil;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
+
 /**
  * {@link BlatAssociationScorer} tests
- * 
- * @author ptan
  *
+ * @author ptan
  */
 public class BlatAssociationScorerTest {
 
-    private BlatResult createBlatResult( String name ) {
-        BlatResult blatResult = BlatResult.Factory.newInstance();
-        blatResult.setRepMatches( 0 );
-        blatResult.setMatches( 49 );
-        blatResult.setQueryGapCount( 0 );
-        blatResult.setTargetGapCount( 2 );
-        blatResult.setMismatches( 1 );
-        BioSequence sequence = BioSequence.Factory.newInstance();
-        blatResult.setQuerySequence( sequence );
-        blatResult.getQuerySequence().setLength( 50L );
-
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "human" );
-
-        Chromosome chr = Chromosome.Factory.newInstance( name, taxon );
-        blatResult.setTargetChromosome( chr );
-
-        return blatResult;
-    }
-
-    private GeneProduct createGeneProduct( String name ) {
-
-        Chromosome chromosome = Chromosome.Factory.newInstance( name, null );
-        GeneProduct geneProduct = GeneProduct.Factory.newInstance();
-        Gene gene = Gene.Factory.newInstance();
-
-        geneProduct.setGene( gene );
-        geneProduct.setName( name );
-
-        return geneProduct;
-    }
-
-    /**
-     * Test method for
-     * {@link ubic.gemma.core.analysis.sequence.BlatAssociationScorer#scoreResults(java.util.Collection, ubic.gemma.core.analysis.sequence.ProbeMapperConfig)}
-     * .
-     */
     @Test
     public void testScoreResults() {
 
         // there's only one gene product that is aligned to two different regions
-        GeneProduct geneProduct = createGeneProduct( "geneProduct" );
+        GeneProduct geneProduct = this.createGeneProduct();
 
-        BlatResult blatResult_1 = createBlatResult( "6_cox_hap2" );
-        BlatResult blatResult_2 = createBlatResult( "6" );
+        BlatResult blatResult_1 = this.createBlatResult( "6_cox_hap2" );
+        BlatResult blatResult_2 = this.createBlatResult( "6" );
 
         // this has the highest score but located on a non-canonical chromosome
         // so this should be ignored
@@ -107,7 +66,7 @@ public class BlatAssociationScorerTest {
         association_2.setOverlap( 30 );
         association_2.setBioSequence( BioSequence.Factory.newInstance() );
 
-        Collection<BlatAssociation> blatAssociations = new ArrayList<BlatAssociation>();
+        Collection<BlatAssociation> blatAssociations = new ArrayList<>();
         blatAssociations.add( association_1 );
         blatAssociations.add( association_2 );
 
@@ -115,15 +74,46 @@ public class BlatAssociationScorerTest {
         config.setTrimNonCanonicalChromosomeHits( true );
 
         // BlatAssociation expected = association_2;
-        BlatAssociation actual = BlatAssociationScorer.scoreResults( blatAssociations, config );
+        BlatAssociation actual = BlatAssociationScorer.scoreResults( blatAssociations );
 
         assertFalse( ChromosomeUtil.isCanonical( blatResult_1.getTargetChromosome() ) );
         assertTrue( ChromosomeUtil.isCanonical( blatResult_2.getTargetChromosome() ) );
-        assertEquals( 940.0, association_1.getScore().doubleValue(), 0 );
-        assertEquals( 564.0, association_2.getScore().doubleValue(), 0 );
-        assertEquals( 1.0, actual.getSpecificity().doubleValue(), 0 );
+        assertEquals( 940.0, association_1.getScore(), 0 );
+        assertEquals( 564.0, association_2.getScore(), 0 );
+        assertEquals( 1.0, actual.getSpecificity(), 0 );
         // assertEquals( expected, actual );
 
+    }
+
+    private BlatResult createBlatResult( String name ) {
+        BlatResult blatResult = BlatResult.Factory.newInstance();
+        blatResult.setRepMatches( 0 );
+        blatResult.setMatches( 49 );
+        blatResult.setQueryGapCount( 0 );
+        blatResult.setTargetGapCount( 2 );
+        blatResult.setMismatches( 1 );
+        BioSequence sequence = BioSequence.Factory.newInstance();
+        blatResult.setQuerySequence( sequence );
+        blatResult.getQuerySequence().setLength( 50L );
+
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName( "human" );
+
+        Chromosome chr = new Chromosome( name, taxon );
+        blatResult.setTargetChromosome( chr );
+
+        return blatResult;
+    }
+
+    private GeneProduct createGeneProduct() {
+
+        GeneProduct geneProduct = GeneProduct.Factory.newInstance();
+        Gene gene = Gene.Factory.newInstance();
+
+        geneProduct.setGene( gene );
+        geneProduct.setName( "geneProduct" );
+
+        return geneProduct;
     }
 
 }

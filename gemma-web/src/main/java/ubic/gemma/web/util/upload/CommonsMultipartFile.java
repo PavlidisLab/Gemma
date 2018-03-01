@@ -46,9 +46,7 @@ import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 @Deprecated
 public class CommonsMultipartFile implements MultipartFile, Serializable {
 
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 6483196912349343465L;
 
     protected static final Log logger = LogFactory.getLog( CommonsMultipartFile.class );
@@ -67,9 +65,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         this.size = this.fileItem.getSize();
     }
 
-    /**
-     * 
-     */
+
     @Override
     public byte[] getBytes() {
         if ( !isAvailable() ) {
@@ -79,9 +75,7 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         return ( bytes != null ? bytes : new byte[0] );
     }
 
-    /**
-     * 
-     */
+
     @Override
     public String getContentType() {
         return this.fileItem.getContentType();
@@ -95,30 +89,24 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         return fileItem;
     }
 
-    /**
-     * 
-     */
+
     @Override
     public InputStream getInputStream() throws IOException {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has been moved - cannot be read again" );
         }
-        try (InputStream inputStream = this.fileItem.getInputStream();) {
+        try (InputStream inputStream = this.fileItem.getInputStream()) {
             return ( inputStream != null ? inputStream : new ByteArrayInputStream( new byte[0] ) );
         }
     }
 
-    /**
-     * 
-     */
+
     @Override
     public String getName() {
         return this.fileItem.getFieldName();
     }
 
-    /**
-     * 
-     */
+
     @Override
     public String getOriginalFilename() {
         if ( this.fileItem.getName() == null ) {
@@ -139,25 +127,19 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
 
     }
 
-    /**
-     * 
-     */
+
     @Override
     public long getSize() {
         return size;
     }
 
-    /**
-     * 
-     */
+
     @Override
     public boolean isEmpty() {
         return ( this.size == 0 );
     }
 
-    /**
-     * 
-     */
+
     @Override
     public void transferTo( File dest ) throws IOException, IllegalStateException {
         if ( !isAvailable() ) {

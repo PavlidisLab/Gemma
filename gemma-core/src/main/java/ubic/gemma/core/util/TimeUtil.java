@@ -32,7 +32,6 @@ public class TimeUtil {
         Long overallElapsed = overallWatch.getTime();
         NumberFormat nf = new DecimalFormat();
         nf.setMaximumFractionDigits( 2 );
-        String minutes = nf.format( overallElapsed / ( 60.0 * 1000.0 ) );
-        return minutes;
+        return nf.format( overallElapsed / ( 60.0 * 1000.0 ) );
     }
 }

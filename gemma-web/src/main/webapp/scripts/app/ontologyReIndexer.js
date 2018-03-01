@@ -23,7 +23,7 @@ function handleSuccess( taskId ) {
       } );
    } catch (e) {
       handleFailure( taskId, e );
-      return;
+
    }
 }
 

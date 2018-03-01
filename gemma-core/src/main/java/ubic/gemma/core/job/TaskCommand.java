@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@ import java.io.Serializable;
  * which might be on a different computer.
  * This class can be used directly, or extended to create a command object to pass parameters for a specific task. See
  * for example {@link ExpressionExperimentLoadTaskCommand}. A entityId field is provided as a convenience for the case
- * when a primary key is all that is really needed. TODO: Make sure it is immutable. TODO: Rename to TaskContext.
+ * when a primary key is all that is really needed.
  *
  * @author keshav
  */
@@ -71,8 +71,8 @@ public class TaskCommand implements Serializable {
     /**
      * How long we will allow this task to be queued before giving up.
      */
-    private Integer maxQueueMinutes = MAX_QUEUING_MINUTES;
-    private int maxRuntime = MAX_RUNTIME_MINUTES;
+    private Integer maxQueueMinutes = TaskCommand.MAX_QUEUING_MINUTES;
+    private int maxRuntime = TaskCommand.MAX_RUNTIME_MINUTES;
 
     public TaskCommand() {
         // The taskId is assigned on creation.

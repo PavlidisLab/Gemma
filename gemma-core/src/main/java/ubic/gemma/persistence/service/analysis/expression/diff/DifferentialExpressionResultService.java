@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -37,6 +36,7 @@ import java.util.Map;
  *
  * @author kelsey
  */
+@SuppressWarnings("unused") // Possible external use
 public interface DifferentialExpressionResultService extends BaseService<DifferentialExpressionAnalysisResult> {
 
     /**
@@ -132,7 +132,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
     /**
-     * Does not thaw the collection of probes (just the factor information)
+     * Does not thawRawAndProcessed the collection of probes (just the factor information)
      */
     void thawLite( ExpressionAnalysisResultSet resultSet );
 

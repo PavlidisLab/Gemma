@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -52,10 +52,10 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
     @Test
     public void testLoad() throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
         ExpressionExperiment newee;
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE26903", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE26903", false, true, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -75,10 +75,10 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
     @Test
     public void testLoadCommandConsoleFormat() throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
         ExpressionExperiment newee;
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE20219", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE20219", false, true, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();

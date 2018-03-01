@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,14 +53,12 @@ import static org.junit.Assert.*;
  */
 public class SecurityServiceTest extends BaseSpringContextTest {
 
+    private static final String compositeSequenceName1 = "Design Element Bar1";
+    private static final String compositeSequenceName2 = "Design Element Bar2";
     @Autowired
     private ArrayDesignService arrayDesignService;
-
     private ArrayDesign arrayDesign;
     private String arrayDesignName;
-    private String compositeSequenceName1 = "Design Element Bar1";
-    private String compositeSequenceName2 = "Design Element Bar2";
-
     @Autowired
     private SecurityService securityService;
 
@@ -82,12 +80,12 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.arrayDesign.setPrimaryTaxon( this.getTaxon( "human" ) );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-        cs1.setName( this.compositeSequenceName1 );
+        cs1.setName( SecurityServiceTest.compositeSequenceName1 );
 
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-        cs2.setName( this.compositeSequenceName2 );
+        cs2.setName( SecurityServiceTest.compositeSequenceName2 );
 
-        Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> col = new HashSet<>();
         col.add( cs1 );
         col.add( cs2 );
 
@@ -107,14 +105,14 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * Tests that the same ACE can not be added twice to a securable object.
      */
     @Test
-    public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() throws Exception {
+    public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() {
         // make private experiment
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
         this.securityService.makePrivate( ee );
         // add user and add the user to the group
-        String username = "salmonid" + randomName();
-        String groupName = "fish" + randomName();
-        makeUser( username );
+        String username = "salmonid" + this.randomName();
+        String groupName = "fish" + this.randomName();
+        this.makeUser( username );
         this.securityService.makeOwnedByUser( ee, username );
         assertTrue( this.securityService.isEditableByUser( ee, username ) );
         this.runAsUser( username );
@@ -145,15 +143,15 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testMakeEEGroupReadWrite() throws Exception {
+    public void testMakeEEGroupReadWrite() {
 
         ArrayDesign entity = super.getTestPersistentArrayDesign( 2, true );
         this.securityService.makePrivate( entity );
 
-        String username = "first_" + randomName();
-        String usertwo = "second_" + randomName();
-        makeUser( username );
-        makeUser( usertwo );
+        String username = "first_" + this.randomName();
+        String usertwo = "second_" + this.randomName();
+        this.makeUser( username );
+        this.makeUser( usertwo );
 
         this.securityService.makeOwnedByUser( entity, username );
 
@@ -164,7 +162,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         /*
          * Create a group, do stuff...
          */
-        String groupName = randomName();
+        String groupName = this.randomName();
         this.securityService.createGroup( groupName );
         this.securityService.makeWriteableByGroup( entity, groupName );
 
@@ -207,7 +205,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testMakeExpressionExperimentPrivate() throws Exception {
+    public void testMakeExpressionExperimentPrivate() {
 
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
 
@@ -240,8 +238,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * (You need to be administrator).
      */
     @Test
-    public void testMakePrivateWithoutPermission() throws Exception {
-        makeUser( "unauthorizedTestUser" );
+    public void testMakePrivateWithoutPermission() {
+        this.makeUser( "unauthorizedTestUser" );
         this.runAsUser( "unauthorizedTestUser" ); // test setup.
 
         ArrayDesign ad = this.arrayDesignService.findByName( this.arrayDesignName ).iterator().next();
@@ -259,15 +257,15 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * object then both acls can be deleted.
      */
     @Test
-    public void testRemoveMultipleAcesFromPrivateExpressionExperiment() throws Exception {
+    public void testRemoveMultipleAcesFromPrivateExpressionExperiment() {
         // make private experiment
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
         this.securityService.makePrivate( ee );
 
         // add user and add the user to a group
         String username = "salmonid";
-        String groupName = "fish" + randomName();
-        makeUser( username );
+        String groupName = "fish" + this.randomName();
+        this.makeUser( username );
         this.securityService.makeOwnedByUser( ee, username );
         assertTrue( this.securityService.isEditableByUser( ee, username ) );
         this.runAsUser( username );
@@ -300,7 +298,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         assertEquals( numberOfAces, entriesAfterDelete.size() );
 
         // also check that the right ACE check the principals
-        Collection<String> principals = new ArrayList<String>();
+        Collection<String> principals = new ArrayList<>();
         principals.add( "AclGrantedAuthoritySid[GROUP_ADMIN]" );
         principals.add( "AclGrantedAuthoritySid[GROUP_AGENT]" );
         principals.add( "AclPrincipalSid[salmonid]" );
@@ -322,8 +320,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
         this.securityService.makePrivate( ee );
 
-        String username = "first_" + randomName();
-        makeUser( username );
+        String username = "first_" + this.randomName();
+        this.makeUser( username );
 
         this.securityService.setOwner( ee, username );
 
@@ -338,22 +336,22 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * Principal ids are created in these method calls on SecurityService.
      */
     @Test
-    public void testSetPrincialSID() {
-        String username = "first_" + randomName();
+    public void testSetPrincipalSID() {
+        String username = "first_" + this.randomName();
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
         this.securityService.makePrivate( ee );
 
         try {
             this.securityService.setOwner( ee, username );
             fail();
-        } catch ( Exception e ) {
+        } catch ( Exception ignored ) {
 
         }
 
         try {
             this.securityService.makeOwnedByUser( ee, username );
             fail();
-        } catch ( Exception e ) {
+        } catch ( Exception ignored ) {
 
         }
 

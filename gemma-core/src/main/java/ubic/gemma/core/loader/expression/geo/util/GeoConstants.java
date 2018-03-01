@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,72 +28,70 @@ import java.util.HashSet;
  */
 public class GeoConstants {
 
-    public static Collection<String> idNames;
-
+    private static final Collection<String> idNames;
     /**
      * Collection of strings used to identify the column holding external database identifiers, usually Genbank
      * accession or ORF numbers. This must be added to when new ones are encountered.
      */
-    public static Collection<String> extRefNames;
-
-    public static Collection<String> descriptionNames;
-    public static Collection<String> sequenceColumnNames;
-    public static Collection<String> probeOrganismColumnNames;
+    private static final Collection<String> extRefNames;
+    private static final Collection<String> descriptionNames;
+    private static final Collection<String> sequenceColumnNames;
+    private static final Collection<String> probeOrganismColumnNames;
 
     static {
-        idNames = new HashSet<String>();
-        idNames.add( "ID" );
-        idNames.add( "TAG" ); // SAGE.
+        idNames = new HashSet<>();
+        GeoConstants.idNames.add( "ID" );
+        GeoConstants.idNames.add( "TAG" ); // SAGE.
 
-        extRefNames = new HashSet<String>();
-        extRefNames.add( "GB_ACC" );
-        extRefNames.add( "GB_LIST" );
-        extRefNames.add( "ORF" );
-        extRefNames.add( "Genbank" );
-        extRefNames.add( "GenBank" );
+        extRefNames = new HashSet<>();
+        GeoConstants.extRefNames.add( "GB_ACC" );
+        GeoConstants.extRefNames.add( "GB_LIST" );
+        GeoConstants.extRefNames.add( "ORF" );
+        GeoConstants.extRefNames.add( "Genbank" );
+        GeoConstants.extRefNames.add( "GenBank" );
         // extRefNames.add( "CLONE_ID" ); // IMAGE...
 
-        descriptionNames = new HashSet<String>();
-        descriptionNames.add( "GENE_SYMBOL" );
-        descriptionNames.add( "GENE_NAME" );
-        descriptionNames.add( "Gene Symbol" );
-        descriptionNames.add( "Gene Title" );
-        descriptionNames.add( "description" );
-        descriptionNames.add( "DESCRIPTION" );
-        descriptionNames.add( "Symbol" );
-        descriptionNames.add( "PRIMARY_NAME" ); // agilent.
+        descriptionNames = new HashSet<>();
+        GeoConstants.descriptionNames.add( "GENE_SYMBOL" );
+        GeoConstants.descriptionNames.add( "GENE_NAME" );
+        GeoConstants.descriptionNames.add( "Gene Symbol" );
+        GeoConstants.descriptionNames.add( "Gene Title" );
+        GeoConstants.descriptionNames.add( "description" );
+        GeoConstants.descriptionNames.add( "DESCRIPTION" );
+        GeoConstants.descriptionNames.add( "Symbol" );
+        GeoConstants.descriptionNames.add( "PRIMARY_NAME" ); // agilent.
 
-        sequenceColumnNames = new HashSet<String>();
-        sequenceColumnNames.add( "SEQUENCE" ); // agilent.
+        sequenceColumnNames = new HashSet<>();
+        GeoConstants.sequenceColumnNames.add( "SEQUENCE" ); // agilent.
 
         //LMD 24/07/09 Bug 1647
-        probeOrganismColumnNames = new HashSet<String>();
-        probeOrganismColumnNames.add( "ORGANISM" );
-        probeOrganismColumnNames.add( "Species" );
-        probeOrganismColumnNames.add( "org" );
-        probeOrganismColumnNames.add( "Species Scientific name" );//agilent?
-        probeOrganismColumnNames.add( "Taxon" );
+        probeOrganismColumnNames = new HashSet<>();
+        GeoConstants.probeOrganismColumnNames.add( "ORGANISM" );
+        GeoConstants.probeOrganismColumnNames.add( "Species" );
+        GeoConstants.probeOrganismColumnNames.add( "org" );
+        GeoConstants.probeOrganismColumnNames.add( "Species Scientific name" );//agilent?
+        GeoConstants.probeOrganismColumnNames.add( "Taxon" );
 
     }
 
     public static boolean likelyId( String tag ) {
-        return idNames.contains( tag );
+        return GeoConstants.idNames.contains( tag );
     }
 
     public static boolean likelyExternalReference( String id ) {
-        return extRefNames.contains( id );
+        return GeoConstants.extRefNames.contains( id );
     }
 
     public static boolean likelySequence( String id ) {
-        return sequenceColumnNames.contains( id );
+        return GeoConstants.sequenceColumnNames.contains( id );
     }
 
     public static boolean likelyProbeOrganism( String id ) {
-        return probeOrganismColumnNames.contains( id );
+        return GeoConstants.probeOrganismColumnNames.contains( id );
     }
 
     public static boolean likelyProbeDescription( String id ) {
-        return descriptionNames.contains( id );
+        return GeoConstants.descriptionNames.contains( id );
     }
 
 }

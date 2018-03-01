@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,8 +19,11 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,35 +32,22 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.util.FileTools;
-
 /**
  * Because agilent makes slides that work with any scanner, the formats are not that predictable. I've seen these so
  * far:
  * <ul>
  * <li>GPR format
- * <p>
  * format.
  * <li>Agilent scanner files. These start with "TYPE" Example: GSE14466. The second line is "FEPARAMS", the fourth
  * column is "Scan_date". The data are in the third line.
  * </ul>
- * 
- * @author paul
  *
+ * @author paul
  */
 public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
-    private static Log log = LogFactory.getLog( AgilentScanDateExtractor.class );
+    private static final Log log = LogFactory.getLog( AgilentScanDateExtractor.class );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.batcheffects.ScanDateExtractor#extract(java.io.InputStream)
-     */
     @Override
     public Date extract( InputStream is ) {
         BufferedReader reader = null;
@@ -71,7 +61,7 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
             String line = reader.readLine();
 
             if ( line.startsWith( "ATF" ) ) {
-                return extractGenePix( reader );
+                return this.extractGenePix( reader );
             } else if ( line.startsWith( "TYPE" ) ) {
                 line = reader.readLine();
                 if ( line.startsWith( "FEPARAMS" ) ) {
@@ -99,7 +89,7 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
                     fields = StringUtils.split( line, '\t' );
                     String date = fields[dateField];
 
-                    Date d = null;
+                    Date d;
 
                     DateFormat f = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss" ); // 10-18-2005 13:02:36
                     f.setLenient( true );
@@ -111,34 +101,17 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
                 throw new UnsupportedRawdataFileFormatException( "Unknown agilent array file format." );
             }
 
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        } catch ( ParseException e ) {
+        } catch ( IOException | ParseException e ) {
             throw new RuntimeException( e );
         } finally {
             try {
-                if ( reader != null ) reader.close();
+                if ( reader != null )
+                    reader.close();
             } catch ( IOException e ) {
-                log.error( "Failed to close open file handle: " + e.getMessage() );
+                AgilentScanDateExtractor.log.error( "Failed to close open file handle: " + e.getMessage() );
             }
         }
         return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.batcheffects.ScanDateExtractor#extract(java.lang.String)
-     */
-    @Override
-    public Date extract( String fileName ) {
-        try {
-            return extract( FileTools.getInputStreamFromPlainOrCompressedFile( fileName ) );
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
     }
 
 }

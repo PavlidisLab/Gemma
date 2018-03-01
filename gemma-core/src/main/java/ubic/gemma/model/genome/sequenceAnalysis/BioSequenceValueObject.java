@@ -8,6 +8,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence> {
 
     private String description;
@@ -30,7 +31,7 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
     }
 
     public static Collection<BioSequenceValueObject> fromEntities( Collection<BioSequence> bsList ) {
-        Collection<BioSequenceValueObject> result = new ArrayList<BioSequenceValueObject>();
+        Collection<BioSequenceValueObject> result = new ArrayList<>();
         for ( BioSequence bs : bsList ) {
             result.add( BioSequenceValueObject.fromEntity( bs ) );
         }
@@ -58,7 +59,7 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         BioSequenceValueObject other = ( BioSequenceValueObject ) obj;
         if ( id == null ) {
@@ -80,11 +81,9 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
             return false;
 
         if ( type == null ) {
-            if ( other.type != null )
-                return false;
-        } else if ( !type.equals( other.type ) )
-            return false;
-        return true;
+            return other.type == null;
+        } else
+            return type.equals( other.type );
     }
 
     public String getDescription() {

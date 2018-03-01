@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,7 +69,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     /**
      * The key is the ensembl protein id.
      */
-    private Map<String, Ensembl2NcbiValueObject> ensembl2ncbi = null;
+    private Map<String, Ensembl2NcbiValueObject> ensembl2ncbi;
 
     /**
      * Reference to external database as held in gemma system
@@ -82,11 +82,13 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     public StringProteinProteinInteractionConverter( Map<String, Ensembl2NcbiValueObject> ensembl2ncbi ) {
         this.ensembl2ncbi = ensembl2ncbi;
 
-        stringVersion = Settings.getString( "protein.string.version" );
-        stringUrl = Settings.getString( "protein.string.linksurl" );
-        if ( stringUrl == null || stringUrl.length() == 0 )
+        StringProteinProteinInteractionConverter.stringVersion = Settings.getString( "protein.string.version" );
+        StringProteinProteinInteractionConverter.stringUrl = Settings.getString( "protein.string.linksurl" );
+        if ( StringProteinProteinInteractionConverter.stringUrl == null
+                || StringProteinProteinInteractionConverter.stringUrl.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "stringUrl was null or empty" ) );
-        if ( stringVersion == null || stringVersion.length() == 0 )
+        if ( StringProteinProteinInteractionConverter.stringVersion == null
+                || StringProteinProteinInteractionConverter.stringVersion.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "stringVersion was null or empty" ) );
     }
 
@@ -107,14 +109,15 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
                             continue;
                         }
                         // converter
-                        Collection<Gene2GeneProteinAssociation> dataColl = convert( stringProteinProteinInteraction );
+                        Collection<Gene2GeneProteinAssociation> dataColl = StringProteinProteinInteractionConverter.this
+                                .convert( stringProteinProteinInteraction );
                         // this returns a collection so split out and put on queue
                         for ( Gene2GeneProteinAssociation gene2GeneProteinAssociation : dataColl ) {
                             gene2GeneProteinAssociationQueue.put( gene2GeneProteinAssociation );
                         }
                     }
                 } catch ( InterruptedException e ) {
-                    log.info( "Interrupted." );
+                    StringProteinProteinInteractionConverter.log.info( "Interrupted." );
                 }
                 producerDone.set( true );
             }
@@ -133,7 +136,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
         }
         long EndTime = System.currentTimeMillis();
         long time = ( EndTime - startTime ) / 1000;
-        log.info( "Time taken for conversion call is  " + time );
+        StringProteinProteinInteractionConverter.log.info( "Time taken for conversion call is  " + time );
         return results;
     }
 
@@ -150,7 +153,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
             processedObject = this.convert( ( Collection<?> ) sourceDomainObject );
         } else if ( sourceDomainObject instanceof StringProteinProteinInteraction ) {
             StringProteinProteinInteraction stringProteinProteinInteraction = ( StringProteinProteinInteraction ) sourceDomainObject;
-            processedObject = convert( stringProteinProteinInteraction );
+            processedObject = this.convert( stringProteinProteinInteraction );
         } else {
             throw new RuntimeException( "Incorrect domain object passed" );
         }
@@ -181,9 +184,11 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
 
         // empty if no mapping found
         if ( genesForProteinOne.isEmpty() ) {
-            log.warn( "No ncbi gene mapping for protein 1: " + sourceDomainObject.getProtein1() );
+            StringProteinProteinInteractionConverter.log
+                    .warn( "No ncbi gene mapping for protein 1: " + sourceDomainObject.getProtein1() );
         } else if ( genesForProteinTwo.isEmpty() ) {
-            log.warn( "No ncbi gene mapping for protein 2: " + sourceDomainObject.getProtein2() );
+            StringProteinProteinInteractionConverter.log
+                    .warn( "No ncbi gene mapping for protein 2: " + sourceDomainObject.getProtein2() );
         } else {
             // create the one to many mapping from ensembl to ncbi/entrez
             for ( Gene geneProtein1 : genesForProteinOne ) {
@@ -208,7 +213,8 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     public DatabaseEntry getDataBaseEntry( StringProteinProteinInteraction stringProteinProteinInteractionId ) {
         String proteinProteinInteraction = this.getProteinProteinInteractionId( stringProteinProteinInteractionId );
         return DatabaseEntry.Factory
-                .newInstance( proteinProteinInteraction, stringVersion, stringUrl, stringExternalDatabase );
+                .newInstance( proteinProteinInteraction, StringProteinProteinInteractionConverter.stringVersion,
+                        StringProteinProteinInteractionConverter.stringUrl, stringExternalDatabase );
     }
 
     /**
@@ -240,8 +246,9 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
                 gene.setNcbiGeneId( Integer.parseInt( entrezGeneId ) );
                 gene.setEnsemblId( ensemblGeneId );
                 genes.add( gene );
-                if ( log.isDebugEnabled() )
-                    log.debug( "Entry found for entrezGeneId " + entrezGeneId );
+                if ( StringProteinProteinInteractionConverter.log.isDebugEnabled() )
+                    StringProteinProteinInteractionConverter.log
+                            .debug( "Entry found for entrezGeneId " + entrezGeneId );
             }
         }
 
@@ -257,7 +264,8 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
      * @return Combined protein 1 and protein 2 ids representing an identifier for this protein interaction
      */
     public String getProteinProteinInteractionId( StringProteinProteinInteraction stringProteinProteinInteraction ) {
-        return stringProteinProteinInteraction.getProtein1().concat( PROTEIN_2_PROTEIN_LINK )
+        return stringProteinProteinInteraction.getProtein1()
+                .concat( StringProteinProteinInteractionConverter.PROTEIN_2_PROTEIN_LINK )
                 .concat( stringProteinProteinInteraction.getProtein2() );
     }
 

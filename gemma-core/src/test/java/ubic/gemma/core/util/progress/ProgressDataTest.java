@@ -18,13 +18,12 @@
  */
 package ubic.gemma.core.util.progress;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import ubic.gemma.core.job.progress.ProgressData;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author klc
@@ -32,7 +31,7 @@ import ubic.gemma.core.job.progress.ProgressData;
  */
 public class ProgressDataTest {
 
-    protected ProgressData pd;
+    private ProgressData pd;
 
     @Before
     public void setUp() {

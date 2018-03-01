@@ -308,7 +308,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
           */
          updatePnlMiniControlSize : function() {
             // Update size of top left control panel so that gene labels line up with data rows.
-            var topPadding = 0; // TODO get actual top padding from somewhere
+            var topPadding = 0;
             // Need "Math.max(140, ...)" so that panel doesn't disappear when all columns are filtered out
             this.fixedWidthCol.pnlControlAndLabels.setHeight( Math.max( 140, this.variableWidthCol.boxTopLabels
                .getHeight() )

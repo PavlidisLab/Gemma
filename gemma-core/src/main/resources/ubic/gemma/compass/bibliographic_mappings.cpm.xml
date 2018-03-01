@@ -12,7 +12,7 @@
 
 -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="common.description.BibliographicReference" alias="bibliographicReference" root="true">
+	<class name="common.description.BibliographicReference" alias="bibliographicReference">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>

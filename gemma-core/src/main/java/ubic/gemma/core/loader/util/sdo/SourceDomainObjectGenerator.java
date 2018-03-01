@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,16 +22,17 @@ import java.util.Collection;
 
 /**
  * @author pavlidis
- *
  */
 public interface SourceDomainObjectGenerator {
 
     /**
      * Combines the necessary data fetching and parsing steps to get a collection of source domain objects.
-     * 
+     *
      * @param accession such as a GEO or ArrayExpression accession identifier.
      * @return Collection of generated objects.
      */
-    public Collection<?> generate( String accession );
+    @SuppressWarnings("unused")
+    // Possible external use
+    Collection<?> generate( String accession );
 
 }

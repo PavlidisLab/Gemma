@@ -1,127 +1,121 @@
-Ext.namespace( 'Gemma' );
+Ext.namespace('Gemma');
 
 /**
- * 
+ *
  * Top level container for all sections of expression experiment group info Sections are: 1. Summary (has editing tools)
- * TODO ...
- * 
+ *
  * @class Gemma.ExpressionExperimentPage
  * @extends Ext.TabPanel
  * @author tvrossum
- * 
+ *
  */
-Gemma.ExpressionExperimentSetPage = Ext.extend( Ext.TabPanel, {
+Gemma.ExpressionExperimentSetPage = Ext.extend(Ext.TabPanel, {
 
-   defaults : {
-      autoScroll : true
-   },
-   deferredRender : true,
-   listeners : {
-      'tabchange' : function( tabPanel, newTab ) {
-         newTab.fireEvent( 'tabChanged' );
-      },
-      'beforetabchange' : function( tabPanel, newTab, currTab ) {
-         // if false is returned, tab isn't changed
-         if ( currTab ) {
-            return currTab.fireEvent( 'leavingTab' );
-         }
-         return true;
-      }
-   },
-   invalidIdHandler : function( msg ) {
-      this.items.add( new Ext.Panel( {
-         html : "Error in loading experiment group due to invalid id. " + msg
-      } ) );
-   },
-
-   /**
-    * @memberOf Gemma.ExpressionExperimentSetPage
-    */
-   initComponent : function() {
-
-      // get id of set to show
-      if ( !this.eeSetId && document.URL.indexOf( "?" ) > -1 && (document.URL.indexOf( "id=" ) > -1) ) {
-         var subsetDetails = document.URL.substr( document.URL.indexOf( "?" ) + 1 );
-         var param = Ext.urlDecode( subsetDetails );
-         if ( param.id ) {
-            var ids = param.id.split( ',' );
-            if ( ids.length === 1 ) {
-               this.eeSetId = ids[0];
-            } else {
-               this.invalidIdHandler( "Id was: " + param.id );
-               Gemma.ExpressionExperimentSetPage.superclass.initComponent.call( this );
-               return;
+    defaults: {
+        autoScroll: true
+    },
+    deferredRender: true,
+    listeners: {
+        'tabchange': function (tabPanel, newTab) {
+            newTab.fireEvent('tabChanged');
+        },
+        'beforetabchange': function (tabPanel, newTab, currTab) {
+            // if false is returned, tab isn't changed
+            if (currTab) {
+                return currTab.fireEvent('leavingTab');
             }
-         } else {
-            this.invalidIdHandler( "Missing \"id\" parameter." );
-            Gemma.ExpressionExperimentSetPage.superclass.initComponent.call( this );
-            return;
-         }
-      }
+            return true;
+        }
+    },
+    invalidIdHandler: function (msg) {
+        this.items.add(new Ext.Panel({
+            html: "Error in loading experiment group due to invalid id. " + msg
+        }));
+    },
 
-      Gemma.ExpressionExperimentSetPage.superclass.initComponent.call( this );
-      this.on( 'render', function() {
-         if ( !this.loadMask ) {
-            this.loadMask = new Ext.LoadMask( this.getEl(), {
-               msg : "Loading ...",
-               msgCls : 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
-            } );
-         }
-         this.loadMask.show();
+    /**
+     * @memberOf Gemma.ExpressionExperimentSetPage
+     */
+    initComponent: function () {
 
-         if ( this.eeSetId ) {
-            ExpressionExperimentSetController.load( this.eeSetId, this.eeSetCb.createDelegate( this ) );
-         } else if ( this.eeSetName ) {
-            ExpressionExperimentSetController.findByName( this.eeSetName, this.eeSetCb.createDelegate( this ) );
-         } else {
-            // panic?
-         }
-      } );
-   },
+        // get id of set to show
+        if (!this.eeSetId && document.URL.indexOf("?") > -1 && (document.URL.indexOf("id=") > -1)) {
+            var subsetDetails = document.URL.substr(document.URL.indexOf("?") + 1);
+            var param = Ext.urlDecode(subsetDetails);
+            if (param.id) {
+                var ids = param.id.split(',');
+                if (ids.length === 1) {
+                    this.eeSetId = ids[0];
+                } else {
+                    this.invalidIdHandler("Id was: " + param.id);
+                    Gemma.ExpressionExperimentSetPage.superclass.initComponent.call(this);
+                    return;
+                }
+            } else {
+                this.invalidIdHandler("Missing \"id\" parameter.");
+                Gemma.ExpressionExperimentSetPage.superclass.initComponent.call(this);
+                return;
+            }
+        }
 
-   isAdmin : Ext.get( "hasAdmin" ) !== null && Ext.get( "hasAdmin" ).getValue() === 'true',
+        Gemma.ExpressionExperimentSetPage.superclass.initComponent.call(this);
+        this.on('render', function () {
+            if (!this.loadMask) {
+                this.loadMask = new Ext.LoadMask(this.getEl(), {
+                    msg: "Loading ...",
+                    msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+                });
+            }
+            this.loadMask.show();
 
-   eeSetCb : function( experimentSetVO ) {
+            if (this.eeSetId) {
+                ExpressionExperimentSetController.load(this.eeSetId, this.eeSetCb.createDelegate(this));
+            } else if (this.eeSetName) {
+                ExpressionExperimentSetController.findByName(this.eeSetName, this.eeSetCb.createDelegate(this));
+            } else {
+                // panic?
+            }
+        });
+    },
 
-      this.experimentSet = experimentSetVO;
-      this.editable = experimentSetVO.userCanWrite;
-      this.loadMask.hide();
-      /* DETAILS TAB */
-      this.add( new Gemma.ExpressionExperimentSetSummary( {
-         title : 'Summary',
-         experimentSet : experimentSetVO,
-         editable : this.editable,
-         admin : this.isAdmin
-      } ) );
+    isAdmin: Ext.get("hasAdmin") !== null && Ext.get("hasAdmin").getValue() === 'true',
 
-      this.adjustForIsAdmin( this.editable );
+    eeSetCb: function (experimentSetVO) {
 
-      Gemma.Application.currentUser.on( "logIn", function( userName ) {
-         var appScope = this;
-         ExpressionExperimentController.canCurrentUserEditGroup( experimentDetails.id, {
-            callback : function( editable ) {
-               appScope.adjustForIsAdmin( editable );
-            },
-            scope : appScope
-         } );
+        this.experimentSet = experimentSetVO;
+        this.editable = experimentSetVO.userCanWrite;
+        this.loadMask.hide();
+        /* DETAILS TAB */
+        this.add(new Gemma.ExpressionExperimentSetSummary({
+            title: 'Summary',
+            experimentSet: experimentSetVO,
+            editable: this.editable,
+            admin: this.isAdmin
+        }));
 
-      }, this );
+        this.adjustForIsAdmin(this.editable);
 
-      Gemma.Application.currentUser.on( "logOut", function() {
-         this.isAdmin = false;
-         this.adjustForIsAdmin( false );
+        Gemma.Application.currentUser.on("logIn", function (userName) {
+            var appScope = this;
+            ExpressionExperimentController.canCurrentUserEditGroup(experimentDetails.id, {
+                callback: function (editable) {
+                    appScope.adjustForIsAdmin(editable);
+                },
+                scope: appScope
+            });
 
-      }, this );
+        }, this);
 
-      this.setActiveTab( 0 );
-   },
+        Gemma.Application.currentUser.on("logOut", function () {
+            this.isAdmin = false;
+            this.adjustForIsAdmin(false);
 
-   adjustForIsAdmin : function( isEditable ) {
-      /* TODO */
+        }, this);
 
-      /* HISTORY TAB */
+        this.setActiveTab(0);
+    },
 
-      /* ADMIN TOOLS TAB */
+    adjustForIsAdmin: function (isEditable) {
+    }
 
-   }
-} );
+});

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,6 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -43,7 +42,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
-    private Class<T> elementClass;
+    private final Class<T> elementClass;
 
     protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -64,7 +63,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     public T create( T entity ) {
         Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
-        assert entity.getId()  != null;
+        assert entity.getId() != null;
         assert id.equals( entity.getId() );
         return entity;
     }
@@ -73,7 +72,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     public Collection<T> load( Collection<Long> ids ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
+                .createQuery( //language=none // Prevents unresolvable missing value warnings.
+                        "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
                 .setParameterList( "ids", ids ).list();
     }
 
@@ -92,8 +92,9 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public Integer countAll() {
-        return (( Long ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select count(*) from " + elementClass.getSimpleName() ).uniqueResult()).intValue();
+        return ( ( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( //language=none // Prevents unresolvable missing value warnings.
+                        "select count(*) from " + elementClass.getSimpleName() ).uniqueResult() ).intValue();
     }
 
     @Override
@@ -126,14 +127,14 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     }
 
     @Override
-    public T findOrCreate( T entity ) {
-        T found = find( entity );
-        return found == null ? create( entity ) : found;
+    public T find( T entity ) {
+        return this.load( entity.getId() );
     }
 
     @Override
-    public T find( T entity ) {
-        return this.load( entity.getId() );
+    public T findOrCreate( T entity ) {
+        T found = this.find( entity );
+        return found == null ? this.create( entity ) : found;
     }
 
     /**

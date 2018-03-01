@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.Collection;
 
@@ -34,7 +34,7 @@ import java.util.Collection;
  * @see BlatResultService
  */
 @Component
-public class BlatResultServiceImpl extends VoEnabledService<BlatResult, BlatResultValueObject>
+public class BlatResultServiceImpl extends AbstractVoEnabledService<BlatResult, BlatResultValueObject>
         implements BlatResultService {
 
     private final BlatResultDao blatResultDao;

@@ -400,7 +400,6 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
     * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
     */
    clearHandler : function() {
-      // TODO reset the combo
       this.setGeneIds( [] );
       this.updateButtonText();
       this.geneCombo.reset();

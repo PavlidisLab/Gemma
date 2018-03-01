@@ -18,18 +18,15 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import org.hibernate.HibernateException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.HibernateException;
-
-/**
- *
- */
-public final class StandardQuantitationTypeEnum extends StandardQuantitationType implements
-        org.hibernate.usertype.EnhancedUserType {
+public final class StandardQuantitationTypeEnum extends StandardQuantitationType
+        implements org.hibernate.usertype.EnhancedUserType {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -46,11 +43,82 @@ public final class StandardQuantitationTypeEnum extends StandardQuantitationType
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#assemble(java.io.Serializable cached, Object owner)
+     * @see org.hibernate.usertype.EnhancedUserType#objectToSQLString(Object object)
      */
     @Override
-    public Object assemble( java.io.Serializable cached, Object owner ) {
-        return cached;
+    public String objectToSQLString( Object object ) {
+        return String.valueOf( ( ( StandardQuantitationType ) object ).getValue() );
+    }
+
+    /**
+     * @see org.hibernate.usertype.EnhancedUserType#toXMLString(Object object)
+     */
+    @Override
+    public String toXMLString( Object object ) {
+        return String.valueOf( ( ( StandardQuantitationType ) object ).getValue() );
+    }
+
+    /**
+     * @see org.hibernate.usertype.EnhancedUserType#fromXMLString(String string)
+     */
+    @Override
+    public Object fromXMLString( String string ) {
+        return StandardQuantitationType.fromString( String.valueOf( string ) );
+    }
+
+    /**
+     * @see org.hibernate.usertype.UserType#sqlTypes()
+     */
+    @Override
+    public int[] sqlTypes() {
+        return StandardQuantitationTypeEnum.SQL_TYPES;
+    }
+
+    /**
+     * @see org.hibernate.usertype.UserType#returnedClass()
+     */
+    @Override
+    public Class<?> returnedClass() {
+        return StandardQuantitationType.class;
+    }
+
+    /**
+     * @see org.hibernate.usertype.UserType#equals(Object, Object)
+     */
+    @Override
+    public boolean equals( Object x, Object y ) throws HibernateException {
+        return ( x == y ) || ( x != null && y != null && y.equals( x ) );
+    }
+
+    /**
+     * @see org.hibernate.usertype.UserType#hashCode(Object value)
+     */
+    @Override
+    public int hashCode( Object value ) {
+        return value.hashCode();
+    }
+
+    /**
+     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], Object)
+     */
+    @Override
+    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner )
+            throws HibernateException, SQLException {
+        final String value = ( String ) resultSet.getObject( values[0] );
+        return resultSet.wasNull() ? null : StandardQuantitationType.fromString( value );
+    }
+
+    /**
+     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int)
+     */
+    @Override
+    public void nullSafeSet( PreparedStatement statement, Object value, int index )
+            throws HibernateException, SQLException {
+        if ( value == null ) {
+            statement.setNull( index, Types.VARCHAR );
+        } else {
+            statement.setObject( index, String.valueOf( String.valueOf( value ) ) );
+        }
     }
 
     /**
@@ -63,38 +131,6 @@ public final class StandardQuantitationTypeEnum extends StandardQuantitationType
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#disassemble(Object value)
-     */
-    @Override
-    public java.io.Serializable disassemble( Object value ) {
-        return ( java.io.Serializable ) value;
-    }
-
-    /**
-     * @see org.hibernate.usertype.UserType#equals(Object, Object)
-     */
-    @Override
-    public boolean equals( Object x, Object y ) throws HibernateException {
-        return ( x == y ) || ( x != null && y != null && y.equals( x ) );
-    }
-
-    /**
-     * @see org.hibernate.usertype.EnhancedUserType#fromXMLString(String string)
-     */
-    @Override
-    public Object fromXMLString( String string ) {
-        return StandardQuantitationType.fromString( String.valueOf( string ) );
-    }
-
-    /**
-     * @see org.hibernate.usertype.UserType#hashCode(Object value)
-     */
-    @Override
-    public int hashCode( Object value ) {
-        return value.hashCode();
-    }
-
-    /**
      * @see org.hibernate.usertype.UserType#isMutable()
      */
     @Override
@@ -104,35 +140,19 @@ public final class StandardQuantitationTypeEnum extends StandardQuantitationType
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, String[], Object)
+     * @see org.hibernate.usertype.UserType#disassemble(Object value)
      */
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] values, Object owner ) throws HibernateException,
-            SQLException {
-        final String value = ( String ) resultSet.getObject( values[0] );
-        return resultSet.wasNull() ? null : fromString( value );
+    public java.io.Serializable disassemble( Object value ) {
+        return ( java.io.Serializable ) value;
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, Object, int)
+     * @see org.hibernate.usertype.UserType#assemble(java.io.Serializable cached, Object owner)
      */
     @Override
-    public void nullSafeSet( PreparedStatement statement, Object value, int index ) throws HibernateException,
-            SQLException {
-        if ( value == null ) {
-            statement.setNull( index, Types.VARCHAR );
-        } else {
-            statement.setObject( index, String.valueOf( String.valueOf( value ) ) );
-        }
-    }
-
-    /**
-     * @see org.hibernate.usertype.EnhancedUserType#objectToSQLString(Object object)
-     */
-    @Override
-    public String objectToSQLString( Object object ) {
-        return String.valueOf( ( ( StandardQuantitationType ) object )
-                .getValue() );
+    public Object assemble( java.io.Serializable cached, Object owner ) {
+        return cached;
     }
 
     /**
@@ -141,30 +161,5 @@ public final class StandardQuantitationTypeEnum extends StandardQuantitationType
     @Override
     public Object replace( Object original, Object target, Object owner ) {
         return original;
-    }
-
-    /**
-     * @see org.hibernate.usertype.UserType#returnedClass()
-     */
-    @Override
-    public Class<?> returnedClass() {
-        return StandardQuantitationType.class;
-    }
-
-    /**
-     * @see org.hibernate.usertype.UserType#sqlTypes()
-     */
-    @Override
-    public int[] sqlTypes() {
-        return SQL_TYPES;
-    }
-
-    /**
-     * @see org.hibernate.usertype.EnhancedUserType#toXMLString(Object object)
-     */
-    @Override
-    public String toXMLString( Object object ) {
-        return String.valueOf( ( ( StandardQuantitationType ) object )
-                .getValue() );
     }
 }

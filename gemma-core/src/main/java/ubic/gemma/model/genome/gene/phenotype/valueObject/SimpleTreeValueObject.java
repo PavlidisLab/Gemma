@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -24,14 +24,14 @@ import java.util.Vector;
 public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> {
 
     // private String _id = "";
-    private String _parent = null;
-    private boolean _is_leaf = false;
-    private String value = "";
-    private String valueUri = "";
-    private long publicGeneCount = 0L;
-    private long privateGeneCount = 0L;
-    private String urlId = "";
-    private boolean dbPhenotype = false;
+    private String _parent;
+    private boolean _is_leaf;
+    private String value;
+    private String valueUri;
+    private long publicGeneCount;
+    private long privateGeneCount;
+    private String urlId;
+    private boolean dbPhenotype;
     private List<String> children = new Vector<>();
 
     /**
@@ -51,7 +51,7 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         this.dbPhenotype = treeCharacteristicValueObject.isDbPhenotype();
 
         for ( TreeCharacteristicValueObject child : treeCharacteristicValueObject.getChildren() ) {
-            children.add( makeUniqueId( child.get_id(), this.get_id() ) );
+            children.add( this.makeUniqueId( child.get_id(), this.get_id() ) );
         }
 
     }
@@ -69,38 +69,10 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         if ( this._parent != null )
             return this._parent.compareToIgnoreCase( o._parent );
 
-        return this.makeUniqueId( this.urlId, this._parent ).compareTo( o.get_id() );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        SimpleTreeValueObject other = ( SimpleTreeValueObject ) obj;
-        if ( this._parent == null ) {
-            if ( other._parent != null )
-                return false;
-        } else if ( !this._parent.equals( other._parent ) )
-            return false;
-        if ( this.value == null ) {
-            if ( other.value != null )
-                return false;
-        } else if ( !this.value.equals( other.value ) )
-            return false;
-        if ( this.valueUri == null ) {
-            if ( other.valueUri != null )
-                return false;
-        } else if ( !this.valueUri.equals( other.valueUri ) )
-            return false;
-        return true;
+        return this.makeUniqueId( this.urlId, null ).compareTo( o.get_id() );
     }
 
     public String get_id() {
-        // return this._id;
         return this.makeUniqueId( urlId, _parent );
     }
 
@@ -184,6 +156,31 @@ public class SimpleTreeValueObject implements Comparable<SimpleTreeValueObject> 
         result = prime * result + ( ( this.value == null ) ? 0 : this.value.hashCode() );
         result = prime * result + ( ( this.valueUri == null ) ? 0 : this.valueUri.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        SimpleTreeValueObject other = ( SimpleTreeValueObject ) obj;
+        if ( this._parent == null ) {
+            if ( other._parent != null )
+                return false;
+        } else if ( !this._parent.equals( other._parent ) )
+            return false;
+        if ( this.value == null ) {
+            if ( other.value != null )
+                return false;
+        } else if ( !this.value.equals( other.value ) )
+            return false;
+        if ( this.valueUri == null ) {
+            return other.valueUri == null;
+        } else
+            return this.valueUri.equals( other.valueUri );
     }
 
     public boolean is_is_leaf() {

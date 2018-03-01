@@ -60,10 +60,8 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
          var imageSrc = ctxBasePath + '/images/icons/externallink.png';
          
          return val+ ' <A HREF=\'' + record.data.webUri + '\' TARGET="_blank"><img src="' + imageSrc + '" /></A>';
-      };
-      
-      
-      function renderBold(val, metaData, record, row, col, store,
+      }
+       function renderBold(val, metaData, record, row, col, store,
             gridView) {
          
          if( record.data.name.indexOf("Total") != -1){
@@ -72,10 +70,8 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
          else{
             return val;
          }
-      };
-      
-      
-      function renderDownload(val, metaData, record, row, col, store,
+      }
+       function renderDownload(val, metaData, record, row, col, store,
             gridView) {
          
          var imageSrc = ctxBasePath + '/images/download.gif';
@@ -93,9 +89,8 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
          }     
          return '<A HREF=\'' + val + '\' TARGET="_blank"><img src="' + imageSrc + '" ext:qtip="Download '+ record.data.name +' file" /></A>';
 
-      };
-
-      Ext.apply(this, {
+      }
+       Ext.apply(this, {
          store : store,
          colModel : new Ext.grid.ColumnModel({
             defaults : {

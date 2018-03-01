@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -67,7 +67,7 @@ public class PhenotypeController extends BaseController {
     public Collection<BibliographicReferenceValueObject> findBibliographicReference( String pubMedId,
             Long evidenceId ) {
         BibliographicReferenceValueObject valueObject = this.phenotypeAssociationManagerService
-                .findBibliographicReference( pubMedId, evidenceId );
+                .findBibliographicReference( pubMedId );
 
         // Contain at most 1 element.
         ArrayList<BibliographicReferenceValueObject> valueObjects = new ArrayList<>( 1 );
@@ -125,8 +125,7 @@ public class PhenotypeController extends BaseController {
 
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
-        return this.phenotypeAssociationManagerService
-                .findExperimentOntologyValue( givenQueryString, categoryUri, taxonId );
+        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString );
     }
 
     public Collection<ExternalDatabaseValueObject> findExternalDatabaseName() {
@@ -164,7 +163,7 @@ public class PhenotypeController extends BaseController {
             this.securityController.updatePermission( this.securityController.getSecurityInfo( ed ) );
 
         } catch ( Throwable throwable ) {
-            validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
+            validateEvidenceValueObject = this.generateValidateEvidenceValueObject( throwable );
         }
         return validateEvidenceValueObject;
     }
@@ -180,7 +179,7 @@ public class PhenotypeController extends BaseController {
                 validateEvidenceValueObject = this.phenotypeAssociationManagerService.update( evidenceValueObject );
             }
         } catch ( Throwable throwable ) {
-            validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
+            validateEvidenceValueObject = this.generateValidateEvidenceValueObject( throwable );
         }
 
         return validateEvidenceValueObject;
@@ -192,7 +191,7 @@ public class PhenotypeController extends BaseController {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService
                     .removeAllEvidenceFromMetaAnalysis( metaAnalysisId );
         } catch ( Throwable throwable ) {
-            validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
+            validateEvidenceValueObject = this.generateValidateEvidenceValueObject( throwable );
         }
         return validateEvidenceValueObject;
     }
@@ -202,7 +201,7 @@ public class PhenotypeController extends BaseController {
         try {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService.remove( evidenceId );
         } catch ( Throwable throwable ) {
-            validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
+            validateEvidenceValueObject = this.generateValidateEvidenceValueObject( throwable );
         }
         return validateEvidenceValueObject;
     }
@@ -243,7 +242,7 @@ public class PhenotypeController extends BaseController {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService
                     .validateEvidence( evidenceValueObject );
         } catch ( Throwable throwable ) {
-            validateEvidenceValueObject = generateValidateEvidenceValueObject( throwable );
+            validateEvidenceValueObject = this.generateValidateEvidenceValueObject( throwable );
         }
         return validateEvidenceValueObject;
     }
@@ -261,7 +260,7 @@ public class PhenotypeController extends BaseController {
             // If type of throwable is not known, log it.
             this.log.error( throwable.getMessage(), throwable );
             // put it also in neuroCarta logs
-            logNeurocarta.error( throwable.getMessage(), throwable );
+            PhenotypeController.logNeurocarta.error( throwable.getMessage(), throwable );
         }
 
         return validateEvidenceValueObject;

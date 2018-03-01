@@ -19,9 +19,9 @@
 
 package ubic.gemma.core.apps;
 
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Add a new external database, but requires editing the code to do so. It can be done by SQL manually as well.

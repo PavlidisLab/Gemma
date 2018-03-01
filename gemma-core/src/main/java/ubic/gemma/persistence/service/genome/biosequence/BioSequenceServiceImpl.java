@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,27 +23,65 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
 /**
+ * Spring Service base class for <code>BioSequenceService</code>, provides access to
+ * all services and entities referenced by this service.
+ *
  * @author keshav
  * @author pavlidis
  * @see BioSequenceService
  */
 @Service
-public class BioSequenceServiceImpl extends BioSequenceServiceBase {
+public class BioSequenceServiceImpl extends AbstractVoEnabledService<BioSequence, BioSequenceValueObject>
+        implements BioSequenceService {
+
+    private final BioSequenceDao bioSequenceDao;
 
     @Autowired
     public BioSequenceServiceImpl( BioSequenceDao bioSequenceDao ) {
         super( bioSequenceDao );
+        this.bioSequenceDao = bioSequenceDao;
     }
 
     @Override
-    public BioSequence thaw( BioSequence bioSequence ) {
-        return this.bioSequenceDao.thaw( bioSequence );
+    public BioSequence findByAccession( DatabaseEntry accession ) {
+        return this.bioSequenceDao.findByAccession( accession );
+    }
+
+    @Override
+    public Map<Gene, Collection<BioSequence>> findByGenes( Collection<Gene> genes ) {
+        return this.bioSequenceDao.findByGenes( genes );
+    }
+
+    @Override
+    public Collection<BioSequence> findByName( String name ) {
+        return this.bioSequenceDao.findByName( name );
+    }
+
+    @Override
+    public Collection<BioSequence> findOrCreate( Collection<BioSequence> bioSequences ) {
+        Collection<BioSequence> result = new HashSet<>();
+        for ( BioSequence bioSequence : bioSequences ) {
+            result.add( this.bioSequenceDao.findOrCreate( bioSequence ) );
+        }
+        return result;
+    }
+
+    @Override
+    public Collection<Gene> getGenesByAccession( String search ) {
+        return this.bioSequenceDao.getGenesByAccession( search );
+    }
+
+    @Override
+    public Collection<Gene> getGenesByName( String search ) {
+        return this.bioSequenceDao.getGenesByName( search );
     }
 
     @Override
@@ -52,37 +90,8 @@ public class BioSequenceServiceImpl extends BioSequenceServiceBase {
     }
 
     @Override
-    protected BioSequence handleFindByAccession( DatabaseEntry accession ) {
-        return this.bioSequenceDao.findByAccession( accession );
-    }
-
-    @Override
-    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) {
-        return this.bioSequenceDao.findByGenes( genes );
-    }
-
-    @Override
-    protected Collection<BioSequence> handleFindByName( String name ) {
-        return this.bioSequenceDao.findByName( name );
-    }
-
-    @Override
-    protected Collection<BioSequence> handleFindOrCreate( Collection<BioSequence> bioSequences ) {
-        Collection<BioSequence> result = new HashSet<BioSequence>();
-        for ( BioSequence bioSequence : bioSequences ) {
-            result.add( this.bioSequenceDao.findOrCreate( bioSequence ) );
-        }
-        return result;
-    }
-
-    @Override
-    protected Collection<Gene> handleGetGenesByAccession( String search ) {
-        return this.bioSequenceDao.getGenesByAccession( search );
-    }
-
-    @Override
-    protected Collection<Gene> handleGetGenesByName( String search ) {
-        return this.bioSequenceDao.getGenesByName( search );
+    public BioSequence thaw( BioSequence bioSequence ) {
+        return this.bioSequenceDao.thaw( bioSequence );
     }
 
 }

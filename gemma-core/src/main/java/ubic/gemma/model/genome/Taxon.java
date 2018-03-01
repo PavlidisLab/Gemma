@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +46,14 @@ public class Taxon implements Identifiable, java.io.Serializable {
     public Taxon() {
     }
 
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * ( hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() ) );
+
+        return hashCode;
+    }
+
     /**
      * Returns <code>true</code> if the argument is a Taxon instance and all identifiers for this entity equal the
      * identifiers of the argument entity. Returns <code>false</code> otherwise.
@@ -67,24 +75,16 @@ public class Taxon implements Identifiable, java.io.Serializable {
             if ( this.getNcbiId() != null && that.getNcbiId() != null && !this.getNcbiId().equals( that.getNcbiId() ) )
                 return false;
 
+            //noinspection SimplifiableIfStatement // Better readability
             if ( this.getSecondaryNcbiId() != null && that.getSecondaryNcbiId() != null && !this.getSecondaryNcbiId()
                     .equals( that.getSecondaryNcbiId() ) )
                 return false;
 
-            if ( this.getScientificName() != null && that.getScientificName() != null && !this.getScientificName()
-                    .equals( that.getScientificName() ) )
-                return false;
+            return this.getScientificName() == null || that.getScientificName() == null || this.getScientificName()
+                    .equals( that.getScientificName() );
 
         }
         return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * ( hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() ) );
-
-        return hashCode;
     }
 
     /**
@@ -136,6 +136,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
         this.externalDatabase = externalDatabase;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }

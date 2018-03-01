@@ -98,8 +98,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         g = geneService.thaw( g );
 
         Collection<GeneProduct> products = g.getProducts();
-        Collection<String> expectedAccessions = new ArrayList<String>();
-        Collection<String> hasAccessions = new ArrayList<String>();
+        Collection<String> expectedAccessions = new ArrayList<>();
+        Collection<String> hasAccessions = new ArrayList<>();
         expectedAccessions.add( "AB209614.2" );
         expectedAccessions.add( "AK307832.1" );
 

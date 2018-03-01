@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ public abstract class SearchSettings implements Identifiable, Serializable {
     private static final long serialVersionUID = -982243911532743661L;
     private String query;
     private String termUri;
-    private Integer maxResults = DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
+    private Integer maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
     private Boolean searchExperiments = Boolean.TRUE;
     private Boolean searchGenes = Boolean.TRUE;
     private Boolean searchPlatforms = Boolean.TRUE;
@@ -64,6 +64,14 @@ public abstract class SearchSettings implements Identifiable, Serializable {
     }
 
     @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -76,17 +84,11 @@ public abstract class SearchSettings implements Identifiable, Serializable {
     }
 
     @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
     public Long getId() {
         return this.id;
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }

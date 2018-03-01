@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,44 +20,15 @@ package ubic.gemma.core.loader.expression.geo;
 
 /**
  * Can be thrown to indicate an invalid input for GEO loading.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
-public class InvalidAccessionException extends RuntimeException {
+class InvalidAccessionException extends RuntimeException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -9078403276805996725L;
 
-    /**
-     * 
-     */
-    public InvalidAccessionException() {
-        super();
-    }
-
-    /**
-     * @param message
-     * @param cause
-     */
-    public InvalidAccessionException( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
-    /**
-     * @param message
-     */
-    public InvalidAccessionException( String message ) {
+    InvalidAccessionException( String message ) {
         super( message );
-    }
-
-    /**
-     * @param cause
-     */
-    public InvalidAccessionException( Throwable cause ) {
-        super( cause );
     }
 
 }

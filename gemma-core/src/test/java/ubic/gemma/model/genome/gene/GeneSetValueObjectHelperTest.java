@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,15 +40,13 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
     private GeneSetService geneSetService;
     @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
-    private Gene g1 = null;
-    private Taxon tax1 = null;
     private GeneSet gset = null;
 
     @Before
     public void setUp() {
 
-        g1 = this.getTestPersistentGene();
-        tax1 = this.getTaxon( "human" );
+        Gene g1 = this.getTestPersistentGene();
+        Taxon tax1 = this.getTaxon( "human" );
         g1.setTaxon( tax1 );
 
         GeneSetMember gmember = GeneSetMember.Factory.newInstance();
@@ -73,15 +71,6 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
         assertEquals( gset.getId(), gsvo.getId() );
         assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
         assertEquals( gset.getName(), gsvo.getName() );
-        // the method for setting the taxon Id uses a db call with the geneSet's id
-        // assertEquals( gmember.getGene().getTaxon().getId(), gsvo.getTaxonId() );
-
-        /*
-         * geneSetService.remove( gset );
-         * 
-         * assertNull( geneSetService.load( id ) );
-         */
-
     }
 
     @Test
@@ -92,19 +81,8 @@ public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
 
         GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToLightValueObject( gset );
 
-        // why do we expect this to be null?
-        // assertNull( gsvo.getGeneIds() );
-
         assertEquals( gset.getId(), gsvo.getId() );
         assertEquals( gset.getMembers().size(), gsvo.getSize().intValue() );
         assertEquals( gset.getName(), gsvo.getName() );
-
-        // the method for setting the taxon Id uses a db call with the geneSet's id
-        // assertEquals( gmember.getGene().getTaxon().getId(), gsvo.getTaxonId() );
-
-        /*
-         * geneSetService.remove( gset ); assertNull( geneSetService.load( id ) );
-         */
-
     }
 }

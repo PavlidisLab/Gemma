@@ -10,7 +10,7 @@
 				if (valid(query)) {
 						location.href='${pageContext.request.contextPath}/searcher.html?query=' + query + '&scope=SEGAP'
 				}							
-			}
+			};
 	
 	//Did the user hit the enter key?
 	isEnterHit = function (e) {
@@ -27,7 +27,7 @@
 		}
 		else
 		   return true;
-	}
+	};
 	
 	//Place to validate the query the user typed in. 
 	valid = function(query){
@@ -40,7 +40,7 @@
 			return false;
 			
 		return true;
-	}		
+	};
 
 	makeDirty = function() {
 		dirty = true;

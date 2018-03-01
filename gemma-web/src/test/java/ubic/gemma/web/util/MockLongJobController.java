@@ -11,9 +11,7 @@ import ubic.gemma.core.job.TaskCommand;
  */
 public interface MockLongJobController {
 
-    /**
-     * 
-     */
+
     public static final int JOB_LENGTH = 2000;
 
     public abstract String runJob( TaskCommand command );

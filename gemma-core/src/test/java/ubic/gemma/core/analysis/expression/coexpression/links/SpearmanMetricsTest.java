@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,22 +18,19 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression.links;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-
-import ubic.basecode.math.Rank;
 import cern.colt.list.DoubleArrayList;
+import org.junit.Test;
+import ubic.basecode.math.Rank;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author paul
- *
  */
 public class SpearmanMetricsTest {
 
     /**
      * Value from R; this has ties.
-     * 
      * <pre>
      * &gt; a&lt;-c(49.0, 43.0, 310.0, 20.0, 20.0, 688.0, 498.0, 533.0, 723.0, 1409.0,279.0);
      * &gt; b&lt;-c(1545.0, 1287.0, 2072.0, 1113.0, 676.0, 2648.0, 2478.0, 2574.0, 3554.0,5155.0, 1624.0);

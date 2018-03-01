@@ -19,7 +19,6 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.Geeq;
 import ubic.gemma.model.expression.experiment.GeeqAdminValueObject;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
@@ -33,29 +32,19 @@ public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject>
     String OPT_MODE_PUB = "pub";
 
     /**
-     * Calculates the GEEQ scores for the experiment with the given id.
-     * Runs all scoring.
+     * Calculates the GEEQ score in the given mode for the experiment with the given id.
      *
      * @param eeId the id of the experiment to calculate the scores for.
-     * @return the updated experiment.
-     */
-    ExpressionExperiment calculateScore( Long eeId );
-
-    /**
-     * Calculates the GEEQ score in the given mode for the experiment with the given id.
-     * @param eeId the id of the experiment to calculate the scores for.
      * @param mode either run all scores, or only re-score batch effect, batch confound or replicates.
-     * @return the updated experiment.
      */
-    ExpressionExperiment calculateScore( Long eeId, String mode );
+    void calculateScore( Long eeId, String mode );
 
     /**
      * Reads manual override info from the given GEEQ Value Object and stores them with the experiment
      *
-     * @param gqVo a GEEQ Value Object containing the necessary information.
      * @param eeId the id of the experiment to update the geeq information for.
-     * @return the updated experiment.
+     * @param gqVo a GEEQ Value Object containing the necessary information.
      */
-    ExpressionExperiment setManualOverrides( Long eeId, GeeqAdminValueObject gqVo );
+    void setManualOverrides( Long eeId, GeeqAdminValueObject gqVo );
 
 }

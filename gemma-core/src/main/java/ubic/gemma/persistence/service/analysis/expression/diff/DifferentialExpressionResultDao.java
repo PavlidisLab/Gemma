@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,6 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseDao;
@@ -35,8 +34,6 @@ import java.util.Map;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
  */
 public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExpressionAnalysisResult> {
-
-    Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the

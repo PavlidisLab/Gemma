@@ -1,24 +1,22 @@
 package ubic.gemma.core.tasks.analysis.expression;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Handle 'flagging' a sample as an outlier. The sample will not be used in analyses.
- * 
- * @author paul
  *
+ * @author paul
  */
 @Component
 @Scope("prototype")
@@ -47,7 +45,7 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, 
 
         Collection<BioAssayValueObject> flagged = new HashSet<>();
         for ( BioAssay ba : bioAssays ) {
-            flagged.add( new BioAssayValueObject( ba ) );
+            flagged.add( new BioAssayValueObject( ba, false ) );
         }
 
         return new TaskResult( taskCommand, flagged );

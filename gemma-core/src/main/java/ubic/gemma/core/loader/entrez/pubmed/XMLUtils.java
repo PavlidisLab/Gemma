@@ -46,7 +46,7 @@ public class XMLUtils {
 
     private static final Log log = LogFactory.getLog( XMLUtils.class );
 
-    public static List<String> extractMultipleChildren( Node parent, String elementName ) throws IOException {
+    public static List<String> extractMultipleChildren( Node parent, String elementName ) {
         List<String> r = new ArrayList<>();
 
         NodeList jNodes = parent.getChildNodes();
@@ -62,7 +62,7 @@ public class XMLUtils {
         return r;
     }
 
-    public static String extractOneChild( Node parent, String elementName ) throws IOException {
+    public static String extractOneChild( Node parent, String elementName ) {
         NodeList jNodes = parent.getChildNodes();
         for ( int q = 0; q < jNodes.getLength(); q++ ) {
             Node jitem = jNodes.item( q );
@@ -91,15 +91,11 @@ public class XMLUtils {
         XMLUtils.log.debug( "Got " + idList.getLength() );
         // NodeList idNodes = idList.item( 0 ).getChildNodes();
         // Node ids = idList.item( 0 );
-        try {
-            for ( int i = 0; i < idList.getLength(); i++ ) {
-                Node item = idList.item( i );
-                String value = XMLUtils.getTextValue( ( Element ) item );
-                XMLUtils.log.debug( "Got " + value );
-                result.add( value );
-            }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+        for ( int i = 0; i < idList.getLength(); i++ ) {
+            Node item = idList.item( i );
+            String value = XMLUtils.getTextValue( ( Element ) item );
+            XMLUtils.log.debug( "Got " + value );
+            result.add( value );
         }
 
         return result;
@@ -113,9 +109,9 @@ public class XMLUtils {
      * * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
      * * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
      *
-     * @throws IOException IO problems
+     * @param ele element
      */
-    public static String getTextValue( org.w3c.dom.Element ele ) throws IOException {
+    public static String getTextValue( org.w3c.dom.Element ele ) {
         if ( ele == null )
             return null;
         StringBuilder value = new StringBuilder();
@@ -129,9 +125,6 @@ public class XMLUtils {
 
     public static Document openAndParse( InputStream is )
             throws IOException, ParserConfigurationException, SAXException {
-        //        if ( is.available() == 0 ) {
-        //            throw new IOException( "XML stream contains no data." );
-        //        }
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );

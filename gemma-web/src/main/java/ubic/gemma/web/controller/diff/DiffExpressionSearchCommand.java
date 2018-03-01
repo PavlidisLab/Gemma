@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,16 +18,14 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
+
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
-
 /**
  * @author keshav
- *
  */
 public class DiffExpressionSearchCommand implements Serializable {
 
@@ -57,32 +55,64 @@ public class DiffExpressionSearchCommand implements Serializable {
         return eeIds;
     }
 
+    public void setEeIds( Collection<Long> eeIds ) {
+        this.eeIds = eeIds;
+    }
+
     public String getEeQuery() {
         return eeQuery;
+    }
+
+    public void setEeQuery( String eeQuery ) {
+        this.eeQuery = eeQuery;
     }
 
     public Long getEeSetId() {
         return eeSetId;
     }
 
+    public void setEeSetId( Long eeSetId ) {
+        this.eeSetId = eeSetId;
+    }
+
     public String getEeSetName() {
         return eeSetName;
+    }
+
+    public void setEeSetName( String eeSetName ) {
+        this.eeSetName = eeSetName;
     }
 
     public Collection<Long> getGeneIds() {
         return geneIds;
     }
 
+    public void setGeneIds( Collection<Long> geneIds ) {
+        this.geneIds = geneIds;
+    }
+
     public Collection<DiffExpressionSelectedFactorCommand> getSelectedFactors() {
         return selectedFactors;
+    }
+
+    public void setSelectedFactors( Collection<DiffExpressionSelectedFactorCommand> selectedFactors ) {
+        this.selectedFactors = selectedFactors;
     }
 
     public Long getTaxonId() {
         return taxonId;
     }
 
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
+    }
+
     public Double getThreshold() {
         return threshold;
+    }
+
+    public void setThreshold( Double threshold ) {
+        this.threshold = threshold;
     }
 
     public boolean isDirty() {
@@ -93,46 +123,9 @@ public class DiffExpressionSearchCommand implements Serializable {
         this.dirty = dirty;
     }
 
-    public void setEeIds( Collection<Long> eeIds ) {
-        this.eeIds = eeIds;
-    }
-
-    public void setEeQuery( String eeQuery ) {
-        this.eeQuery = eeQuery;
-    }
-
-    public void setEeSetId( Long eeSetId ) {
-        this.eeSetId = eeSetId;
-    }
-
-    public void setEeSetName( String eeSetName ) {
-        this.eeSetName = eeSetName;
-    }
-
-    public void setGeneIds( Collection<Long> geneIds ) {
-        this.geneIds = geneIds;
-    }
-
-    public void setSelectedFactors( Collection<DiffExpressionSelectedFactorCommand> selectedFactors ) {
-        this.selectedFactors = selectedFactors;
-    }
-
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
-    }
-
-    public void setThreshold( Double threshold ) {
-        this.threshold = threshold;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
-        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " taxon=" + getTaxonId() + " Threshold="
+        return "GeneIds=" + StringUtils.join( this.getGeneIds(), "," ) + " taxon=" + this.getTaxonId() + " Threshold="
                 + threshold;
     }
 }

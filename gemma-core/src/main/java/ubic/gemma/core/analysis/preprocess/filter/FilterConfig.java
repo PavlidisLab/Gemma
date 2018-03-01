@@ -25,7 +25,7 @@ import java.io.Serializable;
  *
  * @author Paul
  */
-@SuppressWarnings("WeakerAccess") // Constants should have same access level
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Constants should have same access level, possible external use
 public class FilterConfig implements Serializable {
 
     public static final double DEFAULT_DISTINCTVALUE_FRACTION = 0.5;
@@ -54,7 +54,7 @@ public class FilterConfig implements Serializable {
     private int afterMinPresentFilter = 0;
     private int afterZeroVarianceCut = 0;
 
-    private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
+    private double highExpressionCut = FilterConfig.DEFAULT_HIGHEXPRESSION_CUT;
 
     /**
      * If true, the MINIMUM_ROWS_TO_BOTHER is ignored.
@@ -66,12 +66,12 @@ public class FilterConfig implements Serializable {
      */
     private boolean ignoreMinimumSampleThreshold = false;
     private boolean logTransform = false;
-    private double lowDistinctValueCut = DEFAULT_DISTINCTVALUE_FRACTION;
-    private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
+    private double lowDistinctValueCut = FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION;
+    private double lowExpressionCut = FilterConfig.DEFAULT_LOWEXPRESSIONCUT;
     private boolean lowExpressionCutIsSet = true;
-    private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
+    private double lowVarianceCut = FilterConfig.DEFAULT_LOWVARIANCECUT;
     private boolean lowVarianceCutIsSet = true;
-    private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
+    private double minPresentFraction = FilterConfig.DEFAULT_MINPRESENT_FRACTION;
     private boolean minPresentFractionIsSet = true;
     private boolean requireSequences = true;
     private int startingRows = 0;
@@ -227,6 +227,7 @@ public class FilterConfig implements Serializable {
     /**
      * @return the ignoreMinimumRowThreshold
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     public boolean isIgnoreMinimumRowsThreshold() {
         return ignoreMinimumRowsThreshold;
     }
@@ -238,6 +239,7 @@ public class FilterConfig implements Serializable {
         this.ignoreMinimumRowsThreshold = ignoreMinimumRowsThreshold;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     public boolean isIgnoreMinimumSampleThreshold() {
         return ignoreMinimumSampleThreshold;
     }
@@ -282,11 +284,6 @@ public class FilterConfig implements Serializable {
                 .getAfterMinPresentFilter() + "\n" + "# afterLowVarianceCut:" + this.getAfterLowVarianceCut() + "\n"
                 + "# afterLowExpressionCut:" + this.getAfterLowExpressionCut() + "\n" + "# logTransform:" + this
                 .isLogTransform() + "\n";
-    }
-
-    public boolean isDistinctValueThresholdSet() {
-        // TODO Auto-generated method stub
-        return false;
     }
 
 }

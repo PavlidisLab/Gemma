@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+@SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
@@ -58,12 +59,8 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
-    @Secured({ "GROUP_USER" })
-    @Override
-    ArrayDesign create( ArrayDesign arrayDesign );
-
     /**
-     * delete sequence alignment results associated with the bioSequences for this array design. This can indirectly
+     * remove sequence alignment results associated with the bioSequences for this array design. This can indirectly
      * affect other platforms that use the same sequences.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -78,6 +75,37 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     @Override
     ArrayDesign find( ArrayDesign arrayDesign );
+
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
+    @Override
+    ArrayDesign findOrCreate( ArrayDesign arrayDesign );
+
+    @Secured({ "GROUP_USER" })
+    @Override
+    ArrayDesign create( ArrayDesign arrayDesign );
+
+    /**
+     * Given a collection of ID (longs) will return a collection of ArrayDesigns
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Override
+    Collection<ArrayDesign> load( Collection<Long> ids );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    @Override
+    ArrayDesign load( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Override
+    Collection<ArrayDesign> loadAll();
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Override
+    void remove( ArrayDesign arrayDesign );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> findByAlternateName( String queryString );
@@ -97,10 +125,6 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> findByTaxon( Taxon taxon );
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
-    @Override
-    ArrayDesign findOrCreate( ArrayDesign arrayDesign );
-
     /**
      * Retrieves alignments for the platform elements, limited to those which map to a gene product (so not all
      * blat results)
@@ -115,7 +139,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     /**
      * Return all the (unique) biosequences associated with the array design. Composite sequences that don't have
-     * sequences are also returned, so this can be used to do a thaw, in effect.
+     * sequences are also returned, so this can be used to do a thawRawAndProcessed, in effect.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
@@ -182,21 +206,6 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     Map<Long, Boolean> isSubsumer( Collection<Long> ids );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    @Override
-    ArrayDesign load( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    @Override
-    Collection<ArrayDesign> loadAll();
-
-    /**
-     * Given a collection of ID (longs) will return a collection of ArrayDesigns
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    @Override
-    Collection<ArrayDesign> load( Collection<Long> ids );
-
     /**
      * Loads the Value Objects for array designs used by expression experiment with the given ID
      *
@@ -206,6 +215,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
+    @Override
     Collection<ArrayDesignValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
             ArrayList<ObjectFilter[]> filter );
 
@@ -281,10 +291,6 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numGenes( ArrayDesign arrayDesign );
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    @Override
-    void remove( ArrayDesign arrayDesign );
-
     /**
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
@@ -299,17 +305,13 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
-     * Perform a less intensive thaw of an array design: not the composite sequences.
+     * Perform a less intensive thawRawAndProcessed of an array design: not the composite sequences.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawLite( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ArrayDesign arrayDesign );
 
     /**
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to

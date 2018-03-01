@@ -74,27 +74,26 @@ public class MatrixWriter {
      * @param writeSequence   whether to write sequence
      * @throws IOException when the write failed
      */
-    @SuppressWarnings("WeakerAccess") // possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<?> matrix,
             Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence,
             boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
-        int columns = matrix.columns();
         int rows = matrix.rows();
 
-        List<BioMaterial> orderedBioMaterials = getBioMaterialsInRequestedOrder( matrix, orderByDesign );
+        List<BioMaterial> orderedBioMaterials = this.getBioMaterialsInRequestedOrder( matrix, orderByDesign );
 
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
-            writeHeader( orderedBioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, columns, buf );
+            this.writeHeader( orderedBioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, buf );
         }
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
             buf.append( probeForRow.getName() ).append( "\t" );
-            writeSequence( writeSequence, buf, probeForRow );
+            this.writeSequence( writeSequence, buf, probeForRow );
 
             if ( writeGeneInfo ) {
-                addGeneInfoFromStrings( buf, probeForRow, geneAnnotations );
+                this.addGeneInfoFromStrings( buf, probeForRow, geneAnnotations );
             }
 
             int orderedBioMLastIndex = orderedBioMaterials.size() - 1;
@@ -132,26 +131,26 @@ public class MatrixWriter {
      *                        files.
      * @throws IOException when the write failed
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void write( Writer writer, ExpressionDataMatrix<?> matrix,
             Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean writeSequence,
             boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
-        int columns = matrix.columns();
         int rows = matrix.rows();
 
-        List<BioMaterial> bioMaterials = getBioMaterialsInRequestedOrder( matrix, orderByDesign );
+        List<BioMaterial> bioMaterials = this.getBioMaterialsInRequestedOrder( matrix, orderByDesign );
 
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
-            writeHeader( bioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, columns, buf );
+            this.writeHeader( bioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, buf );
         }
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
             buf.append( probeForRow.getName() ).append( "\t" );
-            writeSequence( writeSequence, buf, probeForRow );
+            this.writeSequence( writeSequence, buf, probeForRow );
 
             if ( writeGeneInfo ) {
-                addGeneInfo( buf, probeForRow, geneAnnotations );
+                this.addGeneInfo( buf, probeForRow, geneAnnotations );
             }
 
             // print the data.
@@ -177,6 +176,41 @@ public class MatrixWriter {
         Log.debug( "Done writing" );
     }
 
+    public void writeJSON( Writer writer, ExpressionDataMatrix<?> matrix ) throws IOException {
+        int columns = matrix.columns();
+        int rows = matrix.rows();
+
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( "{ 'numRows' : " ).append( matrix.rows() ).append( ", 'rows': " );
+
+        buf.append( "[" );
+
+        for ( int j = 0; j < rows; j++ ) {
+
+            if ( j > 0 )
+                buf.append( "," );
+            buf.append( "{" );
+            buf.append( "'id' : \"" ).append( matrix.getDesignElementForRow( j ).getName() ).append( "\"" );
+            BioSequence biologicalCharacteristic = matrix.getDesignElementForRow( j ).getBiologicalCharacteristic();
+            if ( biologicalCharacteristic != null )
+                buf.append( ", 'sequence' : \"" ).append( biologicalCharacteristic.getName() ).append( "\"" );
+
+            buf.append( ", 'data' : [" );
+            for ( int i = 0; i < columns; i++ ) {
+                Object val = matrix.get( j, i );
+                if ( i > 0 )
+                    buf.append( "," );
+                buf.append( val );
+            }
+
+            buf.append( "]}\n" );
+
+        }
+        buf.append( "\n]}" );
+        writer.write( buf.toString() );
+    }
+
     private List<BioMaterial> getBioMaterialsInRequestedOrder( ExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
         List<BioMaterial> bioMaterials = new ArrayList<>();
         if ( orderByDesign ) {
@@ -194,7 +228,7 @@ public class MatrixWriter {
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<?> matrix,
-            Map<CompositeSequence, ?> geneAnnotations, boolean writeSequence, boolean writeGeneInfo, int columns,
+            Map<CompositeSequence, ?> geneAnnotations, boolean writeSequence, boolean writeGeneInfo,
             StringBuffer buf ) {
 
         ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, buf );
@@ -314,41 +348,6 @@ public class MatrixWriter {
         } else {
             buf.append( "\t\t\t" );
         }
-    }
-
-    public void writeJSON( Writer writer, ExpressionDataMatrix<?> matrix, boolean writeHeader ) throws IOException {
-        int columns = matrix.columns();
-        int rows = matrix.rows();
-
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( "{ 'numRows' : " ).append( matrix.rows() ).append( ", 'rows': " );
-
-        buf.append( "[" );
-
-        for ( int j = 0; j < rows; j++ ) {
-
-            if ( j > 0 )
-                buf.append( "," );
-            buf.append( "{" );
-            buf.append( "'id' : \"" ).append( matrix.getDesignElementForRow( j ).getName() ).append( "\"" );
-            BioSequence biologicalCharacteristic = matrix.getDesignElementForRow( j ).getBiologicalCharacteristic();
-            if ( biologicalCharacteristic != null )
-                buf.append( ", 'sequence' : \"" ).append( biologicalCharacteristic.getName() ).append( "\"" );
-
-            buf.append( ", 'data' : [" );
-            for ( int i = 0; i < columns; i++ ) {
-                Object val = matrix.get( j, i );
-                if ( i > 0 )
-                    buf.append( "," );
-                buf.append( val );
-            }
-
-            buf.append( "]}\n" );
-
-        }
-        buf.append( "\n]}" );
-        writer.write( buf.toString() );
     }
 
     private void writeSequence( boolean writeSequence, StringBuffer buf, CompositeSequence probeForRow ) {

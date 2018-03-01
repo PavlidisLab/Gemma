@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,28 +107,24 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
             la.clear();
 
-            /*
-             * TODO: make this possible for BioAssaySets rather than just ExpressionExperiments
-             */
-            log.info( "Fetching expression data for " + ee );
+            LinkAnalysisServiceImpl.log.info( "Fetching expression data for " + ee );
 
-            Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
-                    .getProcessedExpressionDataVectors( ee );
-
+            Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
+                    .getProcessedDataVectors( ee );
             processedExpressionDataVectorService.thaw( dataVectors );
 
-            log.info( "Starting analysis" );
-            analyze( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
+            LinkAnalysisServiceImpl.log.info( "Starting analysis" );
+            this.analyze( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
 
-            log.info( "Done with analysis phase, starting persistence" );
-            saveResults( ee, la, linkAnalysisConfig, filterConfig );
-            log.info( "Done with saving results for " + ee );
+            LinkAnalysisServiceImpl.log.info( "Done with analysis phase, starting persistence" );
+            this.saveResults( ee, la, linkAnalysisConfig, filterConfig );
+            LinkAnalysisServiceImpl.log.info( "Done with saving results for " + ee );
             return la;
 
         } catch ( Exception e ) {
 
             if ( linkAnalysisConfig.isUseDb() ) {
-                logFailure( ee, e );
+                this.logFailure( ee, e );
             }
             throw new RuntimeException( e );
         }
@@ -141,17 +137,17 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
                 .getFilteredMatrix( linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
 
-        checkDatamatrix( datamatrix );
+        this.checkDatamatrix( datamatrix );
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
 
         datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
 
-        setUpForAnalysis( t, la, dataVectors, datamatrix );
+        this.setUpForAnalysis( t, la, dataVectors, datamatrix );
 
         la.analyze();
 
         try {
-            writeLinks( la, filterConfig, new PrintWriter( System.out ) );
+            this.writeLinks( la, filterConfig, new PrintWriter( System.out ) );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -161,7 +157,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) {
         if ( datamatrix.rows() == 0 ) {
-            log.info( "No rows left after filtering" );
+            LinkAnalysisServiceImpl.log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
         } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
             throw new InsufficientProbesException(
@@ -170,8 +166,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
     }
 
-    private void addAnalysisObj( ExpressionExperiment ee, ExpressionDataDoubleMatrix eeDoubleMatrix,
-            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig, LinkAnalysis la ) {
+    private void addAnalysisObj( ExpressionExperiment ee, FilterConfig filterConfig,
+            LinkAnalysisConfig linkAnalysisConfig, LinkAnalysis la ) {
 
         /*
          * Set up basics.
@@ -189,16 +185,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private void analyze( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
             LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
 
-        if ( !filterConfig.isDistinctValueThresholdSet() ) {
-            filterConfig.setLowDistinctValueCut( FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION );
-        }
-
-        qcCheck( linkAnalysisConfig, ee );
+        this.qcCheck( linkAnalysisConfig, ee );
 
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
                 .getFilteredMatrix( ee, filterConfig, dataVectors );
 
-        setUpForAnalysis( ee, la, dataVectors, datamatrix );
+        this.setUpForAnalysis( ee, la, dataVectors, datamatrix );
 
         Map<CompositeSequence, Set<Gene>> probeToGeneMap = la.getProbeToGeneMap();
 
@@ -207,25 +199,25 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         /*
          * remove probes that have no gene mapped to them, not just those that have no sequence
          */
-        datamatrix = filterUnmappedProbes( datamatrix, probeToGeneMap );
+        datamatrix = this.filterUnmappedProbes( datamatrix, probeToGeneMap );
 
-        checkDatamatrix( datamatrix );
+        this.checkDatamatrix( datamatrix );
 
-        log.info( "Starting link analysis... " + ee );
+        LinkAnalysisServiceImpl.log.info( "Starting link analysis... " + ee );
 
-        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+        this.normalize( datamatrix, linkAnalysisConfig );
 
         /*
          * Link analysis section.
          */
-        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
+        this.addAnalysisObj( ee, filterConfig, linkAnalysisConfig, la );
         la.analyze();
 
         CoexpCorrelationDistribution corrDist = la.getCorrelationDistribution();
 
         // another qc check.
         if ( linkAnalysisConfig.isCheckCorrelationDistribution() ) {
-            diagnoseCorrelationDistribution( ee, corrDist );
+            this.diagnoseCorrelationDistribution( ee, corrDist );
         }
     }
 
@@ -240,8 +232,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     /**
-     * Check properties of the distribution TODO refactor this out.
+     * Check properties of the distribution
      */
+    @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private void diagnoseCorrelationDistribution( ExpressionExperiment ee, CoexpCorrelationDistribution corrDist )
             throws UnsuitableForAnalysisException {
 
@@ -287,7 +280,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             if ( s >= 0.2 ) {
                 // firstQuintile = binToCorrelation( i, numBins );
             } else if ( s >= 0.5 ) {
-                median = binToCorrelation( bin, numBins );
+                median = this.binToCorrelation( bin, numBins );
             } else if ( s >= 0.8 ) {
                 // lastQuintile = binToCorrelation( i, numBins );
             }
@@ -373,7 +366,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
 
         if ( numRemoved > 0 ) {
-            log.info( numRemoved + "/" + startingSize + " elements had no genes mapped and were removed." );
+            LinkAnalysisServiceImpl.log
+                    .info( numRemoved + "/" + startingSize + " elements had no genes mapped and were removed." );
         }
 
         // assert !probeToGeneMap.isEmpty();
@@ -388,12 +382,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
 
         if ( e instanceof InsufficientSamplesException ) {
-            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+            this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else if ( e instanceof InsufficientProbesException ) {
-            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+            this.audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else {
-            log.error( "While processing " + expressionExperiment, e );
-            audit( expressionExperiment, ExceptionUtils.getStackTrace( e ),
+            LinkAnalysisServiceImpl.log.error( "While processing " + expressionExperiment, e );
+            this.audit( expressionExperiment, ExceptionUtils.getStackTrace( e ),
                     FailedLinkAnalysisEvent.Factory.newInstance() );
         }
     }
@@ -408,15 +402,15 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             case none:
                 return datamatrix;
             case SVD:
-                log.info( "SVD normalizing" );
+                LinkAnalysisServiceImpl.log.info( "SVD normalizing" );
                 svd = new ExpressionDataSVD( datamatrix, true );
                 return svd.removeHighestComponents( 1 );
             case SPELL:
-                log.info( "Computing U matrix via SVD" );
+                LinkAnalysisServiceImpl.log.info( "Computing U matrix via SVD" );
                 svd = new ExpressionDataSVD( datamatrix, true );
                 return svd.uMatrixAsExpressionData();
             case BALANCE:
-                log.info( "SVD-balanceing" );
+                LinkAnalysisServiceImpl.log.info( "SVD-balanceing" );
                 svd = new ExpressionDataSVD( datamatrix, true );
                 return svd.equalize();
             default:
@@ -425,12 +419,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     }
 
     /**
-     * Reject if experiment has outliers or batch effects. TODO use BioAssaySet instead.
+     * Reject if experiment has outliers or batch effects.
      */
     private void qcCheck( LinkAnalysisConfig config, ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
 
         if ( config.isCheckForOutliers() ) {
-            Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
+            Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
             if ( !outliers.isEmpty() ) {
                 throw new UnsuitableForAnalysisException( ee, "Potential outlier samples detected" );
             }
@@ -440,7 +434,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
 
             if ( batchEffect.getDataWasBatchCorrected() ) {
-                log.info( "Data are batch-corrected" );
+                LinkAnalysisServiceImpl.log.info( "Data are batch-corrected" );
                 return;
             }
 
@@ -450,7 +444,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                         "No batch information available, out of an abundance of caution we are skipping" );
             }
 
-            // FIXME might want to adjust this stringency.
             if ( batchEffect.getPvalue() < 0.001 ) {
 
                 double componentVarianceProportion = batchEffect.getComponentVarianceProportion();
@@ -459,7 +452,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 // this
                 // far.
                 if ( component > 2 && componentVarianceProportion < 0.1 ) {
-                    // FIXME might want to adjust this stringency
                     return;
                 }
 
@@ -478,7 +470,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
                 persister.saveLinksToDb( la );
-                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+                this.audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
             } else if ( linkAnalysisConfig.isTextOut() ) {
                 try {
                     PrintWriter w;
@@ -488,17 +480,17 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                     } else {
                         w = new PrintWriter( System.out );
                     }
-                    writeLinks( la, filterConfig, w );
+                    this.writeLinks( la, filterConfig, w );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
             }
 
-            log.info( "Done with processing of " + ee );
+            LinkAnalysisServiceImpl.log.info( "Done with processing of " + ee );
 
         } catch ( Exception e ) {
             if ( linkAnalysisConfig.isUseDb() ) {
-                logFailure( ee, e );
+                this.logFailure( ee, e );
             }
             throw new RuntimeException( e );
         }
@@ -519,7 +511,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             la.setExpressionExperiment( ee );
         }
 
-        getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
+        this.getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
     }
 
     /**
@@ -530,7 +522,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         la.setDataMatrix( eeDoubleMatrix );
         la.setTaxon( t );
-        getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
+        this.getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
     }
 
     /**
@@ -604,7 +596,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             }
 
             if ( ++keptLinksCount % 50000 == 0 ) {
-                log.info( keptLinksCount + " links retained" );
+                LinkAnalysisServiceImpl.log.info( keptLinksCount + " links retained" );
             }
 
             if ( la.getConfig().isSubsetUsed() ) {
@@ -629,12 +621,14 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
 
         if ( la.getConfig().isSubsetUsed() ) {// subset option activated
-            log.info(
-                    "Done, " + keptLinksCount + "/" + links.size() + " links kept, " + buf.size() + " links printed" );
+            LinkAnalysisServiceImpl.log
+                    .info( "Done, " + keptLinksCount + "/" + links.size() + " links kept, " + buf.size()
+                            + " links printed" );
             // wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted +
             // "\n" );
         } else {
-            log.info( "Done, " + keptLinksCount + "/" + links.size() + " links printed (some may have been filtered)" );
+            LinkAnalysisServiceImpl.log.info( "Done, " + keptLinksCount + "/" + links.size()
+                    + " links printed (some may have been filtered)" );
         }
         wr.flush();
 

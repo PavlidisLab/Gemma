@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import java.util.HashSet;
 /**
  * @author tvrossum
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<ExpressionExperimentSet>
         implements SecureValueObject, Comparable<ExpressionExperimentSetValueObject> {
 
@@ -57,8 +58,8 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
     public ExpressionExperimentSetValueObject() {
     }
 
-    public ExpressionExperimentSetValueObject(Long id) {
-        super(id);
+    public ExpressionExperimentSetValueObject( Long id ) {
+        super( id );
         this.expressionExperimentIds = new HashSet<>();
     }
 
@@ -75,15 +76,13 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         ExpressionExperimentSetValueObject other = ( ExpressionExperimentSetValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        return true;
+            return other.id == null;
+        } else
+            return id.equals( other.id );
     }
 
     public String getDescription() {
@@ -122,6 +121,31 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
         this.shared = isShared;
     }
 
+    @Override
+    public Class<? extends Securable> getSecurableClass() {
+        return ExpressionExperimentSet.class;
+    }
+
+    @Override
+    public boolean getUserCanWrite() {
+        return this.userCanWrite;
+    }
+
+    @Override
+    public void setUserCanWrite( boolean userCanWrite ) {
+        this.userCanWrite = userCanWrite;
+    }
+
+    @Override
+    public boolean getUserOwned() {
+        return this.userOwned;
+    }
+
+    @Override
+    public void setUserOwned( boolean isUserOwned ) {
+        this.userOwned = isUserOwned;
+    }
+
     public String getName() {
         return name;
     }
@@ -154,11 +178,6 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
         this.numWithDifferentialExpressionAnalysis = numWithDifferentialExpressionAnalysis;
     }
 
-    @Override
-    public Class<? extends Securable> getSecurableClass() {
-        return ExpressionExperimentSet.class;
-    }
-
     public Long getTaxonId() {
         return taxonId;
     }
@@ -173,26 +192,6 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
 
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
-    }
-
-    @Override
-    public boolean getUserCanWrite() {
-        return this.userCanWrite;
-    }
-
-    @Override
-    public void setUserCanWrite( boolean userCanWrite ) {
-        this.userCanWrite = userCanWrite;
-    }
-
-    @Override
-    public boolean getUserOwned() {
-        return this.userOwned;
-    }
-
-    @Override
-    public void setUserOwned( boolean isUserOwned ) {
-        this.userOwned = isUserOwned;
     }
 
     @Override

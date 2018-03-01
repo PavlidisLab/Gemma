@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@ import ubic.gemma.model.genome.Gene;
 
 import java.io.Serializable;
 
-public abstract class GeneSetMember implements Identifiable, Serializable {
+public class GeneSetMember implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -41,21 +41,6 @@ public abstract class GeneSetMember implements Identifiable, Serializable {
     public GeneSetMember() {
     }
 
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof GeneSetMember ) ) {
-            return false;
-        }
-        final GeneSetMember that = ( GeneSetMember ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
     public Gene getGene() {
         return this.gene;
     }
@@ -64,6 +49,7 @@ public abstract class GeneSetMember implements Identifiable, Serializable {
         this.gene = gene;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
@@ -92,14 +78,27 @@ public abstract class GeneSetMember implements Identifiable, Serializable {
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof GeneSetMember ) ) {
+            return false;
+        }
+        final GeneSetMember that = ( GeneSetMember ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
 
         public static GeneSetMember newInstance() {
-            return new GeneSetMemberImpl();
+            return new GeneSetMember();
         }
 
+        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static GeneSetMember newInstance( Double score, ubic.gemma.model.genome.Gene gene ) {
-            final GeneSetMember entity = new GeneSetMemberImpl();
+            final GeneSetMember entity = new GeneSetMember();
             entity.setScore( score );
             entity.setGene( gene );
             return entity;

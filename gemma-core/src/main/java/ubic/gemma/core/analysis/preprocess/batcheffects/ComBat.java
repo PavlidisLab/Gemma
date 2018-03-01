@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -49,7 +49,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -63,6 +62,7 @@ import java.util.concurrent.Future;
  * Bayes methods. Biostatistics 8(1):118-127.
  * </p>
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class ComBat<R, C> {
 
     private static final String BATCH_COLUMN_NAME = "batch";
@@ -96,12 +96,12 @@ public class ComBat<R, C> {
     /**
      * The data matrix
      */
-    private DoubleMatrix2D y = null;
+    private DoubleMatrix2D y;
 
     /**
      * The design matrix
      */
-    private DoubleMatrix2D x = null;
+    private DoubleMatrix2D x;
 
     public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, ?> sampleInfo ) {
 
@@ -113,10 +113,10 @@ public class ComBat<R, C> {
         this.sampleInfo = sampleInfo;
         solver = new Algebra();
         y = new DenseDoubleMatrix2D( data.asArray() );
-        initPartA();
+        this.initPartA();
         // DesignMatrix dm = new DesignMatrix( sampleInfo );
         // this.x = dm.getMatrix();
-        x = computeDesignMatrix();
+        x = this.computeDesignMatrix();
     }
 
     public DoubleMatrix2D getDesignMatrix() {
@@ -125,7 +125,6 @@ public class ComBat<R, C> {
 
     /**
      * Make diagnostic plots.
-     * TODO: save somewhere more reasonable than in the tmp directory.
      * FIXME: As in the original ComBat, this only graphs the first batch's statistics. In principle we can (and perhaps
      * should) examine these plots for all the batches.
      *
@@ -152,16 +151,16 @@ public class ComBat<R, C> {
             ghtheoryT.fill( n );
         }
         XYSeries ghtheory = ghtheoryT.plot();
-        File tmpfile = null;
+        File tmpfile;
         try {
             tmpfile = File.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
-            log.info( tmpfile );
+            ComBat.log.info( tmpfile );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
         try (OutputStream os = new FileOutputStream( tmpfile )) {
-            writePlot( os, ghplot, ghtheory );
+            this.writePlot( os, ghplot, ghtheory );
 
             /*
              * View the distribution of deltaHat, which we assume has an inverse gamma distribution
@@ -180,15 +179,171 @@ public class ComBat<R, C> {
             XYSeries dhtheory = deltaHatT.plot();
 
             tmpfile = File.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
-            log.info( tmpfile );
+            ComBat.log.info( tmpfile );
 
             try (OutputStream os2 = new FileOutputStream( tmpfile )) {
-                writePlot( os2, dhplot, dhtheory );
+                this.writePlot( os2, dhplot, dhtheory );
             }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
+    }
+
+    /**
+     * @return data corrected using parametric prior estimator
+     * @throws ComBatException combat problems
+     */
+    public DoubleMatrix2D run() throws ComBatException {
+        return this.run( true );
+    }
+
+    /**
+     * @param parametric if false, use the non-parametric (slower) method for estimating the priors.
+     * @return corrected data
+     * @throws ComBatException combat problems
+     */
+    public DoubleMatrix2D run( boolean parametric ) throws ComBatException {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        final DoubleMatrix2D sdata = this.standardize( y, x );
+
+        this.checkForProblems( sdata );
+
+        if ( timer.getTime() > 1000 ) {
+            ComBat.log.info( "Standardized" );
+        }
+        timer.reset();
+        timer.start();
+
+        this.gammaHat( sdata );
+
+        this.deltaHat( sdata );
+        // assertEquals( 1.618, deltaHat.get( 0, 0 ), 0.001 );
+
+        // gamma.bar <- apply(gamma.hat, 1, mean)
+        gammaBar = new DoubleArrayList();
+        t2 = new DoubleArrayList();
+        for ( int batchIndex = 0; batchIndex < gammaHat.rows(); batchIndex++ ) {
+            double mean = DescriptiveWithMissing
+                    .mean( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ) );
+            gammaBar.add( mean );
+            t2.add( DescriptiveWithMissing
+                    .sampleVariance( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ), mean ) );
+        }
+
+        // assertEquals( -0.092144, gammaBar.get( 0 ), 0.001 );
+        // assertEquals( 0.2977, t2.get( 1 ), 0.001 );
+
+        aPrior = this.aPrior( deltaHat );
+        bPrior = this.bPrior( deltaHat );
+
+        if ( timer.getTime() > 1000 ) {
+            ComBat.log.info( "Computed priors" );
+        }
+
+        // assertEquals( 17.4971, aPrior.get( 0 ), 0.0001 );
+        // assertEquals( 4.514, bPrior.get( 1 ), 0.0001 );
+
+        DoubleMatrix2D gammastar = new DenseDoubleMatrix2D( numBatches, numProbes );
+        DoubleMatrix2D deltastar = new DenseDoubleMatrix2D( numBatches, numProbes );
+
+        if ( !parametric ) {
+            this.runNonParametric( sdata, gammastar, deltastar );
+        } else {
+            this.runParametric( sdata, gammastar, deltastar );
+        }
+
+        DoubleMatrix2D adjustedData = this.rawAdjust( sdata, gammastar, deltastar );
+
+        // assertEquals( -0.95099, adjustedData.get( 18, 0 ), 0.0001 );
+        // assertEquals( -0.30273984, adjustedData.get( 14, 6 ), 0.0001 );
+        // assertEquals( 0.2097977, adjustedData.get( 7, 3 ), 0.0001 );
+        // log.info( adjustedData );
+        DoubleMatrix2D result = this.restoreScale( adjustedData );
+        if ( timer.getTime() > 1000 ) {
+            ComBat.log.info( "Done" );
+        }
+        return result;
+    }
+
+    /**
+     * Special standardization: partial regression of covariates
+     *
+     * @param b b
+     * @param A A
+     * @return double matrix 2d
+     */
+    DoubleMatrix2D standardize( DoubleMatrix2D b, DoubleMatrix2D A ) {
+
+        DoubleMatrix2D beta = new LeastSquaresFit( A, b ).getCoefficients();
+
+        // assertEquals( 3.7805, beta.get( 0, 0 ), 0.001 );
+        // assertEquals( 0.0541, beta.get( 2, 18 ), 0.001 );
+
+        int batchIndex = 0;
+        DoubleMatrix2D bba = new DenseDoubleMatrix2D( 1, numBatches );
+        for ( String batchId : batches.keySet() ) {
+            bba.set( 0, batchIndex++, ( double ) batches.get( batchId ).size() / numSamples );
+        }
+
+        /*
+         * Weight the non-batch coefficients by the batch sizes.
+         */
+        DoubleMatrix2D grandMeanM = solver.mult( bba, beta.viewPart( 0, 0, numBatches, beta.columns() ) );
+
+        // assertEquals( 5.8134, grandMeanM.get( 0, 1 ), 0.001 );
+
+        if ( hasMissing ) {
+            varpooled = y.copy().assign( solver.transpose( solver.mult( x, beta ) ), Functions.minus );
+            DoubleMatrix2D var = new DenseDoubleMatrix2D( varpooled.rows(), 1 );
+            for ( int i = 0; i < varpooled.rows(); i++ ) {
+                DoubleMatrix1D row = varpooled.viewRow( i );
+                double m = DescriptiveWithMissing.mean( new DoubleArrayList( row.toArray() ) );
+                double v = DescriptiveWithMissing.sampleVariance( new DoubleArrayList( row.toArray() ), m );
+                var.set( i, 0, v );
+            }
+            varpooled = var;
+        } else {
+            varpooled = y.copy().assign( solver.transpose( solver.mult( x, beta ) ), Functions.minus )
+                    .assign( Functions.pow( 2 ) );
+            DoubleMatrix2D scale = new DenseDoubleMatrix2D( numSamples, 1 );
+            scale.assign( 1.0 / numSamples );
+            varpooled = solver.mult( varpooled, scale );
+        }
+
+        DoubleMatrix2D size = new DenseDoubleMatrix2D( numSamples, 1 );
+        size.assign( 1.0 );
+
+        /*
+         * The coefficients repeated for each sample.
+         */
+        standMean = solver.mult( solver.transpose( grandMeanM ), solver.transpose( size ) );
+
+        /*
+         * Erase the batch factors from a copy of the design matrix
+         */
+        DoubleMatrix2D tmpX = x.copy();
+        for ( batchIndex = 0; batchIndex < numBatches; batchIndex++ ) {
+            for ( int j = 0; j < x.rows(); j++ ) {
+                tmpX.set( j, batchIndex, 0.0 );
+            }
+        }
+
+        /*
+         * row means, adjusted "per group", and ignoring batch effects.
+         */
+        standMean = standMean.assign( solver.transpose( solver.mult( tmpX, beta ) ), Functions.plus );
+
+        DoubleMatrix2D varsq = solver.mult( varpooled.copy().assign( Functions.sqrt ), solver.transpose( size ) );
+
+        /*
+         * Subtract the mean and divide by the standard deviations.
+         */
+        DoubleMatrix2D meansubtracted = y.copy().assign( standMean, Functions.minus );
+        return meansubtracted.assign( varsq, Functions.div );
     }
 
     private void writePlot( OutputStream os, XYSeries empirical, XYSeries theory ) {
@@ -213,85 +368,6 @@ public class ComBat<R, C> {
         }
     }
 
-    /**
-     * @return data corrected using parametric prior estimator
-     * @throws ComBatException combat problems
-     */
-    public DoubleMatrix2D run() throws ComBatException {
-        return this.run( true );
-    }
-
-    /**
-     * @param parametric if false, use the non-parametric (slower) method for estimating the priors.
-     * @return corrected data
-     * @throws ComBatException combat problems
-     */
-    public DoubleMatrix2D run( boolean parametric ) throws ComBatException {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        final DoubleMatrix2D sdata = standardize( y, x );
-
-        checkForProblems( sdata );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Standardized" );
-        }
-        timer.reset();
-        timer.start();
-
-        gammaHat( sdata );
-
-        deltaHat( sdata );
-        // assertEquals( 1.618, deltaHat.get( 0, 0 ), 0.001 );
-
-        // gamma.bar <- apply(gamma.hat, 1, mean)
-        gammaBar = new DoubleArrayList();
-        t2 = new DoubleArrayList();
-        for ( int batchIndex = 0; batchIndex < gammaHat.rows(); batchIndex++ ) {
-            double mean = DescriptiveWithMissing
-                    .mean( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ) );
-            gammaBar.add( mean );
-            t2.add( DescriptiveWithMissing
-                    .sampleVariance( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ), mean ) );
-        }
-
-        // assertEquals( -0.092144, gammaBar.get( 0 ), 0.001 );
-        // assertEquals( 0.2977, t2.get( 1 ), 0.001 );
-
-        aPrior = aPrior( deltaHat );
-        bPrior = bPrior( deltaHat );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Computed priors" );
-        }
-
-        // assertEquals( 17.4971, aPrior.get( 0 ), 0.0001 );
-        // assertEquals( 4.514, bPrior.get( 1 ), 0.0001 );
-
-        DoubleMatrix2D gammastar = new DenseDoubleMatrix2D( numBatches, numProbes );
-        DoubleMatrix2D deltastar = new DenseDoubleMatrix2D( numBatches, numProbes );
-
-        if ( !parametric ) {
-            runNonParametric( sdata, gammastar, deltastar );
-        } else {
-            runParametric( sdata, gammastar, deltastar );
-        }
-
-        DoubleMatrix2D adjustedData = rawAdjust( sdata, gammastar, deltastar );
-
-        // assertEquals( -0.95099, adjustedData.get( 18, 0 ), 0.0001 );
-        // assertEquals( -0.30273984, adjustedData.get( 14, 6 ), 0.0001 );
-        // assertEquals( 0.2097977, adjustedData.get( 7, 3 ), 0.0001 );
-        // log.info( adjustedData );
-        DoubleMatrix2D result = restoreScale( adjustedData );
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Done" );
-        }
-        return result;
-    }
-
     private void runParametric( final DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
         int batchIndex = 0;
         for ( String batchId : batches.keySet() ) {
@@ -300,7 +376,7 @@ public class ComBat<R, C> {
 
             DoubleMatrix1D[] batchResults;
 
-            batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ),
+            batchResults = this.itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ),
                     gammaBar.get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ),
                     bPrior.get( batchIndex ) );
 
@@ -318,7 +394,7 @@ public class ComBat<R, C> {
         final ConcurrentHashMap<String, DoubleMatrix1D[]> results = new ConcurrentHashMap<>();
         int numThreads = Math.min( batches.size(), Runtime.getRuntime().availableProcessors() );
 
-        log.info( "Runing nonparametric estimation on " + numThreads + " threads" );
+        ComBat.log.info( "Runing nonparametric estimation on " + numThreads + " threads" );
 
         Future<?>[] futures = new Future[numThreads];
         ExecutorService service = Executors.newCachedThreadPool();
@@ -341,9 +417,9 @@ public class ComBat<R, C> {
                 public void run() {
                     for ( int k = firstBatch; k < lastBatch; k++ ) {
                         String batchId = batchIds[k];
-                        DoubleMatrix2D batchData = getBatchData( sdata, batchId );
-                        DoubleMatrix1D[] batchResults = nonParametricFit( batchData, gammaHat.viewRow( k ),
-                                deltaHat.viewRow( k ) );
+                        DoubleMatrix2D batchData = ComBat.this.getBatchData( sdata, batchId );
+                        DoubleMatrix1D[] batchResults = ComBat.this
+                                .nonParametricFit( batchData, gammaHat.viewRow( k ), deltaHat.viewRow( k ) );
                         results.put( batchId, batchResults );
                     }
                 }
@@ -435,27 +511,21 @@ public class ComBat<R, C> {
      * @return double matrix 2d
      */
     private DoubleMatrix2D computeDesignMatrix() {
-        DoubleMatrix2D design = null;
+        DoubleMatrix2D design;
         /*
          * Find the batch
          */
         DesignMatrix d = null;
-        int batchFactorColumnIndex = sampleInfo.getColIndexByName( BATCH_COLUMN_NAME );
+        int batchFactorColumnIndex = sampleInfo.getColIndexByName( ComBat.BATCH_COLUMN_NAME );
         Object[] batchFactor = sampleInfo.getColumn( batchFactorColumnIndex );
         if ( batchFactor != null ) {
-            List<String> batchFactorL = new ArrayList<>();
-            for ( Object s : batchFactor ) {
-                batchFactorL.add( ( String ) s );
-            }
-
-            d = new DesignMatrix( batchFactor, 1, BATCH_COLUMN_NAME );
-
+            d = new DesignMatrix( batchFactor, 1, ComBat.BATCH_COLUMN_NAME );
         }
         if ( d == null ) {
             throw new IllegalStateException( "No batch factor was found" );
         }
-        ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = getSampleInfoWithoutBatchFactor(
-                batchFactorColumnIndex );
+        ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = this
+                .getSampleInfoWithoutBatchFactor( batchFactorColumnIndex );
 
         d.add( sampleInfoWithoutBatchFactor );
         design = d.getDoubleMatrix();
@@ -542,7 +612,7 @@ public class ComBat<R, C> {
             }
         }
 
-        int batchColumnIndex = sampleInfo.getColIndexByName( BATCH_COLUMN_NAME );
+        int batchColumnIndex = sampleInfo.getColIndexByName( ComBat.BATCH_COLUMN_NAME );
         batches = new LinkedHashMap<>();
         originalLocationsInMatrix = new HashMap<>();
         for ( int i = 0; i < numSamples; i++ ) {
@@ -575,7 +645,7 @@ public class ComBat<R, C> {
     private DoubleMatrix1D[] itSol( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat, double gbar,
             double t2b, double a, double b ) throws ComBatException {
 
-        DoubleMatrix1D n = rowNonMissingCounts( matrix );
+        DoubleMatrix1D n = this.rowNonMissingCounts( matrix );
         DoubleMatrix1D gold = gHat;
         DoubleMatrix1D dold = dHat;
         final double conv = 0.0001;
@@ -585,17 +655,17 @@ public class ComBat<R, C> {
         int MAXITERS = 500;
 
         while ( change > conv ) {
-            DoubleMatrix1D gnew = postMean( gHat, gbar, n, dold, t2b );
-            DoubleMatrix1D sum2 = stepSum( matrix, gnew );
-            DoubleMatrix1D dnew = postVar( sum2, n, a, b );
+            DoubleMatrix1D gnew = this.postMean( gHat, gbar, n, dold, t2b );
+            DoubleMatrix1D sum2 = this.stepSum( matrix, gnew );
+            DoubleMatrix1D dnew = this.postVar( sum2, n, a, b );
 
             DoubleMatrix1D gnewtmp = gnew.copy().assign( gold, Functions.minus ).assign( Functions.abs )
                     .assign( gold, Functions.div );
 
             DoubleMatrix1D dnewtmp = dnew.copy().assign( dold, Functions.minus ).assign( Functions.abs )
                     .assign( dold, Functions.div );
-            double gnewmax = 0.0;
-            double dnewmax = 0.0;
+            double gnewmax;
+            double dnewmax;
             if ( hasMissing ) {
                 gnewmax = DescriptiveWithMissing.max( new DoubleArrayList( gnewtmp.toArray() ) );
                 dnewmax = DescriptiveWithMissing.max( new DoubleArrayList( dnewtmp.toArray() ) );
@@ -679,7 +749,7 @@ public class ComBat<R, C> {
             dstar.set( i, sumdLH / sumLH );
 
             if ( c++ % 1000 == 0 ) {
-                log.info( i + String.format( " rows done, %.1fs elapsed", timer.getTime() / 1000.00 ) );
+                ComBat.log.info( i + String.format( " rows done, %.1fs elapsed", timer.getTime() / 1000.00 ) );
             }
         }
 
@@ -795,7 +865,7 @@ public class ComBat<R, C> {
         deltaHat = new DenseDoubleMatrix2D( numBatches, numProbes );
         batchIndex = 0;
         for ( String batchId : batches.keySet() ) {
-            DoubleMatrix2D batchData = getBatchData( sdata, batchId );
+            DoubleMatrix2D batchData = this.getBatchData( sdata, batchId );
             for ( int j = 0; j < batchData.rows(); j++ ) {
                 DoubleArrayList row = new DoubleArrayList( batchData.viewRow( j ).toArray() );
                 double variance = DescriptiveWithMissing.sampleVariance( row, DescriptiveWithMissing.mean( row ) );
@@ -803,83 +873,6 @@ public class ComBat<R, C> {
             }
             batchIndex++;
         }
-    }
-
-    /**
-     * Special standardization: partial regression of covariates
-     *
-     * @param b b
-     * @param A A
-     * @return double matrix 2d
-     */
-    protected DoubleMatrix2D standardize( DoubleMatrix2D b, DoubleMatrix2D A ) {
-
-        DoubleMatrix2D beta = new LeastSquaresFit( A, b ).getCoefficients();
-
-        // assertEquals( 3.7805, beta.get( 0, 0 ), 0.001 );
-        // assertEquals( 0.0541, beta.get( 2, 18 ), 0.001 );
-
-        int batchIndex = 0;
-        DoubleMatrix2D bba = new DenseDoubleMatrix2D( 1, numBatches );
-        for ( String batchId : batches.keySet() ) {
-            bba.set( 0, batchIndex++, ( double ) batches.get( batchId ).size() / numSamples );
-        }
-
-        /*
-         * Weight the non-batch coefficients by the batch sizes.
-         */
-        DoubleMatrix2D grandMeanM = solver.mult( bba, beta.viewPart( 0, 0, numBatches, beta.columns() ) );
-
-        // assertEquals( 5.8134, grandMeanM.get( 0, 1 ), 0.001 );
-
-        if ( hasMissing ) {
-            varpooled = y.copy().assign( solver.transpose( solver.mult( x, beta ) ), Functions.minus );
-            DoubleMatrix2D var = new DenseDoubleMatrix2D( varpooled.rows(), 1 );
-            for ( int i = 0; i < varpooled.rows(); i++ ) {
-                DoubleMatrix1D row = varpooled.viewRow( i );
-                double m = DescriptiveWithMissing.mean( new DoubleArrayList( row.toArray() ) );
-                double v = DescriptiveWithMissing.sampleVariance( new DoubleArrayList( row.toArray() ), m );
-                var.set( i, 0, v );
-            }
-            varpooled = var;
-        } else {
-            varpooled = y.copy().assign( solver.transpose( solver.mult( x, beta ) ), Functions.minus )
-                    .assign( Functions.pow( 2 ) );
-            DoubleMatrix2D scale = new DenseDoubleMatrix2D( numSamples, 1 );
-            scale.assign( 1.0 / numSamples );
-            varpooled = solver.mult( varpooled, scale );
-        }
-
-        DoubleMatrix2D size = new DenseDoubleMatrix2D( numSamples, 1 );
-        size.assign( 1.0 );
-
-        /*
-         * The coefficients repeated for each sample.
-         */
-        standMean = solver.mult( solver.transpose( grandMeanM ), solver.transpose( size ) );
-
-        /*
-         * Erase the batch factors from a copy of the design matrix
-         */
-        DoubleMatrix2D tmpX = x.copy();
-        for ( batchIndex = 0; batchIndex < numBatches; batchIndex++ ) {
-            for ( int j = 0; j < x.rows(); j++ ) {
-                tmpX.set( j, batchIndex, 0.0 );
-            }
-        }
-
-        /*
-         * row means, adjusted "per group", and ignoring batch effects.
-         */
-        standMean = standMean.assign( solver.transpose( solver.mult( tmpX, beta ) ), Functions.plus );
-
-        DoubleMatrix2D varsq = solver.mult( varpooled.copy().assign( Functions.sqrt ), solver.transpose( size ) );
-
-        /*
-         * Subtract the mean and divide by the standard deviations.
-         */
-        DoubleMatrix2D meansubtracted = y.copy().assign( standMean, Functions.minus );
-        return meansubtracted.assign( varsq, Functions.div );
     }
 
 }

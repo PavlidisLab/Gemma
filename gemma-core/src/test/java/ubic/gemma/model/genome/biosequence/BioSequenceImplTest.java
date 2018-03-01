@@ -1,6 +1,3 @@
-/**
- * 
- */
 package ubic.gemma.model.genome.biosequence;
 
 import junit.framework.TestCase;
@@ -8,7 +5,6 @@ import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author Paul
- *
  */
 public class BioSequenceImplTest extends TestCase {
 
@@ -22,7 +18,7 @@ public class BioSequenceImplTest extends TestCase {
         a.setName( "foo" );
         b.setName( "goo" );
 
-        assertTrue( a.equals( b ) );
+        TestCase.assertTrue( a.equals( b ) );
     }
 
     public void testEqualsName() {
@@ -32,7 +28,7 @@ public class BioSequenceImplTest extends TestCase {
         a.setName( "foo" );
         b.setName( "goo" );
 
-        assertTrue( !a.equals( b ) );
+        TestCase.assertTrue( !a.equals( b ) );
     }
 
     public void testEqualsSeq() {
@@ -45,7 +41,7 @@ public class BioSequenceImplTest extends TestCase {
         a.setSequence( "AAAAAAAAAAAAAAAA" );
         b.setSequence( "BBBBBBBBBBBBB" );
 
-        assertTrue( !a.equals( b ) );
+        TestCase.assertTrue( !a.equals( b ) );
     }
 
     public void testEqualsTaxon() {
@@ -71,7 +67,7 @@ public class BioSequenceImplTest extends TestCase {
         a.setTaxon( m );
         b.setTaxon( h );
 
-        assertTrue( !a.equals( b ) );
+        TestCase.assertTrue( !a.equals( b ) );
     }
 
     public void testNotEqualsID() {
@@ -84,6 +80,6 @@ public class BioSequenceImplTest extends TestCase {
         a.setName( "foo" );
         b.setName( "foo" );
 
-        assertTrue( !a.equals( b ) );
+        TestCase.assertTrue( !a.equals( b ) );
     }
 }

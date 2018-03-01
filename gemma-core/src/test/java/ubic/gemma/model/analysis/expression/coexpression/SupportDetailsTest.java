@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,8 +45,7 @@ public class SupportDetailsTest {
     public void testSerializeEWAHCompressedBitmap() throws Exception {
         // select HEX(BYTES) from OTHER_LINK_SUPPORT_DETAILS WHERE ID=1
         // 000006AA00000001000000000000003600000000 = empty after removal.
-        Byte[] or = new Byte[] { 00, 00, 06, ( byte ) 0xAA, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 36, 00, 00, 00,
-                00 };
+        Byte[] or = new Byte[] { 0, 0, 6, ( byte ) 0xAA, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         DataInput c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         EWAHCompressedBitmap ff = new EWAHCompressedBitmap();
@@ -54,7 +53,7 @@ public class SupportDetailsTest {
         assertTrue( ff.getPositions().isEmpty() );
 
         // 0000000200000001000000000000000200000000 = also empty after removal.
-        or = new Byte[] { 00, 00, 00, 02, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 02, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();
@@ -79,7 +78,7 @@ public class SupportDetailsTest {
                 .closeEnough( new Integer[] { 1998, 1999, 6519 }, f.getPositions().toArray( new Integer[] {} ) );
 
         // empty after initialization
-        Byte[] or4 = new Byte[] { 00, 00, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 };
+        Byte[] or4 = new Byte[] { 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         di = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or4 ) );
         f = new EWAHCompressedBitmap();
         f.deserialize( di );
@@ -95,8 +94,7 @@ public class SupportDetailsTest {
         // assertTrue( "" + ff.getPositions(), ff.getPositions().isEmpty() );
 
         // 00000003000000020000000200000000000000000000000600000000: 1,2
-        or = new Byte[] { 00, 00, 00, 03, 00, 00, 00, 02, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-                06, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();
@@ -104,8 +102,7 @@ public class SupportDetailsTest {
         // assertTrue( "" + ff.getPositions(), ff.getPositions().isEmpty() );
 
         // 00000003000000020000000200000000000000000000000400000000: 2
-        or = new Byte[] { 00, 00, 00, 03, 00, 00, 00, 02, 00, 00, 00, 02, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00,
-                04, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 0, 3, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();
@@ -113,7 +110,7 @@ public class SupportDetailsTest {
         // assertTrue( "" + ff.getPositions(), ff.getPositions().isEmpty() );
 
         // 0000003E00000001000000000000000200000000
-        or = new Byte[] { 00, 00, 00, ( byte ) 0x3E, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 02, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 0, ( byte ) 0x3E, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();
@@ -121,7 +118,7 @@ public class SupportDetailsTest {
         assertTrue( ff.getPositions().isEmpty() );
 
         // 0000003F00000001000000000000000200000000
-        or = new Byte[] { 00, 00, 00, ( byte ) 0x3F, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 02, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 0, ( byte ) 0x3F, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();
@@ -129,7 +126,7 @@ public class SupportDetailsTest {
         assertTrue( ff.getPositions().isEmpty() );
 
         // 0000000500000001000000000000000200000000
-        or = new Byte[] { 00, 00, 00, 05, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 02, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 0, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();
@@ -137,7 +134,7 @@ public class SupportDetailsTest {
         assertTrue( ff.getPositions().isEmpty() );
 
         // 0000015300000001000000000000000C00000000
-        or = new Byte[] { 00, 00, 01, 53, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, ( byte ) 0x0C, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 1, 53, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, ( byte ) 0x0C, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();
@@ -145,7 +142,7 @@ public class SupportDetailsTest {
         assertTrue( ff.getPositions().isEmpty() );
 
         // 000002BB00000001000000000000001600000000
-        or = new Byte[] { 00, 00, 02, ( byte ) 0xBB, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 16, 00, 00, 00, 00 };
+        or = new Byte[] { 0, 0, 2, ( byte ) 0xBB, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0 };
         System.err.println( StringUtils.join( or, "," ) );
         c = ByteStreams.newDataInput( ArrayUtils.toPrimitive( or ) );
         ff = new EWAHCompressedBitmap();

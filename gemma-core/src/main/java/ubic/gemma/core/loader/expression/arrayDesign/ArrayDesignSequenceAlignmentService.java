@@ -37,6 +37,7 @@ public interface ArrayDesignSequenceAlignmentService {
      */
     Taxon validateTaxaForBlatFile( ArrayDesign arrayDesign, Taxon taxon );
 
+    @SuppressWarnings("unused") // Possible external use
     Collection<BlatResult> processArrayDesign( ArrayDesign design );
 
     Collection<BlatResult> processArrayDesign( ArrayDesign ad, Blat blat );

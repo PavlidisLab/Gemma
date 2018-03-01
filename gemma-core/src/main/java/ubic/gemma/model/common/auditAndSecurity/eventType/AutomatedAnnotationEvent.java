@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * so that the audit-trails can still properly display these events, but creation new events of this type should not
  * occure.
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Still present in database
 @Deprecated
 public class AutomatedAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
@@ -39,6 +40,7 @@ public class AutomatedAnnotationEvent extends ubic.gemma.model.common.auditAndSe
     public AutomatedAnnotationEvent() {
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Still present in database
     @Deprecated
     public static final class Factory {
 

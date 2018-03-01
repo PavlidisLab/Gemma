@@ -95,18 +95,20 @@ public class SequenceManipulation {
      * @return BioSequence. Not all fields are filled in and must be set by the caller.
      */
     public static BioSequence collapse( Collection<Reporter> sequences ) {
-        Collection<Reporter> copyOfSequences = copyReporters( sequences );
+        Collection<Reporter> copyOfSequences = SequenceManipulation.copyReporters( sequences );
         BioSequence collapsed = BioSequence.Factory.newInstance();
         collapsed.setSequence( "" );
-        if ( log.isDebugEnabled() )
-            log.debug( "Collapsing " + sequences.size() + " sequences" );
+        if ( SequenceManipulation.log.isDebugEnabled() )
+            SequenceManipulation.log.debug( "Collapsing " + sequences.size() + " sequences" );
         while ( !copyOfSequences.isEmpty() ) {
-            Reporter next = findLeftMostProbe( copyOfSequences );
+            Reporter next = SequenceManipulation.findLeftMostProbe( copyOfSequences );
             int ol = SequenceManipulation.rightHandOverlap( collapsed, next.getImmobilizedCharacteristic() );
             String nextSeqStr = next.getImmobilizedCharacteristic().getSequence();
             collapsed.setSequence( collapsed.getSequence() + nextSeqStr.substring( ol ) );
-            if ( log.isDebugEnabled() ) {
-                log.debug( "New Seq to add: " + nextSeqStr + " Overlap=" + ol + " Result=" + collapsed.getSequence() );
+            if ( SequenceManipulation.log.isDebugEnabled() ) {
+                SequenceManipulation.log
+                        .debug( "New Seq to add: " + nextSeqStr + " Overlap=" + ol + " Result=" + collapsed
+                                .getSequence() );
             }
             copyOfSequences.remove( next );
         }
@@ -140,10 +142,10 @@ public class SequenceManipulation {
      */
     public static int findCenter( String starts, String sizes ) {
 
-        int[] startArray = blatLocationsToIntArray( starts );
-        int[] sizesArray = blatLocationsToIntArray( sizes );
+        int[] startArray = SequenceManipulation.blatLocationsToIntArray( starts );
+        int[] sizesArray = SequenceManipulation.blatLocationsToIntArray( sizes );
 
-        return findCenterExonCenterBase( startArray, sizesArray );
+        return SequenceManipulation.findCenterExonCenterBase( startArray, sizesArray );
 
     }
 
@@ -162,17 +164,17 @@ public class SequenceManipulation {
      */
     public static int getGeneExonOverlaps( String chromosome, String starts, String sizes, String strand, Gene gene ) {
         if ( gene == null ) {
-            log.warn( "Null gene" );
+            SequenceManipulation.log.warn( "Null gene" );
             return 0;
         }
 
         if ( gene.getPhysicalLocation().getChromosome() != null && !gene.getPhysicalLocation().getChromosome().getName()
-                .equals( deBlatFormatChromosomeName( chromosome ) ) )
+                .equals( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) ) )
             return 0;
 
         int bestOverlap = 0;
         for ( GeneProduct geneProduct : gene.getProducts() ) {
-            int overlap = getGeneProductExonOverlap( starts, sizes, strand, geneProduct );
+            int overlap = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, strand, geneProduct );
             if ( overlap > bestOverlap ) {
                 bestOverlap = overlap;
             }
@@ -207,15 +209,15 @@ public class SequenceManipulation {
         // These are transient instances
         Collection<PhysicalLocation> exons = geneProduct.getExons();
 
-        int[] startArray = blatLocationsToIntArray( starts );
-        int[] sizesArray = blatLocationsToIntArray( sizes );
+        int[] startArray = SequenceManipulation.blatLocationsToIntArray( starts );
+        int[] sizesArray = SequenceManipulation.blatLocationsToIntArray( sizes );
 
         if ( exons.size() == 0 ) {
             /*
              * simply use the gene product location itself. This was the case if we have ProbeAlignedRegion...otherwise
              * it's not expected
              */
-            log.warn( "No exons for " + geneProduct );
+            SequenceManipulation.log.warn( "No exons for " + geneProduct );
             return 0;
 
         }
@@ -238,7 +240,9 @@ public class SequenceManipulation {
         }
 
         if ( totalOverlap > totalLength )
-            log.warn( "More overlap than length of sequence, trimming because " + totalOverlap + " > " + totalLength );
+            SequenceManipulation.log
+                    .warn( "More overlap than length of sequence, trimming because " + totalOverlap + " > "
+                            + totalLength );
 
         return Math.min( totalOverlap, totalLength );
     }
@@ -250,7 +254,7 @@ public class SequenceManipulation {
      * @param target target
      * @return right overlap
      */
-    @SuppressWarnings("WeakerAccess") // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static int rightHandOverlap( BioSequence target, BioSequence query ) {
 
         if ( target == null || query == null )
@@ -283,7 +287,7 @@ public class SequenceManipulation {
 
         StringBuilder buf = new StringBuilder();
         for ( int i = sequence.length() - 1; i >= 0; i-- ) {
-            buf.append( complement( sequence.charAt( i ) ) );
+            buf.append( SequenceManipulation.complement( sequence.charAt( i ) ) );
         }
         return buf.toString();
     }
@@ -358,7 +362,7 @@ public class SequenceManipulation {
      * @return total size
      */
     public static int totalSize( String sizes ) {
-        return totalSize( blatLocationsToIntArray( sizes ) );
+        return SequenceManipulation.totalSize( SequenceManipulation.blatLocationsToIntArray( sizes ) );
     }
 
     /**
@@ -369,7 +373,7 @@ public class SequenceManipulation {
      * @param b b
      * @return overlap
      */
-    @SuppressWarnings("WeakerAccess") // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static int computeOverlap( PhysicalLocation a, PhysicalLocation b ) {
         if ( !a.getChromosome().equals( b.getChromosome() ) ) {
             return 0;
@@ -408,7 +412,7 @@ public class SequenceManipulation {
      * Find the index of the aligned base in the center exon that is the center of the query.
      */
     private static int findCenterExonCenterBase( int[] startArray, int[] sizesArray ) {
-        int middle = middleBase( totalSize( sizesArray ) );
+        int middle = SequenceManipulation.middleBase( SequenceManipulation.totalSize( sizesArray ) );
         int totalSize = 0;
         for ( int i = 0; i < sizesArray.length; i++ ) {
             totalSize += sizesArray[i];

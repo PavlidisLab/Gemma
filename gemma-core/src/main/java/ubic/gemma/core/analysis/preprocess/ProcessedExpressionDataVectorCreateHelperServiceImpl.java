@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -56,19 +57,16 @@ import java.util.*;
  * Transactional methods.
  *
  * @author Paul
- * @see ProcessedExpressionDataVectorCreateService
+ * @see ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService
  */
 @Service
 public class ProcessedExpressionDataVectorCreateHelperServiceImpl
         implements ProcessedExpressionDataVectorCreateHelperService {
 
-    private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateHelperServiceImpl.class );
+    private static final Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateHelperServiceImpl.class );
 
     @Autowired
     private ExpressionExperimentService eeService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorService processedDataService;
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -79,99 +77,33 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
 
-    @Override
-    @Transactional
-    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
-        ee = processedDataService.createProcessedDataVectors( ee );
-        //ee = this.eeService.thawLite( ee );
-        assert ee.getNumberOfDataVectors() != null;
-        audit( ee, "" );
-        return ee;
-    }
+    @Autowired
+    private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
+
+    @Autowired
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Override
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
-        ee = processedDataService.createProcessedDataVectors( ee, vecs );
+        ee = this.processedExpressionDataVectorDao.createProcessedDataVectors( ee, vecs );
         ee = this.eeService.thawLite( ee );
 
         assert ee.getNumberOfDataVectors() != null;
-
-        audit( ee, "" );
-
+        this.audit( ee );
         return ee;
     }
 
-    /**
-     * Computes expression intensities depending on which ArrayDesign TechnologyType is used.
-     *
-     * @return ExpressionDataDoubleMatrix
-     */
     @Override
-    public ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> processedVectors ) {
-        Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
-
-        assert !arrayDesignsUsed.isEmpty();
-        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
-        assert arrayDesign != null && arrayDesign.getTechnologyType() != null;
-
-        ExpressionDataDoubleMatrix intensities;
-
-        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) && !arrayDesign.getTechnologyType()
-                .equals( TechnologyType.NONE ) ) {
-
-            log.info( "Computing intensities for two-color data from underlying data" );
-
-            /*
-             * Get vectors needed to compute intensities.
-             */
-            Collection<QuantitationType> quantitationTypes = eeService.getQuantitationTypes( ee );
-            Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
-                    .getUsefulQuantitationTypes( quantitationTypes );
-
-            if ( usefulQuantitationTypes.isEmpty() ) {
-                throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
-            }
-
-            Collection<DesignElementDataVector> vectors = eeService
-                    .getDesignElementDataVectors( usefulQuantitationTypes );
-
-            if ( vectors.isEmpty() ) {
-                throw new IllegalStateException( "No vectors for useful quantitation types for " + ee.getShortName() );
-            }
-
-            log.info( "Vectors loaded ..." );
-
-            // designElementDataVectorService.thaw( vectors ); // should be in a transaction, don't need to do.
-            ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
-            intensities = builder.getIntensity();
-
-            ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
-
-            if ( missingValues == null ) {
-                log.warn( "Could not locate missing value matrix for " + ee
-                        + ", rank computation skipped (needed for two-color data)" );
-                return intensities;
-            }
-
-            if ( intensities == null ) {
-                log.warn( "Could not locate intensity matrix for " + ee
-                        + ", rank computation skipped (needed for two-color data)" );
-                return intensities;
-            }
-
-            log.info( "Masking ..." );
-            this.maskMissingValues( intensities, missingValues );
-
-        } else {
-            log.info( "Computing intensities directly from processed data" );
-            intensities = new ExpressionDataDoubleMatrix( processedVectors );
-        }
-
-        assert intensities != null;
-
-        return intensities;
+    @Transactional
+    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
+        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
+        assert ee.getNumberOfDataVectors() != null;
+        this.audit( ee );
+        return ee;
     }
 
     @Override
@@ -180,21 +112,23 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
         ExpressionExperiment ee = expressionExperimentDao.load( eeId );
 
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
-            log.info( ee.getShortName() + " does not have a populated experimental design, skipping" );
+            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                    .info( ee.getShortName() + " does not have a populated experimental design, skipping" );
             return;
         }
 
         Collection<ProcessedExpressionDataVector> processedDataVectors = ee.getProcessedExpressionDataVectors();
 
         if ( processedDataVectors.size() == 0 ) {
-            log.info( ee.getShortName() + " does not have processed data" );
+            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                    .info( ee.getShortName() + " does not have processed data" );
             return;
         }
 
         Collection<BioAssayDimension> dims = this.eeService.getBioAssayDimensions( ee );
 
         if ( dims.size() > 1 ) {
-            checkAllBioAssayDimensionsMatch( dims );
+            this.checkAllBioAssayDimensionsMatch( dims );
         }
 
         BioAssayDimension bioassaydim = dims.iterator().next();
@@ -228,12 +162,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
         Map<BioAssayDimension, BioAssayDimension> old2new = new HashMap<>();
         for ( BioAssayDimension bioAssayDimension : dims ) {
 
-            /*
-             * This is a list. Andromda won't let us declare it that way.
-             */
             Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
-
-            assert bioAssays instanceof List<?>;
+            assert bioAssays != null;
 
             /*
              * Initialize the new bioassay list.
@@ -252,19 +182,11 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
                     resorted.set( newIndex, bioAssay );
 
-                    if ( indexes.containsKey( oldIndex ) ) {
-                        /*
-                         * Should be the same for all dimensions....
-                         */
-                        assert indexes.get( oldIndex ).equals( newIndex );
-                    }
-
                     /*
-                     *
+                     * Should be the same for all dimensions....
                      */
-                    // log.info( oldIndex + " ---> " + newIndex );
+                    assert !indexes.containsKey( oldIndex ) || indexes.get( oldIndex ).equals( newIndex );
                     indexes.put( oldIndex, newIndex );
-
                 } else {
                     throw new IllegalStateException();
                 }
@@ -281,39 +203,31 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
             old2new.put( bioAssayDimension, newBioAssayDimension );
 
         }
-        ByteArrayConverter conv = new ByteArrayConverter();
 
+        ByteArrayConverter converter = new ByteArrayConverter();
         for ( ProcessedExpressionDataVector v : processedDataVectors ) {
-
-            // log.info( v.getDesignElement() );
 
             BioAssayDimension revisedBioAssayDimension = old2new.get( v.getBioAssayDimension() );
             assert revisedBioAssayDimension != null;
 
-            double[] data = conv.byteArrayToDoubles( v.getData() );
+            double[] data = converter.byteArrayToDoubles( v.getData() );
 
             /*
-             * Put the data in the order of the bioassaydimension.
+             * Put the data in the order of the bioAssayDimension.
              */
             Double[] resortedData = new Double[data.length];
-
-            // log.info( StringUtils.join( ArrayUtils.toObject( data ), "," ) );
 
             for ( int k = 0; k < data.length; k++ ) {
                 resortedData[k] = data[indexes.get( k )];
             }
 
-            // log.info( StringUtils.join( resortedData, "," ) );
-
-            v.setData( conv.toBytes( resortedData ) );
+            v.setData( converter.toBytes( resortedData ) );
             v.setBioAssayDimension( revisedBioAssayDimension );
 
         }
-        log.info( "Updating bioassay ordering of " + processedDataVectors.size() + " vectors" );
-        // processedDataService.update( processedDataVectors ); // happens automatically on flush.
-
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                .info( "Updating bioassay ordering of " + processedDataVectors.size() + " vectors" );
         this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
-
     }
 
     /**
@@ -322,41 +236,120 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     @Override
     public ExpressionExperiment updateRanks( ExpressionExperiment ee ) {
 
-        Collection<ProcessedExpressionDataVector> processedVectors = this.processedDataService
-                .getProcessedDataVectors( ee );
-        processedDataService.thaw( processedVectors );
+        ee = expressionExperimentDao.thaw( ee );
+        Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
+        processedExpressionDataVectorService.thaw( processedVectors );
         StopWatch timer = new StopWatch();
         timer.start();
-        ExpressionDataDoubleMatrix intensities = loadIntensities( ee, processedVectors );
+        ExpressionDataDoubleMatrix intensities = this.loadIntensities( ee, processedVectors );
 
         if ( intensities == null ) {
             return ee;
         }
 
-        log.info( "Load intensities: " + timer.getTime() + "ms" );
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Load intensities: " + timer.getTime() + "ms" );
 
-        Collection<ProcessedExpressionDataVector> updatedVectors = computeRanks( processedVectors, intensities );
+        Collection<ProcessedExpressionDataVector> updatedVectors = this.computeRanks( processedVectors, intensities );
         if ( updatedVectors == null ) {
-            log.info( "Could not get preferred data vectors, not updating ranks data" );
+            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                    .info( "Could not get preferred data vectors, not updating ranks data" );
             return ee;
         }
 
-        log.info( "Updating ranks data for " + updatedVectors.size() + " vectors ..." );
-        this.processedDataService.update( updatedVectors );
-        log.info( "Done" );
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                .info( "Updating ranks data for " + updatedVectors.size() + " vectors ..." );
+        this.processedExpressionDataVectorService.update( updatedVectors );
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Done" );
         return ee;
     }
 
-    private void audit( ExpressionExperiment ee, String note ) {
+    /**
+     * Computes expression intensities depending on which ArrayDesign TechnologyType is used.
+     *
+     * @return ExpressionDataDoubleMatrix
+     */
+    private ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> processedVectors ) {
+        Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
+
+        assert !arrayDesignsUsed.isEmpty();
+        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
+        assert arrayDesign != null && arrayDesign.getTechnologyType() != null;
+
+        ExpressionDataDoubleMatrix intensities;
+
+        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) && !arrayDesign.getTechnologyType()
+                .equals( TechnologyType.NONE ) ) {
+
+            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                    .info( "Computing intensities for two-color data from underlying data" );
+
+            /*
+             * Get vectors needed to compute intensities.
+             */
+            Collection<QuantitationType> quantitationTypes = eeService.getQuantitationTypes( ee );
+            Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
+                    .getUsefulQuantitationTypes( quantitationTypes );
+
+            if ( usefulQuantitationTypes.isEmpty() ) {
+                throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
+            }
+
+            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.find( usefulQuantitationTypes );
+            if ( vectors.isEmpty() ) {
+                vectors = processedExpressionDataVectorService.find( usefulQuantitationTypes );
+            }
+
+            if ( vectors.isEmpty() ) {
+                throw new IllegalStateException( "No vectors for useful quantitation types for " + ee.getShortName() );
+            }
+
+            ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Vectors loaded ..." );
+
+            Collection<DesignElementDataVector> vs = new HashSet<>( vectors );
+            rawExpressionDataVectorService.thawRawAndProcessed( vs );
+            ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
+            intensities = builder.getIntensity();
+
+            ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
+
+            if ( missingValues == null ) {
+                ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                        .warn( "Could not locate missing value matrix for " + ee
+                                + ", rank computation skipped (needed for two-color data)" );
+                return intensities;
+            }
+
+            if ( intensities == null ) {
+                ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                        .warn( "Could not locate intensity matrix for " + ee
+                                + ", rank computation skipped (needed for two-color data)" );
+                return null;
+            }
+
+            ProcessedExpressionDataVectorCreateHelperServiceImpl.log.info( "Masking ..." );
+            this.maskMissingValues( intensities, missingValues );
+
+        } else {
+            ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                    .info( "Computing intensities directly from processed data" );
+            intensities = new ExpressionDataDoubleMatrix( processedVectors );
+        }
+
+        return intensities;
+    }
+
+    private void audit( ExpressionExperiment ee ) {
         AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+        auditTrailService.addUpdateEvent( ee, eventType, "" );
     }
 
     /**
      * Make sure we have only one ordering!!! If the sample matching is botched, there will be problems.
      */
     private void checkAllBioAssayDimensionsMatch( Collection<BioAssayDimension> dims ) {
-        log.info( "Data set has more than one bioassaydimension for its processed data vectors" );
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                .info( "Data set has more than one bioassaydimension for its processed data vectors" );
         List<BioMaterial> ordering = new ArrayList<>();
         int i = 0;
         for ( BioAssayDimension dim : dims ) {
@@ -382,21 +375,21 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     private Collection<ProcessedExpressionDataVector> computeRanks(
             Collection<ProcessedExpressionDataVector> processedDataVectors, ExpressionDataDoubleMatrix intensities ) {
 
-        DoubleArrayList ranksByMean = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.mean );
+        DoubleArrayList ranksByMean = this.getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.mean );
         assert ranksByMean != null;
-        DoubleArrayList ranksByMax = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.max );
+        DoubleArrayList ranksByMax = this.getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.max );
         assert ranksByMax != null;
 
         for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
             CompositeSequence de = vector.getDesignElement();
             if ( intensities.getRow( de ) == null ) {
-                log.warn( "No intensity value for " + de + ", rank for vector will be null" );
+                ProcessedExpressionDataVectorCreateHelperServiceImpl.log
+                        .warn( "No intensity value for " + de + ", rank for vector will be null" );
                 vector.setRankByMean( null );
                 vector.setRankByMax( null );
                 continue;
             }
             Integer i = intensities.getRowIndex( de );
-            assert i != null;
             double rankByMean = ranksByMean.get( i ) / ranksByMean.size();
             double rankByMax = ranksByMax.get( i ) / ranksByMax.size();
             vector.setRankByMean( rankByMean );
@@ -408,7 +401,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
 
     private DoubleArrayList getRanks( ExpressionDataDoubleMatrix intensities,
             ProcessedExpressionDataVectorDao.RankMethod method ) {
-        log.debug( "Getting ranks" );
+        ProcessedExpressionDataVectorCreateHelperServiceImpl.log.debug( "Getting ranks" );
         assert intensities != null;
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 

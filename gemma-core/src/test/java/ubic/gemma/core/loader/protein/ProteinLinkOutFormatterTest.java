@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,33 +19,32 @@
 
 package ubic.gemma.core.loader.protein;
 
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.model.common.description.DatabaseEntry;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.model.common.description.DatabaseEntry;
-
 /**
  * Test to ensure string links are set correctly in gemma and that evidence codes for interactions are correctly set.
- * 
- * @author ldonnison
  *
+ * @author ldonnison
  */
 public class ProteinLinkOutFormatterTest {
 
+    private static final String accession = "9606.ENSP00000293813%0D9606.ENSP00000360616";
+    private static final String url = "http://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifier";
+    private static final String baseFormattedUrl = ProteinLinkOutFormatterTest.url.concat( "s=" )
+            .concat( ProteinLinkOutFormatterTest.accession );
+    private final DatabaseEntry entry = DatabaseEntry.Factory.newInstance();
     private ProteinLinkOutFormatter formatter = null;
-    DatabaseEntry entry = DatabaseEntry.Factory.newInstance();
-    private static String accession = "9606.ENSP00000293813%0D9606.ENSP00000360616";
-    private static String url = "http://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifier";
-    private static String baseFormattedUrl = url.concat( "s=" ).concat( accession );
 
     @Before
     public void setUp() {
         formatter = new ProteinLinkOutFormatter();
-        entry.setUri( url + "=" );
-        entry.setAccession( accession );
+        entry.setUri( ProteinLinkOutFormatterTest.url + "=" );
+        entry.setAccession( ProteinLinkOutFormatterTest.accession );
     }
 
     /**
@@ -54,7 +53,7 @@ public class ProteinLinkOutFormatterTest {
     @Test
     public void testGetStringProteinProteinInteractionLinkFormatted() {
         String urlForString = formatter.getStringProteinProteinInteractionLinkGemmaDefault( entry );
-        String defaultUrl = ( baseFormattedUrl.concat( "&required_score=150" ) );
+        String defaultUrl = ( ProteinLinkOutFormatterTest.baseFormattedUrl.concat( "&required_score=150" ) );
         assertEquals( defaultUrl, urlForString );
     }
 
@@ -64,7 +63,8 @@ public class ProteinLinkOutFormatterTest {
     @Test
     public void testGetStringProteinProteinInteractionLinkDefault() {
         String urlForString = formatter.getStringProteinProteinInteractionLinkFormatted( entry, "20", "420" );
-        String defaultUrl = ( baseFormattedUrl.concat( "&limit=20" ).concat( "&required_score=420" ) );
+        String defaultUrl = ( ProteinLinkOutFormatterTest.baseFormattedUrl.concat( "&limit=20" )
+                .concat( "&required_score=420" ) );
         assertEquals( defaultUrl, urlForString );
     }
 

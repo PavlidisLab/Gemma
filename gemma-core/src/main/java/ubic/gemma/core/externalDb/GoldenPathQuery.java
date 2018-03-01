@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,18 +38,12 @@ import java.util.Collection;
  */
 public class GoldenPathQuery extends GoldenPath {
 
-    BlatResultParser parser = new BlatResultParser();
+    private static final int TEST_PORT = 3306;
     private EstQuery estQuery;
     private MrnaQuery mrnaQuery;
 
-    public GoldenPathQuery() {
-        super();
-    }
-
-    public GoldenPathQuery( int port, String databaseName, String host, String user, String password )
-            throws SQLException {
-        super( port, databaseName, host, user, password );
-
+    GoldenPathQuery( String databaseName, String host, String user, String password ) {
+        super( GoldenPathQuery.TEST_PORT, databaseName, host, user, password );
     }
 
     public GoldenPathQuery( Taxon taxon ) {
@@ -72,12 +66,18 @@ public class GoldenPathQuery extends GoldenPath {
         return mrnaQuery.execute( accession );
     }
 
+    @Override
+    protected void init() {
+        super.init();
+        estQuery = new EstQuery( this.jdbcTemplate.getDataSource() );
+        mrnaQuery = new MrnaQuery( this.jdbcTemplate.getDataSource() );
+    }
+
     private BlatResult convertResult( ResultSet rs ) throws SQLException {
         BlatResult result = BlatResult.Factory.newInstance();
 
         result.setQuerySequence( BioSequence.Factory.newInstance() );
         Long queryLength = rs.getLong( "qSize" );
-        assert queryLength != null;
         result.getQuerySequence().setLength( queryLength );
 
         result.setMatches( rs.getInt( "matches" ) );
@@ -111,34 +111,26 @@ public class GoldenPathQuery extends GoldenPath {
             }
         }
 
-        result.setTargetChromosome(
-                Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(), getTaxon() ) );
+        result.setTargetChromosome( new Chromosome( chrom, null, BioSequence.Factory.newInstance(), this.getTaxon() ) );
         result.getTargetChromosome().getSequence().setName( chrom );
         result.getTargetChromosome().getSequence().setLength( rs.getLong( "tSize" ) );
-        result.getTargetChromosome().getSequence().setTaxon( getTaxon() );
-        result.setSearchedDatabase( getSearchedDatabase() );
+        result.getTargetChromosome().getSequence().setTaxon( this.getTaxon() );
+        result.setSearchedDatabase( this.getSearchedDatabase() );
 
         return result;
     }
 
-    @Override
-    protected void init() {
-        super.init();
-        estQuery = new EstQuery( this.jdbcTemplate.getDataSource() );
-        mrnaQuery = new MrnaQuery( this.jdbcTemplate.getDataSource() );
-    }
-
     private class EstQuery extends MappingSqlQuery<BlatResult> {
 
-        public EstQuery( DataSource dataSource ) {
+        EstQuery( DataSource dataSource ) {
             super( dataSource, "SELECT * FROM all_est WHERE qName = ?" );
             super.declareParameter( new SqlParameter( "accession", Types.VARCHAR ) );
-            compile();
+            this.compile();
         }
 
         @Override
         protected BlatResult mapRow( ResultSet rs, int rowNum ) throws SQLException {
-            return convertResult( rs );
+            return GoldenPathQuery.this.convertResult( rs );
 
         }
 
@@ -146,15 +138,15 @@ public class GoldenPathQuery extends GoldenPath {
 
     private class MrnaQuery extends MappingSqlQuery<BlatResult> {
 
-        public MrnaQuery( DataSource dataSource ) {
+        MrnaQuery( DataSource dataSource ) {
             super( dataSource, "SELECT * FROM all_mrna WHERE qName = ?" );
             super.declareParameter( new SqlParameter( "accession", Types.VARCHAR ) );
-            compile();
+            this.compile();
         }
 
         @Override
         protected BlatResult mapRow( ResultSet rs, int rowNum ) throws SQLException {
-            return convertResult( rs );
+            return GoldenPathQuery.this.convertResult( rs );
         }
 
     }

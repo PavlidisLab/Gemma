@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,29 +22,13 @@ import ubic.gemma.core.analysis.preprocess.filter.InsufficientDataException;
 
 /**
  * @author paul
- *
  */
 public class InsufficientProbesException extends InsufficientDataException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
-
-    public InsufficientProbesException() {
-        super();
-    }
 
     public InsufficientProbesException( String message ) {
         super( message );
-    }
-
-    public InsufficientProbesException( String arg0, Throwable arg1 ) {
-        super( arg0, arg1 );
-    }
-
-    public InsufficientProbesException( Throwable arg0 ) {
-        super( arg0 );
     }
 
 }

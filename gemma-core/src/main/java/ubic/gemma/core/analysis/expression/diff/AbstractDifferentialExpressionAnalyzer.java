@@ -31,9 +31,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -118,26 +115,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             return null;
         }
         return e;
-    }
-
-    /**
-     * Debugging tool. For example, if qvalue failed, save the pvalues to a temporary file for inspection.
-     *
-     * @param pvaluesToUse p values to use
-     * @return path to file where the pvalues were saved (a temporary file)
-     */
-    protected String savePvaluesForDebugging( double[] pvaluesToUse ) {
-        try {
-            File f = File.createTempFile( "diffanalysis_", ".pvalues.txt" );
-            try (FileWriter w = new FileWriter( f )) {
-                for ( double d : pvaluesToUse ) {
-                    w.write( d + "\n" );
-                }
-            }
-            return f.getPath();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
     }
 
 }

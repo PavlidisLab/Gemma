@@ -4,12 +4,13 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubValueObject> {
 
+    public static final String PRIMARY = "Primary";
+    public static final String RELEVANT = "Relevant";
     private String type = null;
     private CitationValueObject citationValueObject = null;
-    public static String PRIMARY = "Primary";
-    public static String RELEVANT = "Relevant";
 
     public PhenotypeAssPubValueObject() {
 
@@ -18,8 +19,8 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
     public PhenotypeAssPubValueObject( PhenotypeAssociationPublication assocationPublication ) {
         this.type = assocationPublication.getType();
         if ( assocationPublication.getCitation() != null ) {
-            this.citationValueObject = BibliographicReferenceValueObject.constructCitation( assocationPublication
-                    .getCitation() );
+            this.citationValueObject = BibliographicReferenceValueObject
+                    .constructCitation( assocationPublication.getCitation() );
         }
     }
 
@@ -28,7 +29,7 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( accession );
         PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
-        phenotypeAssPubValueObject.setType( PRIMARY );
+        phenotypeAssPubValueObject.setType( PhenotypeAssPubValueObject.PRIMARY );
         phenotypeAssPubValueObject.setCitationValueObject( citationValueObject );
 
         return phenotypeAssPubValueObject;
@@ -38,7 +39,7 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
         CitationValueObject citationValueObject = new CitationValueObject();
         citationValueObject.setPubmedAccession( accession );
         PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
-        phenotypeAssPubValueObject.setType( RELEVANT );
+        phenotypeAssPubValueObject.setType( PhenotypeAssPubValueObject.RELEVANT );
         phenotypeAssPubValueObject.setCitationValueObject( citationValueObject );
 
         return phenotypeAssPubValueObject;
@@ -67,8 +68,8 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
 
         if ( compare == 0 && this.citationValueObject != null
                 && phenotypeAssociationPublicationValueObject.getCitationValueObject() != null ) {
-            compare = this.citationValueObject.compareTo( phenotypeAssociationPublicationValueObject
-                    .getCitationValueObject() );
+            compare = this.citationValueObject
+                    .compareTo( phenotypeAssociationPublicationValueObject.getCitationValueObject() );
         }
 
         return compare;
@@ -86,17 +87,22 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
         PhenotypeAssPubValueObject other = ( PhenotypeAssPubValueObject ) obj;
         if ( citationValueObject == null ) {
-            if ( other.citationValueObject != null ) return false;
-        } else if ( !citationValueObject.equals( other.citationValueObject ) ) return false;
+            if ( other.citationValueObject != null )
+                return false;
+        } else if ( !citationValueObject.equals( other.citationValueObject ) )
+            return false;
         if ( type == null ) {
-            if ( other.type != null ) return false;
-        } else if ( !type.equals( other.type ) ) return false;
-        return true;
+            return other.type == null;
+        } else
+            return type.equals( other.type );
     }
 
 }

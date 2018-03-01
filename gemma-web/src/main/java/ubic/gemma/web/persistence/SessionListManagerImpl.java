@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,6 @@ import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -82,7 +81,7 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo ) {
 
-        return addGeneSet( gsvo, true );
+        return this.addGeneSet( gsvo, true );
 
     }
 
@@ -105,7 +104,7 @@ public class SessionListManagerImpl implements SessionListManager {
 
     @Override
     public Collection<SessionBoundGeneSetValueObject> getAllGeneSets() {
-        return getAllGeneSets( null );
+        return this.getAllGeneSets( null );
     }
 
     @Override
@@ -118,7 +117,7 @@ public class SessionListManagerImpl implements SessionListManager {
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
-            castedCollection = filterGeneSetsByTaxon( taxonId, castedCollection );
+            castedCollection = this.filterGeneSetsByTaxon( taxonId, castedCollection );
         }
 
         return castedCollection;
@@ -138,7 +137,7 @@ public class SessionListManagerImpl implements SessionListManager {
     @Override
     public SessionBoundExpressionExperimentSetValueObject getExperimentSetById( Long id ) {
 
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionExperimentSets = getAllExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionExperimentSets = this.getAllExperimentSets();
 
         for ( SessionBoundExpressionExperimentSetValueObject esvo : sessionExperimentSets ) {
             if ( id.equals( esvo.getId() ) ) {
@@ -151,17 +150,17 @@ public class SessionListManagerImpl implements SessionListManager {
 
     @Override
     public Collection<ExpressionExperimentDetailsValueObject> getExperimentsInSet( Long id ) {
-        Collection<Long> eeids = getExperimentIdsInSet( id );
+        Collection<Long> eeids = this.getExperimentIdsInSet( id );
         Collection<ExpressionExperimentDetailsValueObject> result = expressionExperimentService
                 .loadDetailsValueObjects( null, false, eeids, null, 0, 0 );
-        expressionExperimentReportService.getReportInformation( result );
+        expressionExperimentReportService.populateReportInformation( result );
         return result;
     }
 
     @Override
     public SessionBoundGeneSetValueObject getGeneSetById( Long id ) {
 
-        Collection<SessionBoundGeneSetValueObject> sessionGeneSets = getAllGeneSets();
+        Collection<SessionBoundGeneSetValueObject> sessionGeneSets = this.getAllGeneSets();
 
         for ( SessionBoundGeneSetValueObject gsvo : sessionGeneSets ) {
             if ( id.equals( gsvo.getId() ) ) {
@@ -179,7 +178,7 @@ public class SessionListManagerImpl implements SessionListManager {
 
         GeneSet gs = geneSetService.load( groupId );
         if ( gs == null )
-            return null; // FIXME: Send and error code/feedback?
+            return null; // TODO: Send and error code/feedback?
 
         results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
 

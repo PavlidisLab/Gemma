@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,15 +19,13 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 /**
  * Analyzer base class.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 public abstract class AbstractAnalyzer {
 
@@ -37,12 +35,8 @@ public abstract class AbstractAnalyzer {
     @Autowired
     protected CompositeSequenceService compositeSequenceService;
 
-    // needed for tests.
+    @SuppressWarnings("unused") // needed for tests.
     public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
         this.expressionDataMatrixService = expressionDataMatrixService;
     }
-
-    /*
-     * TODO This used to contain code pertaining to R, it's no longer necessary so this class may eventually be removed.
-     */
 }

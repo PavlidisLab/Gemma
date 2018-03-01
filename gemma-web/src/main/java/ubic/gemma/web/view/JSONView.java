@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,19 +18,16 @@
  */
 package ubic.gemma.web.view;
 
-import java.io.Writer;
-import java.util.Map;
+import net.sf.json.JSONObject;
+import org.springframework.web.servlet.View;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import net.sf.json.JSONObject;
-
-import org.springframework.web.servlet.View;
+import java.io.Writer;
+import java.util.Map;
 
 /**
  * @author paul
- *
  */
 public class JSONView implements View {
     private String docType = "text/html";
@@ -47,28 +44,17 @@ public class JSONView implements View {
         this.docType = docType;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.View#getContentType()
-     */
     @Override
     public String getContentType() {
         return this.docType;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.View#render(java.util.Map, javax.servlet.http.HttpServletRequest,
-     * javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public void render( Map<String, ?> map, HttpServletRequest reqest, HttpServletResponse response ) throws Exception {
 
         JSONObject jso = JSONObject.fromObject( map );
         response.setContentType( this.docType );
-        try (Writer writer = response.getWriter();) {
+        try (Writer writer = response.getWriter()) {
 
             // Need to wrap json in html tags or the proxy server will wrap in <p></p> tags.
             // will work in test enviroment (with or without wrapping json)

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,19 +18,14 @@
  */
 package ubic.gemma.persistence.model.usertypes;
 
-import java.io.InputStream;
+import org.hibernate.HibernateException;
+import org.hibernate.usertype.UserType;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.sql.Blob;
-
-import org.hibernate.HibernateException;
-import org.hibernate.usertype.UserType;
+import java.io.InputStream;
+import java.sql.*;
 
 /**
  * A hibernate user type which converts a Blob into a byte[] and back again.
@@ -61,21 +56,29 @@ public class HibernateByteBlobType implements UserType {
     }
 
     /**
+     * @see org.hibernate.usertype.UserType#hashCode(Object)
+     */
+    @Override
+    public int hashCode( Object x ) {
+        return x.hashCode();
+    }
+
+    /**
      * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
      */
     @Override
-    public Object nullSafeGet( ResultSet resultSet, String[] names, Object owner ) throws HibernateException,
-            SQLException {
+    public Object nullSafeGet( ResultSet resultSet, String[] names, Object owner )
+            throws HibernateException, SQLException {
         final Object object;
 
         try (final InputStream inputStream = resultSet.getBinaryStream( names[0] );
-                final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();) {
+                final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             if ( inputStream == null ) {
                 object = null;
             } else {
 
                 final byte[] buffer = new byte[65536];
-                int read = -1;
+                int read;
 
                 while ( ( read = inputStream.read( buffer ) ) > -1 ) {
                     outputStream.write( buffer, 0, read );
@@ -102,6 +105,7 @@ public class HibernateByteBlobType implements UserType {
                 statement.setBinaryStream( index, null, 0 );
             } catch ( SQLException exception ) {
                 Blob nullBlob = null;
+                //noinspection ConstantConditions // Has to be of Blob type
                 statement.setBlob( index, nullBlob );
             }
         } else {
@@ -114,7 +118,8 @@ public class HibernateByteBlobType implements UserType {
      */
     @Override
     public Object deepCopy( Object value ) {
-        if ( value == null ) return null;
+        if ( value == null )
+            return null;
 
         byte[] bytes = ( byte[] ) value;
         byte[] result = new byte[bytes.length];
@@ -132,11 +137,11 @@ public class HibernateByteBlobType implements UserType {
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#replace(Object, Object, Object)
+     * @see org.hibernate.usertype.UserType#disassemble(Object)
      */
     @Override
-    public Object replace( Object original, Object target, Object owner ) {
-        return original;
+    public java.io.Serializable disassemble( Object value ) {
+        return ( java.io.Serializable ) value;
     }
 
     /**
@@ -148,18 +153,10 @@ public class HibernateByteBlobType implements UserType {
     }
 
     /**
-     * @see org.hibernate.usertype.UserType#disassemble(Object)
+     * @see org.hibernate.usertype.UserType#replace(Object, Object, Object)
      */
     @Override
-    public java.io.Serializable disassemble( Object value ) {
-        return ( java.io.Serializable ) value;
-    }
-
-    /**
-     * @see org.hibernate.usertype.UserType#hashCode(Object)
-     */
-    @Override
-    public int hashCode( Object x ) {
-        return x.hashCode();
+    public Object replace( Object original, Object target, Object owner ) {
+        return original;
     }
 }

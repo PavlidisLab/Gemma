@@ -41,32 +41,27 @@ public class ExperimentalDesignWriter {
     private final Log log = LogFactory.getLog( this.getClass() );
 
     /**
-     * @param sortByDesign whether the design should be arranged in the order defined by
-     *                     ExpressionDataMatrixColumnSort.orderByExperimentalDesign
-     * @param writer       writer
-     * @param ee           ee
-     * @param writeHeader  writer header
+     * @param writer      writer
+     * @param ee          ee
+     * @param writeHeader writer header
      * @throws IOException when the write failed
      */
-    public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader, boolean sortByDesign )
-            throws IOException {
+    public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader ) throws IOException {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
-        write( writer, ee, bioAssays, writeHeader, writeHeader, sortByDesign );
+        this.write( writer, ee, bioAssays, writeHeader, writeHeader );
     }
 
     /**
      * @param writeBaseHeader comments
      * @param writeHeader     column names
-     * @param sortByDesign    whether the design should be arranged in the order defined by
-     *                        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
      * @param ee              ee
      * @param bioAssays       bas
      * @param writer          writer
      * @throws IOException when the write failed
      */
     public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader,
-            boolean writeHeader, boolean sortByDesign ) throws IOException {
+            boolean writeHeader ) throws IOException {
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -85,13 +80,12 @@ public class ExperimentalDesignWriter {
 
         Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
 
-        List<ExperimentalFactor> orderedFactors = new ArrayList<>();
-        orderedFactors.addAll( efs );
+        List<ExperimentalFactor> orderedFactors = new ArrayList<>( efs );
 
         StringBuffer buf = new StringBuffer();
 
         if ( writeHeader ) {
-            writeHeader( writer, ee, orderedFactors, writeBaseHeader, buf );
+            this.writeHeader( ee, orderedFactors, writeBaseHeader, buf );
         }
 
         for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
@@ -138,8 +132,8 @@ public class ExperimentalDesignWriter {
     /**
      * Write an (R-friendly) header
      */
-    private void writeHeader( Writer writer, ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors, boolean writeBaseHeader, StringBuffer buf ) {
+    private void writeHeader( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors,
+            boolean writeBaseHeader, StringBuffer buf ) {
 
         if ( writeBaseHeader ) {
             ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, buf );

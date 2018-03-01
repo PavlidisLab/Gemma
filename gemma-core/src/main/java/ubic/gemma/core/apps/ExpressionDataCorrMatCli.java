@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,15 +19,14 @@
 package ubic.gemma.core.apps;
 
 import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Create correlation visualizations for expression experiments
- * 
- * @author paul
  *
+ * @author paul
  */
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 
@@ -35,20 +34,38 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         try {
             ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
             Exception ex = e.doWork( args );
-            if ( ex != null ) log.info( ex, ex );
+            if ( ex != null )
+                AbstractCLI.log.info( ex, ex );
         } catch ( Exception e ) {
-            log.info( e, e );
+            AbstractCLI.log.info( e, e );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "corrMat";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception exception = this.processCommandLine( args );
+
+        for ( BioAssaySet ee : expressionExperiments ) {
+            try {
+                if ( !( ee instanceof ExpressionExperiment ) ) {
+                    errorObjects.add( ee );
+                    continue;
+                }
+                this.processExperiment( ( ExpressionExperiment ) ee );
+                successObjects.add( ee );
+            } catch ( Exception e ) {
+                AbstractCLI.log.error( "Error while processing " + ee, e );
+                errorObjects.add( ee );
+            }
+
+        }
+        this.summarizeProcessing();
+        return exception;
     }
 
     @Override
@@ -62,50 +79,26 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         super.addForceOption();
     }
 
-    @Override
-    protected Exception doWork( String[] args ) {
-        this.processCommandLine( args );
-
-        for ( BioAssaySet ee : expressionExperiments ) {
-            try {
-                if ( !( ee instanceof ExpressionExperiment ) ) {
-                    errorObjects.add( ee );
-                    continue;
-                }
-                processExperiment( ( ExpressionExperiment ) ee );
-                successObjects.add( ee );
-            } catch ( Exception e ) {
-                log.error( "Error while processing " + ee, e );
-                errorObjects.add( ee );
-            }
-
-        }
-        summarizeProcessing();
-        return null;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, AuditEventType eventType ) {
-        auditTrailService.addUpdateEvent( ee, eventType, "Generated sample correlation matrix" );
+    private void audit( ExpressionExperiment ee ) {
+        auditTrailService.addUpdateEvent( ee, null, "Generated sample correlation matrix" );
         successObjects.add( ee.toString() );
     }
 
-    /**
-     * @param ee
-     */
     private void processExperiment( ExpressionExperiment ee ) {
-        if ( !force && !needToRun( ee, null ) ) {
+        if ( !force && this.noNeedToRun( ee, null ) ) {
             return;
         }
 
         SampleCoexpressionMatrixService sampleCoexpressionMatrixService = this
                 .getBean( SampleCoexpressionMatrixService.class );
 
-        sampleCoexpressionMatrixService.create( ee, this.force );
-        audit( ee, null );
+        if ( this.force ) {
+            sampleCoexpressionMatrixService.create( ee);
+        } else {
+            sampleCoexpressionMatrixService.findOrCreate( ee);
+        }
 
+        this.audit( ee );
     }
 
 }

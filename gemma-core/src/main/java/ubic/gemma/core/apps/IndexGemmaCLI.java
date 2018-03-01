@@ -24,6 +24,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.persistence.util.CompassUtils;
 
@@ -53,7 +54,7 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
                 ex.printStackTrace();
             }
             watch.stop();
-            log.info( "Total indexing time: " + watch.getTime() );
+            AbstractCLI.log.info( "Total indexing time: " + watch.getTime() );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -69,44 +70,39 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
         return "searchIndex";
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Create or update the searchable indexes for a Gemma production system";
-    }
-
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         Option geneOption = OptionBuilder.withDescription( "Index genes" ).withLongOpt( "genes" ).create( 'g' );
-        addOption( geneOption );
+        this.addOption( geneOption );
 
         Option eeOption = OptionBuilder.withDescription( "Index Expression Experiments" )
                 .withLongOpt( "ExpressionExperiments" ).create( 'e' );
-        addOption( eeOption );
+        this.addOption( eeOption );
 
         Option adOption = OptionBuilder.withDescription( "Index Array Designs" ).withLongOpt( "ArrayDesigns" )
                 .create( 'a' );
-        addOption( adOption );
+        this.addOption( adOption );
 
         Option bibliographicOption = OptionBuilder.withDescription( "Index Bibliographic References" )
                 .withLongOpt( "Bibliographic" ).create( 'b' );
-        addOption( bibliographicOption );
+        this.addOption( bibliographicOption );
 
         Option probeOption = OptionBuilder.withDescription( "Index probes" ).withLongOpt( "probes" ).create( 's' );
-        addOption( probeOption );
+        this.addOption( probeOption );
 
         Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt( "sequences" )
                 .create( 'q' );
-        addOption( sequenceOption );
+        this.addOption( sequenceOption );
 
-        addOption( OptionBuilder.withDescription( "Index EE sets" ).withLongOpt( "eesets" ).create( 'x' ) );
+        this.addOption( OptionBuilder.withDescription( "Index EE sets" ).withLongOpt( "eesets" ).create( 'x' ) );
 
-        addOption( OptionBuilder.withDescription( "Index gene sets" ).withLongOpt( "genesets" ).create( 'y' ) );
+        this.addOption( OptionBuilder.withDescription( "Index gene sets" ).withLongOpt( "genesets" ).create( 'y' ) );
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
+        Exception err = this.processCommandLine( args );
         if ( err != null ) {
             return err;
         }
@@ -115,78 +111,85 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
              * These beans are defined in Spring XML.
              */
             if ( this.indexG ) {
-                rebuildIndex( this.getBean( "geneGps", CompassGpsInterfaceDevice.class ), "Gene index" );
+                this.rebuildIndex( this.getBean( "geneGps", CompassGpsInterfaceDevice.class ), "Gene index" );
             }
             if ( this.indexEE ) {
-                rebuildIndex( this.getBean( "expressionGps", CompassGpsInterfaceDevice.class ),
+                this.rebuildIndex( this.getBean( "expressionGps", CompassGpsInterfaceDevice.class ),
                         "Expression Experiment index" );
             }
             if ( this.indexAD ) {
-                rebuildIndex( this.getBean( "arrayGps", CompassGpsInterfaceDevice.class ), "Array Design index" );
+                this.rebuildIndex( this.getBean( "arrayGps", CompassGpsInterfaceDevice.class ), "Array Design index" );
             }
             if ( this.indexB ) {
-                rebuildIndex( this.getBean( "bibliographicGps", CompassGpsInterfaceDevice.class ),
+                this.rebuildIndex( this.getBean( "bibliographicGps", CompassGpsInterfaceDevice.class ),
                         "Bibliographic Reference Index" );
             }
             if ( this.indexP ) {
-                rebuildIndex( this.getBean( "probeGps", CompassGpsInterfaceDevice.class ), "Probe Reference Index" );
+                this.rebuildIndex( this.getBean( "probeGps", CompassGpsInterfaceDevice.class ),
+                        "Probe Reference Index" );
             }
             if ( this.indexQ ) {
-                rebuildIndex( this.getBean( "biosequenceGps", CompassGpsInterfaceDevice.class ), "BioSequence Index" );
+                this.rebuildIndex( this.getBean( "biosequenceGps", CompassGpsInterfaceDevice.class ),
+                        "BioSequence Index" );
             }
 
             if ( this.indexY ) {
-                rebuildIndex( this.getBean( "experimentSetGps", CompassGpsInterfaceDevice.class ),
+                this.rebuildIndex( this.getBean( "experimentSetGps", CompassGpsInterfaceDevice.class ),
                         "Experiment set Index" );
             }
 
             if ( this.indexX ) {
-                rebuildIndex( this.getBean( "geneSetGps", CompassGpsInterfaceDevice.class ), "Gene set Index" );
+                this.rebuildIndex( this.getBean( "geneSetGps", CompassGpsInterfaceDevice.class ), "Gene set Index" );
             }
         } catch ( Exception e ) {
-            log.error( e );
+            AbstractCLI.log.error( e );
             return e;
         }
         return null;
     }
 
     @Override
+    public String getShortDesc() {
+        return "Create or update the searchable indexes for a Gemma production system";
+    }
+
+    @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'e' ) )
+        if ( this.hasOption( 'e' ) )
             indexEE = true;
 
-        if ( hasOption( 'a' ) )
+        if ( this.hasOption( 'a' ) )
             indexAD = true;
 
-        if ( hasOption( 'g' ) )
+        if ( this.hasOption( 'g' ) )
             indexG = true;
 
-        if ( hasOption( 'b' ) )
+        if ( this.hasOption( 'b' ) )
             indexB = true;
 
-        if ( hasOption( 's' ) )
+        if ( this.hasOption( 's' ) )
             indexP = true;
 
-        if ( hasOption( 'q' ) )
+        if ( this.hasOption( 'q' ) )
             indexQ = true;
-        if ( hasOption( 'x' ) )
+        if ( this.hasOption( 'x' ) )
             indexX = true;
-        if ( hasOption( 'y' ) )
+        if ( this.hasOption( 'y' ) )
             indexY = true;
 
     }
 
-    protected void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) throws Exception {
+    private void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
 
         long time = System.currentTimeMillis();
 
-        log.info( "Rebuilding " + whatIndexingMsg );
+        AbstractCLI.log.info( "Rebuilding " + whatIndexingMsg );
         CompassUtils.rebuildCompassIndex( device );
         time = System.currentTimeMillis() - time;
 
-        log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + time );
-        log.info( " \n " );
+        AbstractCLI.log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + time );
+        AbstractCLI.log.info( " \n " );
 
     }
 }

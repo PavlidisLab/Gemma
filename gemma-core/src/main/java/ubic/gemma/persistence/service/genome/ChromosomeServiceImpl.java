@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,7 @@ public class ChromosomeServiceImpl extends AbstractService<Chromosome> implement
 
     @Autowired
     public ChromosomeServiceImpl( ChromosomeDao chromosomeDao ) {
-        super(chromosomeDao);
+        super( chromosomeDao );
         this.chromosomeDao = chromosomeDao;
     }
 
@@ -50,12 +50,6 @@ public class ChromosomeServiceImpl extends AbstractService<Chromosome> implement
     @Transactional
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         return this.chromosomeDao.find( name, taxon );
-    }
-
-    @Override
-    @Transactional
-    public ubic.gemma.model.genome.Chromosome findOrCreate( String name, Taxon taxon ) {
-        return this.chromosomeDao.findOrCreate( name, taxon );
     }
 
 }

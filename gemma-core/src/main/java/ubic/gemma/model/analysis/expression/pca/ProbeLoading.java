@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,8 +21,8 @@ package ubic.gemma.model.analysis.expression.pca;
 /**
  * Only stored for some of the probes (e.g. the top ones)
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
-public abstract class ProbeLoading implements java.io.Serializable {
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+public class ProbeLoading implements java.io.Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -38,25 +38,6 @@ public abstract class ProbeLoading implements java.io.Serializable {
      * No-arg constructor added to satisfy javabean contract
      */
     public ProbeLoading() {
-    }
-
-    /**
-     * @return <code>true</code> if the argument is an ProbeLoading instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof ProbeLoading ) ) {
-            return false;
-        }
-        final ProbeLoading that = ( ProbeLoading ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -119,16 +100,32 @@ public abstract class ProbeLoading implements java.io.Serializable {
         return hashCode;
     }
 
+    /**
+     * @return <code>true</code> if the argument is an ProbeLoading instance and all identifiers for this entity equal
+     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof ProbeLoading ) ) {
+            return false;
+        }
+        final ProbeLoading that = ( ProbeLoading ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
 
         public static ubic.gemma.model.analysis.expression.pca.ProbeLoading newInstance() {
-            return new ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl();
+            return new ubic.gemma.model.analysis.expression.pca.ProbeLoading();
         }
 
         public static ubic.gemma.model.analysis.expression.pca.ProbeLoading newInstance( Integer componentNumber,
                 Double loading, Integer loadingRank,
                 ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
-            final ubic.gemma.model.analysis.expression.pca.ProbeLoading entity = new ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl();
+            final ubic.gemma.model.analysis.expression.pca.ProbeLoading entity = new ubic.gemma.model.analysis.expression.pca.ProbeLoading();
             entity.setComponentNumber( componentNumber );
             entity.setLoading( loading );
             entity.setLoadingRank( loadingRank );

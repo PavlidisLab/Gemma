@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,12 +19,10 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -33,9 +31,10 @@ import java.util.HashSet;
  *
  * @author keshav
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class DifferentialExpressionValueObject {
 
-    private ContrastsValueObject contrasts;
+    private final ContrastsValueObject contrasts;
     private Double corrP;
     private Direction direction;
     private Collection<ExperimentalFactorValueObject> experimentalFactors = new HashSet<>();
@@ -79,28 +78,6 @@ public class DifferentialExpressionValueObject {
     public void addContrast( Long cid, Long factorValueId, Double pvalue, Double logFoldChange,
             Long secondFactorValueId ) {
         this.contrasts.addContrast( cid, factorValueId, logFoldChange, pvalue, secondFactorValueId );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) {
-            return true;
-        }
-        if ( obj == null ) {
-            return false;
-        }
-        if ( getClass() != obj.getClass() ) {
-            return false;
-        }
-        DifferentialExpressionValueObject other = ( DifferentialExpressionValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null ) {
-                return false;
-            }
-        } else if ( !id.equals( other.id ) ) {
-            return false;
-        }
-        return true;
     }
 
     public ContrastsValueObject getContrasts() {
@@ -216,8 +193,22 @@ public class DifferentialExpressionValueObject {
         return result;
     }
 
-    public void setSortKey() {
-        this.sortKey = String.format( "%06f%s", p, gene.getOfficialSymbol() );
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
+            return true;
+        }
+        if ( obj == null ) {
+            return false;
+        }
+        if ( this.getClass() != obj.getClass() ) {
+            return false;
+        }
+        DifferentialExpressionValueObject other = ( DifferentialExpressionValueObject ) obj;
+        if ( id == null ) {
+            return other.id == null;
+        } else
+            return id.equals( other.id );
     }
 
     @Override
@@ -255,6 +246,10 @@ public class DifferentialExpressionValueObject {
         buf.append( p );
 
         return buf.toString();
+    }
+
+    public void setSortKey() {
+        this.sortKey = String.format( "%06f%s", p, gene.getOfficialSymbol() );
     }
 
 }

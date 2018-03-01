@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -60,12 +59,6 @@ public class VocabCharacteristic extends Characteristic {
     public String toString() {
         // return toString( 0 );
         return super.toString() + " categoryUri=" + this.getCategoryUri() + " valueUri=" + this.getValueUri();
-    }
-
-    protected String toString( int indent ) {
-        String ind = StringUtils.repeat( "   ", indent );
-        ++indent;
-        return ind + this.getValue() + "\n";
     }
 
     public static final class Factory {

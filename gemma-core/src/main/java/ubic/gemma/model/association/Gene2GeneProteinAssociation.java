@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,11 @@
 package ubic.gemma.model.association;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class Gene2GeneProteinAssociation extends Gene2GeneAssociation {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -56,7 +58,6 @@ public abstract class Gene2GeneProteinAssociation extends Gene2GeneAssociation {
         public static Gene2GeneProteinAssociation newInstance( Gene firstGene, Gene secondGene,
                 DatabaseEntry databaseEntry, byte[] evidenceVector, Double confidenceScore ) {
             Gene2GeneProteinAssociation entity = new Gene2GeneProteinAssociationImpl();
-
             try {
                 FieldUtils.writeField( entity, "secondGene", secondGene, true );
                 FieldUtils.writeField( entity, "firstGene", firstGene, true );
@@ -65,7 +66,7 @@ public abstract class Gene2GeneProteinAssociation extends Gene2GeneAssociation {
                 FieldUtils.writeField( entity, "confidenceScore", confidenceScore, true );
 
             } catch ( IllegalAccessException e ) {
-                System.err.println( e );
+                LogFactory.getLog( Gene2GeneProteinAssociation.class ).error( e );
             }
             return entity;
         }

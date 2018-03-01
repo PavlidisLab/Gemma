@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,8 +27,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.report.TwitterOutbound;
 import ubic.gemma.core.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.persistence.util.Settings;
-import ubic.gemma.persistence.util.monitor.CacheMonitor;
 import ubic.gemma.persistence.util.monitor.HibernateMonitor;
+import ubic.gemma.web.util.CacheMonitor;
 
 import javax.jms.JMSException;
 import javax.servlet.http.HttpServletRequest;
@@ -41,6 +41,7 @@ import java.lang.management.OperatingSystemMXBean;
  *
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 @Controller
 public class SystemMonitorController {
 
@@ -104,11 +105,6 @@ public class SystemMonitorController {
         return this.hibernateMonitor.getStats( false, false, false ) + "<br/>" + this.getSystemStatus();
     }
 
-    private String getSystemStatus() {
-        OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-        return String.format( "<p>System load average = %.2f</p>", operatingSystemMXBean.getSystemLoadAverage() );
-    }
-
     public String getJMSBrokerStatus() {
         StringBuilder buf = new StringBuilder();
 
@@ -123,15 +119,17 @@ public class SystemMonitorController {
             try {
                 int numWorkers = jmsBrokerMonitor.getNumberOfWorkerHosts();
                 if ( numWorkers == 0 ) {
-                    buf.append( "<img src=\"" + Settings.getRootContext() + "/images/icons/exclamation.png\" /> No workers found!" );
+                    buf.append( "<img src=\"" ).append( Settings.getRootContext() )
+                            .append( "/images/icons/exclamation.png\" /> No workers found!" );
                 } else {
-                    buf.append( "(" + numWorkers + ")" );
+                    buf.append( "(" ).append( numWorkers ).append( ")" );
                     for ( int i = 0; i < numWorkers; i++ ) {
-                        buf.append( "<img src=\"" + Settings.getRootContext() + "/images/icons/server.png\" />" );
+                        buf.append( "<img src=\"" ).append( Settings.getRootContext() )
+                                .append( "/images/icons/server.png\" />" );
                     }
                 }
             } catch ( JMSException e ) {
-                buf.append( "Got exception: " + e.getMessage() );
+                buf.append( "Got exception: " ).append( e.getMessage() );
             }
             buf.append( "</p>" );
         }
@@ -147,7 +145,7 @@ public class SystemMonitorController {
      */
     @RequestMapping("/gridStatus.html")
     public ModelAndView gridStatus( HttpServletRequest request, HttpServletResponse response ) {
-        String brokerStatus = getJMSBrokerStatus();
+        String brokerStatus = this.getJMSBrokerStatus();
         return new ModelAndView( "systemNotices" ).addObject( "status", brokerStatus );
     }
 
@@ -179,5 +177,10 @@ public class SystemMonitorController {
      */
     public void tweetManually( String message ) {
         twitterOutbound.sendManualTweet( message );
+    }
+
+    private String getSystemStatus() {
+        OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+        return String.format( "<p>System load average = %.2f</p>", operatingSystemMXBean.getSystemLoadAverage() );
     }
 }

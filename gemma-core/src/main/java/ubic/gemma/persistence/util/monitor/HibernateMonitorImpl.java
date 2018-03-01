@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +18,6 @@
  */
 package ubic.gemma.persistence.util.monitor;
 
-//import java.lang.management.ManagementFactory;
-import java.util.Arrays;
-import java.util.Date;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,44 +29,35 @@ import org.hibernate.stat.Statistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.Date;
+
 /**
  * Monitoring of Hibernate status.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 @Component
 public class HibernateMonitorImpl implements HibernateMonitor {
 
-    private static Log log = LogFactory.getLog( HibernateMonitorImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( HibernateMonitorImpl.class.getName() );
 
     @Autowired
     private SessionFactory sessionFactory;
 
-    private boolean showQueryCacheStats = true;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see HibernateMonitor#getStats()
-     */
     @Override
     public String getStats() {
-        return getStats( false, false, false );
+        return this.getStats( false, false, false );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see HibernateMonitor#getStats(boolean, boolean, boolean)
-     */
     @Override
-    public String getStats( boolean showEntityStats, boolean showCollectionStats, boolean showSecondLevelCacheDetails ) {
+    public String getStats( boolean showEntityStats, boolean showCollectionStats,
+            boolean showSecondLevelCacheDetails ) {
 
         Statistics stats = sessionFactory.getStatistics();
 
         StringBuilder buf = new StringBuilder();
-        buf.append( "Statistics started at: " + new Date( stats.getStartTime() ) + "\n" );
+        buf.append( "Statistics started at: " ).append( new Date( stats.getStartTime() ) ).append( "\n" );
         long flushes = stats.getFlushCount();
         long trans = stats.getTransactionCount();
         long prep = stats.getPrepareStatementCount();
@@ -78,36 +65,33 @@ public class HibernateMonitorImpl implements HibernateMonitor {
         long close = stats.getSessionCloseCount();
         long ex = stats.getQueryExecutionCount();
 
-        buf.append( "Queries executed: " + ex + "\n" );
+        buf.append( "Queries executed: " ).append( ex ).append( "\n" );
 
-        buf.append( open + " sessions opened, " + close + " closed\n" );
-        buf.append( prep + " statements prepared, " + trans + " transactions completed, " + flushes + " flushes.\n" );
+        buf.append( open ).append( " sessions opened, " ).append( close ).append( " closed\n" );
+        buf.append( prep ).append( " statements prepared, " ).append( trans ).append( " transactions completed, " )
+                .append( flushes ).append( " flushes.\n" );
         String slowQuery = stats.getQueryExecutionMaxTimeQueryString();
         long queryExecutionMaxTime = stats.getQueryExecutionMaxTime();
         if ( queryExecutionMaxTime > 1000 ) {
-            buf.append( "Slowest query [" + queryExecutionMaxTime + "ms]: " + StringUtils.abbreviate( slowQuery, 150 )
-                    + "\n" );
+            buf.append( "Slowest query [" ).append( queryExecutionMaxTime ).append( "ms]: " )
+                    .append( StringUtils.abbreviate( slowQuery, 150 ) ).append( "\n" );
         }
+        buf.append( "\n------------------- Query Cache stats -----------------------\n" );
+        long queryCacheHitCount = stats.getQueryCacheHitCount();
+        long queryCacheMissCount = stats.getQueryCacheMissCount();
+        long queryCachePutCount = stats.getQueryCachePutCount();
 
-        if ( showQueryCacheStats ) {
-            buf.append( "\n------------------- Query Cache stats -----------------------\n" );
-            long queryCacheHitCount = stats.getQueryCacheHitCount();
-            long queryCacheMissCount = stats.getQueryCacheMissCount();
-            long queryCachePutCount = stats.getQueryCachePutCount();
-
-            buf.append( "Puts: " + queryCachePutCount + "\n" );
-            buf.append( "Hits: " + queryCacheHitCount + "\n" );
-            buf.append( "Misses: " + queryCacheMissCount + "\n" );
-
-        }
+        buf.append( "Puts: " ).append( queryCachePutCount ).append( "\n" );
+        buf.append( "Hits: " ).append( queryCacheHitCount ).append( "\n" );
+        buf.append( "Misses: " ).append( queryCacheMissCount ).append( "\n" );
 
         buf.append( "\n------------------- Second Level Cache stats -----------------------\n" );
         long secCacheHits = stats.getSecondLevelCacheHitCount();
         long secCacheMiss = stats.getSecondLevelCacheMissCount();
         long secCachePut = stats.getSecondLevelCachePutCount();
-        buf.append( "Puts: " + secCachePut + "\n" );
-        buf.append( "Hits: " + secCacheHits + "\n" );
-        buf.append( "Misses: " + secCacheMiss + "\n" );
+        buf.append( "Puts: " ).append( secCachePut ).append( "\n" );
+        buf.append( "Hits: " ).append( secCacheHits ).append( "\n" );
+        buf.append( "Misses: " ).append( secCacheMiss ).append( "\n" );
 
         if ( showSecondLevelCacheDetails ) {
             String[] regions = stats.getSecondLevelCacheRegionNames();
@@ -122,8 +106,10 @@ public class HibernateMonitorImpl implements HibernateMonitor {
                 long diskCount = secondLevelCacheStatistics.getElementCountOnDisk();
 
                 if ( putCount > 0 || hitCount > 0 || missCount > 0 ) {
-                    buf.append( region + ": " + hitCount + " hits; " + missCount + " misses; " + putCount
-                            + " puts; Memcount=" + count + "; Diskcount=" + diskCount + " MemSizeBytes=" + size + "\n" );
+                    buf.append( region ).append( ": " ).append( hitCount ).append( " hits; " ).append( missCount )
+                            .append( " misses; " ).append( putCount ).append( " puts; Memcount=" ).append( count )
+                            .append( "; Diskcount=" ).append( diskCount ).append( " MemSizeBytes=" ).append( size )
+                            .append( "\n" );
                 }
             }
         }
@@ -138,8 +124,8 @@ public class HibernateMonitorImpl implements HibernateMonitor {
                 long loadCount = collectionStatistics.getLoadCount();
                 long updateCount = collectionStatistics.getUpdateCount();
                 if ( fetchCount > 0 || loadCount > 0 || updateCount > 0 ) {
-                    buf.append( string + ": " + fetchCount + " fetches, " + loadCount + " loads, " + updateCount
-                            + " updates\n" );
+                    buf.append( string ).append( ": " ).append( fetchCount ).append( " fetches, " ).append( loadCount )
+                            .append( " loads, " ).append( updateCount ).append( " updates\n" );
                 }
             }
         }
@@ -150,15 +136,15 @@ public class HibernateMonitorImpl implements HibernateMonitor {
             Arrays.sort( entityNames );
             for ( String string : entityNames ) {
                 EntityStatistics entityStats = stats.getEntityStatistics( string );
-                long changes = entityStats.getInsertCount() + entityStats.getUpdateCount()
-                        + entityStats.getDeleteCount();
+                long changes =
+                        entityStats.getInsertCount() + entityStats.getUpdateCount() + entityStats.getDeleteCount();
                 if ( changes > 0 ) {
                     String shortName;
                     try {
                         shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
-                        buf.append( shortName + " updates: " + changes + " \n" );
+                        buf.append( shortName ).append( " updates: " ).append( changes ).append( " \n" );
                     } catch ( ClassNotFoundException e ) {
-                        log.error( e, e );
+                        HibernateMonitorImpl.log.error( e, e );
                     }
                 }
                 long reads = entityStats.getLoadCount();
@@ -166,9 +152,9 @@ public class HibernateMonitorImpl implements HibernateMonitor {
                     String shortName;
                     try {
                         shortName = Class.forName( string ).getSimpleName().replaceFirst( "Impl", "" );
-                        buf.append( shortName + " read: " + reads + " \n" );
+                        buf.append( shortName ).append( " read: " ).append( reads ).append( " \n" );
                     } catch ( ClassNotFoundException e ) {
-                        log.error( e, e );
+                        HibernateMonitorImpl.log.error( e, e );
                     }
                 }
 
@@ -177,18 +163,9 @@ public class HibernateMonitorImpl implements HibernateMonitor {
         return buf.toString();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see HibernateMonitor#resetStats()
-     */
     @Override
     public void resetStats() {
         sessionFactory.getStatistics().clear();
-    }
-
-    public void setSessionFactory( SessionFactory sessionFactory ) {
-        this.sessionFactory = sessionFactory;
     }
 
 }

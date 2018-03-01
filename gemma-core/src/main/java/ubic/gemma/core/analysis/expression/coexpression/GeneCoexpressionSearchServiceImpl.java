@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,6 @@ import java.util.*;
 
 /**
  * @author paul
- *
  */
 @Component
 @Lazy
@@ -72,17 +71,17 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     public CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds, Collection<Long> genes,
             int stringency, int maxResults, boolean queryGenesOnly ) {
 
-        return doCoexpressionSearch( inputEeIds, genes, stringency, maxResults, queryGenesOnly, false );
+        return this.doCoexpressionSearch( inputEeIds, genes, stringency, maxResults, queryGenesOnly, false );
     }
 
     @Override
     public CoexpressionMetaValueObject coexpressionSearchQuick( Collection<Long> eeIds, Collection<Long> queryGenes,
             int stringency, int maxResults, boolean queryGenesOnly ) {
-        return doCoexpressionSearch( eeIds, queryGenes, stringency, maxResults, queryGenesOnly, true );
+        return this.doCoexpressionSearch( eeIds, queryGenes, stringency, maxResults, queryGenesOnly, true );
     }
 
     /**
-     * Convert Gene2GeneCoexpressionValueObjects to CoexpressionValueObjectExts
+     * Convert CoexpressionValueObjects to CoexpressionValueObjectExts
      *
      * @param queryGeneIds all those included in the query
      */
@@ -96,7 +95,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         }
 
         // database hit. loadValueObjects is too slow.
-        Map<Long, GeneValueObject> coexpedGenes = EntityUtils.getIdMap( geneService.loadValueObjectsByIds( coexpGenes ) );
+        Map<Long, GeneValueObject> coexpedGenes = EntityUtils
+                .getIdMap( geneService.loadValueObjectsByIds( coexpGenes ) );
 
         for ( CoexpressionValueObject cvo : coexp ) {
 
@@ -106,14 +106,16 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             if ( queryGenesOnly ) {
                 if ( !queryGeneIds.contains( cvo.getCoexGeneId() ) ) {
 
-                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly " + cvo
-                            .getCoexGeneId() + " is not a query" );
+                    GeneCoexpressionSearchServiceImpl.log
+                            .warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
+                                    + cvo.getCoexGeneId() + " is not a query" );
                     continue;
                 }
 
                 if ( !queryGeneIds.contains( cvo.getQueryGeneId() ) ) {
-                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly " + cvo
-                            .getQueryGeneId() + " is not a query" );
+                    GeneCoexpressionSearchServiceImpl.log
+                            .warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
+                                    + cvo.getQueryGeneId() + " is not a query" );
                     continue;
                 }
             }
@@ -170,9 +172,9 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         boolean actuallyUseQueryGeneOnly = queryGenesOnly && genes.size() > 1;
 
         Taxon taxon = this.geneService.load( genes.iterator().next() ).getTaxon();
-        List<ExpressionExperimentValueObject> eevos = getFilteredEEVos( inputEeIds, taxon );
+        List<ExpressionExperimentValueObject> eevos = this.getFilteredEEVos( inputEeIds, taxon );
 
-        CoexpressionMetaValueObject result = initValueObject( genes, eevos );
+        CoexpressionMetaValueObject result = this.initValueObject( genes, eevos );
 
         if ( eevos.isEmpty() ) {
             result = new CoexpressionMetaValueObject();
@@ -187,9 +189,9 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         // Note: auto-choose stringency on client size not always giving something reasonable. Also: not clear we want
         // to do this auto-adjust for 'query genes only'.
 
-        if ( genes.size() > THRESHOLD_TRIGGER_QUERY_GENES_ONLY ) {
+        if ( genes.size() > GeneCoexpressionSearchServiceImpl.THRESHOLD_TRIGGER_QUERY_GENES_ONLY ) {
             if ( !actuallyUseQueryGeneOnly ) {
-                log.info( "Switching to 'query genes only'" );
+                GeneCoexpressionSearchServiceImpl.log.info( "Switching to 'query genes only'" );
             }
             actuallyUseQueryGeneOnly = true;
         }
@@ -199,11 +201,13 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         if ( !queryGenesOnly ) {
             stringency = Math
-                    .max( stringency, chooseStringency( actuallyUseQueryGeneOnly, eeIds.size(), genes.size() ) );
-            log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
-                    + ") and genes (" + genes.size() + ") queried" );
+                    .max( stringency, this.chooseStringency( actuallyUseQueryGeneOnly, eeIds.size(), genes.size() ) );
+            GeneCoexpressionSearchServiceImpl.log
+                    .info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
+                            + ") and genes (" + genes.size() + ") queried" );
         } else {
-            log.info( "Query gene only: stringency maintained at requested value=" + stringency );
+            GeneCoexpressionSearchServiceImpl.log
+                    .info( "Query gene only: stringency maintained at requested value=" + stringency );
         }
 
         assert stringency >= 1 || eeIds.size() == 1;
@@ -228,14 +232,14 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             if ( allCoexpressions.isEmpty() && stringency > minimum_stringency_for_requery ) {
                 stringency -= stepSize; // step size completely made up.
                 stringency = Math.max( minimum_stringency_for_requery, stringency ); // keep stringency at least 2.
-                log.info( "No results, re-querying with stringency=" + stringency );
+                GeneCoexpressionSearchServiceImpl.log.info( "No results, re-querying with stringency=" + stringency );
             } else {
                 // no results.
                 break;
             }
         }
 
-        log.info( "Final actual stringency used was " + stringency );
+        GeneCoexpressionSearchServiceImpl.log.info( "Final actual stringency used was " + stringency );
 
         result.setQueryStringency( stringency );
         result.setQueryGenesOnly( actuallyUseQueryGeneOnly );
@@ -249,8 +253,9 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
             Collection<CoexpressionValueObject> coexpressions = allCoexpressions.get( queryGene );
 
-            List<CoexpressionValueObjectExt> results = addExtCoexpressionValueObjects( idMap.get( queryGene ),
-                    coexpressions, actuallyUseQueryGeneOnly, genes );
+            List<CoexpressionValueObjectExt> results = this
+                    .addExtCoexpressionValueObjects( idMap.get( queryGene ), coexpressions, actuallyUseQueryGeneOnly,
+                            genes );
 
             result.getResults().addAll( results );
 
@@ -261,7 +266,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             result.getSummaries().put( queryGene, summary );
 
             if ( ++k % 100 == 0 ) {
-                log.info( "Processed results for " + k + " query genes ..." );
+                GeneCoexpressionSearchServiceImpl.log.info( "Processed results for " + k + " query genes ..." );
             }
 
         }
@@ -273,7 +278,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             result.trim();
         }
 
-        populateNodeDegrees( result );
+        this.populateNodeDegrees( result );
 
         return result;
     }
@@ -293,8 +298,10 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             allUsedGenes.add( coexp.getFoundGene().getId() );
         }
 
-        Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = coexpressionService
-                .getNodeDegrees( allUsedGenes );
+        Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = new HashMap<>();
+        if ( allUsedGenes.size() > 0 ) {
+            nodeDegrees = coexpressionService.getNodeDegrees( allUsedGenes );
+        }
 
         for ( CoexpressionValueObjectExt coexp : result.getResults() ) {
 
@@ -325,7 +332,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         }
 
         if ( timer.getTime() > 100 ) {
-            log.info( "Populate node degree for " + result.getResults().size() + ": " + timer.getTime() + "ms" );
+            GeneCoexpressionSearchServiceImpl.log
+                    .info( "Populate node degree for " + result.getResults().size() + ": " + timer.getTime() + "ms" );
         }
     }
 
@@ -358,7 +366,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         }
 
         if ( timerFilterTroubled.getTime() > 100 ) {
-            log.info( "Filtering eevos took " + timerFilterTroubled.getTime() + "ms" );
+            GeneCoexpressionSearchServiceImpl.log
+                    .info( "Filtering eevos took " + timerFilterTroubled.getTime() + "ms" );
         }
 
         return eevos;

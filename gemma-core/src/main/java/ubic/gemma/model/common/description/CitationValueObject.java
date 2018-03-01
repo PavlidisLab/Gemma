@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@ import java.util.*;
  *
  * @see BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
 public class CitationValueObject implements Comparable<CitationValueObject> {
 
     // for constructing pubmedURLs
@@ -89,7 +90,7 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
 
         this.setCitation( buf.toString() );
         this.setPubmedAccession( ref.getPubAccession().getAccession() );
-        this.setPubmedURL( PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
+        this.setPubmedURL( CitationValueObject.PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
         this.setId( ref.getId() );
         if ( ref.getPublicationTypes() != null ) {
 
@@ -145,23 +146,6 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         return -1;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        CitationValueObject other = ( CitationValueObject ) obj;
-        if ( pubmedAccession == null ) {
-            if ( other.pubmedAccession != null )
-                return false;
-        } else if ( !pubmedAccession.equals( other.pubmedAccession ) )
-            return false;
-        return true;
-    }
-
     public String getCitation() {
         return citation;
     }
@@ -200,6 +184,21 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
         int result = 1;
         result = prime * result + ( ( pubmedAccession == null ) ? 0 : pubmedAccession.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        CitationValueObject other = ( CitationValueObject ) obj;
+        if ( pubmedAccession == null ) {
+            return other.pubmedAccession == null;
+        } else
+            return pubmedAccession.equals( other.pubmedAccession );
     }
 
     public boolean isRetracted() {

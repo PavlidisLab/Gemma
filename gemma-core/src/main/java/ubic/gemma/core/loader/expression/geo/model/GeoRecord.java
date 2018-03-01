@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,15 +24,12 @@ import java.util.HashSet;
 
 /**
  * Used to contain GEO summary information from the 'Browse' views.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public class GeoRecord extends GeoData {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 2060148205381855991L;
 
     private int numSamples;
@@ -55,68 +52,68 @@ public class GeoRecord extends GeoData {
 
     public GeoRecord() {
         super();
-        this.organisms = new HashSet<String>();
-        this.correspondingExperiments = new HashSet<Long>();
+        this.organisms = new HashSet<>();
+        this.correspondingExperiments = new HashSet<>();
     }
 
     public String getContactName() {
         return contactName;
     }
 
-    public Collection<Long> getCorrespondingExperiments() {
-        return correspondingExperiments;
-    }
-
-    public int getNumSamples() {
-        return numSamples;
-    }
-
-    public Collection<String> getOrganisms() {
-        return organisms;
-    }
-
-    public int getPreviousClicks() {
-        return previousClicks;
-    }
-
-    public Date getReleaseDate() {
-        return releaseDate;
-    }
-
-    public String getSeriesType() {
-        return seriesType;
-    }
-
-    public boolean isUsable() {
-        return usable;
-    }
-
     public void setContactName( String contactName ) {
         this.contactName = contactName;
+    }
+
+    public Collection<Long> getCorrespondingExperiments() {
+        return correspondingExperiments;
     }
 
     public void setCorrespondingExperiments( Collection<Long> correspondingExperiments ) {
         this.correspondingExperiments = correspondingExperiments;
     }
 
+    public int getNumSamples() {
+        return numSamples;
+    }
+
     public void setNumSamples( int numSamples ) {
         this.numSamples = numSamples;
+    }
+
+    public Collection<String> getOrganisms() {
+        return organisms;
     }
 
     public void setOrganisms( Collection<String> organisms ) {
         this.organisms = organisms;
     }
 
+    public int getPreviousClicks() {
+        return previousClicks;
+    }
+
     public void setPreviousClicks( int previousClicks ) {
         this.previousClicks = previousClicks;
+    }
+
+    public Date getReleaseDate() {
+        return releaseDate;
     }
 
     public void setReleaseDate( Date releaseDate ) {
         this.releaseDate = releaseDate;
     }
 
+    public String getSeriesType() {
+        return seriesType;
+    }
+
     public void setSeriesType( String seriesType ) {
         this.seriesType = seriesType;
+    }
+
+    public boolean isUsable() {
+        return usable;
     }
 
     public void setUsable( boolean usable ) {

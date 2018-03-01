@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,26 +18,24 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * Tests the two way anova analyzer with interactions. See test/data/stat-tests/README.txt for R code.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
@@ -45,7 +43,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
     DiffExAnalyzer analyzer = null;
 
     @Test
-    public void testTwoWayAnova() throws Exception {
+    public void testTwoWayAnova() {
 
         log.debug( "Testing TwoWayAnova method in " + DiffExAnalyzer.class.getName() );
 
@@ -54,7 +52,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
             return;
         }
 
-        configureMocks();
+        this.configureMocks();
 
         Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( experimentalFactorA_Area );
@@ -67,29 +65,23 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        assertEquals( NUM_TWA_RESULT_SETS, resultSets.size() );
+        assertEquals( BaseAnalyzerConfigurationTest.NUM_TWA_RESULT_SETS, resultSets.size() );
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            checkResults( resultSet );
+            this.checkResults( resultSet );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
-    @Override
-    protected void configureMocks() throws Exception {
+    private void configureMocks() {
 
-        configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper( 1 );
 
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 
     }
 
     /**
-     * @param resultSet
+     * @param resultSet the result set to check
      */
     private void checkResults( ExpressionAnalysisResultSet resultSet ) {
 
@@ -97,22 +89,12 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-            CompositeSequence probe = probeAnalysisResult.getProbe();
-            Double pvalue = probeAnalysisResult.getPvalue();
+            CompositeSequence probe = r.getProbe();
+            Double pvalue = r.getPvalue();
             pvalue = pvalue == null ? Double.NaN : pvalue;
-            Double qvalue = probeAnalysisResult.getCorrectedPvalue();
-            // Double stat = probeAnalysisResult.getEffectSize();
-            // Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-            // Double stat = null;
-            // if ( !contrasts.isEmpty() ) {
-            // stat = contrasts.iterator().next().getTstat();
-            // }
+            Double qvalue = r.getCorrectedPvalue();
 
-            // if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );
-
-            // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
 
             if ( factors.size() == 1 ) {
 
@@ -120,13 +102,17 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
                 if ( f.equals( super.experimentalFactorA_Area ) ) {
                     assertEquals( factorValueA2, resultSet.getBaselineGroup() );
-                    if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.8769, pvalue, 0.001 );
-                        assertNotNull( qvalue );
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 5.158e-10, pvalue, 1e-12 );
-                    } else if ( probe.getName().equals( "probe_4" ) ) {
-                        assertEquals( 0.0048, pvalue, 0.0001 );
+                    switch ( probe.getName() ) {
+                        case "probe_98":
+                            assertEquals( 0.8769, pvalue, 0.001 );
+                            assertNotNull( qvalue );
+                            break;
+                        case "probe_10":
+                            assertEquals( 5.158e-10, pvalue, 1e-12 );
+                            break;
+                        case "probe_4":
+                            assertEquals( 0.0048, pvalue, 0.0001 );
+                            break;
                     }
 
                 } else {
@@ -141,12 +127,16 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
             } else {
                 assertEquals( null, resultSet.getBaselineGroup() );
-                if ( probe.getName().equals( "probe_98" ) ) {
-                    assertEquals( 0.7893, pvalue, 0.001 );
-                } else if ( probe.getName().equals( "probe_10" ) ) {
-                    assertEquals( 0.04514, pvalue, 0.00001 );
-                } else if ( probe.getName().equals( "probe_4" ) ) {
-                    assertEquals( Double.NaN, pvalue.doubleValue(), 0.00001 );
+                switch ( probe.getName() ) {
+                    case "probe_98":
+                        assertEquals( 0.7893, pvalue, 0.001 );
+                        break;
+                    case "probe_10":
+                        assertEquals( 0.04514, pvalue, 0.00001 );
+                        break;
+                    case "probe_4":
+                        assertEquals( Double.NaN, pvalue, 0.00001 );
+                        break;
                 }
             }
 

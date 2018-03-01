@@ -410,7 +410,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
                 if (!element.category) {
                     chars += "[No category] = " + element.value;
                 } else {
-                    chars +=  element.category + "  = " + element.value;
+                    chars += element.category + "  = " + element.value;
                 }
                 chars += "<br/>";
             });
@@ -554,9 +554,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 });
 
-/**
- *
- */
+
 Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 
     /**

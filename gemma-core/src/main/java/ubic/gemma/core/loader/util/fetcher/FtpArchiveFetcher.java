@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@ import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +41,7 @@ import java.util.concurrent.*;
  *
  * @author pavlidis
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFetcher {
 
     public Expand expander;
@@ -66,8 +67,8 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
 
     protected void cleanUp( File outputFile ) {
         if ( this.doDelete ) {
-            log.info( "Cleaning up " + outputFile.getName() );
-            outputFile.delete();
+            AbstractFetcher.log.info( "Cleaning up " + outputFile.getName() );
+            EntityUtils.deleteFile( outputFile );
         }
     }
 
@@ -77,19 +78,19 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         Executors.newSingleThreadExecutor().execute( future );
         try {
             File outputFile = new File( outputFileName );
-            boolean ok = waitForDownload( future, expectedSize, outputFile );
+            boolean ok = this.waitForDownload( future, expectedSize, outputFile );
 
             if ( !ok ) {
                 // probably cancelled.
                 return null;
             } else if ( future.get() ) {
-                log.info( "Unpacking " + outputFile );
-                unPack( outputFile );
-                cleanUp( outputFile );
+                AbstractFetcher.log.info( "Unpacking " + outputFile );
+                this.unPack( outputFile );
+                this.cleanUp( outputFile );
                 if ( outputFile.isDirectory() )
-                    return listFiles( seekFileName, outputFile, null );
+                    return this.listFiles( seekFileName, outputFile, null );
 
-                return listFiles( seekFileName, outputFile.getParentFile(), null );
+                return this.listFiles( seekFileName, outputFile.getParentFile(), null );
             }
         } catch ( ExecutionException e ) {
             future.cancel( true );
@@ -163,7 +164,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
 
         // recurse into subdirectories.
         for ( File file : FileTools.listSubDirectories( newDir ) ) {
-            listFiles( remoteFile, file, result );
+            this.listFiles( remoteFile, file, result );
         }
         return result;
     }
@@ -179,7 +180,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                  */
                 if ( allowUseExisting && extractedFile.canRead() && extractedFile.length() >= toUnpack.length()
                         && !FileUtils.isFileNewer( toUnpack, extractedFile ) ) {
-                    log.warn( "Expanded file exists, skipping re-expansion: " + extractedFile );
+                    AbstractFetcher.log.warn( "Expanded file exists, skipping re-expansion: " + extractedFile );
                     return Boolean.TRUE;
                 }
 
@@ -215,12 +216,13 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         s.start();
         while ( !future.isDone() && !future.isCancelled() ) {
             try {
-                Thread.sleep( INFO_UPDATE_INTERVAL );
+                Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
                 future.cancel( true );
                 return;
             }
-            log.info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
+            AbstractFetcher.log
+                    .info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
         }
     }
 

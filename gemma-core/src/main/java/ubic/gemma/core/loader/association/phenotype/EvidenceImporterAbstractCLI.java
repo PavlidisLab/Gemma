@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -21,11 +21,12 @@ import ubic.basecode.ontology.providers.*;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.BufferedReader;
@@ -36,42 +37,39 @@ import java.util.*;
 
 public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
 
-    protected static final String WRITE_FOLDER =
+    static final String WRITE_FOLDER =
             Settings.getString( "gemma.appdata.home" ) + File.separator + "EvidenceImporterNeurocarta";
 
-    protected final String BIOSOURCE = "BioSource";
-    protected final String BIOSOURCE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioSource";
-    protected final String DEVELOPMENTAL_STAGE = "DevelopmentalStage";
-    protected final String DEVELOPMENTAL_STAGE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#DevelopmentalStage";
-    protected final String EXPERIMENT = "Experiment";
-    protected final String EXPERIMENT_DESIGN = "ExperimentDesign";
-    protected final String EXPERIMENT_DESIGN_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ExperimentDesign";
-    protected final String EXPERIMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Experiment";
-    protected final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
-    protected final String GENERIC_EVIDENCE = "GENERIC";
-    protected final String LITERATURE_EVIDENCE = "LITERATURE";
-    protected final String ORGANISM_PART = "OrganismPart";
-    protected final String ORGANISM_PART_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#OrganismPart";
-    protected final String TREATMENT = "Treatment";
-    protected final String TREATMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Treatment";
-    protected BufferedReader br = null;
-    protected boolean createInDatabase = false;
-    protected DiseaseOntologyService diseaseOntologyService = null;
-    protected Set<String> errorMessage = new TreeSet<String>();
-    protected FMAOntologyService fmaOntologyService = null;
-    protected GeneService geneService = null;
-    protected HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
+    final String BIOSOURCE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioSource";
+    final String DEVELOPMENTAL_STAGE = "DevelopmentalStage";
+    final String DEVELOPMENTAL_STAGE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#DevelopmentalStage";
+    final String EXPERIMENT = "Experiment";
+    final String EXPERIMENT_DESIGN = "ExperimentDesign";
+    final String EXPERIMENT_DESIGN_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ExperimentDesign";
+    final String EXPERIMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Experiment";
+    final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
+    final String LITERATURE_EVIDENCE = "LITERATURE";
+    final String ORGANISM_PART = "OrganismPart";
+    final String ORGANISM_PART_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#OrganismPart";
+    final String TREATMENT = "Treatment";
+    final String TREATMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Treatment";
+    final Set<String> errorMessage = new TreeSet<>();
+    final HashMap<String, Integer> mapColumns = new HashMap<>();
+    BufferedReader br = null;
+    boolean createInDatabase = false;
+    DiseaseOntologyService diseaseOntologyService = null;
+    FMAOntologyService fmaOntologyService = null;
+    GeneService geneService = null;
+    HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
     // input file path
-    protected String inputFile = "";
-    protected BufferedWriter logFileWriter = null;
-    protected MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
-    protected HashMap<String, Integer> mapColumns = new HashMap<String, Integer>();
-    protected NIFSTDOntologyService nifstdOntologyService = null;
-    protected ObiService obiService = null;
-    protected OntologyService ontologyService = null;
-    protected PhenotypeAssociationManagerService phenotypeAssociationService = null;
-    protected TaxonService taxonService = null;
-    protected String warningMessage = "";
+    String inputFile = "";
+    BufferedWriter logFileWriter = null;
+    MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
+    NIFSTDOntologyService nifstdOntologyService = null;
+    ObiService obiService = null;
+    PhenotypeAssociationManagerService phenotypeAssociationService = null;
+    TaxonService taxonService = null;
+    String warningMessage = "";
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -82,17 +80,24 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     protected void buildOptions() {
         @SuppressWarnings("static-access") Option fileOption = OptionBuilder.withDescription( "The file" ).hasArg()
                 .withArgName( "file path" ).isRequired().create( "f" );
-        addOption( fileOption );
+        this.addOption( fileOption );
         @SuppressWarnings("static-access") Option createOption = OptionBuilder
                 .withDescription( "Create in Database (false or true)" ).hasArg().withArgName( "create in Database" )
                 .isRequired().create( "c" );
-        addOption( createOption );
+        this.addOption( createOption );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        this.inputFile = this.getOptionValue( 'f' );
+        this.createInDatabase = Boolean.valueOf( this.getOptionValue( 'c' ) );
     }
 
     /**
      * Make sure the evidence code found exist in Gemma
      */
-    protected void checkEvidenceCodeExits( String evidenceCode ) {
+    void checkEvidenceCodeExits( String evidenceCode ) {
 
         if ( !( evidenceCode.equalsIgnoreCase( "IC" ) || evidenceCode.equalsIgnoreCase( "IDA" ) || evidenceCode
                 .equalsIgnoreCase( "IEA" ) || evidenceCode.equalsIgnoreCase( "IEP" ) || evidenceCode
@@ -108,18 +113,180 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 .equalsIgnoreCase( "IRD" ) || evidenceCode.equalsIgnoreCase( "IMR" ) || evidenceCode
                 .equalsIgnoreCase( "IED" ) || evidenceCode.equalsIgnoreCase( "IAGP" ) || evidenceCode
                 .equalsIgnoreCase( "IPM" ) || evidenceCode.equalsIgnoreCase( "QTM" ) ) ) {
-            writeError( "evidenceCode not in gemma: " + evidenceCode );
+            this.writeError( "evidenceCode not in gemma: " + evidenceCode );
         }
     }
 
-    protected void createWriteFolder() throws Exception {
+    void createWriteFolder() throws Exception {
 
-        File folder = new File( WRITE_FOLDER );
-        folder.mkdir();
-
-        if ( !folder.exists() ) {
+        File folder = new File( EvidenceImporterAbstractCLI.WRITE_FOLDER );
+        if ( !folder.mkdir() && !folder.exists() ) {
             throw new Exception( "having trouble to create a folder" );
         }
+    }
+
+    /**
+     * Look at all Headers and identify them to determine the type of evidence
+     */
+    String findTypeOfEvidence() throws Exception {
+
+        // lets check what type of evidence when have on the sheet, each header can have any position but must use
+        // strict syntax
+        String[] headers = this.br.readLine().split( "\t" );
+
+        int index = 0;
+
+        // all possible headers
+        for ( String header : headers ) {
+
+            header = header.trim();
+
+            if ( header.equalsIgnoreCase( "GeneSymbol" ) ) {
+                this.mapColumns.put( "GeneSymbol", index );
+            } else if ( header.equalsIgnoreCase( "GeneId" ) ) {
+                this.mapColumns.put( "GeneId", index );
+            } else if ( header.equalsIgnoreCase( "EvidenceCode" ) ) {
+                this.mapColumns.put( "EvidenceCode", index );
+            } else if ( header.equalsIgnoreCase( "Comments" ) ) {
+                this.mapColumns.put( "Comments", index );
+            } else if ( header.equalsIgnoreCase( "IsNegative" ) ) {
+                this.mapColumns.put( "IsNegative", index );
+            } else if ( header.equalsIgnoreCase( "ExternalDatabase" ) ) {
+                this.mapColumns.put( "ExternalDatabase", index );
+            } else if ( header.equalsIgnoreCase( "DatabaseLink" ) ) {
+                this.mapColumns.put( "DatabaseLink", index );
+            } else if ( header.equalsIgnoreCase( "Phenotypes" ) ) {
+                this.mapColumns.put( "Phenotypes", index );
+            } else if ( header.equalsIgnoreCase( "PrimaryPubMeds" ) ) {
+                this.mapColumns.put( "PrimaryPubMeds", index );
+            } else if ( header.equalsIgnoreCase( "OtherPubMed" ) ) {
+                this.mapColumns.put( "OtherPubMed", index );
+            } else if ( header.equalsIgnoreCase( "Score" ) ) {
+                this.mapColumns.put( "Score", index );
+            } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
+                this.mapColumns.put( "ScoreType", index );
+            } else if ( header.equalsIgnoreCase( "Strength" ) ) {
+                this.mapColumns.put( "Strength", index );
+            } else if ( header.equalsIgnoreCase( "DevelopmentalStage" ) ) {
+                this.mapColumns.put( "DevelopmentalStage", index );
+            } else if ( header.equalsIgnoreCase( "BioSource" ) ) {
+                this.mapColumns.put( "BioSource", index );
+            } else if ( header.equalsIgnoreCase( "OrganismPart" ) ) {
+                this.mapColumns.put( "OrganismPart", index );
+            } else if ( header.equalsIgnoreCase( "ExperimentDesign" ) ) {
+                this.mapColumns.put( "ExperimentDesign", index );
+            } else if ( header.equalsIgnoreCase( "Treatment" ) ) {
+                this.mapColumns.put( "Treatment", index );
+            } else if ( header.equalsIgnoreCase( "Experiment" ) ) {
+                this.mapColumns.put( "Experiment", index );
+            } else if ( header.equalsIgnoreCase( "Strength" ) ) {
+                this.mapColumns.put( "Strength", index );
+            } else if ( header.equalsIgnoreCase( "Score" ) ) {
+                this.mapColumns.put( "Score", index );
+            } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
+                this.mapColumns.put( "ScoreType", index );
+            } else if ( header.equalsIgnoreCase( "PhenotypeMapping" ) ) {
+                this.mapColumns.put( "PhenotypeMapping", index );
+            } else if ( header.equalsIgnoreCase( "OrginalPhenotype" ) ) {
+                this.mapColumns.put( "OriginalPhenotype", index );
+            }
+            // not used by evidence importer, used to add extra information only human readable, let this header pass
+            else if ( !header.equalsIgnoreCase( "ExtraInfo" ) ) {
+                throw new Exception( "header not found: " + header );
+            }
+            index++;
+        }
+
+        // Minimum fields any evidence should have, need a (taxon+geneSymbol) or (geneId+geneSymbol)
+        if ( !( ( this.mapColumns.containsKey( "GeneId" ) ) && this.mapColumns.containsKey( "GeneSymbol" )
+                && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" )
+                && this.mapColumns.containsKey( "Phenotypes" ) && this.mapColumns.containsKey( "OriginalPhenotype" )
+                && this.mapColumns.containsKey( "PhenotypeMapping" ) ) ) {
+            throw new Exception( "Headers not set correctly" );
+        }
+
+        // score set ???
+        if ( this.mapColumns.containsKey( "Score" ) && this.mapColumns.containsKey( "ScoreType" ) && this.mapColumns
+                .containsKey( "Strength" ) ) {
+            AbstractCLI.log.info( "Found a score on the evidence" );
+        } else {
+            AbstractCLI.log.info( "No score on the evidence" );
+        }
+
+        // using an external database ???
+        if ( this.mapColumns.containsKey( "ExternalDatabase" ) && this.mapColumns.containsKey( "DatabaseLink" ) ) {
+            AbstractCLI.log.info( "External database link to evidence" );
+        } else {
+            AbstractCLI.log.info( "No external database" );
+        }
+
+        // rules to be an experimentalEvidence
+        if ( this.mapColumns.containsKey( "Experiment" ) && this.mapColumns.containsKey( "Treatment" )
+                && this.mapColumns.containsKey( "ExperimentDesign" ) && this.mapColumns.containsKey( "OrganismPart" )
+                && this.mapColumns.containsKey( "BioSource" ) && this.mapColumns.containsKey( "DevelopmentalStage" )
+                && this.mapColumns.containsKey( "OtherPubMed" ) && this.mapColumns.containsKey( "PrimaryPubMeds" ) ) {
+
+            AbstractCLI.log.info( "The type of Evidence found is: " + this.EXPERIMENTAL_EVIDENCE );
+            this.loadServices( true );
+            return this.EXPERIMENTAL_EVIDENCE;
+        }
+
+        this.loadServices( false );
+
+        return this.LITERATURE_EVIDENCE;
+
+    }
+
+    EvidenceSourceValueObject makeEvidenceSource( String databaseID, String externalDatabaseName ) {
+
+        EvidenceSourceValueObject evidenceSourceValueObject = null;
+        if ( databaseID != null && externalDatabaseName != null && !externalDatabaseName.isEmpty() ) {
+            ExternalDatabaseValueObject externalDatabase = new ExternalDatabaseValueObject();
+            externalDatabase.setName( externalDatabaseName );
+            evidenceSourceValueObject = new EvidenceSourceValueObject( databaseID, externalDatabase );
+        }
+
+        return evidenceSourceValueObject;
+    }
+
+    /**
+     * Trim an array of String
+     */
+    Set<String> trimArray( String[] array ) {
+
+        Set<String> mySet = new HashSet<>();
+
+        for ( String anArray : array ) {
+            String value = anArray.trim();
+
+            if ( !value.equals( "" ) ) {
+                mySet.add( value );
+            }
+        }
+
+        return mySet;
+    }
+
+    void writeAllExceptions() throws IOException {
+
+        for ( String message : this.errorMessage ) {
+            this.logFileWriter.write( "\n" + message );
+            this.logFileWriter.flush();
+        }
+    }
+
+    void writeError( String message ) {
+
+        AbstractCLI.log.error( message );
+        this.errorMessage.add( message );
+    }
+
+    void writeWarning( String message ) throws IOException {
+
+        AbstractCLI.log.info( message );
+        this.warningMessage += "\n" + message;
+        this.logFileWriter.write( "\n" + message + " (warning)" );
+        this.logFileWriter.flush();
     }
 
     /**
@@ -128,12 +295,11 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
      * @param ontologyTerms Collection of ontologyTerms
      * @param search        The value we are interested in finding
      * @return OntologyTerm the exact match value found
-     * @throws IOException
      */
-    protected OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) throws IOException {
+    OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) {
 
         // list of OntologyTerms found
-        Collection<OntologyTerm> ontologyKept = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> ontologyKept = new HashSet<>();
         OntologyTerm termFound = null;
 
         for ( OntologyTerm ot : ontologyTerms ) {
@@ -215,10 +381,10 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
                 }
             }
 
-            writeError( "More than 1 term found for : " + search + "   " + ontologyKept.size() );
+            this.writeError( "More than 1 term found for : " + search + "   " + ontologyKept.size() );
 
             for ( OntologyTerm o : ontologyKept ) {
-                writeError( o.getLabel() + " " + o.getUri() );
+                this.writeError( o.getLabel() + " " + o.getUri() );
             }
         }
 
@@ -226,232 +392,59 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     }
 
     /**
-     * Look at all Headers and identify them to determine the type of evidence
-     */
-    protected String findTypeOfEvidence() throws Exception {
-
-        // lets check what type of evidence when have on the sheet, each header can have any position but must use
-        // strict syntax
-        String[] headers = this.br.readLine().split( "\t" );
-
-        int index = 0;
-
-        // all possible headers
-        for ( String header : headers ) {
-
-            header = header.trim();
-
-            if ( header.equalsIgnoreCase( "GeneSymbol" ) ) {
-                this.mapColumns.put( "GeneSymbol", index );
-            } else if ( header.equalsIgnoreCase( "GeneId" ) ) {
-                this.mapColumns.put( "GeneId", index );
-            } else if ( header.equalsIgnoreCase( "EvidenceCode" ) ) {
-                this.mapColumns.put( "EvidenceCode", index );
-            } else if ( header.equalsIgnoreCase( "Comments" ) ) {
-                this.mapColumns.put( "Comments", index );
-            } else if ( header.equalsIgnoreCase( "IsNegative" ) ) {
-                this.mapColumns.put( "IsNegative", index );
-            } else if ( header.equalsIgnoreCase( "ExternalDatabase" ) ) {
-                this.mapColumns.put( "ExternalDatabase", index );
-            } else if ( header.equalsIgnoreCase( "DatabaseLink" ) ) {
-                this.mapColumns.put( "DatabaseLink", index );
-            } else if ( header.equalsIgnoreCase( "Phenotypes" ) ) {
-                this.mapColumns.put( "Phenotypes", index );
-            } else if ( header.equalsIgnoreCase( "PrimaryPubMeds" ) ) {
-                this.mapColumns.put( "PrimaryPubMeds", index );
-            } else if ( header.equalsIgnoreCase( "OtherPubMed" ) ) {
-                this.mapColumns.put( "OtherPubMed", index );
-            } else if ( header.equalsIgnoreCase( "Score" ) ) {
-                this.mapColumns.put( "Score", index );
-            } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
-                this.mapColumns.put( "ScoreType", index );
-            } else if ( header.equalsIgnoreCase( "Strength" ) ) {
-                this.mapColumns.put( "Strength", index );
-            } else if ( header.equalsIgnoreCase( "DevelopmentalStage" ) ) {
-                this.mapColumns.put( "DevelopmentalStage", index );
-            } else if ( header.equalsIgnoreCase( "BioSource" ) ) {
-                this.mapColumns.put( "BioSource", index );
-            } else if ( header.equalsIgnoreCase( "OrganismPart" ) ) {
-                this.mapColumns.put( "OrganismPart", index );
-            } else if ( header.equalsIgnoreCase( "ExperimentDesign" ) ) {
-                this.mapColumns.put( "ExperimentDesign", index );
-            } else if ( header.equalsIgnoreCase( "Treatment" ) ) {
-                this.mapColumns.put( "Treatment", index );
-            } else if ( header.equalsIgnoreCase( "Experiment" ) ) {
-                this.mapColumns.put( "Experiment", index );
-            } else if ( header.equalsIgnoreCase( "Strength" ) ) {
-                this.mapColumns.put( "Strength", index );
-            } else if ( header.equalsIgnoreCase( "Score" ) ) {
-                this.mapColumns.put( "Score", index );
-            } else if ( header.equalsIgnoreCase( "ScoreType" ) ) {
-                this.mapColumns.put( "ScoreType", index );
-            } else if ( header.equalsIgnoreCase( "PhenotypeMapping" ) ) {
-                this.mapColumns.put( "PhenotypeMapping", index );
-            } else if ( header.equalsIgnoreCase( "OrginalPhenotype" ) ) {
-                this.mapColumns.put( "OriginalPhenotype", index );
-            }
-            // not used by evidence importer, used to add extra information only human readable, let this header pass
-            else if ( !header.equalsIgnoreCase( "ExtraInfo" ) ) {
-                throw new Exception( "header not found: " + header );
-            }
-            index++;
-        }
-
-        // Minimum fields any evidence should have, need a (taxon+geneSymbol) or (geneId+geneSymbol)
-        if ( !( ( this.mapColumns.containsKey( "GeneId" ) ) && this.mapColumns.containsKey( "GeneSymbol" )
-                && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" )
-                && this.mapColumns.containsKey( "Phenotypes" ) && this.mapColumns.containsKey( "OriginalPhenotype" )
-                && this.mapColumns.containsKey( "PhenotypeMapping" ) ) ) {
-            throw new Exception( "Headers not set correctly" );
-        }
-
-        // score set ???
-        if ( this.mapColumns.containsKey( "Score" ) && this.mapColumns.containsKey( "ScoreType" ) && this.mapColumns
-                .containsKey( "Strength" ) ) {
-            log.info( "Found a score on the evidence" );
-        } else {
-            log.info( "No score on the evidence" );
-        }
-
-        // using an external database ???
-        if ( this.mapColumns.containsKey( "ExternalDatabase" ) && this.mapColumns.containsKey( "DatabaseLink" ) ) {
-            log.info( "External database link to evidence" );
-        } else {
-            log.info( "No external database" );
-        }
-
-        // rules to be an experimentalEvidence
-        if ( this.mapColumns.containsKey( "Experiment" ) && this.mapColumns.containsKey( "Treatment" )
-                && this.mapColumns.containsKey( "ExperimentDesign" ) && this.mapColumns.containsKey( "OrganismPart" )
-                && this.mapColumns.containsKey( "BioSource" ) && this.mapColumns.containsKey( "DevelopmentalStage" )
-                && this.mapColumns.containsKey( "OtherPubMed" ) && this.mapColumns.containsKey( "PrimaryPubMeds" ) ) {
-
-            log.info( "The type of Evidence found is: " + this.EXPERIMENTAL_EVIDENCE );
-            loadServices( true );
-            return this.EXPERIMENTAL_EVIDENCE;
-        }
-
-        loadServices( false );
-
-        return this.LITERATURE_EVIDENCE;
-
-    }
-
-    /**
      * Loads all services that will be needed
      *
      * @param experimentalEvidenceServicesNeeded if the type is an experimental evidence (we need then to load more)
      */
-    protected synchronized void loadServices( boolean experimentalEvidenceServicesNeeded ) throws Exception {
+    private synchronized void loadServices( boolean experimentalEvidenceServicesNeeded ) throws Exception {
 
         this.phenotypeAssociationService = this.getBean( PhenotypeAssociationManagerService.class );
 
         this.geneService = this.getBean( GeneService.class );
         this.taxonService = this.getBean( TaxonService.class );
 
-        this.ontologyService = this.getBean( OntologyService.class );
+        OntologyService ontologyService = this.getBean( OntologyService.class );
 
-        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
+        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
+        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
+        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
 
-        while ( this.diseaseOntologyService.isOntologyLoaded() == false ) {
-            wait( 3000 );
-            log.info( "waiting for the Disease Ontology to load" );
+        while ( !this.diseaseOntologyService.isOntologyLoaded() ) {
+            this.wait( 3000 );
+            AbstractCLI.log.info( "waiting for the Disease Ontology to load" );
         }
 
-        while ( this.humanPhenotypeOntologyService.isOntologyLoaded() == false ) {
-            wait( 3000 );
-            log.info( "waiting for the HP Ontology to load" );
+        while ( !this.humanPhenotypeOntologyService.isOntologyLoaded() ) {
+            this.wait( 3000 );
+            AbstractCLI.log.info( "waiting for the HP Ontology to load" );
         }
 
         // only need those services for experimental evidences
         if ( experimentalEvidenceServicesNeeded ) {
 
-            this.nifstdOntologyService = this.ontologyService.getNifstfOntologyService();
-            this.obiService = this.ontologyService.getObiService();
-            this.fmaOntologyService = this.ontologyService.getFmaOntologyService();
+            this.nifstdOntologyService = ontologyService.getNifstfOntologyService();
+            this.obiService = ontologyService.getObiService();
+            this.fmaOntologyService = ontologyService.getFmaOntologyService();
 
-            while ( this.mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
-                wait( 3000 );
-                log.info( "waiting for the MP Ontology to load" );
+            while ( !this.mammalianPhenotypeOntologyService.isOntologyLoaded() ) {
+                this.wait( 3000 );
+                AbstractCLI.log.info( "waiting for the MP Ontology to load" );
             }
 
-            while ( this.obiService.isOntologyLoaded() == false ) {
-                wait( 3000 );
-                log.info( "waiting for the OBI Ontology to load" );
+            while ( !this.obiService.isOntologyLoaded() ) {
+                this.wait( 3000 );
+                AbstractCLI.log.info( "waiting for the OBI Ontology to load" );
             }
 
-            while ( this.nifstdOntologyService.isOntologyLoaded() == false ) {
-                wait( 3000 );
-                log.info( "waiting for the NIF Ontology to load" );
+            while ( !this.nifstdOntologyService.isOntologyLoaded() ) {
+                this.wait( 3000 );
+                AbstractCLI.log.info( "waiting for the NIF Ontology to load" );
             }
 
-            while ( this.fmaOntologyService.isOntologyLoaded() == false ) {
-                wait( 3000 );
-                log.info( "waiting for the FMA Ontology to load" );
-            }
-        }
-    }
-
-    protected EvidenceSourceValueObject makeEvidenceSource( String databaseID, String externalDatabaseName ) {
-
-        EvidenceSourceValueObject evidenceSourceValueObject = null;
-        if ( databaseID != null && externalDatabaseName != null && !externalDatabaseName.isEmpty() ) {
-            ExternalDatabaseValueObject externalDatabase = new ExternalDatabaseValueObject();
-            externalDatabase.setName( externalDatabaseName );
-            evidenceSourceValueObject = new EvidenceSourceValueObject( databaseID, externalDatabase );
-        }
-
-        return evidenceSourceValueObject;
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        this.inputFile = getOptionValue( 'f' );
-        this.createInDatabase = new Boolean( getOptionValue( 'c' ) );
-    }
-
-    /**
-     * Trim an array of String
-     */
-    protected Set<String> trimArray( String[] array ) {
-
-        Set<String> mySet = new HashSet<String>();
-
-        String[] trimmedArray = new String[array.length];
-
-        for ( int i = 0; i < trimmedArray.length; i++ ) {
-            String value = array[i].trim();
-
-            if ( !value.equals( "" ) ) {
-                mySet.add( value );
+            while ( !this.fmaOntologyService.isOntologyLoaded() ) {
+                this.wait( 3000 );
+                AbstractCLI.log.info( "waiting for the FMA Ontology to load" );
             }
         }
-
-        return mySet;
-    }
-
-    protected void writeAllExceptions() throws IOException {
-
-        for ( String message : this.errorMessage ) {
-            this.logFileWriter.write( "\n" + message );
-            this.logFileWriter.flush();
-        }
-    }
-
-    protected void writeError( String message ) {
-
-        log.error( message );
-        this.errorMessage.add( message );
-    }
-
-    protected void writeWarning( String message ) throws IOException {
-
-        log.info( message );
-        this.warningMessage += "\n" + message;
-        this.logFileWriter.write( "\n" + message + " (warning)" );
-        this.logFileWriter.flush();
     }
 }

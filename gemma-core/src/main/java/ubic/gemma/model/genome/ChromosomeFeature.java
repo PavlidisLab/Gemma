@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,6 @@ public abstract class ChromosomeFeature extends Describable {
      */
     private static final long serialVersionUID = -8627296370886752496L;
 
-    private String ncbiId;
     private String previousNcbiId;
 
     private PhysicalLocation physicalLocation;
@@ -39,19 +38,6 @@ public abstract class ChromosomeFeature extends Describable {
      * No-arg constructor added to satisfy javabean contract
      */
     public ChromosomeFeature() {
-    }
-
-    /**
-     * @return The NCBI id for this feature.
-     * @deprecated use NcbiGi or NcbiGeneId.
-     */
-    @Deprecated
-    public String getNcbiId() {
-        return this.ncbiId;
-    }
-
-    public void setNcbiId( String ncbiId ) {
-        this.ncbiId = ncbiId;
     }
 
     public PhysicalLocation getPhysicalLocation() {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,12 +44,12 @@ public abstract class QuantitationType extends Describable {
     private Boolean isBatchCorrected = false;
 
     /**
-     * FIXME this is useless because the processed data is always masked?
+     * This is useless because the processed data is always masked
      */
     private Boolean isMaskedPreferred;
 
     /**
-     * FIXME this is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
+     * This is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
      * It might be wise to separate out "quantile normalized", but since we always quantile normalize ProcessedData, this
      * isn't very useful.
      */

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,38 +18,34 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject; 
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-
 /**
  * This is a convenience value object to hold a BlatResult and its associated gene products and genes.
- * 
+ *
  * @author jsantos
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GeneMappingSummary implements Serializable {
 
     private static final long serialVersionUID = 8899320580201273360L;
-
-    private BlatResultValueObject blatResult;
-
-    private Map<GeneProductValueObject, GeneValueObject> geneProductMap;
-
-    private CompositeSequenceValueObject compositeSequence;
-
     /*
      * These maps are maintained for javascript clients, which cannot marshal maps unless the keys are strings.
      */
     private final Map<String, GeneProductValueObject> geneProductIdMap;
     private final Map<String, GeneValueObject> geneProductIdGeneMap;
-
+    private BlatResultValueObject blatResult;
+    private Map<GeneProductValueObject, GeneValueObject> geneProductMap;
+    private CompositeSequenceValueObject compositeSequence;
     private double identity = 0.0;
     private double score = 0.0;
 
@@ -79,7 +75,8 @@ public class GeneMappingSummary implements Serializable {
             this.score = blatResult2.getScore();
         }
 
-        if ( blatResult2.getId() != null ) this.blatResultId = blatResult2.getId().toString();
+        if ( blatResult2.getId() != null )
+            this.blatResultId = blatResult2.getId().toString();
     }
 
     /**

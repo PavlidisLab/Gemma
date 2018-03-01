@@ -18,16 +18,15 @@
  */
 package ubic.gemma.core.annotation.reference;
 
-import static org.junit.Assert.assertNotNull;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate

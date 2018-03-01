@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,16 +35,15 @@ import java.util.Collection;
 public class PubMedSearcher extends AbstractCLIContextCLI {
     private static final PubMedSearch pms = new PubMedSearch();
 
-    public PubMedSearcher() {
+    PubMedSearcher() {
         super();
     }
 
     public static void main( String[] args ) {
         PubMedSearcher p = new PubMedSearcher();
-        try {
-            p.doWork( args );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+        Exception e = p.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
         }
     }
 
@@ -59,38 +58,38 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
     }
 
     @Override
-    public String getShortDesc() {
-        return "perform pubmed searches from a list of terms, and persist the results in the database";
-    }
-
-    @Override
     protected void buildOptions() {
-        addOption( "d", "persist", false, "Persist the results. Otherwise just search." );
+        this.addOption( "d", "persist", false, "Persist the results. Otherwise just search." );
     }
 
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( args );
+        Exception err = this.processCommandLine( args );
 
         if ( err != null )
             return err;
 
         try {
-            @SuppressWarnings("unchecked") Collection<BibliographicReference> refs = pms
-                    .searchAndRetrieveByHTTP( ( Collection<String> ) getArgList() );
+            @SuppressWarnings("unchecked") Collection<BibliographicReference> refs = PubMedSearcher.pms
+                    .searchAndRetrieveByHTTP( ( Collection<String> ) this.getArgList() );
 
             System.out.println( refs.size() + " references found" );
 
-            if ( hasOption( "d" ) ) {
-                getPersisterHelper().persist( refs );
+            if ( this.hasOption( "d" ) ) {
+                this.getPersisterHelper().persist( refs );
             }
 
         } catch ( IOException | ParserConfigurationException | SAXException e ) {
             return e;
         }
-        resetLogging();
+        this.resetLogging();
         return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "perform pubmed searches from a list of terms, and persist the results in the database";
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,7 @@ import org.directwebremoting.annotations.RemoteProxy;
 import org.directwebremoting.spring.BeanCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.image.LinkOutValueObject;
+import ubic.gemma.core.image.ABALinkOutValueObject;
 import ubic.gemma.core.image.aba.AllenBrainAtlasService;
 import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.core.image.aba.ImageSeries;
@@ -53,11 +53,11 @@ public class LinkOutController {
      * @return linkout vo
      */
     @RemoteMethod
-    public LinkOutValueObject getAllenBrainAtlasLink( String geneOfficialSymbol ) {
+    public ABALinkOutValueObject getAllenBrainAtlasLink( String geneOfficialSymbol ) {
 
         Collection<ImageSeries> imageSeries = null;
         String abaGeneUrl = null;
-        Collection<String> imageUrls = new ArrayList<String>();
+        Collection<String> imageUrls = new ArrayList<>();
 
         // Get Allen Brain Atals information and put in value object
         try {
@@ -74,7 +74,7 @@ public class LinkOutController {
         } catch ( IOException e ) {
 
         }
-        return new LinkOutValueObject( imageUrls, abaGeneUrl, geneOfficialSymbol );
+        return new ABALinkOutValueObject( imageUrls, abaGeneUrl, geneOfficialSymbol );
 
     }
 

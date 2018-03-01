@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ import java.util.Map;
  * @author pavlidis
  */
 public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
-    private static Log log = LogFactory.getLog( RowLevelFilter.class.getName() );
+    private static final Log log = LogFactory.getLog( RowLevelFilter.class.getName() );
     private boolean removeAllNegative = false;
     private Method method = Method.MAX;
     private double lowCut = -Double.MAX_VALUE;
@@ -53,7 +53,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     /**
      * @param ranks Map of rank values in range 0...1
      */
-    public RowLevelFilter( Map<CompositeSequence, Double> ranks ) {
+    RowLevelFilter( Map<CompositeSequence, Double> ranks ) {
         this.ranks = ranks;
         this.setUseLowCutAsFraction( true );
         this.setUseHighCutAsFraction( true );
@@ -67,14 +67,14 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {
 
         if ( lowCut == -Double.MAX_VALUE && highCut == Double.MAX_VALUE ) {
-            log.info( "No filtering requested" );
+            RowLevelFilter.log.info( "No filtering requested" );
             return data;
         }
 
         int numRows = data.rows();
         DoubleArrayList criteria = new DoubleArrayList( new double[numRows] );
 
-        int numAllNeg = computeCriteria( data, criteria );
+        int numAllNeg = this.computeCriteria( data, criteria );
 
         DoubleArrayList sortedCriteria = criteria.copy();
         sortedCriteria.sort();
@@ -86,32 +86,31 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             startIndex = numAllNeg;
         }
 
-        double realHighCut = getHighThreshold( sortedCriteria, consideredRows );
-        double realLowCut = getLowThreshold( numRows, sortedCriteria, consideredRows, startIndex );
+        double realHighCut = this.getHighThreshold( sortedCriteria, consideredRows );
+        double realLowCut = this.getLowThreshold( numRows, sortedCriteria, consideredRows, startIndex );
 
         if ( Double.isNaN( realHighCut ) ) {
             throw new IllegalStateException( "High threshold cut is NaN" );
         }
 
-        log.debug( "Low cut = " + realLowCut );
-        log.debug( "High cut = " + realHighCut );
+        RowLevelFilter.log.debug( "Low cut = " + realLowCut );
+        RowLevelFilter.log.debug( "High cut = " + realHighCut );
 
         if ( realHighCut <= realLowCut ) {
             throw new RuntimeException( "High cut " + realHighCut + " is lower or same as low cut " + realLowCut );
         }
 
-        List<CompositeSequence> kept = new ArrayList<CompositeSequence>();
+        List<CompositeSequence> kept = new ArrayList<>();
 
         for ( int i = 0; i < numRows; i++ ) {
             // greater than but not equal to realLowCut to account for case when realLowCut = 0 with many ties in
-            // values,
-            // zeros should always be removed
+            // values, zeros should always be removed
             if ( criteria.get( i ) > realLowCut && criteria.get( i ) <= realHighCut ) {
                 kept.add( data.getDesignElementForRow( i ) );
             }
         }
 
-        logInfo( numRows, kept );
+        this.logInfo( numRows, kept );
 
         return new ExpressionDataDoubleMatrix( data, kept );
     }
@@ -125,12 +124,6 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         highCut = h;
     }
 
-    public void setHighCut( double highCut, boolean isFraction ) {
-        setHighCut( highCut );
-        setUseHighCutAsFraction( isFraction );
-        useHighAsFraction = isFraction;
-    }
-
     /**
      * Set the low threshold for removal.
      *
@@ -141,8 +134,8 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     }
 
     public void setLowCut( double lowCut, boolean isFraction ) {
-        setLowCut( lowCut );
-        setUseLowCutAsFraction( isFraction );
+        this.setLowCut( lowCut );
+        this.setUseLowCutAsFraction( isFraction );
         useLowAsFraction = isFraction;
     }
 
@@ -165,7 +158,8 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      */
     public void setRemoveAllNegative( boolean t ) {
         if ( t ) {
-            log.info( "Rows with all negative values will be " + "removed PRIOR TO applying fraction-based criteria" );
+            RowLevelFilter.log.info( "Rows with all negative values will be "
+                    + "removed PRIOR TO applying fraction-based criteria" );
         }
         removeAllNegative = t;
     }
@@ -177,22 +171,34 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      * @param setting boolean
      */
     public void setUseAsFraction( boolean setting ) {
-        setUseHighCutAsFraction( setting );
-        setUseLowCutAsFraction( setting );
+        this.setUseHighCutAsFraction( setting );
+        this.setUseLowCutAsFraction( setting );
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setUseHighCutAsFraction( boolean setting ) {
-        if ( setting == true && !Stats.isValidFraction( highCut ) ) {
+        if ( setting && !Stats.isValidFraction( highCut ) ) {
             highCut = 0.0; // temporary, user sets this later, we hope.
         }
         useHighAsFraction = setting;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setUseLowCutAsFraction( boolean setting ) {
-        if ( setting == true && !Stats.isValidFraction( lowCut ) ) {
+        if ( setting && !Stats.isValidFraction( lowCut ) ) {
             lowCut = 1.0; // temporary, use sets this later, we hope.
         }
         useLowAsFraction = setting;
+    }
+
+    /**
+     * Set the value considered to be an insignificant difference between two numbers. Default is Constants.SMALL. Used
+     * by DISTINCTVALUE filter.
+     *
+     * @param tolerance tolerance
+     */
+    public void setTolerance( Double tolerance ) {
+        this.tolerance = Math.abs( tolerance );
     }
 
     private void addCriterion( DoubleArrayList criteria, DoubleArrayList rowAsList, CompositeSequence designElement,
@@ -247,16 +253,6 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         }
     }
 
-    /**
-     * Set the value considered to be an insignificant difference between two numbers. Default is Constants.SMALL. Used
-     * by DISTINCTVALUE filter.
-     *
-     * @param tolerance tolerance
-     */
-    public void setTolerance( Double tolerance ) {
-        this.tolerance = Math.abs( tolerance );
-    }
-
     private int computeCriteria( ExpressionDataDoubleMatrix data, DoubleArrayList criteria ) {
         int numRows = data.rows();
         int numCols = data.columns();
@@ -284,7 +280,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
                 numAllNeg++;
             }
 
-            addCriterion( criteria, rowAsList, data.getDesignElementForRow( i ), i );
+            this.addCriterion( criteria, rowAsList, data.getDesignElementForRow( i ), i );
         }
         return numAllNeg;
     }
@@ -295,7 +291,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             if ( !Stats.isValidFraction( highCut ) ) {
                 throw new IllegalStateException( "High level cut must be a fraction between 0 and 1" );
             }
-            int thresholdIndex = 0;
+            int thresholdIndex;
             thresholdIndex = ( int ) Math.ceil( consideredRows * ( 1.0 - highCut ) ) - 1;
 
             thresholdIndex = Math.max( 0, thresholdIndex );
@@ -313,7 +309,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
                 throw new IllegalStateException( "Low level cut must be a fraction between 0 and 1" );
             }
 
-            int thresholdIndex = 0;
+            int thresholdIndex;
             thresholdIndex = startIndex + ( int ) Math.floor( consideredRows * lowCut );
             thresholdIndex = Math.min( numRows - 1, thresholdIndex );
             realLowCut = sortedCriteria.get( thresholdIndex );
@@ -325,18 +321,19 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     private void logInfo( int numRows, List<CompositeSequence> kept ) {
         if ( kept.size() == 0 ) {
-            log.warn( "All rows filtered out!" );
+            RowLevelFilter.log.warn( "All rows filtered out!" );
             return;
         }
 
-        if ( log.isDebugEnabled() ) {
+        if ( RowLevelFilter.log.isDebugEnabled() ) {
             NumberFormat nf = NumberFormat.getNumberInstance();
             nf.setMaximumFractionDigits( 2 );
 
             double fracFiltered = ( double ) ( numRows - kept.size() ) / numRows;
 
-            log.debug( "There are " + kept.size() + " rows left after " + this.method + " filtering. Filtered out " + (
-                    numRows - kept.size() ) + " rows " + nf.format( 100 * fracFiltered ) + "%" );
+            RowLevelFilter.log
+                    .debug( "There are " + kept.size() + " rows left after " + this.method + " filtering. Filtered out "
+                            + ( numRows - kept.size() ) + " rows " + nf.format( 100 * fracFiltered ) + "%" );
         }
     }
 

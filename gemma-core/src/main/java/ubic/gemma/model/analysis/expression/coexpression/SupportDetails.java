@@ -1,13 +1,13 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -50,6 +50,7 @@ public abstract class SupportDetails extends IdArray {
      * @param isPositive value of isPositive
      * @param secondGene second gene
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public SupportDetails( Gene firstGene, Gene secondGene, Boolean isPositive ) {
         if ( firstGene != null )
             this.firstGeneId = firstGene.getId();
@@ -67,6 +68,7 @@ public abstract class SupportDetails extends IdArray {
      * @param isPositive value of isPositive
      * @param secondGene second gene
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public SupportDetails( Long firstGene, Long secondGene, Boolean isPositive ) {
         if ( firstGene != null )
             this.firstGeneId = firstGene;
@@ -76,32 +78,11 @@ public abstract class SupportDetails extends IdArray {
             this.isPositive = isPositive;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( getClass() != obj.getClass() )
-            return false;
-        SupportDetails other = ( SupportDetails ) obj;
-
-        if ( this.id != null )
-            return this.id.equals( other.getId() );
-
-        if ( this.firstGeneId != null && !this.firstGeneId.equals( other.firstGeneId ) )
-            return false;
-        if ( this.secondGeneId != null && !this.secondGeneId.equals( other.secondGeneId ) )
-            return false;
-        if ( this.isPositive != null && !this.isPositive.equals( other.isPositive ) )
-            return false;
-
-        return true;
-
-    }
-
     public Long getId() {
         return id;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }
@@ -116,6 +97,26 @@ public abstract class SupportDetails extends IdArray {
         hashCode = 29 * hashCode + ( isPositive == null ? 0 : isPositive.hashCode() );
 
         return hashCode;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        SupportDetails other = ( SupportDetails ) obj;
+
+        if ( this.id != null )
+            return this.id.equals( other.getId() );
+
+        if ( this.firstGeneId != null && !this.firstGeneId.equals( other.firstGeneId ) )
+            return false;
+        //noinspection SimplifiableIfStatement // Better readability
+        if ( this.secondGeneId != null && !this.secondGeneId.equals( other.secondGeneId ) )
+            return false;
+        return this.isPositive == null || this.isPositive.equals( other.isPositive );
+
     }
 
     @Override

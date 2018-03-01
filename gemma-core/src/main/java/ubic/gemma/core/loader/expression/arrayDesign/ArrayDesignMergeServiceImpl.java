@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,23 +18,22 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author paul
@@ -49,7 +48,8 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      */
     private static final String PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR = "___";
 
-    private static final String PROBE_NAME_DISAMBIGUATION_REGEX = PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + "(\\d)+";
+    private static final String PROBE_NAME_DISAMBIGUATION_REGEX =
+            ArrayDesignMergeServiceImpl.PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + "(\\d)+";
 
     private final ArrayDesignService arrayDesignService;
     private final ArrayDesignReportService arrayDesignReportService;
@@ -74,29 +74,29 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
          * We allow merging of, or into, an already merged design, but array designs can't be merged into more than one.
          */
         if ( arrayDesign.getMergedInto() != null ) {
-            throw new IllegalArgumentException( "Sorry, can't merge an array design that is already a mergee ("
-                    + arrayDesign + ")" );
+            throw new IllegalArgumentException(
+                    "Sorry, can't merge an array design that is already a mergee (" + arrayDesign + ")" );
         }
 
         if ( add && arrayDesign.getMergees().isEmpty() ) {
-            throw new IllegalArgumentException( "Can't use 'add' when arrayDesign isn't already a mergee ("
-                    + arrayDesign + ")" );
+            throw new IllegalArgumentException(
+                    "Can't use 'add' when arrayDesign isn't already a mergee (" + arrayDesign + ")" );
         }
 
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
         // appear more than once per array design.
-        Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
+        Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<>();
 
-        ArrayDesign thawed = makeBioSeqMap( globalBsMap, arrayDesign );
+        ArrayDesign thawed = this.makeBioSeqMap( globalBsMap, arrayDesign );
 
-        log.info( globalBsMap.keySet().size() + " sequences in first array design." );
+        ArrayDesignMergeServiceImpl.log.info( globalBsMap.keySet().size() + " sequences in first array design." );
         // Now check the other designs, add slots for additional probes if necessary.
-        Collection<ArrayDesign> thawedOthers = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> thawedOthers = new HashSet<>();
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
 
             if ( otherArrayDesign.getMergedInto() != null ) {
-                throw new IllegalArgumentException( "Sorry, can't merge an array design that is already a mergee ("
-                        + otherArrayDesign + ")" );
+                throw new IllegalArgumentException(
+                        "Sorry, can't merge an array design that is already a mergee (" + otherArrayDesign + ")" );
             }
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
@@ -104,13 +104,14 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                 continue;
             }
 
-            log.info( "Examining " + otherArrayDesign );
-            thawedOthers.add( makeBioSeqMap( globalBsMap, otherArrayDesign ) );
+            ArrayDesignMergeServiceImpl.log.info( "Examining " + otherArrayDesign );
+            thawedOthers.add( this.makeBioSeqMap( globalBsMap, otherArrayDesign ) );
 
-            log.info( globalBsMap.keySet().size() + " unique sequences encountered in total so far" );
+            ArrayDesignMergeServiceImpl.log
+                    .info( globalBsMap.keySet().size() + " unique sequences encountered in total so far" );
         }
 
-        return createMerged( thawed, thawedOthers, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
+        return this.createMerged( thawed, thawedOthers, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
     }
 
     /**
@@ -120,12 +121,13 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
             Map<BioSequence, Collection<CompositeSequence>> globalBsMap, String newName, String newShortName,
             boolean mergeWithExisting ) {
 
-        ArrayDesign result = formMergedDesign( arrayDesign, otherArrayDesigns, newName, newShortName, mergeWithExisting );
+        ArrayDesign result = this
+                .formMergedDesign( arrayDesign, otherArrayDesigns, newName, newShortName, mergeWithExisting );
 
-        Collection<CompositeSequence> newProbes = makeNewProbes( result, globalBsMap, mergeWithExisting );
+        Collection<CompositeSequence> newProbes = this.makeNewProbes( result, globalBsMap, mergeWithExisting );
 
-        result = mergeServiceHelper.persistMerging( result, arrayDesign, otherArrayDesigns, mergeWithExisting,
-                newProbes );
+        result = mergeServiceHelper
+                .persistMerging( result, arrayDesign, otherArrayDesigns, mergeWithExisting, newProbes );
 
         arrayDesignReportService.generateArrayDesignReport( result.getId() );
 
@@ -137,7 +139,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      * arrayDesign is updated
      *
      * @return either a new non-persistent arrayDesign ready to be populated, or arrayDesign with an updated
-     *         description.
+     * description.
      */
     private ArrayDesign formMergedDesign( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns,
             String newName, String newShortName, boolean mergeWithExisting ) {
@@ -152,7 +154,8 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                         "Cannot use 'add' unless the array design is already a merged design: " + arrayDesign );
             }
             assert arrayDesign.getId() != null;
-            log.info( arrayDesign + " is already a merged design, others will be added in" );
+            ArrayDesignMergeServiceImpl.log
+                    .info( arrayDesign + " is already a merged design, others will be added in" );
             result = arrayDesign;
             result.setDescription( result.getDescription() + "; Additional designs merged in: " + mergeeListString );
         } else {
@@ -170,22 +173,21 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
     /**
      * Names won't be re-used, they will get names like "fooo___1".
-     *
      */
     private String getProbeName( Collection<String> probeNames, CompositeSequence cs ) {
         String name = cs.getName();
         int i = 1;
 
-        if ( name.matches( PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
-            // FIXME then we can't do the stuff below without some fix.
+        //noinspection StatementWithEmptyBody // FIXME then we can't do the stuff below without some fix.
+        if ( name.matches( ArrayDesignMergeServiceImpl.PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
         }
 
         while ( probeNames.contains( name ) ) {
-            if ( name.matches( ".+?" + PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
-                name = name
-                        .replaceAll( PROBE_NAME_DISAMBIGUATION_REGEX, PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + i );
+            if ( name.matches( ".+?" + ArrayDesignMergeServiceImpl.PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
+                name = name.replaceAll( ArrayDesignMergeServiceImpl.PROBE_NAME_DISAMBIGUATION_REGEX,
+                        ArrayDesignMergeServiceImpl.PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + i );
             } else {
-                name = name + PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + i;
+                name = name + ArrayDesignMergeServiceImpl.PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + i;
             }
             i++;
         }
@@ -194,12 +196,12 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
     /**
      * If we're merging into an existing platform, it is important that this method is called for that platform first.
-     * 
+     *
      * @param globalBsMap Map that tells us, in effect, how many probes to make for the sequence. Modified by this.
      */
     private ArrayDesign makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap,
             ArrayDesign arrayDesign ) {
-        Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
+        Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<>();
         arrayDesign = this.arrayDesignService.thaw( arrayDesign );
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
@@ -231,7 +233,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         }
 
         if ( ++count % 10000 == 0 ) {
-            log.info( "Processed " + count + " probes" );
+            ArrayDesignMergeServiceImpl.log.info( "Processed " + count + " probes" );
         }
         return arrayDesign;
     }
@@ -241,15 +243,14 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      * probes from arrayDesign will not be included; just the ones that we need to add to it will be returned.
      *
      * @param globalBsMap Map that tells us, in effect, how many probes to make for the sequence.
-
      */
     private Collection<CompositeSequence> makeNewProbes( ArrayDesign arrayDesign,
             Map<BioSequence, Collection<CompositeSequence>> globalBsMap, boolean mergeWithExisting ) {
 
-        Collection<CompositeSequence> newProbes = new HashSet<CompositeSequence>();
-        log.info( globalBsMap.size() + " unique sequences" );
+        Collection<CompositeSequence> newProbes = new HashSet<>();
+        ArrayDesignMergeServiceImpl.log.info( globalBsMap.size() + " unique sequences" );
 
-        Collection<String> probeNames = new HashSet<String>();
+        Collection<String> probeNames = new HashSet<>();
         for ( BioSequence bs : globalBsMap.keySet() ) {
             assert bs != null; // should be the placeholder NULL_BIOSEQUENCE
             for ( CompositeSequence cs : globalBsMap.get( bs ) ) {
@@ -268,7 +269,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
                     newCs.setBiologicalCharacteristic( bs );
                 }
 
-                String name = getProbeName( probeNames, cs );
+                String name = this.getProbeName( probeNames, cs );
 
                 probeNames.add( name );
                 newCs.setName( name );
@@ -277,12 +278,13 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
                 newProbes.add( newCs );
 
-                if ( log.isDebugEnabled() )
-                    log.debug( "Made merged probe for " + bs + ": " + newCs + " for old probe on "
-                            + cs.getArrayDesign().getShortName() );
+                if ( ArrayDesignMergeServiceImpl.log.isDebugEnabled() )
+                    ArrayDesignMergeServiceImpl.log
+                            .debug( "Made merged probe for " + bs + ": " + newCs + " for old probe on " + cs
+                                    .getArrayDesign().getShortName() );
             }
         }
-        log.info( "Made " + newProbes.size() + " new probes" );
+        ArrayDesignMergeServiceImpl.log.info( "Made " + newProbes.size() + " new probes" );
         return newProbes;
     }
 

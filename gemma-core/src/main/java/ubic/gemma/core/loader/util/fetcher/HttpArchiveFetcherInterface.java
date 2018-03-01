@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,19 +18,18 @@
  */
 package ubic.gemma.core.loader.util.fetcher;
 
+import ubic.gemma.model.common.description.LocalFile;
+
 import java.io.File;
 import java.util.Collection;
 
-import ubic.gemma.model.common.description.LocalFile;
-
 /**
  * Interface for downloading via http files and unarchiving them
- * 
- * @author ldonnison
  *
+ * @author ldonnison
  */
 public interface HttpArchiveFetcherInterface extends Fetcher {
 
-    public File unPackFile( Collection<LocalFile> localFile );
+    File unPackFile( Collection<LocalFile> localFile );
 
 }

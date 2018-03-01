@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,52 +33,50 @@ public class MeasurementImpl extends ubic.gemma.model.common.measurement.Measure
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
 
         Measurement other = ( Measurement ) obj;
         if ( super.getId() == null ) {
             if ( other.getId() != null )
                 return false;
-        } else if ( !getId().equals( other.getId() ) )
+        } else if ( !this.getId().equals( other.getId() ) )
             return false;
 
-        if ( getValue() == null ) {
+        if ( this.getValue() == null ) {
             if ( other.getValue() != null )
                 return false;
-        } else if ( !getValue().equals( other.getValue() ) )
+        } else if ( !this.getValue().equals( other.getValue() ) )
             return false;
 
-        if ( getUnit() == null ) {
+        if ( this.getUnit() == null ) {
             if ( other.getUnit() != null )
                 return false;
-        } else if ( !getUnit().equals( other.getUnit() ) )
+        } else if ( !this.getUnit().equals( other.getUnit() ) )
             return false;
 
-        if ( getType() == null ) {
+        if ( this.getType() == null ) {
             if ( other.getType() != null )
                 return false;
-        } else if ( !getType().equals( other.getType() ) )
+        } else if ( !this.getType().equals( other.getType() ) )
             return false;
 
-        if ( getKindCV() == null ) {
+        if ( this.getKindCV() == null ) {
             if ( other.getKindCV() != null )
                 return false;
-        } else if ( !getKindCV().equals( other.getKindCV() ) )
+        } else if ( !this.getKindCV().equals( other.getKindCV() ) )
             return false;
 
-        if ( getOtherKind() == null ) {
+        if ( this.getOtherKind() == null ) {
             if ( other.getOtherKind() != null )
                 return false;
-        } else if ( !getOtherKind().equals( other.getOtherKind() ) )
+        } else if ( !this.getOtherKind().equals( other.getOtherKind() ) )
             return false;
-        if ( getRepresentation() == null ) {
-            if ( other.getRepresentation() != null )
-                return false;
-        } else if ( !getRepresentation().equals( other.getRepresentation() ) )
-            return false;
+        if ( this.getRepresentation() == null ) {
+            return other.getRepresentation() == null;
+        } else
+            return this.getRepresentation().equals( other.getRepresentation() );
 
-        return true;
     }
 
     @Override
@@ -88,15 +86,16 @@ public class MeasurementImpl extends ubic.gemma.model.common.measurement.Measure
         result = prime * result + ( ( super.getId() == null ) ? 0 : super.getId().hashCode() );
 
         if ( super.getId() == null ) {
-            result = prime * result + ( ( getValue() == null ) ? 0 : getValue().hashCode() );
+            result = prime * result + ( ( this.getValue() == null ) ? 0 : this.getValue().hashCode() );
 
-            result = prime * result + ( ( getRepresentation() == null ) ? 0 : getRepresentation().hashCode() );
-            result = prime * result + ( ( getUnit() == null ) ? 0 : getUnit().hashCode() );
+            result =
+                    prime * result + ( ( this.getRepresentation() == null ) ? 0 : this.getRepresentation().hashCode() );
+            result = prime * result + ( ( this.getUnit() == null ) ? 0 : this.getUnit().hashCode() );
 
-            result = prime * result + ( ( getType() == null ) ? 0 : getType().hashCode() );
+            result = prime * result + ( ( this.getType() == null ) ? 0 : this.getType().hashCode() );
 
-            result = prime * result + ( ( getKindCV() == null ) ? 0 : getKindCV().hashCode() );
-            result = prime * result + ( ( getOtherKind() == null ) ? 0 : getOtherKind().hashCode() );
+            result = prime * result + ( ( this.getKindCV() == null ) ? 0 : this.getKindCV().hashCode() );
+            result = prime * result + ( ( this.getOtherKind() == null ) ? 0 : this.getOtherKind().hashCode() );
 
         }
         return result;

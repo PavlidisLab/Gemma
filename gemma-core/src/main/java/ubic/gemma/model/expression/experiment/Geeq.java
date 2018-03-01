@@ -95,10 +95,6 @@ public class Geeq implements Identifiable, Serializable {
 
     private String otherIssues;
 
-    public static long getserialVersionUID() {
-        return Geeq.serialVersionUID;
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash( this.getId() );

@@ -12,16 +12,17 @@ import ubic.gemma.core.tasks.AbstractTask;
 /**
  * Task to try to get 'batch' information about an experiment. This usually involves downloading raw data files from the
  * provider.
- * @author paul
  *
+ * @author paul
  */
 @Component
 @Scope("prototype")
-public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFetchTaskCommand> implements BatchInfoFetchTask {
+public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFetchTaskCommand>
+        implements BatchInfoFetchTask {
 
-    @Autowired private BatchInfoPopulationService batchInfoService;
-
-    private Log log = LogFactory.getLog( BatchInfoFetchTask.class.getName() );
+    private final Log log = LogFactory.getLog( BatchInfoFetchTask.class.getName() );
+    @Autowired
+    private BatchInfoPopulationService batchInfoService;
 
     @Override
     public TaskResult execute() {
@@ -32,7 +33,7 @@ public class BatchInfoFetchTaskImpl extends AbstractTask<TaskResult, BatchInfoFe
                     "Doing all Batch fetches in task not implemented, sorry, you must configure one" );
         } else if ( taskCommand.getExpressionExperiment() != null ) {
             taskCommand.setMaxRuntime( 30 ); // time to download files etc.
-            batchInfoService.fillBatchInformation( taskCommand.getExpressionExperiment(), true);
+            batchInfoService.fillBatchInformation( taskCommand.getExpressionExperiment(), true );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

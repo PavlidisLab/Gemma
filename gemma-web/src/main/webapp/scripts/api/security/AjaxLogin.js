@@ -129,7 +129,6 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend( Ext.Window, {
           * entity's page, we should refresh the page when they login, in case this fixes the problem or allows them to
           * see the entity
           */
-         // TODO this is a hacky tmp check for whether this page is an error page; fix it!!
          var myReloadPageOnLogin = Ext.getDom( 'reloadOnLogin' );
          if ( myReloadPageOnLogin && myReloadPageOnLogin.value === "true" ) {
             this.reloadPageOnLogin = true;

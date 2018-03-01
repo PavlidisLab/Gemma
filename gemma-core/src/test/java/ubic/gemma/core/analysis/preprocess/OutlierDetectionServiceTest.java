@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,31 +63,32 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
 
         if ( ee == null ) {
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse2982Short" ) ) );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse2982Short" ) ) );
 
-            Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
 
             ee = ( ExpressionExperiment ) results.iterator().next();
         }
 
         ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        // Forced recomputation with no regression
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.create( ee, false, false );
 
-        // no outliers initially
-        Collection<OutlierDetails> output = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
-        assertEquals( 0, output.size() );
+        // 1 outlier initially
+        Collection<OutlierDetails> output = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
+        assertEquals( 1, output.size() );
 
         // modify a sample to be the outlier
-        int outlierIdx = 0;
+        int outlierIdx = 1;
         for ( int j = 0; j < sampleCorrelationMatrix.columns(); j++ ) {
             sampleCorrelationMatrix.set( j, outlierIdx, -0.5 + j / 100.0 );
             sampleCorrelationMatrix.set( outlierIdx, j, -0.5 + j / 100.0 );
         }
 
-        // now we expect one outlier from the modified matrix
-        output = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
-        assertEquals( 1, output.size() );
+        // now we expect one new outlier from the modified matrix
+        output = outlierDetectionService.identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
+        assertEquals( 2, output.size() );
         assertEquals( sampleCorrelationMatrix.getColName( outlierIdx ), output.iterator().next().getBioAssay() );
     }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,53 +18,32 @@
  */
 package ubic.gemma.web.taglib;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.util.Settings;
 
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.Tag;
+import javax.servlet.jsp.tagext.TagSupport;
+
 /**
  * @author keshav
- *
  */
+@SuppressWarnings("unused") // Frontend use
 public class DatabaseEntryTag extends TagSupport {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -8225561718129593445L;
 
     private static Log log = LogFactory.getLog( DatabaseEntryTag.class );
 
     private DatabaseEntryValueObject databaseEntry;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
-     */
-    @Override
-    public int doEndTag() {
-
-        log.debug( "end tag" );
-
-        return EVAL_PAGE;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
-     */
     @Override
     public int doStartTag() throws JspException {
 
-        log.debug( "start tag" );
+        DatabaseEntryTag.log.debug( "start tag" );
 
         StringBuilder buf = new StringBuilder();
         if ( this.databaseEntry == null ) {
@@ -77,16 +56,18 @@ public class DatabaseEntryTag extends TagSupport {
                 if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "GEO" ) ) {
 
                     accession = accession.replaceAll( "\\.[1-9]$", "" );
-                    buf.append( accession + "&nbsp;<a title='NCBI page for this entry'"
-                            + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + accession
-                            + "'><img src='" + Settings.getRootContext() + "/images/logo/geoTiny.png' /></a>" );
+                    buf.append( accession ).append( "&nbsp;<a title='NCBI page for this entry'" )
+                            .append( " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" )
+                            .append( accession ).append( "'><img src='" ).append( Settings.getRootContext() )
+                            .append( "/images/logo/geoTiny.png' /></a>" );
                 } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
-                    buf.append( accession
-                            + "&nbsp;<a title='ArrayExpress page for this entry'"
-                            + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
-                            + accession + "'><img src='" + Settings.getRootContext() + "/images/logo/arrayExpressTiny.png' /></a>" );
+                    buf.append( accession ).append( "&nbsp;<a title='ArrayExpress page for this entry'" ).append(
+                            " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession=" )
+                            .append( accession ).append( "'><img src='" ).append( Settings.getRootContext() )
+                            .append( "/images/logo/arrayExpressTiny.png' /></a>" );
                 } else {
-                    buf.append( accession + "(" + databaseEntry.getExternalDatabase().getName() + ":" + ")" );
+                    buf.append( accession ).append( "(" ).append( databaseEntry.getExternalDatabase().getName() )
+                            .append( ":" ).append( ")" );
                 }
             } else {
                 buf.append( accession );
@@ -98,12 +79,17 @@ public class DatabaseEntryTag extends TagSupport {
         } catch ( Exception ex ) {
             throw new JspException( this.getClass().getName() + ex.getMessage() );
         }
-        return SKIP_BODY;
+        return Tag.SKIP_BODY;
     }
 
-    /**
-     * @param databaseEntry
-     */
+    @Override
+    public int doEndTag() {
+
+        DatabaseEntryTag.log.debug( "end tag" );
+
+        return Tag.EVAL_PAGE;
+    }
+
     public void setDatabaseEntry( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) {
             // if it is a user-owned data set.

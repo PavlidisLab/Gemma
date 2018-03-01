@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
@@ -49,6 +50,8 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
     private ExpressionExperiment ee = null;
     private ExternalDatabase ed;
     private String accession;
@@ -59,7 +62,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
         if ( !persisted ) {
             ee = this.getTestPersistentCompleteExpressionExperiment( false );
-            ee.setName( EE_NAME );
+            ee.setName( ExpressionExperimentServiceTest.EE_NAME );
 
             DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
             accession = accessionEntry.getAccession();
@@ -141,10 +144,8 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<QuantitationType> quantitationTypes = new HashSet<>();
         quantitationTypes.add( quantitationType );
-        Collection<DesignElementDataVector> vectors = expressionExperimentService
-                .getDesignElementDataVectors( quantitationTypes );
+        Collection<RawExpressionDataVector> vectors = rawExpressionDataVectorService.find( quantitationTypes );
         assertEquals( 12, vectors.size() );
-
     }
 
     @Test
@@ -192,8 +193,8 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
         assertEquals( 2, designElements.size() );
 
-        Collection<DesignElementDataVector> vectors = expressionExperimentService
-                .getDesignElementDataVectors( designElements, quantitationType );
+        Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService
+                .find( designElements, quantitationType );
 
         assertEquals( 2, vectors.size() );
 

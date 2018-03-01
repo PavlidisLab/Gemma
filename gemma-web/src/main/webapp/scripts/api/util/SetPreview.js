@@ -68,7 +68,7 @@ Gemma.SetPreview = Ext.extend( Ext.Panel, {
    },
 
    /**
-    * insert a message into the preview FIXME make private
+    * insert a message into the preview
     * 
     * @param {String}
     *           msg

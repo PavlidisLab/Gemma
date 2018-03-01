@@ -43,7 +43,7 @@ import java.net.URLConnection;
 // Constants are better for readability
 public class EutilFetch {
 
-    static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    private static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
     // private static String EFETCH =
     // "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
@@ -63,10 +63,11 @@ public class EutilFetch {
      * @return XML
      * @throws IOException if there is a problem while manipulating the file
      */
-    public static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
+    @SuppressWarnings("SameParameterValue") // Only TEXT is used, also observe the parameter javadoc fix me note
+    private static String fetch( String db, String searchString, Mode mode, int limit ) throws IOException {
 
         URL searchUrl = new URL( EutilFetch.ESEARCH + db + "&usehistory=y&term=" + searchString );
-        URLConnection conn = searchUrl.openConnection();
+        URLConnection conn;
 
         try {
 
@@ -115,9 +116,6 @@ public class EutilFetch {
                 String line;
                 while ( ( line = br.readLine() ) != null ) {
                     buf.append( line );
-                    // if ( !line.endsWith( " " ) ) {
-                    // buf.append( " " );
-                    // }
                 }
 
                 return buf.toString();
@@ -179,20 +177,8 @@ public class EutilFetch {
         }
     }
 
-    static void printElements( Document doc ) {
-
-        NodeList nodelist = doc.getElementsByTagName( "*" );
-        Node node;
-
-        for ( int i = 0; i < nodelist.getLength(); i++ ) {
-            node = nodelist.item( i );
-            System.out.print( node.getNodeName() + " " );
-        }
-
-        System.out.println();
-
-    }
-
+    @SuppressWarnings("unused")
+    // EutilFetch.fetch(java.lang.String, java.lang.String, ubic.gemma.core.loader.entrez.EutilFetch.Mode, int) fix me note
     public enum Mode {
         HTML, TEXT, XML
     }

@@ -45,7 +45,7 @@
 			</Book>
 			<ArticleTitle book="gene" part="gan">Giant Axonal Neuropathy</ArticleTitle>
 			<Language>eng</Language>
-			<AuthorList Type="authors">
+			<AuthorList>
 				<Author>
 					<LastName>Kuhlenbaumer</LastName>
 					<ForeName>Gregor</ForeName>
@@ -167,7 +167,7 @@
 			<PublicationStatus>ppublish</PublicationStatus>
 
 			<ArticleIdList>
-				<ArticleId IdType="pubmed">20301315</ArticleId>
+				<ArticleId>20301315</ArticleId>
 			</ArticleIdList>
 
 		</PubmedBookData>

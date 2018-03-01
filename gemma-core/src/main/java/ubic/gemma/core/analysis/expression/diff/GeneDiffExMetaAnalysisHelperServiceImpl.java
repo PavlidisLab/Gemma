@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,28 +19,18 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject;
-import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-
 /**
- * TODO Document Me
- * 
- * @author frances
- *
+ * * @author frances
  */
 @Component
 public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAnalysisHelperService {
@@ -51,13 +41,6 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#convertToValueObject(ubic.gemma.model
-     * .analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis)
-     */
     @Override
     public GeneDifferentialExpressionMetaAnalysisDetailValueObject convertToValueObject(
             GeneDifferentialExpressionMetaAnalysis metaAnalysis ) {
@@ -72,11 +55,10 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         Collection<ExpressionAnalysisResultSet> resultSetsIncluded = metaAnalysis.getResultSetsIncluded();
 
         analysisVO.setIncludedResultSetsInfo(
-                new HashSet<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject>(
-                        resultSetsIncluded.size() ) );
+                new HashSet<IncludedResultSetInfoValueObject>( resultSetsIncluded.size() ) );
 
         for ( ExpressionAnalysisResultSet resultSetIncluded : resultSetsIncluded ) {
-            GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject includedResultSetInfo = new GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject();
+            IncludedResultSetInfoValueObject includedResultSetInfo = new IncludedResultSetInfoValueObject();
             includedResultSetInfo.setExperimentId( resultSetIncluded.getAnalysis().getExperimentAnalyzed().getId() );
             includedResultSetInfo.setAnalysisId( resultSetIncluded.getAnalysis().getId() );
             includedResultSetInfo.setResultSetId( resultSetIncluded.getId() );
@@ -102,11 +84,6 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         return analysisVO;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#findDetailMetaAnalysisById(long)
-     */
     @Override
     public GeneDifferentialExpressionMetaAnalysisDetailValueObject findDetailMetaAnalysisById( long analysisId ) {
         GeneDifferentialExpressionMetaAnalysis metaAnalysis = this.geneDiffExMetaAnalysisService.load( analysisId );
@@ -125,11 +102,6 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
         return analysisVO;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService#loadAllMetaAnalyses()
-     */
     @Override
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
         Collection<GeneDifferentialExpressionMetaAnalysis> metaAnalyses = this.geneDiffExMetaAnalysisService.loadAll();

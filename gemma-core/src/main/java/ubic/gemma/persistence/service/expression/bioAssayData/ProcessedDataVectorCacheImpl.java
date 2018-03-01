@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,6 +43,7 @@ import java.util.Collection;
  * @author paul
  */
 @Component
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class ProcessedDataVectorCacheImpl implements InitializingBean, ProcessedDataVectorCache {
 
     private static final String VECTOR_CACHE_NAME = "ProcessedExpressionDataVectorCache";
@@ -58,27 +59,8 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     private EhCacheManagerFactoryBean cacheManagerFactory;
 
     @Override
-    public void addToCache( Long eeid, Long g, Collection<DoubleVectorValueObject> collection ) {
-        cache.put( new Element( new CacheKey( eeid, g ), collection ) );
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        CacheManager cacheManager = this.cacheManagerFactory.getObject();
-        int maxElements = Settings.getInt( "gemma.cache.vectors.maxelements", VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = Settings.getInt( "gemma.cache.vectors.timetolive", VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = Settings.getInt( "gemma.cache.vectors.timetoidle", VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
-        boolean overFlowToDisk = Settings
-                .getBoolean( "gemma.cache.vectors.usedisk", VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
-        boolean eternal =
-                Settings.getBoolean( "gemma.cache.vectors.eternal", VECTOR_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", true ) && !terracottaEnabled;
-
-        this.cache = CacheUtils
-                .createOrLoadCache( cacheManager, VECTOR_CACHE_NAME, terracottaEnabled, maxElements, overFlowToDisk,
-                        eternal, timeToIdle, timeToLive, diskPersistent );
-
+    public void addToCache( Long eeId, Long g, Collection<DoubleVectorValueObject> collection ) {
+        cache.put( new Element( new CacheKey( eeId, g ), collection ) );
     }
 
     @Override
@@ -87,10 +69,10 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     }
 
     @Override
-    public void clearCache( Long eeid ) {
+    public void clearCache( Long eeId ) {
         for ( Object o : cache.getKeys() ) {
             CacheKey k = ( CacheKey ) o;
-            if ( k.getEeid().equals( eeid ) ) {
+            if ( k.getEeId().equals( eeId ) ) {
                 cache.remove( k );
             }
         }
@@ -117,43 +99,45 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     public int size() {
         return this.cache.getSize();
     }
+
+    @Override
+    public void afterPropertiesSet() {
+        CacheManager cacheManager = this.cacheManagerFactory.getObject();
+        int maxElements = Settings.getInt( "gemma.cache.vectors.maxelements",
+                ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = Settings.getInt( "gemma.cache.vectors.timetolive",
+                ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = Settings.getInt( "gemma.cache.vectors.timetoidle",
+                ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
+        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.vectors.usedisk",
+                ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
+        boolean eternal = Settings.getBoolean( "gemma.cache.vectors.eternal",
+                ProcessedDataVectorCacheImpl.VECTOR_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
+        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", true ) && !terracottaEnabled;
+
+        this.cache = CacheUtils
+                .createOrLoadCache( cacheManager, ProcessedDataVectorCacheImpl.VECTOR_CACHE_NAME, terracottaEnabled,
+                        maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive, diskPersistent );
+
+    }
 }
 
+@SuppressWarnings({ "unused", "WeakerAccess" })
+        // Possible external use
 class CacheKey implements Serializable {
 
     private static final long serialVersionUID = -7873367550383853137L;
-    private final Long eeid;
+    private final Long eeId;
     private final Long geneId;
 
-    CacheKey( Long eeid, Long geneId ) {
-        this.eeid = eeid;
+    CacheKey( Long eeId, Long geneId ) {
+        this.eeId = eeId;
         this.geneId = geneId;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        CacheKey other = ( CacheKey ) obj;
-        if ( eeid == null ) {
-            if ( other.eeid != null )
-                return false;
-        } else if ( !eeid.equals( other.eeid ) )
-            return false;
-        if ( geneId == null ) {
-            if ( other.geneId != null )
-                return false;
-        } else if ( !geneId.equals( other.geneId ) )
-            return false;
-        return true;
-    }
-
-    public Long getEeid() {
-        return eeid;
+    public Long getEeId() {
+        return eeId;
     }
 
     public Long getGeneId() {
@@ -164,9 +148,29 @@ class CacheKey implements Serializable {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( eeid == null ? 0 : eeid.hashCode() );
+        result = prime * result + ( eeId == null ? 0 : eeId.hashCode() );
         result = prime * result + ( geneId == null ? 0 : geneId.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        CacheKey other = ( CacheKey ) obj;
+        if ( eeId == null ) {
+            if ( other.eeId != null )
+                return false;
+        } else if ( !eeId.equals( other.eeId ) )
+            return false;
+        if ( geneId == null ) {
+            return other.geneId == null;
+        } else
+            return geneId.equals( other.geneId );
     }
 
 }

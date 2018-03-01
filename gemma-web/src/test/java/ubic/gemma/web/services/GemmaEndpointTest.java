@@ -27,9 +27,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-/**
- *
- */
+
 public class GemmaEndpointTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.web.services.GemmaEndpointTest.readReport'

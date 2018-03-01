@@ -69,7 +69,7 @@ public class DifferentialExpressionAnalysisTaskImpl
             }
 
             log.info( "Removing analysis ..." );
-            this.differentialExpressionAnalysisService.delete( toRemove );
+            this.differentialExpressionAnalysisService.remove( toRemove );
 
             return new TaskResult( taskCommand, true );
         }

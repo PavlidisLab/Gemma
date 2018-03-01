@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,8 @@ import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Sid;
 import ubic.gemma.model.common.Identifiable;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -41,6 +43,28 @@ import java.util.*;
  * @author paul
  */
 public class EntityUtils {
+
+    /**
+     * Checks if the given map already contains a Set for the given key, and if it does, adds the given has code to it.
+     * If a key does not exist in the map, it creates a new set, and adds the has into it.
+     *
+     * @param map  the map to be checked
+     * @param key  the key
+     * @param hash the hash to be added to the set at the given key of the map
+     * @param <T>  the key type parameter of the map
+     * @param <S>  the type parameter of the set
+     */
+    public static <T, S> void populateMapSet( Map<T, Set<S>> map, T key, S hash ) {
+        if ( map.containsKey( key ) ) {
+            map.get( key ).add( hash );
+        } else {
+            Set<S> set = new HashSet<>();
+            if ( hash != null ) {
+                set.add( hash );
+            }
+            map.put( key, set );
+        }
+    }
 
     /**
      * Expert only. Put the given entity into the Session, with LockMode.NONE
@@ -68,9 +92,10 @@ public class EntityUtils {
     }
 
     public static Long getId( Object entity ) {
-        return getId( entity, "getId" );
+        return EntityUtils.getId( entity, "getId" );
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static Long getId( Object entity, String methodName ) {
         try {
             Method m = entity.getClass().getMethod( methodName );
@@ -89,7 +114,7 @@ public class EntityUtils {
         Map<Long, T> result = new HashMap<>();
 
         for ( T object : entities ) {
-            result.put( getId( object, "getId" ), object );
+            result.put( EntityUtils.getId( object, "getId" ), object );
         }
 
         return result;
@@ -105,7 +130,8 @@ public class EntityUtils {
 
         for ( T object : entities ) {
             try {
-                result.put( getId( FieldUtils.readField( object, nestedProperty, true ), methodName ), object );
+                result.put( EntityUtils.getId( FieldUtils.readField( object, nestedProperty, true ), methodName ),
+                        object );
             } catch ( IllegalAccessException e ) {
                 throw new RuntimeException( e );
             }
@@ -121,7 +147,7 @@ public class EntityUtils {
         Map<Long, T> result = new HashMap<>();
 
         for ( T object : entities ) {
-            result.put( getId( object, methodName ), object );
+            result.put( EntityUtils.getId( object, methodName ), object );
         }
 
         return result;
@@ -147,7 +173,7 @@ public class EntityUtils {
     public static Collection<Long> getIds( Object entity ) {
         Collection<Long> r;
         r = new HashSet<>();
-        r.add( getId( entity ) );
+        r.add( EntityUtils.getId( entity ) );
         return r;
     }
 
@@ -170,7 +196,7 @@ public class EntityUtils {
      * @return the underlying implementation.
      */
     public static Object getImplementationForProxy( Object target ) {
-        if ( isProxy( target ) ) {
+        if ( EntityUtils.isProxy( target ) ) {
             HibernateProxy proxy = ( HibernateProxy ) target;
             return proxy.getHibernateLazyInitializer().getImplementation();
         }
@@ -219,7 +245,7 @@ public class EntityUtils {
         queryString += " join ACLSID sid on sid.ID = aoi.OWNER_SID_FK ";
         queryString += " where aoi.OBJECT_ID in (:ids)";
         queryString += " and aoi.OBJECT_CLASS = :clazz and ";
-        queryString += addGroupAndUserNameRestriction( showOnlyEditable, showPublic );
+        queryString += EntityUtils.addGroupAndUserNameRestriction( showOnlyEditable, showPublic );
 
         // will be empty if anonymous
         //noinspection unchecked
@@ -358,8 +384,8 @@ public class EntityUtils {
                         .getMask() ) {
                     Sid sid = ace.getSid();
                     if ( sid instanceof AclGrantedAuthoritySid ) {
+                        //noinspection unused //FIXME if user is in granted group then he can write probably
                         String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
-                        //FIXME if user is in granted group then he can write probably
                     } else if ( sid instanceof AclPrincipalSid ) {
                         if ( ( ( AclPrincipalSid ) sid ).getPrincipal().equals( SecurityUtil.getCurrentUsername() ) ) {
                             canWrite = true;
@@ -391,4 +417,34 @@ public class EntityUtils {
         return new boolean[] { isPublic, canWrite, isShared };
     }
 
+    public static void mkdirs( File parentDir ) {
+        if ( !parentDir.exists() ) {
+            if ( !parentDir.mkdirs() ) {
+                Exception e = new RuntimeException( "Could not mkdirs in " + parentDir.getPath() );
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void createFile( File file ) throws IOException {
+        if ( !file.createNewFile() ) {
+            Exception e = new RuntimeException( "Could not create file " + file.getPath() );
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteFile( File file ) {
+        if ( !file.delete() ) {
+            Exception e = new RuntimeException( "Could not delete file " + file.getPath() );
+            e.printStackTrace();
+        }
+    }
+
+    public static void renameFile( File file, File newFile ) {
+        if ( !file.renameTo( newFile ) ) {
+            Exception e = new RuntimeException( "Could not rename file " + file.getPath() );
+            e.printStackTrace();
+        }
+    }
 }
+

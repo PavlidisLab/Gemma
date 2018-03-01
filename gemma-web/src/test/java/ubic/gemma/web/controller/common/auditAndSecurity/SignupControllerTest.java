@@ -1,13 +1,13 @@
 /*
  * The gemma-web project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -21,11 +21,11 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptchaResponse;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
@@ -55,13 +55,15 @@ public class SignupControllerTest extends BaseSpringWebTest {
     @Before
     public void setup() {
 
-        ReCaptcha mockReCaptcha = Mockito.mock(ReCaptcha.class);
+        ReCaptcha mockReCaptcha = Mockito.mock( ReCaptcha.class );
 
-        when(mockReCaptcha.validateRequest(any(HttpServletRequest.class))).thenReturn(new ReCaptchaResponse(true, ""));
+        when( mockReCaptcha.validateRequest( any( HttpServletRequest.class ) ) )
+                .thenReturn( new ReCaptchaResponse( true, "" ) );
 
         suc.setRecaptchaTester( mockReCaptcha );
     }
 
+    @SuppressWarnings("Duplicates") // Not in this project
     @Test
     public void testSignup() throws Exception {
         int numThreads = 10; // too high and we run out of connections, which is not what we're testing.
@@ -69,7 +71,7 @@ public class SignupControllerTest extends BaseSpringWebTest {
         final Random random = new Random();
         final AtomicInteger c = new AtomicInteger( 0 );
         final AtomicBoolean failed = new AtomicBoolean( false );
-        Collection<Thread> threads = new HashSet<Thread>();
+        Collection<Thread> threads = new HashSet<>();
         for ( int i = 0; i < numThreads; i++ ) {
 
             Thread k = new Thread( new Runnable() {
@@ -77,7 +79,7 @@ public class SignupControllerTest extends BaseSpringWebTest {
                 public void run() {
                     try {
                         for ( int j = 0; j < numsignupsperthread; j++ ) {
-                            MockHttpServletRequest req = null;
+                            MockHttpServletRequest req;
                             Thread.sleep( random.nextInt( 50 ) );
                             req = new MockHttpServletRequest( "POST", "/signup.html" );
                             String uname = RandomStringUtils.randomAlphabetic( 10 );
@@ -102,7 +104,7 @@ public class SignupControllerTest extends BaseSpringWebTest {
                             ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
                             ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
                             // log.info( "Making experiment" + ee.getName() );
-                            ee = expressionExperimentService.create( ee );
+                            expressionExperimentService.create( ee );
 
                             c.incrementAndGet();
 

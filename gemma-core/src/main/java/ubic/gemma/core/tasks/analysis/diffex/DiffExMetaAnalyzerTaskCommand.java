@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,34 +18,25 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import java.util.Collection;
-
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.tasks.Task;
 
+import java.util.Collection;
+
 /**
  * A command object to be used by spaces.
- * 
- * @author frances
  *
+ * @author frances
  */
 public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
-    private Collection<Long> analysisResultSetIds;
+    private final Collection<Long> analysisResultSetIds;
     private String name;
     private String description;
     private boolean persist = false;
-
-    public boolean isPersist() {
-        return this.persist;
-    }
-
-    public void setPersist( boolean persist ) {
-        this.persist = persist;
-    }
 
     public DiffExMetaAnalyzerTaskCommand( Collection<Long> analysisResultSetIds ) {
         this.analysisResultSetIds = analysisResultSetIds;
@@ -56,6 +47,15 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
         this.analysisResultSetIds = analysisResultSetIds;
         this.name = name;
         this.description = description;
+        this.persist = persist;
+    }
+
+    public boolean isPersist() {
+        return this.persist;
+    }
+
+    @SuppressWarnings("unused") // Possible external use
+    public void setPersist( boolean persist ) {
         this.persist = persist;
     }
 
@@ -72,7 +72,7 @@ public class DiffExMetaAnalyzerTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return DiffExMetaAnalyzerTask.class;
     }
 }

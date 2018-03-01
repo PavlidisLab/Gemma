@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,28 +70,26 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        GeneCoexpressionNodeDegree other = ( GeneCoexpressionNodeDegree ) obj;
-        if ( geneId == null ) {
-            if ( other.geneId != null )
-                return false;
-        } else if ( !geneId.equals( other.geneId ) )
-            return false;
-        return true;
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        GeneCoexpressionNodeDegree other = ( GeneCoexpressionNodeDegree ) obj;
+        if ( geneId == null ) {
+            return other.geneId == null;
+        } else
+            return geneId.equals( other.geneId );
     }
 
     public Long getGeneId() {
@@ -102,8 +100,13 @@ public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
         this.geneId = geneId;
     }
 
+    @Override
     public Long getId() {
         return geneId;
+    }
+
+    public void setId( Long id ) {
+        this.geneId = id;
     }
 
     public byte[] getLinkCountsNegative() {

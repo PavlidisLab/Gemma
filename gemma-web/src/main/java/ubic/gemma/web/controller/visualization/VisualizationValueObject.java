@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,7 +73,7 @@ public class VisualizationValueObject {
         this();
 
         Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
-        populateColorMap( new ArrayList<>( idMap.keySet() ) );
+        this.populateColorMap( new ArrayList<>( idMap.keySet() ) );
 
         Collection<Long> validatedProbeIdList = new ArrayList<>();
         if ( validatedProbes != null && !validatedProbes.isEmpty() ) {
@@ -84,7 +84,7 @@ public class VisualizationValueObject {
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
-                setEEwithPvalue( new ExpressionExperimentDetailsValueObject( vector.getExpressionExperiment() ),
+                this.setEEwithPvalue( new ExpressionExperimentDetailsValueObject( vector.getExpressionExperiment() ),
                         minPvalue );
             } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
                 throw new IllegalArgumentException(
@@ -141,11 +141,11 @@ public class VisualizationValueObject {
         this();
 
         Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
-        populateColorMap( new ArrayList<>( idMap.keySet() ) );
+        this.populateColorMap( new ArrayList<>( idMap.keySet() ) );
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
-                setEEwithPvalue( new ExpressionExperimentDetailsValueObject( vector.getExpressionExperiment() ),
+                this.setEEwithPvalue( new ExpressionExperimentDetailsValueObject( vector.getExpressionExperiment() ),
                         minPvalue );
             } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
                 throw new IllegalArgumentException(
@@ -184,7 +184,7 @@ public class VisualizationValueObject {
 
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
-        setEevo( new ExpressionExperimentDetailsValueObject( dvvo.getExpressionExperiment() ) );
+        this.setEevo( new ExpressionExperimentDetailsValueObject( dvvo.getExpressionExperiment() ) );
         GeneExpressionProfile profile = new GeneExpressionProfile( dvvo );
         profiles.add( profile );
     }
@@ -194,9 +194,9 @@ public class VisualizationValueObject {
         final int maxLen = 5;
         return "VisualizationValueObject [" + ( eevo != null ? "eevo=" + eevo + "\n " : "" ) + (
                 factorProfiles != null ?
-                        factorProfiles.size() + " factorProfiles=\n" + toString( factorProfiles, 20 ) :
+                        factorProfiles.size() + " factorProfiles=\n" + this.toString( factorProfiles, 20 ) :
                         "" ) + ( profiles != null ?
-                profiles.size() + " exp. profiles (show up to " + maxLen + "):\n" + toString( profiles, maxLen ) :
+                profiles.size() + " exp. profiles (show up to " + maxLen + "):\n" + this.toString( profiles, maxLen ) :
                 "" ) + "]";
     }
 
@@ -206,7 +206,7 @@ public class VisualizationValueObject {
     public void setUpFactorProfiles(
             LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout ) {
         if ( layout == null ) {
-            log.warn( "Null layout, ignoring" );
+            VisualizationValueObject.log.warn( "Null layout, ignoring" );
             return;
         }
 
@@ -278,17 +278,17 @@ public class VisualizationValueObject {
     }
 
     public void setEEwithPvalue( ExpressionExperimentDetailsValueObject ee, Double minP ) {
-        setEevo( ee );
+        this.setEevo( ee );
         this.eevo.setMinPvalue( minP );
     }
 
     private void populateColorMap( List<Long> genes ) {
         int i = 0;
-        if ( genes.size() > colors.length ) {
-            // / FIXME -- we just cycle through for now.
-        }
+        //if ( genes.size() > colors.length ) {
+        // / FIXME -- we just cycle through for now.
+        //}
         for ( Long g : genes ) {
-            colorMap.put( g, colors[i % colors.length] );
+            colorMap.put( g, VisualizationValueObject.colors[i % VisualizationValueObject.colors.length] );
             i++;
         }
     }

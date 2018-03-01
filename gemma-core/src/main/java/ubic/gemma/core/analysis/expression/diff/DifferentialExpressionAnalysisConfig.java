@@ -34,6 +34,7 @@ import java.util.*;
  *
  * @author keshav
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     /**
@@ -47,7 +48,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<>();
 
-    private boolean ebayes = DEFAULT_EBAYES;
+    private boolean ebayes = DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES;
 
     private List<ExperimentalFactor> factorsToInclude = new ArrayList<>();
 
@@ -77,55 +78,15 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         return analysisType;
     }
 
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
+    }
+
     /**
      * @return the baseLineFactorValues
      */
     public Map<ExperimentalFactor, FactorValue> getBaseLineFactorValues() {
         return baseLineFactorValues;
-    }
-
-    /**
-     * @return the factorsToInclude
-     */
-    public List<ExperimentalFactor> getFactorsToInclude() {
-        return factorsToInclude;
-    }
-
-    /**
-     * @return the interactionsToInclude
-     */
-    public Collection<Collection<ExperimentalFactor>> getInteractionsToInclude() {
-        return interactionsToInclude;
-    }
-
-    /**
-     * @return true if empirical Bayes moderated test statisics should be used
-     */
-    public boolean getModerateStatistics() {
-        return this.ebayes;
-    }
-
-    public boolean getPersist() {
-        return this.persist;
-    }
-
-    /**
-     * @return the subsetFactor
-     */
-    public ExperimentalFactor getSubsetFactor() {
-        return subsetFactor;
-    }
-
-    public FactorValue getSubsetFactorValue() {
-        return subsetFactorValue;
-    }
-
-    public boolean getUseWeights() {
-        return useWeights;
-    }
-
-    public void setAnalysisType( AnalysisType analysisType ) {
-        this.analysisType = analysisType;
     }
 
     /**
@@ -135,6 +96,12 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         this.baseLineFactorValues = baseLineFactorValues;
     }
 
+    /**
+     * @return the factorsToInclude
+     */
+    public List<ExperimentalFactor> getFactorsToInclude() {
+        return factorsToInclude;
+    }
 
     public void setFactorsToInclude( Collection<ExperimentalFactor> factorsToInclude ) {
         if ( factorsToInclude instanceof List<?> ) {
@@ -151,21 +118,44 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
+     * @return the interactionsToInclude
+     */
+    public Collection<Collection<ExperimentalFactor>> getInteractionsToInclude() {
+        return interactionsToInclude;
+    }
+
+    /**
      * @param interactionsToInclude the interactionsToInclude to set
      */
     public void setInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactionsToInclude ) {
         this.interactionsToInclude = interactionsToInclude;
     }
 
+    /**
+     * @return true if empirical Bayes moderated test statisics should be used
+     */
+    public boolean getModerateStatistics() {
+        return this.ebayes;
+    }
 
     public void setModerateStatistics( boolean ebayes ) {
         this.ebayes = ebayes;
     }
 
+    public boolean getPersist() {
+        return this.persist;
+    }
 
     public void setPersist( boolean persist ) {
         this.persist = persist;
 
+    }
+
+    /**
+     * @return the subsetFactor
+     */
+    public ExperimentalFactor getSubsetFactor() {
+        return subsetFactor;
     }
 
     /**
@@ -175,9 +165,16 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         this.subsetFactor = subsetFactor;
     }
 
+    public FactorValue getSubsetFactorValue() {
+        return subsetFactorValue;
+    }
 
     public void setSubsetFactorValue( FactorValue subsetFactorValue ) {
         this.subsetFactorValue = subsetFactorValue;
+    }
+
+    public boolean getUseWeights() {
+        return useWeights;
     }
 
     /*
@@ -204,25 +201,26 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append( "# AnalysisType: " + this.analysisType + "\n" );
+        buf.append( "# AnalysisType: " ).append( this.analysisType ).append( "\n" );
 
-        buf.append( "# Factors: " + StringUtils.join( this.factorsToInclude, " " ) );
+        buf.append( "# Factors: " ).append( StringUtils.join( this.factorsToInclude, " " ) );
 
         buf.append( "\n" );
 
         if ( this.subsetFactor != null ) {
-            buf.append( "# SubsetFactor: " + this.subsetFactor + "\n" );
+            buf.append( "# SubsetFactor: " ).append( this.subsetFactor ).append( "\n" );
         } else if ( this.subsetFactorValue != null ) {
-            buf.append( "# Subset analysis for " + this.subsetFactorValue );
+            buf.append( "# Subset analysis for " ).append( this.subsetFactorValue );
         }
         if ( !interactionsToInclude.isEmpty() ) {
-            buf.append( "# Interactions:  " + StringUtils.join( interactionsToInclude, ":" ) + "\n" );
+            buf.append( "# Interactions:  " ).append( StringUtils.join( interactionsToInclude, ":" ) ).append( "\n" );
         }
 
         if ( !baseLineFactorValues.isEmpty() ) {
             buf.append( "# Baselines:\n" );
             for ( ExperimentalFactor ef : baseLineFactorValues.keySet() ) {
-                buf.append( "# " + ef.getName() + ": Baseline = " + baseLineFactorValues.get( ef ) + "\n" );
+                buf.append( "# " ).append( ef.getName() ).append( ": Baseline = " )
+                        .append( baseLineFactorValues.get( ef ) ).append( "\n" );
             }
         }
 

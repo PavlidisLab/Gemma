@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,8 +26,6 @@ import ubic.gemma.persistence.util.ReflectionUtil;
  * @author paul
  */
 public class SearchResult implements Comparable<SearchResult>, Identifiable {
-
-    boolean indexSearch;
 
     private Class<?> resultClass;
 
@@ -61,28 +59,6 @@ public class SearchResult implements Comparable<SearchResult>, Identifiable {
     @Override
     public int compareTo( SearchResult o ) {
         return -this.score.compareTo( o.getScore() );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        final SearchResult other = ( SearchResult ) obj;
-        if ( objectId == null ) {
-            if ( other.objectId != null )
-                return false;
-        } else if ( !objectId.equals( other.objectId ) )
-            return false;
-        if ( resultClass == null ) {
-            if ( other.resultClass != null )
-                return false;
-        } else if ( !resultClass.getName().equals( other.resultClass.getName() ) )
-            return false;
-        return true;
     }
 
     public String getHighlightedText() {
@@ -138,15 +114,24 @@ public class SearchResult implements Comparable<SearchResult>, Identifiable {
         return result;
     }
 
-    /**
-     * @return Was this a result obtained from a Lucene index search?
-     */
-    public boolean isIndexSearchResult() {
-        return indexSearch;
-    }
-
-    public void setIndexSearchResult( boolean isIndexSearchResult ) {
-        this.indexSearch = isIndexSearchResult;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        final SearchResult other = ( SearchResult ) obj;
+        if ( objectId == null ) {
+            if ( other.objectId != null )
+                return false;
+        } else if ( !objectId.equals( other.objectId ) )
+            return false;
+        if ( resultClass == null ) {
+            return other.resultClass == null;
+        } else
+            return resultClass.getName().equals( other.resultClass.getName() );
     }
 
     @Override

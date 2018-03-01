@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,28 +30,15 @@ import java.util.List;
 public abstract class GeoData implements Serializable {
 
     private static final long serialVersionUID = -859220901359581113L;
-
-    protected GeoContact contact = new GeoContact();
-
-    protected String geoAccession;
-
-    private List<String> columnNames = new ArrayList<String>();
-
-    private List<String> columnDescriptions = new ArrayList<String>();
-
+    private final List<String> columnNames = new ArrayList<>();
+    private final List<String> columnDescriptions = new ArrayList<>();
+    GeoContact contact = new GeoContact();
+    String geoAccession;
     private String title = "";
 
     public void addColumnName( String columnName ) {
         assert columnName != null;
         this.columnNames.add( columnName );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( obj instanceof GeoData ) {
-            return ( ( GeoData ) obj ).getGeoAccession().equals( this.getGeoAccession() );
-        }
-        return false;
     }
 
     /**
@@ -106,8 +93,13 @@ public abstract class GeoData implements Serializable {
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29 * hashCode + ( getGeoAccession() == null ? 0 : getGeoAccession().hashCode() );
+        hashCode = 29 * hashCode + ( this.getGeoAccession() == null ? 0 : this.getGeoAccession().hashCode() );
         return hashCode;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        return obj instanceof GeoData && ( ( GeoData ) obj ).getGeoAccession().equals( this.getGeoAccession() );
     }
 
     @Override

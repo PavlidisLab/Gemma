@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,15 +27,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
-import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
@@ -47,7 +47,7 @@ import java.util.*;
 
 public class CoexpressionServiceImpl implements CoexpressionService {
 
-    private static Logger log = LoggerFactory.getLogger( CoexpressionServiceImpl.class );
+    private static final Logger log = LoggerFactory.getLogger( CoexpressionServiceImpl.class );
 
     @Autowired
     private CoexpressionDao coexpressionDao;
@@ -74,11 +74,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     }
 
     @Override
-    public Map<Gene, Integer> countOldLinks( Collection<Gene> genes ) {
-        return this.coexpressionDao.countOldLinks( genes );
-    }
-
-    @Override
     @Transactional
     public void createOrUpdate( BioAssaySet bioAssaySet, List<NonPersistentNonOrderedCoexpLink> links, LinkCreator c,
             Set<Gene> genesTested ) {
@@ -92,8 +87,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             genes.add( link.getFirstGene() );
             genes.add( link.getSecondGene() );
         }
-        this.coexpressionQueryQueue
-                .removeFromQueue( genes, CoexpressionQueryUtils.getGeneLinkClassName( genesTested.iterator().next() ) );
+        this.coexpressionQueryQueue.removeFromQueue( genes );
     }
 
     @Override
@@ -139,7 +133,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
         // since we require these links occur in all the given data sets, we assume we should cache (if not there
         // already) - don't bother checking 'quick' and 'maxResults'.
-        possiblyAddToCacheQueue( t, results );
+        this.possiblyAddToCacheQueue( results );
 
         return results;
     }
@@ -151,7 +145,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
                 .findCoexpressionRelationships( t, genes, bas, stringency, maxResults, quick );
 
         if ( stringency > CoexpressionCache.CACHE_QUERY_STRINGENCY || quick || maxResults > 0 ) {
-            possiblyAddToCacheQueue( t, results );
+            this.possiblyAddToCacheQueue( results );
         }
 
         return results;
@@ -164,7 +158,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
                 .findInterCoexpressionRelationships( t, genes, bas, stringency, quick );
 
         // these are always candidates for queuing since the constraint on genes is done at the query level.
-        possiblyAddToCacheQueue( t, results );
+        this.possiblyAddToCacheQueue( results );
         return results;
     }
 
@@ -172,6 +166,37 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Transactional(readOnly = true)
     public Collection<CoexpressionValueObject> getCoexpression( BioAssaySet experiment, boolean quick ) {
         return this.coexpressionDao.getCoexpression( experimentDao.getTaxon( experiment ), experiment, quick );
+    }
+
+    @Override
+    public void updateNodeDegrees( Taxon t ) {
+        CoexpressionServiceImpl.log.info( "Updating node degree for all genes from " + t );
+
+        // map of support to gene to number of links, in order of support.
+        TreeMap<Integer, Map<Long, Integer>> forRanksPos = new TreeMap<>();
+        TreeMap<Integer, Map<Long, Integer>> forRanksNeg = new TreeMap<>();
+
+        int count = 0;
+        for ( Gene g : this.geneDao.loadKnownGenes( t ) ) {
+            this.updateNodeDegree( g, forRanksPos, forRanksNeg );
+
+            if ( ++count % 1000 == 0 ) {
+                CoexpressionServiceImpl.log
+                        .info( "Updated node degree for " + count + " genes; last was " + g + " ..." );
+            }
+
+        }
+        CoexpressionServiceImpl.log.info( "Updated node degree for " + count + " genes" );
+
+        /*
+         * Update the ranks. Each entry in the resulting map (key = gene id) is a list of the ranks at each support
+         * threshold. So it means the rank "at or above" that level of support.
+         */
+        Map<Long, List<Double>> relRanksPerGenePos = this.computeRelativeRanks( forRanksPos );
+        Map<Long, List<Double>> relRanksPerGeneNeg = this.computeRelativeRanks( forRanksNeg );
+
+        this.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
+
     }
 
     @Override
@@ -194,13 +219,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CoexpressionService#initializeLinksFromOldData(ubic.gemma.model.genome
-     * .Taxon)
-     */
     @Override
     @Transactional
     public Map<SupportDetails, Gene2GeneCoexpression> initializeLinksFromOldData( Gene g, Map<Long, Gene> idMap,
@@ -208,43 +226,12 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return this.coexpressionDao.initializeFromOldData( g, idMap, linksSoFar, skipGenes );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CoexpressionService#updateNodeDegrees(ubic.gemma.model.genome.Taxon)
-     */
     @Override
-    public void updateNodeDegrees( Taxon t ) {
-        log.info( "Updating node degree for all genes from " + t );
-
-        // map of support to gene to number of links, in order of support.
-        TreeMap<Integer, Map<Long, Integer>> forRanksPos = new TreeMap<>();
-        TreeMap<Integer, Map<Long, Integer>> forRanksNeg = new TreeMap<>();
-
-        int count = 0;
-        for ( Gene g : this.geneDao.loadKnownGenes( t ) ) {
-            updateNodeDegree( g, forRanksPos, forRanksNeg );
-
-            if ( ++count % 1000 == 0 ) {
-                log.info( "Updated node degree for " + count + " genes; last was " + g + " ..." );
-            }
-
-        }
-        log.info( "Updated node degree for " + count + " genes" );
-
-        /*
-         * Update the ranks. Each entry in the resulting map (key = gene id) is a list of the ranks at each support
-         * threshold. So it means the rank "at or above" that level of support.
-         */
-        Map<Long, List<Double>> relRanksPerGenePos = computeRelativeRanks( forRanksPos );
-        Map<Long, List<Double>> relRanksPerGeneNeg = computeRelativeRanks( forRanksNeg );
-
-        this.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
-
+    public Map<Gene, Integer> countOldLinks( Collection<Gene> genes ) {
+        return this.coexpressionDao.countOldLinks( genes );
     }
 
-    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePos,
+    private void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePos,
             Map<Long, List<Double>> relRanksPerGeneNeg ) {
         this.coexpressionDao.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
 
@@ -276,9 +263,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     /**
      * Check for results which were not in the cache, and which were not cached; make sure we fully query them.
-     *
      */
-    private void possiblyAddToCacheQueue( Taxon t, Map<Long, List<CoexpressionValueObject>> links ) {
+    private void possiblyAddToCacheQueue( Map<Long, List<CoexpressionValueObject>> links ) {
 
         if ( !coexpressionCache.isEnabled() )
             return;
@@ -290,12 +276,11 @@ public class CoexpressionServiceImpl implements CoexpressionService {
                     continue;
                 }
                 toQueue.add( link.getQueryGeneId() );
-                // toQueue.add( link.getCoexGeneId() );
             }
         }
         if ( !toQueue.isEmpty() ) {
-            log.info( "Queuing " + toQueue.size() + " genes for coexpression cache warm" );
-            coexpressionQueryQueue.addToFullQueryQueue( toQueue, CoexpressionQueryUtils.getGeneLinkClassName( t ) );
+            CoexpressionServiceImpl.log.info( "Queuing " + toQueue.size() + " genes for coexpression cache warm" );
+            coexpressionQueryQueue.addToFullQueryQueue( toQueue );
         }
 
     }
@@ -309,8 +294,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             TreeMap<Integer, Map<Long, Integer>> forRanksNeg ) {
         GeneCoexpressionNodeDegreeValueObject updatedVO = this.updateNodeDegree( g );
 
-        if ( log.isDebugEnabled() )
-            log.debug( updatedVO.toString() );
+        if ( CoexpressionServiceImpl.log.isDebugEnabled() )
+            CoexpressionServiceImpl.log.debug( updatedVO.toString() );
 
         /*
          * Positive

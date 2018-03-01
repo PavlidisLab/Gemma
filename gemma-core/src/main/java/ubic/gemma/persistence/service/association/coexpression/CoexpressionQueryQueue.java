@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,47 +19,27 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.Gene;
+
+import java.util.Collection;
 
 /**
  * For internal use. A queue of genes lined up for querying so the cache is warmed up. Genes are added to the queue if
  * they were not queried originally in a suitable "unrestricted" way usable across any query for that gene.
- * 
- * @author Paul
  *
+ * @author Paul
  */
-public interface CoexpressionQueryQueue {
+interface CoexpressionQueryQueue {
 
-    /**
-     * @param geneIds
-     * @param className
-     */
-    void addToFullQueryQueue( Collection<Long> geneIds, String className );
+    void addToFullQueryQueue( Collection<Long> geneIds );
 
-    /**
-     * @param gene
-     */
     void addToFullQueryQueue( Gene gene );
 
     /**
-     * @param geneId
-     * @param className
-     */
-    void addToFullQueryQueue( Long geneId, String className );
-
-    /**
-     * 
-     */
-    void queryForCache( QueuedGene gene );
-
-    /**
      * Remove genes from the queue; for example if we know their data is about to become stale.
-     * 
-     * @param geneIds
-     * @param className
+     *
+     * @param geneIds gene IDs
      */
-    void removeFromQueue( Collection<Long> geneIds, String className );
+    void removeFromQueue( Collection<Long> geneIds );
 
 }

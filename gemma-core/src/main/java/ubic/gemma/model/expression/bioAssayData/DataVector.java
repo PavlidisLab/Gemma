@@ -34,6 +34,17 @@ public abstract class DataVector implements Identifiable, Serializable {
     private QuantitationType quantitationType;
 
     /**
+     * Returns a hash code based on this entity's identifiers.
+     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    /**
      * Returns <code>true</code> if the argument is an DataVector instance and all identifiers for this entity equal the
      * identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
@@ -46,21 +57,7 @@ public abstract class DataVector implements Identifiable, Serializable {
             return false;
         }
         final DataVector that = ( DataVector ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
     public byte[] getData() {
@@ -71,6 +68,7 @@ public abstract class DataVector implements Identifiable, Serializable {
         this.data = data;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }

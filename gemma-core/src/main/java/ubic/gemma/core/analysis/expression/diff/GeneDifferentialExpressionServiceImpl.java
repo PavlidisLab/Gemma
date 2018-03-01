@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -72,17 +72,18 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         for ( FactorValue fv : fvs ) {
             String fvName = fv.toString();
             if ( StringUtils.isNotBlank( fvName ) ) {
-                factorValuesAsString.append( fvName ).append( FV_SEP );
+                factorValuesAsString.append( fvName ).append( GeneDifferentialExpressionServiceImpl.FV_SEP );
             }
         }
 
         /* clean up the start and end of the string */
         factorValuesAsString = new StringBuilder(
                 StringUtils.remove( factorValuesAsString.toString(), ef.getName() + ":" ) );
-        factorValuesAsString = new StringBuilder( StringUtils.removeEnd( factorValuesAsString.toString(), FV_SEP ) );
+        factorValuesAsString = new StringBuilder( StringUtils
+                .removeEnd( factorValuesAsString.toString(), GeneDifferentialExpressionServiceImpl.FV_SEP ) );
 
         /*
-         * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client. // FIXME???
+         * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client.
          */
         efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( factorValuesAsString.toString(), 50 ) + ")" );
 
@@ -118,9 +119,9 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                 .find( gene, EntityUtils.getIds( ees ) );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Diff ex results: " + timer.getTime() + " ms" );
+            GeneDifferentialExpressionServiceImpl.log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
-        return postProcessDiffExResults( results );
+        return this.postProcessDiffExResults( results );
     }
 
     @Override
@@ -137,9 +138,9 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                 .find( gene, EntityUtils.getIds( ees ), threshold, limit );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Diff ex results: " + timer.getTime() + " ms" );
+            GeneDifferentialExpressionServiceImpl.log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
-        return postProcessDiffExResults( results );
+        return this.postProcessDiffExResults( results );
     }
 
     @Override
@@ -185,7 +186,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         }
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Diff ex results: " + timer.getTime() + " ms" );
+            GeneDifferentialExpressionServiceImpl.log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
         return result;
     }
@@ -206,10 +207,10 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                 .find( gene, threshold, limit );
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Diff raw ex results: " + timer.getTime() + " ms" );
+            GeneDifferentialExpressionServiceImpl.log.info( "Diff raw ex results: " + timer.getTime() + " ms" );
         }
 
-        return postProcessDiffExResults( results );
+        return this.postProcessDiffExResults( results );
     }
 
     @Override
@@ -226,7 +227,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> resultsMap = differentialExpressionResultService
                 .find( g, EntityUtils.getIds( activeExperiments ) );
 
-        log.debug( resultsMap.size() + " results for " + g + " in " + activeExperiments );
+        GeneDifferentialExpressionServiceImpl.log
+                .debug( resultsMap.size() + " results for " + g + " in " + activeExperiments );
 
         DifferentialExpressionMetaAnalysisValueObject mavo = new DifferentialExpressionMetaAnalysisValueObject();
 
@@ -239,7 +241,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
         for ( ExpressionExperimentValueObject ee : resultsMap.keySet() ) {
 
-            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
+            ExpressionExperimentValueObject eevo = this.configExpressionExperimentValueObject( ee );
 
             Collection<DifferentialExpressionValueObject> proberesults = resultsMap.get( ee );
 
@@ -276,7 +278,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             }
 
             if ( filteredResults.size() == 0 ) {
-                log.warn( "No result for ee=" + ee );
+                GeneDifferentialExpressionServiceImpl.log.warn( "No result for ee=" + ee );
                 continue;
             }
 
@@ -284,7 +286,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
              * For the diff expression meta analysis, ignore threshold. Select the 'best' penalized probe if multiple
              * probes map to the same gene.
              */
-            DifferentialExpressionValueObject res = findMinPenalizedProbeResult( filteredResults );
+            DifferentialExpressionValueObject res = this.findMinPenalizedProbeResult( filteredResults );
             if ( res == null )
                 continue;
 
@@ -295,7 +297,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             /*
              * Moderate the pvalues by setting all values to be no smaller than PVALUE_CLIP_THRESHOLD
              */
-            pvaluesToCombine.add( Math.max( p, PVALUE_CLIP_THRESHOLD ) );
+            pvaluesToCombine.add( Math.max( p, GeneDifferentialExpressionService.PVALUE_CLIP_THRESHOLD ) );
 
             /* for each filtered result, set up a devo (contains only results with chosen factor) */
 
@@ -304,7 +306,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                 Collection<ExperimentalFactorValueObject> efs = r.getExperimentalFactors();
                 if ( efs == null ) {
                     // This should not happen any more, but just in case.
-                    log.warn( "No experimentalFactor(s) for DifferentialExpressionAnalysisResult: " + r.getId() );
+                    GeneDifferentialExpressionServiceImpl.log
+                            .warn( "No experimentalFactor(s) for DifferentialExpressionAnalysisResult: " + r.getId() );
                     continue;
                 }
 
@@ -335,7 +338,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Meta-analysis results: " + timer.getTime() + " ms" );
+            GeneDifferentialExpressionServiceImpl.log.info( "Meta-analysis results: " + timer.getTime() + " ms" );
         }
 
         return mavo;
@@ -361,7 +364,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         for ( DifferentialExpressionValueObject r : results ) {
 
             /*
-             * FIXME use the contrasts.
+             * TODO use the contrasts.
              */
             //r.getContrasts();
 
@@ -369,8 +372,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                 continue;
             /* penalize pvals */
             double pval = r.getP() * numProbesForGene;
-            if ( pval > MAX_PVAL )
-                pval = MAX_PVAL;
+            if ( pval > GeneDifferentialExpressionServiceImpl.MAX_PVAL )
+                pval = GeneDifferentialExpressionServiceImpl.MAX_PVAL;
 
             /* find the best pval */
             if ( i == 0 || pval <= min ) {
@@ -410,12 +413,14 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
                 if ( efs == null ) {
                     // This should not happen any more, but just in case.
-                    log.warn( "No experimentalfactor(s) for DifferentialExpressionAnalysisResult: " + r.getId() );
+                    GeneDifferentialExpressionServiceImpl.log
+                            .warn( "No experimentalfactor(s) for DifferentialExpressionAnalysisResult: " + r.getId() );
                     continue;
                 }
 
                 if ( r.getCorrP() == null ) {
-                    log.warn( "No p-value for DifferentialExpressionAnalysisResult: " + r.getId() );
+                    GeneDifferentialExpressionServiceImpl.log
+                            .warn( "No p-value for DifferentialExpressionAnalysisResult: " + r.getId() );
                     continue;
                 }
 
@@ -426,7 +431,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         }
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Postprocess Diff ex results: " + timer.getTime() + " ms" );
+            GeneDifferentialExpressionServiceImpl.log.info( "Postprocess Diff ex results: " + timer.getTime() + " ms" );
         }
 
         return devos;

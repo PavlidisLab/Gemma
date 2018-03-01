@@ -47,6 +47,22 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
     private Persister persisterHelper;
 
     @Override
+    public boolean deleteAnalyses( BioAssaySet ee ) {
+        Collection<CoexpressionAnalysis> oldAnalyses = coexpressionAnalysisService.findByInvestigation( ee );
+
+        if ( oldAnalyses.isEmpty() )
+            return false;
+
+        LinkAnalysisPersisterImpl.log
+                .info( "Deleting old coexpression analysis, link data and 'genes tested-in' for " + ee );
+
+        for ( CoexpressionAnalysis old : oldAnalyses ) {
+            coexpressionAnalysisService.remove( old );
+        }
+        return true;
+    }
+
+    @Override
     public void initializeLinksFromOldData( Taxon t ) {
         Collection<Gene> genes = geneService.loadAll( t );
         Map<Long, Gene> idMap = EntityUtils.getIdMap( genes );
@@ -56,7 +72,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
          * passed in to the service so they would be recognized in the second gene. We have to do that counting as a
          * separate step because we need to know ahead of time. This might be more trouble than it is worth...
          */
-        log.info( "Counting old links for " + genes.size() + " genes." );
+        LinkAnalysisPersisterImpl.log.info( "Counting old links for " + genes.size() + " genes." );
         Map<Gene, Integer> counts = gene2GeneCoexpressionService.countOldLinks( genes );
         int LIMIT = 100;
         Set<Long> skipGenes = new HashSet<>();
@@ -71,8 +87,9 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
         }
 
         Map<NonPersistentNonOrderedCoexpLink, SupportDetails> linksSoFar = new HashMap<>();
-        log.info( "Creating stub links for up to " + genes.size() + " genes; " + skipGenes.size()
-                + " genes will be ignored because they have too few links." );
+        LinkAnalysisPersisterImpl.log
+                .info( "Creating stub links for up to " + genes.size() + " genes; " + skipGenes.size()
+                        + " genes will be ignored because they have too few links." );
 
         int numGenes = 0;
         int count = 0;
@@ -106,10 +123,11 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
                 }
             }
 
-            log.info( links.size() + " links created for " + gene + ", " + count + " links created so far." );
+            LinkAnalysisPersisterImpl.log
+                    .info( links.size() + " links created for " + gene + ", " + count + " links created so far." );
 
             if ( ++numGenes % 500 == 0 ) {
-                log.info( "***** " + numGenes + " processed" );
+                LinkAnalysisPersisterImpl.log.info( "***** " + numGenes + " processed" );
             }
 
         }
@@ -121,7 +139,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
         if ( !la.getConfig().isUseDb() ) {
             throw new IllegalArgumentException( "Analysis is not configured to use the db to persist" );
         }
-        deleteAnalyses( la.getExpressionExperiment() );
+        this.deleteAnalyses( la.getExpressionExperiment() );
 
         // the analysis object will get updated.
         CoexpressionAnalysis analysisObj = la.getAnalysisObj();
@@ -139,8 +157,9 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
 
         ObjectArrayList links = la.getKeep();
 
-        int numSaved = saveLinks( la, links );
-        log.info( "Seconds to process " + numSaved + " links (plus flipped versions):" + watch.getTime() / 1000.0 );
+        int numSaved = this.saveLinks( la, links );
+        LinkAnalysisPersisterImpl.log.info( "Seconds to process " + numSaved + " links (plus flipped versions):"
+                + watch.getTime() / 1000.0 );
 
         watch.stop();
 
@@ -158,9 +177,8 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
      * @return entity ready for saving to the database (or updating equivalent existing link)
      */
     private Gene2GeneCoexpression initCoexp( double w, LinkCreator c, Gene v1, Gene v2 ) {
-        Gene2GeneCoexpression ppCoexpression = c.create( w, v1.getId(), v2.getId() );
 
-        return ppCoexpression;
+        return c.create( w, v1.getId(), v2.getId() );
     }
 
     /**
@@ -168,7 +186,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
      */
     private int saveLinks( LinkAnalysis la, ObjectArrayList links ) {
 
-        LinkCreator c = getLinkCreator( la );
+        LinkCreator c = this.getLinkCreator( la );
 
         int selfLinksSkipped = 0;
         int duplicateLinksSkipped = 0;
@@ -182,8 +200,6 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
                 continue;
             Link m = ( Link ) val;
             Double w = m.getWeight();
-
-            assert w != null;
 
             int x = m.getx();
             int y = m.gety();
@@ -205,26 +221,26 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
                     }
 
                     NonPersistentNonOrderedCoexpLink link = new NonPersistentNonOrderedCoexpLink(
-                            initCoexp( w, c, g1, g2 ) );
+                            this.initCoexp( w, c, g1, g2 ) );
                     if ( linksForDb.contains( link ) ) {
                         /*
                          * This happens if there is more than one probe retained for a gene (or both genes) and the
                          * coexpression shows up more than once (different pair of probes, same genes).
                          */
-                        if ( log.isDebugEnabled() )
-                            log.debug( "Skipping duplicate: " + link );
+                        if ( LinkAnalysisPersisterImpl.log.isDebugEnabled() )
+                            LinkAnalysisPersisterImpl.log.debug( "Skipping duplicate: " + link );
                         duplicateLinksSkipped++;
                         continue;
 
                         /*
-                         * TODO what do we do when a pair of genes is both positively and negatively correlated in the
+                         * FIXME what do we do when a pair of genes is both positively and negatively correlated in the
                          * same experiment? Currently they are both kept, but if we go to a completely gene-based
                          * analysis we wouldn't do that, so it's an inconsistency;
                          */
                     }
 
-                    if ( log.isDebugEnabled() ) {
-                        log.debug( "Adding : " + link );
+                    if ( LinkAnalysisPersisterImpl.log.isDebugEnabled() ) {
+                        LinkAnalysisPersisterImpl.log.debug( "Adding : " + link );
                     }
 
                     linksForDb.add( link );
@@ -237,16 +253,16 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
             }
 
             if ( i > 0 && i % 200000 == 0 ) {
-                log.info( i + " links checked" );
+                LinkAnalysisPersisterImpl.log.info( i + " links checked" );
             }
 
         }
 
         if ( selfLinksSkipped > 0 ) {
-            log.info( selfLinksSkipped + " self-links skipped" );
+            LinkAnalysisPersisterImpl.log.info( selfLinksSkipped + " self-links skipped" );
         }
         if ( duplicateLinksSkipped > 0 ) {
-            log.info( duplicateLinksSkipped
+            LinkAnalysisPersisterImpl.log.info( duplicateLinksSkipped
                     + " duplicate links skipped (likely cause: more than one probe supporting the same link)" );
         }
 
@@ -254,8 +270,9 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
             throw new RuntimeException( "No links left!" );
         }
 
-        log.info( linksForDb.size() + " links ready for saving to db" );
-        assert la.getGenesTested().containsAll( genesWithLinks );
+        LinkAnalysisPersisterImpl.log.info( linksForDb.size() + " links ready for saving to db" );
+        if ( !la.getGenesTested().containsAll( genesWithLinks ) )
+            throw new AssertionError();
 
         /*
          * Do the actual database writing. It's a good idea to do this part in one (big) transaction. Note that even if
@@ -278,21 +295,6 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
          * Updating node degree cannot be done here, since we need to know the support. We have to do that
          * "periodically" if we want it available in summary form.
          */
-    }
-
-    @Override
-    public boolean deleteAnalyses( BioAssaySet ee ) {
-        Collection<CoexpressionAnalysis> oldAnalyses = coexpressionAnalysisService.findByInvestigation( ee );
-
-        if ( oldAnalyses.isEmpty() )
-            return false;
-
-        log.info( "Deleting old coexpression analysis, link data and 'genes tested-in' for " + ee );
-
-        for ( CoexpressionAnalysis old : oldAnalyses ) {
-            coexpressionAnalysisService.delete( old );
-        }
-        return true;
     }
 
 }

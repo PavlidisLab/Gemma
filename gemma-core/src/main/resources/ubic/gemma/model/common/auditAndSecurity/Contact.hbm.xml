@@ -3,15 +3,15 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.common.auditAndSecurity.Contact" table="CONTACT" dynamic-insert="false" dynamic-update="false" discriminator-value="Contact">
+<hibernate-mapping>
+   <class name="ubic.gemma.model.common.auditAndSecurity.Contact" table="CONTACT" discriminator-value="Contact">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
          <generator class="native">
          </generator>
       </id>
-      <discriminator column="class" type="string"/>
+      <discriminator column="class"/>
       <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
          <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
@@ -24,11 +24,11 @@
       <property name="email" type="java.lang.String">
          <column name="EMAIL" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <subclass name="ubic.gemma.model.common.auditAndSecurity.Person" discriminator-value="Person" dynamic-insert="false" dynamic-update="false" abstract="false">
+      <subclass name="ubic.gemma.model.common.auditAndSecurity.Person" discriminator-value="Person" abstract="false">
          <property name="lastName" type="java.lang.String">
             <column name="LAST_NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
          </property>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.User" discriminator-value="User" dynamic-insert="false" dynamic-update="false" abstract="false">
+         <subclass name="ubic.gemma.model.common.auditAndSecurity.User" discriminator-value="User" abstract="false">
             <property name="userName" type="java.lang.String">
                <column name="USER_NAME" not-null="false" unique="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
             </property>

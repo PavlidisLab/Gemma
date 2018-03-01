@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,8 +43,8 @@ public class RepeatScan {
 
     private static final String REPEAT_MASKER_CONFIG_PARAM = "repeatMasker.exe";
     private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 2;
-    private static Log log = LogFactory.getLog( RepeatScan.class.getName() );
-    private static String REPEAT_MASKER = Settings.getString( REPEAT_MASKER_CONFIG_PARAM );
+    private static final Log log = LogFactory.getLog( RepeatScan.class.getName() );
+    private static final String REPEAT_MASKER = Settings.getString( RepeatScan.REPEAT_MASKER_CONFIG_PARAM );
 
     /**
      * @param sequences          sequences
@@ -59,15 +59,15 @@ public class RepeatScan {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-        Collection<BioSequence> finalRes = new HashSet<BioSequence>();
+        Collection<BioSequence> finalRes = new HashSet<>();
         // build map of identifiers to sequences.
         Collection<BioSequence> results = parser.getResults();
 
-        Map<String, BioSequence> map = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> map = new HashMap<>();
         for ( BioSequence maskedSeq : results ) {
             String identifier = maskedSeq.getName();
-            if ( log.isDebugEnabled() )
-                log.debug( "Masked: " + identifier );
+            if ( RepeatScan.log.isDebugEnabled() )
+                RepeatScan.log.debug( "Masked: " + identifier );
             map.put( identifier, maskedSeq );
         }
 
@@ -77,16 +77,16 @@ public class RepeatScan {
             String identifier = SequenceWriter.getIdentifier( origSeq );
             BioSequence maskedSeq = map.get( identifier );
 
-            if ( log.isDebugEnabled() )
-                log.debug( "Orig: " + identifier );
+            if ( RepeatScan.log.isDebugEnabled() )
+                RepeatScan.log.debug( "Orig: " + identifier );
 
             if ( maskedSeq == null ) {
-                log.warn( "No masked sequence for " + identifier );
+                RepeatScan.log.warn( "No masked sequence for " + identifier );
                 continue;
             }
 
             origSeq.setSequence( maskedSeq.getSequence() );
-            double fraction = computeFractionMasked( maskedSeq );
+            double fraction = this.computeFractionMasked( maskedSeq );
             origSeq.setFractionRepeats( fraction );
 
             if ( fraction > 0 ) {
@@ -95,7 +95,7 @@ public class RepeatScan {
             }
         }
 
-        log.info( finalRes.size() + " sequences had non-zero repeat fractions." );
+        RepeatScan.log.info( finalRes.size() + " sequences had non-zero repeat fractions." );
         return finalRes;
 
     }
@@ -110,7 +110,7 @@ public class RepeatScan {
     public Collection<BioSequence> repeatScan( Collection<BioSequence> sequences ) {
         try {
             if ( sequences.size() == 0 ) {
-                log.warn( "No sequences to test" );
+                RepeatScan.log.warn( "No sequences to test" );
                 return sequences;
             }
 
@@ -119,7 +119,7 @@ public class RepeatScan {
 
             Taxon taxon = sequences.iterator().next().getTaxon();
 
-            execRepeatMasker( querySequenceFile, taxon );
+            this.execRepeatMasker( querySequenceFile, taxon );
 
             final String outputSequencePath =
                     querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".masked";
@@ -128,11 +128,11 @@ public class RepeatScan {
 
             File output = new File( outputSequencePath );
             if ( !output.exists() ) {
-                handleNoOutputCondition( querySequenceFile, outputSequencePath );
-                return new HashSet<BioSequence>();
+                this.handleNoOutputCondition( querySequenceFile, outputSequencePath );
+                return new HashSet<>();
             }
 
-            return processRepeatMaskerOutput( sequences, outputSequencePath );
+            return this.processRepeatMaskerOutput( sequences, outputSequencePath );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -144,14 +144,13 @@ public class RepeatScan {
         int origLength = maskedSeq.getSequence().length();
         int unmaskedBases = maskedSeq.getSequence().replaceAll( "[a-z]", "" ).length();
 
-        double fraction = ( origLength - unmaskedBases ) / ( double ) origLength;
-        return fraction;
+        return ( origLength - unmaskedBases ) / ( double ) origLength;
     }
 
     private void checkForExe() {
-        if ( REPEAT_MASKER == null ) {
+        if ( RepeatScan.REPEAT_MASKER == null ) {
             throw new IllegalStateException( "Repeatmasker executable could not be found. Make sure you correctly set "
-                    + REPEAT_MASKER_CONFIG_PARAM );
+                    + RepeatScan.REPEAT_MASKER_CONFIG_PARAM );
         }
     }
 
@@ -163,12 +162,11 @@ public class RepeatScan {
      */
     private void execRepeatMasker( File querySequenceFile, Taxon taxon ) throws IOException {
 
-        checkForExe();
+        this.checkForExe();
 
-        final String cmd =
-                REPEAT_MASKER + " -parallel 8 -xsmall -species " + taxon.getCommonName() + " " + querySequenceFile
-                        .getAbsolutePath();
-        log.info( "Running repeatmasker like this: " + cmd );
+        final String cmd = RepeatScan.REPEAT_MASKER + " -parallel 8 -xsmall -species " + taxon.getCommonName() + " "
+                + querySequenceFile.getAbsolutePath();
+        RepeatScan.log.info( "Running repeatmasker like this: " + cmd );
 
         final Process run = Runtime.getRuntime().exec( cmd );
 
@@ -192,27 +190,26 @@ public class RepeatScan {
                 } catch ( IllegalThreadStateException e ) {
                     // okay, still waiting.
                 }
-                Thread.sleep( UPDATE_INTERVAL_MS );
+                Thread.sleep( RepeatScan.UPDATE_INTERVAL_MS );
                 String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                log.info( "Repeatmasker: " + minutes + " minutes elapsed" );
+                RepeatScan.log.info( "Repeatmasker: " + minutes + " minutes elapsed" );
             }
 
             overallWatch.stop();
             String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-            log.info( "Repeatmasker took a total of " + minutes + " minutes" );
+            RepeatScan.log.info( "Repeatmasker took a total of " + minutes + " minutes" );
 
             // int exitVal = run.waitFor();
 
-            log.debug( "Repeatmasker exit value=" + exitVal );
+            RepeatScan.log.debug( "Repeatmasker exit value=" + exitVal );
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
         }
-        log.debug( "Repeatmasker Success" );
+        RepeatScan.log.debug( "Repeatmasker Success" );
 
     }
 
-    private void handleNoOutputCondition( File querySequenceFile, final String outputSequencePath )
-            throws FileNotFoundException, IOException {
+    private void handleNoOutputCondition( File querySequenceFile, final String outputSequencePath ) throws IOException {
         // this happens if there were no repeats to mask. Check to make sure.
         final String outputSummary =
                 querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".out";
@@ -223,13 +220,14 @@ public class RepeatScan {
                             + " or " + outputSummary );
         }
         InputStream is = new FileInputStream( outputSummary );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
             String nothingFound = "There were no repetitive sequences detected";
             String line = br.readLine();
             if ( line == null || line.startsWith( nothingFound ) ) {
-                log.info( "There were no repeats found" );
+                RepeatScan.log.info( "There were no repeats found" );
             } else {
-                log.warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );
+                RepeatScan.log
+                        .warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );
             }
         }
 

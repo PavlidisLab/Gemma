@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,10 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,7 +54,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         Object result;
 
         if ( entity instanceof ArrayDesign ) {
-            result = findOrPersistArrayDesign( ( ArrayDesign ) entity );
+            result = this.findOrPersistArrayDesign( ( ArrayDesign ) entity );
             return result;
         }
 
@@ -77,7 +77,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( arrayDesign == null )
             return null;
 
-        if ( !isTransient( arrayDesign ) )
+        if ( !this.isTransient( arrayDesign ) )
             return arrayDesign;
 
         /*
@@ -93,15 +93,16 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
 
             if ( existing == null ) {
-                log.info( arrayDesign + " is new, processing..." );
-                return persistNewArrayDesign( arrayDesign );
+                AbstractPersister.log.info( arrayDesign + " is new, processing..." );
+                return this.persistNewArrayDesign( arrayDesign );
             }
 
-            log.info( "Platform exactly matching " + arrayDesign + " doesn't exist, but found " + existing
-                    + "; returning" );
+            AbstractPersister.log
+                    .info( "Platform exactly matching " + arrayDesign + " doesn't exist, but found " + existing
+                            + "; returning" );
 
         } else {
-            log.info( "Platform " + arrayDesign + " already exists, returning..." );
+            AbstractPersister.log.info( "Platform " + arrayDesign + " already exists, returning..." );
         }
 
         return existing;
@@ -116,17 +117,17 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( arrayDesign == null )
             return null;
 
-        log.info( "Persisting new platform " + arrayDesign.getName() );
+        AbstractPersister.log.info( "Persisting new platform " + arrayDesign.getName() );
 
         try {
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
             if ( arrayDesign.getDesignProvider() != null )
-                arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
+                arrayDesign.setDesignProvider( this.persistContact( arrayDesign.getDesignProvider() ) );
 
             if ( arrayDesign.getLocalFiles() != null ) {
                 for ( LocalFile file : arrayDesign.getLocalFiles() ) {
-                    persistLocalFile( file );
+                    this.persistLocalFile( file );
                 }
             }
 
@@ -134,23 +135,22 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 throw new IllegalArgumentException( "Primary taxon cannot be null" );
             }
 
-            arrayDesign.setPrimaryTaxon( ( Taxon ) persist( arrayDesign.getPrimaryTaxon() ) );
+            arrayDesign.setPrimaryTaxon( ( Taxon ) this.persist( arrayDesign.getPrimaryTaxon() ) );
 
             for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
-                externalRef.setExternalDatabase( persistExternalDatabase( externalRef.getExternalDatabase() ) );
+                externalRef.setExternalDatabase( this.persistExternalDatabase( externalRef.getExternalDatabase() ) );
             }
 
-            log.info( "Persisting " + arrayDesign );
+            AbstractPersister.log.info( "Persisting " + arrayDesign );
 
-            if ( arrayDesign.getAuditTrail() != null && isTransient( arrayDesign.getAuditTrail() ) )
+            if ( arrayDesign.getAuditTrail() != null && this.isTransient( arrayDesign.getAuditTrail() ) )
                 arrayDesign.getAuditTrail().setId( null );
 
-            Collection<CompositeSequence> scs = new ArrayList<>();
-            scs.addAll( arrayDesign.getCompositeSequences() );
+            Collection<CompositeSequence> scs = new ArrayList<>( arrayDesign.getCompositeSequences() );
             arrayDesign.getCompositeSequences().clear();
             arrayDesign = arrayDesignDao.create( arrayDesign );
             arrayDesign.getCompositeSequences().addAll( scs );
-            arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
+            arrayDesign = this.persistArrayDesignCompositeSequenceAssociations( arrayDesign );
             arrayDesignDao.update( arrayDesign );
 
         } finally {
@@ -163,13 +163,13 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         int numElements = arrayDesign.getCompositeSequences().size();
         if ( numElements == 0 )
             return arrayDesign;
-        log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
+        AbstractPersister.log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
 
         int persistedBioSequences = 0;
-        int numElementsPerUpdate = numElementsPerUpdate( arrayDesign.getCompositeSequences() );
+        int numElementsPerUpdate = this.numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
-            if ( !isTransient( compositeSequence ) ) {
+            if ( !this.isTransient( compositeSequence ) ) {
                 // in case of retry (not used?)
                 continue;
             }
@@ -179,20 +179,22 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
 
-            BioSequence persistedBs = persistBioSequence( biologicalCharacteristic );
+            BioSequence persistedBs = this.persistBioSequence( biologicalCharacteristic );
 
             compositeSequence.setBiologicalCharacteristic( persistedBs );
 
             if ( ++persistedBioSequences % numElementsPerUpdate == 0 && numElements > 1000 ) {
-                log.info( persistedBioSequences + "/" + numElements + " compositeSequence sequences examined for "
-                        + arrayDesign );
+                AbstractPersister.log
+                        .info( persistedBioSequences + "/" + numElements + " compositeSequence sequences examined for "
+                                + arrayDesign );
             }
 
         }
 
         if ( persistedBioSequences > 0 ) {
-            log.info(
-                    "Total of " + persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
+            AbstractPersister.log
+                    .info( "Total of " + persistedBioSequences + " compositeSequence sequences examined for "
+                            + arrayDesign );
         }
 
         return arrayDesign;

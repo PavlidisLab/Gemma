@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,22 +45,18 @@ import static org.junit.Assert.*;
 @Deprecated
 public class StringBiomartProteinConverterTest {
 
-    StringProteinProteinInteractionConverter stringBiomartProteinConverter = null;
-    Collection<Taxon> taxa = new ArrayList<Taxon>();
-    Taxon taxon = null;
-
-    StringProteinProteinInteraction stringProteinProteinInteractionOne;
-    StringProteinProteinInteraction stringProteinProteinInteractionTwo;
-    StringProteinProteinInteraction stringProteinProteinInteractionThree;
-    Collection<StringProteinProteinInteraction> stringProteinProteinInteractions = new ArrayList<StringProteinProteinInteraction>();
+    private final Collection<Taxon> taxa = new ArrayList<>();
+    private final Collection<StringProteinProteinInteraction> stringProteinProteinInteractions = new ArrayList<>();
+    private StringProteinProteinInteractionConverter stringBiomartProteinConverter = null;
+    private StringProteinProteinInteraction stringProteinProteinInteractionOne;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         String fileNameBiomartmouse = "/data/loader/protein/biomart/biomartmmusculusShort.txt";
         URL fileNameBiomartmouseURL = this.getClass().getResource( fileNameBiomartmouse );
         File taxonBiomartFile = new File( fileNameBiomartmouseURL.getFile() );
 
-        taxon = Taxon.Factory.newInstance();
+        Taxon taxon = Taxon.Factory.newInstance();
         taxon.setIsGenesUsable( true );
         taxon.setNcbiId( 10090 );
         taxon.setScientificName( "Mus musculus" );
@@ -79,11 +75,11 @@ public class StringBiomartProteinConverterTest {
         stringProteinProteinInteractionOne = new StringProteinProteinInteraction( "ENSMUSP00000111623",
                 "ENSMUSP00000100396" );
 
-        stringProteinProteinInteractionTwo = new StringProteinProteinInteraction( "ENSMUSP00000100395",
-                "ENSMUSP00000100396" );
+        StringProteinProteinInteraction stringProteinProteinInteractionTwo = new StringProteinProteinInteraction(
+                "ENSMUSP00000100395", "ENSMUSP00000100396" );
 
-        stringProteinProteinInteractionThree = new StringProteinProteinInteraction( "ENSMUSP00000100407",
-                "ENSMUSP00000100395" );
+        StringProteinProteinInteraction stringProteinProteinInteractionThree = new StringProteinProteinInteraction(
+                "ENSMUSP00000100407", "ENSMUSP00000100395" );
 
         // add them to array
         stringProteinProteinInteractions.add( stringProteinProteinInteractionOne );
@@ -99,7 +95,7 @@ public class StringBiomartProteinConverterTest {
         try {
             Object object = stringBiomartProteinConverter.convert( stringProteinProteinInteractions );
 
-            if ( object instanceof Collection ) {
+            if ( object != null ) {
                 // method returns a collection of arraylists
                 // these arraylist represent one string line which can get mapped to multiple
                 // Gene2GeneProteinAssociation

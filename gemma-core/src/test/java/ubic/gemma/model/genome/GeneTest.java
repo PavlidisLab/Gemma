@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,10 +27,9 @@ import junit.framework.TestCase;
  */
 public class GeneTest extends TestCase {
 
-    Taxon aTax;
-    Taxon bTax;
-    PhysicalLocation aLoc;
-    PhysicalLocation bLoc;
+    private Taxon aTax;
+    private Taxon bTax;
+    private PhysicalLocation aLoc;
 
     public void testEqualsA() {
         Gene a = Gene.Factory.newInstance();
@@ -39,7 +38,7 @@ public class GeneTest extends TestCase {
         a.setOfficialSymbol( "foo" );
         b.setOfficialSymbol( "foo" );
 
-        assertFalse( a.equals( b ) );
+        TestCase.assertFalse( a.equals( b ) );
 
     }
 
@@ -50,7 +49,7 @@ public class GeneTest extends TestCase {
         a.setNcbiGeneId( 1234 );
         b.setNcbiGeneId( 1234 );
 
-        assertEquals( a, b );
+        TestCase.assertEquals( a, b );
 
     }
 
@@ -65,7 +64,7 @@ public class GeneTest extends TestCase {
         a.setTaxon( aTax );
         b.setTaxon( bTax );
 
-        assertFalse( a.equals( b ) );
+        TestCase.assertFalse( a.equals( b ) );
 
     }
 
@@ -80,7 +79,7 @@ public class GeneTest extends TestCase {
         a.setTaxon( aTax );
         b.setTaxon( aTax );
 
-        assertEquals( a, b );
+        TestCase.assertEquals( a, b );
 
     }
 
@@ -97,7 +96,7 @@ public class GeneTest extends TestCase {
         a.setPhysicalLocation( aLoc );
         b.setPhysicalLocation( aLoc );
 
-        assertEquals( a, b );
+        TestCase.assertEquals( a, b );
 
     }
 
@@ -112,13 +111,13 @@ public class GeneTest extends TestCase {
         bTax.setScientificName( "Barioobius foobarius" );
         bTax.setIsSpecies( true );
         bTax.setIsGenesUsable( true );
-        Chromosome c = Chromosome.Factory.newInstance( "X", aTax );
+        Chromosome c = new Chromosome( "X", aTax );
 
         aLoc = PhysicalLocation.Factory.newInstance();
         aLoc.setChromosome( c );
         aLoc.setNucleotide( 10L );
 
-        bLoc = PhysicalLocation.Factory.newInstance();
+        PhysicalLocation bLoc = PhysicalLocation.Factory.newInstance();
         bLoc.setChromosome( c );
         bLoc.setNucleotide( 20L );
     }

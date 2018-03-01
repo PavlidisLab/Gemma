@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -33,7 +34,7 @@ import java.util.*;
  * @author keshav
  */
 @Service
-public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> implements TaxonService {
+public class TaxonServiceImpl extends AbstractVoEnabledService<Taxon, TaxonValueObject> implements TaxonService {
 
     private static final Comparator<TaxonValueObject> TAXON_VO_COMPARATOR = new Comparator<TaxonValueObject>() {
         @Override
@@ -110,51 +111,33 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     }
 
     /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Taxon> loadAllTaxaWithGenes() {
+        SortedSet<Taxon> taxaWithGenes = new TreeSet<>( TaxonServiceImpl.TAXON_COMPARATOR );
+        for ( Taxon taxon : this.loadAll() ) {
+            if ( taxon.getIsGenesUsable() ) {
+                taxaWithGenes.add( taxon );
+            }
+        }
+        return taxaWithGenes;
+    }
+
+    /**
      * @return Taxon that are species. (only returns usable taxa)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaSpecies() {
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : loadAll() ) {
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
+        for ( Taxon taxon : this.loadAll() ) {
             if ( taxon.getIsSpecies() ) {
                 taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
             }
         }
         return taxaSpecies;
-    }
-
-    /**
-     * @return List of taxa with array designs in gemma
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithArrays() {
-        Set<TaxonValueObject> taxaWithArrays = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-
-        for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
-            taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
-        }
-        log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
-        return taxaWithArrays;
-    }
-
-    /**
-     * @return collection of taxa that have expression experiments available.
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> getTaxaWithDatasets() {
-        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-
-        Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
-
-        for ( Taxon taxon : loadAll() ) {
-            if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
-                taxaWithDatasets.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaWithDatasets;
     }
 
     /**
@@ -164,8 +147,8 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithEvidence() {
 
-        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : loadTaxonWithEvidence() ) {
+        SortedSet<TaxonValueObject> taxaSpecies = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
+        for ( Taxon taxon : this.taxonDao.findTaxonUsedInEvidence() ) {
             if ( taxon.getIsSpecies() ) {
                 taxaSpecies.add( TaxonValueObject.fromEntity( taxon ) );
             }
@@ -179,8 +162,8 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     @Override
     @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithGenes() {
-        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<TaxonValueObject>( TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : loadAll() ) {
+        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
+        for ( Taxon taxon : this.loadAll() ) {
             if ( taxon.getIsGenesUsable() ) {
                 taxaWithGenes.add( TaxonValueObject.fromEntity( taxon ) );
             }
@@ -189,27 +172,36 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     }
 
     /**
-     * @return Taxon that have genes loaded into Gemma and that should be used
+     * @return collection of taxa that have expression experiments available.
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<Taxon> loadAllTaxaWithGenes() {
-        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
-        for ( Taxon taxon : loadAll() ) {
-            if ( taxon.getIsGenesUsable() ) {
-                taxaWithGenes.add( taxon );
+    public Collection<TaxonValueObject> getTaxaWithDatasets() {
+        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
+
+        Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
+
+        for ( Taxon taxon : this.loadAll() ) {
+            if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
+                taxaWithDatasets.add( TaxonValueObject.fromEntity( taxon ) );
             }
         }
-        return taxaWithGenes;
+        return taxaWithDatasets;
     }
 
     /**
-     * @see TaxonService#loadTaxonWithEvidence()
+     * @return List of taxa with array designs in gemma
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<Taxon> loadTaxonWithEvidence() {
-        return this.taxonDao.findTaxonUsedInEvidence();
+    public Collection<TaxonValueObject> getTaxaWithArrays() {
+        Set<TaxonValueObject> taxaWithArrays = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
+
+        for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
+            taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
+        }
+        AbstractService.log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
+        return taxaWithArrays;
     }
 
     @Override
@@ -217,4 +209,5 @@ public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> 
     public void thaw( final Taxon taxon ) {
         this.taxonDao.thaw( taxon );
     }
+
 }

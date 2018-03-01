@@ -5,13 +5,8 @@ import ubic.gemma.core.job.TaskResult;
 
 /**
  * @author anton
- *
  */
 public interface MailUtils {
 
-    /**
-     * @param context
-     * @param taskResult
-     */
-    public void sendTaskCompletedNotificationEmail( EmailNotificationContext context, TaskResult taskResult );
+    void sendTaskCompletedNotificationEmail( EmailNotificationContext context, TaskResult taskResult );
 }

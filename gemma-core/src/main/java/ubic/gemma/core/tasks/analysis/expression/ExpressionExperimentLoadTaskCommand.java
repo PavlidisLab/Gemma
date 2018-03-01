@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +24,8 @@ import ubic.gemma.core.tasks.Task;
 
 /**
  * @author keshav
- *
  */
+@SuppressWarnings("unused") // Possible external use
 public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -75,8 +75,16 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
         return accession;
     }
 
+    public void setAccession( String accession ) {
+        this.accession = accession;
+    }
+
     public String getArrayDesignName() {
         return arrayDesignName;
+    }
+
+    public void setArrayDesignName( String arrayDesignName ) {
+        this.arrayDesignName = arrayDesignName;
     }
 
     @Override
@@ -88,39 +96,15 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
         return aggressiveQtRemoval;
     }
 
+    public void setAggressiveQtRemoval( boolean aggressiveQtRemoval ) {
+        this.aggressiveQtRemoval = aggressiveQtRemoval;
+    }
+
     /**
      * @return the allowArrayExpressDesign
      */
     public boolean isAllowArrayExpressDesign() {
         return allowArrayExpressDesign;
-    }
-
-    public boolean isAllowSuperSeriesLoad() {
-        return this.allowSuperSeriesLoad;
-    }
-
-    public boolean isArrayExpress() {
-        return isArrayExpress;
-    }
-
-    public boolean isLoadPlatformOnly() {
-        return loadPlatformOnly;
-    }
-
-    public boolean isSplitByPlatform() {
-        return isSplitByPlatform;
-    }
-
-    public boolean isSuppressMatching() {
-        return suppressMatching;
-    }
-
-    public void setAccession( String accession ) {
-        this.accession = accession;
-    }
-
-    public void setAggressiveQtRemoval( boolean aggressiveQtRemoval ) {
-        this.aggressiveQtRemoval = aggressiveQtRemoval;
     }
 
     /**
@@ -130,6 +114,10 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
         this.allowArrayExpressDesign = allowArrayExpressDesign;
     }
 
+    public boolean isAllowSuperSeriesLoad() {
+        return this.allowSuperSeriesLoad;
+    }
+
     /**
      * @param allowSuperSeriesLoad the allowSuperSeriesLoad to set
      */
@@ -137,20 +125,32 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
         this.allowSuperSeriesLoad = allowSuperSeriesLoad;
     }
 
-    public void setArrayDesignName( String arrayDesignName ) {
-        this.arrayDesignName = arrayDesignName;
+    public boolean isArrayExpress() {
+        return isArrayExpress;
     }
 
     public void setArrayExpress( boolean isArrayExpress ) {
         this.isArrayExpress = isArrayExpress;
     }
 
+    public boolean isLoadPlatformOnly() {
+        return loadPlatformOnly;
+    }
+
     public void setLoadPlatformOnly( boolean loadPlatformOnly ) {
         this.loadPlatformOnly = loadPlatformOnly;
     }
 
+    public boolean isSplitByPlatform() {
+        return isSplitByPlatform;
+    }
+
     public void setSplitByPlatform( boolean isSplitByPlatform ) {
         this.isSplitByPlatform = isSplitByPlatform;
+    }
+
+    public boolean isSuppressMatching() {
+        return suppressMatching;
     }
 
     public void setSuppressMatching( boolean suppressMatching ) {

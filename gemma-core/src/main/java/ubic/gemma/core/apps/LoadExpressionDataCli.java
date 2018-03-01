@@ -1,9 +1,9 @@
 /*
 
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,43 +19,53 @@
  */
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
-
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
-import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.model.common.Describable;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
-
 /**
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
  * file.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
-    /**
-     * @param args
-     */
+    // Command line Options
+    private String accessionFile = null;
+    private String accessions = null;
+    private boolean doMatching = true;
+    private boolean force = false;
+    private boolean platformOnly = false;
+    private boolean allowSubSeriesLoad = false;
+    private boolean allowSuperSeriesLoad = false;
+    // Service Beans
+    private ExpressionExperimentService eeService;
+    private PreprocessorService preprocessorService;
+    private boolean splitByPlatform = false;
+    private boolean suppressPostProcessing = false;
+
     public static void main( String[] args ) {
         LoadExpressionDataCli p = new LoadExpressionDataCli();
         StopWatch watch = new StopWatch();
@@ -66,7 +76,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 ex.printStackTrace();
             }
             watch.stop();
-            log.info( watch.getTime() );
+            AbstractCLI.log.info( watch.getTime() );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -77,43 +87,11 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         return CommandGroup.EXPERIMENT;
     }
 
-    // Command line Options
-    protected String accessionFile = null;
-    protected String accessions = null;
-    protected String adName = "none";
-    protected boolean doMatching = true;
-    protected boolean force = false;
-    protected boolean platformOnly = false;
-
-    private boolean allowSubSeriesLoad = false;
-
-    private boolean allowSuperSeriesLoad = false;
-    // Service Beans
-    private ExpressionExperimentService eeService;
-    private PreprocessorService preprocessorService;
-    private boolean splitByPlatform = false;
-    private boolean suppressPostProcessing = false;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "addGEOData";
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Load data from GEO";
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -121,32 +99,31 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 .withDescription( "Optional path to file with list of experiment accessions to load" )
                 .withLongOpt( "file" ).create( 'f' );
 
-        addOption( fileOption );
+        this.addOption( fileOption );
 
         Option accessionOption = OptionBuilder.hasArg().withArgName( "Accession(s)" )
                 .withDescription( "Optional comma-delimited list of accessions (GSE or GDS or GPL) to load" )
                 .withLongOpt( "acc" ).create( 'e' );
-        addOption( accessionOption );
+        this.addOption( accessionOption );
 
-        Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" )
-                .withDescription(
-                        "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
+        Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" ).withDescription(
+                "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
                 .withLongOpt( "platforms" ).create( 'y' );
-        addOption( platformOnlyOption );
+        this.addOption( platformOnlyOption );
 
         Option noBioAssayMatching = OptionBuilder.withDescription( "Do not try to match samples across platforms" )
                 .withLongOpt( "nomatch" ).create( 'n' );
 
-        addOption( noBioAssayMatching );
+        this.addOption( noBioAssayMatching );
 
         Option splitByPlatformOption = OptionBuilder
                 .withDescription( "Force data from each platform into a separate experiment. This implies '-nomatch'" )
                 .create( "splitByPlatform" );
-        addOption( splitByPlatformOption );
+        this.addOption( splitByPlatformOption );
 
         Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
                 .withLongOpt( "force" ).create( "force" );
-        addOption( forceOption );
+        this.addOption( forceOption );
 
         // Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" )
         // .withDescription( "Specify the name or short name of the platform the experiment uses (AE only)" )
@@ -154,22 +131,17 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
         // addOption( arrayDesign );
 
-        addOption( OptionBuilder.withDescription( "Suppress postprocessing steps" ).create( "nopost" ) );
+        this.addOption( OptionBuilder.withDescription( "Suppress postprocessing steps" ).create( "nopost" ) );
 
         /*
          * add 'allowsub/super' series option;
          */
-        addOption( OptionBuilder.withDescription( "Allow sub/super series to be loaded" ).create( "allowsuper" ) );
+        this.addOption( OptionBuilder.withDescription( "Allow sub/super series to be loaded" ).create( "allowsuper" ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
+        Exception err = this.processCommandLine( args );
         if ( err != null ) {
             return err;
         }
@@ -184,7 +156,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             }
 
             if ( accessions != null ) {
-                log.info( "Got accession(s) from command line " + accessions );
+                AbstractCLI.log.info( "Got accession(s) from command line " + accessions );
                 String[] accsToRun = StringUtils.split( accessions, ',' );
 
                 for ( String accession : accsToRun ) {
@@ -196,124 +168,124 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                     }
 
                     if ( platformOnly ) {
-                        Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, false, true,
-                                true );
-                        ArrayDesignService ads = getBean( ArrayDesignService.class );
+                        Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, true, true );
+                        ArrayDesignService ads = this.getBean( ArrayDesignService.class );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             ArrayDesign ad = ( ArrayDesign ) object;
                             ad = ads.thawLite( ad );
 
-                            successObjects.add( ad.getName() + " ("
-                                    + ad.getExternalReferences().iterator().next().getAccession() + ")" );
+                            successObjects.add( ad.getName() + " (" + ad.getExternalReferences().iterator().next()
+                                    .getAccession() + ")" );
                         }
                     } else {
-                        processAccession( geoService, accession );
+                        this.processAccession( geoService, accession );
                     }
                 }
 
             }
 
             if ( accessionFile != null ) {
-                log.info( "Loading accessions from " + accessionFile );
+                AbstractCLI.log.info( "Loading accessions from " + accessionFile );
                 InputStream is = new FileInputStream( accessionFile );
-                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+                try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
-                    String accession = null;
+                    String accession;
                     while ( ( accession = br.readLine() ) != null ) {
 
                         if ( StringUtils.isBlank( accession ) ) {
                             continue;
                         }
 
-                        processAccession( geoService, accession );
+                        this.processAccession( geoService, accession );
 
                     }
                 }
             }
-            summarizeProcessing();
+            this.summarizeProcessing();
         } catch ( Exception e ) {
-            log.error( e );
+            AbstractCLI.log.error( e );
             return e;
         }
         return null;
     }
 
-    protected void processAccession( GeoService geoService, String accession ) {
-        try {
-
-            if ( force ) {
-                removeIfExists( accession );
-            }
-
-            @SuppressWarnings("unchecked")
-            Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    accession, false, doMatching, true, this.splitByPlatform, this.allowSuperSeriesLoad,
-                    this.allowSubSeriesLoad );
-
-            if ( !suppressPostProcessing ) {
-                postProcess( ees );
-            }
-
-            for ( Object object : ees ) {
-                assert object instanceof ExpressionExperiment;
-                successObjects.add( ( ( Describable ) object ).getName() + " ("
-                        + ( ( ExpressionExperiment ) object ).getAccession().getAccession() + ")" );
-            }
-        } catch ( Exception e ) {
-            errorObjects.add( accession + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
-            log.error( e, e );
-        }
+    @Override
+    public String getShortDesc() {
+        return "Load data from GEO";
     }
 
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'f' ) ) {
-            accessionFile = getOptionValue( 'f' );
+        if ( this.hasOption( 'f' ) ) {
+            accessionFile = this.getOptionValue( 'f' );
         }
 
-        if ( hasOption( 'e' ) ) {
-            accessions = getOptionValue( 'e' );
+        if ( this.hasOption( 'e' ) ) {
+            accessions = this.getOptionValue( 'e' );
         }
 
-        if ( hasOption( 'y' ) ) {
+        if ( this.hasOption( 'y' ) ) {
             platformOnly = true;
         }
 
-        if ( hasOption( "force" ) ) {
+        if ( this.hasOption( "force" ) ) {
             force = true;
         }
 
-        this.allowSubSeriesLoad = hasOption( "allowsuper" );
-        this.allowSuperSeriesLoad = hasOption( "allowsuper" );
+        this.allowSubSeriesLoad = this.hasOption( "allowsuper" );
+        this.allowSuperSeriesLoad = this.hasOption( "allowsuper" );
 
-        if ( hasOption( 'a' ) ) {
-            this.adName = getOptionValue( 'a' );
-        }
-
-        if ( hasOption( "splitByPlatform" ) ) {
+        if ( this.hasOption( "splitByPlatform" ) ) {
             this.splitByPlatform = true;
             this.doMatching = false; // defensive
         } else {
             this.splitByPlatform = false;
-            this.doMatching = !hasOption( 'n' );
+            this.doMatching = !this.hasOption( 'n' );
         }
 
-        this.suppressPostProcessing = hasOption( "nopost" );
+        this.suppressPostProcessing = this.hasOption( "nopost" );
 
-        this.eeService = getBean( ExpressionExperimentService.class );
-        this.preprocessorService = getBean( PreprocessorService.class );
+        this.eeService = this.getBean( ExpressionExperimentService.class );
+        this.preprocessorService = this.getBean( PreprocessorService.class );
 
+    }
+
+    private void processAccession( GeoService geoService, String accession ) {
+        try {
+
+            if ( force ) {
+                this.removeIfExists( accession );
+            }
+
+            @SuppressWarnings("unchecked") Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( accession, false, doMatching, this.splitByPlatform, this.allowSuperSeriesLoad,
+                            this.allowSubSeriesLoad );
+
+            if ( !suppressPostProcessing ) {
+                this.postProcess( ees );
+            }
+
+            for ( Object object : ees ) {
+                assert object instanceof ExpressionExperiment;
+                successObjects.add( ( ( Describable ) object ).getName() + " (" + ( ( ExpressionExperiment ) object )
+                        .getAccession().getAccession() + ")" );
+            }
+        } catch ( Exception e ) {
+            errorObjects.add( accession + ": " + e.getMessage() );
+            AbstractCLI.log
+                    .error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
+            AbstractCLI.log.error( e, e );
+        }
     }
 
     /**
      * Delete previous version of the experiment.
-     * 
-     * @param accession
+     *
+     * @param accession accession
      */
-    protected void removeIfExists( String accession ) {
+    private void removeIfExists( String accession ) {
         DatabaseEntry acDbe = DatabaseEntry.Factory.newInstance();
         acDbe.setAccession( accession );
         ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
@@ -322,7 +294,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         Collection<ExpressionExperiment> existing = eeService.findByAccession( acDbe );
 
         if ( !existing.isEmpty() ) {
-            log.info( "Deleting existing version of " + accession );
+            AbstractCLI.log.info( "Deleting existing version of " + accession );
             for ( ExpressionExperiment expressionExperiment : existing ) {
                 eeService.remove( expressionExperiment );
             }
@@ -331,17 +303,17 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
     /**
      * Do missing value and processed vector creation steps.
-     * 
-     * @param ees
+     *
+     * @param ees experiments
      */
     private void postProcess( Collection<ExpressionExperiment> ees ) {
-        log.info( "Postprocessing ..." );
+        AbstractCLI.log.info( "Postprocessing ..." );
         for ( ExpressionExperiment ee : ees ) {
 
             try {
                 preprocessorService.process( ee );
             } catch ( PreprocessingException e ) {
-                log.error( "Experiment was loaded, but there was an error during postprocessing: " + ee
+                AbstractCLI.log.error( "Experiment was loaded, but there was an error during postprocessing: " + ee
                         + " , make sure additional steps are completed", e );
                 errorObjects.add( ee.getShortName() + ": " + e.getMessage() );
             }

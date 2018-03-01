@@ -43,7 +43,8 @@ import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.genome.GeneDao;
@@ -59,7 +60,7 @@ import java.util.Map.Entry;
  * @see GeneService
  */
 @Service
-public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> implements GeneService {
+public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObject> implements GeneService {
 
     private final GeneDao geneDao;
 
@@ -129,6 +130,13 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
 
     @Override
     @Transactional(readOnly = true)
+    public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
+        Gene gene = this.findByNCBIId( accession );
+        return new GeneValueObject( gene );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds ) {
         Map<Integer, GeneValueObject> result = new HashMap<>();
         Map<Integer, Gene> genes = this.geneDao.findByNcbiIds( ncbiIds );
@@ -136,13 +144,6 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
             result.put( entry.getKey(), new GeneValueObject( entry.getValue() ) );
         }
         return result;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
-        Gene gene = findByNCBIId( accession );
-        return new GeneValueObject( gene );
     }
 
     /**
@@ -204,7 +205,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         if ( geneId == null )
             throw new IllegalArgumentException( "Null id for gene" );
         Collection<AnnotationValueObject> ontologies = new HashSet<>();
-        Gene g = load( geneId );
+        Gene g = this.load( geneId );
 
         if ( g == null ) {
             throw new IllegalArgumentException( "No such gene could be loaded with id=" + geneId );
@@ -275,7 +276,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
             return Collections.emptyList();
         }
 
-        gene = thaw( gene );
+        gene = this.thaw( gene );
 
         Collection<GeneProduct> gpCollection = gene.getProducts();
         Collection<PhysicalLocationValueObject> locations = new LinkedList<>();
@@ -288,7 +289,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
             PhysicalLocation physicalLocation = gp.getPhysicalLocation();
 
             if ( physicalLocation == null ) {
-                log.warn( gene.getOfficialSymbol() + " product " + gp.getName() + " (id:" + gp.getId()
+                AbstractService.log.warn( gene.getOfficialSymbol() + " product " + gp.getName() + " (id:" + gp.getId()
                         + ") has no location." );
                 continue;
             }
@@ -307,7 +308,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     public Collection<GeneProductValueObject> getProducts( Long geneId ) {
         if ( geneId == null )
             throw new IllegalArgumentException( "Null id for gene" );
-        Gene gene = load( geneId );
+        Gene gene = this.load( geneId );
 
         if ( gene == null )
             throw new IllegalArgumentException( "No gene with id " + geneId );
@@ -351,7 +352,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
             gvo.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
         }
 
-        Long compositeSequenceCount = getCompositeSequenceCountById( id );
+        Long compositeSequenceCount = this.getCompositeSequenceCountById( id );
         gvo.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         Integer platformCount = this.geneDao.getPlatformCountById( id );
@@ -359,6 +360,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
 
         Collection<GeneSet> geneSets = this.geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsVos = new ArrayList<>();
+        //noinspection CollectionAddAllCanBeReplacedWithConstructor // Constructor can't handle subclasses
         gsVos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( geneSets, false ) );
 
         gvo.setGeneSets( gsVos );
@@ -407,8 +409,8 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Override
     @Transactional(readOnly = true)
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
-        Gene gene = load( geneId );
-        gene = thaw( gene );
+        Gene gene = this.load( geneId );
+        gene = this.thaw( gene );
         GeneValueObject initialResult = GeneValueObject.convert2ValueObject( gene );
         GeneValueObject details = new GeneValueObject( initialResult );
 
@@ -419,12 +421,12 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
         }
         details.setAliases( aliasStrings );
 
-        Long compositeSequenceCount = getCompositeSequenceCountById( geneId );
+        Long compositeSequenceCount = this.getCompositeSequenceCountById( geneId );
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         Collection<GeneSet> geneSets = geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsVos = new ArrayList<>();
-
+        //noinspection CollectionAddAllCanBeReplacedWithConstructor // Constructor can't handle subclasses
         gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
         details.setGeneSets( gsVos );
 
@@ -487,7 +489,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     }
 
     /**
-     * Only thaw the Aliases, very light version
+     * Only thawRawAndProcessed the Aliases, very light version
      */
     @Override
     @Transactional(readOnly = true)

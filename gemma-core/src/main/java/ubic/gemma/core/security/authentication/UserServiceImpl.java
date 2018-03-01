@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -39,6 +39,7 @@ import java.util.Collection;
 /**
  * @author pavlidis
  */
+@SuppressWarnings("CollectionAddAllCanBeReplacedWithConstructor") // Not possible due to type safety
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
@@ -65,15 +66,6 @@ public class UserServiceImpl implements UserService {
         // add user to list of members
         group.getGroupMembers().add( user );
         this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
-
-        // FIXME: Maybe user registration should be a completely separate, isolated code path.
-        // Or maybe call to makeReadableByGroup shouldn't be here in the first place.
-        // if (group.getName().equals( "Users" )) {
-        // USERS group is a special case
-        // } else {
-        // grant read permissions to newly added user
-        // this.securityService.makeReadableByGroup( group, group.getName() );
-        // }
     }
 
     @Override
@@ -118,7 +110,7 @@ public class UserServiceImpl implements UserService {
     public void delete( UserGroup group ) {
         String groupName = group.getName();
 
-        if ( !groupExists( groupName ) ) {
+        if ( !this.groupExists( groupName ) ) {
             throw new IllegalArgumentException( "No group with that name: " + groupName );
         }
 
@@ -131,7 +123,8 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException( "Cannot remove that group, it is required for system operation." );
         }
 
-        if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) ) && !SecurityUtil.isUserAdmin() ) {
+        if ( !securityService.isOwnedByCurrentUser( this.findGroupByName( groupName ) ) && !SecurityUtil
+                .isUserAdmin() ) {
             throw new AccessDeniedException( "Only administrator or owner of a group can remove it" );
         }
 
@@ -162,15 +155,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean groupExists( String name ) {
+        return this.userGroupDao.findByName( name ) != null;
+    }
+
+    @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
         Collection<UserGroup> ret = new ArrayList<>();
         ret.addAll( this.userGroupDao.findGroupsForUser( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) );
         return ret;
-    }
-
-    @Override
-    public boolean groupExists( String name ) {
-        return this.userGroupDao.findByName( name ) != null;
     }
 
     @Override

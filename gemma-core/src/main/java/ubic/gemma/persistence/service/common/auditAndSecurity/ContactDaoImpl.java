@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,11 +23,10 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -35,11 +34,11 @@ import java.util.List;
  * @see Contact
  */
 @Repository
-public class ContactDaoImpl extends ContactDaoBase {
+public class ContactDaoImpl extends AbstractDao<Contact> implements ContactDao {
 
     @Autowired
     public ContactDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
+        super( Contact.class, sessionFactory );
     }
 
     @Override
@@ -62,17 +61,5 @@ public class ContactDaoImpl extends ContactDaoBase {
         }
         return ( Contact ) result;
 
-    }
-
-    /**
-     * This returns investigations of type Contact. If there are other types of investigations they will have to be
-     * added to the results.
-     */
-    @Override
-    public Collection<Investigation> getInvestigations( Contact contact ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select e from ExpressionExperiment e join e.investigators i where i=:c " )
-                .setParameter( "c", contact ).list();
     }
 }

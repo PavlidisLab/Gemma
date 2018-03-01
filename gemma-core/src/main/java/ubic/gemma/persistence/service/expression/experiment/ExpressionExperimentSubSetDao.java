@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,12 +31,14 @@ import java.util.Collection;
  */
 public interface ExpressionExperimentSubSetDao extends BaseDao<ExpressionExperimentSubSet> {
 
+    @Override
+    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
+
     /**
      * @return matching or new entity. Matching would mean the same bioassays.
      */
+    @Override
     ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
-
-    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
 
     Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 

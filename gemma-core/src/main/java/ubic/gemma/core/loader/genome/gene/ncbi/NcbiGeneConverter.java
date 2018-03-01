@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,13 +59,14 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     private static final Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
     private static final ExternalDatabase genBank;
     private static final ExternalDatabase ensembl;
-    private static final boolean retainProteinInformation = Settings.getBoolean( RETAIN_PROTEIN_INFO_PARAM, false );
+    private static final boolean retainProteinInformation = Settings
+            .getBoolean( NcbiGeneConverter.RETAIN_PROTEIN_INFO_PARAM, false );
 
     static {
         genBank = ExternalDatabase.Factory.newInstance();
-        genBank.setName( "Genbank" );
+        NcbiGeneConverter.genBank.setName( "Genbank" );
         ensembl = ExternalDatabase.Factory.newInstance();
-        ensembl.setName( "Ensembl" );
+        NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
 
     AtomicBoolean producerDone = new AtomicBoolean( false );
@@ -75,14 +76,14 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
      * @return the genBank
      */
     public static ExternalDatabase getGenbank() {
-        return genBank;
+        return NcbiGeneConverter.genBank;
     }
 
     /**
      * @return the ensembl
      */
     public static ExternalDatabase getEnsembl() {
-        return ensembl;
+        return NcbiGeneConverter.ensembl;
     }
 
     @Override
@@ -92,6 +93,17 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             results.add( this.convert( object ) );
         }
         return results;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Object convert( Object sourceDomainObject ) {
+        if ( sourceDomainObject instanceof Collection ) {
+            return this.convert( ( Collection<Object> ) sourceDomainObject );
+        }
+        assert sourceDomainObject instanceof NCBIGene2Accession;
+        NCBIGene2Accession ncbiGene = ( NCBIGene2Accession ) sourceDomainObject;
+        return this.convert( ncbiGene.getInfo() );
     }
 
     public Gene convert( NCBIGeneInfo info ) {
@@ -118,9 +130,10 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             }
 
         } else if ( StringUtils.isNotBlank( info.getDiscontinuedId() ) ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id " + info
-                        .getDiscontinuedId() );
+            if ( NcbiGeneConverter.log.isDebugEnabled() )
+                NcbiGeneConverter.log
+                        .debug( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
+                                + info.getDiscontinuedId() );
             gene.setPreviousNcbiId( info.getDiscontinuedId() );
         }
 
@@ -136,7 +149,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
          * We are going to stop maintaining this information
          */
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        Chromosome chrom = Chromosome.Factory.newInstance( info.getChromosome(), t );
+        Chromosome chrom = new Chromosome( info.getChromosome(), t );
         pl.setChromosome( chrom );
 
         gene.setPhysicalLocation( pl );
@@ -154,23 +167,12 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             String identifier = info.getDbXrefs().get( dbname );
             DatabaseEntry crossref = DatabaseEntry.Factory.newInstance();
             crossref.setAccession( identifier );
-            crossref.setExternalDatabase( getEnsembl() );
+            crossref.setExternalDatabase( NcbiGeneConverter.getEnsembl() );
             gene.getAccessions().add( crossref );
         }
 
         return gene;
 
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public Object convert( Object sourceDomainObject ) {
-        if ( sourceDomainObject instanceof Collection ) {
-            return this.convert( ( Collection<Object> ) sourceDomainObject );
-        }
-        assert sourceDomainObject instanceof NCBIGene2Accession;
-        NCBIGene2Accession ncbiGene = ( NCBIGene2Accession ) sourceDomainObject;
-        return convert( ncbiGene.getInfo() );
     }
 
     public Collection<GeneProduct> convert( NCBIGene2Accession acc, Gene gene ) {
@@ -198,7 +200,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                 DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
                 accession.setAccession( acc.getRnaNucleotideAccession() );
                 accession.setAccessionVersion( acc.getRnaNucleotideAccessionVersion() );
-                accession.setExternalDatabase( genBank );
+                accession.setExternalDatabase( NcbiGeneConverter.genBank );
                 if ( rna.getAccessions() == null ) {
                     rna.setAccessions( new HashSet<DatabaseEntry>() );
                 }
@@ -209,8 +211,8 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
              * Fill in physical location details.
              */
             if ( acc.getGenomicNucleotideAccession() != null && gene.getPhysicalLocation() != null ) {
-                getChromosomeDetails( acc, gene );
-                PhysicalLocation pl = getPhysicalLocation( acc, gene );
+                this.getChromosomeDetails( acc, gene );
+                PhysicalLocation pl = this.getPhysicalLocation( acc, gene );
                 rna.setPhysicalLocation( pl );
             }
 
@@ -219,7 +221,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         }
 
         // Protein section
-        if ( retainProteinInformation && acc.getProteinAccession() != null ) {
+        if ( NcbiGeneConverter.retainProteinInformation && acc.getProteinAccession() != null ) {
             GeneProduct protein = GeneProduct.Factory.newInstance();
 
             // set available fields
@@ -233,7 +235,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
             accession.setAccession( acc.getProteinAccession() );
             accession.setAccessionVersion( acc.getProteinAccessionVersion() );
-            accession.setExternalDatabase( genBank );
+            accession.setExternalDatabase( NcbiGeneConverter.genBank );
 
             Collection<DatabaseEntry> accessions = new HashSet<>();
             accessions.add( accession );
@@ -241,6 +243,77 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             geneProducts.add( protein );
         }
         return geneProducts;
+    }
+
+    public Gene convert( NcbiGeneData data ) {
+        // get gene info and fill in gene
+        NCBIGeneInfo geneInfo = data.getGeneInfo();
+        Gene gene = this.convert( geneInfo );
+
+        // grab all accessions and fill in GeneProduct/DatabaseEntry
+        // and associate with Gene
+        Collection<NCBIGene2Accession> gene2accession = data.getAccessions();
+        Collection<GeneProduct> geneProducts = new HashSet<>();
+
+        for ( NCBIGene2Accession acc : gene2accession ) {
+            geneProducts.addAll( this.convert( acc, gene ) );
+        }
+        gene.setProducts( geneProducts );
+
+        return gene;
+    }
+
+    /*
+     * Threaded conversion of domain objects to Gemma objects.
+     */
+    public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
+        // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
+        // then push the gene onto the geneQueue for loading
+
+        if ( !NcbiGeneConverter.retainProteinInformation ) {
+            NcbiGeneConverter.log.info( "Note that protein information will be ignored; set "
+                    + NcbiGeneConverter.RETAIN_PROTEIN_INFO_PARAM + " to true to change" );
+        }
+
+        Thread convertThread = new Thread( new Runnable() {
+            @Override
+            @SuppressWarnings("synthetic-access")
+            public void run() {
+                while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
+                    try {
+                        NcbiGeneData data = geneInfoQueue.poll();
+                        if ( data == null ) {
+                            continue;
+                        }
+                        Gene converted = NcbiGeneConverter.this.convert( data );
+
+                        geneQueue.put( converted );
+
+                    } catch ( InterruptedException e ) {
+                        NcbiGeneConverter.log.warn( "Interrupted" );
+                        break;
+                    } catch ( Exception e ) {
+                        NcbiGeneConverter.log.error( e, e );
+                        break;
+                    }
+                }
+                producerDone.set( true );
+            }
+        }, "Converter" );
+
+        convertThread.start();
+    }
+
+    public boolean isProducerDone() {
+        return this.producerDone.get();
+    }
+
+    public void setProducerDoneFlag( AtomicBoolean flag ) {
+        this.producerDone = flag;
+    }
+
+    public void setSourceDoneFlag( AtomicBoolean flag ) {
+        this.sourceDone = flag;
     }
 
     private PhysicalLocation getPhysicalLocation( NCBIGene2Accession acc, Gene gene ) {
@@ -265,7 +338,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         chromSeq.setType( SequenceType.WHOLE_CHROMOSOME );
         chromSeq.setTaxon( gene.getTaxon() );
         DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
-        dbe.setExternalDatabase( genBank );
+        dbe.setExternalDatabase( NcbiGeneConverter.genBank );
         dbe.setAccession( acc.getGenomicNucleotideAccession() );
         dbe.setAccessionVersion( acc.getGenomicNucleotideAccessionVersion() );
         chromSeq.setSequenceDatabaseEntry( dbe );
@@ -275,77 +348,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             e.printStackTrace();
         }
 
-    }
-
-    public Gene convert( NcbiGeneData data ) {
-        // get gene info and fill in gene
-        NCBIGeneInfo geneInfo = data.getGeneInfo();
-        Gene gene = convert( geneInfo );
-
-        // grab all accessions and fill in GeneProduct/DatabaseEntry
-        // and associate with Gene
-        Collection<NCBIGene2Accession> gene2accession = data.getAccessions();
-        Collection<GeneProduct> geneProducts = new HashSet<>();
-
-        for ( NCBIGene2Accession acc : gene2accession ) {
-            geneProducts.addAll( convert( acc, gene ) );
-        }
-        gene.setProducts( geneProducts );
-
-        return gene;
-    }
-
-    /*
-     * Threaded conversion of domain objects to Gemma objects.
-     */
-    public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
-        // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
-        // then push the gene onto the geneQueue for loading
-
-        if ( !retainProteinInformation ) {
-            log.info( "Note that protein information will be ignored; set " + RETAIN_PROTEIN_INFO_PARAM
-                    + " to true to change" );
-        }
-
-        Thread convertThread = new Thread( new Runnable() {
-            @Override
-            @SuppressWarnings("synthetic-access")
-            public void run() {
-                while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
-                    try {
-                        NcbiGeneData data = geneInfoQueue.poll();
-                        if ( data == null ) {
-                            continue;
-                        }
-                        Gene converted = convert( data );
-
-                        geneQueue.put( converted );
-
-                    } catch ( InterruptedException e ) {
-                        log.warn( "Interrupted" );
-                        break;
-                    } catch ( Exception e ) {
-                        log.error( e, e );
-                        break;
-                    }
-                }
-                producerDone.set( true );
-            }
-        }, "Converter" );
-
-        convertThread.start();
-    }
-
-    public boolean isProducerDone() {
-        return this.producerDone.get();
-    }
-
-    public void setProducerDoneFlag( AtomicBoolean flag ) {
-        this.producerDone = flag;
-    }
-
-    public void setSourceDoneFlag( AtomicBoolean flag ) {
-        this.sourceDone = flag;
     }
 
 }

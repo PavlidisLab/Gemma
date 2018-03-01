@@ -17,7 +17,6 @@ package ubic.gemma.persistence.service.common.search;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.persistence.service.AbstractDao;
 

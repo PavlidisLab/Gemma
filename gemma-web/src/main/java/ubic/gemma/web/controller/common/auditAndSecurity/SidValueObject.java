@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,21 +20,15 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclPrincipalSid;
+import org.springframework.security.acls.model.Sid;
 
 import java.io.Serializable;
 
-import org.springframework.security.acls.model.Sid;
-
-
 /**
  * @author paul
- *
  */
 public class SidValueObject implements Comparable<SidValueObject>, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     private static final String rolePrefix = "GROUP_";
@@ -48,7 +42,7 @@ public class SidValueObject implements Comparable<SidValueObject>, Serializable 
 
     public SidValueObject( Sid owner ) {
         this.principal = owner instanceof AclPrincipalSid;
-        this.authority = sidToString( owner );
+        this.authority = this.sidToString( owner );
     }
 
     @Override
@@ -68,33 +62,14 @@ public class SidValueObject implements Comparable<SidValueObject>, Serializable 
         return this.authority.compareTo( arg0.getAuthority() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        SidValueObject other = ( SidValueObject ) obj;
-        if ( authority == null ) {
-            if ( other.authority != null ) return false;
-        } else if ( !authority.equals( other.authority ) ) return false;
-        if ( principal != other.principal ) return false;
-        return true;
-    }
-
     public String getAuthority() {
         return authority;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
+    public void setAuthority( String authority ) {
+        this.authority = authority;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -104,12 +79,25 @@ public class SidValueObject implements Comparable<SidValueObject>, Serializable 
         return result;
     }
 
-    public boolean isPrincipal() {
-        return principal;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        SidValueObject other = ( SidValueObject ) obj;
+        if ( authority == null ) {
+            if ( other.authority != null )
+                return false;
+        } else if ( !authority.equals( other.authority ) )
+            return false;
+        return principal == other.principal;
     }
 
-    public void setAuthority( String authority ) {
-        this.authority = authority;
+    public boolean isPrincipal() {
+        return principal;
     }
 
     public void setPrincipal( boolean principal ) {
@@ -121,8 +109,8 @@ public class SidValueObject implements Comparable<SidValueObject>, Serializable 
             return ( ( AclPrincipalSid ) s ).getPrincipal();
         } else if ( s instanceof AclGrantedAuthoritySid ) {
             String grantedAuthority = ( ( AclGrantedAuthoritySid ) s ).getGrantedAuthority();
-            if ( !grantedAuthority.startsWith( rolePrefix ) ) {
-                grantedAuthority = rolePrefix + grantedAuthority;
+            if ( !grantedAuthority.startsWith( SidValueObject.rolePrefix ) ) {
+                grantedAuthority = SidValueObject.rolePrefix + grantedAuthority;
             }
             return grantedAuthority;
         }

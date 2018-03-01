@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
-public abstract class Eigenvalue implements java.io.Serializable {
+public class Eigenvalue implements java.io.Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -33,21 +33,6 @@ public abstract class Eigenvalue implements java.io.Serializable {
      * No-arg constructor added to satisfy javabean contract
      */
     public Eigenvalue() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof Eigenvalue ) ) {
-            return false;
-        }
-        final Eigenvalue that = ( Eigenvalue ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public Integer getComponentNumber() {
@@ -90,10 +75,22 @@ public abstract class Eigenvalue implements java.io.Serializable {
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof Eigenvalue ) ) {
+            return false;
+        }
+        final Eigenvalue that = ( Eigenvalue ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
 
         public static ubic.gemma.model.analysis.expression.pca.Eigenvalue newInstance() {
-            return new ubic.gemma.model.analysis.expression.pca.EigenvalueImpl();
+            return new ubic.gemma.model.analysis.expression.pca.Eigenvalue();
         }
 
     }

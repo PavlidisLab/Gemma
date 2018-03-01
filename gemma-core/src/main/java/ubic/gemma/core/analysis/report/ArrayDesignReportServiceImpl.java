@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,6 +69,192 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         this.auditEventService = auditEventService;
     }
 
+    @Override
+    public void generateAllArrayDesignReport() {
+        ArrayDesignReportServiceImpl.log.info( "Generating report summarizing all platforms ... " );
+
+        // obtain time information (for timestamp)
+        Date d = new Date( System.currentTimeMillis() );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
+
+        long numCsBioSequences = arrayDesignService.numAllCompositeSequenceWithBioSequences();
+        long numCsBlatResults = arrayDesignService.numAllCompositeSequenceWithBlatResults();
+        long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes();
+        long numGenes = arrayDesignService.numAllGenes();
+
+        // create a surrogate ArrayDesignValue object to represent the total of all platforms
+        ArrayDesignValueObject adVo = new ArrayDesignValueObject( -1L );
+        adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
+        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
+        adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
+        adVo.setNumGenes( Long.toString( numGenes ) );
+        adVo.setDateCached( timestamp );
+        // remove file first
+        File f = new File( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
+        if ( f.exists() ) {
+            if ( !f.canWrite() || !f.delete() ) {
+                ArrayDesignReportServiceImpl.log.warn( "Cannot write to file." );
+                return;
+            }
+        }
+        try (FileOutputStream fos = new FileOutputStream( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
+                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+            oos.writeObject( adVo );
+        } catch ( Throwable e ) {
+            // cannot write to file. Just fail gracefully.
+            ArrayDesignReportServiceImpl.log.error( "Cannot write to file." );
+        }
+        ArrayDesignReportServiceImpl.log.info( "Done making reports" );
+    }
+
+    @Override
+    @Secured({ "GROUP_AGENT" })
+    public void generateArrayDesignReport() {
+        this.initDirectories();
+
+        Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
+        ArrayDesignReportServiceImpl.log.info( "Creating reports for " + ads.size() + " platforms" );
+        for ( ArrayDesignValueObject ad : ads ) {
+            this.generateArrayDesignReport( ad );
+        }
+
+        ArrayDesignReportServiceImpl.log.info( "Generating global report" );
+        this.generateAllArrayDesignReport();
+    }
+
+    @Override
+    public void generateArrayDesignReport( ArrayDesignValueObject adVo ) {
+
+        ArrayDesign ad = arrayDesignService.load( adVo.getId() );
+        if ( ad == null )
+            return;
+
+        // obtain time information (for timestamp)
+        Date d = new Date( System.currentTimeMillis() );
+        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
+
+        long numProbes = arrayDesignService.getCompositeSequenceCount( ad );
+        long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
+        long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
+        long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
+        long numGenes = arrayDesignService.numGenes( ad );
+
+        adVo.setDesignElementCount( ( int ) numProbes );
+        adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
+        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
+        adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
+        adVo.setNumGenes( Long.toString( numGenes ) );
+        adVo.setDateCached( timestamp );
+
+        // check the directory exists.
+        String reportDir = ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR;
+        File reportDirF = new File( reportDir );
+        if ( !reportDirF.exists() ) {
+            EntityUtils.mkdirs( reportDirF );
+        }
+
+        String reportFileName =
+                reportDir + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
+                        + adVo.getId();
+        File f = new File( reportFileName );
+
+        if ( f.exists() ) {
+            if ( !f.canWrite() || !f.delete() ) {
+                ArrayDesignReportServiceImpl.log
+                        .error( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
+                return;
+            }
+        }
+
+        try (FileOutputStream fos = new FileOutputStream( reportFileName );
+                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
+            oos.writeObject( adVo );
+        } catch ( Throwable e ) {
+            ArrayDesignReportServiceImpl.log.error( "Cannot write to file: " + reportFileName );
+            return;
+        }
+        ArrayDesignReportServiceImpl.log.info( "Generated report for " + ad );
+    }
+
+    @Override
+    public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
+        Collection<ArrayDesignValueObject> adVo = arrayDesignService
+                .loadValueObjectsByIds( Collections.singleton( id ) );
+        if ( adVo != null && adVo.size() > 0 ) {
+            this.generateArrayDesignReport( adVo.iterator().next() );
+            return this.getSummaryObject( id );
+        }
+        ArrayDesignReportServiceImpl.log.warn( "No value objects return for requested platforms" );
+        return null;
+    }
+
+    /**
+     * Get a specific cached summary object
+     *
+     * @return arrayDesignValueObject the specified summary object
+     */
+    @Override
+    public ArrayDesignValueObject getSummaryObject( Long id ) {
+        ArrayDesignValueObject adVo = null;
+        File f = new File(
+                ArrayDesignReportServiceImpl.HOME_DIR + "/" + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR
+                        + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
+                        + id );
+        if ( f.exists() ) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
+
+                adVo = ( ArrayDesignValueObject ) ois.readObject();
+
+            } catch ( Throwable e ) {
+                return null;
+            }
+        }
+        return adVo;
+    }
+
+    /**
+     * Get the cached summary object that represents all platforms.
+     *
+     * @return arrayDesignValueObject the summary object that represents the grand total of all array designs
+     */
+    @Override
+    public ArrayDesignValueObject getSummaryObject() {
+        ArrayDesignValueObject adVo = null;
+        File f = new File( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
+        if ( f.exists() ) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
+                adVo = ( ArrayDesignValueObject ) ois.readObject();
+            } catch ( Throwable e ) {
+                return null;
+            }
+        }
+        return adVo;
+    }
+
+    /**
+     * Get the cached summary objects
+     *
+     * @return arrayDesignValueObjects the specified summary object
+     */
+    @Override
+    public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids ) {
+        Collection<ArrayDesignValueObject> adVos = new ArrayList<>();
+        for ( Long id : ids ) {
+            ArrayDesignValueObject adVo = this.getSummaryObject( id );
+            if ( adVo != null ) {
+                adVos.add( this.getSummaryObject( id ) );
+            }
+        }
+        return adVos;
+    }
+
     /**
      * Fill in event information
      */
@@ -81,7 +267,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         for ( Object object : adVos ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             Long id = adVo.getId();
@@ -143,7 +329,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Added event information in " + watch.getTime() + "ms" );
+            ArrayDesignReportServiceImpl.log.info( "Added event information in " + watch.getTime() + "ms" );
 
     }
 
@@ -151,7 +337,8 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
         Collection<Long> ids = new ArrayList<>();
         for ( Object object : valueObjects ) {
-            if(object == null) continue;
+            if ( object == null )
+                continue;
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             ids.add( adVo.getId() );
         }
@@ -184,8 +371,9 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public void fillInValueObjects( Collection<ArrayDesignValueObject> adVos ) {
         for ( ArrayDesignValueObject origVo : adVos ) {
-            if(origVo == null ) continue;
-            ArrayDesignValueObject cachedVo = getSummaryObject( origVo.getId() );
+            if ( origVo == null )
+                continue;
+            ArrayDesignValueObject cachedVo = this.getSummaryObject( origVo.getId() );
             if ( cachedVo != null ) {
                 origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
                 origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
@@ -198,210 +386,26 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     }
 
     @Override
-    public void generateAllArrayDesignReport() {
-        log.info( "Generating report summarizing all platforms ... " );
-
-        // obtain time information (for timestamp)
-        Date d = new Date( System.currentTimeMillis() );
-        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
-
-        long numCsBioSequences = arrayDesignService.numAllCompositeSequenceWithBioSequences();
-        long numCsBlatResults = arrayDesignService.numAllCompositeSequenceWithBlatResults();
-        long numCsGenes = arrayDesignService.numAllCompositeSequenceWithGenes();
-        long numGenes = arrayDesignService.numAllGenes();
-
-        // create a surrogate ArrayDesignValue object to represent the total of all platforms
-        ArrayDesignValueObject adVo = new ArrayDesignValueObject( -1L );
-        adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
-        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
-        adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
-        adVo.setNumGenes( Long.toString( numGenes ) );
-        adVo.setDateCached( timestamp );
-        // remove file first
-        File f = new File(
-                HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY );
-        if ( f.exists() ) {
-            if ( !f.canWrite() || !f.delete() ) {
-                log.warn( "Cannot write to file." );
-                return;
-            }
-        }
-        try (FileOutputStream fos = new FileOutputStream(
-                HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY );
-                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
-            oos.writeObject( adVo );
-        } catch ( Throwable e ) {
-            // cannot write to file. Just fail gracefully.
-            log.error( "Cannot write to file." );
-        }
-        log.info( "Done making reports" );
-    }
-
-    @Override
-    @Secured({ "GROUP_AGENT" })
-    public void generateArrayDesignReport() {
-        initDirectories();
-
-        Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
-        log.info( "Creating reports for " + ads.size() + " platforms" );
-        for ( ArrayDesignValueObject ad : ads ) {
-            generateArrayDesignReport( ad );
-        }
-
-        log.info( "Generating global report" );
-        generateAllArrayDesignReport();
-    }
-
-    @Override
-    public void generateArrayDesignReport( ArrayDesignValueObject adVo ) {
-
-        ArrayDesign ad = arrayDesignService.load( adVo.getId() );
-        if ( ad == null )
-            return;
-
-        // obtain time information (for timestamp)
-        Date d = new Date( System.currentTimeMillis() );
-        String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
-
-        long numProbes = arrayDesignService.getCompositeSequenceCount( ad );
-        long numCsBioSequences = arrayDesignService.numCompositeSequenceWithBioSequences( ad );
-        long numCsBlatResults = arrayDesignService.numCompositeSequenceWithBlatResults( ad );
-        long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
-        long numGenes = arrayDesignService.numGenes( ad );
-
-        adVo.setDesignElementCount( ( int ) numProbes );
-        adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
-        adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
-        adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
-        adVo.setNumGenes( Long.toString( numGenes ) );
-        adVo.setDateCached( timestamp );
-
-        // check the directory exists.
-        String reportDir = HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR;
-        File reportDirF = new File( reportDir );
-        if ( !reportDirF.exists() ) {
-            reportDirF.mkdirs();
-        }
-
-        String reportFileName =
-                reportDir + File.separatorChar + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + adVo.getId();
-        File f = new File( reportFileName );
-
-        if ( f.exists() ) {
-            if ( !f.canWrite() || !f.delete() ) {
-                log.error( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
-                return;
-            }
-        }
-
-        try (FileOutputStream fos = new FileOutputStream( reportFileName );
-                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
-            // remove old file first (possible todo: don't do this until after new file is okayed - maybe this remove
-            // isn't needed, just clobber.)
-
-            oos.writeObject( adVo );
-        } catch ( Throwable e ) {
-            log.error( "Cannot write to file: " + reportFileName );
-            return;
-        }
-        log.info( "Generated report for " + ad );
-    }
-
-    @Override
-    public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
-        Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjectsByIds( Collections.singleton( id ) );
-        if ( adVo != null && adVo.size() > 0 ) {
-            generateArrayDesignReport( adVo.iterator().next() );
-            return getSummaryObject( id );
-        }
-        log.warn( "No value objects return for requested platforms" );
-        return null;
-    }
-
-    @Override
-    public String getLastGeneMappingEvent( Long id ) {
-        return getLastEvent( id, ArrayDesignGeneMappingEvent.class );
-
-    }
-
-    @Override
-    public String getLastRepeatMaskEvent( Long id ) {
-        return getLastEvent( id, ArrayDesignRepeatAnalysisEvent.class );
+    public String getLastSequenceUpdateEvent( Long id ) {
+        return this.getLastEvent( id, ArrayDesignSequenceUpdateEvent.class );
     }
 
     @Override
     public String getLastSequenceAnalysisEvent( Long id ) {
-        return getLastEvent( id, ArrayDesignSequenceAnalysisEvent.class );
+        return this.getLastEvent( id, ArrayDesignSequenceAnalysisEvent.class );
     }
 
     @Override
-    public String getLastSequenceUpdateEvent( Long id ) {
-        return getLastEvent( id, ArrayDesignSequenceUpdateEvent.class );
+    public String getLastRepeatMaskEvent( Long id ) {
+        return this.getLastEvent( id, ArrayDesignRepeatAnalysisEvent.class );
     }
 
-    /**
-     * Get the cached summary object that represents all platforms.
-     *
-     * @return arrayDesignValueObject the summary object that represents the grand total of all array designs
-     */
     @Override
-    public ArrayDesignValueObject getSummaryObject() {
-        ArrayDesignValueObject adVo = null;
-        File f = new File(
-                HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY );
-        if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
-                adVo = ( ArrayDesignValueObject ) ois.readObject();
-            } catch ( Throwable e ) {
-                return null;
-            }
-        }
-        return adVo;
+    public String getLastGeneMappingEvent( Long id ) {
+        return this.getLastEvent( id, ArrayDesignGeneMappingEvent.class );
+
     }
 
-    /**
-     * Get the cached summary objects
-     *
-     * @return arrayDesignValueObjects the specified summary object
-     */
-    @Override
-    public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids ) {
-        Collection<ArrayDesignValueObject> adVos = new ArrayList<ArrayDesignValueObject>();
-        for ( Long id : ids ) {
-            ArrayDesignValueObject adVo = getSummaryObject( id );
-            if ( adVo != null ) {
-                adVos.add( getSummaryObject( id ) );
-            }
-        }
-        return adVos;
-    }
-
-    /**
-     * Get a specific cached summary object
-     *
-     * @return arrayDesignValueObject the specified summary object
-     */
-    @Override
-    public ArrayDesignValueObject getSummaryObject( Long id ) {
-        ArrayDesignValueObject adVo = null;
-        File f = new File(
-                HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX
-                        + "." + id );
-        if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
-
-                adVo = ( ArrayDesignValueObject ) ois.readObject();
-
-            } catch ( Throwable e ) {
-                return null;
-            }
-        }
-        return adVo;
-    }
-
-    /**
-     * FIXME this could be refactored and used elsewhere. This is similar to code in the AuditableService/Dao.
-     */
     private String getLastEvent( Long id, Class<? extends AuditEventType> eventType ) {
         ArrayDesign ad = arrayDesignService.load( id );
 
@@ -411,7 +415,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         List<AuditEvent> events2 = auditEventService.getEvents( ad );
 
         String analysisEventString;
-        List<AuditEvent> events = new ArrayList<AuditEvent>();
+        List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : events2 ) {
             if ( event == null )
@@ -426,7 +430,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             return "[None]";
         }
 
-        // add the most recent events to the report. fixme check there are events.
+        // add the most recent events to the report. There should always be at least one creation event.
         AuditEvent lastEvent = events.get( events.size() - 1 );
         analysisEventString = DateFormatUtils.format( lastEvent.getDate(), "yyyy.MMM.dd hh:mm aa" );
 
@@ -434,8 +438,9 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     }
 
     private void initDirectories() {
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separator + ARRAY_DESIGN_REPORT_DIR );
+        FileTools.createDir( ArrayDesignReportServiceImpl.HOME_DIR );
+        FileTools.createDir( ArrayDesignReportServiceImpl.HOME_DIR + File.separator
+                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR );
     }
 
 }

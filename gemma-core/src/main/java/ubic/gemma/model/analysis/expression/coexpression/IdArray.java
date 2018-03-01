@@ -1,13 +1,13 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -27,6 +27,7 @@ import java.util.*;
  *
  * @author Paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class IdArray implements Serializable {
 
     private static final long serialVersionUID = -7563304392793946778L;
@@ -119,11 +120,12 @@ public abstract class IdArray implements Serializable {
     }
 
     public byte[] getBytes() {
-        return pack( this.data );
+        return IdArray.pack( this.data );
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setBytes( byte[] bytes ) {
-        this.data = unpack( bytes );
+        this.data = IdArray.unpack( bytes );
     }
 
     /**
@@ -165,7 +167,7 @@ public abstract class IdArray implements Serializable {
     }
 
     /**
-     * Use 'and' instead if possible. FIXME this might be a bit slow.
+     * Use 'and' instead if possible.
      *
      * @param g the id to check for
      * @return true if the given id is in this array

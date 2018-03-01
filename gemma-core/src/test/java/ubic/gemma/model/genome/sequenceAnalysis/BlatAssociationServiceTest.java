@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,10 +44,10 @@ import static org.junit.Assert.assertNotNull;
  */
 public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
-    private String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
+    private final String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
 
-    private String testSequence = RandomStringUtils.random( 35, "ATGC" );
-    private String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
+    private final String testSequence = RandomStringUtils.random( 35, "ATGC" );
+    private final String testSequenceName = RandomStringUtils.randomAlphabetic( 6 );
 
     @Autowired
     private BlatAssociationService blatAssociationService;
@@ -86,7 +86,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
             GeneProduct gp = this.getTestPersistentGeneProduct( g );
             if ( i == 10 ) {
-                g.setOfficialName( testGeneIdentifier ); // fixme need taxon too.
+                g.setOfficialName( testGeneIdentifier );
                 gp.setGene( g );
                 gp.setName( testGeneIdentifier );
                 this.geneProductService.update( gp );
@@ -107,7 +107,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
         for ( Gene gene : genes ) {
             try {
                 geneService.remove( gene );
-            } catch ( Exception e ) {
+            } catch ( Exception ignored ) {
 
             }
         }

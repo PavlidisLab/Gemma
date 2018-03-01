@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,28 +29,31 @@ import java.util.Collection;
  */
 public interface ProtocolService extends BaseService<Protocol> {
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     Protocol find( Protocol protocol );
 
+    @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     Protocol findOrCreate( Protocol protocol );
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( Protocol protocol );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( Protocol protocol );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( Collection<Protocol> entities );
-
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<Protocol> loadAll();
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( Long id );
 
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Protocol protocol );
+
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( Collection<Protocol> entities );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<Protocol> loadAll();
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( Protocol protocol );
 
 }

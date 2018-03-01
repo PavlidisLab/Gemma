@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006-2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,7 +49,6 @@ import java.util.List;
 /**
  * @author luke
  * @author paul
- *
  */
 @Controller
 public class CoexpressionSearchController {
@@ -57,12 +56,11 @@ public class CoexpressionSearchController {
     private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY = 500;
     private static final int DEFAULT_MAX_RESULTS = 200;
     private static final int MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY = Settings
-            .getInt( "gemma.coexpressionSearch.maxGenesForQueryGenesOnly", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY );
-    private static final int MAX_RESULTS_PER_GENE = Settings
-            .getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene", DEFAULT_MAX_RESULTS );
-    /**
-     *
-     */
+            .getInt( "gemma.coexpressionSearch.maxGenesForQueryGenesOnly",
+                    CoexpressionSearchController.DEFAULT_MAX_GENES_PER_MY_GENES_ONLY );
+    private static final int MAX_RESULTS_PER_GENE = Settings.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene",
+            CoexpressionSearchController.DEFAULT_MAX_RESULTS );
+
     private static final String NOTHING_FOUND_MESSAGE = "No coexpression found with those settings";
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
     @Autowired
@@ -112,10 +110,9 @@ public class CoexpressionSearchController {
             }
         }
 
-        if ( searchOptions.getGeneIds().size() > MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY ) {
-            result.setErrorState(
-                    "Too many genes selected, please limit searches to " + MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY
-                            + " genes" );
+        if ( searchOptions.getGeneIds().size() > CoexpressionSearchController.MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY ) {
+            result.setErrorState( "Too many genes selected, please limit searches to "
+                    + CoexpressionSearchController.MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY + " genes" );
             return result;
         }
 
@@ -129,7 +126,7 @@ public class CoexpressionSearchController {
             myEE = expressionExperimentService.loadAll();
         }
 
-        Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
+        Collection<Long> eeIds = this.chooseExperimentsToQuery( searchOptions, result );
 
         if ( StringUtils.isNotBlank( result.getErrorState() ) )
             return result;
@@ -137,7 +134,7 @@ public class CoexpressionSearchController {
         if ( myEE != null && !myEE.isEmpty() ) {
             eeIds.addAll( EntityUtils.getIds( myEE ) );
         } else {
-            log.info( "No user data to add" );
+            CoexpressionSearchController.log.info( "No user data to add" );
         }
 
         if ( eeIds.isEmpty() ) {
@@ -146,10 +143,11 @@ public class CoexpressionSearchController {
             searchOptions.setEeIds( eeIds );
         }
 
-        log.info( "Starting coexpression search: " + searchOptions );
+        CoexpressionSearchController.log.info( "Starting coexpression search: " + searchOptions );
 
         result = geneCoexpressionService.coexpressionSearch( searchOptions.getEeIds(), searchOptions.getGeneIds(),
-                searchOptions.getStringency(), MAX_RESULTS_PER_GENE, searchOptions.getQueryGenesOnly() );
+                searchOptions.getStringency(), CoexpressionSearchController.MAX_RESULTS_PER_GENE,
+                searchOptions.getQueryGenesOnly() );
 
         // make sure to create an empty list instead of null for front-end
         if ( result.getResults() == null ) {
@@ -158,8 +156,8 @@ public class CoexpressionSearchController {
         }
 
         if ( result.getResults().isEmpty() ) {
-            result.setErrorState( NOTHING_FOUND_MESSAGE );
-            log.info( "No search results for query: " + searchOptions );
+            result.setErrorState( CoexpressionSearchController.NOTHING_FOUND_MESSAGE );
+            CoexpressionSearchController.log.info( "No search results for query: " + searchOptions );
         }
 
         return result;
@@ -186,7 +184,7 @@ public class CoexpressionSearchController {
         if ( queryGeneIds.size() == 1 ) {
             // there is nothing to do; really we shouldn't be here.
             assert !searchOptions.getGeneIds().isEmpty();
-            return doSearch( searchOptions );
+            return this.doSearch( searchOptions );
         }
 
         assert searchOptions.getQueryGenesOnly();
@@ -197,7 +195,7 @@ public class CoexpressionSearchController {
             myEE = expressionExperimentService.loadAll();
         }
 
-        Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
+        Collection<Long> eeIds = this.chooseExperimentsToQuery( searchOptions, result );
 
         if ( StringUtils.isNotBlank( result.getErrorState() ) )
             return result;
@@ -205,7 +203,7 @@ public class CoexpressionSearchController {
         if ( myEE != null && !myEE.isEmpty() ) {
             eeIds.addAll( EntityUtils.getIds( myEE ) );
         } else {
-            log.debug( "No user data to add" );
+            CoexpressionSearchController.log.debug( "No user data to add" );
         }
 
         if ( eeIds.isEmpty() ) {
@@ -217,10 +215,11 @@ public class CoexpressionSearchController {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        log.info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes, stringency=" + searchOptions
-                .getStringency() + ( searchOptions.getEeIds() != null ?
-                ( " ees=" + searchOptions.getEeIds().size() ) :
-                " All ees" ) );
+        CoexpressionSearchController.log
+                .info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes, stringency="
+                        + searchOptions.getStringency() + ( searchOptions.getEeIds() != null ?
+                        ( " ees=" + searchOptions.getEeIds().size() ) :
+                        " All ees" ) );
 
         result = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(), searchOptions.getGeneIds(),
                 searchOptions.getStringency(), -1 /* no limit in this situation anyway */, true );
@@ -229,12 +228,12 @@ public class CoexpressionSearchController {
         // result.trim( new HashSet<>( queryGeneIds ) );
 
         if ( result.getResults() == null || result.getResults().isEmpty() ) {
-            result.setErrorState( NOTHING_FOUND_MESSAGE );
-            log.info( "No search results for query: " + searchOptions );
+            result.setErrorState( CoexpressionSearchController.NOTHING_FOUND_MESSAGE );
+            CoexpressionSearchController.log.info( "No search results for query: " + searchOptions );
         }
 
         if ( timer.getTime() > 2000 ) {
-            log.info( "Search complete: " + result.getResults().size() + " hits" );
+            CoexpressionSearchController.log.info( "Search complete: " + result.getResults().size() + " hits" );
         }
 
         return result;
@@ -316,7 +315,8 @@ public class CoexpressionSearchController {
 
             CoexSearchTaskCommand coexCommand = ( CoexSearchTaskCommand ) taskCommand;
 
-            CoexpressionMetaValueObject results = doSearch( coexCommand.getSearchOptions() );
+            CoexpressionMetaValueObject results = CoexpressionSearchController.this
+                    .doSearch( coexCommand.getSearchOptions() );
 
             return new TaskResult( taskCommand, results );
 

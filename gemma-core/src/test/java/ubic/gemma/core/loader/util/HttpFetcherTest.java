@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,26 +18,23 @@
  */
 package ubic.gemma.core.loader.util;
 
+import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.model.common.description.LocalFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
-import ubic.gemma.model.common.description.LocalFile;
-
 /**
  * @author pavlidis
- *
  */
 public class HttpFetcherTest extends TestCase {
 
-    private static Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );
-    File f;
+    private static final Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );
+    private File f;
 
     /*
      * Test method for 'ubic.gemma.core.loader.loaderutils.HttpFetcher.fetch(String)'
@@ -48,23 +45,18 @@ public class HttpFetcherTest extends TestCase {
         try {
             hf.setForce( true );
             Collection<LocalFile> results = hf.fetch( "http://www.yahoo.com" );
-            assertNotNull( results );
-            assertTrue( results.size() > 0 && results.iterator().next().getLocalURL() != null );
+            TestCase.assertNotNull( results );
+            TestCase.assertTrue( results.size() > 0 && results.iterator().next().getLocalURL() != null );
             f = new File( results.iterator().next().getLocalURL().toURI() );
-            assertTrue( f.length() > 0 );
+            TestCase.assertTrue( f.length() > 0 );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException ) {
-                log.error( "Got IOException, skipping test" );
-                return;
+                HttpFetcherTest.log.error( "Got IOException, skipping test" );
             }
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#tearDown()
-     */
+    @SuppressWarnings("ResultOfMethodCallIgnored") // Does not matter
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();

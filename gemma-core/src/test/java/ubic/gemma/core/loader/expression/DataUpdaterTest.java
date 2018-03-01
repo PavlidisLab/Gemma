@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -104,7 +105,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         /*
          * Load a regular data set that has no data. Platform is (basically) irrelevant.
          */
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
         ExpressionExperiment ee;
 
         // ExpressionExperiment oldee = experimentService.findByShortName( "GSE37646" );
@@ -112,7 +113,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         try {
             // RNA-seq data.
-            Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE37646", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             // log.warn( "Test skipped because GSE37646 was not removed from the system prior to test" );
@@ -130,7 +131,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             bms.add( ba.getSampleUsed() );
         }
 
-        targetArrayDesign = getTestPersistentArrayDesign( 100, true );
+        targetArrayDesign = this.getTestPersistentArrayDesign( 100, true );
 
         DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = new DenseDoubleMatrix<>(
                 targetArrayDesign.getCompositeSequences().size(), bms.size() );
@@ -148,7 +149,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         rawMatrix.setRowNames( probes );
         rawMatrix.setColumnNames( bms );
 
-        QuantitationType qt = makeQt( true );
+        QuantitationType qt = this.makeQt( true );
 
         ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
 
@@ -188,7 +189,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         /*
          * Test adding data (non-preferred)
          */
-        qt = makeQt( false );
+        qt = this.makeQt( false );
         ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
         ee = dataUpdater.addData( ee, targetArrayDesign, moreData );
 
@@ -206,7 +207,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
     /*
      * More realistic test of RNA seq. GSE19166
-     * 
+     *
 
      */
     @Test
@@ -215,7 +216,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         ExpressionExperiment ee;
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -231,7 +232,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE19166_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
-                        "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" );) {
+                        "/data/loader/expression/flatfileload/GSE19166_expression_RPKM.test.txt" )) {
 
             DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
@@ -270,19 +271,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
         assertEquals( 199, mat.rows() );
 
-        boolean found = false;
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
-
-            assertEquals( 36, ba.getSequenceReadLength().intValue() );
-
-            if ( ba.getDescription().contains( "GSM475204" ) ) {
-                assertEquals( 3949585, ba.getSequenceReadCount().intValue() );
-                found = true;
-            }
-        }
-
-        assertTrue( found );
+        TestUtils.assertBAs( ee, targetArrayDesign, "GSM475204", 3949585 );
 
         assertEquals( 3 * 199, ee.getRawExpressionDataVectors().size() );
 
@@ -315,7 +304,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertTrue( experimentService.findByShortName( "GSE29006" ) == null );
 
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
@@ -330,7 +319,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
-                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );) {
+                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" )) {
             DoubleMatrix<String, String> countMatrix = reader.read( countData );
             DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
@@ -372,18 +361,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         assertEquals( 199, processedDataArrays.size() );
 
-        boolean found = false;
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
-
-            assertEquals( 36, ba.getSequenceReadLength().intValue() );
-
-            if ( ba.getDescription().contains( "GSM718709" ) ) {
-                assertEquals( 320383, ba.getSequenceReadCount().intValue() );
-                found = true;
-            }
-        }
-        assertTrue( found );
+        TestUtils.assertBAs( ee, targetArrayDesign, "GSM718709", 320383 );
 
         for ( DoubleVectorValueObject v : processedDataArrays ) {
             assertEquals( 4, v.getBioAssays().size() );

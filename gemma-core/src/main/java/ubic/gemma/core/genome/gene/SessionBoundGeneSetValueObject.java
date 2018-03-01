@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
     /**
      * default constructor to satisfy java bean contract
      */
+    @SuppressWarnings("WeakerAccess") // Frontend use
     public SessionBoundGeneSetValueObject() {
         super();
         this.setModified( false );

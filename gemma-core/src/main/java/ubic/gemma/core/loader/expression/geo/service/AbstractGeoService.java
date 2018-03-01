@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,43 +35,30 @@ import java.util.Collection;
  */
 public abstract class AbstractGeoService implements BeanFactoryAware, GeoService {
 
-    protected static Log log = LogFactory.getLog( AbstractGeoService.class );
-
-    protected GeoDomainObjectGenerator geoDomainObjectGenerator;
-
+    static final Log log = LogFactory.getLog( AbstractGeoService.class );
     @Autowired
     protected Persister persisterHelper;
-
     @Autowired
     protected ArrayDesignService arrayDesignService;
-
-    protected BeanFactory beanFactory;
-
-    @Override
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
-            boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
+    GeoDomainObjectGenerator geoDomainObjectGenerator;
+    BeanFactory beanFactory;
 
     @Override
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
+            boolean splitIncompatiblePlatforms );
+
+    @Override
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
     @Override
     public GeoDomainObjectGenerator getGeoDomainObjectGenerator() {
         return this.geoDomainObjectGenerator;
     }
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
     @Override
     public void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator ) {
         this.geoDomainObjectGenerator = generator;
-    }
-
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
     @Override

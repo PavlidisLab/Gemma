@@ -16,10 +16,8 @@ package ubic.gemma.core.analysis.preprocess;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
-import java.util.Collection;
+import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
 /**
  * @author Paul
@@ -27,21 +25,23 @@ import java.util.Collection;
 public interface SampleCoexpressionMatrixService {
 
     /**
-     * Creates the matrix, or loads it if it already exists.
+     * Creates the matrix, regressing out major factors and removing outliers, or loads it if it already exists.
      *
-     * @param expressionExperiment the experiment
+     * @param ee the experiment
      * @return the coexpression matrix
      */
-    DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment );
+    DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment ee );
 
     /**
-     * Retrieve (and if necessary compute) the correlation matrix for the samples.
+     * Creates the matrix, or loads it if it already exists.
      *
      * @param ee             the experiment
-     * @param forceRecompute whether to force recomputation
-     * @return Matrix, sorted by experimental design
+     * @param useRegression  whether to regress out major factors when creating a new matrix.
+     * @param removeOutliers whether to remove marked outliers when creating a new matrix.
+     * @return the coexpression matrix
      */
-    DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean forceRecompute );
+    DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment ee, boolean useRegression,
+            boolean removeOutliers );
 
     /**
      * @param ee the experiment
@@ -50,16 +50,33 @@ public interface SampleCoexpressionMatrixService {
     boolean hasMatrix( ExpressionExperiment ee );
 
     /**
-     * @param ee the experiment to delete the matrix for
+     * @param ee the experiment to remove the matrix for
      */
     void delete( ExpressionExperiment ee );
 
     /**
-     * @param ee               the experiment
-     * @param processedVectors the processed vectors
-     * @return correlation matrix. The matrix is NOT sorted by the experimental design.
+     * Creates a sample correlation matrix for the given experiment, regressing out major factors and removing marked outliers.
+     * Note that since you get a full square matrix, all correlations
+     * are represented twice, and values on the main diagonal will always be 1. Method for extracting the lower triangle
+     * to a linear array is here: {@link  ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl#getLowerTriangle(double[][])};
+     * Also observe that the matrix can contain NaN values, as dealt with here: {@link GeeqServiceImpl#getLowerTriCormat(ubic.basecode.dataStructure.matrix.DoubleMatrix)}
+     *
+     * @param ee the experiment to create a sample correlation matrix for.
+     * @return the sample-sample correlation matrix.
      */
-    DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> processedVectors );
+    DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee );
 
+    /**
+     * Creates a sample correlation matrix for the given experiment.
+     * Note that since you get a full square matrix, all correlations
+     * are represented twice, and values on the main diagonal will always be 1. Method for extracting the lower triangle
+     * to a linear array is here: {@link  ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl#getLowerTriangle(double[][])};
+     * Also observe that the matrix can contain NaN values, as dealt with here: {@link GeeqServiceImpl#getLowerTriCormat(ubic.basecode.dataStructure.matrix.DoubleMatrix)}
+     *
+     * @param ee             the experiment to create a sample correlation matrix for.
+     * @param useRegression  whether to regress out major factors.
+     * @param removeOutliers whether to remove marked outliers.
+     * @return the sample-sample correlation matrix.
+     */
+    DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean useRegression, boolean removeOutliers );
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,25 +36,6 @@ public abstract class ContrastResult implements java.io.Serializable {
     private FactorValue secondFactorValue;
 
     /**
-     * @return <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof ContrastResult ) ) {
-            return false;
-        }
-        final ContrastResult that = ( ContrastResult ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * @return The estimated value from the fit
      */
     public Double getCoefficient() {
@@ -81,6 +62,7 @@ public abstract class ContrastResult implements java.io.Serializable {
         return this.id;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }
@@ -135,11 +117,28 @@ public abstract class ContrastResult implements java.io.Serializable {
         return hashCode;
     }
 
+    /**
+     * @return <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
+     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof ContrastResult ) ) {
+            return false;
+        }
+        final ContrastResult that = ( ContrastResult ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
         public static ContrastResult newInstance() {
             return new ContrastResultImpl();
         }
 
+        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static ContrastResult newInstance( Double pvalue, Double tstat, Double coefficient, Double logFoldChange,
                 FactorValue factorValue, FactorValue secondFactorValue ) {
             final ContrastResult entity = new ContrastResultImpl();

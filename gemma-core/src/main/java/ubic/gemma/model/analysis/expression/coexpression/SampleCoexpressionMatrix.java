@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,22 +30,6 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
     private byte[] coexpressionMatrix;
     private Long id;
 
-    /**
-     * Returns <code>true</code> if the argument is an SampleCoexpressionMatrix instance and all identifiers for this
-     * entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof SampleCoexpressionMatrix ) ) {
-            return false;
-        }
-        final SampleCoexpressionMatrix that = ( SampleCoexpressionMatrix ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
-    }
-
     public BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
     }
@@ -66,6 +50,7 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
         return this.id;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }
@@ -81,6 +66,23 @@ public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
         return hashCode;
     }
 
+    /**
+     * Returns <code>true</code> if the argument is an SampleCoexpressionMatrix instance and all identifiers for this
+     * entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof SampleCoexpressionMatrix ) ) {
+            return false;
+        }
+        final SampleCoexpressionMatrix that = ( SampleCoexpressionMatrix ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
         public static SampleCoexpressionMatrix newInstance() {
             return new SampleCoexpressionMatrixImpl();

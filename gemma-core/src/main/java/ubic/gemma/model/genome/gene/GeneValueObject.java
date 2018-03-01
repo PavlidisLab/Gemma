@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -155,13 +155,13 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
 
         GeneValueObject geneValueObject = new GeneValueObject( gene );
 
-        addConvertedAliases( gene, geneValueObject );
+        GeneValueObject.addConvertedAliases( gene, geneValueObject );
 
         return geneValueObject;
     }
 
     /**
-     * A static method for easily converting GeneSetMembers into GeneValueObjects FIXME does not convert aliases.
+     * A static method for easily converting GeneSetMembers into GeneValueObjects
      *
      * @param setMembers gene set members
      * @return gene VOs
@@ -176,7 +176,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
             if ( member == null )
                 continue;
             GeneValueObject geneValueObject = new GeneValueObject( member.getGene() );
-            addConvertedAliases( member.getGene(), geneValueObject );
+            GeneValueObject.addConvertedAliases( member.getGene(), geneValueObject );
             converted.add( geneValueObject );
         }
 
@@ -206,19 +206,12 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     }
 
     @Override
-    public String toString() {
-        return "GeneValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + ( officialSymbol != null ?
-                "officialSymbol=" + officialSymbol + ", " :
-                "" ) + ( officialName != null ? "officialName=" + officialName : "" ) + "]";
-    }
-
-    @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         GeneValueObject other = ( GeneValueObject ) obj;
 
@@ -235,11 +228,16 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         } else if ( !officialSymbol.equals( other.officialSymbol ) )
             return false;
         if ( taxonId == null ) {
-            if ( other.taxonId != null )
-                return false;
-        } else if ( !taxonId.equals( other.taxonId ) )
-            return false;
-        return true;
+            return other.taxonId == null;
+        } else
+            return taxonId.equals( other.taxonId );
+    }
+
+    @Override
+    public String toString() {
+        return "GeneValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + ( officialSymbol != null ?
+                "officialSymbol=" + officialSymbol + ", " :
+                "" ) + ( officialName != null ? "officialName=" + officialName : "" ) + "]";
     }
 
     public Collection<String> getAliases() {

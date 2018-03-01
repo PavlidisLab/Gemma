@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,13 @@
  */
 package ubic.gemma.core.loader.genome;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
+import ubic.gemma.core.loader.util.parser.LineParser;
+import ubic.gemma.core.loader.util.parser.Parser;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,24 +33,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
-
-import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-
 /**
  * Parse probes from a tabular file. First columnn = probe id; Second column = sequence name; Third column = sequence.
- * <p>
  * This is designed primarily to deal with oligonucleotide arrays that have sequence names different from the probe
  * names.
- * 
- * @author paul
  *
+ * @author paul
  */
 public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence> {
 
-    private Map<String, BioSequence> results = new HashMap<String, BioSequence>();
+    private final Map<String, BioSequence> results = new HashMap<>();
 
     @Override
     public boolean containsKey( String key ) {
@@ -68,18 +67,20 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
     @Override
     public void parse( InputStream is ) throws IOException {
 
-        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+        if ( is == null )
+            throw new IllegalArgumentException( "InputStream was null" );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
             StopWatch timer = new StopWatch();
             timer.start();
             int nullLines = 0;
-            String line = null;
+            String line;
             int linesParsed = 0;
             while ( ( line = br.readLine() ) != null ) {
 
-                BioSequence newItem = parseOneLine( line );
+                BioSequence newItem = this.parseOneLine( line );
 
-                if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
+                if ( ++linesParsed % Parser.PARSE_ALERT_FREQUENCY == 0
+                        && timer.getTime() > LineParser.PARSE_ALERT_TIME_FREQUENCY_MS ) {
                     String message = "Parsed " + linesParsed + " lines ";
                     log.info( message );
                     timer.reset();
@@ -88,21 +89,16 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
                 if ( newItem == null ) {
                     nullLines++;
-                    continue;
                 }
 
             }
-            log.info( "Parsed " + linesParsed + " lines. "
-                    + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
+            log.info( "Parsed " + linesParsed + " lines. " + ( nullLines > 0 ?
+                    nullLines + " yielded no parse result (they may have been filtered)." :
+                    "" ) );
 
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.BasicLineMapParser#parseOneLine(java.lang.String)
-     */
     @Override
     public BioSequence parseOneLine( String line ) {
 
@@ -122,7 +118,8 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         }
 
         if ( sArray.length != 3 ) {
-            throw new IllegalArgumentException( "Expected 3 fields: probe name, sequence name, sequence; line=" + line );
+            throw new IllegalArgumentException(
+                    "Expected 3 fields: probe name, sequence name, sequence; line=" + line );
         }
 
         String probeId = sArray[0].trim();
@@ -169,16 +166,11 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         if ( this.results.containsKey( probeId ) ) {
             log.warn( "Duplicated probe id: " + probeId );
         }
-        put( probeId, seq );
+        this.put( probeId, seq );
 
         return seq;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
-     */
     @Override
     protected String getKey( BioSequence newItem ) {
         throw new UnsupportedOperationException();

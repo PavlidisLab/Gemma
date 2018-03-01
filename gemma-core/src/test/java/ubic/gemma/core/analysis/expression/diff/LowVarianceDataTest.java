@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -31,6 +30,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -64,7 +64,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private GeoService geoService;
@@ -87,14 +87,19 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
                 // log.info( probe.getName() + " " + r.getPvalue() );
 
-                if ( probe.getName().equals( "1552338_at" ) ) {
-                    fail( "Should not have found a result for constant probe: 1552338_at" );
-                } else if ( probe.getName().equals( "1552337_s_at" ) ) {
-                    fail( "Should not have found a result for constant probe: 1552337_s_at" );
-                } else if ( probe.getName().equals( "1552391_at" ) ) {
-                    fail( "Should not have found a result for constant probe: 1552391_at" );
-                } else {
-                    found1 = true;
+                switch ( probe.getName() ) {
+                    case "1552338_at":
+                        fail( "Should not have found a result for constant probe: 1552338_at" );
+                        break;
+                    case "1552337_s_at":
+                        fail( "Should not have found a result for constant probe: 1552337_s_at" );
+                        break;
+                    case "1552391_at":
+                        fail( "Should not have found a result for constant probe: 1552391_at" );
+                        break;
+                    default:
+                        found1 = true;
+                        break;
                 }
             }
 
@@ -110,7 +115,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
                 new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/expression" ) ) );
 
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE19420", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE19420", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
@@ -119,8 +124,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
-        toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+        Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
             experimentalFactorService.delete( ef );
             ee.getExperimentalDesign().getExperimentalFactors().remove( ef );
@@ -129,7 +133,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
 
         ee = expressionExperimentService.thaw( ee );
 
@@ -139,7 +143,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void test() {
         ee = expressionExperimentService.thawLite( ee );
 
         AnalysisType aa = analysisService
@@ -161,7 +165,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         DifferentialExpressionAnalysis analysis = result.iterator().next();
 
-        checkResults( analysis );
+        this.checkResults( analysis );
 
     }
 }

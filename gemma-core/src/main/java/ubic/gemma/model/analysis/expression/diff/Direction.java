@@ -8,6 +8,7 @@ import java.util.List;
  * two directions with respect to different conditions.
  * </p>
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class Direction implements java.io.Serializable, Comparable<Direction> {
     public static final Direction UP = new Direction( "U" );
     public static final Direction DOWN = new Direction( "D" );
@@ -17,26 +18,29 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
      */
     private static final long serialVersionUID = 3327245550772860236L;
     private static final java.util.Map<String, Direction> values = new java.util.LinkedHashMap<>( 3, 1 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> literals = new java.util.ArrayList<>( 3 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> names = new java.util.ArrayList<>( 3 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<Direction> valueList = new java.util.ArrayList<>( 3 );
 
     static {
-        values.put( UP.value, UP );
-        valueList.add( UP );
-        literals.add( UP.value );
-        names.add( "UP" );
-        values.put( DOWN.value, DOWN );
-        valueList.add( DOWN );
-        literals.add( DOWN.value );
-        names.add( "DOWN" );
-        values.put( EITHER.value, EITHER );
-        valueList.add( EITHER );
-        literals.add( EITHER.value );
-        names.add( "EITHER" );
-        valueList = java.util.Collections.unmodifiableList( valueList );
-        literals = java.util.Collections.unmodifiableList( literals );
-        names = java.util.Collections.unmodifiableList( names );
+        Direction.values.put( Direction.UP.value, Direction.UP );
+        Direction.valueList.add( Direction.UP );
+        Direction.literals.add( Direction.UP.value );
+        Direction.names.add( "UP" );
+        Direction.values.put( Direction.DOWN.value, Direction.DOWN );
+        Direction.valueList.add( Direction.DOWN );
+        Direction.literals.add( Direction.DOWN.value );
+        Direction.names.add( "DOWN" );
+        Direction.values.put( Direction.EITHER.value, Direction.EITHER );
+        Direction.valueList.add( Direction.EITHER );
+        Direction.literals.add( Direction.EITHER.value );
+        Direction.names.add( "EITHER" );
+        Direction.valueList = java.util.Collections.unmodifiableList( Direction.valueList );
+        Direction.literals = java.util.Collections.unmodifiableList( Direction.literals );
+        Direction.names = java.util.Collections.unmodifiableList( Direction.names );
     }
 
     private String value;
@@ -44,7 +48,7 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
     /**
      * The default constructor allowing super classes to access it.
      */
-    protected Direction() {
+    Direction() {
     }
 
     private Direction( String value ) {
@@ -58,7 +62,7 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
      * @return new instance of Direction
      */
     public static Direction fromString( String value ) {
-        final Direction typeValue = values.get( value );
+        final Direction typeValue = Direction.values.get( value );
         if ( typeValue == null ) {
             /*
              * Customization to permit database values to change before code does. Previously this would throw an
@@ -76,7 +80,7 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
     public static java.util.List<String> literals() {
-        return literals;
+        return Direction.literals;
     }
 
     /**
@@ -86,7 +90,7 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
      * modified.
      */
     public static java.util.List<String> names() {
-        return names;
+        return Direction.names;
     }
 
     /**
@@ -95,7 +99,7 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
      * @return A List containing the actual enumeration instance values.
      */
     public static java.util.List<Direction> values() {
-        return valueList;
+        return Direction.valueList;
     }
 
     /**
@@ -107,19 +111,11 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
     }
 
     /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals( Object object ) {
-        return ( this == object ) || ( object instanceof Direction && ( ( Direction ) object ).getValue()
-                .equals( this.getValue() ) );
-    }
-
-    /**
      * Gets the underlying value of this type safe enumeration.
      *
      * @return the underlying value.
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public String getValue() {
         return this.value;
     }
@@ -130,6 +126,15 @@ public class Direction implements java.io.Serializable, Comparable<Direction> {
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
+    }
+
+    /**
+     * @see Object#equals(Object)
+     */
+    @Override
+    public boolean equals( Object object ) {
+        return ( this == object ) || ( object instanceof Direction && ( ( Direction ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     /**

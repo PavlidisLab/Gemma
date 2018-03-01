@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,17 +20,15 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignProbeMapTaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignProbeMapTaskCommand;
 
 /**
  * A controller to run array design probe mapper either locally or in a space.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 @Controller
 public class ArrayDesignProbeMapperController {
@@ -42,9 +40,8 @@ public class ArrayDesignProbeMapperController {
 
     /**
      * AJAX entry point.
-     *
      */
-    public String run( Long id ) throws Exception {
+    public String run( Long id ) {
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         arrayDesign = arrayDesignService.thaw( arrayDesign );

@@ -34,9 +34,9 @@
       <operations public="false" package="false" protected="true" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="ubic.gemma.model.expression.bioAssayData.BioAssayDimensionImpl" 
+  <class id="4" language="java" name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
     project="gemma-core"
-    file="/gemma-core/src/main/java/ubic/gemma/model/expression/bioAssayData/BioAssayDimensionImpl.java" binary="false"
+    file="/gemma-core/src/main/java/ubic/gemma/model/expression/bioAssayData/BioAssayDimension.java" binary="false"
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1066" y="575"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

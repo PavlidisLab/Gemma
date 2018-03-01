@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,46 +18,39 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+
+import static org.junit.Assert.*;
 
 /**
  * @author paul
- *
  */
 public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
@@ -107,22 +100,16 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
         /*
          * Have to add ssal for this platform.
          */
-
-        Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
-
-        // if ( salmon == null ) {
         super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
-        salmon = taxonService.findByCommonName( "atlantic salmon" );
-        // }
-
+        Taxon salmon = taxonService.findByCommonName( "atlantic salmon" );
         assertNotNull( salmon );
 
         /*
          * Load the array design (platform).
          */
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                getTestFileBasePath( "designLoadTests" ) ) );
-        geoService.fetchAndLoad( "GPL2899", true, true, false, false );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "designLoadTests" ) ) );
+        geoService.fetchAndLoad( "GPL2899", true, true, false );
         ArrayDesign ad = arrayDesignService.findByShortName( "GPL2899" );
 
         assertNotNull( ad );
@@ -140,13 +127,12 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
         metaData.getArrayDesigns().add( ad );
 
         try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/expressionDataBrain2003TestFile.txt" );) {
+                "/data/loader/expression/geo/designLoadTests/expressionDataBrain2003TestFile.txt" )) {
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
         }
         // ee = this.eeService.thawLite( ee );
     }
-
 
     @Test
     public final void testUploadBadDesign() throws Exception {
@@ -155,10 +141,10 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
          * The following file has a bug in it. It should fail.
          */
         try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003FirstBadFile.txt" );) {
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003FirstBadFile.txt" )) {
 
             try {
-                experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should fail.
+                experimentalDesignImporter.importDesign( ee, is ); // dry run, should fail.
                 fail( "Should have gotten an error when loading a bad file" );
             } catch ( IOException ok ) {
                 // ok
@@ -176,17 +162,17 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
          * Now try the good one.
          */
         try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );) {
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" )) {
 
-            experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should pass
+            experimentalDesignImporter.importDesign( ee, is ); // dry run, should pass
         }
 
         /*
          * Reopen the file.
          */
         try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );) {
-            experimentalDesignImporter.importDesign( ee, is, false ); // not a dry run, should pass.
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" )) {
+            experimentalDesignImporter.importDesign( ee, is ); // not a dry run, should pass.
         }
 
         ee = this.expressionExperimentService.load( ee.getId() );
@@ -195,14 +181,12 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         assertEquals( 3, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-            bms.add( bm );
-
+            //noinspection ResultOfMethodCallIgnored // Checking if accessible
+            ba.getSampleUsed();
         }
 
-        checkResults( bms );
+        this.checkResults();
 
         int s = ee.getExperimentalDesign().getExperimentalFactors().size();
         ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
@@ -234,14 +218,10 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
     }
 
-    /**
-     * @param bms
-     */
-    private void checkResults( Collection<BioMaterial> bms ) {
+    private void checkResults() {
         // check.
         assertEquals( 3, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        Collection<Long> seenFactorValueIds = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
 
             if ( ef.getName().equals( "SamplingLocation" ) ) {
@@ -249,15 +229,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
             }
 
             for ( FactorValue fv : ef.getFactorValues() ) {
-                if ( fv.getCharacteristics().size() > 0 ) {
-                    VocabCharacteristic c = ( VocabCharacteristic ) fv.getCharacteristics().iterator().next();
-                    assertNotNull( c.getValue() );
-                    assertNotNull( c.getCategoryUri() );
-                } else {
-                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic",
-                            fv.getMeasurement() );
-                }
-                seenFactorValueIds.add( fv.getId() );
+                ExperimentalDesignImporterTest.assertFv( fv );
             }
         }
 

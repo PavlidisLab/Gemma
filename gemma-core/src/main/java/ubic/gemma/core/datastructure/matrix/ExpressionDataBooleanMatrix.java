@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,7 +36,6 @@ import java.util.*;
  * Matrix of booleans mapped from an ExpressionExperiment.
  *
  * @author pavlidis
- *
  */
 public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolean> {
 
@@ -44,7 +43,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     private ObjectMatrixImpl<CompositeSequence, Integer, Boolean> matrix;
 
     public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        init();
+        this.init();
 
         for ( DesignElementDataVector dedv : vectors ) {
             if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
@@ -52,15 +51,15 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
             }
         }
 
-        selectVectors( vectors );
-        vectorsToMatrix( vectors );
+        this.selectVectors( vectors );
+        this.vectorsToMatrix( vectors );
     }
 
     public ExpressionDataBooleanMatrix( Collection<? extends DesignElementDataVector> vectors,
             List<QuantitationType> qtypes ) {
-        init();
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, qtypes );
-        vectorsToMatrix( selectedVectors );
+        this.init();
+        Collection<DesignElementDataVector> selectedVectors = this.selectVectors( vectors, qtypes );
+        this.vectorsToMatrix( selectedVectors );
     }
 
     @Override
@@ -81,14 +80,13 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
 
     @Override
     public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
-        // TODO Implement me
         throw new UnsupportedOperationException();
     }
 
     @Override
     public Boolean[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
-        return getColumn( index );
+        return this.getColumn( index );
     }
 
     @Override
@@ -105,7 +103,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
 
     @Override
     public Boolean[][] getColumns( List<BioAssay> bioAssays ) {
-        // TODO Implement me
         throw new UnsupportedOperationException();
     }
 
@@ -150,23 +147,19 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         Boolean[][] result = new Boolean[designElements.size()][];
         int i = 0;
         for ( CompositeSequence element : designElements ) {
-            Boolean[] rowResult = getRow( element );
+            Boolean[] rowResult = this.getRow( element );
             result[i] = rowResult;
             i++;
         }
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
-     */
     @Override
     public boolean hasMissingValues() {
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                if ( matrix.get( i, j ) == null ) return true;
+                if ( matrix.get( i, j ) == null )
+                    return true;
             }
         }
         return false;
@@ -188,9 +181,9 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
             throw new IllegalArgumentException();
         }
 
-        int maxSize = setUpColumnElements();
+        int maxSize = this.setUpColumnElements();
 
-        this.matrix = createMatrix( vectors, maxSize );
+        this.matrix = this.createMatrix( vectors, maxSize );
 
     }
 
@@ -225,7 +218,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
 
             rowNames.put( rowIndex, designElement );
 
-            boolean[] vals = getVals( bac, vector, bytes );
+            boolean[] vals = this.getVals( bac, vector, bytes );
 
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
 
@@ -236,7 +229,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
             }
 
             Iterator<BioAssay> it = bioAssays.iterator();
-            setMatBioAssayValues( mat, rowIndex, ArrayUtils.toObject( vals ), bioAssays, it );
+            this.setMatBioAssayValues( mat, rowIndex, ArrayUtils.toObject( vals ), bioAssays, it );
         }
 
         for ( int i = 0; i < mat.rows(); i++ ) {
@@ -260,14 +253,19 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
             vals = new boolean[charVals.length];
             int j = 0;
             for ( char c : charVals ) {
-                if ( c == 'P' ) {
-                    vals[j] = true;
-                } else if ( c == 'M' ) {
-                    vals[j] = false;
-                } else if ( c == 'A' ) {
-                    vals[j] = false;
-                } else {
-                    vals[j] = false;
+                switch ( c ) {
+                    case 'P':
+                        vals[j] = true;
+                        break;
+                    case 'M':
+                        vals[j] = false;
+                        break;
+                    case 'A':
+                        vals[j] = false;
+                        break;
+                    default:
+                        vals[j] = false;
+                        break;
                 }
                 j++;
             }

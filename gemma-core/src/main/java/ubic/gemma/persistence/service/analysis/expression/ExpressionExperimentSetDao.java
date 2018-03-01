@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,12 +51,6 @@ public interface ExpressionExperimentSetDao
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsInSet( Long id );
-
-    /**
-     * @return ExpressionExperimentSets that have more than 1 experiment in them.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
 
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them &amp; have a taxon value.

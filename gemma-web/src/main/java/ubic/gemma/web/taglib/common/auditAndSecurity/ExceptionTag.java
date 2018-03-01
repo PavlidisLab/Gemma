@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,47 +18,26 @@
  */
 package ubic.gemma.web.taglib.common.auditAndSecurity;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.servlet.jsp.tagext.Tag;
+import javax.servlet.jsp.tagext.TagSupport;
+
 /**
  * @author pavlidis
- *
  */
+@SuppressWarnings("unused") // Frontend use
 public class ExceptionTag extends TagSupport {
 
-    protected static Log log = LogFactory.getLog( ExceptionTag.class.getName() );
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4323477499674966726L;
+    protected static Log log = LogFactory.getLog( ExceptionTag.class.getName() );
+    private Exception exception;
+    private Boolean showStackTrace = true;
 
-    Exception exception;
-
-    Boolean showStackTrace = true;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
-     */
     @Override
-    public int doEndTag() {
-        return EVAL_PAGE;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
-     */
-    @Override
-    public int doStartTag() throws JspException {
+    public int doStartTag() {
         try {
             final StringBuilder buf = new StringBuilder();
             if ( this.exception == null ) {
@@ -75,7 +54,7 @@ public class ExceptionTag extends TagSupport {
                     buf.append( "</div>" );
                 }
                 // To make sure error doesn't get swallowed.
-                log.error( this.exception, this.exception );
+                ExceptionTag.log.error( this.exception, this.exception );
             }
 
             pageContext.getOut().print( buf.toString() );
@@ -83,14 +62,16 @@ public class ExceptionTag extends TagSupport {
             /*
              * Avoid stack overflow...
              */
-            log.error( "Exception tag threw an exception: " + ex.getMessage(), ex );
+            ExceptionTag.log.error( "Exception tag threw an exception: " + ex.getMessage(), ex );
         }
-        return SKIP_BODY;
+        return Tag.SKIP_BODY;
     }
 
-    /**
-     * @param exception
-     */
+    @Override
+    public int doEndTag() {
+        return Tag.EVAL_PAGE;
+    }
+
     public void setException( Exception exception ) {
         this.exception = exception;
     }

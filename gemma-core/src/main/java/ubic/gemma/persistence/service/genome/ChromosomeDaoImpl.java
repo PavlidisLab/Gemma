@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,27 +46,25 @@ public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements Chromo
     @Override
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from ChromosomeImpl c where c.name=:n and c.taxon=:t" )
-                .setParameter( "n", name ).setParameter( "t", taxon ).list();
-    }
-
-    @Override
-    public Chromosome findOrCreate( String name, Taxon taxon ) {
-        Collection<Chromosome> hits = this.find( name, taxon );
-        if ( hits == null || hits.isEmpty() ) {
-            Chromosome c = Chromosome.Factory.newInstance( name, taxon );
-            return create( c );
-        }
-        return hits.iterator().next();
-    }
-
-    @Override
-    public Chromosome findOrCreate( Chromosome entity ) {
-        return this.findOrCreate( entity.getName(), entity.getSequence().getTaxon() );
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from Chromosome c where c.name=:n and c.taxon=:t" ).setParameter( "n", name )
+                .setParameter( "t", taxon ).list();
     }
 
     @Override
     public Chromosome find( Chromosome entity ) {
         return this.find( entity.getName(), entity.getSequence().getTaxon() ).iterator().next();
+    }
+
+    @Override
+    public Chromosome findOrCreate( Chromosome entity ) {
+        String name = entity.getName();
+        Taxon taxon = entity.getSequence().getTaxon();
+        Collection<Chromosome> hits = this.find( name, taxon );
+        if ( hits == null || hits.isEmpty() ) {
+            Chromosome c = new Chromosome( name, taxon );
+            return this.create( c );
+        }
+        return hits.iterator().next();
     }
 }

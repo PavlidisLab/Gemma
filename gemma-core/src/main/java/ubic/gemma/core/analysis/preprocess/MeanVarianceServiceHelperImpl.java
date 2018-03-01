@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,16 +20,14 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author ptan
- *
  */
 @Component
 public class MeanVarianceServiceHelperImpl implements MeanVarianceServiceHelper {
@@ -40,28 +38,16 @@ public class MeanVarianceServiceHelperImpl implements MeanVarianceServiceHelper 
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.MeanVarianceServiceHelper#getIntensities(ExpressionExperiment)
-     */
-    @Override
-    public ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee ) {
-        return expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.preprocess.MeanVarianceServiceHelper#createMeanVariance(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation)
-     */
     @Override
     public void createMeanVariance( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
         mvr.setSecurityOwner( ee );
         ee.setMeanVarianceRelation( mvr );
         expressionExperimentService.update( ee );
+    }
+
+    @Override
+    public ExpressionDataDoubleMatrix getIntensities( ExpressionExperiment ee ) {
+        return expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
     }
 
 }

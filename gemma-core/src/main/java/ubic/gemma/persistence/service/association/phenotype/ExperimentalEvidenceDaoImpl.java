@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,13 +23,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
 @Repository
-public class ExperimentalEvidenceDaoImpl extends VoEnabledDao<ExperimentalEvidence, ExperimentalEvidenceValueObject>
+public class ExperimentalEvidenceDaoImpl
+        extends AbstractVoEnabledDao<ExperimentalEvidence, ExperimentalEvidenceValueObject>
         implements ExperimentalEvidenceDao {
 
     @Autowired

@@ -29,10 +29,9 @@ public interface PreprocessorService {
      * @param ee    the experiment
      * @param light if true, just do the bare minimum. The following are skipped: two-channel missing values; redoing
      *              differential expression.
-     * @return the experiment
      * @throws PreprocessingException if there was a problem during the processing
      */
-    ExpressionExperiment process( ExpressionExperiment ee, boolean light ) throws PreprocessingException;
+    void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException;
 
     /**
      * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
@@ -43,9 +42,8 @@ public interface PreprocessorService {
      * @param allowOutliers whether the computationally predicted outliers should stand in the way of batch correction.
      *                      Set to true to ignore outlier checks. If you have already removed/evaluated outliers then setting this to
      *                      true is safe.
-     * @return the experiment
      * @throws PreprocessingException if there was a problem during the batch correction
      */
-    ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean allowOutliers ) throws PreprocessingException;
+    void batchCorrect( ExpressionExperiment ee, boolean allowOutliers ) throws PreprocessingException;
 
 }

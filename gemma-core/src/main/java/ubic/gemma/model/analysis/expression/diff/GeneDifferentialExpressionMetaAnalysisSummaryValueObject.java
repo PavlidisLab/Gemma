@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,8 +25,8 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidence
 
 /**
  * @author frances
- *
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements SecureValueObject {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -51,13 +51,29 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
         return this.description;
     }
 
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public DiffExpressionEvidenceValueObject getDiffExpressionEvidence() {
         return this.diffExpressionEvidence;
+    }
+
+    public void setDiffExpressionEvidence( DiffExpressionEvidenceValueObject diffExpressionEvidence ) {
+        this.diffExpressionEvidence = diffExpressionEvidence;
+        if ( diffExpressionEvidence != null ) {
+            this.diffExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisSummaryValueObject( this );
+        }
+
     }
 
     @Override
     public Long getId() {
         return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     @Override
@@ -68,22 +84,6 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     @Override
     public boolean getIsShared() {
         return this.isShared;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public Integer getNumGenesAnalyzed() {
-        return this.numGenesAnalyzed;
-    }
-
-    public Integer getNumResults() {
-        return this.numResults;
-    }
-
-    public Integer getNumResultSetsIncluded() {
-        return this.numResultSetsIncluded;
     }
 
     @Override
@@ -101,86 +101,9 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
         return this.isOwnedByCurrentUser;
     }
 
-    @Deprecated
-    public boolean isEditable() {
-        return this.isEditable;
-    }
-
-    @Deprecated
-    public boolean isOwnedByCurrentUser() {
-        return this.isOwnedByCurrentUser;
-    }
-
-    @Deprecated
-    public boolean isPublic() {
-        return this.isPublic;
-    }
-
-    @Deprecated
-    public boolean isShared() {
-        return this.isShared;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setDiffExpressionEvidence( DiffExpressionEvidenceValueObject diffExpressionEvidence ) {
-        this.diffExpressionEvidence = diffExpressionEvidence;
-        if ( diffExpressionEvidence != null ) {
-            this.diffExpressionEvidence.setGeneDifferentialExpressionMetaAnalysisSummaryValueObject( this );
-        }
-
-    }
-
-    @Deprecated
-    public void setEditable( boolean isEditable ) {
-        this.isEditable = isEditable;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
     @Override
-    public void setIsPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
-    @Override
-    public void setIsShared( boolean isShared ) {
-        this.isShared = isShared;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
-        this.numGenesAnalyzed = numGenesAnalyzed;
-    }
-
-    public void setNumResults( Integer numResults ) {
-        this.numResults = numResults;
-    }
-
-    public void setNumResultSetsIncluded( Integer numResultSetsIncluded ) {
-        this.numResultSetsIncluded = numResultSetsIncluded;
-    }
-
-    @Deprecated
-    public void setOwnedByCurrentUser( boolean isOwnedByCurrentUser ) {
-        this.isOwnedByCurrentUser = isOwnedByCurrentUser;
-    }
-
-    @Deprecated
-    public void setPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
-    @Deprecated
-    public void setShared( boolean isShared ) {
-        this.isShared = isShared;
+    public void setUserOwned( boolean isUserOwned ) {
+        this.isOwnedByCurrentUser = isUserOwned;
     }
 
     @Override
@@ -189,8 +112,85 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
     }
 
     @Override
-    public void setUserOwned( boolean isUserOwned ) {
-        this.isOwnedByCurrentUser = isUserOwned;
+    public void setIsShared( boolean isShared ) {
+        this.isShared = isShared;
+    }
+
+    @Override
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public Integer getNumGenesAnalyzed() {
+        return this.numGenesAnalyzed;
+    }
+
+    public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
+        this.numGenesAnalyzed = numGenesAnalyzed;
+    }
+
+    public Integer getNumResults() {
+        return this.numResults;
+    }
+
+    public void setNumResults( Integer numResults ) {
+        this.numResults = numResults;
+    }
+
+    public Integer getNumResultSetsIncluded() {
+        return this.numResultSetsIncluded;
+    }
+
+    public void setNumResultSetsIncluded( Integer numResultSetsIncluded ) {
+        this.numResultSetsIncluded = numResultSetsIncluded;
+    }
+
+    @Deprecated
+    public boolean isEditable() {
+        return this.isEditable;
+    }
+
+    @Deprecated
+    public void setEditable( boolean isEditable ) {
+        this.isEditable = isEditable;
+    }
+
+    @Deprecated
+    public boolean isOwnedByCurrentUser() {
+        return this.isOwnedByCurrentUser;
+    }
+
+    @Deprecated
+    public void setOwnedByCurrentUser( boolean isOwnedByCurrentUser ) {
+        this.isOwnedByCurrentUser = isOwnedByCurrentUser;
+    }
+
+    @Deprecated
+    public boolean isPublic() {
+        return this.isPublic;
+    }
+
+    @Deprecated
+    public void setPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    @Deprecated
+    public boolean isShared() {
+        return this.isShared;
+    }
+
+    @Deprecated
+    public void setShared( boolean isShared ) {
+        this.isShared = isShared;
     }
 
 }

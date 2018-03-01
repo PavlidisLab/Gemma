@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,14 @@ public class GeneAlias implements Identifiable, Serializable {
     }
 
     @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -48,18 +56,7 @@ public class GeneAlias implements Identifiable, Serializable {
             return false;
         }
         final GeneAlias that = ( GeneAlias ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
     public String getAlias() {
@@ -70,6 +67,7 @@ public class GeneAlias implements Identifiable, Serializable {
         this.alias = alias;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
@@ -83,6 +81,7 @@ public class GeneAlias implements Identifiable, Serializable {
             return new ubic.gemma.model.genome.gene.GeneAlias();
         }
 
+        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static ubic.gemma.model.genome.gene.GeneAlias newInstance( String alias ) {
             final ubic.gemma.model.genome.gene.GeneAlias entity = new ubic.gemma.model.genome.gene.GeneAlias();
             entity.setAlias( alias );

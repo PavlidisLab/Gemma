@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,15 +37,24 @@ import java.util.Map;
 /**
  * @author kelsey
  */
+@SuppressWarnings("unused") // Possible external use
 public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject> {
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    Collection<Gene> create( Collection<Gene> genes );
+    Gene create( Gene gene );
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    Gene create( Gene gene );
+    void remove( Gene gene );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void update( Collection<Gene> genes );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void update( Gene gene );
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
@@ -59,8 +68,9 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     /**
      * Searches for a gene based on its ensembl ID.
-     * FIXME There is a small amount of genes in our database that have duplicate ensembl IDs. These genes are believed
+     * There is a small amount of genes in our database that have duplicate ensembl IDs. These genes are believed
      * to be somehow unusable anyway, so we ignore those cases at the moment - Aug. 11th 2017.
+     *
      * @param exactString the ensembl ID that the gene will be looked up by.
      * @return a Gene with the given Ensembl ID.
      */
@@ -151,18 +161,10 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids );
 
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Collection<Gene> genes );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Gene gene );
-
     Gene thaw( Gene gene );
 
     /**
-     * Only thaw the Aliases, very light version
+     * Only thawRawAndProcessed the Aliases, very light version
      */
     Gene thawAliases( Gene gene );
 
@@ -171,13 +173,5 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
     Gene thawLite( Gene gene );
 
     Gene thawLiter( Gene gene );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void update( Collection<Gene> genes );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void update( Gene gene );
 
 }

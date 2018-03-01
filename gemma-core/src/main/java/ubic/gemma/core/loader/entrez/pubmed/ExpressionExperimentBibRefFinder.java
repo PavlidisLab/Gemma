@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,11 +40,11 @@ import java.util.regex.Pattern;
  */
 public class ExpressionExperimentBibRefFinder {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentBibRefFinder.class.getName() );
+    private static final Log log = LogFactory.getLog( ExpressionExperimentBibRefFinder.class.getName() );
 
-    private static String GEO_SERIES_URL_BASE = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=";
+    private static final String GEO_SERIES_URL_BASE = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=";
 
-    private static String PUBMEDREF_REGEX = "class=\"pubmed_id\" id=\"(\\d+)";
+    private static final String PUBMEDREF_REGEX = "class=\"pubmed_id\" id=\"(\\d+)";
 
     public BibliographicReference locatePrimaryReference( ExpressionExperiment ee ) {
 
@@ -56,7 +56,7 @@ public class ExpressionExperimentBibRefFinder {
         ExternalDatabase ed = accession.getExternalDatabase();
 
         if ( !ed.getName().equals( "GEO" ) ) {
-            log.warn( "Don't know how to get references for non-GEO data sets" );
+            ExpressionExperimentBibRefFinder.log.warn( "Don't know how to get references for non-GEO data sets" );
             return null;
         }
 
@@ -73,30 +73,30 @@ public class ExpressionExperimentBibRefFinder {
 
     private int locatePubMedId( String geoSeries ) {
         if ( !geoSeries.matches( "GSE\\d+" ) ) {
-            log.warn( geoSeries + " is not a GEO Series Accession" );
+            ExpressionExperimentBibRefFinder.log.warn( geoSeries + " is not a GEO Series Accession" );
             return -1;
         }
-        URL url = null;
+        URL url;
 
-        Pattern pat = Pattern.compile( PUBMEDREF_REGEX );
+        Pattern pat = Pattern.compile( ExpressionExperimentBibRefFinder.PUBMEDREF_REGEX );
 
         URLConnection conn;
         try {
-            url = new URL( GEO_SERIES_URL_BASE + geoSeries );
+            url = new URL( ExpressionExperimentBibRefFinder.GEO_SERIES_URL_BASE + geoSeries );
             conn = url.openConnection();
             conn.connect();
         } catch ( IOException e1 ) {
-            log.error( e1, e1 );
+            ExpressionExperimentBibRefFinder.log.error( e1, e1 );
             throw new RuntimeException( "Could not get data from remote server", e1 );
         }
 
         try (InputStream is = conn.getInputStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
-            String line = null;
+            String line;
             while ( ( line = br.readLine() ) != null ) {
                 Matcher mat = pat.matcher( line );
-                log.debug( line );
+                ExpressionExperimentBibRefFinder.log.debug( line );
                 if ( mat.find() ) {
                     String capturedAccession = mat.group( 1 );
                     if ( StringUtils.isBlank( capturedAccession ) )
@@ -107,10 +107,10 @@ public class ExpressionExperimentBibRefFinder {
             is.close();
 
         } catch ( IOException e ) {
-            log.error( e, e );
+            ExpressionExperimentBibRefFinder.log.error( e, e );
             throw new RuntimeException( "Could not get data from remote server", e );
         } catch ( NumberFormatException e ) {
-            log.error( e, e );
+            ExpressionExperimentBibRefFinder.log.error( e, e );
             throw new RuntimeException( "Could not determine valid pubmed id" );
         }
 

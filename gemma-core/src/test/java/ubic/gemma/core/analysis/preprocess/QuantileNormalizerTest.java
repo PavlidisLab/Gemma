@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,9 +18,9 @@
  */
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,27 +36,25 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author pavlidis
- *
  */
 public class QuantileNormalizerTest {
-    private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
+    private static final Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
 
-    DoubleMatrix<String, String> tester;
-    QuantileNormalizer<String, String> qn;
+    private DoubleMatrix<String, String> tester;
+    private QuantileNormalizer<String, String> qn;
 
     @Before
     public void setUp() throws Exception {
@@ -64,8 +62,8 @@ public class QuantileNormalizerTest {
         tester = reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
         assert tester != null;
 
-        qn = new QuantileNormalizer<String, String>();
-        log.debug( "Setup done" );
+        qn = new QuantileNormalizer<>();
+        QuantileNormalizerTest.log.debug( "Setup done" );
     }
 
     @After
