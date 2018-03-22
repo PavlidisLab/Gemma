@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,6 +54,7 @@ public abstract class CurationDetailsEvent extends AuditEventType {
     /**
      * Throws an exception, as CurationDetailsEvent can not be instantiated.
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
         /**
          * @return Throws an UnsupportedOperationException

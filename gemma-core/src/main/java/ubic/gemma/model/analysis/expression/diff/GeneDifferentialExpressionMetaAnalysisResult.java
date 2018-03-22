@@ -36,25 +36,6 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
     private Gene gene;
     private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
 
-    /**
-     * Returns <code>true</code> if the argument is an GeneDifferentialExpressionMetaAnalysisResult instance and all
-     * identifiers for this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof GeneDifferentialExpressionMetaAnalysisResult ) ) {
-            return false;
-        }
-        final GeneDifferentialExpressionMetaAnalysisResult that = ( GeneDifferentialExpressionMetaAnalysisResult ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
     public Gene getGene() {
         return this.gene;
     }
@@ -142,6 +123,22 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
         hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
 
         return hashCode;
+    }
+
+    /**
+     * Returns <code>true</code> if the argument is an GeneDifferentialExpressionMetaAnalysisResult instance and all
+     * identifiers for this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof GeneDifferentialExpressionMetaAnalysisResult ) ) {
+            return false;
+        }
+        final GeneDifferentialExpressionMetaAnalysisResult that = ( GeneDifferentialExpressionMetaAnalysisResult ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
     public static final class Factory {

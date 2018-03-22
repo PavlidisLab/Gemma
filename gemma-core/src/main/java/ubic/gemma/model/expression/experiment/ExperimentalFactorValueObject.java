@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,7 @@ import java.util.Objects;
  * @author luke
  * @author keshav
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class ExperimentalFactorValueObject extends IdentifiableValueObject<ExperimentalFactor> implements Serializable {
 
     private static final long serialVersionUID = -2615804031123874251L;
@@ -66,12 +67,12 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
         if ( factor.getCategory() != null )
             this.setCategory( factor.getCategory().getCategory() );
 
-        this.setCategoryUri( getCategoryUri( factor.getCategory() ) );
+        this.setCategoryUri( this.getCategoryUri( factor.getCategory() ) );
 
         /*
          * Note: this code copied from the ExperimentalDesignController.
          */
-        Collection<FactorValueValueObject> vals = new HashSet<FactorValueValueObject>();
+        Collection<FactorValueValueObject> vals = new HashSet<>();
 
         if ( factor.getType() != null ) {
             this.type = factor.getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
@@ -128,7 +129,7 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         ExperimentalFactorValueObject other = ( ExperimentalFactorValueObject ) obj;
         return Objects.equals( id, other.id );
@@ -169,8 +170,12 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
         this.factorValues = factorValues;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
+        return result;
     }
 
     public String getName() {
@@ -209,14 +214,6 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     public void setValues( Collection<FactorValueValueObject> values ) {
         this.values = values;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
-        return result;
     }
 
     private String getCategoryUri( Characteristic c ) {

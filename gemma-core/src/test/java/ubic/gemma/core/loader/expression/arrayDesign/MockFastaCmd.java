@@ -13,7 +13,7 @@ import java.util.HashSet;
 
 class MockFastaCmd implements FastaCmd {
 
-    private Taxon taxon;
+    private final Taxon taxon;
 
     public MockFastaCmd( Taxon t ) {
         this.taxon = t;
@@ -21,41 +21,56 @@ class MockFastaCmd implements FastaCmd {
 
     @Override
     public BioSequence getByAccession( String accession, String database ) {
-        return getSingle( accession, database, null );
+        return this.getSingle( accession, database, null );
     }
 
     @Override
     public BioSequence getByIdentifier( int identifier, String database ) {
-        return getSingle( new Integer( identifier ), database, null );
+        return this.getSingle( identifier, database, null );
     }
 
     @Override
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database ) {
-        return getMultiple( accessions, database, null );
+        return this.getMultiple( accessions, database, null );
     }
 
     @Override
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database ) {
-        return getMultiple( identifiers, database, null );
+        return this.getMultiple( identifiers, database, null );
     }
 
     @Override
     public BioSequence getByAccession( String accession, String database, String blastHome ) {
-        return getSingle( accession, database, blastHome );
+        return this.getSingle( accession, database, blastHome );
+    }
+
+    @Override
+    public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
+        return this.getSingle( identifier, database, blastHome );
+    }
+
+    @Override
+    public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database,
+            String blastHome ) {
+        return this.getMultiple( accessions, database, blastHome );
+    }
+
+    @Override
+    public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database,
+            String blastHome ) {
+        return this.getMultiple( identifiers, database, blastHome );
     }
 
     @SuppressWarnings("unused")
     private BioSequence getSingle( Object accession, String database, String blastHome ) {
-        BioSequence result = makeSequence( accession );
-        return result;
+        return this.makeSequence( accession );
     }
 
     @SuppressWarnings("unused")
-    private Collection<BioSequence> getMultiple( Collection<? extends Object> accessions, String database,
-            String blastHome ) {
-        Collection<BioSequence> results = new HashSet<BioSequence>();
+    private Collection<BioSequence> getMultiple( Collection<?> accessions, String database, String blastHome ) {
+        Collection<BioSequence> results = new HashSet<>();
         for ( Object object : accessions ) {
-            BioSequence result = makeSequence( object );
+            BioSequence result = this.makeSequence( object );
 
             results.add( result );
         }
@@ -74,22 +89,5 @@ class MockFastaCmd implements FastaCmd {
         DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( object.toString() );
         result.setSequenceDatabaseEntry( genbank );
         return result;
-    }
-
-    @Override
-    public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
-        return getSingle( new Integer( identifier ), database, blastHome );
-    }
-
-    @Override
-    public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database,
-            String blastHome ) {
-        return getMultiple( accessions, database, blastHome );
-    }
-
-    @Override
-    public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database,
-            String blastHome ) {
-        return getMultiple( identifiers, database, blastHome );
     }
 }

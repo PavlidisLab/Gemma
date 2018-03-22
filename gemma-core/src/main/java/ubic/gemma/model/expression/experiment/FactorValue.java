@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,6 +55,24 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
     }
 
     @Override
+    public int hashCode() {
+        if ( this.getId() != null )
+            return this.getId().hashCode();
+
+        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() )
+                .append( this.getExperimentalFactor() ).append( this.getMeasurement() );
+        if ( this.getCharacteristics() != null ) {
+            for ( Characteristic c : this.getCharacteristics() ) {
+                if ( c instanceof VocabCharacteristic )
+                    builder.append( c.hashCode() );
+                else
+                    builder.append( c.hashCode() );
+            }
+        }
+        return builder.toHashCode();
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( object == null )
             return false;
@@ -74,36 +92,18 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
          * the fields; pain in butt
          */
 
-        return checkGuts( that );
+        return this.checkGuts( that );
 
-    }
-
-    @Override
-    public int hashCode() {
-        if ( this.getId() != null )
-            return this.getId().hashCode();
-
-        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() )
-                .append( this.getExperimentalFactor() ).append( this.getMeasurement() );
-        if ( this.getCharacteristics() != null ) {
-            for ( Characteristic c : this.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic )
-                    builder.append( ( ( VocabCharacteristic ) c ).hashCode() );
-                else
-                    builder.append( c.hashCode() );
-            }
-        }
-        return builder.toHashCode();
     }
 
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         // this can be null in tests or with half-setup transient objects
-        buf.append( "FactorValue " + this.getId() + ": " );
+        buf.append( "FactorValue " ).append( this.getId() ).append( ": " );
 
         if ( this.getExperimentalFactor() != null )
-            buf.append( this.getExperimentalFactor().getName() + ":" );
+            buf.append( this.getExperimentalFactor().getName() ).append( ":" );
         if ( this.getCharacteristics().size() > 0 ) {
             for ( Characteristic c : this.getCharacteristics() ) {
                 buf.append( c.getValue() );
@@ -127,6 +127,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.id = id;
     }
 
+    @Transient
     @Override
     public ExpressionExperiment getSecurityOwner() {
         return securityOwner;
@@ -180,6 +181,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         this.value = value;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     @Transient
     public String getDescriptiveString() {
         if ( this.characteristics != null && this.characteristics.size() > 0 ) {
@@ -235,10 +237,7 @@ public class FactorValue implements Identifiable, Serializable, gemma.gsec.model
         }
 
         if ( this.getValue() != null ) {
-            if ( that.getValue() == null )
-                return false;
-            if ( !this.getValue().equals( that.getValue() ) )
-                return false;
+            return that.getValue() != null && this.getValue().equals( that.getValue() );
         }
 
         // everything is empty...

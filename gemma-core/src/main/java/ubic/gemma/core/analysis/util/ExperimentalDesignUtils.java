@@ -1,39 +1,37 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.analysis.util;
 
-import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisUtil;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.util.FactorValueVector;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 import java.util.*;
 
 /**
  * @author paul
- *
  */
 public class ExperimentalDesignUtils {
 
@@ -44,18 +42,6 @@ public class ExperimentalDesignUtils {
     public static final String FACTOR_VALUE_RNAME_PREFIX = ExperimentalFactorService.FACTOR_VALUE_RNAME_PREFIX;
 
     /**
-     * @return batch factor, if present, or else null
-     */
-    public static ExperimentalFactor batchFactor( Collection<ExperimentalFactor> factors ) {
-        for ( ExperimentalFactor f : factors ) {
-            if ( isBatch( f ) ) {
-                return f;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Check if a factor has missing values (samples that lack an assigned value)
      *
      * @param baselines not really important for this
@@ -64,7 +50,7 @@ public class ExperimentalDesignUtils {
     public static boolean isComplete( ExperimentalFactor factor, List<BioMaterial> samplesUsed,
             Map<ExperimentalFactor, FactorValue> baselines ) {
         for ( BioMaterial samp : samplesUsed ) {
-            Object value = extractFactorValueForSample( baselines, samp, factor );
+            Object value = ExperimentalDesignUtils.extractFactorValueForSample( baselines, samp, factor );
             if ( value == null )
                 return false;
         }
@@ -82,11 +68,12 @@ public class ExperimentalDesignUtils {
     public static ObjectMatrix<String, String, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
             List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines ) {
 
-        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(), factors.size() );
+        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(),
+                factors.size() );
 
         Map<ExperimentalFactor, String> factorNamesInR = new LinkedHashMap<>();
         for ( ExperimentalFactor factor : factors ) {
-            factorNamesInR.put( factor, nameForR( factor ) );
+            factorNamesInR.put( factor, ExperimentalDesignUtils.nameForR( factor ) );
         }
         designMatrix.setColumnNames( new ArrayList<>( factorNamesInR.values() ) );
 
@@ -99,7 +86,7 @@ public class ExperimentalDesignUtils {
 
             int col = 0;
             for ( ExperimentalFactor factor : factors ) {
-                Object value = extractFactorValueForSample( baselines, samp, factor );
+                Object value = ExperimentalDesignUtils.extractFactorValueForSample( baselines, samp, factor );
 
                 designMatrix.set( row, col, value );
 
@@ -152,7 +139,7 @@ public class ExperimentalDesignUtils {
     public static Collection<ExperimentalFactor> factorsWithoutBatch( Collection<ExperimentalFactor> factors ) {
         Collection<ExperimentalFactor> result = new ArrayList<>();
         for ( ExperimentalFactor f : factors ) {
-            if ( !isBatch( f ) ) {
+            if ( !ExperimentalDesignUtils.isBatch( f ) ) {
                 result.add( f );
             }
         }
@@ -208,24 +195,23 @@ public class ExperimentalDesignUtils {
             return false;
         }
         Characteristic category = ef.getCategory();
-        return ef.getName().equals( BATCH_FACTOR_NAME ) && category.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME );
+        return ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) && category.getCategory()
+                .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
     }
 
     /**
      * @return true if this factor appears to be a "batch" factor.
      */
     public static boolean isBatch( ExperimentalFactorValueObject ef ) {
-        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) )
+        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS.getValue() ) )
             return false;
 
         String category = ef.getCategory();
-        if ( category != null && ef.getName() != null ) {
-            if ( category.equals( BATCH_FACTOR_CATEGORY_NAME ) && ef.getName().contains( BATCH_FACTOR_NAME ) && ef
-                    .getName().contains( BATCH_FACTOR_NAME_PREFIX ) )
-                return true;
-        }
+        return category != null && ef.getName() != null && category
+                .equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) && ef.getName()
+                .contains( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) && ef.getName()
+                .contains( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX );
 
-        return false;
     }
 
     /**
@@ -238,6 +224,7 @@ public class ExperimentalDesignUtils {
         for ( FactorValue fv : ef.getFactorValues() ) {
             if ( fv.getMeasurement() != null ) {
                 try {
+                    //noinspection ResultOfMethodCallIgnored // Checking if parseable
                     Double.parseDouble( fv.getMeasurement().getValue() );
                     return true;
                 } catch ( NumberFormatException e ) {
@@ -253,7 +240,7 @@ public class ExperimentalDesignUtils {
     }
 
     public static String nameForR( FactorValue fv, boolean isBaseline ) {
-        return FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? "_base" : "" );
+        return ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? "_base" : "" );
     }
 
     public static String prettyString( FactorValue fv ) {
@@ -270,30 +257,6 @@ public class ExperimentalDesignUtils {
                 buf.append( " | " );
         }
         return buf.toString();
-
-    }
-
-    /**
-     */
-    public static CountingMap<FactorValueVector> getDesignMatrix( ExpressionExperiment expressionExperiment ) {
-
-        Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
-
-        for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
-            ExperimentalFactor experimentalFactor = iterator.next();
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
-                iterator.remove();
-            }
-        }
-
-        CountingMap<FactorValueVector> assayCount = new CountingMap<>();
-        for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
-            BioMaterial sample = assay.getSampleUsed();
-            assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
-
-        }
-
-        return assayCount;
 
     }
 
@@ -315,7 +278,7 @@ public class ExperimentalDesignUtils {
             int col = 0;
             for ( ExperimentalFactor factor : factors ) {
 
-                Object value = extractFactorValueForSample( baselines, samp, factor );
+                Object value = ExperimentalDesignUtils.extractFactorValueForSample( baselines, samp, factor );
 
                 designMatrix.set( row, col, value );
 
@@ -335,8 +298,7 @@ public class ExperimentalDesignUtils {
      * Sort factors in a consistent way.
      */
     public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
-        List<ExperimentalFactor> facs = new ArrayList<>();
-        facs.addAll( factors );
+        List<ExperimentalFactor> facs = new ArrayList<>( factors );
         Collections.sort( facs, new Comparator<ExperimentalFactor>() {
             @Override
             public int compare( ExperimentalFactor o1, ExperimentalFactor o2 ) {
@@ -366,7 +328,7 @@ public class ExperimentalDesignUtils {
 
                 boolean isBaseline = baseLineFV != null && fv.equals( baseLineFV );
 
-                if ( isContinuous( factor ) ) {
+                if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
                     Measurement measurement = fv.getMeasurement();
                     assert measurement != null;
                     try {
@@ -379,7 +341,7 @@ public class ExperimentalDesignUtils {
                      * We always use a dummy value. It's not as human-readable but at least we're sure it is unique and
                      * R-compliant. (assuming the fv is persistent!)
                      */
-                    value = nameForR( fv, isBaseline );
+                    value = ExperimentalDesignUtils.nameForR( fv, isBaseline );
                 }
                 found = true;
                 // could break here but nice to check for uniqueness.

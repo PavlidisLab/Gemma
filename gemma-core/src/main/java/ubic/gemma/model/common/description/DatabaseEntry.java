@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,18 +48,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
     }
 
     @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof DatabaseEntry ) ) {
-            return false;
-        }
-        final DatabaseEntry that = ( DatabaseEntry ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    @Override
     public int hashCode() {
         if ( this.getId() != null )
             return super.hashCode();
@@ -75,6 +63,18 @@ public class DatabaseEntry implements Identifiable, Serializable {
             hashCode += this.getExternalDatabase().hashCode();
 
         return hashCode;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof DatabaseEntry ) ) {
+            return false;
+        }
+        final DatabaseEntry that = ( DatabaseEntry ) object;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
     @Override
@@ -108,6 +108,7 @@ public class DatabaseEntry implements Identifiable, Serializable {
         this.externalDatabase = externalDatabase;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }

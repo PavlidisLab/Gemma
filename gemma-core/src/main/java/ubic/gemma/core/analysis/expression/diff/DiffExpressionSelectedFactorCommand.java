@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,10 +22,10 @@ import java.io.Serializable;
 
 /**
  * A command object with a selected factor and associated experiment.
- * 
- * @author keshav
  *
+ * @author keshav
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class DiffExpressionSelectedFactorCommand implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -46,12 +46,12 @@ public class DiffExpressionSelectedFactorCommand implements Serializable {
         return eeId;
     }
 
-    public Long getEfId() {
-        return efId;
-    }
-
     public void setEeId( Long eeId ) {
         this.eeId = eeId;
+    }
+
+    public Long getEfId() {
+        return efId;
     }
 
     public void setEfId( Long efId ) {

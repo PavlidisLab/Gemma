@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -78,67 +78,8 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     @Override
     public void addToCache( Collection<DiffExprGeneSearchResult> diffExForCache ) {
         for ( DiffExprGeneSearchResult d : diffExForCache ) {
-            addToCache( d );
+            this.addToCache( d );
         }
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        CacheManager cacheManager = cacheManagerFactory.getObject();
-        int maxElements = Settings.getInt( "gemma.cache.diffex.maxelements", CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = Settings.getInt( "gemma.cache.diffex.timetolive", CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = Settings.getInt( "gemma.cache.diffex.timetoidle", CACHE_DEFAULT_TIME_TO_IDLE );
-
-        boolean eternal = Settings.getBoolean( "gemma.cache.diffex.eternal", CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
-        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
-        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.diffex.usedisk", CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
-
-        if ( !cacheManager.cacheExists( CACHE_NAME_BASE ) ) {
-            /*
-             * See TerracottaConfiguration.
-             */
-            int diskExpiryThreadIntervalSeconds = 600;
-            int maxElementsOnDisk = 10000;
-            boolean terracottaCoherentReads = false;
-            boolean clearOnFlush = false;
-
-            if ( terracottaEnabled ) {
-
-                CacheConfiguration config = new CacheConfiguration( CACHE_NAME_BASE, maxElements );
-                config.setStatistics( false );
-                config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
-                config.setEternal( eternal );
-                config.setTimeToIdleSeconds( timeToIdle );
-                config.setMaxElementsOnDisk( maxElementsOnDisk );
-                config.addTerracotta( new TerracottaConfiguration() );
-                config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
-                config.clearOnFlush( clearOnFlush );
-                config.setTimeToLiveSeconds( timeToLive );
-                config.getTerracottaConfiguration().setClustered( true );
-                config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-                NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
-                TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
-                tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
-                nonstopConfiguration.addTimeoutBehavior( tobc );
-                config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
-                this.cache = new Cache( config );
-                this.topHitsCache = new Cache( config );
-                this.topHitsCache.setName( TOP_HIT_CACHE_NAME_BASE );
-
-            } else {
-                this.cache = new Cache( CACHE_NAME_BASE, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
-                        null, eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null );
-                this.topHitsCache = new Cache( TOP_HIT_CACHE_NAME_BASE, maxElements, MemoryStoreEvictionPolicy.LRU,
-                        overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,
-                        diskExpiryThreadIntervalSeconds, null );
-            }
-
-            cacheManager.addCache( cache );
-            cacheManager.addCache( topHitsCache );
-        }
-
     }
 
     @Override
@@ -158,18 +99,14 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
-    public DiffExprGeneSearchResult get( Long resultSet, Long g ) {
-        assert cache != null;
-        Element element = cache.get( new CacheKey( resultSet, g ) );
-        if ( element == null )
-            return null;
-        return ( DiffExprGeneSearchResult ) element.getObjectValue();
+    public void clearTopHitCache( Long resultSetId ) {
+        this.topHitsCache.remove( resultSetId );
     }
 
     @Override
     public Collection<DiffExprGeneSearchResult> get( Long resultSet, Collection<Long> genes ) {
         assert cache != null;
-        Collection<DiffExprGeneSearchResult> results = new HashSet<DiffExprGeneSearchResult>();
+        Collection<DiffExprGeneSearchResult> results = new HashSet<>();
         for ( Long g : genes ) {
             Element element = cache.get( new CacheKey( resultSet, g ) );
             if ( element != null ) {
@@ -180,6 +117,15 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
+    public DiffExprGeneSearchResult get( Long resultSet, Long g ) {
+        assert cache != null;
+        Element element = cache.get( new CacheKey( resultSet, g ) );
+        if ( element == null )
+            return null;
+        return ( DiffExprGeneSearchResult ) element.getObjectValue();
+    }
+
+    @Override
     public Boolean isEnabled() {
         return enabled;
     }
@@ -187,11 +133,6 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     @Override
     public void setEnabled( Boolean enabled ) {
         this.enabled = enabled;
-    }
-
-    @Override
-    public void clearTopHitCache( Long resultSetId ) {
-        this.topHitsCache.remove( resultSetId );
     }
 
     @Override
@@ -210,39 +151,85 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         return ( List<DifferentialExpressionValueObject> ) element.getObjectValue();
     }
 
+    @Override
+    public void afterPropertiesSet() {
+        CacheManager cacheManager = cacheManagerFactory.getObject();
+        int maxElements = Settings.getInt( "gemma.cache.diffex.maxelements",
+                DifferentialExpressionResultCacheImpl.CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = Settings.getInt( "gemma.cache.diffex.timetolive",
+                DifferentialExpressionResultCacheImpl.CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = Settings.getInt( "gemma.cache.diffex.timetoidle",
+                DifferentialExpressionResultCacheImpl.CACHE_DEFAULT_TIME_TO_IDLE );
+
+        boolean eternal = Settings.getBoolean( "gemma.cache.diffex.eternal",
+                DifferentialExpressionResultCacheImpl.CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
+        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.diffex.usedisk",
+                DifferentialExpressionResultCacheImpl.CACHE_DEFAULT_OVERFLOW_TO_DISK );
+        boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
+
+        if ( !cacheManager.cacheExists( DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE ) ) {
+            /*
+             * See TerracottaConfiguration.
+             */
+            int diskExpiryThreadIntervalSeconds = 600;
+            int maxElementsOnDisk = 10000;
+            boolean terracottaCoherentReads = false;
+            boolean clearOnFlush = false;
+
+            if ( terracottaEnabled ) {
+
+                CacheConfiguration config = new CacheConfiguration(
+                        DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE, maxElements );
+                config.setStatistics( false );
+                config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
+                config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
+                config.setEternal( eternal );
+                config.setTimeToIdleSeconds( timeToIdle );
+                config.setMaxElementsOnDisk( maxElementsOnDisk );
+                config.addTerracotta( new TerracottaConfiguration() );
+                //noinspection ConstantConditions // Better readability
+                config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
+                //noinspection ConstantConditions // Better readability
+                config.clearOnFlush( clearOnFlush );
+                config.setTimeToLiveSeconds( timeToLive );
+                config.getTerracottaConfiguration().setClustered( true );
+                config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
+                NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
+                TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
+                tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
+                nonstopConfiguration.addTimeoutBehavior( tobc );
+                config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
+                this.cache = new Cache( config );
+                this.topHitsCache = new Cache( config );
+                this.topHitsCache.setName( DifferentialExpressionResultCacheImpl.TOP_HIT_CACHE_NAME_BASE );
+
+            } else {
+                this.cache = new Cache( DifferentialExpressionResultCacheImpl.CACHE_NAME_BASE, maxElements,
+                        MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
+                        diskPersistent, diskExpiryThreadIntervalSeconds, null );
+                this.topHitsCache = new Cache( DifferentialExpressionResultCacheImpl.TOP_HIT_CACHE_NAME_BASE,
+                        maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive,
+                        timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null );
+            }
+
+            cacheManager.addCache( cache );
+            cacheManager.addCache( topHitsCache );
+        }
+
+    }
+
 }
 
 class CacheKey implements Serializable {
 
     private static final long serialVersionUID = 1453661277282349121L;
-    Long resultSetId;
-    Long geneId;
+    final Long resultSetId;
+    private final Long geneId;
 
     CacheKey( Long resultSetId, Long geneId ) {
         this.resultSetId = resultSetId;
         this.geneId = geneId;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        CacheKey other = ( CacheKey ) obj;
-        if ( resultSetId == null ) {
-            if ( other.resultSetId != null )
-                return false;
-        } else if ( !resultSetId.equals( other.resultSetId ) )
-            return false;
-        if ( geneId == null ) {
-            if ( other.geneId != null )
-                return false;
-        } else if ( !geneId.equals( other.geneId ) )
-            return false;
-        return true;
     }
 
     @Override
@@ -252,6 +239,26 @@ class CacheKey implements Serializable {
         result = prime * result + ( ( resultSetId == null ) ? 0 : resultSetId.hashCode() );
         result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        CacheKey other = ( CacheKey ) obj;
+        if ( resultSetId == null ) {
+            if ( other.resultSetId != null )
+                return false;
+        } else if ( !resultSetId.equals( other.resultSetId ) )
+            return false;
+        if ( geneId == null ) {
+            return other.geneId == null;
+        } else
+            return geneId.equals( other.geneId );
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -46,7 +45,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.File;
@@ -70,13 +70,13 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private DesignElementDataVectorService designElementDataVectorService;
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
     private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedDataVectorService;
+    private ProcessedExpressionDataVectorService processedDataVectorService;
 
     @Autowired
     private GeoService geoService;
@@ -227,25 +227,19 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         bioAssayDimension.setBioAssays( assays );
 
-        Collection<DesignElementDataVector> vectors1 = new LinkedHashSet<>();
         RawExpressionDataVector vector1 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata1 = { 74.9, 101.7 };
         byte[] bdata1 = bac.doubleArrayToBytes( ddata1 );
         vector1.setData( bdata1 );
         vector1.setQuantitationType( qt );
         vector1.setBioAssayDimension( bioAssayDimension );
-        vectors1.add( vector1 );
 
-        Collection<DesignElementDataVector> vectors2 = new LinkedHashSet<>();
         RawExpressionDataVector vector2 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata2 = { 404.6, 318.7 };
         byte[] bdata2 = bac.doubleArrayToBytes( ddata2 );
         vector2.setData( bdata2 );
         vector2.setQuantitationType( qt );
         vector2.setBioAssayDimension( bioAssayDimension );
-        vectors2.add( vector2 );
-
-        Collection<CompositeSequence> designElements = new LinkedHashSet<>();
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "test ar" );
@@ -271,9 +265,6 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         de2.setArrayDesign( ad );
         vector2.setDesignElement( de2 );
 
-        designElements.add( de1 );
-        designElements.add( de2 );
-
         Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
@@ -292,18 +283,19 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         try {
 
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE8294", false, true, false, false );
+            geoService
+                    .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "" ) ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE8294", false, true, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
         newee = expressionExperimentService.thaw( newee );
-        // make sure we really thaw them, so we can get the design element sequences.
+        // make sure we really thawRawAndProcessed them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
-        designElementDataVectorService.thaw( vectors );
+        rawExpressionDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
         ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
@@ -338,7 +330,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         newee = expressionExperimentService.thaw( newee );
         Collection<ProcessedExpressionDataVector> vecs = newee.getProcessedExpressionDataVectors();
 
-        this.designElementDataVectorService.thaw( vecs );
+        this.processedDataVectorService.thaw( vecs );
 
         assertTrue( !vecs.isEmpty() );
 
@@ -350,11 +342,11 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         assertTrue( Double.isNaN( data.getColumn( tba )[10] ) );
 
         sampleRemoveService.unmarkAsMissing( ol );
-        newee = expressionExperimentService.load( newee.getId());
+        newee = expressionExperimentService.load( newee.getId() );
         newee = expressionExperimentService.thaw( newee );
         vecs = newee.getProcessedExpressionDataVectors();
 
-        this.designElementDataVectorService.thaw( vecs );
+        this.processedDataVectorService.thaw( vecs );
 
         assertTrue( !vecs.isEmpty() );
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,7 +45,7 @@ public class SequenceWriter {
      * Required for some applications (read: Repeatmasker) that can't handle long identifiers.
      */
     private static final int MAX_SEQ_IDENTIFIER_LENGTH = 50;
-    private static Log log = LogFactory.getLog( SequenceWriter.class.getName() );
+    private static final Log log = LogFactory.getLog( SequenceWriter.class.getName() );
 
     /**
      * Write a collection of sequences in FASTA format
@@ -56,20 +56,20 @@ public class SequenceWriter {
      * @throws IOException io problems
      */
     public static int writeSequencesToFile( Collection<BioSequence> sequences, File outputFile ) throws IOException {
-        try (BufferedWriter out = new BufferedWriter( new FileWriter( outputFile ) );) {
+        try (BufferedWriter out = new BufferedWriter( new FileWriter( outputFile ) )) {
 
-            log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
+            SequenceWriter.log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
             int count = 0;
-            Collection<Object> identifiers = new HashSet<Object>();
+            Collection<Object> identifiers = new HashSet<>();
             int repeats = 0;
             for ( BioSequence b : sequences ) {
                 if ( StringUtils.isBlank( b.getSequence() ) ) {
-                    log.warn( "Blank sequence for " + b );
+                    SequenceWriter.log.warn( "Blank sequence for " + b );
                     continue;
                 }
-                String identifier = getIdentifier( b );
+                String identifier = SequenceWriter.getIdentifier( b );
                 if ( identifiers.contains( identifier ) ) {
-                    log.debug( b + " is a repeat with identifier " + identifier );
+                    SequenceWriter.log.debug( b + " is a repeat with identifier " + identifier );
                     repeats++;
                     continue; // don't repeat sequences.
                 }
@@ -79,11 +79,11 @@ public class SequenceWriter {
                 identifiers.add( identifier );
 
                 if ( ++count % 2000 == 0 ) {
-                    log.debug( "Wrote " + count + " sequences" );
+                    SequenceWriter.log.debug( "Wrote " + count + " sequences" );
                 }
             }
 
-            log.info( "Wrote " + count + " sequences to " + outputFile + ( repeats > 0 ?
+            SequenceWriter.log.info( "Wrote " + count + " sequences to " + outputFile + ( repeats > 0 ?
                     " ( " + repeats + " repeated items were skipped)." :
                     "" ) );
             return count;
@@ -99,8 +99,9 @@ public class SequenceWriter {
      */
     public static String getIdentifier( BioSequence b ) {
         String identifier = b.getName();
-        identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
-        identifier = identifier.substring( 0, Math.min( identifier.length(), MAX_SEQ_IDENTIFIER_LENGTH ) );
+        identifier = identifier.replaceAll( " ", SequenceWriter.SPACE_REPLACEMENT );
+        identifier = identifier
+                .substring( 0, Math.min( identifier.length(), SequenceWriter.MAX_SEQ_IDENTIFIER_LENGTH ) );
         return identifier;
     }
 

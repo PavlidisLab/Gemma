@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,25 +49,28 @@ import static org.junit.Assert.*;
  */
 public class AclAuthorizationTest extends BaseSpringContextTest {
 
-    String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.randomAlphabetic( 5 );
-    ArrayDesign arrayDesign;
-    String arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-    String compositeSequenceName1 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-    String compositeSequenceName2 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
+    private final String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.randomAlphabetic( 5 );
+    private final String arrayDesignName =
+            "AD_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+    private final String compositeSequenceName1 =
+            "Design Element_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+    private final String compositeSequenceName2 =
+            "Design Element_" + RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
+    private final ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
+    private ArrayDesign arrayDesign;
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
     private UserManager userManager;
     @Autowired
     private SecurityService securityService;
-    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
     @Autowired
     private MutableAclService aclService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( arrayDesignName );
@@ -81,7 +84,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
         cs2.setName( compositeSequenceName2 );
 
-        Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> col = new HashSet<>();
         col.add( cs1 );
         col.add( cs2 );
         cs1.setArrayDesign( arrayDesign );
@@ -103,7 +106,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
      * Tests getting composite sequences (target objects) with correct privileges on domain object (array design).
      */
     @Test
-    public void testGetCompositeSequencesForArrayDesign() throws Exception {
+    public void testGetCompositeSequencesForArrayDesign() {
 
         Collection<CompositeSequence> col = compositeSequenceService.findByName( compositeSequenceName1 );
 
@@ -125,7 +128,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         try {
             securityService.makePublic( arrayDesign );
             fail( "Should have gotten an access denied" );
-        } catch ( AccessDeniedException ok ) {
+        } catch ( AccessDeniedException ignored ) {
 
         }
 
@@ -138,9 +141,9 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
      *
      */
     @Test
-    public void testEditArrayDesignDisallowed() throws Exception {
+    public void testEditArrayDesignDisallowed() {
 
-        MutableAcl acl = getAcl( arrayDesign );
+        MutableAcl acl = this.getAcl( arrayDesign );
 
         securityService.makePrivate( arrayDesign );
         assertTrue( securityService.isPrivate( arrayDesign ) );
@@ -156,7 +159,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         try {
             arrayDesignService.update( arrayDesign );
             fail( "Should have gotten an access denied exception, acl was: " + acl );
-        } catch ( AccessDeniedException e ) {
+        } catch ( AccessDeniedException ignored ) {
 
         }
     }

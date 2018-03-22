@@ -3,8 +3,8 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.biomaterial.BioMaterial" table="BIO_MATERIAL" dynamic-insert="false" dynamic-update="false">
+<hibernate-mapping>
+   <class name="ubic.gemma.model.expression.biomaterial.BioMaterial" table="BIO_MATERIAL">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -23,7 +23,7 @@
       <many-to-one name="sourceTaxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">
          <column name="SOURCE_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="factorValues" table="BIO_MATERIAL_FACTOR_VALUES" lazy="false" fetch="select" inverse="false">
+      <set name="factorValues" table="BIO_MATERIAL_FACTOR_VALUES" lazy="false" fetch="select">
          <key foreign-key="FACTOR_VALUE_BIO_MATERIALS_FKC">
             <column name="BIO_MATERIALS_FK" sql-type="BIGINT"/>
          </key>
@@ -38,14 +38,14 @@
          </key>
          <one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay"/>
       </set>
-      <set name="treatments"  lazy="true" fetch="select" inverse="false" cascade="all">
+      <set name="treatments" lazy="true" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="TREATMENT_BIO_MATERIALS_FKC">
             <column name="BIO_MATERIALS_FK" sql-type="BIGINT"/>
          </key>
          <one-to-many class="ubic.gemma.model.expression.biomaterial.TreatmentImpl"/>
       </set>
-      <set name="characteristics" lazy="false" fetch="select" inverse="false" cascade="all">
+      <set name="characteristics" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="CHARACTERISTIC_BIO_MATERIAL_FKC">
             <column name="BIO_MATERIAL_FK" sql-type="BIGINT"/>

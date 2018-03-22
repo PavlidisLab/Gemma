@@ -90,8 +90,6 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.util.*;
 
-import static ubic.gemma.persistence.service.expression.experiment.GeeqService.*;
-
 /**
  * @author keshav
  */
@@ -182,13 +180,13 @@ public class ExpressionExperimentController {
             Long taxonId ) {
 
         if ( taxonId == null ) {
-            return browse( batch );
+            return this.browse( batch );
         }
         Taxon taxon = taxonService.load( taxonId );
         if ( taxon == null ) {
-            log.info( "Attempted to browse experiments by taxon with id = " + taxonId
+            ExpressionExperimentController.log.info( "Attempted to browse experiments by taxon with id = " + taxonId
                     + ", but this id is invalid. Browsing without taxon restriction." );
-            return browse( batch );
+            return this.browse( batch );
         }
 
         return this.browseSpecific( batch, null, taxon );
@@ -209,18 +207,6 @@ public class ExpressionExperimentController {
 
         return this.browseSpecific( batch, noDupIds, null );
 
-    }
-
-    private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
-            List<Long> ids, Taxon taxon ) {
-
-        Collection<ExpressionExperimentDetailsValueObject> records = loadAllValueObjectsOrdered( batch, ids, taxon );
-
-        int count = SecurityUtil.isUserAdmin() ?
-                expressionExperimentService.countAll() :
-                expressionExperimentService.countNotTroubled();
-
-        return new JsonReaderResponse<>( records, count );
     }
 
     /**
@@ -313,7 +299,7 @@ public class ExpressionExperimentController {
      * @return EE ids that match
      */
     public Collection<Long> find( String query, Long taxonId ) {
-        log.info( "Search: query='" + query + "' taxon=" + taxonId );
+        ExpressionExperimentController.log.info( "Search: query='" + query + "' taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
     }
 
@@ -354,10 +340,11 @@ public class ExpressionExperimentController {
         String eeDescription = ee.getDescription() == null ? "" : ee.getDescription().trim();
 
         // Need to trim?
-        if ( eeDescription.length() < TRIM_SIZE + 1 )
+        if ( eeDescription.length() < ExpressionExperimentController.TRIM_SIZE + 1 )
             descriptive.append( eeDescription );
         else
-            descriptive.append( eeDescription.substring( 0, TRIM_SIZE ) ).append( "...&nbsp;&nbsp;" );
+            descriptive.append( eeDescription.substring( 0, ExpressionExperimentController.TRIM_SIZE ) )
+                    .append( "...&nbsp;&nbsp;" );
 
         // Is there any factor info to add?
         if ( efs.size() < 1 )
@@ -470,65 +457,14 @@ public class ExpressionExperimentController {
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
         qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
         qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
-        qc.setNumOutliersRemoved( numOutliersRemoved( ee ) );
+        qc.setNumOutliersRemoved( this.numOutliersRemoved( ee ) );
         try {
-            qc.setNumPossibleOutliers( numPossibleOutliers( ee ) );
+            qc.setNumPossibleOutliers( this.numPossibleOutliers( ee ) );
         } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
-            log.fatal( e );
+            ExpressionExperimentController.log.fatal( e );
             e.printStackTrace();
         }
         return qc.getQChtml();
-    }
-
-    /**
-     * How many possible sample outliers are detected?
-     */
-    private int numPossibleOutliers( ExpressionExperiment ee ) {
-        int count;
-
-        if ( ee == null ) {
-            log.warn( " Experiment is null " );
-            return 0;
-        }
-
-        // identify outliers
-        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
-            return 0;
-        }
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
-        if ( sampleCorrelationMatrix.rows() < 3 ) {
-            return 0;
-        }
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
-        count = outliers.size();
-
-        log.info( count + " possible outliers detected." );
-
-        return count;
-    }
-
-    /**
-     * How many possible sample outliers were removed?
-     */
-    private int numOutliersRemoved( ExpressionExperiment ee ) {
-        int count = 0;
-
-        if ( ee == null ) {
-            log.warn( " Experiment is null " );
-            return 0;
-        }
-
-        ee = expressionExperimentService.thawLite( ee );
-        for ( BioAssay assay : ee.getBioAssays() ) {
-            if ( assay.getIsOutlier() != null && assay.getIsOutlier() ) {
-                count++;
-            }
-
-        }
-
-        log.info( count + " outliers were removed." );
-
-        return count;
     }
 
     /**
@@ -669,19 +605,19 @@ public class ExpressionExperimentController {
             return null;
         }
 
-        expressionExperimentReportService.getReportInformation( initialResults );
+        expressionExperimentReportService.populateReportInformation( initialResults );
         expressionExperimentReportService.getAnnotationInformation( initialResults );
-        expressionExperimentReportService.getEventInformation( initialResults );
+        expressionExperimentReportService.populateEventInformation( initialResults );
 
         ExpressionExperimentDetailsValueObject finalResult = initialResults.iterator().next();
         // Most of DetailsVO values are set automatically through the constructor.
         // We only need to set the additional values:
 
-        finalResult.setQChtml( getQCTagHTML( ee ) );
+        finalResult.setQChtml( this.getQCTagHTML( ee ) );
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee ) );
 
         finalResult = this.setPreferredAndReprocessed( finalResult, ee );
-        finalResult = this.setMutipleTechTypes( finalResult, ee );
+        finalResult = this.setMultipleTechTypes( finalResult, ee );
         finalResult = this.setParentTaxon( finalResult, finalResult.getTaxonId() );
 
         finalResult = this.setPublicationAndAuthor( finalResult, ee );
@@ -711,160 +647,8 @@ public class ExpressionExperimentController {
         geeqService.calculateScore( id, mode );
     }
 
-    public void setGeeqManualSettings(long id, GeeqAdminValueObject vo){
+    public void setGeeqManualSettings( long id, GeeqAdminValueObject vo ) {
         geeqService.setManualOverrides( id, vo );
-    }
-
-    /**
-     * Sets batch information and related properties
-     *
-     * @param ee          ee
-     * @param finalResult result
-     * @return ee details vo
-     */
-    private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
-            ExpressionExperiment ee ) {
-        boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
-
-        finalResult.setHasBatchInformation( hasBatchInformation );
-        if ( hasBatchInformation ) {
-            finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
-            finalResult.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
-        }
-
-        return finalResult;
-    }
-
-    /**
-     * populates the publication and author information
-     *
-     * @param ee          ee
-     * @param finalResult result
-     * @return ee details vo
-     */
-    private ExpressionExperimentDetailsValueObject setPublicationAndAuthor(
-            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
-
-        finalResult.setDescription( ee.getDescription() );
-
-        if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult.setPrimaryCitation(
-                    CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
-            String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
-
-            try {
-                finalResult.setPubmedId( Integer.parseInt( accession ) );
-            } catch ( NumberFormatException e ) {
-                log.warn( "Pubmed id not formatted correctly: " + accession );
-            }
-        }
-
-        return finalResult;
-    }
-
-    /**
-     * Loads, checks not null, and thaws the array designs the given EE is associated with.
-     *
-     * @param ee ee
-     * @return ads
-     */
-    private Collection<ArrayDesign> getADsSafely( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( ads == null ) {
-            throw new IllegalArgumentException( "No array designs for experiment " + ee.getId() + " could be loaded." );
-        }
-        ads = arrayDesignService.thawLite( ads );
-
-        return ads;
-    }
-
-    /**
-     * Loads, checks not null, and thaws the ee with given ID;
-     *
-     * @param id id
-     * @return ee
-     */
-    private ExpressionExperiment getEESafely( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
-        }
-        ee = expressionExperimentService.thawLiter( ee );
-
-        return ee;
-    }
-
-    /**
-     * Checks and sets multiple technology types
-     *
-     * @param ee          ee
-     * @param finalResult result
-     * @return ee details vo
-     */
-    private ExpressionExperimentDetailsValueObject setMutipleTechTypes(
-            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
-        Collection<TechnologyType> techTypes = new HashSet<>();
-        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            techTypes.add( ad.getTechnologyType() );
-        }
-
-        finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
-
-        return finalResult;
-    }
-
-    /**
-     * Check for multiple "preferred" qts and reprocessing.
-     *
-     * @param ee          ee
-     * @param finalResult result
-     * @return ee details vo
-     */
-    private ExpressionExperimentDetailsValueObject setPreferredAndReprocessed(
-            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
-
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
-
-        boolean dataReprocessedFromRaw = false;
-        int countPreferred = 0;
-        for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsPreferred() ) {
-                countPreferred++;
-            }
-            if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
-                dataReprocessedFromRaw = true;
-            }
-        }
-
-        finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
-        finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
-
-        return finalResult;
-    }
-
-    /**
-     * Checks and sets parent taxon and related properties
-     *
-     * @param taxonId     taxon id
-     * @param finalResult result
-     * @return ee details vo
-     */
-    private ExpressionExperimentDetailsValueObject setParentTaxon( ExpressionExperimentDetailsValueObject finalResult,
-            Long taxonId ) {
-        if ( taxonId == null ) {
-            throw new IllegalArgumentException( "Taxon ID can not be null!" );
-        }
-        Taxon taxon = taxonService.load( taxonId );
-        taxonService.thaw( taxon );
-
-        if ( taxon.getParentTaxon() != null ) {
-            finalResult.setParentTaxon( taxon.getParentTaxon().getCommonName() );
-            finalResult.setParentTaxonId( taxon.getParentTaxon().getId() );
-        } else {
-            finalResult.setParentTaxonId( taxon.getId() );
-            finalResult.setParentTaxon( taxon.getCommonName() );
-        }
-        return finalResult;
     }
 
     /**
@@ -877,7 +661,7 @@ public class ExpressionExperimentController {
         if ( ids.isEmpty() ) {
             return new HashSet<>();
         }
-        return getFilteredExpressionExperimentValueObjects( null, ids, 0, true );
+        return this.getFilteredExpressionExperimentValueObjects( null, ids, 0, true );
     }
 
     /**
@@ -886,7 +670,7 @@ public class ExpressionExperimentController {
      * @param id of platform
      */
     public Collection<ExpressionExperimentDetailsValueObject> loadExperimentsForPlatform( Long id ) {
-        return getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils
+        return this.getFilteredExpressionExperimentValueObjects( null, ( List<Long> ) EntityUtils
                 .getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ), 0, true );
     }
 
@@ -901,9 +685,9 @@ public class ExpressionExperimentController {
         if ( ids.isEmpty() ) {
             return new HashSet<>();
         }
-        Collection<ExpressionExperimentDetailsValueObject> result = getFilteredExpressionExperimentValueObjects( null,
-                null, 0, true );
-        this.expressionExperimentReportService.getReportInformation( result );
+        Collection<ExpressionExperimentDetailsValueObject> result = this
+                .getFilteredExpressionExperimentValueObjects( null, null, 0, true );
+        this.expressionExperimentReportService.populateReportInformation( result );
         return result;
     }
 
@@ -951,7 +735,7 @@ public class ExpressionExperimentController {
     public Collection<QuantitationTypeValueObject> loadQuantitationTypes( Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        // need to thaw?
+        // need to thawRawAndProcessed?
         ee = expressionExperimentService.thawLite( ee );
         Collection<QuantitationType> qts = ee.getQuantitationTypes();
 
@@ -982,24 +766,25 @@ public class ExpressionExperimentController {
         if ( limit == null ) {
             limit = 50;
         }
-        vos = getEEVOsForManager( taxonId, ids, limit, filter, showPublic );
+        vos = this.getEEVOsForManager( taxonId, ids, limit, filter, showPublic );
 
         if ( vos.isEmpty() ) {
             return new HashSet<>();
         }
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Fetching basic data took: " + timer.getTime() + "ms" );
+            ExpressionExperimentController.log.info( "Fetching basic data took: " + timer.getTime() + "ms" );
         }
 
         timer.reset();
         timer.start();
 
         expressionExperimentReportService.getAnnotationInformation( vos );
-        expressionExperimentReportService.getEventInformation( vos );
+        expressionExperimentReportService.populateEventInformation( vos );
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Filling in report data for " + vos.size() + " EEs: " + timer.getTime() + "ms" );
+            ExpressionExperimentController.log
+                    .info( "Filling in report data for " + vos.size() + " EEs: " + timer.getTime() + "ms" );
         }
 
         // We need to convert the VOs to detailVos and add array designs so trouble info can be correctly displayed.
@@ -1018,7 +803,7 @@ public class ExpressionExperimentController {
      * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
-    public String removePrimaryPublication( Long eeId ) throws Exception {
+    public String removePrimaryPublication( Long eeId ) {
         RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
         return taskRunningService.submitLocalTask( task );
     }
@@ -1116,7 +901,7 @@ public class ExpressionExperimentController {
         ModelAndView mv = new ModelAndView( "bioAssays" )
                 .addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
 
-        addQCInfo( expressionExperiment, mv );
+        this.addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
         return mv;
     }
@@ -1148,7 +933,7 @@ public class ExpressionExperimentController {
         }
 
         ModelAndView mav = new ModelAndView( "bioMaterials" );
-        if ( AJAX ) {
+        if ( ExpressionExperimentController.AJAX ) {
             mav.addObject( "bioMaterialIdList", bioMaterialService.getBioMaterialIdList( bioMaterials ) );
         }
 
@@ -1156,7 +941,7 @@ public class ExpressionExperimentController {
         mav.addObject( "numBioMaterials", numBioMaterials );
         mav.addObject( "bioMaterials", bioMaterialService.thaw( bioMaterials ) );
 
-        addQCInfo( expressionExperiment, mav );
+        this.addQCInfo( expressionExperiment, mav );
 
         return mav;
     }
@@ -1168,7 +953,7 @@ public class ExpressionExperimentController {
         timer.start();
 
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" );
-        BioAssaySet expExp = getExpressionExperimentFromRequest( request );
+        BioAssaySet expExp = this.getExpressionExperimentFromRequest( request );
 
         mav.addObject( "expressionExperiment", expExp );
 
@@ -1176,7 +961,8 @@ public class ExpressionExperimentController {
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
 
         if ( timer.getTime() > 200 ) {
-            log.info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
+            ExpressionExperimentController.log
+                    .info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
         }
 
         return mav;
@@ -1295,21 +1081,21 @@ public class ExpressionExperimentController {
                 details += ( changed ? ", " : "" ) + "primary publication ( none -> " + command.getPubMedId() + ")";
             }
             changed = true;
-            updatePubMed( entityId, command.getPubMedId() );
+            this.updatePubMed( entityId, command.getPubMedId() );
         } else if ( command.isRemovePrimaryPublication() ) {
             details += ( changed ? ", " : "" ) + "removed primary publication";
             changed = true;
-            removePrimaryPublication( entityId );
+            this.removePrimaryPublication( entityId );
         }
 
         if ( changed ) {
-            log.info( "Updating " + ee );
+            ExpressionExperimentController.log.info( "Updating " + ee );
             auditTrailService
                     .addUpdateEvent( ee, CommentedEvent.Factory.newInstance(), "Updated experiment details", details );
             expressionExperimentService.update( ee );
         }
 
-        return loadExpressionExperimentDetails( ee.getId() );
+        return this.loadExpressionExperimentDetails( ee.getId() );
     }
 
     /*
@@ -1318,8 +1104,8 @@ public class ExpressionExperimentController {
     @RequestMapping("/refreshCorrMatrix.html")
     public ModelAndView updateCorrelationMatrix( Long id ) {
         // TODO: make this an ajax background job
-        updateCorrelationMatrixFile( id );
-        updateMV( id );
+        this.updateCorrelationMatrixFile( id );
+        this.updateMV( id );
         return new ModelAndView(
                 new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + id, true ) );
     }
@@ -1332,7 +1118,7 @@ public class ExpressionExperimentController {
      * @return string
      */
     @SuppressWarnings("UnusedReturnValue") // AJAX method - possibly used in JS
-    public String updatePubMed( Long eeId, String pubmedId ) throws Exception {
+    public String updatePubMed( Long eeId, String pubmedId ) {
         UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
         command.setPubmedId( pubmedId );
         UpdatePubMed task = new UpdatePubMed( command );
@@ -1362,14 +1148,232 @@ public class ExpressionExperimentController {
             ees.addAll( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
         }
 
-        mav.addObject( TextView.TEXT_PARAM, format4File( ees, eeSetName ) );
+        mav.addObject( TextView.TEXT_PARAM, this.format4File( ees, eeSetName ) );
         watch.stop();
         Long time = watch.getTime();
 
         if ( time > 100 ) {
-            log.info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
+            ExpressionExperimentController.log
+                    .info( "Retrieved and Formated" + ees.size() + " genes in : " + time + " ms." );
         }
         return mav;
+    }
+
+    private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
+            List<Long> ids, Taxon taxon ) {
+
+        Collection<ExpressionExperimentDetailsValueObject> records = this
+                .loadAllValueObjectsOrdered( batch, ids, taxon );
+
+        int count = SecurityUtil.isUserAdmin() ?
+                expressionExperimentService.countAll() :
+                expressionExperimentService.countNotTroubled();
+
+        return new JsonReaderResponse<>( records, count );
+    }
+
+    /**
+     * How many possible sample outliers are detected?
+     */
+    private int numPossibleOutliers( ExpressionExperiment ee ) {
+        int count;
+
+        if ( ee == null ) {
+            ExpressionExperimentController.log.warn( " Experiment is null " );
+            return 0;
+        }
+
+        // identify outliers
+        if ( !sampleCoexpressionMatrixService.hasMatrix( ee ) ) {
+            return 0;
+        }
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+        if ( sampleCorrelationMatrix.rows() < 3 ) {
+            return 0;
+        }
+        Collection<OutlierDetails> outliers = outlierDetectionService
+                .identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
+        count = outliers.size();
+
+        ExpressionExperimentController.log.info( count + " possible outliers detected." );
+
+        return count;
+    }
+
+    /**
+     * How many possible sample outliers were removed?
+     */
+    private int numOutliersRemoved( ExpressionExperiment ee ) {
+        int count = 0;
+
+        if ( ee == null ) {
+            ExpressionExperimentController.log.warn( " Experiment is null " );
+            return 0;
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            if ( assay.getIsOutlier() != null && assay.getIsOutlier() ) {
+                count++;
+            }
+
+        }
+
+        ExpressionExperimentController.log.info( count + " outliers were removed." );
+
+        return count;
+    }
+
+    /**
+     * Sets batch information and related properties
+     *
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
+     */
+    private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
+            ExpressionExperiment ee ) {
+        boolean hasBatchInformation = expressionExperimentService.checkHasBatchInfo( ee );
+
+        finalResult.setHasBatchInformation( hasBatchInformation );
+        if ( hasBatchInformation ) {
+            finalResult.setBatchConfound( expressionExperimentService.getBatchConfound( ee ) );
+            finalResult.setBatchEffect( expressionExperimentService.getBatchEffectDescription( ee ) );
+        }
+
+        return finalResult;
+    }
+
+    /**
+     * populates the publication and author information
+     *
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
+     */
+    private ExpressionExperimentDetailsValueObject setPublicationAndAuthor(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+
+        finalResult.setDescription( ee.getDescription() );
+
+        if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
+            finalResult.setPrimaryCitation(
+                    CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
+            String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
+
+            try {
+                finalResult.setPubmedId( Integer.parseInt( accession ) );
+            } catch ( NumberFormatException e ) {
+                ExpressionExperimentController.log.warn( "Pubmed id not formatted correctly: " + accession );
+            }
+        }
+
+        return finalResult;
+    }
+
+    /**
+     * Loads, checks not null, and thaws the array designs the given EE is associated with.
+     *
+     * @param ee ee
+     * @return ads
+     */
+    private Collection<ArrayDesign> getADsSafely( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
+        if ( ads == null ) {
+            throw new IllegalArgumentException( "No array designs for experiment " + ee.getId() + " could be loaded." );
+        }
+        ads = arrayDesignService.thawLite( ads );
+
+        return ads;
+    }
+
+    /**
+     * Loads, checks not null, and thaws the ee with given ID;
+     *
+     * @param id id
+     * @return ee
+     */
+    private ExpressionExperiment getEESafely( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
+        }
+        ee = expressionExperimentService.thawLiter( ee );
+
+        return ee;
+    }
+
+    /**
+     * Checks and sets multiple technology types
+     *
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
+     */
+    private ExpressionExperimentDetailsValueObject setMultipleTechTypes(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+        Collection<TechnologyType> techTypes = new HashSet<>();
+        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            techTypes.add( ad.getTechnologyType() );
+        }
+
+        finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
+
+        return finalResult;
+    }
+
+    /**
+     * Check for multiple "preferred" qts and reprocessing.
+     *
+     * @param ee          ee
+     * @param finalResult result
+     * @return ee details vo
+     */
+    private ExpressionExperimentDetailsValueObject setPreferredAndReprocessed(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
+
+        boolean dataReprocessedFromRaw = false;
+        int countPreferred = 0;
+        for ( QuantitationType qt : quantitationTypes ) {
+            if ( qt.getIsPreferred() ) {
+                countPreferred++;
+            }
+            if ( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+                dataReprocessedFromRaw = true;
+            }
+        }
+
+        finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
+        finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
+
+        return finalResult;
+    }
+
+    /**
+     * Checks and sets parent taxon and related properties
+     *
+     * @param taxonId     taxon id
+     * @param finalResult result
+     * @return ee details vo
+     */
+    private ExpressionExperimentDetailsValueObject setParentTaxon( ExpressionExperimentDetailsValueObject finalResult,
+            Long taxonId ) {
+        if ( taxonId == null ) {
+            throw new IllegalArgumentException( "Taxon ID can not be null!" );
+        }
+        Taxon taxon = taxonService.load( taxonId );
+        taxonService.thaw( taxon );
+
+        if ( taxon.getParentTaxon() != null ) {
+            finalResult.setParentTaxon( taxon.getParentTaxon().getCommonName() );
+            finalResult.setParentTaxonId( taxon.getParentTaxon().getId() );
+        } else {
+            finalResult.setParentTaxonId( taxon.getId() );
+            finalResult.setParentTaxon( taxon.getCommonName() );
+        }
+        return finalResult;
     }
 
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
@@ -1384,8 +1388,8 @@ public class ExpressionExperimentController {
         mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) );
         mav.addObject( "hasCorrDist", true ); // FIXME
 
-        mav.addObject( "numPossibleOutliers", numPossibleOutliers( expressionExperiment ) );
-        mav.addObject( "numOutliersRemoved", numOutliersRemoved( expressionExperiment ) );
+        mav.addObject( "numPossibleOutliers", this.numPossibleOutliers( expressionExperiment ) );
+        mav.addObject( "numOutliersRemoved", this.numOutliersRemoved( expressionExperiment ) );
     }
 
     /**
@@ -1421,7 +1425,7 @@ public class ExpressionExperimentController {
                 break;
             case 5:
                 // FIXME this can now be delegated to the DAO layer
-                eeVOsToKeep = returnTroubled( eeValObjectCol, true );
+                eeVOsToKeep = this.returnTroubled( eeValObjectCol, true );
                 break;
             case 6:
                 eesToKeep = expressionExperimentService.loadLackingFactors();
@@ -1448,11 +1452,11 @@ public class ExpressionExperimentController {
                 break;
             case 12:
                 // FIXME this can now be delegated to the DAO layer
-                eeVOsToKeep = returnNeedsAttention( eeValObjectCol );
+                eeVOsToKeep = this.returnNeedsAttention( eeValObjectCol );
                 break;
             case 13:
                 // FIXME this can now be delegated to the DAO layer
-                eeVOsToKeep = returnTroubled( eeValObjectCol, false );
+                eeVOsToKeep = this.returnTroubled( eeValObjectCol, false );
                 break;
             default:
                 throw new IllegalArgumentException( "Unknown filter: " + filter );
@@ -1522,7 +1526,7 @@ public class ExpressionExperimentController {
                 .getFilteredExpressionExperimentValueObjects( taxonService.load( taxonId ), ids, limit, showPublic );
 
         if ( filter != null && filter > 0 ) {
-            eeVos = applyFilter( eeVos, filter );
+            eeVos = this.applyFilter( eeVos, filter );
         }
         if ( eeVos.isEmpty() ) {
             return eeVos;
@@ -1685,7 +1689,7 @@ public class ExpressionExperimentController {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        sampleCoexpressionMatrixService.create( expressionExperiment, true );
+        sampleCoexpressionMatrixService.create( expressionExperiment );
     }
 
     private void updateMV( Long id ) {
@@ -1736,7 +1740,7 @@ public class ExpressionExperimentController {
                 return new TaskResult( taskCommand, false );
             }
 
-            log.info( "Removing reference" );
+            ExpressionExperimentController.log.info( "Removing reference" );
             ee.setPrimaryPublication( null );
 
             expressionExperimentService.update( ee );
@@ -1764,11 +1768,11 @@ public class ExpressionExperimentController {
 
             if ( publication != null ) {
 
-                log.info( "Reference exists in system, associating..." );
+                ExpressionExperimentController.log.info( "Reference exists in system, associating..." );
                 expressionExperiment.setPrimaryPublication( publication );
                 expressionExperimentService.update( expressionExperiment );
             } else {
-                log.info( "Searching pubmed on line .." );
+                ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
                 PubMedSearch pms = new PubMedSearch();
@@ -1783,10 +1787,10 @@ public class ExpressionExperimentController {
                 // check to see if there are publications found
                 // if there are none, or more than one, add an error message and do nothing
                 if ( publications.size() == 0 ) {
-                    log.info( "No matching publication found" );
+                    ExpressionExperimentController.log.info( "No matching publication found" );
                     throw new IllegalArgumentException( "No matching publication found" );
                 } else if ( publications.size() > 1 ) {
-                    log.info( "Multiple matching publications found!" );
+                    ExpressionExperimentController.log.info( "Multiple matching publications found!" );
                     throw new IllegalArgumentException( "Multiple matching publications found!" );
                 } else {
                     publication = publications.iterator().next();
@@ -1800,7 +1804,7 @@ public class ExpressionExperimentController {
                     publication.setPubAccession( pubAccession );
 
                     // persist new publication
-                    log.info( "Found new publication, associating ..." );
+                    ExpressionExperimentController.log.info( "Found new publication, associating ..." );
 
                     publication = ( BibliographicReference ) persisterHelper.persist( publication );
                     // publication = bibliographicReferenceService.findOrCreate( publication );

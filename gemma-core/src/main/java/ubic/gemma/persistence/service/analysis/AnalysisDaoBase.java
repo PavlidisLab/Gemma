@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ import java.util.Map;
  */
 public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T> implements AnalysisDao<T> {
 
-    public AnalysisDaoBase( Class elementClass, SessionFactory sessionFactory ) {
+    protected AnalysisDaoBase( Class<T> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
     }
 
@@ -45,53 +45,19 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T>
      * @see AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
     @Override
-    public Collection<T> findByInvestigation( final Investigation investigation ) {
-        return this.handleFindByInvestigation( investigation );
-    }
+    public abstract Collection<T> findByInvestigation( final Investigation investigation );
 
     /**
      * @see AnalysisDao#findByInvestigations(java.util.Collection)
      */
     @Override
-    public Map<Investigation, Collection<T>> findByInvestigations( final Collection<Investigation> investigations ) {
-        return this.handleFindByInvestigations( investigations );
-    }
-
-    /**
-     * @see AnalysisDao#findByParentTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    public Collection<T> findByParentTaxon( final Taxon taxon ) {
-        return this.handleFindByParentTaxon( taxon );
-    }
+    public abstract Map<Investigation, Collection<T>> findByInvestigations(
+            final Collection<Investigation> investigations );
 
     /**
      * @see AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    public Collection<T> findByTaxon( final Taxon taxon ) {
-        return this.handleFindByTaxon( taxon );
-    }
-
-    /**
-     * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
-     */
-    protected abstract Collection<T> handleFindByInvestigation( Investigation investigation );
-
-    /**
-     * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
-     */
-    protected abstract Map<Investigation, Collection<T>> handleFindByInvestigations(
-            Collection<Investigation> investigatons );
-
-    /**
-     * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract Collection<T> handleFindByParentTaxon( Taxon taxon );
-
-    /**
-     * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract Collection<T> handleFindByTaxon( Taxon taxon );
+    public abstract Collection<T> findByTaxon( final Taxon taxon );
 
 }

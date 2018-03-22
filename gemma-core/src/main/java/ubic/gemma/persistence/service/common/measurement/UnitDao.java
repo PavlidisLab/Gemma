@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.common.measurement;
 
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -29,8 +28,10 @@ import ubic.gemma.persistence.service.BaseDao;
 @Repository
 public interface UnitDao extends BaseDao<Unit> {
 
-    public Unit find( Unit unit );
+    @Override
+    Unit find( Unit unit );
 
-    public Unit findOrCreate( Unit unit );
+    @Override
+    Unit findOrCreate( Unit unit );
 
 }

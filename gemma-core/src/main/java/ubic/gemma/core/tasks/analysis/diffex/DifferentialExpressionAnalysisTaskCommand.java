@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@ import java.util.Collection;
  *
  * @author keshav
  */
+@SuppressWarnings("unused") // Possible external use
 public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -43,7 +44,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     private AnalysisType analysisType;
 
-    private ExpressionExperiment expressionExperiment = null;
+    private ExpressionExperiment expressionExperiment;
 
     /**
      * The factors to actually use in the analysis. If null the system tries to figure it out.
@@ -97,12 +98,24 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return analysisType;
     }
 
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
+    }
+
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
     }
 
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
     public Collection<ExperimentalFactor> getFactors() {
         return factors;
+    }
+
+    public void setFactors( Collection<ExperimentalFactor> factors ) {
+        this.factors = factors;
     }
 
     /**
@@ -110,6 +123,13 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     public ExperimentalFactor getSubsetFactor() {
         return subsetFactor;
+    }
+
+    /**
+     * @param subsetFactor the subsetFactor to set
+     */
+    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
+        this.subsetFactor = subsetFactor;
     }
 
     @Override
@@ -121,36 +141,20 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return toRedo;
     }
 
+    public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
+        this.toRedo = toRedo;
+    }
+
     public boolean isForceAnalysis() {
         return forceAnalysis;
     }
 
-    public boolean isIncludeInteractions() {
-        return includeInteractions;
-    }
-
-    public boolean isModerateStatistics() {
-        return moderateStatistics;
-    }
-
-    public boolean isUseWeights() {
-        return useWeights;
-    }
-
-    public void setAnalysisType( AnalysisType analysisType ) {
-        this.analysisType = analysisType;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public void setFactors( Collection<ExperimentalFactor> factors ) {
-        this.factors = factors;
-    }
-
     public void setForceAnalysis( boolean forceAnalysis ) {
         this.forceAnalysis = forceAnalysis;
+    }
+
+    public boolean isIncludeInteractions() {
+        return includeInteractions;
     }
 
     /**
@@ -160,19 +164,16 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.includeInteractions = includeInteractions;
     }
 
+    public boolean isModerateStatistics() {
+        return moderateStatistics;
+    }
+
     public void setModerateStatistics( boolean moderateStatistics ) {
         this.moderateStatistics = moderateStatistics;
     }
 
-    /**
-     * @param subsetFactor the subsetFactor to set
-     */
-    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
-        this.subsetFactor = subsetFactor;
-    }
-
-    public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
-        this.toRedo = toRedo;
+    public boolean isUseWeights() {
+        return useWeights;
     }
 
     public void setUseWeights( boolean useWeights ) {

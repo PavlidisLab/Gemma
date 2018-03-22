@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,9 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-/**
- *
- */
 public class ManualAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
     /**
@@ -36,6 +33,7 @@ public class ManualAnnotationEvent extends ubic.gemma.model.common.auditAndSecur
     public ManualAnnotationEvent() {
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
 
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent newInstance() {

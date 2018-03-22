@@ -422,7 +422,7 @@ Gemma.EEReportGridColumnRenderers = {
 
         if (record.get("userCanWrite")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
-                + id+ ', ' + false + ')">' +
+                + id + ', ' + false + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
         }
 
@@ -441,7 +441,7 @@ Gemma.EEReportGridColumnRenderers = {
             }
             // pass in parameter indicating we already have the pca.
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
-                + id+ ', ' + true + ')">' +
+                + id + ', ' + true + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
 
             return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
@@ -456,7 +456,7 @@ Gemma.EEReportGridColumnRenderers = {
         var dataSource = record.get('externalDatabase');
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch('+ id + ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run batch info fetch"></i></span>';
         }
 
@@ -502,7 +502,7 @@ Gemma.EEReportGridColumnRenderers = {
 
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('+ id+ ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run missing value analysis"></i></span>';
         }
 
@@ -534,7 +534,7 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('+ id + ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run processed vector generation"></i></span>';
         }
 
@@ -565,7 +565,7 @@ Gemma.EEReportGridColumnRenderers = {
 
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential('+ id+ ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run differential expression analysis"></i></span>';
         }
 
@@ -586,8 +586,6 @@ Gemma.EEReportGridColumnRenderers = {
                     // we ran it, but the analyses were apparently deleted.
                     return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
                 }
-
-                // TODO: add tooltip describing the analysis.
                 return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
                     + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
             } else {

@@ -1,5 +1,5 @@
 /* Copyright (c) 2006-2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -61,72 +61,8 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
             throw new IllegalArgumentException( "Couldn't find task with task id: " + taskId );
 
         submittedTask.requestCancellation();
-        // FIXME: we can't really say if it is cancelled or not, since task can be running remotely. Client should check
-        // FIXME: task status some time after this call to see if task got cancelled
+        // we can't really say if it is cancelled or not, since task can be running remotely. Client should check
         return true;
-    }
-
-    @Override
-    public synchronized List<ProgressData> getProgressStatus( String taskId ) {
-        if ( taskId == null )
-            throw new IllegalArgumentException( "task id cannot be null" );
-        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
-
-        List<ProgressData> statusObjects = new Vector<ProgressData>();
-
-        if ( task == null ) {
-            log.warn( "It looks like job " + taskId + " has gone missing; assuming it is dead or finished already" );
-
-            // We should assume it is dead.
-            ProgressData data = new ProgressData();
-            data.setTaskId( taskId );
-            data.setDone( true );
-            data.setDescription( "The job has gone missing; it has already finished or failed." );
-            statusObjects.add( data );
-
-            return statusObjects;
-        }
-
-        assert task.getTaskId() != null;
-        assert task.getTaskId().equals( taskId );
-
-        Queue<String> updates = task.getProgressUpdates();
-        String progressMessage = "";
-        while ( !updates.isEmpty() ) {
-            String update = updates.poll();
-            progressMessage += update + "\n";
-        }
-
-        if ( task.isDone() ) {
-            ProgressData data;
-            if ( task.getStatus() == SubmittedTask.Status.COMPLETED ) {
-                log.debug( "Job " + taskId + " is done" );
-                data = new ProgressData( taskId, 1, progressMessage + "Done!", true );
-            } else if ( task.getStatus() == SubmittedTask.Status.FAILED ) {
-                data = new ProgressData( taskId, 1, progressMessage + "Failed!", true );
-                data.setFailed( true );
-            } else {
-                data = new ProgressData( taskId, 1, progressMessage + "Possibly canceled.", true );
-            }
-            statusObjects.add( data );
-        } else {
-            statusObjects.add( new ProgressData( taskId, 1, progressMessage, false ) );
-        }
-
-        return statusObjects;
-    }
-
-    @Override
-    public SubmittedTaskValueObject getSubmittedTask( String taskId ) {
-        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
-        if ( task == null )
-            return null;
-        return new SubmittedTaskValueObject( task );
-    }
-
-    @Override
-    public Collection<SubmittedTaskValueObject> getSubmittedTasks() {
-        return SubmittedTaskValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks() );
     }
 
     @Override
@@ -155,6 +91,74 @@ public class ProgressStatusServiceImpl implements ProgressStatusService {
         }
 
         return answer;
+    }
+
+    @Override
+    public synchronized List<ProgressData> getProgressStatus( String taskId ) {
+        if ( taskId == null )
+            throw new IllegalArgumentException( "task id cannot be null" );
+        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
+
+        List<ProgressData> statusObjects = new Vector<>();
+
+        if ( task == null ) {
+            ProgressStatusServiceImpl.log.warn( "It looks like job " + taskId
+                    + " has gone missing; assuming it is dead or finished already" );
+
+            // We should assume it is dead.
+            ProgressData data = new ProgressData();
+            data.setTaskId( taskId );
+            data.setDone( true );
+            data.setDescription( "The job has gone missing; it has already finished or failed." );
+            statusObjects.add( data );
+
+            return statusObjects;
+        }
+
+        assert task.getTaskId() != null;
+        assert task.getTaskId().equals( taskId );
+
+        Queue<String> updates = task.getProgressUpdates();
+        StringBuilder progressMessage = new StringBuilder();
+        while ( !updates.isEmpty() ) {
+            String update = updates.poll();
+            progressMessage.append( update ).append( "\n" );
+        }
+
+        if ( task.isDone() ) {
+            ProgressData data;
+            switch ( task.getStatus() ) {
+                case COMPLETED:
+                    ProgressStatusServiceImpl.log.debug( "Job " + taskId + " is done" );
+                    data = new ProgressData( taskId, 1, progressMessage + "Done!", true );
+                    break;
+                case FAILED:
+                    data = new ProgressData( taskId, 1, progressMessage + "Failed!", true );
+                    data.setFailed( true );
+                    break;
+                default:
+                    data = new ProgressData( taskId, 1, progressMessage + "Possibly canceled.", true );
+                    break;
+            }
+            statusObjects.add( data );
+        } else {
+            statusObjects.add( new ProgressData( taskId, 1, progressMessage.toString(), false ) );
+        }
+
+        return statusObjects;
+    }
+
+    @Override
+    public SubmittedTaskValueObject getSubmittedTask( String taskId ) {
+        SubmittedTask<?> task = taskRunningService.getSubmittedTask( taskId );
+        if ( task == null )
+            return null;
+        return new SubmittedTaskValueObject( task );
+    }
+
+    @Override
+    public Collection<SubmittedTaskValueObject> getSubmittedTasks() {
+        return SubmittedTaskValueObject.convert2ValueObjects( taskRunningService.getSubmittedTasks() );
     }
 
 }

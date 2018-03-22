@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,15 +23,14 @@ import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValue
 /**
  * @author luke
  */
-@SuppressWarnings("WeakerAccess") // Possibly used in front end
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class CoexpressionSummaryValueObject {
 
+    private final long geneId;
     // node degree info for this gene, genome wide.
     private GeneCoexpressionNodeDegreeValueObject coexpNodeDegree = null;
     private int datasetsAvailable;
     private int datasetsTested;
-    private long geneId;
-
     private int linksFound;
 
     public CoexpressionSummaryValueObject( Long geneId ) {
@@ -49,9 +48,6 @@ public class CoexpressionSummaryValueObject {
      * @param coexpNodeDegree node degree info for this gene, genome wide.
      */
     public void setCoexpNodeDegree( GeneCoexpressionNodeDegreeValueObject coexpNodeDegree ) {
-        /*
-         * FIXME this value object is a bit complex for use in the client...
-         */
         this.coexpNodeDegree = coexpNodeDegree;
     }
 

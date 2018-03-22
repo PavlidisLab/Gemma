@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.persistence.service.AbstractService;
 
@@ -55,25 +54,6 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         this.auditTrailDao = auditTrailDao;
         this.auditEventDao = auditEventDao;
         this.curationDetailsService = curationDetailsService;
-    }
-
-    /**
-     * @see AuditTrailService#addComment(Auditable, String, String)
-     */
-    @Override
-    @Transactional
-    public void addComment( final Auditable auditable, final String comment, final String detail ) {
-        AuditEventType type = new CommentedEvent();
-        this.addUpdateEvent( auditable, type, comment, detail );
-    }
-
-    /**
-     * @see AuditTrailService#addUpdateEvent(Auditable, String)
-     */
-    @Override
-    @Transactional
-    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        return this.addUpdateEvent( auditable, null, note );
     }
 
     /**
@@ -134,6 +114,15 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         }
 
         return this.addUpdateEvent( auditable, auditEventType, note, detail );
+    }
+
+    /**
+     * @see AuditTrailService#addUpdateEvent(Auditable, String)
+     */
+    @Override
+    @Transactional
+    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
+        return this.addUpdateEvent( auditable, null, note );
     }
 
     @Override

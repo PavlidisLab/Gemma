@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,44 +18,37 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.zip.GZIPInputStream;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.zip.GZIPInputStream;
+
+import static org.junit.Assert.*;
 
 /**
  * @author klc
- *
  */
 public class GeneSetServiceTest extends BaseSpringContextTest {
 
-    private Gene g = null;
-    private Gene g3 = null;
-
     static private final String GOTERM_INDB = "GO_0000310";
     static private final String GOTERM_QUERY = "GO:0000310";
-
+    private Gene g = null;
+    private Gene g3 = null;
     @Autowired
     private GeneSetService geneSetService;
 
@@ -74,9 +67,8 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Before
     public void setUp() throws Exception {
 
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/ontology/molecular-function.test.owl.gz" ) );
-        assert is != null;
+        InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) );
         geneOntologyService.loadTermsInNameSpace( is );
 
         g = this.getTestPersistentGene();
@@ -122,9 +114,6 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * 
-     */
     @Test
     public void testFindByGene() {
 
@@ -150,20 +139,20 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     public void testFindByGoId() {
 
         VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
-        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GOTERM_INDB );
-        oe.setValue( GOTERM_INDB );
+        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GeneSetServiceTest.GOTERM_INDB );
+        oe.setValue( GeneSetServiceTest.GOTERM_INDB );
         Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance( g, oe, GOEvidenceCode.EXP );
 
         gene2GoService.create( g2Go1 );
 
         oe = VocabCharacteristic.Factory.newInstance();
-        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GOTERM_INDB );
-        oe.setValue( GOTERM_INDB );
+        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GeneSetServiceTest.GOTERM_INDB );
+        oe.setValue( GeneSetServiceTest.GOTERM_INDB );
         Gene2GOAssociation g2Go2 = Gene2GOAssociation.Factory.newInstance( g3, oe, GOEvidenceCode.EXP );
 
         gene2GoService.create( g2Go2 );
 
-        GeneSet gset = this.geneSetSearch.findByGoId( GOTERM_QUERY, g3.getTaxon() );
+        GeneSet gset = this.geneSetSearch.findByGoId( GeneSetServiceTest.GOTERM_QUERY, g3.getTaxon() );
         assertEquals( 2, gset.getMembers().size() );
     }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,21 +20,20 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.ExternalDatabase;
-
-import java.util.Collection;
+import ubic.gemma.persistence.service.BaseService;
 
 /**
  * @author Gemma
  */
-public interface ExternalDatabaseService {
+public interface ExternalDatabaseService extends BaseService<ExternalDatabase> {
 
-    ExternalDatabase find( String name );
+    ExternalDatabase findByName( String name );
 
+    @Override
     @Secured({ "GROUP_USER" })
     ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
 
-    Collection<ExternalDatabase> loadAll();
-
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( ExternalDatabase externalDatabase );
 

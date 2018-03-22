@@ -20,6 +20,7 @@ package ubic.gemma.model.common.quantitationtype;
 
 import java.util.*;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
     /**
      * This is effectively the opposite of "log-transformed" (or any other transformation)
@@ -53,54 +54,57 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
     private static final long serialVersionUID = 2817283097042204701L;
     private static final Map<String, ScaleType> values = new LinkedHashMap<>( 10, 1 );
 
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> literals = new ArrayList<>( 10 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> names = new ArrayList<>( 10 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<ScaleType> valueList = new ArrayList<>( 10 );
 
     static {
-        values.put( LINEAR.value, LINEAR );
-        valueList.add( LINEAR );
-        literals.add( LINEAR.value );
-        names.add( "LINEAR" );
-        values.put( LN.value, LN );
-        valueList.add( LN );
-        literals.add( LN.value );
-        names.add( "LN" );
-        values.put( LOG2.value, LOG2 );
-        valueList.add( LOG2 );
-        literals.add( LOG2.value );
-        names.add( "LOG2" );
-        values.put( LOG10.value, LOG10 );
-        valueList.add( LOG10 );
-        literals.add( LOG10.value );
-        names.add( "LOG10" );
-        values.put( LOGBASEUNKNOWN.value, LOGBASEUNKNOWN );
-        valueList.add( LOGBASEUNKNOWN );
-        literals.add( LOGBASEUNKNOWN.value );
-        names.add( "LOGBASEUNKNOWN" );
-        values.put( FOLDCHANGE.value, FOLDCHANGE );
-        valueList.add( FOLDCHANGE );
-        literals.add( FOLDCHANGE.value );
-        names.add( "FOLDCHANGE" );
-        values.put( OTHER.value, OTHER );
-        valueList.add( OTHER );
-        literals.add( OTHER.value );
-        names.add( "OTHER" );
-        values.put( UNSCALED.value, UNSCALED );
-        valueList.add( UNSCALED );
-        literals.add( UNSCALED.value );
-        names.add( "UNSCALED" );
-        values.put( PERCENT.value, PERCENT );
-        valueList.add( PERCENT );
-        literals.add( PERCENT.value );
-        names.add( "PERCENT" );
-        values.put( COUNT.value, COUNT );
-        valueList.add( COUNT );
-        literals.add( COUNT.value );
-        names.add( "COUNT" );
-        valueList = Collections.unmodifiableList( valueList );
-        literals = Collections.unmodifiableList( literals );
-        names = Collections.unmodifiableList( names );
+        ScaleType.values.put( ScaleType.LINEAR.value, ScaleType.LINEAR );
+        ScaleType.valueList.add( ScaleType.LINEAR );
+        ScaleType.literals.add( ScaleType.LINEAR.value );
+        ScaleType.names.add( "LINEAR" );
+        ScaleType.values.put( ScaleType.LN.value, ScaleType.LN );
+        ScaleType.valueList.add( ScaleType.LN );
+        ScaleType.literals.add( ScaleType.LN.value );
+        ScaleType.names.add( "LN" );
+        ScaleType.values.put( ScaleType.LOG2.value, ScaleType.LOG2 );
+        ScaleType.valueList.add( ScaleType.LOG2 );
+        ScaleType.literals.add( ScaleType.LOG2.value );
+        ScaleType.names.add( "LOG2" );
+        ScaleType.values.put( ScaleType.LOG10.value, ScaleType.LOG10 );
+        ScaleType.valueList.add( ScaleType.LOG10 );
+        ScaleType.literals.add( ScaleType.LOG10.value );
+        ScaleType.names.add( "LOG10" );
+        ScaleType.values.put( ScaleType.LOGBASEUNKNOWN.value, ScaleType.LOGBASEUNKNOWN );
+        ScaleType.valueList.add( ScaleType.LOGBASEUNKNOWN );
+        ScaleType.literals.add( ScaleType.LOGBASEUNKNOWN.value );
+        ScaleType.names.add( "LOGBASEUNKNOWN" );
+        ScaleType.values.put( ScaleType.FOLDCHANGE.value, ScaleType.FOLDCHANGE );
+        ScaleType.valueList.add( ScaleType.FOLDCHANGE );
+        ScaleType.literals.add( ScaleType.FOLDCHANGE.value );
+        ScaleType.names.add( "FOLDCHANGE" );
+        ScaleType.values.put( ScaleType.OTHER.value, ScaleType.OTHER );
+        ScaleType.valueList.add( ScaleType.OTHER );
+        ScaleType.literals.add( ScaleType.OTHER.value );
+        ScaleType.names.add( "OTHER" );
+        ScaleType.values.put( ScaleType.UNSCALED.value, ScaleType.UNSCALED );
+        ScaleType.valueList.add( ScaleType.UNSCALED );
+        ScaleType.literals.add( ScaleType.UNSCALED.value );
+        ScaleType.names.add( "UNSCALED" );
+        ScaleType.values.put( ScaleType.PERCENT.value, ScaleType.PERCENT );
+        ScaleType.valueList.add( ScaleType.PERCENT );
+        ScaleType.literals.add( ScaleType.PERCENT.value );
+        ScaleType.names.add( "PERCENT" );
+        ScaleType.values.put( ScaleType.COUNT.value, ScaleType.COUNT );
+        ScaleType.valueList.add( ScaleType.COUNT );
+        ScaleType.literals.add( ScaleType.COUNT.value );
+        ScaleType.names.add( "COUNT" );
+        ScaleType.valueList = Collections.unmodifiableList( ScaleType.valueList );
+        ScaleType.literals = Collections.unmodifiableList( ScaleType.literals );
+        ScaleType.names = Collections.unmodifiableList( ScaleType.names );
     }
 
     private String value;
@@ -108,7 +112,7 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
     /**
      * The default constructor allowing super classes to access it.
      */
-    protected ScaleType() {
+    ScaleType() {
     }
 
     private ScaleType( String value ) {
@@ -122,7 +126,7 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      * @return scale type
      */
     public static ScaleType fromString( String value ) {
-        final ScaleType typeValue = values.get( value );
+        final ScaleType typeValue = ScaleType.values.get( value );
         if ( typeValue == null ) {
             /*
              * Customization to permit database values to change before code does. Previously this would throw an
@@ -140,7 +144,7 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
     public static List<String> literals() {
-        return literals;
+        return ScaleType.literals;
     }
 
     /**
@@ -150,7 +154,7 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      * modified.
      */
     public static List<String> names() {
-        return names;
+        return ScaleType.names;
     }
 
     /**
@@ -159,18 +163,12 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
      * @return A List containing the actual enumeration instance values.
      */
     public static List<ScaleType> values() {
-        return valueList;
+        return ScaleType.valueList;
     }
 
     @Override
     public int compareTo( ScaleType that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        return ( this == object ) || ( object instanceof ScaleType && ( ( ScaleType ) object ).getValue()
-                .equals( this.getValue() ) );
     }
 
     /**
@@ -185,6 +183,12 @@ public class ScaleType implements java.io.Serializable, Comparable<ScaleType> {
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        return ( this == object ) || ( object instanceof ScaleType && ( ( ScaleType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     @Override

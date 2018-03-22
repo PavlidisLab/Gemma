@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,19 +18,18 @@
  */
 package ubic.gemma.core.infrastructure.jms;
 
-import javax.jms.Queue;
-
 import org.apache.activemq.command.ActiveMQQueue;
-
 import ubic.gemma.core.infrastructure.common.MessageReceiver;
+
+import javax.jms.Queue;
 
 /**
  * author: anton date: 08/02/13
  */
 public class JmsMessageReceiver<T> implements MessageReceiver<T> {
 
-    private JMSHelper jmsHelper;
-    private Queue queue;
+    private final JMSHelper jmsHelper;
+    private final Queue queue;
 
     public JmsMessageReceiver( JMSHelper jmsHelper, String queueName ) {
         this.jmsHelper = jmsHelper;
@@ -39,15 +38,15 @@ public class JmsMessageReceiver<T> implements MessageReceiver<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public T receive() {
-        Object message = jmsHelper.receiveMessage( queue );
+    public T blockingReceive() {
+        Object message = jmsHelper.blockingReceiveMessage( queue );
         return ( T ) message;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public T blockingReceive() {
-        Object message = jmsHelper.blockingReceiveMessage( queue );
+    public T receive() {
+        Object message = jmsHelper.receiveMessage( queue );
         return ( T ) message;
     }
 }

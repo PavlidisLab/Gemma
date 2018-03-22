@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,10 +35,10 @@ import java.util.HashSet;
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
     private static final long serialVersionUID = 4357218100681569138L;
-    private Collection<Characteristic> characteristics = new HashSet<Characteristic>();
+    private Collection<Characteristic> characteristics = new HashSet<>();
     private DatabaseEntry sourceAccession;
-    private Collection<BibliographicReference> literatureSources = new HashSet<BibliographicReference>();
-    private Collection<GeneSetMember> members = new HashSet<GeneSetMember>();
+    private Collection<BibliographicReference> literatureSources = new HashSet<>();
+    private Collection<GeneSetMember> members = new HashSet<>();
 
     static public GeneSetMember containsGene( Gene g, GeneSet gs ) {
         for ( GeneSetMember gm : gs.getMembers() ) {

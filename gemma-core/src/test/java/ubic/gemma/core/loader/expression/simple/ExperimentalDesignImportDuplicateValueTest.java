@@ -97,10 +97,10 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
 
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.txt" )) {
-            experimentalDesignImporter.importDesign( ee, is, false );
+            experimentalDesignImporter.importDesign( ee, is );
         }
 
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        Collection<BioMaterial> bms = new HashSet<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             bms.add( bm );
@@ -114,7 +114,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         assertEquals( 17, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         for ( BioMaterial bm : bms ) {
-            Collection<ExperimentalFactor> seenExperimentalFactors = new HashSet<ExperimentalFactor>();
+            Collection<ExperimentalFactor> seenExperimentalFactors = new HashSet<>();
             for ( FactorValue fv : bm.getFactorValues() ) {
 
                 if ( seenExperimentalFactors.contains( fv.getExperimentalFactor() ) ) {

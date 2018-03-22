@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,24 +18,23 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import java.io.InputStream;
-import java.util.Collection;
-
 import junit.framework.TestCase;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import java.io.InputStream;
+import java.util.Collection;
+
 /**
  * @author pavlidis
- *
  */
 public class BlatResultParserTest extends TestCase {
 
     public void testParseInputStreamNoheader() throws Exception {
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.noheader.txt" );) {
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.noheader.txt" )) {
             BlatResultParser bp = new BlatResultParser();
             bp.parse( is );
             Collection<BlatResult> res = bp.getResults();
-            assertEquals( 18, res.size() );
+            TestCase.assertEquals( 18, res.size() );
         }
     }
 
@@ -43,11 +42,11 @@ public class BlatResultParserTest extends TestCase {
      * Test method for 'ubic.gemma.core.loader.loaderutils.BasicLineParser.parse(InputStream)'
      */
     public void testParseInputStreamWheader() throws Exception {
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.wheader.txt" );) {
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.wheader.txt" )) {
             BlatResultParser bp = new BlatResultParser();
             bp.parse( is );
             Collection<BlatResult> res = bp.getResults();
-            assertEquals( 15, res.size() );
+            TestCase.assertEquals( 15, res.size() );
         }
 
     }

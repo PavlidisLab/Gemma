@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.*;
 
@@ -38,6 +37,7 @@ import java.util.*;
  *
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
     private static final long serialVersionUID = -5116242513725297615L;
@@ -123,7 +123,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this( dedv, genes, vectorsBadVo );
 
         if ( dimToMatch.getBioAssays().size() != this.data.length ) {
-            addGaps( dimToMatch );
+            this.addGaps( dimToMatch );
         }
 
     }
@@ -139,7 +139,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         if ( qt.getIsMaskedPreferred() ) {
             this.masked = true;
         }
-        this.data = byteArrayConverter.byteArrayToDoubles( dedv.getData() );
+        this.data = DataVectorValueObject.byteArrayConverter.byteArrayToDoubles( dedv.getData() );
         if ( dedv instanceof ProcessedExpressionDataVector ) {
             this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();
@@ -164,16 +164,14 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             return true;
         if ( !super.equals( obj ) )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
 
         DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
         if ( sourceVectorId == null ) {
-            if ( other.sourceVectorId != null )
-                return false;
-        } else if ( !sourceVectorId.equals( other.sourceVectorId ) )
-            return false;
-        return true;
+            return other.sourceVectorId == null;
+        } else
+            return sourceVectorId.equals( other.sourceVectorId );
     }
 
     @Override
@@ -282,7 +280,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setQuantitationType( updatedQuantitationType );
 
         result.setDesignElement( cs );
-        result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
+        result.setData( DataVectorValueObject.byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
     }
 

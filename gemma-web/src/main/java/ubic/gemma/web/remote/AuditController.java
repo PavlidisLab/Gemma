@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,16 +22,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.*;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -61,9 +63,9 @@ public class AuditController {
 
     @SuppressWarnings("unchecked")
     public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
-        AbstractAuditable entity = getAuditable( e );
+        AbstractAuditable entity = this.getAuditable( e );
         if ( entity == null ) {
-            log.warn( "Couldn't find Auditable represented by " + e );
+            AuditController.log.warn( "Couldn't find Auditable represented by " + e );
             return;
         }
 
@@ -77,16 +79,16 @@ public class AuditController {
         AuditEvent auditEvent = auditTrailService
                 .addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
         if ( auditEvent == null ) {
-            log.error( "Persisting the audit event failed! On auditable id " + entity.getId() );
+            AuditController.log.error( "Persisting the audit event failed! On auditable id " + entity.getId() );
         } else {
-            log.info( "created new event: " + auditEvent );
+            AuditController.log.info( "created new event: " + auditEvent );
         }
     }
 
     public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
         Collection<AuditEventValueObject> result = new HashSet<>();
 
-        Auditable entity = getAuditable( e );
+        Auditable entity = this.getAuditable( e );
 
         if ( entity == null ) {
             return result;
@@ -109,9 +111,6 @@ public class AuditController {
         return result;
     }
 
-    /**
-     * FIXME this relies on the exact class name being available from the EntityDelegator.
-     */
     private AbstractAuditable getAuditable( EntityDelegator e ) {
         if ( e == null || e.getId() == null )
             return null;
@@ -130,12 +129,12 @@ public class AuditController {
         } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
             result = arrayDesignService.load( e.getId() );
         } else {
-            log.warn( "We don't support that class yet, sorry" );
+            AuditController.log.warn( "We don't support that class yet, sorry" );
             return null;
         }
 
         if ( result == null ) {
-            log.warn( "Entity with id = " + e.getId() + " not found" );
+            AuditController.log.warn( "Entity with id = " + e.getId() + " not found" );
         }
         return result;
     }

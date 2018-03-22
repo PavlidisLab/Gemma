@@ -26,55 +26,21 @@ import java.util.Collection;
 public interface OutlierDetectionService {
 
     /**
-     * Use default settings.
+     * Uses the {@link this#identifyOutliersByMedianCorrelation(DoubleMatrix)} method to identify outliers in the given
+     * experiment.
      *
-     * @param ee the experiment
-     * @return collection of outlier details
+     * @param ee The experiment to identify sample outliers in.
+     * @return the information about the identified outliers.
      */
-    Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee );
-
-    /* Jenni's code for outlier detection validation */
-    OutlierDetectionTestDetails identifyOutliers( ExpressionExperiment ee, boolean useRegression,
-            boolean findByMedian );
-
-    /* Jenni's code for detecting outliers by combining two detection methods */
-    OutlierDetectionTestDetails identifyOutliersByCombinedMethod( ExpressionExperiment ee );
+    Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee );
 
     /**
-     * @param useRegression     whether the experimental design should be accounted for (Based on our tests, it tends to
-     *                          cause more outlier calls, not fewer)
-     * @param quantileThreshold which quantile the correlation has to be in before it's considered potentially outlying (suggestion: 15)
-     * @param fractionThreshold what fraction of samples have to have a correlation lower than the quantile for a sample, for that sample
-     * @param ee                the experiment
-     * @return collection of outlier details
+     * Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range
+     * This is exposed for efficiency in geeq score calculation, use this#identifyOutliers(ExpressionExperiment, boolean, boolean)
+     * to have the correlation matrix computed correctly for you.
+     *
+     * @param cormat the correlation matrix to identify outliers in.
+     * @return the information about the identified outliers.
      */
-    Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, boolean useRegression, int quantileThreshold,
-            double fractionThreshold );
-
-    Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee, boolean useRegression );
-
-    /**
-     * @param ee     the experiment
-     * @param cormat the correlation matrix
-     * @return collection of outlier details
-     * @see OutlierDetectionService#identifyOutliers(ExpressionExperiment, DoubleMatrix, int, double) with default
-     * thresholds
-     */
-    Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, DoubleMatrix<BioAssay, BioAssay> cormat );
-
-    /**
-     * @param cormat            pre-computed correlation matrix.
-     * @param quantileThreshold which quantile the correlation has to be in before it's considered potentially outlying
-     *                          (suggestion: 15)
-     * @param fractionThreshold what fraction of samples have to have a correlation lower than the quantile for a
-     * @param ee                the experiment
-     * @return collection of outlier details
-     */
-    Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, DoubleMatrix<BioAssay, BioAssay> cormat,
-            int quantileThreshold, double fractionThreshold );
-
-    DoubleMatrix<BioAssay, BioAssay> getCorrelationMatrix( ExpressionExperiment ee, boolean useRegression );
-
-    Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
-            DoubleMatrix<BioAssay, BioAssay> cormat );
+    Collection<OutlierDetails> identifyOutliersByMedianCorrelation( DoubleMatrix<BioAssay, BioAssay> cormat );
 }

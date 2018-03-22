@@ -413,7 +413,6 @@ Ext
                                                    + " for more information, "
                                                    + "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your platform."
                                              } ]
-                                 // fixme add link to report.
                                  },
                                  new Gemma.QuantitationTypePanel( {
                                     id : 'quantitation-type-panel',

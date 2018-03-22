@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,8 @@ import java.util.Map;
 /**
  * @see ubic.gemma.model.common.description.Characteristic
  */
-public interface CharacteristicDao extends BrowsingDao<Characteristic>, BaseVoEnabledDao<Characteristic, CharacteristicValueObject> {
+public interface CharacteristicDao
+        extends BrowsingDao<Characteristic>, BaseVoEnabledDao<Characteristic, CharacteristicValueObject> {
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -50,12 +51,6 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic>, BaseVoEn
     Collection<? extends Characteristic> findByCategory( String query );
 
     /**
-     * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to
-     * parent objects.
-     */
-    Map<Characteristic, Object> findByParentClass( java.lang.Class<?> parentClass );
-
-    /**
      * @param classes constraint of who the 'owner' of the Characteristic has to be.
      */
     Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
@@ -67,7 +62,7 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic>, BaseVoEn
 
     Collection<Characteristic> findByUri( Collection<String> uris );
 
-    Collection<Characteristic> findByUri( java.lang.String searchString );
+    Collection<Characteristic> findByUri( String searchString );
 
     /**
      * @param classes constraint of who the 'owner' of the Characteristic has to be.
@@ -77,17 +72,11 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic>, BaseVoEn
     /**
      * Finds all Characteristics whose value match the given search term
      */
-    Collection<Characteristic> findByValue( java.lang.String search );
+    Collection<Characteristic> findByValue( String search );
 
     /**
      * Returns a map of the specified characteristics to their parent objects.
      */
-    Map<Characteristic, Object> getParents( java.lang.Class<?> parentClass,
-            Collection<Characteristic> characteristics );
-
-    /**
-     * @return URIs of categories that are used.
-     */
-    Collection<String> getUsedCategories();
+    Map<Characteristic, Object> getParents( Class<?> parentClass, Collection<Characteristic> characteristics );
 
 }

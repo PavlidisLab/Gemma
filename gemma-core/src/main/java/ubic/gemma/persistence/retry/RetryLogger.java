@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,47 +29,46 @@ import org.springframework.stereotype.Component;
 /**
  * Provide logging when an operation has failed and is being retried. This would not be needed if there was better
  * logging control over the default RetryContext.
- * 
- * @author paul
  *
+ * @author paul
  */
 @Component
 public class RetryLogger extends RetryListenerSupport {
 
-    private static Log log = LogFactory.getLog( RetryLogger.class );
+    private static final Log log = LogFactory.getLog( RetryLogger.class );
 
-    /*
-     * Called after the final attempt (successful or not). (non-Javadoc)
-     * 
-     * @see org.springframework.retry.listener.RetryListenerSupport#close(org.springframework.retry.RetryContext,
-     * org.springframework.retry.RetryCallback, java.lang.Throwable)
+    /**
+     * Called after the final attempt (successful or not).
+     *
+     * @param callback  the callback
+     * @param context   the context
+     * @param throwable throwable
      */
     @Override
     public <T> void close( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
 
         if ( context.isExhaustedOnly() ) {
-            log.error( "Retry attempts exhausted" );
+            RetryLogger.log.error( "Retry attempts exhausted" );
         } else if ( context.getRetryCount() > 0 && throwable == null ) {
-            log.info( "Retry was successful! Attempts: " + context.getRetryCount() );
+            RetryLogger.log.info( "Retry was successful! Attempts: " + context.getRetryCount() );
         }
 
         super.close( context, callback, throwable );
     }
 
-    /*
-     * Called after every unsuccessful attempt at a retry. (non-Javadoc)
-     * 
-     * @see org.springframework.retry.listener.RetryListenerSupport#onError(org.springframework.retry.RetryContext,
-     * org.springframework.retry.RetryCallback, java.lang.Throwable)
+    /**
+     * Called after every unsuccessful attempt at a retry.
+     *
+     * @param callback  the callback
+     * @param context   the context
+     * @param throwable throwable
      */
     @Override
     public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
         if ( context.getRetryCount() > 0 ) {
-            log.warn( "Retry attempt # "
-                    + context.getRetryCount()
-                    + " failed "
-                    + ( throwable == null ? "" : ( "[ " + throwable.getClass().getName() + ": "
-                            + throwable.getMessage() + "]" ) ) );
+            RetryLogger.log.warn( "Retry attempt # " + context.getRetryCount() + " failed " + ( throwable == null ?
+                    "" :
+                    ( "[ " + throwable.getClass().getName() + ": " + throwable.getMessage() + "]" ) ) );
         }
         super.onError( context, callback, throwable );
     }

@@ -77,9 +77,6 @@ Ext.onReady( function() {
          var callback = browsergrid.refresh.createDelegate( browsergrid );
          var errorHandler = Gemma.CharacteristicBrowser.handleError.createDelegate( this );
 
-         /*
-          * FIXME this has to be done in a progress bar.
-          */
          CharacteristicBrowserController.updateCharacteristics( chars, {
             callback : callback,
             errorHandler : errorHandler
@@ -344,7 +341,6 @@ Ext.onReady( function() {
    secondToolbar.doLayout();
    browsergrid.doLayout();
 
-   // FIXME put this somewhere better.
    queryField.el.on( "keyup", function( e ) {
       if ( e.getCharCode() == Ext.EventObject.ENTER ) {
          doQuery();

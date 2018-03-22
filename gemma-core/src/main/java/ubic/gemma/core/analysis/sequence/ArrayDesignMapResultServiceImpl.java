@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,35 +18,30 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import java.math.BigInteger;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.util.EntityUtils;
+
+import java.math.BigInteger;
+import java.util.*;
 
 /**
  * Supports obtaining detailed information about the sequence analysis of probes on microarrays.
- * 
- * @author Paul
  *
+ * @author Paul
  */
 @Component
 public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultService {
@@ -75,50 +70,10 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
     }
 
-
     @Override
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
         Collection<Object[]> sequenceData = compositeSequenceService.getRawSummary( arrayDesign, null );
-        return getSummaryMapValueObjects( sequenceData );
-    }
-
-    /**
-     * count the number of distinct blat hits
-     *
-     * @param blatResultCount map of csid to blat result hashes.
-
-     */
-    private void countBlatHits( Object[] row, Map<Long, Set<Integer>> blatResultCount, Long csId,
-            CompositeSequenceMapValueObject vo ) {
-
-        Long chromId = ( ( BigInteger ) row[15] ).longValue();
-        Long targetStart = ( ( BigInteger ) row[16] ).longValue();
-        Long targetEnd = ( ( BigInteger ) row[17] ).longValue();
-        String targetStarts = ( String ) row[18];
-        Long queryId = ( ( BigInteger ) row[19] ).longValue();
-
-        int hash = 1;
-        int prime = 31;
-        hash = prime * hash + chromId.hashCode();
-        hash = prime * hash + targetStart.hashCode();
-        hash = prime * hash + targetEnd.hashCode();
-        hash = prime * hash + targetStarts.hashCode();
-        hash = prime * hash + queryId.hashCode();
-
-        if ( blatResultCount.containsKey( csId ) ) {
-            blatResultCount.get( csId ).add( hash );
-        } else {
-            Set<Integer> blatResultHash = new HashSet<>();
-            blatResultHash.add( hash );
-            blatResultCount.put( csId, blatResultHash );
-        }
-
-        if ( vo.getNumBlatHits() == null ) {
-            vo.setNumBlatHits( 1 );
-        } else {
-            vo.setNumBlatHits( blatResultCount.get( csId ).size() );
-        }
-
+        return this.getSummaryMapValueObjects( sequenceData );
     }
 
     @Override
@@ -155,12 +110,12 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                 String geneProductAccession = ( String ) row[7];
                 Object geneProductGeneId = row[8];
                 String geneProductType = ( String ) row[9];
-                Object geneId = row[10];
+                Long geneId = ( ( BigInteger ) row[10] ).longValue();
                 String geneName = ( String ) row[11];
                 Integer geneAccession = ( Integer ) row[12]; // NCBI
 
                 // fill in value object for geneProducts
-                Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
+                Map<Long, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
                 // if the geneProduct is already in the map, do not do anything.
                 // if it isn't there, put it in the map
                 if ( !geneProductSet.containsKey( geneProductId ) ) {
@@ -171,15 +126,15 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                         gpVo.setGeneId( ( ( BigInteger ) geneProductGeneId ).longValue() );
                     }
                     gpVo.setType( geneProductType );
-                    geneProductSet.put( geneProductId.toString(), gpVo );
+                    geneProductSet.put( geneProductId, gpVo );
                 }
 
-                Map<String, GeneValueObject> geneSet = vo.getGenes();
+                Map<Long, GeneValueObject> geneSet = vo.getGenes();
                 if ( !geneSet.containsKey( geneId ) ) {
-                    GeneValueObject gVo = new GeneValueObject(( ( BigInteger ) geneId ).longValue());
+                    GeneValueObject gVo = new GeneValueObject( geneId );
                     gVo.setOfficialSymbol( geneName );
                     gVo.setNcbiId( geneAccession );
-                    geneSet.put( ( ( BigInteger ) geneId ).toString(), gVo );
+                    geneSet.put( geneId, gVo );
                 }
 
             }
@@ -208,7 +163,8 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                 vo.setBioSequenceNcbiId( bioSequenceNcbiId );
             }
 
-            if ( blatId != null ) countBlatHits( row, blatResultCount, csId, vo );
+            if ( blatId != null )
+                this.countBlatHits( row, blatResultCount, csId, vo );
 
         }
 
@@ -244,12 +200,44 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
             result.add( summary );
 
             if ( ++count % 1000 == 0 ) {
-                log.info( "Processed " + count + " elements..." );
+                ArrayDesignMapResultServiceImpl.log.info( "Processed " + count + " elements..." );
             }
 
         }
-        log.info( "Done, processed " + count + " elements" );
+        ArrayDesignMapResultServiceImpl.log.info( "Done, processed " + count + " elements" );
         return result;
+    }
+
+    /**
+     * count the number of distinct blat hits
+     *
+     * @param blatResultCount map of csid to blat result hashes.
+     */
+    private void countBlatHits( Object[] row, Map<Long, Set<Integer>> blatResultCount, Long csId,
+            CompositeSequenceMapValueObject vo ) {
+
+        Long chromId = ( ( BigInteger ) row[15] ).longValue();
+        Long targetStart = ( ( BigInteger ) row[16] ).longValue();
+        Long targetEnd = ( ( BigInteger ) row[17] ).longValue();
+        String targetStarts = ( String ) row[18];
+        Long queryId = ( ( BigInteger ) row[19] ).longValue();
+
+        int hash = 1;
+        int prime = 31;
+        hash = prime * hash + chromId.hashCode();
+        hash = prime * hash + targetStart.hashCode();
+        hash = prime * hash + targetEnd.hashCode();
+        hash = prime * hash + targetStarts.hashCode();
+        hash = prime * hash + queryId.hashCode();
+
+        EntityUtils.populateMapSet( blatResultCount, csId, hash );
+
+        if ( vo.getNumBlatHits() == null ) {
+            vo.setNumBlatHits( 1 );
+        } else {
+            vo.setNumBlatHits( blatResultCount.get( csId ).size() );
+        }
+
     }
 
 }

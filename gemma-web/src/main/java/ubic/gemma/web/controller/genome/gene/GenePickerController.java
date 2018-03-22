@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -261,8 +261,7 @@ public class GenePickerController {
      * @return map with each gene-query as a key and a collection of the search-results as the value
      * @throws IOException IO problems
      */
-    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )
-            throws IOException {
+    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) {
         return geneSearchService.searchMultipleGenesGetMap( query, taxonId );
     }
 

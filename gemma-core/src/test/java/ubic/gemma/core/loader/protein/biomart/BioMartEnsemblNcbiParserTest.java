@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,24 +18,21 @@
  */
 package ubic.gemma.core.loader.protein.biomart;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
+import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
-import ubic.gemma.model.genome.Taxon;
+import static org.junit.Assert.*;
 
 /**
  * Tests the parsing of a BioMart file. Tests one line can be parsed and whole files. Some error conditions are tested
  * for too.
- * 
+ *
  * @author ldonnison
  */
 public class BioMartEnsemblNcbiParserTest {
@@ -43,7 +40,7 @@ public class BioMartEnsemblNcbiParserTest {
     private BiomartEnsembleNcbiParser parser = null;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setNcbiId( 10 );
@@ -75,8 +72,8 @@ public class BioMartEnsemblNcbiParserTest {
         String[] attributesToGet = new String[] { "ensembl_gene_id", "ensembl_transcript_id", "entrezgene",
                 "ensembl_peptide_id", "hgnc_id" };
         parser.setBioMartFields( attributesToGet );
-        String line = "ENSG00000220023" + "\t" + "ENST00000418749" + "\t" + "10013421" + "\t" + "ENST00000418749"
-                + "\t" + "12123";
+        String line = "ENSG00000220023" + "\t" + "ENST00000418749" + "\t" + "10013421" + "\t" + "ENST00000418749" + "\t"
+                + "12123";
 
         Ensembl2NcbiValueObject bioMartEnsembleNcbi = parser.parseOneLine( line );
 
@@ -134,9 +131,7 @@ public class BioMartEnsemblNcbiParserTest {
                 }
             }
 
-        }
-
-        catch ( Exception e ) {
+        } catch ( Exception e ) {
             e.printStackTrace();
             fail();
         }

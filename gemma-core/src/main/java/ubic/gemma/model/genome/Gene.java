@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,7 @@ public class Gene extends ChromosomeFeature {
     private String officialSymbol;
     private String officialName;
     private Integer ncbiGeneId;
-    private String ensemblId; //FIXME non-unique for roughly 2000 genes as of Aug 11th 2017
+    private String ensemblId; //Non-unique for roughly 2000 genes as of Aug 11th 2017
     private Collection<GeneProduct> products = new HashSet<>();
     private Collection<GeneAlias> aliases = new HashSet<>();
     private Taxon taxon;
@@ -105,7 +105,7 @@ public class Gene extends ChromosomeFeature {
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29 * hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() );
+        hashCode = 29 * hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() );
         return hashCode;
     }
 

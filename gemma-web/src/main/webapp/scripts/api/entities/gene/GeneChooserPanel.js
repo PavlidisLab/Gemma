@@ -164,7 +164,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
             }
         }, this);
 
-        // See http://www.extjs.com/learn/Tutorial:RelayEvents // FIXME use EVENTBUS
+        // See http://www.extjs.com/learn/Tutorial:RelayEvents
         this.relayEvents(this.getTopToolbar(), ['ready', 'taxonchanged']);
 
         if (this.genes) {
@@ -233,7 +233,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
         var text = e.geneNames;
         GenePickerController.searchMultipleGenes(text, taxonId, {
             callback: function (genes) {
-                if (genes.length < 1 || (genes.length === 1 && genes[0] === null )) {
+                if (genes.length < 1 || (genes.length === 1 && genes[0] === null)) {
                     Ext.Msg.alert("Genes not found", "No genes matching your query and taxon found.");
                     loadMask.hide();
                     return;

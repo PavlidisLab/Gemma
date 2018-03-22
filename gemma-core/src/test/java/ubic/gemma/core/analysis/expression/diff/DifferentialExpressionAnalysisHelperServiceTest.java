@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -27,12 +26,6 @@ import static org.junit.Assert.assertTrue;
  * @author keshav
  */
 public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyzerConfigurationTest {
-
-    @Override
-    @Before
-    public void configureMocks() throws Exception {
-        configureMockAnalysisServiceHelper( 1 );
-    }
 
     /*
      * Tests the AnalyzerHelper.checkBiologicalReplicates method.

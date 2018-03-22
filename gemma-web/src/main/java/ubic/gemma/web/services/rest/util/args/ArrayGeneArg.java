@@ -33,21 +33,22 @@ public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneValueObject, GeneServ
     @SuppressWarnings("unused")
     public static ArrayGeneArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayGeneArg( String.format( ERROR_MSG, s ), new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+            return new ArrayGeneArg( String.format( ArrayGeneArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( ArrayGeneArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayGeneArg( Arrays.asList( splitString( s ) ) );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_GENE_ALIAS;
+        return new ArrayGeneArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
     }
 
     @Override
     protected String getPropertyName( GeneService service ) {
         String value = this.getValue().get( 0 );
-        GeneArg arg = GeneArg.valueOf( value );
-        return checkPropertyNameString( arg, value, service );
+        MutableArg<?, Gene, GeneValueObject, GeneService> arg = GeneArg.valueOf( value );
+        return this.checkPropertyNameString( arg, value, service );
+    }
+
+    @Override
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_GENE_ALIAS;
     }
 
 }

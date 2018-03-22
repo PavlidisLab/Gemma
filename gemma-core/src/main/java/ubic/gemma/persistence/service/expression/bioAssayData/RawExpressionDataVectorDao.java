@@ -8,12 +8,7 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
@@ -22,22 +17,9 @@ import java.util.Collection;
  * @author paul
  */
 public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<RawExpressionDataVector> {
+
     /**
      * @return the experiment.
      */
     ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors );
-
-    Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
-
-    Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes );
-
-    RawExpressionDataVector find( RawExpressionDataVector designElementDataVector );
-
-    Collection<RawExpressionDataVector> find( QuantitationType quantitationType );
-
-    Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
-
-    void removeDataForCompositeSequence( CompositeSequence compositeSequence );
-
-    void removeDataForQuantitationType( QuantitationType quantitationType );
 }

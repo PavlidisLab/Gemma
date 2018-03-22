@@ -46,16 +46,13 @@ public class QuantitationTypeParameterGuesser {
 
     private static final Set<String> measuredSignalDescPatterns = new HashSet<>();
     private static final Set<String> derivedSignalDescPatterns = new HashSet<>();
-    private static final Set<String> ratioDescPatterns = new HashSet<>();
     private static final Set<String> measuredSignalNamePatterns = new HashSet<>();
     private static final Set<String> derivedSignalNamePatterns = new HashSet<>();
-    // private static Set<String> ratioStringNamePatterns = new HashSet<String>();
 
     private static final Set<String> isNormalizedPatterns = new HashSet<>();
     private static final Set<String> isBackgroundSubtractedNamePatterns = new HashSet<>();
     private static final Set<String> isBackgroundSubtractedDescPatterns = new HashSet<>();
     private static final Set<String> isPreferredNamePatterns = new HashSet<>();
-    // private static Set<String> isPreferredDescPatterns = new HashSet<String>();
 
     private static final Map<ScaleType, Set<String>> scaleDescPatterns = new HashMap<>();
     private static final Map<StandardQuantitationType, Set<String>> typeDescPatterns = new HashMap<>();
@@ -80,216 +77,267 @@ public class QuantitationTypeParameterGuesser {
                 handler.setFileName( gemmaAppDataHome + File.separatorChar + "quantitationType.properties" );
                 handler.load();
             } catch ( ConfigurationException e ) {
-                log.info( "No custom quantitation type descriptors found" );
+                QuantitationTypeParameterGuesser.log.info( "No custom quantitation type descriptors found" );
             }
         }
 
-        measuredSignalDescPatterns.addAll( Arrays.asList( config.getStringArray( "measuredSignalPatterns" ) ) );
-        derivedSignalDescPatterns.addAll( Arrays.asList( config.getStringArray( "derivedSignalPatterns" ) ) );
+        QuantitationTypeParameterGuesser.measuredSignalDescPatterns
+                .addAll( Arrays.asList( config.getStringArray( "measuredSignalPatterns" ) ) );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns
+                .addAll( Arrays.asList( config.getStringArray( "derivedSignalPatterns" ) ) );
 
-        ratioDescPatterns.addAll( Arrays.asList( config.getStringArray( "ratioStringPatterns" ) ) );
+        QuantitationTypeParameterGuesser.measuredSignalDescPatterns
+                .add( ".*channel[\\s_ ][12] (mean|median) (signal|intensity) (?!- background).*" );
+        QuantitationTypeParameterGuesser.measuredSignalDescPatterns
+                .add( ".*(red|green|cy5|cy3) (mean|median) (feature)? intensity.*" );
 
-        measuredSignalDescPatterns.add( ".*channel[\\s_ ][12] (mean|median) (signal|intensity) (?!- background).*" );
-        measuredSignalDescPatterns.add( ".*(red|green|cy5|cy3) (mean|median) (feature)? intensity.*" );
-        measuredSignalDescPatterns.add( ".*(red|green|cy5|cy3) (mean|median) (feature)? intensity.*" );
+        QuantitationTypeParameterGuesser.measuredSignalNamePatterns.add( ".*[rg]_?(mean|median).*?(?!sd)" );
+        QuantitationTypeParameterGuesser.measuredSignalNamePatterns.add( ".*ch[12][ib]?_(mean|median|^sd).*?(?!sd).*" );
+        QuantitationTypeParameterGuesser.measuredSignalNamePatterns.add( ".*ch[12]_(mean|bkg).*?(?!sd)" );
+        QuantitationTypeParameterGuesser.measuredSignalNamePatterns
+                .add( ".*channel [12] (mean|median) (signal|intensity).*" );
+        QuantitationTypeParameterGuesser.measuredSignalNamePatterns
+                .add( "[fb](635|532)[_\\s\\.](mean|median).*?(?!b(635|532))(?!sd)" );
 
-        measuredSignalNamePatterns.add( ".*[rg]_?(mean|median).*?(?!sd)" );
-        measuredSignalNamePatterns.add( ".*ch[12][ib]?_(mean|median|^sd).*?(?!sd).*" );
-        measuredSignalNamePatterns.add( ".*ch[12]_(mean|bkg).*?(?!sd)" );
-        measuredSignalNamePatterns.add( ".*channel [12] (mean|median) (signal|intensity).*" );
-        measuredSignalNamePatterns.add( "[fb](635|532)[_\\s\\.](mean|median).*?(?!b(635|532))(?!sd)" );
-
-        derivedSignalDescPatterns
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns
                 .add( ".*channel [12] (mean|median) signal background (subtracted|corrected).*(?!ratio).*" );
-        derivedSignalNamePatterns.add( "ch[12][nd]_(mean|median).*(?!ratio).*" );
+        QuantitationTypeParameterGuesser.derivedSignalNamePatterns.add( "ch[12][nd]_(mean|median).*(?!ratio).*" );
 
-        derivedSignalNamePatterns.add( ".*channel[\\s_ ][12]\\s?(mean|median)?\\s?(signal|intensity) - background" );
-        derivedSignalDescPatterns.add( ".*(?<!ratio).*(?<!un)normalized.*(?!ratio).*" );
-        derivedSignalDescPatterns.add( ".*processed_signal" );
-        derivedSignalDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
-        derivedSignalDescPatterns.add( ".*relative abundance of a transcript.*" );
-        derivedSignalDescPatterns.add( "mas(\\s+)?[56](\\.[0-9])? signal.*" );
-        derivedSignalDescPatterns
+        QuantitationTypeParameterGuesser.derivedSignalNamePatterns
+                .add( ".*channel[\\s_ ][12]\\s?(mean|median)?\\s?(signal|intensity) - background" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns
+                .add( ".*(?<!ratio).*(?<!un)normalized.*(?!ratio).*" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns.add( ".*processed_signal" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns
+                .add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns.add( ".*relative abundance of a transcript.*" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns.add( "mas(\\s+)?[56](\\.[0-9])? signal.*" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns
                 .add( ".*(?<!ratio).*background[\\s-](subtraction|substraction|subtracted|corrected).*(?!ratio).*" );
-        derivedSignalDescPatterns.add( ".*processed.*" );
-        derivedSignalNamePatterns.add( "pos[/_](neg|fraction).*" );
-        derivedSignalDescPatterns.add( "sum_of_(mean|median)s" );
-        derivedSignalNamePatterns.add( "^%.*" );
-        derivedSignalDescPatterns.add( ".*\\s+\\s.*" );
-        derivedSignalNamePatterns.add( "ch[12]_per_sat.*" );
-        derivedSignalNamePatterns.add( "f(635|532)[_\\s\\.](mean|median)(\\s-\\s|_)b(635|532)" );
-        derivedSignalNamePatterns.add( "pergtbch[12].*" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns.add( ".*processed.*" );
+        QuantitationTypeParameterGuesser.derivedSignalNamePatterns.add( "pos[/_](neg|fraction).*" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns.add( "sum_of_(mean|median)s" );
+        QuantitationTypeParameterGuesser.derivedSignalNamePatterns.add( "^%.*" );
+        QuantitationTypeParameterGuesser.derivedSignalDescPatterns.add( ".*\\s+\\s.*" );
+        QuantitationTypeParameterGuesser.derivedSignalNamePatterns.add( "ch[12]_per_sat.*" );
+        QuantitationTypeParameterGuesser.derivedSignalNamePatterns
+                .add( "f(635|532)[_\\s\\.](mean|median)(\\s-\\s|_)b(635|532)" );
+        QuantitationTypeParameterGuesser.derivedSignalNamePatterns.add( "pergtbch[12].*" );
 
-        scaleDescPatterns.put( ScaleType.PERCENT, new HashSet<String>() );
-        scaleDescPatterns.put( ScaleType.LINEAR, new HashSet<String>() );
-        scaleDescPatterns.put( ScaleType.LOG2, new HashSet<String>() );
-        scaleDescPatterns.put( ScaleType.LOG10, new HashSet<String>() );
-        scaleDescPatterns.put( ScaleType.LOGBASEUNKNOWN, new HashSet<String>() );
-        scaleDescPatterns.put( ScaleType.UNSCALED, new HashSet<String>() );
-        scaleDescPatterns.put( ScaleType.LN, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.put( ScaleType.PERCENT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.put( ScaleType.LINEAR, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.put( ScaleType.LOG2, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.put( ScaleType.LOG10, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.put( ScaleType.LOGBASEUNKNOWN, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.put( ScaleType.UNSCALED, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.put( ScaleType.LN, new HashSet<String>() );
 
-        scaleNamePatterns.put( ScaleType.PERCENT, new HashSet<String>() );
-        scaleNamePatterns.put( ScaleType.LN, new HashSet<String>() );
-        scaleNamePatterns.put( ScaleType.LINEAR, new HashSet<String>() );
-        scaleNamePatterns.put( ScaleType.LOG2, new HashSet<String>() );
-        scaleNamePatterns.put( ScaleType.LOG10, new HashSet<String>() );
-        scaleNamePatterns.put( ScaleType.LOGBASEUNKNOWN, new HashSet<String>() );
-        scaleNamePatterns.put( ScaleType.UNSCALED, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.put( ScaleType.PERCENT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.put( ScaleType.LN, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.put( ScaleType.LINEAR, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.put( ScaleType.LOG2, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.put( ScaleType.LOG10, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.put( ScaleType.LOGBASEUNKNOWN, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.put( ScaleType.UNSCALED, new HashSet<String>() );
 
-        scaleDescPatterns.get( ScaleType.PERCENT ).add( "^(the\\s)?percent(age)?.*" );
-        scaleDescPatterns.get( ScaleType.PERCENT ).add( "^%.*" );
-        scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*log( )?2.*" );
-        scaleDescPatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
-        scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
-        scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
-        scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma(\\W.*)?" );
-        scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*?\\brma\\b.*?" );
-        scaleDescPatterns.get( ScaleType.LOG2 ).add( "mas(\\s)?[56](\\.[0-9])? signal.*" );
-        scaleDescPatterns.get( ScaleType.LN ).add( ".*?natural log.*" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.PERCENT ).add( "^(the\\s)?percent(age)?.*" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.PERCENT ).add( "^%.*" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*log( )?2.*" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN )
+                .add( ".*log( )?(?!(10|2)).*" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma(\\W.*)?" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*?\\brma\\b.*?" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LOG2 )
+                .add( "mas(\\s)?[56](\\.[0-9])? signal.*" );
+        QuantitationTypeParameterGuesser.scaleDescPatterns.get( ScaleType.LN ).add( ".*?natural log.*" );
 
-        scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
-        scaleNamePatterns.get( ScaleType.PERCENT ).add( "pergtbch[12].*" );
-        scaleNamePatterns.get( ScaleType.PERCENT ).add( "ch[12]_per_sat.*" );
-        scaleNamePatterns.get( ScaleType.LOG2 ).add( ".*log( )?2.*" );
-        scaleNamePatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
-        scaleNamePatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.get( ScaleType.PERCENT ).add( "pergtbch[12].*" );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.get( ScaleType.PERCENT ).add( "ch[12]_per_sat.*" );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.get( ScaleType.LOG2 ).add( ".*log( )?2.*" );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
+        QuantitationTypeParameterGuesser.scaleNamePatterns.get( ScaleType.LOGBASEUNKNOWN )
+                .add( ".*log( )?(?!(10|2)).*" );
 
-        typeDescPatterns.put( StandardQuantitationType.PRESENTABSENT, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.AMOUNT, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.CONFIDENCEINDICATOR, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.COORDINATE, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.CORRELATION, new HashSet<String>() );
-        typeDescPatterns.put( StandardQuantitationType.OTHER, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeDescPatterns
+                .put( StandardQuantitationType.PRESENTABSENT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeDescPatterns.put( StandardQuantitationType.AMOUNT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeDescPatterns
+                .put( StandardQuantitationType.CONFIDENCEINDICATOR, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeDescPatterns
+                .put( StandardQuantitationType.COORDINATE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeDescPatterns
+                .put( StandardQuantitationType.CORRELATION, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeDescPatterns.put( StandardQuantitationType.OTHER, new HashSet<String>() );
 
-        typeNamePatterns.put( StandardQuantitationType.PRESENTABSENT, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.AMOUNT, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.CONFIDENCEINDICATOR, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.COORDINATE, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.CORRELATION, new HashSet<String>() );
-        typeNamePatterns.put( StandardQuantitationType.OTHER, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeNamePatterns
+                .put( StandardQuantitationType.PRESENTABSENT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeNamePatterns.put( StandardQuantitationType.AMOUNT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeNamePatterns
+                .put( StandardQuantitationType.CONFIDENCEINDICATOR, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeNamePatterns
+                .put( StandardQuantitationType.COORDINATE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeNamePatterns
+                .put( StandardQuantitationType.CORRELATION, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.typeNamePatterns.put( StandardQuantitationType.OTHER, new HashSet<String>() );
 
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "[rg]_(bg)?_?sd" );
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "[bf](532|635)[_\\s]sd" );
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "p_value" );
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "d_p-value" );
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "ch[12](_bkd)?b?n? ?_(\\s)?sd" );
-        typeDescPatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( "[rg]_(bg)?_?sd" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( "[bf](532|635)[_\\s]sd" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( "p_value" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( "d_p-value" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( "ch[12](_bkd)?b?n? ?_(\\s)?sd" );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
                 .add( ".*(mean|median|background) standard deviation.*" );
-        typeDescPatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( "standard deviation.*" );
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( ".*ch[12][_\\s]confidence.*" );
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( ".*ch[12][i][_\\s]sd" );
-        typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR ).add( ".*det(ection)?[_\\s-]p(-value)?.*" );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( "standard deviation.*" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( ".*ch[12][_\\s]confidence.*" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( ".*ch[12][i][_\\s]sd" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.CONFIDENCEINDICATOR )
+                .add( ".*det(ection)?[_\\s-]p(-value)?.*" );
 
-        typeDescPatterns.get( StandardQuantitationType.AMOUNT ).addAll( measuredSignalDescPatterns );
-        typeDescPatterns.get( StandardQuantitationType.AMOUNT ).addAll( derivedSignalDescPatterns );
-        typeNamePatterns.get( StandardQuantitationType.AMOUNT ).addAll( measuredSignalNamePatterns );
-        typeNamePatterns.get( StandardQuantitationType.AMOUNT ).addAll( derivedSignalNamePatterns );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.AMOUNT )
+                .addAll( QuantitationTypeParameterGuesser.measuredSignalDescPatterns );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.AMOUNT )
+                .addAll( QuantitationTypeParameterGuesser.derivedSignalDescPatterns );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.AMOUNT )
+                .addAll( QuantitationTypeParameterGuesser.measuredSignalNamePatterns );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.AMOUNT )
+                .addAll( QuantitationTypeParameterGuesser.derivedSignalNamePatterns );
 
-        typeNamePatterns.get( StandardQuantitationType.PRESENTABSENT ).add( ".*(pre|abs)([ _])?call.*" );
-        typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT ).add( ".*call.+present.*" );
-        typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT ).add( ".*dchip detection call.*" );
-        typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT ).add( "detection" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.PRESENTABSENT )
+                .add( ".*(pre|abs)([ _])?call.*" );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT )
+                .add( ".*call.+present.*" );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT )
+                .add( ".*dchip detection call.*" );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.PRESENTABSENT )
+                .add( "detection" );
 
-        typeDescPatterns.get( StandardQuantitationType.CORRELATION ).add( ".*correlation.*" );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.CORRELATION )
+                .add( ".*correlation.*" );
 
-        typeNamePatterns.get( StandardQuantitationType.COORDINATE )
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.COORDINATE )
                 .add( ".*(array_row|array_column|top|left|right|bot).*" );
-        typeNamePatterns.get( StandardQuantitationType.COORDINATE )
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.COORDINATE )
                 .add( "(x_coord|y_coord|x_location|y_location|x|y)" );
-        typeNamePatterns.get( StandardQuantitationType.COORDINATE ).add( "(row|column)" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.COORDINATE )
+                .add( "(row|column)" );
 
-        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "^pairs.*" );
-        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "area" );
-        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "dia\\.?(meter)?" );
-        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "flags?" ); // FLAGS are now skipped
-        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "(m|p)m[_\\s]excess" );
-        typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "negative" );
-        typeDescPatterns.get( StandardQuantitationType.OTHER )
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "^pairs.*" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "area" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.OTHER )
+                .add( "dia\\.?(meter)?" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.OTHER )
+                .add( "flags?" ); // FLAGS are now skipped
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.OTHER )
+                .add( "(m|p)m[_\\s]excess" );
+        QuantitationTypeParameterGuesser.typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "negative" );
+        QuantitationTypeParameterGuesser.typeDescPatterns.get( StandardQuantitationType.OTHER )
                 .add( "number of pixels used to calculate a feature's intensity" ); // special case...
 
-        representationDescPatterns.put( PrimitiveType.DOUBLE, new HashSet<String>() );
-        representationDescPatterns.put( PrimitiveType.INT, new HashSet<String>() );
-        representationDescPatterns.put( PrimitiveType.STRING, new HashSet<String>() );
-        representationDescPatterns.put( PrimitiveType.BOOLEAN, new HashSet<String>() );
-        representationDescPatterns.put( PrimitiveType.CHAR, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationDescPatterns.put( PrimitiveType.DOUBLE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationDescPatterns.put( PrimitiveType.INT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationDescPatterns.put( PrimitiveType.STRING, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationDescPatterns.put( PrimitiveType.BOOLEAN, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationDescPatterns.put( PrimitiveType.CHAR, new HashSet<String>() );
 
-        representationNamePatterns.put( PrimitiveType.DOUBLE, new HashSet<String>() );
-        representationNamePatterns.put( PrimitiveType.INT, new HashSet<String>() );
-        representationNamePatterns.put( PrimitiveType.STRING, new HashSet<String>() );
-        representationNamePatterns.put( PrimitiveType.BOOLEAN, new HashSet<String>() );
-        representationNamePatterns.put( PrimitiveType.CHAR, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationNamePatterns.put( PrimitiveType.DOUBLE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationNamePatterns.put( PrimitiveType.INT, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationNamePatterns.put( PrimitiveType.STRING, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationNamePatterns.put( PrimitiveType.BOOLEAN, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.representationNamePatterns.put( PrimitiveType.CHAR, new HashSet<String>() );
 
-        representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of (background\\s)?pixels.*" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of feature pixels.*" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of (positive )?probe pairs.*" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( ".*number of probe set.*" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( ".*(?<!positive/)pairs[_\\s]used.*" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( "number of (positive|negative) probe pairs" );
-        representationNamePatterns.get( PrimitiveType.INT ).add( "pairs[_\\s]in[_\\s]?avg" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( "area" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( "b[\\s_]pixels" );
-        representationDescPatterns.get( PrimitiveType.INT )
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
+                .add( ".*number of (background\\s)?pixels.*" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
+                .add( ".*number of feature pixels.*" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
+                .add( ".*number of (positive )?probe pairs.*" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
+                .add( ".*number of probe set.*" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
+                .add( ".*(?<!positive/)pairs[_\\s]used.*" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
+                .add( "number of (positive|negative) probe pairs" );
+        QuantitationTypeParameterGuesser.representationNamePatterns.get( PrimitiveType.INT )
+                .add( "pairs[_\\s]in[_\\s]?avg" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT ).add( "area" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT ).add( "b[\\s_]pixels" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
                 .add( ".*(array_row|array_column|top|left(?!\\safter)|right|bot).*" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( ".*(x_coord|y_coord|x_location|y_location).*" );
-        representationNamePatterns.get( PrimitiveType.STRING ).add( "abs([ _])?call" );
-        representationNamePatterns.get( PrimitiveType.STRING ).add( "flag(s)?" );
-        representationDescPatterns.get( PrimitiveType.DOUBLE ).add( ".*ratio.*" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.INT )
+                .add( ".*(x_coord|y_coord|x_location|y_location).*" );
+        QuantitationTypeParameterGuesser.representationNamePatterns.get( PrimitiveType.STRING ).add( "abs([ _])?call" );
+        QuantitationTypeParameterGuesser.representationNamePatterns.get( PrimitiveType.STRING ).add( "flag(s)?" );
+        QuantitationTypeParameterGuesser.representationDescPatterns.get( PrimitiveType.DOUBLE ).add( ".*ratio.*" );
 
-        isBackgroundDescPatterns.put( Boolean.FALSE, new HashSet<String>() );
-        isBackgroundDescPatterns.put( Boolean.TRUE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isBackgroundDescPatterns.put( Boolean.FALSE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isBackgroundDescPatterns.put( Boolean.TRUE, new HashSet<String>() );
 
-        isBackgroundNamePatterns.put( Boolean.FALSE, new HashSet<String>() );
-        isBackgroundNamePatterns.put( Boolean.TRUE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isBackgroundNamePatterns.put( Boolean.FALSE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isBackgroundNamePatterns.put( Boolean.TRUE, new HashSet<String>() );
 
-        isRatioNamePatterns.put( Boolean.FALSE, new HashSet<String>() );
-        isRatioNamePatterns.put( Boolean.TRUE, new HashSet<String>() );
-        isRatioDescPatterns.put( Boolean.FALSE, new HashSet<String>() );
-        isRatioDescPatterns.put( Boolean.TRUE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isRatioNamePatterns.put( Boolean.FALSE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isRatioNamePatterns.put( Boolean.TRUE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isRatioDescPatterns.put( Boolean.FALSE, new HashSet<String>() );
+        QuantitationTypeParameterGuesser.isRatioDescPatterns.put( Boolean.TRUE, new HashSet<String>() );
 
-        isRatioNamePatterns.get( Boolean.TRUE ).add( "(pix_)?rat[12]n?_(mean|median)" );
-        isRatioNamePatterns.get( Boolean.TRUE ).add( ".*\\(.+?/.+?\\).*" );
-        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*(fold[_\\s]change|ratio).*" );
-        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*test/reference.*" );
-        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*normch2/normch1.*" );
-        isRatioDescPatterns.get( Boolean.TRUE ).add( ".*percent(age)?.*" );
+        QuantitationTypeParameterGuesser.isRatioNamePatterns.get( Boolean.TRUE )
+                .add( "(pix_)?rat[12]n?_(mean|median)" );
+        QuantitationTypeParameterGuesser.isRatioNamePatterns.get( Boolean.TRUE ).add( ".*\\(.+?/.+?\\).*" );
+        QuantitationTypeParameterGuesser.isRatioDescPatterns.get( Boolean.TRUE ).add( ".*(fold[_\\s]change|ratio).*" );
+        QuantitationTypeParameterGuesser.isRatioDescPatterns.get( Boolean.TRUE ).add( ".*test/reference.*" );
+        QuantitationTypeParameterGuesser.isRatioDescPatterns.get( Boolean.TRUE ).add( ".*normch2/normch1.*" );
+        QuantitationTypeParameterGuesser.isRatioDescPatterns.get( Boolean.TRUE ).add( ".*percent(age)?.*" );
 
-        isBackgroundNamePatterns.get( Boolean.TRUE ).add( "ch[12]b.*" );
-        isBackgroundDescPatterns.get( Boolean.TRUE )
+        QuantitationTypeParameterGuesser.isBackgroundNamePatterns.get( Boolean.TRUE ).add( "ch[12]b.*" );
+        QuantitationTypeParameterGuesser.isBackgroundDescPatterns.get( Boolean.TRUE )
                 .add( ".*(?<!subtracted\\s(by\\s)?)(?<!over the\\s)((pixel|feature)\\s)?(background(\\s|\\sintensity|\\ssignal)?)(?!subtracted).*" );
 
-        isNormalizedPatterns.add( ".*(?<!un)normalized.*" );
-        isNormalizedPatterns.add( "ch[12](b)?n.*" );
-        isNormalizedPatterns.add( "(unf_)?value" );
-        isNormalizedPatterns.add( "rma" );
-        isNormalizedPatterns.add( "dchip" );
+        QuantitationTypeParameterGuesser.isNormalizedPatterns.add( ".*(?<!un)normalized.*" );
+        QuantitationTypeParameterGuesser.isNormalizedPatterns.add( "ch[12](b)?n.*" );
+        QuantitationTypeParameterGuesser.isNormalizedPatterns.add( "(unf_)?value" );
+        QuantitationTypeParameterGuesser.isNormalizedPatterns.add( "rma" );
+        QuantitationTypeParameterGuesser.isNormalizedPatterns.add( "dchip" );
 
-        isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*background[\\s-](subtracted|corrected).*(?!ratio).*" );
-        isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
-        isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
-        isBackgroundSubtractedDescPatterns.add( ".*background intensity subtracted.*" );
-        isBackgroundSubtractedNamePatterns.add( ".*- ch[12]_bkd" );
-        isBackgroundSubtractedNamePatterns.add( "ch[12]d.*" );
-        isBackgroundSubtractedNamePatterns.add( ".*((- )|_)b(532|635)" );
-        isBackgroundSubtractedNamePatterns.add( ".*- background" );
-        isBackgroundSubtractedNamePatterns.add( "rma" );
-        isBackgroundSubtractedNamePatterns.add( "gcrma" );
-        isBackgroundSubtractedNamePatterns.add( "dchip" );
-        isBackgroundSubtractedDescPatterns
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedDescPatterns
+                .add( ".*(?<!ratio).*background[\\s-](subtracted|corrected).*(?!ratio).*" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedDescPatterns
+                .add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedDescPatterns
+                .add( ".*background intensity subtracted.*" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns.add( ".*- ch[12]_bkd" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns.add( "ch[12]d.*" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns.add( ".*((- )|_)b(532|635)" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns.add( ".*- background" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns.add( "rma" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns.add( "gcrma" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns.add( "dchip" );
+        QuantitationTypeParameterGuesser.isBackgroundSubtractedDescPatterns
                 .add( ".*channel [12] (mean|median) signal background (subtracted|corrected).*(?!ratio).*" );
 
         // note: unf_value is without the flagged values removed.
-        isPreferredNamePatterns.add( "value" );
-        isPreferredNamePatterns.add( "rma" );
-        isPreferredNamePatterns.add( "gcrma" );
-        isPreferredNamePatterns.add( "dchip" );
-        isPreferredNamePatterns.add( "chpsignal" );
-        isPreferredNamePatterns.add( "signal" );
+        QuantitationTypeParameterGuesser.isPreferredNamePatterns.add( "value" );
+        QuantitationTypeParameterGuesser.isPreferredNamePatterns.add( "rma" );
+        QuantitationTypeParameterGuesser.isPreferredNamePatterns.add( "gcrma" );
+        QuantitationTypeParameterGuesser.isPreferredNamePatterns.add( "dchip" );
+        QuantitationTypeParameterGuesser.isPreferredNamePatterns.add( "chpsignal" );
+        QuantitationTypeParameterGuesser.isPreferredNamePatterns.add( "signal" );
         // isPreferredNamePatterns.add( ".*?log_rat2n_mean" );
 
     }
 
     public static void guessQuantitationTypeParameters( QuantitationType qt, String name, String description ) {
-        guessQuantitationTypeParameters( qt, name, description, null );
+        QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, name, description, null );
     }
 
     /**
@@ -326,14 +374,15 @@ public class QuantitationTypeParameterGuesser {
         Boolean isNormalized;
         Boolean isRatio;
 
-        sType = guessScaleType( namelc, descriptionlc );
-        qType = guessType( namelc, descriptionlc );
-        rType = guessPrimitiveType( namelc, descriptionlc, exampleValue );
+        sType = QuantitationTypeParameterGuesser.guessScaleType( namelc, descriptionlc );
+        qType = QuantitationTypeParameterGuesser.guessType( namelc, descriptionlc );
+        rType = QuantitationTypeParameterGuesser.guessPrimitiveType( namelc, descriptionlc, exampleValue );
 
-        isBackground = guessIsBackground( namelc, descriptionlc ) && maybeBackground( namelc, descriptionlc );
-        isBackgroundSubtracted = isBackgroundSubtracted( namelc, descriptionlc );
-        isNormalized = isNormalized( namelc, descriptionlc );
-        isRatio = isRatio( namelc, descriptionlc );
+        isBackground = QuantitationTypeParameterGuesser.guessIsBackground( namelc, descriptionlc )
+                && QuantitationTypeParameterGuesser.maybeBackground( namelc, descriptionlc );
+        isBackgroundSubtracted = QuantitationTypeParameterGuesser.isBackgroundSubtracted( namelc, descriptionlc );
+        isNormalized = QuantitationTypeParameterGuesser.isNormalized( namelc, descriptionlc );
+        isRatio = QuantitationTypeParameterGuesser.isRatio( namelc, descriptionlc );
 
         if ( qType.equals( StandardQuantitationType.AMOUNT ) || qType.equals( StandardQuantitationType.COUNT ) ) {
             gType = GeneralType.QUANTITATIVE;
@@ -382,7 +431,7 @@ public class QuantitationTypeParameterGuesser {
             qt.setIsRatio( isRatio );
 
         if ( qt.getIsPreferred() == null )
-            qt.setIsPreferred( isPreferred( qt ) );
+            qt.setIsPreferred( QuantitationTypeParameterGuesser.isPreferred( qt ) );
 
         if ( qt.getIsMaskedPreferred() == null )
             qt.setIsMaskedPreferred( Boolean.FALSE );
@@ -390,13 +439,13 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static Boolean guessIsBackground( String name, String description ) {
-        for ( Boolean type : isBackgroundDescPatterns.keySet() ) {
-            for ( String patt : isBackgroundDescPatterns.get( type ) ) {
+        for ( Boolean type : QuantitationTypeParameterGuesser.isBackgroundDescPatterns.keySet() ) {
+            for ( String patt : QuantitationTypeParameterGuesser.isBackgroundDescPatterns.get( type ) ) {
                 if ( description.matches( patt ) ) {
                     return type;
                 }
             }
-            for ( String patt : isBackgroundNamePatterns.get( type ) ) {
+            for ( String patt : QuantitationTypeParameterGuesser.isBackgroundNamePatterns.get( type ) ) {
                 if ( name.matches( patt ) ) {
                     return type;
                 }
@@ -425,16 +474,17 @@ public class QuantitationTypeParameterGuesser {
             /*
              * Goofy special case of 'null' thanks to bad decision by GEO data submitters. See bug 1760
              */
-            if ( StringUtils.isNotBlank( exampleString ) && exampleString != null && !exampleString
-                    .equalsIgnoreCase( "null" ) ) {
+            if ( StringUtils.isNotBlank( exampleString ) && !exampleString.equalsIgnoreCase( "null" ) ) {
 
                 try {
+                    //noinspection ResultOfMethodCallIgnored // ok, checking for exceptions
                     Double.parseDouble( exampleString );
                 } catch ( NumberFormatException e ) {
                     couldBeDouble = false;
                 }
 
                 try {
+                    //noinspection ResultOfMethodCallIgnored // ok, checking for exceptions
                     Integer.parseInt( exampleString );
                 } catch ( NumberFormatException e ) {
                     couldBeInt = false;
@@ -442,12 +492,12 @@ public class QuantitationTypeParameterGuesser {
             }
         }
 
-        for ( PrimitiveType type : representationDescPatterns.keySet() ) {
+        for ( PrimitiveType type : QuantitationTypeParameterGuesser.representationDescPatterns.keySet() ) {
             PrimitiveType guessed;
-            guessed = checkType( type, name, couldBeDouble, couldBeInt );
+            guessed = QuantitationTypeParameterGuesser.checkType( type, name, couldBeDouble, couldBeInt );
             if ( guessed != null )
                 return guessed;
-            guessed = checkType( type, description, couldBeDouble, couldBeInt );
+            guessed = QuantitationTypeParameterGuesser.checkType( type, description, couldBeDouble, couldBeInt );
             if ( guessed != null )
                 return guessed;
         }
@@ -460,16 +510,17 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static ScaleType guessScaleType( String name, String description ) {
-        for ( ScaleType type : scaleDescPatterns.keySet() ) {
-            for ( String patt : scaleNamePatterns.get( type ) ) {
+        for ( ScaleType type : QuantitationTypeParameterGuesser.scaleDescPatterns.keySet() ) {
+            for ( String patt : QuantitationTypeParameterGuesser.scaleNamePatterns.get( type ) ) {
                 if ( name.matches( patt ) ) {
-                    log.debug( "!!!!!name=" + name + " matched " + patt );
+                    QuantitationTypeParameterGuesser.log.debug( "!!!!!name=" + name + " matched " + patt );
                     return type;
                 }
             }
-            for ( String patt : scaleDescPatterns.get( type ) ) {
+            for ( String patt : QuantitationTypeParameterGuesser.scaleDescPatterns.get( type ) ) {
                 if ( description.toLowerCase().matches( patt ) ) {
-                    log.debug( "!!!!!description=" + description + " matched " + patt );
+                    QuantitationTypeParameterGuesser.log
+                            .debug( "!!!!!description=" + description + " matched " + patt );
                     return type;
                 }
 
@@ -480,29 +531,30 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static StandardQuantitationType guessType( String name, String description ) {
-        for ( StandardQuantitationType type : typeDescPatterns.keySet() ) {
+        for ( StandardQuantitationType type : QuantitationTypeParameterGuesser.typeDescPatterns.keySet() ) {
 
             boolean isQuant = type == StandardQuantitationType.AMOUNT || type == StandardQuantitationType.COUNT;
 
-            if ( isQuant && !maybeDerivedSignal( name ) ) {
+            if ( isQuant && !QuantitationTypeParameterGuesser.maybeDerivedSignal( name ) ) {
                 continue;
-            } else if ( isQuant && !maybeMeasuredSignal( name ) ) {
+            } else if ( isQuant && !QuantitationTypeParameterGuesser.maybeMeasuredSignal( name ) ) {
                 continue;
             }
 
-            for ( String patt : typeNamePatterns.get( type ) ) {
-                log.debug( "name=" + name + " test " + patt );
+            for ( String patt : QuantitationTypeParameterGuesser.typeNamePatterns.get( type ) ) {
+                QuantitationTypeParameterGuesser.log.debug( "name=" + name + " test " + patt );
                 if ( name.matches( patt ) ) {
                     // special case for derived signal
-                    log.debug( "!!!!!name=" + name + " matched " + patt );
+                    QuantitationTypeParameterGuesser.log.debug( "!!!!!name=" + name + " matched " + patt );
                     return type;
                 }
             }
 
-            for ( String patt : typeDescPatterns.get( type ) ) {
-                log.debug( "description=" + description + " test " + patt );
+            for ( String patt : QuantitationTypeParameterGuesser.typeDescPatterns.get( type ) ) {
+                QuantitationTypeParameterGuesser.log.debug( "description=" + description + " test " + patt );
                 if ( description.matches( patt ) ) {
-                    log.debug( "!!!!!description=" + description + " matched " + patt );
+                    QuantitationTypeParameterGuesser.log
+                            .debug( "!!!!!description=" + description + " matched " + patt );
                     return type;
                 }
             }
@@ -514,17 +566,17 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static boolean isBackgroundSubtracted( String name, String description ) {
-        for ( String patt : isBackgroundSubtractedNamePatterns ) {
-            log.debug( name + " test " + patt );
+        for ( String patt : QuantitationTypeParameterGuesser.isBackgroundSubtractedNamePatterns ) {
+            QuantitationTypeParameterGuesser.log.debug( name + " test " + patt );
             if ( name.matches( patt ) ) {
-                log.debug( "name=" + name + " <<<matched " + patt );
+                QuantitationTypeParameterGuesser.log.debug( "name=" + name + " <<<matched " + patt );
                 return true;
             }
         }
-        for ( String patt : isBackgroundSubtractedDescPatterns ) {
-            log.debug( description + " test " + patt );
+        for ( String patt : QuantitationTypeParameterGuesser.isBackgroundSubtractedDescPatterns ) {
+            QuantitationTypeParameterGuesser.log.debug( description + " test " + patt );
             if ( description.matches( patt ) ) {
-                log.debug( description + " <<<matched " + patt );
+                QuantitationTypeParameterGuesser.log.debug( description + " <<<matched " + patt );
                 return true;
             }
         }
@@ -532,15 +584,15 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static boolean isNormalized( String name, String description ) {
-        for ( String patt : isNormalizedPatterns ) {
+        for ( String patt : QuantitationTypeParameterGuesser.isNormalizedPatterns ) {
             if ( name.matches( patt ) ) {
-                log.debug( "name=" + name + " matched " + patt );
+                QuantitationTypeParameterGuesser.log.debug( "name=" + name + " matched " + patt );
                 return true;
             }
         }
-        for ( String patt : isNormalizedPatterns ) {
+        for ( String patt : QuantitationTypeParameterGuesser.isNormalizedPatterns ) {
             if ( description.matches( patt ) ) {
-                log.debug( description + " matched " + patt );
+                QuantitationTypeParameterGuesser.log.debug( description + " matched " + patt );
                 return true;
             }
         }
@@ -560,9 +612,9 @@ public class QuantitationTypeParameterGuesser {
         // return false; // definitely not
         // }
         String name = qt.getName().toLowerCase();
-        for ( String patt : isPreferredNamePatterns ) {
+        for ( String patt : QuantitationTypeParameterGuesser.isPreferredNamePatterns ) {
             if ( name.matches( patt ) ) {
-                log.debug( "name=" + name + " <<<matched " + patt );
+                QuantitationTypeParameterGuesser.log.debug( "name=" + name + " <<<matched " + patt );
                 return true;
             }
         }
@@ -573,18 +625,18 @@ public class QuantitationTypeParameterGuesser {
 
     protected static boolean isRatio( String name, String description ) {
 
-        if ( !maybeRatio( name ) )
+        if ( !QuantitationTypeParameterGuesser.maybeRatio( name ) )
             return false;
 
-        for ( Boolean type : isRatioNamePatterns.keySet() ) {
-            for ( String patt : isRatioNamePatterns.get( type ) ) {
-                log.debug( name + " test " + patt );
+        for ( Boolean type : QuantitationTypeParameterGuesser.isRatioNamePatterns.keySet() ) {
+            for ( String patt : QuantitationTypeParameterGuesser.isRatioNamePatterns.get( type ) ) {
+                QuantitationTypeParameterGuesser.log.debug( name + " test " + patt );
                 if ( name.matches( patt ) ) {
                     return type;
                 }
             }
-            for ( String patt : isRatioDescPatterns.get( type ) ) {
-                log.debug( description + " test " + patt );
+            for ( String patt : QuantitationTypeParameterGuesser.isRatioDescPatterns.get( type ) ) {
+                QuantitationTypeParameterGuesser.log.debug( description + " test " + patt );
                 if ( description.matches( patt ) ) {
                     return type;
                 }
@@ -594,6 +646,7 @@ public class QuantitationTypeParameterGuesser {
         return false;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement") // Better readability
     protected static boolean maybeBackground( String namelc, String descriptionlc ) {
         if ( descriptionlc.contains( "background over the background" ) ) {
             return false; // definitely not.
@@ -609,12 +662,10 @@ public class QuantitationTypeParameterGuesser {
             return false; // definitely not.
         } else if ( namelc.matches( ".*- background" ) ) {
             return false; // definitely not.
-        } else if ( namelc.matches( "f(532|635).*" ) ) {
-            return false; // definitely not.
-        }
+        } else
+            return !namelc.matches( "f(532|635).*" );
 
         // this is really a 'maybe'.
-        return true;
     }
 
     protected static boolean maybeDerivedSignal( String name ) {
@@ -644,12 +695,12 @@ public class QuantitationTypeParameterGuesser {
     }
 
     protected static boolean maybeRatio( String name ) {
-        return !name.matches( "(p|m)m[\\s_]excess" );
+        return !name.matches( "([pm])m[\\s_]excess" );
     }
 
     private static PrimitiveType checkType( PrimitiveType type, String value, boolean couldBeDouble,
             boolean couldBeInt ) {
-        for ( String patt : representationDescPatterns.get( type ) ) {
+        for ( String patt : QuantitationTypeParameterGuesser.representationDescPatterns.get( type ) ) {
             if ( value.matches( patt ) ) {
                 if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
                     continue; // cannot be double.

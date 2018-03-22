@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,54 +37,44 @@ import java.util.HashSet;
 /**
  * @author pavlidis
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class ESearchXMLParser {
 
-    protected static final Log log = LogFactory.getLog( ESearchXMLParser.class );
+    private static final Log log = LogFactory.getLog( ESearchXMLParser.class );
 
     public Collection<String> parse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
-        Document document = openAndParse( is );
-        return extractIds( document );
-    }
-
-    private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
-        //        if ( is.available() == 0 ) {
-        //            throw new IOException( "XML stream contains no data." );
-        //        }
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setIgnoringComments( true );
-        // factory.setValidating( true );
-
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.parse( is );
-        return document;
+        Document document = this.openAndParse( is );
+        return this.extractIds( document );
     }
 
     public int getCount( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
-        Document document = openAndParse( is );
+        Document document = this.openAndParse( is );
         NodeList idList = document.getElementsByTagName( "Count" );
         Node item = idList.item( 0 );
         String value = XMLUtils.getTextValue( ( Element ) item );
-        log.debug( "Got " + value );
+        ESearchXMLParser.log.debug( "Got " + value );
         return Integer.parseInt( value );
     }
 
+    private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringComments( true );
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse( is );
+    }
+
     private Collection<String> extractIds( Document doc ) {
-        Collection<String> result = new HashSet<String>();
+        Collection<String> result = new HashSet<>();
         NodeList idList = doc.getElementsByTagName( "Id" );
         assert idList != null;
-        log.debug( "Got " + idList.getLength() );
-        // NodeList idNodes = idList.item( 0 ).getChildNodes();
-        // Node ids = idList.item( 0 );
-        try {
-            for ( int i = 0; i < idList.getLength(); i++ ) {
-                Node item = idList.item( i );
-                String value = XMLUtils.getTextValue( ( Element ) item );
-                log.debug( "Got " + value );
-                result.add( value );
-            }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+        ESearchXMLParser.log.debug( "Got " + idList.getLength() );
+
+        for ( int i = 0; i < idList.getLength(); i++ ) {
+            Node item = idList.item( i );
+            String value = XMLUtils.getTextValue( ( Element ) item );
+            ESearchXMLParser.log.debug( "Got " + value );
+            result.add( value );
         }
 
         return result;

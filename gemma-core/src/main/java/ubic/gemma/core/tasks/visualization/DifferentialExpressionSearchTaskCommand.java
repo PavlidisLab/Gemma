@@ -12,7 +12,7 @@ import java.util.Collection;
  * Created with IntelliJ IDEA. User: anton Date: 22/01/13 Time: 10:10 AM To change this template use File | Settings |
  * File Templates.
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class DifferentialExpressionSearchTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = -8510536003059837349L;

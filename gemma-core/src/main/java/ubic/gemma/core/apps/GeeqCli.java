@@ -1,7 +1,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.openjena.atlas.logging.Log;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -46,8 +45,7 @@ public class GeeqCli extends AbstractCLIContextCLI {
             this.stopArg = this.getOptionValue( "stop" );
         }
         if ( this.hasOption( 'm' ) ) {
-            String m = this.getOptionValue( 'm' );
-            this.mode = m;
+            this.mode = this.getOptionValue( 'm' );
         }
     }
 
@@ -59,24 +57,24 @@ public class GeeqCli extends AbstractCLIContextCLI {
     @SuppressWarnings("AccessStaticViaInstance")
     @Override
     protected void buildOptions() {
-        Option startOption = OptionBuilder.hasArg().withDescription(
-                "The first experiment ID denoting the beginning of the ID range to run the GEEQ for. " ).isRequired()
-                .create( "start" );
+        Option startOption = Option.builder( "start" )
+                .desc( "The first experiment ID denoting the beginning of the ID range to run the GEEQ for. " ).hasArg()
+                .required().build();
         this.addOption( startOption );
 
-        Option stopOption = OptionBuilder.hasArg()
-                .withDescription( "The ID of the last experiment to generate GEEQ for, i.e the end of the ID range." )
-                .isRequired().create( "stop" );
+        Option stopOption = Option.builder( "stop" )
+                .desc( "The ID of the last experiment to generate GEEQ for, i.e the end of the ID range." ).hasArg()
+                .required().build();
         this.addOption( stopOption );
 
-        Option modeOption = OptionBuilder.hasArg()
-                .withDescription( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
+        Option modeOption = Option.builder( "m" ).longOpt( "mode" )
+                .desc( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
                         + "\n Possible values are:" //
                         + "\n " + OPT_MODE_ALL + " - runs all scoring" //
                         + "\n " + OPT_MODE_B_EFFECT + "- recalcualtes batch effect score" //
                         + "\n " + OPT_MODE_B_CONFOUND + " - recalculates batch confound score" //
                         + "\n " + OPT_MODE_REPS + " - recalculates score for replicates" //
-                        + "\n " + OPT_MODE_PUB + " - recalculates score for publication" ).create( 'm' );
+                        + "\n " + OPT_MODE_PUB + " - recalculates score for publication" ).hasArg().build();
         this.addOption( modeOption );
     }
 

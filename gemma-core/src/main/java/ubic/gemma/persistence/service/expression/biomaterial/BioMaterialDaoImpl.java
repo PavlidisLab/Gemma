@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -37,16 +39,17 @@ import java.util.List;
  * @see BioMaterial
  */
 @Repository
-public class BioMaterialDaoImpl extends BioMaterialDaoBase {
+public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMaterialValueObject>
+        implements BioMaterialDao {
 
     @Autowired
     public BioMaterialDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
+        super( BioMaterial.class, sessionFactory );
     }
 
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
-        log.debug( "Start find" );
+        AbstractDao.log.debug( "Start find" );
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
@@ -63,8 +66,25 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
                 result = results.iterator().next();
             }
         }
-        log.debug( "Done with find" );
+        AbstractDao.log.debug( "Done with find" );
         return ( BioMaterial ) result;
+    }
+
+    @Override
+    public BioMaterial copy( final BioMaterial bioMaterial ) {
+
+        BioMaterial newMaterial = BioMaterial.Factory.newInstance();
+        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" );
+        newMaterial.setCharacteristics( bioMaterial.getCharacteristics() );
+        newMaterial.setSourceTaxon( bioMaterial.getSourceTaxon() );
+
+        newMaterial.setTreatments( bioMaterial.getTreatments() );
+        newMaterial.setFactorValues( bioMaterial.getFactorValues() );
+
+        newMaterial.setName( "Modeled after " + bioMaterial.getName() );
+        newMaterial = this.findOrCreate( newMaterial );
+        return newMaterial;
+
     }
 
     @Override
@@ -114,30 +134,13 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     }
 
     @Override
-    protected BioMaterial handleCopy( final BioMaterial bioMaterial ) {
-
-        BioMaterial newMaterial = BioMaterial.Factory.newInstance();
-        newMaterial.setDescription( bioMaterial.getDescription() + " [Created by Gemma]" );
-        newMaterial.setCharacteristics( bioMaterial.getCharacteristics() );
-        newMaterial.setSourceTaxon( bioMaterial.getSourceTaxon() );
-
-        newMaterial.setTreatments( bioMaterial.getTreatments() );
-        newMaterial.setFactorValues( bioMaterial.getFactorValues() );
-
-        newMaterial.setName( "Modeled after " + bioMaterial.getName() );
-        newMaterial = findOrCreate( newMaterial );
-        return newMaterial;
-
-    }
-
-    @Override
     public BioMaterialValueObject loadValueObject( BioMaterial entity ) {
         return new BioMaterialValueObject( entity );
     }
 
     @Override
     public Collection<BioMaterialValueObject> loadValueObjects( Collection<BioMaterial> entities ) {
-        Collection<BioMaterialValueObject> vos = new LinkedHashSet<BioMaterialValueObject>();
+        Collection<BioMaterialValueObject> vos = new LinkedHashSet<>();
         for ( BioMaterial e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }

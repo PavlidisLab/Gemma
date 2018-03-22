@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,84 +18,76 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.IOException;
+
 /**
  * Prints preferred data matrix to a file.
- * 
- * @author Paul
  *
+ * @author Paul
  */
 public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulatingCLI {
+
+    private boolean filter = false;
+    private String outFileName = null;
 
     public static void main( String[] args ) {
         ExpressionDataMatrixWriterCLI cli = new ExpressionDataMatrixWriterCLI();
         Exception exc = cli.doWork( args );
         if ( exc != null ) {
-            log.error( exc.getMessage() );
+            AbstractCLI.log.error( exc.getMessage() );
         }
     }
-    /* (non-Javadoc)
-     * @see ubic.gemma.core.util.AbstractCLIContextCLI#getCommandGroup()
-     */
+
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;
-    }
-    private boolean filter = false;
-
-    private ExpressionDataFileService fs;
-
-    private String outFileName = null;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
-    @Override
-    public String getCommandName() {
-        return "getDataMatrix";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Prints preferred data matrix to a file; gene information is included if available.";
     }
 
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option outputFileOption = OptionBuilder
-                .hasArg()
-                .withArgName( "outFileName" )
-                .withDescription(
-                        "File name. If omitted, the file name will be based on the short name of the experiment." )
+        Option outputFileOption = OptionBuilder.hasArg().withArgName( "outFileName" ).withDescription(
+                "File name. If omitted, the file name will be based on the short name of the experiment." )
                 .withLongOpt( "outFileName" ).create( 'o' );
-        addOption( outputFileOption );
+        this.addOption( outputFileOption );
 
         Option filteredOption = OptionBuilder.withDescription( "Filter expression matrix under default parameters" )
                 .create( "filter" );
-        addOption( filteredOption );
+        this.addOption( filteredOption );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        outFileName = this.getOptionValue( 'o' );
+        if ( this.hasOption( "filter" ) ) {
+            filter = true;
+        }
+    }
+
+    @Override
+    public String getCommandName() {
+        return "getDataMatrix";
     }
 
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        Exception err = this.processCommandLine( args );
+        if ( err != null )
+            return err;
 
-        fs = this.getBean( ExpressionDataFileService.class );
+        ExpressionDataFileService fs = this.getBean( ExpressionDataFileService.class );
 
         if ( expressionExperiments.size() > 1 && StringUtils.isNotBlank( outFileName ) ) {
             throw new IllegalArgumentException( "Output file name can only be used for single experiment output" );
@@ -120,11 +112,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-        outFileName = getOptionValue( 'o' );
-        if ( hasOption( "filter" ) ) {
-            filter = true;
-        }
+    public String getShortDesc() {
+        return "Prints preferred data matrix to a file; gene information is included if available.";
     }
 }

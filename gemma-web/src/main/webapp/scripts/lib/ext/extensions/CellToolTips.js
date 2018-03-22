@@ -93,7 +93,7 @@ Ext.ux.plugins.grid.CellToolTips = function(config) {
     	this.tipConfig = config.tipConfig;
     }
     this.ajaxTips = cfgTips;
-} // End of constructor
+}; // End of constructor
 
 // plugin code
 Ext.extend( Ext.ux.plugins.grid.CellToolTips, Ext.util.Observable, {

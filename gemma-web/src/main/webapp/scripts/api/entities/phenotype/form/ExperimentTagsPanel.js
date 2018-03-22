@@ -108,7 +108,6 @@ Gemma.PhenotypeAssociationForm.ExperimentTagsPanel = Ext.extend(Ext.Panel, {
 
                         var currentValue = currRowPanel.getCategoryComboBox().getValue();
 
-                        // TODO: Make sure if there is a better way to do the following.
                         // Because store is shared among all the combo boxes, just load data for the first one.
                         if (i === 0) {
                            currRowPanel.getCategoryComboBox().getStore().loadData(Gemma.PhenotypeAssociationForm.ExperimentTagCategories);

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
     @Autowired
     AnalysisSelectionAndExecutionService analysis = null;
-    DiffExAnalyzer analyzer;
+    private DiffExAnalyzer analyzer;
 
     /*
      * Tests determineAnalysis.
@@ -38,8 +38,8 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
      * Expected analyzer: TwoWayAnovaWithInteractionsAnalyzerImpl
      */
     @Test
-    public void testDetermineAnalysisA() throws Exception {
-        configureMocks();
+    public void testDetermineAnalysisA() {
+        this.configureMocks();
         analyzer = this.getBean( DiffExAnalyzer.class );
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
@@ -54,14 +54,13 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     @Test
     public void testDetermineAnalysisB() throws Exception {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
-        configureMocks();
+        this.configureMocks();
         analyzer = this.getBean( DiffExAnalyzer.class );
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 
-    @Override
-    protected void configureMocks() throws Exception {
-        configureMockAnalysisServiceHelper( 2 );
+    private void configureMocks() {
+        this.configureMockAnalysisServiceHelper( 2 );
     }
 
 }

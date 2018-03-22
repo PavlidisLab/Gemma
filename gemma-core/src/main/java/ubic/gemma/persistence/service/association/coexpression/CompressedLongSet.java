@@ -1,8 +1,8 @@
 /*
  * The baseCode project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,14 +29,14 @@ import java.util.*;
  *
  * @author paul
  */
-public class CompressedLongSet {
+class CompressedLongSet {
 
-    private EWAHCompressedBitmap data;
+    private final EWAHCompressedBitmap data;
 
     /**
      * @param longs set
      */
-    public CompressedLongSet( Set<Long> longs ) {
+    CompressedLongSet( Set<Long> longs ) {
         List<Long> v = new ArrayList<>( longs );
         Collections.sort( v );
         data = new EWAHCompressedBitmap( longs.size() );
@@ -55,6 +55,7 @@ public class CompressedLongSet {
      *
      * @return positions
      */
+    @SuppressWarnings("unused") // Possible external use
     public Long[] getValues() {
         List<Integer> positions = data.getPositions();
         Long[] result = new Long[positions.size()];
@@ -71,7 +72,7 @@ public class CompressedLongSet {
      */
     public Collection<Long> toSet() {
         List<Integer> positions = data.getPositions();
-        Set<Long> result = new HashSet<Long>();
+        Set<Long> result = new HashSet<>();
         for ( Integer i : positions ) {
             result.add( i.longValue() );
         }

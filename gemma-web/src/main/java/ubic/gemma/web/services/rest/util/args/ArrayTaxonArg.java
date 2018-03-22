@@ -35,24 +35,30 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
     @SuppressWarnings("unused")
     public static ArrayTaxonArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayTaxonArg( String.format( ERROR_MSG, s ), new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+            return new ArrayTaxonArg( String.format( ArrayTaxonArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( ArrayTaxonArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayTaxonArg( Arrays.asList( splitString( s ) ) );
+        return new ArrayTaxonArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
     }
 
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_TAXON_ALIAS;
-    }
-
+    /**
+     * The taxon implementation is different from the others, because the taxon checks the property name by attempting
+     * to retrieve a taxon with the given identifier (no other entity allows multiple unconstrained free text identifiers).
+     * Therefore, if the first identifier does not exist, we can not
+     * determine the name of the property. This is why we iterate over the array before we encounter the first identifier
+     * that exists. if none of the identifiers exist, null will be returned, which will in turn cause a 400 error.
+     *
+     * @param service see the parent class
+     * @return see the parent class
+     */
     @Override
     protected String getPropertyName( TaxonService service ) {
         String propertyName;
         for ( int i = 0; i < this.getValue().size(); i++ ) {
             try {
                 String value = this.getValue().get( i );
-                TaxonArg arg = TaxonArg.valueOf( value );
-                propertyName = checkPropertyNameString( arg, value, service );
+                MutableArg<?, Taxon, TaxonValueObject, TaxonService> arg = TaxonArg.valueOf( value );
+                propertyName = this.checkPropertyNameString( arg, value, service );
                 return propertyName;
             } catch ( GemmaApiException e ) {
                 if ( i == this.getValue().size() - 1 ) {
@@ -62,6 +68,11 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
         }
         // should never happen as the catch will rethrow at the end of the loop
         return null;
+    }
+
+    @Override
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_TAXON_ALIAS;
     }
 
 }

@@ -70,8 +70,8 @@ public class ProbeMapperImpl implements ProbeMapper {
         Map<String, Collection<BlatAssociation>> allRes = new HashMap<>();
         int count = 0;
 
-        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = groupBlatResultsByBioSequence(
-                blatResults );
+        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = this
+                .groupBlatResultsByBioSequence( blatResults );
 
         assert !biosequenceToBlatResults.isEmpty();
 
@@ -86,8 +86,8 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             assert !blatResultsForSequence.isEmpty();
 
-            Collection<BlatResult> trimmedBlatResultsForSequence = trimNonCanonicalChromosomeHits(
-                    blatResultsForSequence, config );
+            Collection<BlatResult> trimmedBlatResultsForSequence = this
+                    .trimNonCanonicalChromosomeHits( blatResultsForSequence, config );
 
             /*
              * Screen out likely repeats, where cross-hybridization is a problem.
@@ -95,9 +95,9 @@ public class ProbeMapperImpl implements ProbeMapper {
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
                     && trimmedBlatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
-                if ( config.getWarnings() < MAX_WARNINGS ) {
+                if ( config.getWarnings() < ProbeMapperImpl.MAX_WARNINGS ) {
                     log.info( "Skipped " + sequence + " due to repeat content (" + fractionRepeats + ")" );
-                    if ( config.getWarnings() == MAX_WARNINGS )
+                    if ( config.getWarnings() == ProbeMapperImpl.MAX_WARNINGS )
                         log.info( "Further non-mappings will not be logged" );
 
                     config.incrementWarnings();
@@ -111,10 +111,10 @@ public class ProbeMapperImpl implements ProbeMapper {
              * is to the site of a known gene.
              */
             if ( trimmedBlatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
-                if ( config.getWarnings() < MAX_WARNINGS ) {
+                if ( config.getWarnings() < ProbeMapperImpl.MAX_WARNINGS ) {
                     log.info( "Skipped " + sequence + " due to non-specificity (" + trimmedBlatResultsForSequence.size()
                             + " hits)" );
-                    if ( config.getWarnings() == MAX_WARNINGS )
+                    if ( config.getWarnings() == ProbeMapperImpl.MAX_WARNINGS )
                         log.info( "Further non-mappings will not be logged" );
 
                     config.incrementWarnings();
@@ -161,8 +161,8 @@ public class ProbeMapperImpl implements ProbeMapper {
                 }
 
                 // here's the key line! Find gene products that map to the given blat result.
-                Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult,
-                        config );
+                Collection<BlatAssociation> resultsForOneBlatResult = this
+                        .processBlatResult( goldenPathDb, blatResult, config );
 
                 if ( resultsForOneBlatResult != null && resultsForOneBlatResult.size() > 0 ) {
 
@@ -183,18 +183,18 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             // Another important step: fill in the specificity, remove duplicates
             if ( !blatAssociationsForSequence.isEmpty() ) {
-                BlatAssociationScorer.scoreResults( blatAssociationsForSequence, config );
+                BlatAssociationScorer.scoreResults( blatAssociationsForSequence );
                 // Remove hits not meeting criteria
-                blatAssociationsForSequence = filterOnScores( blatAssociationsForSequence, config );
+                blatAssociationsForSequence = this.filterOnScores( blatAssociationsForSequence, config );
             }
 
             // it might be empty now...
             if ( blatAssociationsForSequence.isEmpty() ) {
-                if ( config.getWarnings() < MAX_WARNINGS ) {
+                if ( config.getWarnings() < ProbeMapperImpl.MAX_WARNINGS ) {
                     log.info( "No mappings for " + sequence + "; " + trimmedBlatResultsForSequence.size()
                             + " individual blat results checked; " + skipped
                             + " had identity or score below threshold, rest had no mapping" );
-                    if ( config.getWarnings() == MAX_WARNINGS )
+                    if ( config.getWarnings() == ProbeMapperImpl.MAX_WARNINGS )
                         log.info( "Further non-mappings will not be logged" );
                 }
                 config.incrementWarnings();
@@ -239,7 +239,7 @@ public class ProbeMapperImpl implements ProbeMapper {
             log.warn( "No results obtained for " + genbankId );
         }
 
-        return processBlatResults( goldenPathDb, blatResults );
+        return this.processBlatResults( goldenPathDb, blatResults );
 
     }
 
@@ -260,7 +260,7 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             String genbankId = genbankIdAr[0];
 
-            Map<String, Collection<BlatAssociation>> res = processGbId( goldenPathDb, genbankId );
+            Map<String, Collection<BlatAssociation>> res = this.processGbId( goldenPathDb, genbankId );
             allRes.putAll( res );
 
             count++;
@@ -282,7 +282,7 @@ public class ProbeMapperImpl implements ProbeMapper {
         } catch ( IOException e ) {
             throw new RuntimeException( "Error running blat", e );
         }
-        Map<String, Collection<BlatAssociation>> allRes = processBlatResults( goldenPath, results );
+        Map<String, Collection<BlatAssociation>> allRes = this.processBlatResults( goldenPath, results );
         assert allRes.keySet().size() == 1;
         return allRes.values().iterator().next();
     }
@@ -299,7 +299,7 @@ public class ProbeMapperImpl implements ProbeMapper {
             for ( Collection<BlatResult> coll : results.values() ) {
                 blatRes.addAll( coll );
             }
-            return processBlatResults( goldenpath, blatRes );
+            return this.processBlatResults( goldenpath, blatRes );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -337,7 +337,6 @@ public class ProbeMapperImpl implements ProbeMapper {
      *
      * @param blatAssociationsForSequence associations for one sequence.
      * @return filtered collection
-     * @see BlatAssociationScorer#scoreResults(Collection, ProbeMapperConfig) which does some of the filtering
      */
     private Collection<BlatAssociation> filterOnScores( Collection<BlatAssociation> blatAssociationsForSequence,
             ProbeMapperConfig config ) {
@@ -385,7 +384,7 @@ public class ProbeMapperImpl implements ProbeMapper {
             BlatResult blatResult, ProbeMapperConfig config ) {
         assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
 
-        boolean ignoreStrand = determineStrandTreatment( blatResult );
+        boolean ignoreStrand = this.determineStrandTreatment( blatResult );
 
         String strand = ignoreStrand ? null : blatResult.getStrand();
 

@@ -51,6 +51,17 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String batchEffect;
     private String batchConfound;
 
+    @Override
+    public int hashCode() {
+        int result = 1;
+        if ( this.getId() != null ) {
+            return this.getId().hashCode();
+        } else if ( this.getShortName() != null ) {
+            return this.getShortName().hashCode();
+        }
+        return result;
+    }
+
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass") // It does check, just not the classic way.
     @Override
     public boolean equals( Object object ) {
@@ -68,17 +79,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
             return this.getShortName().equals( that.getShortName() );
         }
         return false;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = 1;
-        if ( this.getId() != null ) {
-            return this.getId().hashCode();
-        } else if ( this.getShortName() != null ) {
-            return this.getShortName().hashCode();
-        }
-        return result;
     }
 
     @Override
@@ -104,6 +104,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.bioAssays = bioAssays;
     }
 
+    @Deprecated
     @Override
     public ExpressionExperimentValueObject createValueObject() {
         return new ExpressionExperimentValueObject( this );

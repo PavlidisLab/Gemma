@@ -59,16 +59,18 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         if ( minPresentFractionIsSet ) {
             int proposedMinimumNumberOfSamples = ( int ) Math.ceil( minPresentFraction * numCols );
             if ( !minPresentIsSet ) {
-                setMinPresentCount( proposedMinimumNumberOfSamples );
+                this.setMinPresentCount( proposedMinimumNumberOfSamples );
             } else if ( proposedMinimumNumberOfSamples > minPresentCount ) {
-                log.info( "The minimum number of samples is already set to " + this.minPresentCount
-                        + " but computed missing threshold from fraction of " + minPresentFraction + " is higher ("
-                        + proposedMinimumNumberOfSamples + ")" );
-                setMinPresentCount( proposedMinimumNumberOfSamples );
+                RowMissingValueFilter.log
+                        .info( "The minimum number of samples is already set to " + this.minPresentCount
+                                + " but computed missing threshold from fraction of " + minPresentFraction
+                                + " is higher (" + proposedMinimumNumberOfSamples + ")" );
+                this.setMinPresentCount( proposedMinimumNumberOfSamples );
             } else {
-                log.info( "The minimum number of samples is already set to " + this.minPresentCount
-                        + " and computed missing threshold from fraction of " + minPresentFraction + " is lower ("
-                        + proposedMinimumNumberOfSamples + "), keeping higher value." );
+                RowMissingValueFilter.log
+                        .info( "The minimum number of samples is already set to " + this.minPresentCount
+                                + " and computed missing threshold from fraction of " + minPresentFraction
+                                + " is lower (" + proposedMinimumNumberOfSamples + "), keeping higher value." );
             }
         }
 
@@ -79,7 +81,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         }
 
         if ( !minPresentIsSet ) {
-            log.info( "No filtering was requested" );
+            RowMissingValueFilter.log.info( "No filtering was requested" );
             return data;
         }
 
@@ -102,7 +104,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
                 }
             }
             present.add( presentCount );
-            if ( presentCount >= ABSOLUTE_MIN_PRESENT && presentCount >= minPresentCount ) {
+            if ( presentCount >= RowMissingValueFilter.ABSOLUTE_MIN_PRESENT && presentCount >= minPresentCount ) {
                 kept.add( designElementForRow );
             }
         }
@@ -113,27 +115,30 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             sortedPresent.sort();
             sortedPresent.reverse();
 
-            log.info( "There are " + kept.size() + " rows that meet criterion of at least " + minPresentCount
-                    + " non-missing values, but that's too many given the max fraction of " + maxFractionRemoved
-                    + "; minPresent adjusted to " + sortedPresent.get( ( int ) ( numRows * ( maxFractionRemoved ) ) ) );
+            RowMissingValueFilter.log
+                    .info( "There are " + kept.size() + " rows that meet criterion of at least " + minPresentCount
+                            + " non-missing values, but that's too many given the max fraction of " + maxFractionRemoved
+                            + "; minPresent adjusted to " + sortedPresent
+                            .get( ( int ) ( numRows * ( maxFractionRemoved ) ) ) );
 
             minPresentCount = sortedPresent.get( ( int ) ( numRows * ( maxFractionRemoved ) ) );
 
             // Do another pass to add rows we missed before.
             for ( int i = 0; i < numRows; i++ ) {
-                if ( present.get( i ) >= minPresentCount && present.get( i ) >= ABSOLUTE_MIN_PRESENT ) {
+                if ( present.get( i ) >= minPresentCount
+                        && present.get( i ) >= RowMissingValueFilter.ABSOLUTE_MIN_PRESENT ) {
                     CompositeSequence designElementForRow = data.getDesignElementForRow( i );
                     if ( kept.contains( designElementForRow ) )
-                        continue; // FIXME SLOW because it is a
-                    // list.
+                        continue;
                     kept.add( designElementForRow );
                 }
             }
 
         }
 
-        log.info( "Retaining " + kept.size() + " rows that meet criterion of at least " + minPresentCount
-                + " non-missing values" );
+        RowMissingValueFilter.log
+                .info( "Retaining " + kept.size() + " rows that meet criterion of at least " + minPresentCount
+                        + " non-missing values" );
 
         return new ExpressionDataDoubleMatrix( data, kept );
 

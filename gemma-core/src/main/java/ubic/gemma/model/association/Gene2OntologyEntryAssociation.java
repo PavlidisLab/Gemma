@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,9 +24,6 @@ import ubic.gemma.model.genome.Gene;
 
 import java.io.Serializable;
 
-/**
- *
- */
 public abstract class Gene2OntologyEntryAssociation implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -6097916172357707966L;
@@ -39,6 +36,7 @@ public abstract class Gene2OntologyEntryAssociation implements Identifiable, Ser
         return this.gene;
     }
 
+    @Override
     public Long getId() {
         return id;
     }

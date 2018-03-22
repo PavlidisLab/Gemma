@@ -21,6 +21,7 @@ package ubic.gemma.model.common.quantitationtype;
 import java.io.Serializable;
 import java.util.*;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
     public static final PrimitiveType DOUBLE = new PrimitiveType( "DOUBLE" );
     public static final PrimitiveType INT = new PrimitiveType( "INT" );
@@ -39,58 +40,61 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
     private static final long serialVersionUID = 8068644810546069278L;
     private static final Map<String, PrimitiveType> values = new LinkedHashMap<>( 11, 1 );
 
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> literals = new ArrayList<>( 11 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> names = new ArrayList<>( 11 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<PrimitiveType> valueList = new ArrayList<>( 11 );
 
     static {
-        values.put( DOUBLE.value, DOUBLE );
-        valueList.add( DOUBLE );
-        literals.add( DOUBLE.value );
-        names.add( "DOUBLE" );
-        values.put( INT.value, INT );
-        valueList.add( INT );
-        literals.add( INT.value );
-        names.add( "INT" );
-        values.put( LONG.value, LONG );
-        valueList.add( LONG );
-        literals.add( LONG.value );
-        names.add( "LONG" );
-        values.put( CHAR.value, CHAR );
-        valueList.add( CHAR );
-        literals.add( CHAR.value );
-        names.add( "CHAR" );
-        values.put( BOOLEAN.value, BOOLEAN );
-        valueList.add( BOOLEAN );
-        literals.add( BOOLEAN.value );
-        names.add( "BOOLEAN" );
-        values.put( STRING.value, STRING );
-        valueList.add( STRING );
-        literals.add( STRING.value );
-        names.add( "STRING" );
-        values.put( INTARRAY.value, INTARRAY );
-        valueList.add( INTARRAY );
-        literals.add( INTARRAY.value );
-        names.add( "INTARRAY" );
-        values.put( DOUBLEARRAY.value, DOUBLEARRAY );
-        valueList.add( DOUBLEARRAY );
-        literals.add( DOUBLEARRAY.value );
-        names.add( "DOUBLEARRAY" );
-        values.put( CHARARRAY.value, CHARARRAY );
-        valueList.add( CHARARRAY );
-        literals.add( CHARARRAY.value );
-        names.add( "CHARARRAY" );
-        values.put( BOOLEANARRAY.value, BOOLEANARRAY );
-        valueList.add( BOOLEANARRAY );
-        literals.add( BOOLEANARRAY.value );
-        names.add( "BOOLEANARRAY" );
-        values.put( STRINGARRAY.value, STRINGARRAY );
-        valueList.add( STRINGARRAY );
-        literals.add( STRINGARRAY.value );
-        names.add( "STRINGARRAY" );
-        valueList = Collections.unmodifiableList( valueList );
-        literals = Collections.unmodifiableList( literals );
-        names = Collections.unmodifiableList( names );
+        PrimitiveType.values.put( PrimitiveType.DOUBLE.value, PrimitiveType.DOUBLE );
+        PrimitiveType.valueList.add( PrimitiveType.DOUBLE );
+        PrimitiveType.literals.add( PrimitiveType.DOUBLE.value );
+        PrimitiveType.names.add( "DOUBLE" );
+        PrimitiveType.values.put( PrimitiveType.INT.value, PrimitiveType.INT );
+        PrimitiveType.valueList.add( PrimitiveType.INT );
+        PrimitiveType.literals.add( PrimitiveType.INT.value );
+        PrimitiveType.names.add( "INT" );
+        PrimitiveType.values.put( PrimitiveType.LONG.value, PrimitiveType.LONG );
+        PrimitiveType.valueList.add( PrimitiveType.LONG );
+        PrimitiveType.literals.add( PrimitiveType.LONG.value );
+        PrimitiveType.names.add( "LONG" );
+        PrimitiveType.values.put( PrimitiveType.CHAR.value, PrimitiveType.CHAR );
+        PrimitiveType.valueList.add( PrimitiveType.CHAR );
+        PrimitiveType.literals.add( PrimitiveType.CHAR.value );
+        PrimitiveType.names.add( "CHAR" );
+        PrimitiveType.values.put( PrimitiveType.BOOLEAN.value, PrimitiveType.BOOLEAN );
+        PrimitiveType.valueList.add( PrimitiveType.BOOLEAN );
+        PrimitiveType.literals.add( PrimitiveType.BOOLEAN.value );
+        PrimitiveType.names.add( "BOOLEAN" );
+        PrimitiveType.values.put( PrimitiveType.STRING.value, PrimitiveType.STRING );
+        PrimitiveType.valueList.add( PrimitiveType.STRING );
+        PrimitiveType.literals.add( PrimitiveType.STRING.value );
+        PrimitiveType.names.add( "STRING" );
+        PrimitiveType.values.put( PrimitiveType.INTARRAY.value, PrimitiveType.INTARRAY );
+        PrimitiveType.valueList.add( PrimitiveType.INTARRAY );
+        PrimitiveType.literals.add( PrimitiveType.INTARRAY.value );
+        PrimitiveType.names.add( "INTARRAY" );
+        PrimitiveType.values.put( PrimitiveType.DOUBLEARRAY.value, PrimitiveType.DOUBLEARRAY );
+        PrimitiveType.valueList.add( PrimitiveType.DOUBLEARRAY );
+        PrimitiveType.literals.add( PrimitiveType.DOUBLEARRAY.value );
+        PrimitiveType.names.add( "DOUBLEARRAY" );
+        PrimitiveType.values.put( PrimitiveType.CHARARRAY.value, PrimitiveType.CHARARRAY );
+        PrimitiveType.valueList.add( PrimitiveType.CHARARRAY );
+        PrimitiveType.literals.add( PrimitiveType.CHARARRAY.value );
+        PrimitiveType.names.add( "CHARARRAY" );
+        PrimitiveType.values.put( PrimitiveType.BOOLEANARRAY.value, PrimitiveType.BOOLEANARRAY );
+        PrimitiveType.valueList.add( PrimitiveType.BOOLEANARRAY );
+        PrimitiveType.literals.add( PrimitiveType.BOOLEANARRAY.value );
+        PrimitiveType.names.add( "BOOLEANARRAY" );
+        PrimitiveType.values.put( PrimitiveType.STRINGARRAY.value, PrimitiveType.STRINGARRAY );
+        PrimitiveType.valueList.add( PrimitiveType.STRINGARRAY );
+        PrimitiveType.literals.add( PrimitiveType.STRINGARRAY.value );
+        PrimitiveType.names.add( "STRINGARRAY" );
+        PrimitiveType.valueList = Collections.unmodifiableList( PrimitiveType.valueList );
+        PrimitiveType.literals = Collections.unmodifiableList( PrimitiveType.literals );
+        PrimitiveType.names = Collections.unmodifiableList( PrimitiveType.names );
     }
 
     private String value;
@@ -98,7 +102,7 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
     /**
      * The default constructor allowing super classes to access it.
      */
-    protected PrimitiveType() {
+    PrimitiveType() {
     }
 
     private PrimitiveType( String value ) {
@@ -112,7 +116,7 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      * @return primitive type
      */
     public static PrimitiveType fromString( String value ) {
-        final PrimitiveType typeValue = values.get( value );
+        final PrimitiveType typeValue = PrimitiveType.values.get( value );
         if ( typeValue == null ) {
             /*
              * Customization to permit database values to change before code does. Previously this would throw an
@@ -130,7 +134,7 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
     public static List<String> literals() {
-        return literals;
+        return PrimitiveType.literals;
     }
 
     /**
@@ -140,7 +144,7 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      * modified.
      */
     public static List<String> names() {
-        return names;
+        return PrimitiveType.names;
     }
 
     /**
@@ -149,18 +153,12 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
      * @return A List containing the actual enumeration instance values.
      */
     public static List<PrimitiveType> values() {
-        return valueList;
+        return PrimitiveType.valueList;
     }
 
     @Override
     public int compareTo( PrimitiveType that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        return ( this == object ) || ( object instanceof PrimitiveType && ( ( PrimitiveType ) object ).getValue()
-                .equals( this.getValue() ) );
     }
 
     /**
@@ -175,6 +173,12 @@ public class PrimitiveType implements Serializable, Comparable<PrimitiveType> {
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        return ( this == object ) || ( object instanceof PrimitiveType && ( ( PrimitiveType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     @Override

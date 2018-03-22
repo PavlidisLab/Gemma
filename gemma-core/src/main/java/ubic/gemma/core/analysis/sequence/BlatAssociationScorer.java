@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,6 +38,7 @@ import java.util.Map;
  *
  * @author pavlidis
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class BlatAssociationScorer {
 
     private static final Log log = LogFactory.getLog( BlatAssociationScorer.class.getName() );
@@ -63,24 +64,24 @@ public class BlatAssociationScorer {
      * will be less than 1.
      *
      * @param blatAssociations for a single sequence.
-     * @param config           config
      * @return the highest-scoring result (if there are ties this will be a random one). Note that this return value is
      * not all that useful because it assumes there is a "clear winner". The passed-in blatAssociations will be
      * pruned to remove redundant entries, and will have score information filled in as well. It is intended
      * that these 'refined' BlatAssociations will be used in further analysis.
      * @throws IllegalArgumentException if the blatAssociations are from multiple biosequences.
      */
-    public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations,
-            ProbeMapperConfig config ) {
+    public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
 
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProductAndInitializeScores(
-                blatAssociations );
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = BlatAssociationScorer
+                .organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
 
-        BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
+        BlatAssociation globalBest = BlatAssociationScorer
+                .removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
         assert blatAssociations.size() > 0;
 
-        Map<Gene, Collection<BlatAssociation>> genes2Associations = organizeBlatAssociationsByGene( blatAssociations );
+        Map<Gene, Collection<BlatAssociation>> genes2Associations = BlatAssociationScorer
+                .organizeBlatAssociationsByGene( blatAssociations );
 
         assert genes2Associations.size() > 0;
 
@@ -92,7 +93,7 @@ public class BlatAssociationScorer {
             return globalBest;
         }
 
-        Map<PhysicalLocation, Collection<Gene>> geneClusters = clusterGenes( genes2Associations );
+        Map<PhysicalLocation, Collection<Gene>> geneClusters = BlatAssociationScorer.clusterGenes( genes2Associations );
 
         // compute specificity at the level of genes. First, get the best score for each gene cluster.
         Map<PhysicalLocation, Double> scores = new HashMap<>();
@@ -117,7 +118,8 @@ public class BlatAssociationScorer {
             for ( Gene cgene : geneClusters.get( pl ) ) {
                 // All members of the cluster get the same specificity.
                 for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
-                    blatAssociation.setSpecificity( computeSpecificity( scores.values(), alignScore ) );
+                    blatAssociation
+                            .setSpecificity( BlatAssociationScorer.computeSpecificity( scores.values(), alignScore ) );
                 }
             }
         }
@@ -133,7 +135,7 @@ public class BlatAssociationScorer {
      * @param overlap   A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
      * @return int
      */
-    protected static int computeScore( double blatScore, double overlap ) {
+    private static int computeScore( double blatScore, double overlap ) {
         return ( int ) ( 1000 * blatScore * overlap );
     }
 
@@ -150,7 +152,7 @@ public class BlatAssociationScorer {
      * @param score  score
      * @return double
      */
-    protected static Double computeSpecificity( Collection<Double> scores, double score ) {
+    static Double computeSpecificity( Collection<Double> scores, double score ) {
         if ( scores.size() == 1 ) {
             return 1.0;
         }
@@ -187,11 +189,12 @@ public class BlatAssociationScorer {
         }
 
         // debugging information about clusters.
-        if ( log.isDebugEnabled() ) {
+        if ( BlatAssociationScorer.log.isDebugEnabled() ) {
             for ( PhysicalLocation pl : clusters.keySet() ) {
                 if ( clusters.get( pl ).size() > 1 ) {
-                    log.debug( "Cluster at " + pl + " with " + clusters.get( pl ).size() + " members:\n" + StringUtils
-                            .join( clusters.get( pl ).iterator(), "\n" ) );
+                    BlatAssociationScorer.log
+                            .debug( "Cluster at " + pl + " with " + clusters.get( pl ).size() + " members:\n"
+                                    + StringUtils.join( clusters.get( pl ).iterator(), "\n" ) );
                 }
             }
         }
@@ -199,17 +202,16 @@ public class BlatAssociationScorer {
         return clusters;
     }
 
-    private static double computeScore( BlatAssociation blatAssociation ) {
+    private static void computeScore( BlatAssociation blatAssociation ) {
         BlatResult br = blatAssociation.getBlatResult();
 
         assert br.getQuerySequence().getLength() > 0;
 
         double blatScore = br.score();
-        double overlap = computeOverlapFraction( blatAssociation );
-        double score = computeScore( blatScore, overlap );
+        double overlap = BlatAssociationScorer.computeOverlapFraction( blatAssociation );
+        double score = BlatAssociationScorer.computeScore( blatScore, overlap );
 
         blatAssociation.setScore( score );
-        return score;
     }
 
     private static Map<Gene, Collection<BlatAssociation>> organizeBlatAssociationsByGene(
@@ -235,12 +237,12 @@ public class BlatAssociationScorer {
     private static Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
             Collection<BlatAssociation> blatAssociations ) {
         Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<>();
-        Collection<BioSequence> sequences = new HashSet<BioSequence>();
+        Collection<BioSequence> sequences = new HashSet<>();
 
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             assert blatAssociation.getBioSequence() != null;
 
-            computeScore( blatAssociation );
+            BlatAssociationScorer.computeScore( blatAssociation );
             sequences.add( blatAssociation.getBioSequence() );
 
             if ( sequences.size() > 1 ) {
@@ -273,7 +275,7 @@ public class BlatAssociationScorer {
 
         double globalMaxScore = 0.0;
         BlatAssociation globalBest = null;
-        Collection<BlatAssociation> keepers = new HashSet<BlatAssociation>();
+        Collection<BlatAssociation> keepers = new HashSet<>();
 
         for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
             Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );

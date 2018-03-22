@@ -1,60 +1,87 @@
 package ubic.gemma.core.loader.association.phenotype;
 
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLI;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-
 /* this importer cannot automatically download files it expects the files to already be there */
-/**
- * TODO Document Me
- *
- *
- */
+
 public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // to find to file go to : http://dga.nubic.northwestern.edu/pages/download.php
 
-    public static final String DGA_FILE_NAME = "IDMappings.rdf";
+    private static final String DGA_FILE_NAME = "IDMappings.rdf";
 
     // name of the external database
     private static final String DGA = "DGA";
-
-    public static void main( String[] args ) throws Exception {
-        DgaDatabaseImporter databaseImporter = new DgaDatabaseImporter( args );
-        databaseImporter.doWork( args );
-    }
-
-    private HashMap<String, HashSet<OntologyTerm>> commonLines = new HashMap<String, HashSet<OntologyTerm>>();
-
+    private final HashMap<String, HashSet<OntologyTerm>> commonLines = new HashMap<>();
+    private final HashSet<String> linesToExclude = new HashSet<>();
     private File dgaFile = null;
 
-    private HashSet<String> linesToExclude = new HashSet<String>();
-
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public DgaDatabaseImporter( String[] args ) throws Exception {
         super( args );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
+    public static void main( String[] args ) throws Exception {
+        DgaDatabaseImporter databaseImporter = new DgaDatabaseImporter( args );
+        Exception e = databaseImporter.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String getCommandName() {
         return "dgaImport";
     }
 
+    @Override
+    public CommandGroup getCommandGroup() {
+        return null;
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+
+        try {
+            this.checkForDGAFile();
+            this.findTermsWithParents();
+            this.processDGAFile();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Creates a .tsv file of lines of evidence from DGA, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
     /* this importer cannot automatically download files it expects the files to already be there */
     private void checkForDGAFile() throws Exception {
 
-        writeFolder = WRITE_FOLDER + File.separator + DGA;
+        writeFolder =
+                ExternalDatabaseEvidenceImporterAbstractCLI.WRITE_FOLDER + File.separator + DgaDatabaseImporter.DGA;
 
         File folder = new File( writeFolder );
 
@@ -63,7 +90,7 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
 
         // file expected
-        dgaFile = new File( writeFolder + File.separator + DGA_FILE_NAME );
+        dgaFile = new File( writeFolder + File.separator + DgaDatabaseImporter.DGA_FILE_NAME );
         if ( !dgaFile.exists() ) {
             throw new Exception( "cannot find file: " + dgaFile.getAbsolutePath() );
         }
@@ -72,7 +99,7 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     private int findHowManyParents( OntologyTerm o, int increment ) {
 
         if ( o.getParents( true ).size() != 0 ) {
-            return findHowManyParents( o.getParents( true ).iterator().next(), ++increment );
+            return this.findHowManyParents( o.getParents( true ).iterator().next(), ++increment );
         }
 
         return increment;
@@ -81,7 +108,7 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     // find string between first > and <
     private String findStringBetweenSpecialCharacter( String line ) {
         String newLine = line.substring( line.indexOf( ">" ) + 1, line.length() );
-        if ( newLine.indexOf( "<" ) != -1 ) {
+        if ( newLine.contains( "<" ) ) {
             newLine = newLine.substring( 0, newLine.indexOf( "<" ) );
         }
         return newLine;
@@ -89,39 +116,39 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     private String findStringBetweenSpecialCharacter( String line, String keyword ) throws Exception {
 
-        if ( line.indexOf( keyword ) == -1 ) {
+        if ( !line.contains( keyword ) ) {
             throw new Exception( keyword + " not found in File ??? " + line );
         }
 
-        return findStringBetweenSpecialCharacter( line );
+        return this.findStringBetweenSpecialCharacter( line );
     }
 
     // extra step to take out redundant terms, if a child term is more specific dont keep the parent, if 2 lines share
     // same pubmed, gene and gene RIF take the most specific uri
     // example: same pubed, same gene 1-leukemia 2-myeloid leukemia 3-acute myeloid leukemia, keep only 3-
-    private void findTermsWithParents() throws NumberFormatException, IOException, Exception {
+    private void findTermsWithParents() throws Exception {
 
-        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );) {
-            String line = "";
+        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) )) {
+            String line;
 
             while ( ( line = dgaReader.readLine() ) != null ) {
 
                 // found a term
-                if ( line.indexOf( "DOID" ) != -1 ) {
+                if ( line.contains( "DOID" ) ) {
                     // this being of the url could change make sure its still correct if something doesn't work
-                    String valueUri = "http://purl.obolibrary.org/obo/DOID_"
-                            + findStringBetweenSpecialCharacter( line );
+                    String valueUri =
+                            "http://purl.obolibrary.org/obo/DOID_" + this.findStringBetweenSpecialCharacter( line );
 
-                    String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
-                    String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
-                    String geneRIF = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
+                    String geneId = this.findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
+                    String pubMedID = this.findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
+                    String geneRIF = this.findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
 
-                    OntologyTerm o = findOntologyTermExistAndNotObsolote( valueUri );
+                    OntologyTerm o = this.findOntologyTermExistAndNotObsolote( valueUri );
 
                     if ( o != null ) {
 
                         String key = geneId + pubMedID + geneRIF;
-                        HashSet<OntologyTerm> valuesUri = new HashSet<OntologyTerm>();
+                        HashSet<OntologyTerm> valuesUri = new HashSet<>();
 
                         if ( commonLines.get( key ) != null ) {
                             valuesUri = commonLines.get( key );
@@ -138,11 +165,11 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
         for ( String key : commonLines.keySet() ) {
 
-            log.info( "Checking for lines that are ontology duplicated: " + key );
+            AbstractCLI.log.info( "Checking for lines that are ontology duplicated: " + key );
 
             HashSet<OntologyTerm> ontologyTerms = commonLines.get( key );
 
-            HashSet<String> allUri = new HashSet<String>();
+            HashSet<String> allUri = new HashSet<>();
 
             for ( OntologyTerm o : ontologyTerms ) {
                 allUri.add( o.getUri() );
@@ -165,86 +192,82 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
     }
 
-    private boolean lineToExclude( String key ) {
-
-        if ( linesToExclude.contains( key ) ) {
-            return true;
-        }
-        return false;
+    private boolean lineToInclude( String key ) {
+        return !linesToExclude.contains( key );
     }
 
     private void processDGAFile() throws Exception {
 
-        initFinalOutputFile( false, true );
+        this.initFinalOutputFile( false, true );
 
-        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );) {
-            String line = "";
+        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) )) {
+            String line;
 
             while ( ( line = dgaReader.readLine() ) != null ) {
 
                 // found a term
-                if ( line.indexOf( "DOID" ) != -1 ) {
+                if ( line.contains( "DOID" ) ) {
                     // this being of the url could change make sure its still correct if something doesn't work
-                    String valueUri = "http://purl.obolibrary.org/obo/DOID_"
-                            + findStringBetweenSpecialCharacter( line );
+                    String valueUri =
+                            "http://purl.obolibrary.org/obo/DOID_" + this.findStringBetweenSpecialCharacter( line );
 
-                    String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
-                    String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
-                    String geneRIF = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
+                    String geneId = this.findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
+                    String pubMedID = this.findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
+                    String geneRIF = this.findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
 
-                    OntologyTerm o = findOntologyTermExistAndNotObsolote( valueUri );
+                    OntologyTerm o = this.findOntologyTermExistAndNotObsolote( valueUri );
 
                     if ( o != null ) {
 
-                        String geneSymbol = geneToSymbol( new Integer( geneId ) );
+                        String geneSymbol = this.geneToSymbol( new Integer( geneId ) );
                         // gene do exist
                         if ( geneSymbol != null ) {
 
                             String key = geneId + pubMedID + geneRIF + o.getUri();
 
                             // if deep >3 always keep
-                            int howDeepIdTerm = findHowManyParents( o, 0 );
+                            int howDeepIdTerm = this.findHowManyParents( o, 0 );
 
                             // keep leaf or deep enough or uri=DOID_162(cancer)
-                            if ( !( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 )
-                                    || o.getUri().indexOf( "DOID_162" ) != -1 ) ) {
+                            if ( !( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 ) || o.getUri()
+                                    .contains( "DOID_162" ) ) ) {
 
                                 // negative
-                                if ( ( geneRIF.indexOf( " is not " ) != -1
-                                        || geneRIF.indexOf( " not associated " ) != -1
-                                        || geneRIF.indexOf( " no significant " ) != -1
-                                        || geneRIF.indexOf( " no association " ) != -1
-                                        || geneRIF.indexOf( " not significant " ) != -1
-                                        || geneRIF.indexOf( " not expressed " ) != -1 )
-                                        && geneRIF.indexOf( "is associated" ) == -1
-                                        && geneRIF.indexOf( "is significant" ) == -1
-                                        && geneRIF.indexOf( "is not only" ) == -1
-                                        && geneRIF.indexOf( "is expressed" ) == -1 ) {
+                                if ( ( geneRIF.contains( " is not " ) || geneRIF.contains( " not associated " )
+                                        || geneRIF.contains( " no significant " ) || geneRIF
+                                        .contains( " no association " ) || geneRIF.contains( " not significant " )
+                                        || geneRIF.contains( " not expressed " ) ) && !geneRIF
+                                        .contains( "is associated" ) && !geneRIF.contains( "is significant" )
+                                        && !geneRIF.contains( "is not only" ) && !geneRIF.contains( "is expressed" ) ) {
 
-                                    if ( !lineToExclude( key ) ) {
-                                        outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t"
-                                                + "IEA" + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t"
-                                                + "" + "\t" + "" + "\t" + o.getUri() + "\t" + "1" + "\n" );
+                                    if ( this.lineToInclude( key ) ) {
+                                        outFinalResults
+                                                .write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
+                                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DgaDatabaseImporter.DGA
+                                                        + "\t" + "" + "\t" + "" + "\t" + "" + "\t" + o.getUri() + "\t"
+                                                        + "1" + "\n" );
                                     }
 
                                 }
                                 // positive
                                 else {
-                                    if ( !lineToExclude( key ) ) {
-                                        outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t"
-                                                + "IEA" + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t"
-                                                + "" + "\t" + "" + "\t" + o.getUri() + "\t" + "" + "\n" );
+                                    if ( this.lineToInclude( key ) ) {
+                                        outFinalResults
+                                                .write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
+                                                        + "\t" + "GeneRIF: " + geneRIF + "\t" + DgaDatabaseImporter.DGA
+                                                        + "\t" + "" + "\t" + "" + "\t" + "" + "\t" + o.getUri() + "\t"
+                                                        + "" + "\n" );
                                     }
                                 }
 
                                 outFinalResults.flush();
                             }
                         } else {
-                            log.info( "gene NCBI no found in Gemma discard this eidence: ncbi: " + geneId );
+                            AbstractCLI.log.info( "gene NCBI no found in Gemma discard this eidence: ncbi: " + geneId );
                         }
 
                     } else {
-                        log.info( "Ontology term not found in Ontology or obsolete : " + valueUri
+                        AbstractCLI.log.info( "Ontology term not found in Ontology or obsolete : " + valueUri
                                 + " (normal that this happen sometimes)" );
                     }
                 }
@@ -252,40 +275,5 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             dgaReader.close();
             outFinalResults.close();
         }
-    }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Creates a .tsv file of lines of evidence from DGA, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-
-        try {
-            checkForDGAFile();
-            findTermsWithParents();
-            processDGAFile();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 }

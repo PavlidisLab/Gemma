@@ -98,8 +98,7 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
                     "The value object must have some experiments associated before it can be converted and persisted" );
         }
 
-        Collection<BioAssaySet> bas = new HashSet<BioAssaySet>();
-        bas.addAll( experiments );
+        Collection<BioAssaySet> bas = new HashSet<BioAssaySet>( experiments );
         entity.setExperiments( bas );
         entity.setName( setVO.getName() );
 

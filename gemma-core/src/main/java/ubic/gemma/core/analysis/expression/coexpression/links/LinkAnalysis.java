@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,12 +47,12 @@ import java.util.*;
  *
  * @author xiangwan, paul (refactoring)
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class LinkAnalysis {
 
     protected static final Log log = LogFactory.getLog( LinkAnalysis.class );
     private static final int MAX_WARNINGS = 5;
     private CoexpressionAnalysis analysis;
-    private DoubleArrayList cdf;
     private LinkAnalysisConfig config;
     private ExpressionDataDoubleMatrix dataMatrix = null;
 
@@ -62,7 +62,7 @@ public class LinkAnalysis {
     private ObjectArrayList keep; // links that are retained.
 
     private MatrixRowPairAnalysis metricMatrix;
-    private Map<Integer, Integer> probeDegreeMap = new HashMap<Integer, Integer>();
+    private Map<Integer, Integer> probeDegreeMap = new HashMap<>();
 
     private Map<CompositeSequence, Set<Gene>> probeToGeneMap = null;
 
@@ -85,18 +85,17 @@ public class LinkAnalysis {
         assert this.taxon != null;
         assert this.probeToGeneMap != null;
 
-        log.debug( "Taxon: " + this.taxon.getCommonName() );
+        LinkAnalysis.log.debug( "Taxon: " + this.taxon.getCommonName() );
 
         if ( this.probeToGeneMap.size() == 0 ) {
-            log.warn( "No genes found for this dataset. Do the associated platforms need processing?" );
+            LinkAnalysis.log.warn( "No genes found for this dataset. Do the associated platforms need processing?" );
         }
 
-        log.info( "Current Options: \n" + this.config );
-        this.preprocessDataMatrix();
+        LinkAnalysis.log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
 
         if ( Thread.currentThread().isInterrupted() ) {
-            log.info( "Cancelled." );
+            LinkAnalysis.log.info( "Cancelled." );
             return;
         }
 
@@ -107,25 +106,10 @@ public class LinkAnalysis {
 
         this.getLinks();
 
-        log.info( metricMatrix.getNumUniqueGenes() + " unique genes." );
-        log.info( metricMatrix.getCrossHybridizationRejections()
+        LinkAnalysis.log.info( metricMatrix.getNumUniqueGenes() + " unique genes." );
+        LinkAnalysis.log.info( metricMatrix.getCrossHybridizationRejections()
                 + " pairs rejected due to cross-hybridization potential" );
 
-    }
-
-    /**
-     * Perform preprocessing of the data before computing correlations, as determined by the implementer. This could
-     * include operations such as:
-     * <ul>
-     * <li>Imputing missing values
-     * <li>Batch correction (if not already done)
-     * <li>Collapsing rows that map to the same gene (e.g., by averaging or picking the "best" row)
-     * </ul>
-     */
-    private void preprocessDataMatrix() {
-        /*
-         * TODO maybe
-         */
     }
 
     /**
@@ -191,12 +175,12 @@ public class LinkAnalysis {
         for ( CompositeSequence cs : dataMatrix.getRowNames() ) {
             Set<Gene> geneClusters = this.probeToGeneMap.get( cs );
             if ( geneClusters == null ) {
-                if ( numWarnings <= MAX_WARNINGS ) {
-                    log.warn( "No genes for: " + cs );
+                if ( numWarnings <= LinkAnalysis.MAX_WARNINGS ) {
+                    LinkAnalysis.log.warn( "No genes for: " + cs );
 
                     numWarnings++;
-                    if ( numWarnings > MAX_WARNINGS ) {
-                        log.warn( "Further warnings will be suppressed" );
+                    if ( numWarnings > LinkAnalysis.MAX_WARNINGS ) {
+                        LinkAnalysis.log.warn( "Further warnings will be suppressed" );
                     }
                 }
                 continue;
@@ -220,7 +204,7 @@ public class LinkAnalysis {
     }
 
     public CompositeSequence getProbe( int index ) {
-        return getMetricMatrix().getProbeForRow( getDataMatrix().getRowElement( index ) );
+        return this.getMetricMatrix().getProbeForRow( this.getDataMatrix().getRowElement( index ) );
     }
 
     /**
@@ -258,10 +242,10 @@ public class LinkAnalysis {
      */
     private void calculateDistribution() {
         if ( config.getMetric().equals( "pearson" ) ) {
-            log.info( "Using Pearson linear correlation" );
+            LinkAnalysis.log.info( "Using Pearson linear correlation" );
             metricMatrix = new PearsonMetrics( this.dataMatrix, config.getCorrelationCacheThreshold() );
         } else if ( config.getMetric().equals( "spearman" ) ) {
-            log.info( "Using Spearman rank correlation" );
+            LinkAnalysis.log.info( "Using Spearman rank correlation" );
             metricMatrix = new SpearmanMetrics( dataMatrix, config.getCorrelationCacheThreshold() );
         }
 
@@ -272,7 +256,7 @@ public class LinkAnalysis {
         this.init();
 
         metricMatrix.calculateMetrics();
-        log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
+        LinkAnalysis.log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
                 + " values in the correlation matrix with values over " + config.getCorrelationCacheThreshold() );
 
     }
@@ -281,7 +265,7 @@ public class LinkAnalysis {
      * Compute the thresholds needed to choose links for storage in the system.
      */
     private void chooseCutPoints() {
-        cdf = Stats.cdf( metricMatrix.getHistogramArrayList() );
+        DoubleArrayList cdf = Stats.cdf( metricMatrix.getHistogramArrayList() );
         if ( config.getCdfCut() <= 0.0 ) {
             config.setUpperTailCut( 1.0 );
             config.setLowerTailCut( -1.0 );
@@ -310,7 +294,7 @@ public class LinkAnalysis {
                     break;
                 }
             }
-            log.debug( form.format( cdfLowerCutScore ) + " is the lower cdf cutpoint at " + cdfTailCut );
+            LinkAnalysis.log.debug( form.format( cdfLowerCutScore ) + " is the lower cdf cutpoint at " + cdfTailCut );
         }
 
         // find the upper cut point.
@@ -321,7 +305,7 @@ public class LinkAnalysis {
             }
         }
 
-        log.debug( form.format( cdfUpperCutScore ) + " is the upper cdf cutpoint at " + cdfTailCut );
+        LinkAnalysis.log.debug( form.format( cdfUpperCutScore ) + " is the upper cdf cutpoint at " + cdfTailCut );
 
         // get the cutpoint based on statistical signficance.
         double maxP = 1.0;
@@ -332,11 +316,12 @@ public class LinkAnalysis {
             maxP = config.getFwe() / numUniqueGenes; // bonferroni.
 
             scoreAtP = CorrelationStats.correlationForPvalue( maxP, this.dataMatrix.columns() );
-            log.debug( "Minimum correlation to get " + form.format( maxP ) + " is about " + form.format( scoreAtP )
-                    + " for " + numUniqueGenes + " unique items (if all " + this.dataMatrix.columns()
-                    + " items are present)" );
+            LinkAnalysis.log
+                    .debug( "Minimum correlation to get " + form.format( maxP ) + " is about " + form.format( scoreAtP )
+                            + " for " + numUniqueGenes + " unique items (if all " + this.dataMatrix.columns()
+                            + " items are present)" );
             if ( scoreAtP > 0.9 ) {
-                log.warn( "This data set has a very high threshold for statistical significance!" );
+                LinkAnalysis.log.warn( "This data set has a very high threshold for statistical significance!" );
             }
         }
         this.metricMatrix.setPValueThreshold( maxP ); // this is the corrected
@@ -377,8 +362,8 @@ public class LinkAnalysis {
             config.setLowerCdfCutUsed( true );
         }
 
-        log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
-        log.info( "Final lower cut is " + form.format( config.getLowerTailCut() ) );
+        LinkAnalysis.log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
+        LinkAnalysis.log.info( "Final lower cut is " + form.format( config.getLowerTailCut() ) );
 
         metricMatrix.setUpperTailThreshold( config.getUpperTailCut() );
         if ( config.isAbsoluteValue() ) {
@@ -415,12 +400,12 @@ public class LinkAnalysis {
      * Does the main computation and link selection.
      */
     private void getLinks() {
-        chooseCutPoints();
+        this.chooseCutPoints();
         metricMatrix.calculateMetrics();
 
         keep = metricMatrix.getKeepers();
 
-        computeProbeDegrees();
+        this.computeProbeDegrees();
     }
 
     private void init() {

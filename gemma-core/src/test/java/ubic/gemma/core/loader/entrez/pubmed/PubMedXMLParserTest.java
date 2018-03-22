@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,13 +42,13 @@ import static org.junit.Assert.*;
  */
 public class PubMedXMLParserTest {
 
-    private static Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
+    private static final Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
 
     private InputStream testStream;
     private PubMedXMLParser testParser;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         testParser = new PubMedXMLParser();
     }
 
@@ -60,7 +60,7 @@ public class PubMedXMLParserTest {
     }
 
     @Test
-    public void testParse() throws Exception {
+    public void testParse() {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
 
@@ -76,20 +76,12 @@ public class PubMedXMLParserTest {
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+            this.logOrThrowException( e );
         }
     }
 
     @Test
-    public void testParseBook() throws Exception {
+    public void testParseBook() {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-fullbook.xml" );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
@@ -117,15 +109,7 @@ public class PubMedXMLParserTest {
             assertTrue( br.getAbstractText().endsWith( "interested general public." ) );
 
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+            this.logOrThrowException( e );
         }
     }
 
@@ -133,7 +117,7 @@ public class PubMedXMLParserTest {
      * Test uses 2030131
      */
     @Test
-    public void testParseBookArticle() throws Exception {
+    public void testParseBookArticle() {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-bookarticle.xml" );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
@@ -158,20 +142,12 @@ public class PubMedXMLParserTest {
                     "offering custom prenatal testing if the disease-causing mutations in a family are known." ) );
 
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+            this.logOrThrowException( e );
         }
     }
 
     @Test
-    public void testParseMesh() throws Exception {
+    public void testParseMesh() {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
@@ -185,15 +161,7 @@ public class PubMedXMLParserTest {
             // }
             // }
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+            this.logOrThrowException( e );
         }
     }
 
@@ -231,20 +199,12 @@ public class PubMedXMLParserTest {
             assertEquals( expectedNumberofCompounds, actualNumberofCompounds );
 
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+            this.logOrThrowException( e );
         }
     }
 
     @Test
-    public void testParseMultipartAbstract() throws Exception {
+    public void testParseMultipartAbstract() {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mpabs.xml" );
 
@@ -257,17 +217,9 @@ public class PubMedXMLParserTest {
                             + "fluorescent dye 4-(4-(dihexadecylamino)styryl)-N" ) );
             assertTrue(
                     br.getAbstractText().contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
-            log.info( br.getAbstractText() );
+            PubMedXMLParserTest.log.info( br.getAbstractText() );
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+            this.logOrThrowException( e );
         }
     }
 
@@ -275,7 +227,7 @@ public class PubMedXMLParserTest {
      * PMID 7914452 is an example of a retracted article.
      */
     @Test
-    public void testParseRetracted() throws Exception {
+    public void testParseRetracted() {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" );
 
@@ -295,15 +247,17 @@ public class PubMedXMLParserTest {
             assertTrue( ok );
 
         } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+            this.logOrThrowException( e );
+        }
+    }
+
+    private void logOrThrowException( RuntimeException e ) {
+        if ( e.getCause() instanceof java.net.ConnectException ) {
+            PubMedXMLParserTest.log.warn( "Test skipped due to connection exception" );
+        } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+            PubMedXMLParserTest.log.warn( "Test skipped due to unknown host exception" );
+        } else {
+            throw ( e );
         }
     }
 }

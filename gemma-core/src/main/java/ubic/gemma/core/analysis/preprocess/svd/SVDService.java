@@ -14,10 +14,10 @@
  */
 package ubic.gemma.core.analysis.preprocess.svd;
 
-import java.util.Map;
-
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+
+import java.util.Map;
 
 /**
  * @author paul

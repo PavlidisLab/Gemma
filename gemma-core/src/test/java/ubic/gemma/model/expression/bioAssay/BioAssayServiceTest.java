@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,24 +18,20 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collection;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+
+import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- *
  */
 public class BioAssayServiceTest extends BaseSpringContextTest {
 
@@ -44,10 +40,8 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
     @Autowired
     private BioAssayService bioAssayService;
 
-    static boolean setupDone = false;
-
     @Before
-    public void setup()   {
+    public void setup() {
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.*;
 import java.util.Collection;
@@ -61,7 +62,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
     private static final String DATASET_SUMMARY_VIEW_BASENAME = "DatasetSummary";
     private static final String DATASET_TISSUE_VIEW_BASENAME = "DatasetTissue";
     private static final String DATASET_DIFFEX_VIEW_BASENAME = "DatasetDiffEx";
-    private static Log log = LogFactory.getLog( DatabaseViewGeneratorImpl.class );
+    private static final Log log = LogFactory.getLog( DatabaseViewGeneratorImpl.class );
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -75,102 +76,45 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
     private ArrayDesignService arrayDesignService;
 
     @Override
+    public File getOutputFile( String filename ) {
+        String fullFilePath = DatabaseViewGenerator.VIEW_DIR + filename;
+        File f = new File( fullFilePath );
+
+        if ( f.exists() ) {
+            return f;
+        }
+
+        EntityUtils.mkdirs( f.getParentFile() );
+        return f;
+    }
+
+    @Override
+    public void runAll() {
+        this.runAll( null );
+    }
+
+    @Override
     public void runAll( Integer limit ) {
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadAll();
         try {
-            generateDatasetView( limit, ees );
-            generateDatasetTissueView( limit, ees );
-            generateDifferentialExpressionView( limit, ees );
+            this.generateDatasetView( limit, ees );
+            this.generateDatasetTissueView( limit, ees );
+            this.generateDifferentialExpressionView( limit, ees );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
 
-    @Override
-    public void runAll() {
-        runAll( null );
-    }
-
-    @Override
-    public void generateDatasetView( int limit, Collection<ExpressionExperiment> experiments )
-            throws FileNotFoundException, IOException {
-
-        log.info( "Generating dataset summary view" );
+    private void generateDatasetTissueView( Integer limit, Collection<ExpressionExperiment> experiments )
+            throws IOException {
+        DatabaseViewGeneratorImpl.log.info( "Generating dataset tissue view" );
 
         /*
          * Get handle to output file
          */
-        File file = getViewFile( DATASET_SUMMARY_VIEW_BASENAME );
-        log.info( "Writing to " + file );
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
-
-            writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
-
-            /*
-             * Print out their names etc.
-             */
-            int i = 0;
-            for ( ExpressionExperiment ee : experiments ) {
-                ee = expressionExperimentService.thawLite( ee );
-                log.info( "Processing: " + ee.getShortName() );
-
-                String acc = "";
-                String source = "";
-
-                if ( ee.getAccession() != null && ee.getAccession().getAccession() != null ) {
-                    acc = ee.getAccession().getAccession();
-                    source = ee.getAccession().getExternalDatabase().getName();
-                }
-
-                Long gemmaId = ee.getId();
-                String shortName = ee.getShortName();
-                String name = ee.getName();
-                String description = ee.getDescription();
-                description = StringUtils.replaceChars( description, '\t', ' ' );
-                description = StringUtils.replaceChars( description, '\n', ' ' );
-                description = StringUtils.replaceChars( description, '\r', ' ' );
-
-                Taxon taxon = expressionExperimentService.getTaxon( ee );
-
-                if ( taxon == null )
-                    continue;
-
-                Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
-                StringBuffer manufacturers = new StringBuffer();
-
-                // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
-                for ( ArrayDesign ad : ads ) {
-                    ad = arrayDesignService.thawLite( ad );
-                    if ( ad.getDesignProvider() == null ) {
-                        log.debug( "Array Design: " + ad.getShortName()
-                                + " has no design provoider assoicated with it. Skipping" );
-                        continue;
-                    }
-                    manufacturers.append( ad.getDesignProvider().getName() + "," );
-                }
-
-                writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
-                        description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) );
-
-                if ( limit > 0 && ++i > limit )
-                    break;
-
-            }
-
-        }
-    }
-
-    @Override
-    public void generateDatasetTissueView( int limit, Collection<ExpressionExperiment> experiments )
-            throws FileNotFoundException, IOException {
-        log.info( "Generating dataset tissue view" );
-
-        /*
-         * Get handle to output file
-         */
-        File file = getViewFile( DATASET_TISSUE_VIEW_BASENAME );
-        log.info( "Writing to " + file );
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
+        File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_TISSUE_VIEW_BASENAME );
+        DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
 
             /*
              * For all of their annotations... if it's a tissue, print out a line
@@ -180,7 +124,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             for ( ExpressionExperiment ee : experiments ) {
                 ee = expressionExperimentService.thawLite( ee );
 
-                log.info( "Processing: " + ee.getShortName() );
+                DatabaseViewGeneratorImpl.log.info( "Processing: " + ee.getShortName() );
 
                 Long gemmaId = ee.getId();
 
@@ -210,7 +154,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 }
 
-                if ( limit > 0 && ++i > limit )
+                if ( limit != null && ( limit > 0 && ++i > limit ) )
                     break;
 
             }
@@ -218,17 +162,83 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
         }
     }
 
-    @Override
-    public void generateDifferentialExpressionView( int limit, Collection<ExpressionExperiment> experiments )
-            throws FileNotFoundException, IOException {
-        log.info( "Generating dataset diffex view" );
+    private void generateDatasetView( Integer limit, Collection<ExpressionExperiment> experiments ) throws IOException {
+
+        DatabaseViewGeneratorImpl.log.info( "Generating dataset summary view" );
 
         /*
          * Get handle to output file
          */
-        File file = getViewFile( DATASET_DIFFEX_VIEW_BASENAME );
-        log.info( "Writing to " + file );
-        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
+        File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_SUMMARY_VIEW_BASENAME );
+        DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
+
+            writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
+
+            /*
+             * Print out their names etc.
+             */
+            int i = 0;
+            for ( ExpressionExperiment ee : experiments ) {
+                ee = expressionExperimentService.thawLite( ee );
+                DatabaseViewGeneratorImpl.log.info( "Processing: " + ee.getShortName() );
+
+                String acc = "";
+                String source = "";
+
+                if ( ee.getAccession() != null && ee.getAccession().getAccession() != null ) {
+                    acc = ee.getAccession().getAccession();
+                    source = ee.getAccession().getExternalDatabase().getName();
+                }
+
+                Long gemmaId = ee.getId();
+                String shortName = ee.getShortName();
+                String name = ee.getName();
+                String description = ee.getDescription();
+                description = StringUtils.replaceChars( description, '\t', ' ' );
+                description = StringUtils.replaceChars( description, '\n', ' ' );
+                description = StringUtils.replaceChars( description, '\r', ' ' );
+
+                Taxon taxon = expressionExperimentService.getTaxon( ee );
+
+                if ( taxon == null )
+                    continue;
+
+                Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
+                StringBuilder manufacturers = new StringBuilder();
+
+                // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
+                for ( ArrayDesign ad : ads ) {
+                    ad = arrayDesignService.thawLite( ad );
+                    if ( ad.getDesignProvider() == null ) {
+                        DatabaseViewGeneratorImpl.log.debug( "Array Design: " + ad.getShortName()
+                                + " has no design provoider assoicated with it. Skipping" );
+                        continue;
+                    }
+                    manufacturers.append( ad.getDesignProvider().getName() ).append( "," );
+                }
+
+                writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
+                        description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) );
+
+                if ( limit != null && ( limit > 0 && ++i > limit ) )
+                    break;
+
+            }
+
+        }
+    }
+
+    private void generateDifferentialExpressionView( Integer limit, Collection<ExpressionExperiment> experiments )
+            throws IOException {
+        DatabaseViewGeneratorImpl.log.info( "Generating dataset diffex view" );
+
+        /*
+         * Get handle to output file
+         */
+        File file = this.getViewFile( DatabaseViewGeneratorImpl.DATASET_DIFFEX_VIEW_BASENAME );
+        DatabaseViewGeneratorImpl.log.info( "Writing to " + file );
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) )) {
 
             /*
              * For each gene that is differentially expressed, print out a line per contrast
@@ -242,17 +252,15 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                 Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService
                         .getAnalyses( ee );
                 if ( results == null || results.isEmpty() ) {
-                    log.warn( "No differential expression results found for " + ee );
+                    DatabaseViewGeneratorImpl.log.warn( "No differential expression results found for " + ee );
                     continue;
                 }
 
+                //noinspection StatementWithEmptyBody // FIXME. Should probably skip for this purpose.
                 if ( results.size() > 1 ) {
-                    /*
-                     * FIXME. Should probably skip for this purpose.
-                     */
                 }
 
-                log.info( "Processing: " + ee.getShortName() );
+                DatabaseViewGeneratorImpl.log.info( "Processing: " + ee.getShortName() );
 
                 for ( DifferentialExpressionAnalysis analysis : results ) {
 
@@ -260,7 +268,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                     for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 
-                        // ears = differentialExpressionResultService.thaw( ears );
+                        // ears = differentialExpressionResultService.thawRawAndProcessed( ears );
 
                         FactorValue baselineGroup = ears.getBaselineGroup();
 
@@ -276,20 +284,21 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                         String baselineDescription = ExperimentalDesignUtils.prettyString( baselineGroup );
 
                         // Get the factor category name
-                        String factorName = "";
-                        String factorURI = "";
+                        StringBuilder factorName = new StringBuilder();
+                        StringBuilder factorURI = new StringBuilder();
 
                         for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
-                            factorName += ef.getName() + ",";
+                            factorName.append( ef.getName() ).append( "," );
                             if ( ef.getCategory() instanceof VocabCharacteristic ) {
-                                factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";
+                                factorURI.append( ef.getCategory().getCategoryUri() ).append( "," );
                             }
                         }
-                        factorName = StringUtils.removeEnd( factorName, "," );
-                        factorURI = StringUtils.removeEnd( factorURI, "," );
+                        factorName = new StringBuilder( StringUtils.removeEnd( factorName.toString(), "," ) );
+                        factorURI = new StringBuilder( StringUtils.removeEnd( factorURI.toString(), "," ) );
 
                         if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
-                            log.warn( "No  differential expression analysis results found for " + ee );
+                            DatabaseViewGeneratorImpl.log
+                                    .warn( "No  differential expression analysis results found for " + ee );
                             continue;
                         }
 
@@ -297,15 +306,18 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                         for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
 
                             if ( dear == null ) {
-                                log.warn( "Missing results for " + ee + " skipping to next. " );
+                                DatabaseViewGeneratorImpl.log
+                                        .warn( "Missing results for " + ee + " skipping to next. " );
                                 continue;
                             }
 
-                            if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD )
+                            if ( dear.getCorrectedPvalue() == null
+                                    || dear.getCorrectedPvalue() > DatabaseViewGeneratorImpl.THRESH_HOLD )
                                 continue;
 
-                            String formatted = formatDiffExResult( ee, dear, factorName, factorURI,
-                                    baselineDescription );
+                            String formatted = this
+                                    .formatDiffExResult( ee, dear, factorName.toString(), factorURI.toString(),
+                                            baselineDescription );
 
                             if ( StringUtils.isNotBlank( formatted ) )
                                 writer.write( formatted );
@@ -314,7 +326,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                     } // ears loop
                 } // analysis loop
 
-                if ( limit > 0 && ++i > limit )
+                if ( limit != null && ( limit > 0 && ++i > limit ) )
                     break;
 
             } // EE loop
@@ -357,22 +369,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
     }
 
     private File getViewFile( String datasetDiffexViewBasename ) {
-        return getOutputFile( datasetDiffexViewBasename + VIEW_FILE_SUFFIX );
-    }
-
-    @Override
-    public File getOutputFile( String filename ) {
-        String fullFilePath = VIEW_DIR + filename;
-        File f = new File( fullFilePath );
-
-        if ( f.exists() ) {
-            return f;
-        }
-
-        File parentDir = f.getParentFile();
-        if ( !parentDir.exists() )
-            parentDir.mkdirs();
-        return f;
+        return this.getOutputFile( datasetDiffexViewBasename + DatabaseViewGenerator.VIEW_FILE_SUFFIX );
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -84,28 +84,20 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     private boolean sendEmail = true;
 
-    /**
-     * For use in tests.
-     */
-    @Override
-    public void disableEmail() {
-        this.sendEmail = false;
-    }
-
     @Override
     @Transactional
     public synchronized void updateGene2CsEntries() {
 
-        if ( running.get() )
+        if ( TableMaintenanceUtilImpl.running.get() )
             return;
 
-        log.debug( "Running Gene2CS status check" );
+        TableMaintenanceUtilImpl.log.debug( "Running Gene2CS status check" );
 
         String annotation = "";
         try {
-            running.set( true );
+            TableMaintenanceUtilImpl.running.set( true );
 
-            Gene2CsStatus status = getLastGene2CsUpdateStatus();
+            Gene2CsStatus status = this.getLastGene2CsUpdateStatus();
             boolean needToRefresh = false;
             if ( status == null ) {
                 needToRefresh = true;
@@ -118,7 +110,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     if ( a instanceof ArrayDesign ) {
                         needToRefresh = true;
                         annotation = a + " is new since " + status.getLastUpdate();
-                        log.debug( annotation );
+                        TableMaintenanceUtilImpl.log.debug( annotation );
                         break;
                     }
                 }
@@ -136,7 +128,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
                                 needToRefresh = true;
                                 annotation = a + " had probe mapping done since: " + status.getLastUpdate();
-                                log.debug( annotation );
+                                TableMaintenanceUtilImpl.log.debug( annotation );
                                 break;
                             }
                         }
@@ -147,26 +139,34 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             }
 
             if ( needToRefresh ) {
-                log.debug( "Update of GENE2CS initiated" );
-                generateGene2CsEntries();
-                Gene2CsStatus updatedStatus = writeUpdateStatus( annotation, null );
-                sendEmail( updatedStatus );
+                TableMaintenanceUtilImpl.log.debug( "Update of GENE2CS initiated" );
+                this.generateGene2CsEntries();
+                Gene2CsStatus updatedStatus = this.writeUpdateStatus( annotation, null );
+                this.sendEmail( updatedStatus );
 
             } else {
-                log.debug( "No update of GENE2CS needed" );
+                TableMaintenanceUtilImpl.log.debug( "No update of GENE2CS needed" );
             }
 
         } catch ( Exception e ) {
             try {
-                log.info( "Error during attempt to check status or update GENE2CS", e );
-                Gene2CsStatus updatedStatus = writeUpdateStatus( annotation, e );
-                sendEmail( updatedStatus );
+                TableMaintenanceUtilImpl.log.info( "Error during attempt to check status or update GENE2CS", e );
+                Gene2CsStatus updatedStatus = this.writeUpdateStatus( annotation, e );
+                this.sendEmail( updatedStatus );
             } catch ( IOException e1 ) {
                 throw new RuntimeException( e1 );
             }
         } finally {
-            running.set( false );
+            TableMaintenanceUtilImpl.running.set( false );
         }
+    }
+
+    /**
+     * For use in tests.
+     */
+    @Override
+    public void disableEmail() {
+        this.sendEmail = false;
     }
 
     /**
@@ -176,31 +176,29 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
     private void generateGene2CsEntries() {
-        log.info( "Updating Gene2Cs ..." );
+        TableMaintenanceUtilImpl.log.info( "Updating Gene2Cs ..." );
         Session session = this.sessionFactory.getCurrentSession();
-        log.info( "Deleting all entries for Gene2Cs." );
+        TableMaintenanceUtilImpl.log.info( "Deleting all entries for Gene2Cs." );
         String queryString = "DELETE FROM GENE2CS"; // Truncate doesn't work., bug 2057
         org.hibernate.SQLQuery queryObject;
 
         queryObject = session.createSQLQuery( queryString ); // for native query.
         int deleted = queryObject.executeUpdate();
 
-        log.info( "Deleted " + deleted + "; Recreating all entries for Gene2Cs." );
-        queryString = GENE2CS_REPOPULATE_QUERY;
+        TableMaintenanceUtilImpl.log.info( "Deleted " + deleted + "; Recreating all entries for Gene2Cs." );
+        queryString = TableMaintenanceUtilImpl.GENE2CS_REPOPULATE_QUERY;
         queryObject = session.createSQLQuery( queryString ); // for native query.
         queryObject.executeUpdate();
-        log.info( "Done regenerating Gene2Cs." );
+        TableMaintenanceUtilImpl.log.info( "Done regenerating Gene2Cs." );
 
         session.flush();
         session.clear();
 
     }
 
-    /**
-     *
-     */
     private File getGene2CsInfopath() {
-        return new File( HOME_DIR + File.separatorChar + DB_INFO_DIR + File.separatorChar + "gene2cs.info" );
+        return new File( TableMaintenanceUtilImpl.HOME_DIR + File.separatorChar + TableMaintenanceUtilImpl.DB_INFO_DIR
+                + File.separatorChar + "gene2cs.info" );
     }
 
     /**
@@ -209,7 +207,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * @return null if there is no update information available.
      */
     private Gene2CsStatus getLastGene2CsUpdateStatus() throws IOException, ClassNotFoundException {
-        File gene2CsInfopath = getGene2CsInfopath();
+        File gene2CsInfopath = this.getGene2CsInfopath();
         if ( !gene2CsInfopath.canRead() ) {
             return null;
         }
@@ -221,8 +219,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     }
 
     private void initDirectories() {
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + DB_INFO_DIR );
+        FileTools.createDir( TableMaintenanceUtilImpl.HOME_DIR );
+        FileTools.createDir(
+                TableMaintenanceUtilImpl.HOME_DIR + File.separatorChar + TableMaintenanceUtilImpl.DB_INFO_DIR );
     }
 
     private void sendEmail( Gene2CsStatus results ) {
@@ -231,21 +230,22 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         SimpleMailMessage msg = new SimpleMailMessage();
         String adminEmailAddress = Settings.getAdminEmailAddress();
         if ( StringUtils.isBlank( adminEmailAddress ) ) {
-            log.warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
+            TableMaintenanceUtilImpl.log
+                    .warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
             return;
         }
         msg.setTo( adminEmailAddress );
         msg.setSubject( "Gene2Cs update status." );
         msg.setText( "Gene2Cs updating was run.\n" + results.getAnnotation() );
         mailEngine.send( msg );
-        log.info( "Email notification sent to " + adminEmailAddress );
+        TableMaintenanceUtilImpl.log.info( "Email notification sent to " + adminEmailAddress );
     }
 
     /**
      * @param annotation extra text that describes the status
      */
     private Gene2CsStatus writeUpdateStatus( String annotation, Exception e ) throws IOException {
-        initDirectories();
+        this.initDirectories();
         Gene2CsStatus status = new Gene2CsStatus();
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
@@ -253,7 +253,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         status.setError( e );
         status.setAnnotation( annotation );
 
-        try (FileOutputStream fos = new FileOutputStream( getGene2CsInfopath() );
+        try (FileOutputStream fos = new FileOutputStream( this.getGene2CsInfopath() );
                 ObjectOutputStream oos = new ObjectOutputStream( fos )) {
             oos.writeObject( status );
         }

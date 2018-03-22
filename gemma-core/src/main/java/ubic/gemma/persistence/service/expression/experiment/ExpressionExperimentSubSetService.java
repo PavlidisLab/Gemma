@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,36 +23,32 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
-public interface ExpressionExperimentSubSetService {
+public interface ExpressionExperimentSubSetService extends BaseService<ExpressionExperimentSubSet> {
 
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
-
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
 
+    @Override
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
 
-    /**
-     * @param entity entity
-     * @param factor factor
-     * @return the factor values of the given factor that are relevant to the subset.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
+    @Override
+    @Secured({ "GROUP_USER" })
+    ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
 
-    Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
-
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperimentSubSet load( Long id );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSubSet> loadAll();
 
@@ -65,7 +61,18 @@ public interface ExpressionExperimentSubSetService {
      *
      * @param entity the subset to remove
      */
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void delete( ExpressionExperimentSubSet entity );
+    void remove( ExpressionExperimentSubSet entity );
+
+    /**
+     * @param entity entity
+     * @param factor factor
+     * @return the factor values of the given factor that are relevant to the subset.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
+
+    Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
 
 }

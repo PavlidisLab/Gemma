@@ -36,7 +36,7 @@ import java.util.concurrent.*;
  *
  * @author paul
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class FtpFetcher extends AbstractFetcher {
 
     protected FTPClient ftpClient;

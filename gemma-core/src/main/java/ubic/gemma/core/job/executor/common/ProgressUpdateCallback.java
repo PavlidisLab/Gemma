@@ -5,5 +5,5 @@ package ubic.gemma.core.job.executor.common;
  * File Templates.
  */
 public interface ProgressUpdateCallback {
-    public void addProgressUpdate( String message );
+    void addProgressUpdate( String message );
 }

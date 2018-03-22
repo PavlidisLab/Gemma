@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,22 +29,19 @@ import java.util.Date;
  */
 public abstract class SubmittedTaskAbstract<T extends TaskResult> implements SubmittedTask<T> {
 
-    protected String taskId;
-    protected TaskCommand taskCommand;
-
-    protected boolean emailAlert = false;
-
+    final String taskId;
+    final TaskCommand taskCommand;
     // The time at which the job was first submitted to the running queue.
-    protected Date submissionTime;
+    final Date submissionTime;
+    boolean emailAlert;
     // The time the job was actually started.
-    protected Date startTime;
+    Date startTime;
     // The time at which job completed/failed.
-    protected Date finishTime;
+    Date finishTime;
 
-    // TODO: one idea is to associate timestamp with status transition inside a Status class.
-    protected Status status;
+    Status status;
 
-    public SubmittedTaskAbstract( TaskCommand taskCommand ) {
+    SubmittedTaskAbstract( TaskCommand taskCommand ) {
         this.taskId = taskCommand.getTaskId();
         this.taskCommand = taskCommand;
 
@@ -70,7 +67,7 @@ public abstract class SubmittedTaskAbstract<T extends TaskResult> implements Sub
         return ( this.status.equals( Status.COMPLETED ) || this.status.equals( Status.FAILED ) );
     }
 
-    protected void setTimeStampAndStatus( Status status, Date timeStamp ) {
+    void setTimeStampAndStatus( Status status, Date timeStamp ) {
         this.status = status;
         switch ( status ) {
             case RUNNING:
@@ -81,12 +78,8 @@ public abstract class SubmittedTaskAbstract<T extends TaskResult> implements Sub
                 finishTime = timeStamp;
                 break;
             case CANCELLING:
-                // TODO: last cancel request time?
-                break;
             case QUEUED:
-                break;
             case UNKNOWN:
-                break;
             default:
                 break;
         }

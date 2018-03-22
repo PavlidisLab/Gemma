@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Example unix shell script to start workers
 
 
@@ -10,7 +11,7 @@ CONFIGS=~/configs
 JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
 CMD="$JAVACMD -classpath ${CONFIGS}:${JARS} ubic.gemma.core.job.executor.worker.WorkerCLI"
-$CMD
+${CMD}
 
 
 

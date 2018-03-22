@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,13 +30,7 @@ import java.util.*;
  *
  * @author Paul
  */
-public class CoexpressionQueryUtils {
-
-    static String getExperimentLinkClassName( Gene gene ) {
-        Taxon taxon = gene.getTaxon();
-        assert taxon != null;
-        return getExperimentLinkClassName( taxon );
-    }
+class CoexpressionQueryUtils {
 
     static String getExperimentLinkClassName( Taxon taxon ) {
         String g2gClassName;
@@ -72,7 +66,7 @@ public class CoexpressionQueryUtils {
     static String getGeneLinkClassName( Gene gene ) {
         Taxon taxon = gene.getTaxon();
         assert taxon != null;
-        return getGeneLinkClassName( taxon );
+        return CoexpressionQueryUtils.getGeneLinkClassName( taxon );
     }
 
     /**

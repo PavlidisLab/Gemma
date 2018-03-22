@@ -21,6 +21,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -51,47 +52,60 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     }
 
     @Override
-    public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
-        final String queryString =
-                "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
-                        + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                        + "and dev.quantitationType = :quantitationType ";
-
+    public Collection<RawExpressionDataVector> find( BioAssayDimension bioAssayDimension ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "quantitationType", quantitationType )
-                .setParameter( "adid", arrayDesign.getId() ).list();
-
-    }
-
-    @Override
-    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
-        Collection<? extends DesignElementDataVector> results = new HashSet<>();
-
-        //noinspection unchecked
-        results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad" )
+        return new HashSet<>( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select d from RawExpressionDataVector d where d.bioAssayDimension = :bad" )
                 .setParameter( "bad", bioAssayDimension ).list() );
-
-        //noinspection unchecked
-        results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad" )
-                .setParameter( "bad", bioAssayDimension ).list() );
-        return results;
-
     }
 
     @Override
     public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
-        final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
+        //language=HQL
+        final String queryString = "select dev from RawExpressionDataVector dev where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "quantitationTypes", quantitationTypes )
-                .list();
+        return new HashSet<>( this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameterList( "quantitationTypes", quantitationTypes ).list() );
     }
 
     @Override
-    public Collection<RawExpressionDataVector> find( QuantitationType quantitationType ) {
-        return this.findByProperty( "quantitationType", quantitationType );
+    public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select dev from RawExpressionDataVector dev  inner join fetch dev.bioAssayDimension bd "
+                        + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
+                        + "and dev.quantitationType = :quantitationType " )
+                .setParameter( "quantitationType", quantitationType ).setParameter( "adid", arrayDesign.getId() )
+                .list();
+
+    }
+
+    @Override
+    public Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements,
+            QuantitationType quantitationType ) {
+        if ( designElements == null || designElements.size() == 0 )
+            return new HashSet<>();
+
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select dev from RawExpressionDataVector as dev inner join dev.designElement as de "
+                        + " where de in (:des) and dev.quantitationType = :qt" )
+                .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
+    }
+
+    @Override
+    public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
+        final String dedvRemovalQuery = "delete RawExpressionDataVector dedv where dedv.designElement = ?";
+        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
+        AbstractDao.log.info( "Deleted: " + deleted );
+    }
+
+    @Override
+    public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
+        final String dedvRemovalQuery = "delete from RawExpressionDataVector as dedv where dedv.quantitationType = ?";
+        int deleted = this.getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
+        AbstractDao.log.info( "Deleted " + deleted + " data vector elements" );
     }
 
     @Override
@@ -126,20 +140,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         }
         return ( RawExpressionDataVector ) result;
 
-    }
-
-    @Override
-    public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
-        final String dedvRemovalQuery = "delete RawExpressionDataVectorImpl dedv where dedv.designElement = ?";
-        int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
-        log.info( "Deleted: " + deleted );
-    }
-
-    @Override
-    public void removeDataForQuantitationType( final QuantitationType quantitationType ) {
-        final String dedvRemovalQuery = "delete from RawExpressionDataVectorImpl as dedv where dedv.quantitationType = ?";
-        int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
-        log.info( "Deleted " + deleted + " data vector elements" );
     }
 
 }

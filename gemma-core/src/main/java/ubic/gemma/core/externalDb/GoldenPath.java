@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,24 +37,18 @@ import java.sql.SQLException;
  *
  * @author pavlidis
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class GoldenPath {
 
-    protected static final Log log = LogFactory.getLog( GoldenPath.class );
-    protected DriverManagerDataSource dataSource;
-    protected JdbcTemplate jdbcTemplate;
+    static final Log log = LogFactory.getLog( GoldenPath.class );
+    JdbcTemplate jdbcTemplate;
     private ExternalDatabase searchedDatabase;
     private String databaseName = null;
-
     private Taxon taxon;
-
     private int port;
-
     private String host;
-
     private String user;
-
     private String password;
-
     private String url;
 
     /**
@@ -63,30 +57,30 @@ public class GoldenPath {
     public GoldenPath() {
         this.taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
-        readConfig();
+        this.readConfig();
     }
 
-    public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException {
+    public GoldenPath( int port, String databaseName, String host, String user, String password ) {
         this.databaseName = databaseName;
 
-        getTaxonForDbName( databaseName );
+        this.getTaxonForDbName( databaseName );
 
         this.port = port;
         this.host = host;
         this.user = user;
         this.password = password;
 
-        init();
+        this.init();
     }
 
-    public GoldenPath( String databaseName ) throws SQLException {
-        getTaxonForDbName( databaseName );
-        readConfig();
+    public GoldenPath( String databaseName ) {
+        this.getTaxonForDbName( databaseName );
+        this.readConfig();
     }
 
     public GoldenPath( Taxon taxon ) {
         this.taxon = taxon;
-        readConfig();
+        this.readConfig();
     }
 
     public String getDatabaseName() {
@@ -113,15 +107,15 @@ public class GoldenPath {
         }
     }
 
-    protected void init() {
+    void init() {
         assert databaseName != null;
-        dataSource = new DriverManagerDataSource();
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
         this.url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true";
-        log.info( "Connecting to " + databaseName );
-        log.debug( "Connecting to Golden Path : " + url + " as " + user );
+        GoldenPath.log.info( "Connecting to " + databaseName );
+        GoldenPath.log.debug( "Connecting to Golden Path : " + url + " as " + user );
 
-        dataSource.setDriverClassName( getDriver() );
+        dataSource.setDriverClassName( this.getDriver() );
         dataSource.setUrl( url );
         dataSource.setUsername( user );
         dataSource.setPassword( password );
@@ -135,7 +129,7 @@ public class GoldenPath {
         String driver = Settings.getString( "gemma.goldenpath.db.driver" );
         if ( StringUtils.isBlank( driver ) ) {
             driver = Settings.getString( "gemma.db.driver" );
-            log.warn( "No DB driver configured for GoldenPath, falling back on gemma.db.driver=" + driver );
+            GoldenPath.log.warn( "No DB driver configured for GoldenPath, falling back on gemma.db.driver=" + driver );
         }
         return driver;
     }
@@ -158,16 +152,18 @@ public class GoldenPath {
         if ( taxon == null )
             throw new IllegalStateException( "Taxon cannot be null" );
         String commonName = taxon.getCommonName();
-        if ( commonName.equals( "mouse" ) ) {
-            databaseName = Settings.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an
-            // external source - e.g., the taxon
-            // service.
-        } else if ( commonName.equals( "human" ) ) {
-            databaseName = Settings.getString( "gemma.goldenpath.db.human" );
-        } else if ( commonName.equals( "rat" ) ) {
-            databaseName = Settings.getString( "gemma.goldenpath.db.rat" );
-        } else {
-            throw new IllegalArgumentException( "No GoldenPath database for  " + taxon );
+        switch ( commonName ) {
+            case "mouse":
+                databaseName = Settings.getString( "gemma.goldenpath.db.mouse" );
+                break;
+            case "human":
+                databaseName = Settings.getString( "gemma.goldenpath.db.human" );
+                break;
+            case "rat":
+                databaseName = Settings.getString( "gemma.goldenpath.db.rat" );
+                break;
+            default:
+                throw new IllegalArgumentException( "No GoldenPath database for  " + taxon );
         }
 
         this.host = Settings.getString( "gemma.goldenpath.db.host" );
@@ -184,7 +180,7 @@ public class GoldenPath {
         searchedDatabase.setName( databaseName );
         searchedDatabase.setType( DatabaseType.SEQUENCE );
 
-        init();
+        this.init();
 
     }
 

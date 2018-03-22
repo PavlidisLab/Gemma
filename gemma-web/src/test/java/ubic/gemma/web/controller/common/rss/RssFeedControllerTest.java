@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,28 +18,24 @@
  */
 package ubic.gemma.web.controller.common.rss;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.servlet.ModelAndView;
+import ubic.basecode.util.RegressionTesting;
+import ubic.gemma.core.analysis.report.WhatsNew;
+import ubic.gemma.core.analysis.report.WhatsNewService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.servlet.ModelAndView;
-
-import ubic.basecode.util.RegressionTesting;
-import ubic.gemma.core.analysis.report.WhatsNew;
-import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.testing.BaseSpringWebTest;
+import static org.junit.Assert.*;
 
 /**
  * @author sshao
- *
  */
 public class RssFeedControllerTest extends BaseSpringWebTest {
 
@@ -52,7 +48,7 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
     private int updateCount;
     private int newCount;
 
-    private Map<ExpressionExperiment, String> experiments = new HashMap<ExpressionExperiment, String>();
+    private Map<ExpressionExperiment, String> experiments = new HashMap<>();
 
     @Before
     public void setup() {
@@ -88,8 +84,7 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
         Map<String, Object> model = mav.getModel();
         assertNotNull( model );
 
-        @SuppressWarnings("unchecked")
-        Map<ExpressionExperiment, String> retreivedExperiments = ( Map<ExpressionExperiment, String> ) model
+        @SuppressWarnings("unchecked") Map<ExpressionExperiment, String> retreivedExperiments = ( Map<ExpressionExperiment, String> ) model
                 .get( "feedContent" );
         Integer retreivedUpdateCount = ( Integer ) model.get( "updateCount" );
         Integer retreivedNewCount = ( Integer ) model.get( "newCount" );

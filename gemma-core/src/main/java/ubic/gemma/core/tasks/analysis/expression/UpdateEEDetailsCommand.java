@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,41 +24,23 @@ import ubic.gemma.core.tasks.Task;
 
 /**
  * @author paul
- *
  */
+@SuppressWarnings("unused") // Possible external use
 public class UpdateEEDetailsCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
-    String shortName;
-
-    String name;
-
-    String description;
-
-    String pubMedId;
-
-    boolean removePrimaryPublication;
+    private String shortName;
+    private String name;
+    private String description;
+    private String pubMedId;
+    private boolean removePrimaryPublication;
 
     /**
      * @return the description
      */
     public String getDescription() {
         return description;
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @return the shortName
-     */
-    public String getShortName() {
-        return shortName;
     }
 
     /**
@@ -69,10 +51,24 @@ public class UpdateEEDetailsCommand extends TaskCommand {
     }
 
     /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * @param name the name to set
      */
     public void setName( String name ) {
         this.name = name;
+    }
+
+    /**
+     * @return the shortName
+     */
+    public String getShortName() {
+        return shortName;
     }
 
     /**
@@ -94,6 +90,7 @@ public class UpdateEEDetailsCommand extends TaskCommand {
         return removePrimaryPublication;
     }
 
+    @SuppressWarnings("unused") // Possible frontend use
     public void setRemovePrimaryPublication( boolean removePrimaryPublication ) {
         this.removePrimaryPublication = removePrimaryPublication;
     }

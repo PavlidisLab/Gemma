@@ -19,13 +19,13 @@
 
 package ubic.gemma.core.job;
 
-import static org.junit.Assert.*;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author paul
@@ -38,7 +38,7 @@ public class TaskUtilsTest {
      */
     @Test
     public final void testGenerateTaskId() {
-        Collection<String> seen = new HashSet<String>();
+        Collection<String> seen = new HashSet<>();
 
         for ( int i = 0; i < 1000; i++ ) {
             String id = TaskUtils.generateTaskId();

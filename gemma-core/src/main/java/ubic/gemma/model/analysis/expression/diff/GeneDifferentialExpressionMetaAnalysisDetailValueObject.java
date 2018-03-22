@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +24,8 @@ import java.util.Collection;
 
 /**
  * @author frances
- *
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GeneDifferentialExpressionMetaAnalysisDetailValueObject implements Serializable {
 
     /**
@@ -35,28 +35,27 @@ public class GeneDifferentialExpressionMetaAnalysisDetailValueObject implements 
 
     private Integer numGenesAnalyzed;
 
-    private Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> includedResultSetsInfo;
+    private Collection<IncludedResultSetInfoValueObject> includedResultSetsInfo;
     private Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> results;
 
-    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> getIncludedResultSetsInfo() {
+    public Collection<IncludedResultSetInfoValueObject> getIncludedResultSetsInfo() {
         return this.includedResultSetsInfo;
+    }
+
+    public void setIncludedResultSetsInfo( Collection<IncludedResultSetInfoValueObject> includedResultSetsInfo ) {
+        this.includedResultSetsInfo = includedResultSetsInfo;
     }
 
     public Integer getNumGenesAnalyzed() {
         return this.numGenesAnalyzed;
     }
 
-    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> getResults() {
-        return this.results;
-    }
-
-    public void setIncludedResultSetsInfo(
-            Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> includedResultSetsInfo ) {
-        this.includedResultSetsInfo = includedResultSetsInfo;
-    }
-
     public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
         this.numGenesAnalyzed = numGenesAnalyzed;
+    }
+
+    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> getResults() {
+        return this.results;
     }
 
     public void setResults( Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> results ) {

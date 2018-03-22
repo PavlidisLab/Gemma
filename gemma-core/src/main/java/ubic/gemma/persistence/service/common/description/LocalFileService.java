@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,61 +18,45 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.service.BaseService;
+
 import java.io.IOException;
 import java.util.Collection;
 
-import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.common.description.LocalFile;
-
 /**
  * @author kelsey
- *
  */
-public interface LocalFileService {
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+public interface LocalFileService extends BaseService<LocalFile> {
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
-    public LocalFile copyFile( LocalFile sourceFile, LocalFile targetFile ) throws IOException;
+    LocalFile copyFile( LocalFile sourceFile, LocalFile targetFile ) throws IOException;
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void deleteFile( LocalFile localFile ) throws IOException;
+    void deleteFile( LocalFile localFile ) throws IOException;
 
-    /**
-     * 
-     */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public LocalFile find( LocalFile localFile );
+    LocalFile find( LocalFile localFile );
 
-    /**
-     * 
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public LocalFile findByPath( java.lang.String path );
-
-    /**
-     * 
-     */
+    @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    public LocalFile findOrCreate( LocalFile localFile );
+    LocalFile findOrCreate( LocalFile localFile );
 
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public LocalFile save( LocalFile localFile );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( LocalFile localFile );
-
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<LocalFile> loadAll();
+    Collection<LocalFile> loadAll();
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( LocalFile localFile );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    LocalFile findByPath( java.lang.String path );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    LocalFile save( LocalFile localFile );
 
 }

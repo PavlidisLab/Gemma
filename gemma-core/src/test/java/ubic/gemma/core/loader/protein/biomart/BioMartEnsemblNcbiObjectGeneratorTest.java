@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,8 +18,10 @@
  */
 package ubic.gemma.core.loader.protein.biomart;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
+import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;
 import java.net.URL;
@@ -27,34 +29,29 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
-import ubic.gemma.model.genome.Taxon;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Class to test BioMartEnsemblNcbiObjectGeneration. Simple class but there is some logic connected to the many to many
  * relationship between ensembl genes and entrez genes and map manipulation. Using awk on the file validate the numbers.
- * 
- * @author ldonnison
  *
+ * @author ldonnison
  */
 public class BioMartEnsemblNcbiObjectGeneratorTest {
-    BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = null;
-    Taxon taxon = null;
-    Collection<Taxon> taxa = null;
-    File taxonBiomartFile = null;
+    private BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = null;
+    private Collection<Taxon> taxa = null;
+    private File taxonBiomartFile = null;
 
     @Before
     public void setUp() {
         biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
-        taxon = Taxon.Factory.newInstance();
+        Taxon taxon = Taxon.Factory.newInstance();
         taxon.setIsGenesUsable( true );
         taxon.setNcbiId( 10090 );
         taxon.setScientificName( "Mus musculus" );
         taxon.setIsSpecies( true );
-        taxa = new ArrayList<Taxon>();
+        taxa = new ArrayList<>();
         taxa.add( taxon );
 
         String fileNameBiomartmouse = "/data/loader/protein/biomart/biomartmmusculusShort.txt";

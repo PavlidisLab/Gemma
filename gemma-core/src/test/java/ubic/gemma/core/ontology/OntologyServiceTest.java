@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007-2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,7 +41,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     private OntologyService os;
 
     @Test
-    public void test() throws Exception {
+    public void test() {
 
         os.getDiseaseOntologyService()
                 .loadTermsInNameSpace( this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );

@@ -15,24 +15,12 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author Paul
  */
 public interface ExpressionExperimentBatchCorrectionService {
-
-    void checkBatchEffectSeverity( ExpressionExperiment ee );
-
-    /**
-     * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
-     * least two samples per batch?
-     *
-     * @param ee    the experiment
-     * @return whether it is correctable
-     */
-    boolean checkCorrectability( ExpressionExperiment ee );
 
     /**
      * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
@@ -52,19 +40,6 @@ public interface ExpressionExperimentBatchCorrectionService {
      */
     ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat );
 
-    /**
-     * @param parametric          if false, the non-parametric (slow) ComBat estimation will be used.
-     * @param importanceThreshold a p-value threshold used to select covariates. Covariates which are not associated
-     *                            with one of the first three principal components of the data at this level of significance will be removed
-     *                            from the correction model fitting.
-     * @param originalDataMatrix  the original matrix
-     * @return corrected data.
-     */
-    ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix, boolean parametric,
-            Double importanceThreshold );
-
     ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee );
-
-    ExperimentalFactor getBatchFactor( ExpressionExperiment ee );
 
 }

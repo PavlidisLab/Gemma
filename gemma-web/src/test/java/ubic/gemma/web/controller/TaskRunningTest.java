@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,7 @@ import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.job.progress.ProgressData;
 import ubic.gemma.core.job.progress.ProgressStatusService;
-import ubic.gemma.core.testing.BaseSpringWebTest;
+import ubic.gemma.web.util.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
 
 import java.util.List;
@@ -104,7 +104,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertNotNull( lastResult );
         assertTrue( lastResult.isFailed() );
     }
-    
+
     @Test
     public final void testSuccessfulRun() throws Exception {
 

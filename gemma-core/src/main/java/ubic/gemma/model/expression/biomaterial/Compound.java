@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class Compound extends ubic.gemma.model.common.Describable {
 
     /**
@@ -28,6 +29,7 @@ public abstract class Compound extends ubic.gemma.model.common.Describable {
     private String registryNumber;
     private ubic.gemma.model.common.description.DatabaseEntry externalLIMS;
     private ubic.gemma.model.common.description.Characteristic compoundIndices;
+
     /**
      * No-arg constructor added to satisfy javabean contract
      *

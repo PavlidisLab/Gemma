@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.*;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.type.LongType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -97,7 +96,7 @@ public class CommonQueries {
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         List<?> qr = queryObject.list();
-        ee2ads = addAllAds( ee2ads, qr );
+        ee2ads = CommonQueries.addAllAds( ee2ads, qr );
 
         if ( ee2ads.size() < ees.size() ) {
             // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
@@ -110,7 +109,7 @@ public class CommonQueries {
             // has a bug.
 
             qr = session.createQuery( subsetQuery ).setParameterList( "ees", possibleEEsubsets ).list();
-            ee2ads = addAllAds( ee2ads, qr );
+            ee2ads = CommonQueries.addAllAds( ee2ads, qr );
         }
 
         return ee2ads;
@@ -136,26 +135,27 @@ public class CommonQueries {
         if ( ee == null ) {
             return null;
         }
-        return getArrayDesignsUsed( ee.getId(), session );
+        return CommonQueries.getArrayDesignsUsed( ee.getId(), session );
     }
 
     /**
      * @return list of array designs used in given expression experiment
      */
     @SuppressWarnings("unchecked")
-    public static Collection<ArrayDesign> getArrayDesignsUsed( Long eeId, Session session ) {
-        List<?> list = createGetADsUsedQueryObject( eeId, session ).list();
+    private static Collection<ArrayDesign> getArrayDesignsUsed( Long eeId, Session session ) {
+        List<?> list = CommonQueries.createGetADsUsedQueryObject( eeId, session ).list();
         /*
          * Thaw the TT.
          */
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
+            //noinspection ResultOfMethodCallIgnored // Only thawing
             ad.getTechnologyType();
         }
         return ( Collection<ArrayDesign> ) list;
     }
 
     public static Collection<ArrayDesignValueObject> getArrayDesignsUsedVOs( Long eeId, Session session ) {
-        List<?> list = createGetADsUsedQueryObject( eeId, session ).list();
+        List<?> list = CommonQueries.createGetADsUsedQueryObject( eeId, session ).list();
         Collection<ArrayDesignValueObject> vos = new LinkedList<>();
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
             vos.add( new ArrayDesignValueObject( ad ) );
@@ -195,28 +195,6 @@ public class CommonQueries {
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         return queryObject.list();
-    }
-
-    /**
-     * Given gene ids, get map of probes to genes for each probe --- starting from genes. The values will only contain
-     * genes that were given, and is not filled in with other genes the probes may detect.
-     */
-    public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Session session ) {
-
-        Map<Long, Collection<Long>> cs2genes = new HashMap<>();
-
-        String queryString = "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds)";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", LongType.INSTANCE );
-        queryObject.addScalar( "geneId", LongType.INSTANCE );
-
-        queryObject.setParameterList( "geneIds", genes );
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        addGeneIds( cs2genes, results );
-        results.close();
-
-        return cs2genes;
-
     }
 
     private static Query createGetADsUsedQueryObject( Long eeId, Session session ) {
@@ -261,7 +239,7 @@ public class CommonQueries {
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        addGeneIds( cs2genes, results );
+        CommonQueries.addGeneIds( cs2genes, results );
         results.close();
 
         return cs2genes;
@@ -287,10 +265,10 @@ public class CommonQueries {
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        addGenes( cs2gene, results );
+        CommonQueries.addGenes( cs2gene, results );
         results.close();
         if ( timer.getTime() > 200 ) {
-            log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
+            CommonQueries.log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
         }
         return cs2gene;
 
@@ -316,10 +294,10 @@ public class CommonQueries {
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        addGenes( cs2gene, results );
+        CommonQueries.addGenes( cs2gene, results );
         results.close();
         if ( timer.getTime() > 200 ) {
-            log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
+            CommonQueries.log.info( "Get cs2gene for " + genes.size() + " :" + timer.getTime() + "ms" );
         }
         return cs2gene;
     }
@@ -333,26 +311,6 @@ public class CommonQueries {
             }
             cs2gene.get( cs ).add( g );
         }
-    }
-
-    /**
-     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
-     *
-     * @param type Class
-     * @return A List of class names, including the given type.
-     */
-    public static List<String> getEventTypeClassHierarchy( Class<? extends AuditEventType> type, Session session ) {
-        List<String> classes = new ArrayList<>();
-        classes.add( type.getCanonicalName() );
-
-        // how to determine subclasses? There is no way to do this but the hibernate way.
-        SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) session.getSessionFactory()
-                .getClassMetadata( type );
-        if ( classMetadata == null )
-            return classes;
-
-        addSubclasses( classes, classMetadata );
-        return classes;
     }
 
     public static void addSubclasses( List<String> classes, SingleTableEntityPersister classMetadata ) {
@@ -386,25 +344,7 @@ public class CommonQueries {
         queryObject.setFlushMode( FlushMode.MANUAL );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        addGeneIds( cs2genes, results );
-        results.close();
-
-        return cs2genes;
-    }
-
-    /**
-     * Given gene ids, return map of of gene id -&gt; probes for that gene.
-     */
-    public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
-        Map<Long, Collection<Long>> cs2genes = new HashMap<>();
-
-        String queryString = "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds)";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", LongType.INSTANCE );
-        queryObject.addScalar( "geneId", LongType.INSTANCE );
-        queryObject.setParameterList( "geneIds", genes, LongType.INSTANCE );
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        addGeneIds( cs2genes, results );
+        CommonQueries.addGeneIds( cs2genes, results );
         results.close();
 
         return cs2genes;

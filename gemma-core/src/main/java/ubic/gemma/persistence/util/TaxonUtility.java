@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@ import ubic.gemma.model.genome.Taxon;
  *
  * @author klc
  */
+@SuppressWarnings("SimplifiableIfStatement") // Better readability
 public class TaxonUtility {
 
     public static boolean isHuman( Taxon tax ) {
@@ -34,10 +35,8 @@ public class TaxonUtility {
             return true;
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "homo sapiens" ) ) )
             return true;
-        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "human" ) ) )
-            return true;
+        return ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "human" ) );
 
-        return false;
     }
 
     public static boolean isMouse( Taxon tax ) {
@@ -47,10 +46,8 @@ public class TaxonUtility {
             return true;
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName().equalsIgnoreCase( "mus musculus" ) ) )
             return true;
-        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "mouse" ) ) )
-            return true;
+        return ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "mouse" ) );
 
-        return false;
     }
 
     public static boolean isRat( Taxon tax ) {
@@ -61,10 +58,7 @@ public class TaxonUtility {
         if ( ( tax.getScientificName() != null ) && ( tax.getScientificName()
                 .equalsIgnoreCase( "Rattus norvegicus" ) ) )
             return true;
-        if ( ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "rat" ) ) )
-            return true;
-
-        return false;
+        return ( tax.getCommonName() != null ) && ( tax.getCommonName().equalsIgnoreCase( "rat" ) );
 
     }
 

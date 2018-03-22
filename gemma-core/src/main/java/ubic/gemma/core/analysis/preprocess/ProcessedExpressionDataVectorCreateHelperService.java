@@ -14,7 +14,6 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -29,14 +28,6 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
             Collection<ProcessedExpressionDataVector> vecs );
 
     ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee );
-
-    /**
-     * @param ee               the experiment
-     * @param processedVectors the processed vectors
-     * @return intensities See {@link ExpressionDataMatrixBuilder#getIntensity()}
-     */
-    ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> processedVectors );
 
     void reorderByDesign( Long eeId );
 

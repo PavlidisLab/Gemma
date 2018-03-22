@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,8 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -37,7 +38,7 @@ import java.util.List;
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  */
 @Repository
-public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, ExperimentalFactorValueObject>
+public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<ExperimentalFactor, ExperimentalFactorValueObject>
         implements ExperimentalFactorDao {
 
     @Autowired
@@ -50,6 +51,47 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
         return ( ExperimentalFactor ) this.getSessionFactory().getCurrentSession().createQuery(
                 "select ef from ExperimentalFactor ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
                 .setParameter( "id", id ).uniqueResult();
+    }
+
+    @Override
+    public void remove( ExperimentalFactor experimentalFactor ) {
+        Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
+        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
+                .load( ExperimentalDesign.class, experimentalDesignId );
+
+        //language=HQL
+        final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
+        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
+
+        if ( results.size() == 0 ) {
+            throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
+        }
+
+        ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+
+            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<>();
+            for ( FactorValue factorValue : bm.getFactorValues() ) {
+                if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
+                    factorValuesToRemoveFromBioMaterial.add( factorValue );
+                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
+                }
+            }
+
+            // if there are factor values to remove
+            if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
+                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
+                // this.getSessionFactory().getCurrentSession().update( bm ); // needed? see bug 4341
+            }
+        }
+
+        // ed.getExperimentalFactors().remove( experimentalFactor );
+        // remove the experimental factor this cascades to values.
+
+        // this.getExperimentalDesignDao().update( ed );
+        this.getHibernateTemplate().delete( experimentalFactor );
     }
 
     @Override
@@ -83,48 +125,13 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
             assert existing.getId() != null;
             return existing;
         }
-        log.debug( "Creating new arrayDesign: " + experimentalFactor.getName() );
-        return create( experimentalFactor );
+        AbstractDao.log.debug( "Creating new arrayDesign: " + experimentalFactor.getName() );
+        return this.create( experimentalFactor );
     }
 
     @Override
-    public void remove( ExperimentalFactor experimentalFactor ) {
-        Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
-        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
-                .load( ExperimentalDesign.class, experimentalDesignId );
-
-        final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
-        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
-
-        if ( results.size() == 0 ) {
-            throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
-        }
-
-        ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
-
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-
-            Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<>();
-            for ( FactorValue factorValue : bm.getFactorValues() ) {
-                if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
-                    factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
-                }
-            }
-
-            // if there are factor values to remove
-            if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                // this.getSessionFactory().getCurrentSession().update( bm ); // needed? see bug 4341
-            }
-        }
-
-        // ed.getExperimentalFactors().remove( experimentalFactor );
-        // delete the experimental factor this cascades to values.
-
-        // this.getExperimentalDesignDao().update( ed );
-        this.getHibernateTemplate().delete( experimentalFactor );
+    public ExperimentalFactorValueObject loadValueObject( ExperimentalFactor e ) {
+        return new ExperimentalFactorValueObject( e );
     }
 
     @Override
@@ -134,11 +141,6 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
             vos.add( new ExperimentalFactorValueObject( fv ) );
         }
         return vos;
-    }
-
-    @Override
-    public ExperimentalFactorValueObject loadValueObject( ExperimentalFactor e ) {
-        return new ExperimentalFactorValueObject( e );
     }
 
 }

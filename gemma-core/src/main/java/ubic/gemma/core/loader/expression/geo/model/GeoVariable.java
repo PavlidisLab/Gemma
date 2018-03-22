@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,14 +33,15 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public class GeoVariable {
 
-    VariableType type;
-    String description = "";
+    private VariableType type;
+    private String description = "";
     /**
      * The samples to which this variable applies.
      */
-    Collection<GeoSample> samples;
+    private Collection<GeoSample> samples;
 
     /**
      * Convert a string e.g., "age" to the corresponding enumerated type.
@@ -103,34 +104,8 @@ public class GeoVariable {
 
     }
 
-    public void addToDescription( String d ) {
-        this.description += d;
-    }
-
     public void addToVariableSampleList( GeoSample sample ) {
         this.samples.add( sample );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        final GeoVariable other = ( GeoVariable ) obj;
-        if ( description == null ) {
-            if ( other.description != null )
-                return false;
-        } else if ( !description.equals( other.description ) )
-            return false;
-        if ( type == null ) {
-            if ( other.type != null )
-                return false;
-        } else if ( !type.equals( other.type ) )
-            return false;
-        return true;
     }
 
     /**
@@ -182,6 +157,26 @@ public class GeoVariable {
         result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
         result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        final GeoVariable other = ( GeoVariable ) obj;
+        if ( description == null ) {
+            if ( other.description != null )
+                return false;
+        } else if ( !description.equals( other.description ) )
+            return false;
+        if ( type == null ) {
+            return other.type == null;
+        } else
+            return type.equals( other.type );
     }
 
     @Override

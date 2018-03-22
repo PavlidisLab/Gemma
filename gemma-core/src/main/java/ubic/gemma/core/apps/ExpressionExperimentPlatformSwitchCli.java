@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,13 +21,14 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**
  * Switch the array design used to the merged one.
@@ -44,13 +45,36 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         ExpressionExperimentPlatformSwitchCli p = new ExpressionExperimentPlatformSwitchCli();
         Exception e = p.doWork( args );
         if ( e != null ) {
-            log.fatal( e, e );
+            AbstractCLI.log.fatal( e, e );
         }
     }
 
     @Override
     public String getCommandName() {
         return "switchExperimentPlatform";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+
+        Exception exp = this.processCommandLine( args );
+        if ( exp != null ) {
+            return exp;
+        }
+
+        serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
+
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( ee instanceof ExpressionExperiment ) {
+                this.processExperiment( ( ExpressionExperiment ) ee );
+            } else {
+                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+            }
+
+        }
+        this.summarizeProcessing();
+        return null;
+
     }
 
     @Override
@@ -66,31 +90,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
                 .withLongOpt( "array" ).create( 'a' );
 
-        addOption( arrayDesignOption );
+        this.addOption( arrayDesignOption );
         this.addForceOption();
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception exp = processCommandLine( args );
-        if ( exp != null ) {
-            return exp;
-        }
-
-        serv = this.getBean( ExpressionExperimentPlatformSwitchService.class );
-
-        for ( BioAssaySet ee : expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                processExperiment( ( ExpressionExperiment ) ee );
-            } else {
-                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-            }
-
-        }
-        summarizeProcessing();
-        return null;
-
     }
 
     @Override
@@ -110,10 +111,10 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             AuditTrailService ats = this.getBean( AuditTrailService.class );
             AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             if ( this.arrayDesignName != null ) {
-                ArrayDesign ad = locateArrayDesign( this.arrayDesignName, arrayDesignService );
+                ArrayDesign ad = this.locateArrayDesign( this.arrayDesignName, arrayDesignService );
                 if ( ad == null ) {
-                    log.error( "Unknown array design" );
-                    bail( ErrorCode.INVALID_OPTION );
+                    AbstractCLI.log.error( "Unknown array design" );
+                    this.bail( ErrorCode.INVALID_OPTION );
                 }
                 ad = arrayDesignService.thaw( ad );
                 ee = serv.switchExperimentToArrayDesign( ee, ad );
@@ -128,7 +129,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
             super.successObjects.add( ee.toString() );
         } catch ( Exception e ) {
-            log.error( e, e );
+            AbstractCLI.log.error( e, e );
             super.errorObjects.add( ee + ": " + e.getMessage() );
         }
     }

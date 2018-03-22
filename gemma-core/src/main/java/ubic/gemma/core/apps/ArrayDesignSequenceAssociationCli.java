@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -51,12 +53,103 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     public static void main( String[] args ) {
         ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
-        tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
     }
 
     @Override
     public String getCommandName() {
         return "addPlatformSequences";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        try {
+            Exception err = this.processCommandLine( args );
+            if ( err != null )
+                return err;
+
+            // this is kind of an oddball function of this tool.
+            if ( this.hasOption( 's' ) ) {
+                BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
+                        new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
+                if ( updated != null ) {
+                    AbstractCLI.log.info( "Updated or created " + updated );
+                }
+                return null;
+            }
+
+            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+
+                arrayDesign = this.thaw( arrayDesign );
+
+                SequenceType sequenceTypeEn = SequenceType.fromString( sequenceType );
+
+                if ( sequenceTypeEn == null ) {
+                    AbstractCLI.log.error( "No sequenceType " + sequenceType + " found" );
+                    this.bail( ErrorCode.INVALID_OPTION );
+                }
+
+                if ( this.hasOption( 'f' ) ) {
+                    try (InputStream sequenceFileIs = FileTools
+                            .getInputStreamFromPlainOrCompressedFile( sequenceFile )) {
+
+                        if ( sequenceFileIs == null ) {
+                            AbstractCLI.log.error( "No file " + sequenceFile + " was readable" );
+                            this.bail( ErrorCode.INVALID_OPTION );
+                            return null;
+                        }
+
+                        Taxon taxon = null;
+                        if ( this.hasOption( 't' ) ) {
+                            taxon = taxonService.findByCommonName( this.taxonName );
+                            if ( taxon == null ) {
+                                throw new IllegalArgumentException( "No taxon named " + taxonName );
+                            }
+                        }
+
+                        AbstractCLI.log.info( "Processing ArrayDesign..." );
+
+                        arrayDesignSequenceProcessingService
+                                .processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn, taxon );
+
+                        this.audit( arrayDesign, "Sequences read from file: " + sequenceFile );
+                    }
+                } else if ( this.hasOption( 'i' ) ) {
+                    try (InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile )) {
+
+                        if ( idFileIs == null ) {
+                            AbstractCLI.log.error( "No file " + idFile + " was readable" );
+                            this.bail( ErrorCode.INVALID_OPTION );
+                        }
+
+                        Taxon taxon = null;
+                        if ( this.hasOption( 't' ) ) {
+                            taxon = taxonService.findByCommonName( this.taxonName );
+                            if ( taxon == null ) {
+                                throw new IllegalArgumentException( "No taxon named " + taxonName );
+                            }
+                        }
+
+                        AbstractCLI.log.info( "Processing ArrayDesign..." );
+
+                        arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs,
+                                new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
+
+                        this.audit( arrayDesign, "Sequences identifiers from file: " + idFile );
+                    }
+                } else {
+                    AbstractCLI.log.info( "Retrieving sequences from BLAST databases" );
+                    arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
+                            new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
+                    this.audit( arrayDesign, "Sequence looked up from BLAST databases" );
+                }
+            }
+
+        } catch ( Exception e ) {
+            AbstractCLI.log.error( e, e );
+            return e;
+        }
+        return null;
     }
 
     @Override
@@ -72,13 +165,13 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         Option fileOption = OptionBuilder.hasArg().withArgName( "Input sequence file" )
                 .withDescription( "Path to file (FASTA)" ).withLongOpt( "file" ).create( 'f' );
 
-        addOption( fileOption );
+        this.addOption( fileOption );
 
         Option sequenceIdentifierOption = OptionBuilder.hasArg().withArgName( "Input identifier file" )
                 .withDescription( "Path to file (two columns with probe ids and sequence accessions)" )
                 .withLongOpt( "ids" ).create( 'i' );
 
-        addOption( sequenceIdentifierOption );
+        this.addOption( sequenceIdentifierOption );
 
         StringBuilder buf = new StringBuilder();
 
@@ -92,116 +185,25 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         Option sequenceTypeOption = OptionBuilder.hasArg().isRequired().withArgName( "Sequence type" )
                 .withDescription( seqtypes ).withLongOpt( "type" ).create( 'y' );
 
-        addOption( sequenceTypeOption );
+        this.addOption( sequenceTypeOption );
 
-        addOption( OptionBuilder.hasArg().withArgName( "accession" ).withDescription( "A single accession to update" )
-                .withLongOpt( "sequence" ).create( 's' ) );
+        this.addOption(
+                OptionBuilder.hasArg().withArgName( "accession" ).withDescription( "A single accession to update" )
+                        .withLongOpt( "sequence" ).create( 's' ) );
 
         Option forceOption = OptionBuilder.withArgName( "Force overwriting of existing sequences" )
                 .withLongOpt( "force" ).withDescription(
                         "If biosequences are encountered that already have sequences filled in, "
                                 + "they will be overwritten; default is to leave them." ).create( "force" );
 
-        addOption( forceOption );
+        this.addOption( forceOption );
 
         Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
                 "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
                 .create( 't' );
 
-        addOption( taxonOption );
+        this.addOption( taxonOption );
 
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-        try {
-            Exception err = processCommandLine( args );
-            if ( err != null )
-                return err;
-
-            // this is kind of an oddball function of this tool.
-            if ( this.hasOption( 's' ) ) {
-                BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
-                        new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
-                if ( updated != null ) {
-                    log.info( "Updated or created " + updated );
-                }
-                return null;
-            }
-
-            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
-
-                arrayDesign = unlazifyArrayDesign( arrayDesign );
-
-                SequenceType sequenceTypeEn = SequenceType.fromString( sequenceType );
-
-                if ( sequenceTypeEn == null ) {
-                    log.error( "No sequenceType " + sequenceType + " found" );
-                    bail( ErrorCode.INVALID_OPTION );
-                }
-
-                if ( this.hasOption( 'f' ) ) {
-                    try (InputStream sequenceFileIs = FileTools
-                            .getInputStreamFromPlainOrCompressedFile( sequenceFile )) {
-
-                        if ( sequenceFileIs == null ) {
-                            log.error( "No file " + sequenceFile + " was readable" );
-                            bail( ErrorCode.INVALID_OPTION );
-                            return null;
-                        }
-
-                        Taxon taxon = null;
-                        if ( this.hasOption( 't' ) ) {
-                            taxon = taxonService.findByCommonName( this.taxonName );
-                            if ( taxon == null ) {
-                                throw new IllegalArgumentException( "No taxon named " + taxonName );
-                            }
-                        }
-
-                        log.info( "Processing ArrayDesign..." );
-
-                        arrayDesignSequenceProcessingService
-                                .processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn, taxon );
-
-                        audit( arrayDesign, "Sequences read from file: " + sequenceFile );
-                    }
-                } else if ( this.hasOption( 'i' ) ) {
-                    try (InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile )) {
-
-                        if ( idFileIs == null ) {
-                            log.error( "No file " + idFile + " was readable" );
-                            bail( ErrorCode.INVALID_OPTION );
-                        }
-
-                        Taxon taxon = null;
-                        if ( this.hasOption( 't' ) ) {
-                            taxon = taxonService.findByCommonName( this.taxonName );
-                            if ( taxon == null ) {
-                                throw new IllegalArgumentException( "No taxon named " + taxonName );
-                            }
-                        }
-
-                        log.info( "Processing ArrayDesign..." );
-
-                        arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs,
-                                new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
-
-                        audit( arrayDesign, "Sequences identifiers from file: " + idFile );
-                    }
-                } else {
-                    log.info( "Retrieving sequences from BLAST databases" );
-                    // FIXME - put in correctdatabases to search. Don't always want to do mouse, human etc.
-                    arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
-                            new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
-                    audit( arrayDesign, "Sequence looked up from BLAST databases" );
-                }
-            }
-
-        } catch ( Exception e ) {
-            log.error( e, e );
-            return e;
-        }
-        return null;
     }
 
     @Override

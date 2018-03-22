@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 
 import java.util.Collection;
@@ -39,11 +40,17 @@ import java.util.Set;
  * @see ArrayDesignService
  */
 @Service
-public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
+public class ArrayDesignServiceImpl extends AbstractVoEnabledService<ArrayDesign, ArrayDesignValueObject>
+        implements ArrayDesignService {
+
+    private final ArrayDesignDao arrayDesignDao;
+    private final AuditEventDao auditEventDao;
 
     @Autowired
     public ArrayDesignServiceImpl( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
-        super( arrayDesignDao, auditEventDao );
+        super( arrayDesignDao );
+        this.arrayDesignDao = arrayDesignDao;
+        this.auditEventDao = auditEventDao;
     }
 
     @Override
@@ -53,9 +60,52 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
+    public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.compositeSequenceWithoutBioSequences( arrayDesign );
+    }
+
+    @Override
+    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.compositeSequenceWithoutBlatResults( arrayDesign );
+    }
+
+    @Override
+    public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.compositeSequenceWithoutGenes( arrayDesign );
+    }
+
+    @Override
+    public void deleteAlignmentData( ArrayDesign arrayDesign ) {
+        this.arrayDesignDao.deleteAlignmentData( arrayDesign );
+    }
+
+    @Override
+    public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
+        this.arrayDesignDao.deleteGeneProductAssociations( arrayDesign );
+    }
+
+    @Override
+    public Collection<ArrayDesign> findByAlternateName( String queryString ) {
+        return this.arrayDesignDao.findByAlternateName( queryString );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByManufacturer( String searchString ) {
         return this.arrayDesignDao.findByManufacturer( searchString );
+    }
+
+    /**
+     * @see ArrayDesignService#findByName(java.lang.String)
+     */
+    @Override
+    public Collection<ArrayDesign> findByName( String name ) {
+        return this.arrayDesignDao.findByName( name );
+    }
+
+    @Override
+    public ArrayDesign findByShortName( String shortName ) {
+        return this.arrayDesignDao.findByShortName( shortName );
     }
 
     @Override
@@ -71,9 +121,92 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( java.lang.Long id ) {
+        return this.arrayDesignDao.getAllAssociatedBioAssays( id );
+
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.getBioSequences( arrayDesign );
+    }
+
+    @Override
+    public Long getCompositeSequenceCount( ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null )
+            throw new IllegalArgumentException( "Array design cannot be null" );
+        return this.arrayDesignDao.numCompositeSequences( arrayDesign.getId() );
+    }
+
+    @Override
+    public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId(), -1, 0 );
+    }
+
+    @Override
+    public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
+        return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId(), limit, offset );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getExpressionExperiments( arrayDesign );
+    }
+
+    @Override
+    public Map<Long, AuditEvent> getLastAnnotationFile( Collection<Long> ids ) {
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
+
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        // remove all AuditEvents that are not AnnotationFile events
+        Set<Long> aaIds = eventMap.keySet();
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignAnnotationFileEvent.class;
+        this.getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
+    }
+
+    @Override
+    public Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids ) {
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        Set<Long> aaIds = eventMap.keySet();
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignGeneMappingEvent.class;
+        this.getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
+    }
+
+    @Override
+    public Map<Long, AuditEvent> getLastRepeatAnalysis( Collection<Long> ids ) {
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        // remove all AuditEvents that are not SequenceAnalysis events
+        Set<Long> aaIds = eventMap.keySet();
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignRepeatAnalysisEvent.class;
+        this.getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
+    }
+
+    @Override
+    public Map<Long, AuditEvent> getLastSequenceAnalysis( Collection<Long> ids ) {
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        // remove all AuditEvents that are not SequenceAnalysis events
+        Set<Long> aaIds = eventMap.keySet();
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceAnalysisEvent.class;
+        this.getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
+    }
+
+    @Override
+    public Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids ) {
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        // remove all AuditEvents that are not Sequence update events
+        Set<Long> aaIds = eventMap.keySet();
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceUpdateEvent.class;
+        this.getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
     }
 
     @Override
@@ -83,9 +216,126 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
+    public Collection<Taxon> getTaxa( java.lang.Long id ) {
+        return this.arrayDesignDao.getTaxa( id );
+    }
+
+    @Override
+    public Taxon getTaxon( java.lang.Long id ) {
+        return this.arrayDesignDao.load( id ).getPrimaryTaxon();
+    }
+
+    @Override
+    public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
+        return this.arrayDesignDao.isMerged( ids );
+    }
+
+    @Override
+    public Map<Long, Boolean> isMergee( Collection<Long> ids ) {
+        return this.arrayDesignDao.isMergee( ids );
+    }
+
+    @Override
+    public Map<Long, Boolean> isSubsumed( Collection<Long> ids ) {
+        return this.arrayDesignDao.isSubsumed( ids );
+    }
+
+    @Override
+    public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
+        return this.arrayDesignDao.isSubsumer( ids );
+    }
+
+    @Override
+    public Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
+        return this.arrayDesignDao.loadValueObjectsForEE( eeId );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
         return this.arrayDesignDao.loadValueObjectsByIds( ids );
+    }
+
+    @Override
+    public long numAllCompositeSequenceWithBioSequences() {
+        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences();
+    }
+
+    @Override
+    public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
+        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences( ids );
+    }
+
+    @Override
+    public long numAllCompositeSequenceWithBlatResults() {
+        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults();
+    }
+
+    @Override
+    public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
+        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults( ids );
+    }
+
+    @Override
+    public long numAllCompositeSequenceWithGenes() {
+        return this.arrayDesignDao.numAllCompositeSequenceWithGenes();
+    }
+
+    @Override
+    public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
+        return this.arrayDesignDao.numAllCompositeSequenceWithGenes( ids );
+    }
+
+    @Override
+    public long numAllGenes() {
+        return this.arrayDesignDao.numAllGenes();
+    }
+
+    @Override
+    public long numAllGenes( Collection<Long> ids ) {
+        return this.arrayDesignDao.numAllGenes( ids );
+    }
+
+    @Override
+    public long numBioSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numBioSequences( arrayDesign );
+    }
+
+    @Override
+    public long numBlatResults( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numBlatResults( arrayDesign );
+    }
+
+    @Override
+    public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numCompositeSequenceWithBioSequences( arrayDesign );
+    }
+
+    @Override
+    public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numCompositeSequenceWithBlatResults( arrayDesign );
+    }
+
+    @Override
+    public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numCompositeSequenceWithGenes( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int numExperiments( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numExperiments( arrayDesign );
+    }
+
+    @Override
+    public long numGenes( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numGenes( arrayDesign );
+    }
+
+    @Override
+    public void removeBiologicalCharacteristics( ArrayDesign arrayDesign ) {
+        this.arrayDesignDao.removeBiologicalCharacteristics( arrayDesign );
+
     }
 
     @Override
@@ -96,261 +346,18 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        return this.arrayDesignDao.thawLite( arrayDesigns );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.thawLite( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public int numExperiments( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numExperiments( arrayDesign );
+    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
+        return this.arrayDesignDao.thawLite( arrayDesigns );
     }
 
     @Override
-    protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBioSequences( arrayDesign );
-    }
-
-    @Override
-    protected Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutBlatResults( arrayDesign );
-    }
-
-    @Override
-    protected Collection<CompositeSequence> handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.compositeSequenceWithoutGenes( arrayDesign );
-    }
-
-    @Override
-    protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) {
-        this.arrayDesignDao.deleteAlignmentData( arrayDesign );
-    }
-
-    @Override
-    protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
-        this.arrayDesignDao.deleteGeneProductAssociations( arrayDesign );
-    }
-
-    @Override
-    protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) {
-        return this.arrayDesignDao.findByAlternateName( queryString );
-    }
-
-    /**
-     * @see ArrayDesignService#findByName(java.lang.String)
-     */
-    @Override
-    protected Collection<ArrayDesign> handleFindByName( String name ) {
-        return this.arrayDesignDao.findByName( name );
-    }
-
-    @Override
-    protected ArrayDesign handleFindByShortName( String shortName ) {
-        return this.arrayDesignDao.findByShortName( shortName );
-    }
-
-    @Override
-    protected java.util.Collection<BioAssay> handleGetAllAssociatedBioAssays( java.lang.Long id ) {
-        return this.arrayDesignDao.getAllAssociatedBioAssays( id );
-
-    }
-
-    @Override
-    protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.getExpressionExperiments( arrayDesign );
-    }
-
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastAnnotationFile( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-        // remove all AuditEvents that are not AnnotationFile events
-        Set<Long> aaIds = eventMap.keySet();
-        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignAnnotationFileEvent.class;
-        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
-        return lastEventMap;
-    }
-
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastGeneMapping( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-        Set<Long> aaIds = eventMap.keySet();
-        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignGeneMappingEvent.class;
-        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
-        return lastEventMap;
-    }
-
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastRepeatAnalysis( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-        // remove all AuditEvents that are not SequenceAnalysis events
-        Set<Long> aaIds = eventMap.keySet();
-        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignRepeatAnalysisEvent.class;
-        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
-        return lastEventMap;
-    }
-
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastSequenceAnalysis( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-        // remove all AuditEvents that are not SequenceAnalysis events
-        Set<Long> aaIds = eventMap.keySet();
-        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceAnalysisEvent.class;
-        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
-        return lastEventMap;
-    }
-
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastSequenceUpdate( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-        // remove all AuditEvents that are not Sequence update events
-        Set<Long> aaIds = eventMap.keySet();
-        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceUpdateEvent.class;
-        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
-        return lastEventMap;
-    }
-
-    @Override
-    protected Collection<Taxon> handleGetTaxa( java.lang.Long id ) {
-        return this.arrayDesignDao.getTaxa( id );
-    }
-
-    @Override
-    protected Taxon handleGetTaxon( java.lang.Long id ) {
-        return this.arrayDesignDao.load( id ).getPrimaryTaxon();
-    }
-
-    @Override
-    protected Map<Long, Boolean> handleIsMerged( Collection<Long> ids ) {
-        return this.arrayDesignDao.isMerged( ids );
-    }
-
-    @Override
-    protected Map<Long, Boolean> handleIsMergee( Collection<Long> ids ) {
-        return this.arrayDesignDao.isMergee( ids );
-    }
-
-    @Override
-    protected Map<Long, Boolean> handleIsSubsumed( Collection<Long> ids ) {
-        return this.arrayDesignDao.isSubsumed( ids );
-    }
-
-    @Override
-    protected Map<Long, Boolean> handleIsSubsumer( Collection<Long> ids ) {
-        return this.arrayDesignDao.isSubsumer( ids );
-    }
-
-    @Override
-    protected Collection<CompositeSequence> handleLoadCompositeSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId(), -1, 0 );
-    }
-
-    @Override
-    public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
-        return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId(), limit, offset );
-    }
-
-    @Override
-    protected Collection<ArrayDesignValueObject> handleLoadValueObjectsForEE( Long eeId ) {
-        return this.arrayDesignDao.loadValueObjectsForEE( eeId );
-    }
-
-    @Override
-    protected long handleNumAllCompositeSequenceWithBioSequences() {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences();
-    }
-
-    @Override
-    protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences( ids );
-    }
-
-    @Override
-    protected long handleNumAllCompositeSequenceWithBlatResults() {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults();
-    }
-
-    @Override
-    protected long handleNumAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults( ids );
-    }
-
-    @Override
-    protected long handleNumAllCompositeSequenceWithGenes() {
-        return this.arrayDesignDao.numAllCompositeSequenceWithGenes();
-    }
-
-    @Override
-    protected long handleNumAllCompositeSequenceWithGenes( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllCompositeSequenceWithGenes( ids );
-    }
-
-    @Override
-    protected long handleNumAllGenes() {
-        return this.arrayDesignDao.numAllGenes();
-    }
-
-    @Override
-    protected long handleNumAllGenes( Collection<Long> ids ) {
-        return this.arrayDesignDao.numAllGenes( ids );
-    }
-
-    @Override
-    protected long handleNumBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numBioSequences( arrayDesign );
-    }
-
-    @Override
-    protected long handleNumBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numBlatResults( arrayDesign );
-    }
-
-    @Override
-    protected long handleNumCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numCompositeSequenceWithBioSequences( arrayDesign );
-    }
-
-    @Override
-    protected long handleNumCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numCompositeSequenceWithBlatResults( arrayDesign );
-    }
-
-    @Override
-    protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numCompositeSequenceWithGenes( arrayDesign );
-    }
-
-    @Override
-    protected long handleNumGenes( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numGenes( arrayDesign );
-    }
-
-    @Override
-    protected long handleGetCompositeSequenceCount( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null )
-            throw new IllegalArgumentException( "Array design cannot be null" );
-        return this.arrayDesignDao.numCompositeSequences( arrayDesign.getId() );
-    }
-
-    @Override
-    protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) {
-        this.arrayDesignDao.removeBiologicalCharacteristics( arrayDesign );
-
-    }
-
-    @Override
-    protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
+    public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 
@@ -386,11 +393,11 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
             ArrayDesign arrayDesign = this.load( arrayDesignId );
             if ( arrayDesign.getSubsumingArrayDesign() != null ) {
                 ArrayDesign subsumedInto = arrayDesign.getSubsumingArrayDesign();
-                checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, subsumedInto );
+                this.checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, subsumedInto );
             }
             if ( arrayDesign.getMergedInto() != null ) {
                 ArrayDesign mergedInto = arrayDesign.getMergedInto();
-                checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, mergedInto );
+                this.checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, mergedInto );
             }
 
         }

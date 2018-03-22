@@ -1,5 +1,5 @@
 /* Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,25 +33,24 @@ public class ProgressData implements Serializable {
     private String taskId;
     private boolean failed = false;
 
-    // dwr doesn't work right without blank constructor
+    @SuppressWarnings("WeakerAccess") // dwr doesn't work right without blank constructor
     public ProgressData() {
-
     }
 
-    public ProgressData( String taskId, int per, String descrip ) {
-        this( taskId, per, descrip, false );
+    public ProgressData( String taskId, int per, String description ) {
+        this( taskId, per, description, false );
     }
 
     /**
-     * @param per      int value of percent
-     * @param descrip  string a description of the progress
-     * @param finished finished
-     * @param taskId   task id
+     * @param per         int value of percent
+     * @param description string a description of the progress
+     * @param finished    finished
+     * @param taskId      task id
      */
-    public ProgressData( String taskId, int per, String descrip, boolean finished ) {
+    public ProgressData( String taskId, int per, String description, boolean finished ) {
         percent = per;
         this.taskId = taskId;
-        description = descrip;
+        this.description = description;
         done = finished;
     }
 

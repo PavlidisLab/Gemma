@@ -53,7 +53,7 @@ public class ExpressionExperimentFilter {
 
     private static final Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
     private final FilterConfig config;
-    private Collection<ArrayDesign> arrayDesignsUsed;
+    private final Collection<ArrayDesign> arrayDesignsUsed;
 
     /**
      * @param config           configuration used for all filtering. This must be defined at construction and cannot be changed
@@ -65,6 +65,7 @@ public class ExpressionExperimentFilter {
         this.config = config;
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public static ExpressionDataDoubleMatrix doNothingFilter( ExpressionDataDoubleMatrix matrix ) {
         return new ExpressionDataDoubleMatrix( matrix, matrix.getRowNames() );
     }
@@ -76,6 +77,7 @@ public class ExpressionExperimentFilter {
      * @param matrix   the data matrix
      * @return filtered matrix
      */
+    @SuppressWarnings("unused") // Possible external use
     public static ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix, int quantile ) {
         if ( quantile <= 0 || quantile >= 100 ) {
             throw new IllegalArgumentException( "quantile must be between 1 and 100" );
@@ -147,8 +149,8 @@ public class ExpressionExperimentFilter {
      */
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
-        transform( eeDoubleMatrix );
-        return filter( eeDoubleMatrix );
+        this.transform( eeDoubleMatrix );
+        return this.filter( eeDoubleMatrix );
     }
 
     /**
@@ -178,13 +180,13 @@ public class ExpressionExperimentFilter {
         config.setStartingRows( startingRows );
 
         if ( config.isRequireSequences() ) {
-            filteredMatrix = noSequencesFilter( eeDoubleMatrix );
+            filteredMatrix = this.noSequencesFilter( eeDoubleMatrix );
             if ( filteredMatrix.rows() == 0 ) {
                 // This can happen if the array design is not populated. To avoid problems with useless failures, just
                 // skip this step.
 
-                log.warn(
-                        "There were no sequences for the platform(s), but allowing filtering to go forward anyway despite config settings." );
+                ExpressionExperimentFilter.log
+                        .warn( "There were no sequences for the platform(s), but allowing filtering to go forward anyway despite config settings." );
                 filteredMatrix = eeDoubleMatrix;
                 // throw new IllegalStateException( "No rows left after removing elements without sequences" );
             }
@@ -196,19 +198,18 @@ public class ExpressionExperimentFilter {
         int afterMinPresentFilter = afterSequenceRemovalRows;
         int afterLowVarianceCut = afterSequenceRemovalRows;
         int afterLowExpressionCut = afterSequenceRemovalRows;
-        int afterZeroVarianceCut = afterSequenceRemovalRows;
-        int afterDistinctValueCut = afterSequenceRemovalRows;
+        int afterZeroVarianceCut;
 
-        if ( usesAffymetrix() ) {
-            log.debug( "Filtering Affymetrix controls" );
-            filteredMatrix = affyControlProbeFilter( filteredMatrix );
+        if ( this.usesAffymetrix() ) {
+            ExpressionExperimentFilter.log.debug( "Filtering Affymetrix controls" );
+            filteredMatrix = this.affyControlProbeFilter( filteredMatrix );
             afterAffyControlsFilter = filteredMatrix.rows();
         }
         config.setAfterInitialFilter( afterAffyControlsFilter );
 
         if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() ) {
-            log.debug( "Filtering for missing data" );
-            filteredMatrix = minPresentFilter( filteredMatrix );
+            ExpressionExperimentFilter.log.debug( "Filtering for missing data" );
+            filteredMatrix = this.minPresentFilter( filteredMatrix );
             afterMinPresentFilter = filteredMatrix.rows();
             config.setAfterMinPresentFilter( afterMinPresentFilter );
 
@@ -220,32 +221,21 @@ public class ExpressionExperimentFilter {
         /*
          * Always remove rows that have a variance of zero.
          */
-        log.debug( "Filtering rows with zero variance" );
-        filteredMatrix = zeroVarianceFilter( filteredMatrix );
+        ExpressionExperimentFilter.log.debug( "Filtering rows with zero variance" );
+        filteredMatrix = ExpressionExperimentFilter.zeroVarianceFilter( filteredMatrix );
         afterZeroVarianceCut = filteredMatrix.rows();
         config.setAfterZeroVarianceCut( afterZeroVarianceCut );
         if ( filteredMatrix.rows() == 0 ) {
             throw new IllegalStateException( "No rows left after filtering rows with zero variance" );
         }
 
-        if ( config.isDistinctValueThresholdSet() ) {
-            log.debug( "Filtering rows that have too few distinct values" );
-            filteredMatrix = lowDistinctValueFilter( filteredMatrix );
-            afterDistinctValueCut = filteredMatrix.rows();
-            config.setAfterDistinctValueCut( afterDistinctValueCut );
-
-            if ( filteredMatrix.rows() == 0 ) {
-                throw new IllegalStateException( "No rows left after distinct value filtering" );
-            }
-        }
-
         /*
          * Filtering lowly expressed genes.
          */
         if ( config.isLowExpressionCutIsSet() ) {
-            log.debug( "Filtering for low or too high expression" );
+            ExpressionExperimentFilter.log.debug( "Filtering for low or too high expression" );
             Map<CompositeSequence, Double> ranks = eeDoubleMatrix.getRanks();
-            filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
+            filteredMatrix = this.lowExpressionFilter( filteredMatrix, ranks );
             afterLowExpressionCut = filteredMatrix.rows();
             config.setAfterLowExpressionCut( afterLowExpressionCut );
 
@@ -265,8 +255,8 @@ public class ExpressionExperimentFilter {
          * BMC Bioinformatics 2009 10:11 (http://www.ncbi.nlm.nih.gov/pubmed/19133141)
          */
         if ( config.isLowVarianceCutIsSet() ) {
-            log.debug( "Filtering for low variance " );
-            filteredMatrix = lowVarianceFilter( filteredMatrix );
+            ExpressionExperimentFilter.log.debug( "Filtering for low variance " );
+            filteredMatrix = this.lowVarianceFilter( filteredMatrix );
             afterLowVarianceCut = filteredMatrix.rows();
             config.setAfterLowVarianceCut( afterLowVarianceCut );
 
@@ -275,7 +265,7 @@ public class ExpressionExperimentFilter {
             }
         }
 
-        if ( log.isInfoEnabled() ) {
+        if ( ExpressionExperimentFilter.log.isInfoEnabled() ) {
             StringBuilder buf = new StringBuilder();
 
             buf.append( "Filter summary:\n" );
@@ -284,7 +274,7 @@ public class ExpressionExperimentFilter {
                     .append( " columns) " ).append( "\n" );
             if ( config.isRequireSequences() )
                 buf.append( "After Seq\t" ).append( afterSequenceRemovalRows ).append( "\n" );
-            if ( usesAffymetrix() )
+            if ( this.usesAffymetrix() )
                 buf.append( "After removing Affy controls\t" ).append( afterAffyControlsFilter ).append( "\n" );
             if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() )
                 buf.append( "After MinPresent\t" ).append( afterMinPresentFilter ).append( "\n" );
@@ -294,7 +284,7 @@ public class ExpressionExperimentFilter {
             if ( config.isLowVarianceCutIsSet() )
                 buf.append( "After LowVar\t" ).append( afterLowVarianceCut ).append( "\n" );
             buf.append( "================================================================\n" );
-            log.info( buf.toString() );
+            ExpressionExperimentFilter.log.info( buf.toString() );
         }
 
         return filteredMatrix;
@@ -327,7 +317,7 @@ public class ExpressionExperimentFilter {
             throw new IllegalStateException( "Failed to get filtered data matrix, it was null" );
 
         if ( eeDoubleMatrix.rows() == 0 ) {
-            log.info( "No rows left after filtering" );
+            ExpressionExperimentFilter.log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
         } else if ( !config.isIgnoreMinimumRowsThreshold()
                 && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
@@ -355,13 +345,13 @@ public class ExpressionExperimentFilter {
             ScaleType scale = qt.getScale();
             if ( scale.equals( ScaleType.LN ) || scale.equals( ScaleType.LOG10 ) || scale.equals( ScaleType.LOG2 )
                     || scale.equals( ScaleType.LOGBASEUNKNOWN ) ) {
-                log.info( "Quantitationtype says the data is already log transformed" );
+                ExpressionExperimentFilter.log.info( "Quantitationtype says the data is already log transformed" );
                 return true;
             }
         }
 
         if ( this.isTwoColor() ) {
-            log.info( "Data is from a two-color array, assuming it is log transformed" );
+            ExpressionExperimentFilter.log.info( "Data is from a two-color array, assuming it is log transformed" );
             return true;
         }
 
@@ -369,13 +359,13 @@ public class ExpressionExperimentFilter {
             for ( int j = 0; j < eeDoubleMatrix.columns(); j++ ) {
                 double v = eeDoubleMatrix.get( i, j );
                 if ( v > 20 ) {
-                    log.info( "Data has large values, doesn't look log transformed" );
+                    ExpressionExperimentFilter.log.info( "Data has large values, doesn't look log transformed" );
                     return false;
                 }
             }
         }
 
-        log.info( "Data looks log-transformed, but not sure...assuming it is" );
+        ExpressionExperimentFilter.log.info( "Data looks log-transformed, but not sure...assuming it is" );
         return true;
 
     }
@@ -404,16 +394,12 @@ public class ExpressionExperimentFilter {
         return answer;
     }
 
-    private ExpressionDataDoubleMatrix lowDistinctValueFilter( ExpressionDataDoubleMatrix filteredMatrix ) {
-        return tooFewDistinctValues( filteredMatrix, config.getLowDistinctValueCut() );
-    }
-
     private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix,
             Map<CompositeSequence, Double> ranks ) {
         // check for null ranks, in which case we can't use this.
         for ( Double d : ranks.values() ) {
             if ( d == null ) {
-                log.info( "Ranks are null -- skipping expression level"
+                ExpressionExperimentFilter.log.info( "Ranks are null -- skipping expression level"
                         + " filtering (This is okay if ranks cannot be computed)" );
                 return matrix;
             }
@@ -441,7 +427,7 @@ public class ExpressionExperimentFilter {
      * @return filtered matrix
      */
     private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix matrix ) {
-        log.info( "Filtering out genes that are missing too many values" );
+        ExpressionExperimentFilter.log.info( "Filtering out genes that are missing too many values" );
 
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
         rowMissingFilter.setMinPresentFraction( config.getMinPresentFraction() );
@@ -449,7 +435,7 @@ public class ExpressionExperimentFilter {
         /*
          * Always require at least 5 samples.
          */
-        rowMissingFilter.setMinPresentCount( MIN_NUMBER_OF_SAMPLES_PRESENT );
+        rowMissingFilter.setMinPresentCount( ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT );
 
         return rowMissingFilter.filter( matrix );
     }

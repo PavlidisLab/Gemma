@@ -23,7 +23,7 @@ import java.util.Collection;
 /**
  * @author anton
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class BioAssayOutlierProcessingTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 3083077516188614790L;

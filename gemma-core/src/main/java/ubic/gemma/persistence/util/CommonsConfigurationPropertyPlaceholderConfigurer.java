@@ -19,7 +19,7 @@ import java.util.Properties;
  */
 public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyPlaceholderConfigurer {
 
-    Configuration configuration;
+    private Configuration configuration;
 
     public void setConfiguration( PropertiesConfiguration configuration ) {
         this.configuration = configuration;

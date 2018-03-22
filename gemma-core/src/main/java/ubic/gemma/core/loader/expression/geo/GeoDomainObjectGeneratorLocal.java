@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,12 +23,12 @@ import ubic.gemma.core.loader.expression.geo.fetcher.LocalSeriesFetcher;
 
 /**
  * GEO object generator that works on local files. Created partly to assist in testing.
- * 
+ *
  * @author pavlidis
  */
 public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
 
-    private String fileLocation;
+    private final String fileLocation;
 
     public GeoDomainObjectGeneratorLocal( String fileLocation ) {
         this.fileLocation = fileLocation;
@@ -37,7 +37,7 @@ public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
 
     @Override
     public void initialize() {
-        log.debug( "Initializing local-source domain object generator" );
+        GeoDomainObjectGenerator.log.debug( "Initializing local-source domain object generator" );
         if ( this.fileLocation != null ) {
             datasetFetcher = new LocalDatasetFetcher( fileLocation );
             seriesFetcher = new LocalSeriesFetcher( fileLocation );

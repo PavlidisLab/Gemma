@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -32,14 +32,15 @@ import java.util.Set;
 public class ArrayDesignsForExperimentCache {
     private static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
 
-    private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
+    private final Map<String, ArrayDesign> arrayDesignCache = new HashMap<>();
 
-    private Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
+    private final Map<String, CompositeSequence> designElementCache = new HashMap<>();
 
-    private Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
+    private final Map<String, CompositeSequence> designElementSequenceCache = new HashMap<>();
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void add( ArrayDesign arrayDesign ) {
-        addToDesignElementCache( arrayDesign );
+        this.addToDesignElementCache( arrayDesign );
 
         this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
 
@@ -47,19 +48,19 @@ public class ArrayDesignsForExperimentCache {
 
     public void add( ArrayDesign arrayDesign, Map<CompositeSequence, BioSequence> sequences ) {
         for ( CompositeSequence cs : sequences.keySet() ) {
-            addToCache( cs );
+            this.addToCache( cs );
         }
         this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
     }
 
     public void add( ArrayDesign arrayDesign, Set<CompositeSequence> seqs ) {
-        addToDesignElementCache( seqs );
+        this.addToDesignElementCache( seqs );
         this.arrayDesignCache.put( arrayDesign.getShortName(), arrayDesign );
     }
 
     public void addToCache( CompositeSequence cs ) {
 
-        String key = makeKey( cs );
+        String key = this.makeKey( cs );
 
         designElementCache.put( key, cs );
 
@@ -80,7 +81,7 @@ public class ArrayDesignsForExperimentCache {
 
     public CompositeSequence getFromCache( CompositeSequence cs ) {
 
-        String key = makeKey( cs );
+        String key = this.makeKey( cs );
 
         if ( designElementCache.containsKey( key ) ) {
             return designElementCache.get( key );
@@ -106,12 +107,12 @@ public class ArrayDesignsForExperimentCache {
      */
     private void addToDesignElementCache( final ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
-        addToDesignElementCache( compositeSequences );
+        this.addToDesignElementCache( compositeSequences );
     }
 
     private void addToDesignElementCache( Collection<CompositeSequence> seqs ) {
         for ( CompositeSequence cs : seqs ) {
-            addToCache( cs );
+            this.addToCache( cs );
         }
     }
 

@@ -54,8 +54,7 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
      * @param <T>     type of the given MutableArg.
      * @return the name of the property that the values in this arrayArg refer to.
      */
-    <T extends MutableArg<?, O, VO, BaseVoEnabledService<O, VO>>> String checkPropertyNameString( T arg, String value,
-            BaseVoEnabledService<O, VO> service ) {
+    <T extends MutableArg<?, O, VO, S>> String checkPropertyNameString( T arg, String value, S service ) {
         String identifier = arg.getPropertyName( service );
         if ( Strings.isNullOrEmpty( identifier ) ) {
             throw new GemmaApiException( new WellComposedErrorBody( Response.Status.BAD_REQUEST,
@@ -66,6 +65,10 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
 
     /**
      * Combines the given filters with the properties in this array to create a final filter to be used for VO retrieval.
+     * Note that this does not check whether objects with identifiers in this array arg do actually exist. This merely creates
+     * a set of filters that should be used to impose restrictions in the database query.
+     * You can call this#getPersistentObjects which does try to retrieve the corresponding objects, and consequently
+     * does yield a 404 error if an object for any of the identifiers in this array arg does not exist.
      *
      * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
      * @param filters the filters list to add the new filter to. Can be null.
@@ -83,14 +86,20 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
         }
         ObjectFilter filter;
         try {
-            filter = new ObjectFilter( name, type, this.getValue(), ObjectFilter.in, getObjectDaoAlias() );
+            filter = new ObjectFilter( name, type, this.getValue(), ObjectFilter.in, this.getObjectDaoAlias() );
         } catch ( ParseException e ) {
-            throw convertParseException( e );
+            throw this.convertParseException( e );
         }
         filters.add( new ObjectFilter[] { filter } );
         return filters;
     }
 
+    /**
+     * Converts the given parse exception into a GemmaApiException with a well composed error body.
+     *
+     * @param e the exception to be converted.
+     * @return a properly populated GemmaApiException describing the given exception.
+     */
     GemmaApiException convertParseException( ParseException e ) {
         WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
                 FilterArg.ERROR_MSG_MALFORMED_REQUEST );
@@ -98,23 +107,31 @@ public abstract class ArrayEntityArg<O extends Identifiable, VO extends Identifi
         return new GemmaApiException( error );
     }
 
+    /**
+     * Retrieves the persistent objects for all the identifiers in this array arg.
+     * Note that if any of the values in the array do not map to an object (i.e. an object with such identifier does not exist),
+     * a 404 error will be thrown.
+     *
+     * @param service the service that will be used to retrieve the persistent objects.
+     * @return a collection of persistent objects matching the identifiers on this array arg.
+     */
     public Collection<O> getPersistentObjects( S service ) {
-        Collection<O> ees = new ArrayList<>( getValue().size() );
-        for ( String s : getValue() ) {
+        Collection<O> objects = new ArrayList<>( this.getValue().size() );
+        for ( String s : this.getValue() ) {
             try {
                 MutableArg<?, O, VO, S> arg;
-                // noinspection unchecked, JavaReflectionMemberAccess
+                // noinspection unchecked // Could not avoid using reflection, because java does not allow abstract static methods.
                 arg = ( MutableArg<?, O, VO, S> ) argClass.getMethod( "valueOf", String.class ).invoke( null, s );
-                ees.add( arg.getPersistentObject( service ) );
+                objects.add( arg.getPersistentObject( service ) );
             } catch ( IllegalAccessException | InvocationTargetException | NoSuchMethodException e ) {
-                // Could not avoid using reflection, because java does not allow abstract static methods.
                 e.printStackTrace();
             }
         }
-        return ees;
+        return objects;
     }
 
     /**
+     * @param service the service used to guess the type and name of the property that this arrayEntityArg represents.
      * @return the name of the property that the values in this array represent.
      */
     protected abstract String getPropertyName( S service );

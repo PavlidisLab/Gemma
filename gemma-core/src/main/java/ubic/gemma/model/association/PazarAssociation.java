@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 package ubic.gemma.model.association;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
@@ -26,6 +27,7 @@ import ubic.gemma.model.genome.Gene;
 /**
  * A TF - target association from Pazar (www.pazar.info)
  */
+@SuppressWarnings("unused") // Possible external use
 public abstract class PazarAssociation extends TfGeneAssociation {
     private static final long serialVersionUID = 765189108667614057L;
     final private String pazarTfId = null;
@@ -54,7 +56,7 @@ public abstract class PazarAssociation extends TfGeneAssociation {
                 FieldUtils.writeField( entity, "pazarTargetGeneId", pazarTargetGeneId, true );
 
             } catch ( IllegalAccessException e ) {
-                System.err.println( e );
+                LogFactory.getLog( PazarAssociation.class ).error( e );
             }
             return entity;
 

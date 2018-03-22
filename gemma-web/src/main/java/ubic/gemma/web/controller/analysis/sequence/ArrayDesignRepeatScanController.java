@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,17 +20,15 @@ package ubic.gemma.web.controller.analysis.sequence;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 
 /**
  * A controller to run array design repeat scan either locally or in a space.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 @Controller
 public class ArrayDesignRepeatScanController {
@@ -42,9 +40,8 @@ public class ArrayDesignRepeatScanController {
 
     /**
      * AJAX entry point.
-     *
      */
-    public String run( Long id ) throws Exception {
+    public String run( Long id ) {
         ArrayDesign ad = arrayDesignService.load( id );
 
         ad = arrayDesignService.thawLite( ad );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,88 +19,54 @@
 
 package ubic.gemma.core.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
  * @author paul
- *
  */
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
-    /**
-     * @param args
-     */
+    private static final String DESCRIPTION = "Generate analysis text files (diff expression, co-expression)";
+    private ExpressionDataFileService expressionDataFileService;
+    private boolean force_write = false;
+
     public static void main( String[] args ) {
         ExpressionExperimentDataFileGeneratorCli p = new ExpressionExperimentDataFileGeneratorCli();
         Exception e = p.doWork( args );
         if ( e != null ) {
-            log.fatal( e, e );
+            AbstractCLI.log.fatal( e, e );
         }
     }
 
-    private ExpressionDataFileService expressionDataFileService;
-
-    private String DESCRIPTION = "Generate analysis text files (diff expression, co-expression)";
-
-    private boolean force_write = false;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "generateDataFile";
     }
 
     @Override
-    public String getShortDesc() {
-        return DESCRIPTION;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-
-        Option forceWriteOption = OptionBuilder.hasArg().withArgName( "ForceWrite" )
-                .withDescription( "Overwrites exsiting files if this option is set" ).withLongOpt( "forceWrite" )
-                .create( 'w' );
-
-        addThreadsOption();
-        addOption( forceWriteOption );
-    }
-
-    @Override
     protected Exception doWork( String[] args ) {
 
-        Exception exp = processCommandLine( args );
+        Exception exp = this.processCommandLine( args );
         if ( exp != null ) {
             return exp;
         }
 
-        BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<BioAssaySet>( expressionExperiments.size() );
+        BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<>( expressionExperiments.size() );
 
         // Add the Experiments to the queue for processing
         for ( BioAssaySet ee : expressionExperiments ) {
@@ -108,7 +74,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
                 try {
                     queue.put( ee );
                 } catch ( InterruptedException ie ) {
-                    log.info( ie );
+                    AbstractCLI.log.info( ie );
                 }
             } else {
                 throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
@@ -118,10 +84,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         // Inner class for processing the experiments
         class Worker extends Thread {
-            SecurityContext context;
-            BlockingQueue<BioAssaySet> q;
+            private SecurityContext context;
+            private BlockingQueue<BioAssaySet> q;
 
-            Worker( BlockingQueue<BioAssaySet> q, SecurityContext context ) {
+            private Worker( BlockingQueue<BioAssaySet> q, SecurityContext context ) {
                 this.context = context;
                 this.q = q;
             }
@@ -136,8 +102,8 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
                     if ( ee == null ) {
                         break;
                     }
-                    log.info( "Processing Experiment: " + ee.getName() );
-                    processExperiment( ( ExpressionExperiment ) ee );
+                    AbstractCLI.log.info( "Processing Experiment: " + ee.getName() );
+                    ExpressionExperimentDataFileGeneratorCli.this.processExperiment( ( ExpressionExperiment ) ee );
 
                 }
 
@@ -146,32 +112,50 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        Collection<Thread> threads = new ArrayList<Thread>();
+        Collection<Thread> threads = new ArrayList<>();
 
         for ( int i = 1; i <= this.numThreads; i++ ) {
             Worker worker = new Worker( queue, context );
             threads.add( worker );
-            log.info( "Starting thread " + i );
+            AbstractCLI.log.info( "Starting thread " + i );
             worker.start();
         }
 
-        waitForThreadPoolCompletion( threads );
+        this.waitForThreadPoolCompletion( threads );
 
-        summarizeProcessing();
+        this.summarizeProcessing();
 
         return null;
 
     }
 
     @Override
+    public String getShortDesc() {
+        return ExpressionExperimentDataFileGeneratorCli.DESCRIPTION;
+    }
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+
+        Option forceWriteOption = OptionBuilder.hasArg().withArgName( "ForceWrite" )
+                .withDescription( "Overwrites exsiting files if this option is set" ).withLongOpt( "forceWrite" )
+                .create( 'w' );
+
+        this.addThreadsOption();
+        this.addOption( forceWriteOption );
+    }
+
+    @Override
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( THREADS_OPTION ) ) {
+        if ( this.hasOption( AbstractCLI.THREADS_OPTION ) ) {
             this.numThreads = this.getIntegerOptionValue( "threads" );
         }
 
-        if ( hasOption( 'w' ) ) {
+        if ( this.hasOption( 'w' ) ) {
             this.force_write = true;
         }
 
@@ -193,9 +177,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {
-            log.error( e, e );
-            super.errorObjects.add( "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: "
-                    + e.getMessage() );
+            AbstractCLI.log.error( e, e );
+            super.errorObjects
+                    .add( "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: " + e.getMessage() );
         }
     }
 

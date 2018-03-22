@@ -1,26 +1,26 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -88,6 +88,15 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ( ( phenotypeCategory == null ) ? 0 : phenotypeCategory.hashCode() );
+        result = prime * result + ( ( phenotypeName == null ) ? 0 : phenotypeName.hashCode() );
+        return result;
+    }
+
+    @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) {
             return true;
@@ -95,7 +104,7 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
         if ( !super.equals( obj ) ) {
             return false;
         }
-        if ( getClass() != obj.getClass() ) {
+        if ( this.getClass() != obj.getClass() ) {
             return false;
         }
         PhenotypeGroupValueObject other = ( PhenotypeGroupValueObject ) obj;
@@ -107,13 +116,9 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
             return false;
         }
         if ( phenotypeName == null ) {
-            if ( other.phenotypeName != null ) {
-                return false;
-            }
-        } else if ( !phenotypeName.equals( other.phenotypeName ) ) {
-            return false;
-        }
-        return true;
+            return other.phenotypeName == null;
+        } else
+            return phenotypeName.equals( other.phenotypeName );
     }
 
     public String getPhenotypeCategory() {
@@ -138,15 +143,6 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
 
     public void setSearchTerm( String searchTerm ) {
         this.searchTerm = searchTerm;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ( ( phenotypeCategory == null ) ? 0 : phenotypeCategory.hashCode() );
-        result = prime * result + ( ( phenotypeName == null ) ? 0 : phenotypeName.hashCode() );
-        return result;
     }
 
 }

@@ -34,14 +34,13 @@ import java.util.Set;
 
 /**
  * @author keshav
- * @deprecated Methods here can be done other ways, or added to the CompositeSequenceService if need be.
  */
-@Deprecated
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 @Component
 public class CompositeSequenceGeneMapperService {
     private final Log log = LogFactory.getLog( this.getClass() );
     @Autowired
-    GeneService geneService;
+    private GeneService geneService;
 
     /**
      * @param arrayDesigns    to look in
@@ -51,7 +50,7 @@ public class CompositeSequenceGeneMapperService {
     public LinkedHashMap<Gene, Collection<CompositeSequence>> getGene2ProbeMapByOfficialSymbols(
             Collection<String> officialSymbols, Collection<ArrayDesign> arrayDesigns ) {
 
-        LinkedHashMap<String, Collection<Gene>> genesMap = findGenesByOfficialSymbols( officialSymbols );
+        LinkedHashMap<String, Collection<Gene>> genesMap = this.findGenesByOfficialSymbols( officialSymbols );
 
         Set<String> geneOfficialSymbolKeySet = genesMap.keySet();
 
@@ -76,6 +75,13 @@ public class CompositeSequenceGeneMapperService {
     }
 
     /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    /**
      * Returns a map of gene collections, each keyed by a gene official symbol.
      *
      * @param officialSymbols official symbols
@@ -94,13 +100,6 @@ public class CompositeSequenceGeneMapperService {
         }
 
         return geneMap;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
     }
 
 }

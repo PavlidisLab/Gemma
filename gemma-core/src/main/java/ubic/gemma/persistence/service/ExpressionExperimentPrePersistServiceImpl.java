@@ -1,23 +1,18 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.persistence.service;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -26,23 +21,27 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
-import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.util.Settings;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Sets up the array designs, put the designelements in the data vectors.
- * 
- * @author paul
  *
+ * @author paul
  */
 @Component
 public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExperimentPrePersistService {
@@ -58,12 +57,10 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
-
     @Override
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee ) {
-        return prepare( ee, new ArrayDesignsForExperimentCache() );
+        return this.prepare( ee, new ArrayDesignsForExperimentCache() );
     }
-
 
     @Override
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
@@ -80,7 +77,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             /*
              * That's okay; some data sets don't come with data.
              */
-            prepareWithoutData( ee, cache );
+            this.prepareWithoutData( ee, cache );
         }
 
         for ( DesignElementDataVector dataVector : vectors ) {
@@ -91,7 +88,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
             ArrayDesign arrayDesign = probe.getArrayDesign();
             assert arrayDesign != null : probe + " does not have an array design";
 
-            arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign, cache );
+            arrayDesign = this.loadOrPersistArrayDesignAndAddToCache( arrayDesign, cache );
 
             CompositeSequence cachedProbe = cache.getFromCache( probe );
 
@@ -112,12 +109,13 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
          */
         if ( !dataVectorsThatNeedNewProbes.isEmpty() ) {
 
-            log.info( dataVectorsThatNeedNewProbes.size() + " vectors don't have probes, may add to the platform." );
+            ExpressionExperimentPrePersistServiceImpl.log.info( dataVectorsThatNeedNewProbes.size()
+                    + " vectors don't have probes, may add to the platform." );
 
-            newprobes = addNewDesignElementToPersistentArrayDesigns( newprobes );
+            newprobes = this.addNewDesignElementToPersistentArrayDesigns( newprobes );
 
             if ( newprobes.isEmpty() ) {
-                log.info( "No probes were added" );
+                ExpressionExperimentPrePersistServiceImpl.log.info( "No probes were added" );
                 // this is okay if there were none to add, but a problem otherwise.
             } else {
 
@@ -151,16 +149,18 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     private void prepareWithoutData( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             ArrayDesign arrayDesign = ba.getArrayDesignUsed();
-            arrayDesign = loadOrPersistArrayDesignAndAddToCache( arrayDesign, cache );
+            arrayDesign = this.loadOrPersistArrayDesignAndAddToCache( arrayDesign, cache );
             ba.setArrayDesignUsed( arrayDesign );
         }
     }
 
     private CompositeSequence addNewDesignElementToPersistentArrayDesign( ArrayDesign arrayDesign,
             CompositeSequence designElement ) {
-        if ( designElement == null ) return null;
+        if ( designElement == null )
+            return null;
 
-        if ( !persisterHelper.isTransient( designElement ) ) return designElement;
+        if ( !persisterHelper.isTransient( designElement ) )
+            return designElement;
 
         /*
          * No sequence, or the sequence name isn't provided. Of course, if there is no sequence it isn't going to be
@@ -174,8 +174,8 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         if ( persisterHelper.isTransient( biologicalCharacteristic ) ) {
             // transaction.
-            designElement.setBiologicalCharacteristic( ( BioSequence ) persisterHelper
-                    .persist( biologicalCharacteristic ) );
+            designElement
+                    .setBiologicalCharacteristic( ( BioSequence ) persisterHelper.persist( biologicalCharacteristic ) );
 
         }
 
@@ -208,20 +208,22 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
             Collection<CompositeSequence> probesToAdd = toAdd.get( ad );
 
-            log.info( "Adding " + probesToAdd.size() + " new probes to " + ad );
+            ExpressionExperimentPrePersistServiceImpl.log
+                    .info( "Adding " + probesToAdd.size() + " new probes to " + ad );
 
             for ( CompositeSequence cs : probesToAdd ) {
-                CompositeSequence np = addNewDesignElementToPersistentArrayDesign( ad, cs );
+                CompositeSequence np = this.addNewDesignElementToPersistentArrayDesign( ad, cs );
                 newprobes.add( np );
 
-                log.warn( "Adding new probe to existing array design " + ad.getShortName() + ": " + cs + " bioseq="
-                        + cs.getBiologicalCharacteristic() );
+                ExpressionExperimentPrePersistServiceImpl.log
+                        .warn( "Adding new probe to existing array design " + ad.getShortName() + ": " + cs + " bioseq="
+                                + cs.getBiologicalCharacteristic() );
 
             }
             result.get( ad ).addAll( newprobes );
 
             arrayDesignService.addProbes( ad, newprobes );
-            log.info( "Created " + newprobes.size() + " new probes" );
+            ExpressionExperimentPrePersistServiceImpl.log.info( "Created " + newprobes.size() + " new probes" );
 
         }
 
@@ -256,12 +258,13 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         arrayDesign = ( ArrayDesign ) persisterHelper.persist( arrayDesign );
 
         // transaction (read-only). Wasteful, if this is an existing design.
-        // arrayDesign = arrayDesignService.thaw( arrayDesign );
+        // arrayDesign = arrayDesignService.thawRawAndProcessed( arrayDesign );
         Map<CompositeSequence, BioSequence> sequences = arrayDesignService.getBioSequences( arrayDesign );
         cache.add( arrayDesign, sequences.keySet() );
 
         if ( timer.getTime() > 20000 ) {
-            log.info( "Load/persist & thaw array design: " + timer.getTime() + "ms" );
+            ExpressionExperimentPrePersistServiceImpl.log
+                    .info( "Load/persist & thawRawAndProcessed array design: " + timer.getTime() + "ms" );
         }
 
         return arrayDesign;

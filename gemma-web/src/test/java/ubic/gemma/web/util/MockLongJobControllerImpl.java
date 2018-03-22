@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,28 +18,34 @@
  */
 package ubic.gemma.web.util;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.tasks.AbstractTask;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Controller that does nothing except wait a while. Used for tests.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 @Controller
 public class MockLongJobControllerImpl implements MockLongJobController {
+
+    @Autowired
+    private TaskRunningService taskRunningService;
+
+    @Override
+    public String runJob( TaskCommand command ) {
+        return taskRunningService.submitLocalTask( new WasteOfTime( command ) );
+    }
 
     static class WasteOfTime extends AbstractTask<TaskResult, TaskCommand> {
         protected Log log = LogFactory.getLog( this.getClass().getName() );
@@ -52,7 +58,7 @@ public class MockLongJobControllerImpl implements MockLongJobController {
         public TaskResult execute() {
 
             long millis = System.currentTimeMillis();
-            while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {
+            while ( System.currentTimeMillis() - millis < MockLongJobController.JOB_LENGTH ) {
                 try {
                     Thread.sleep( 500 );
                 } catch ( InterruptedException e ) {
@@ -65,23 +71,10 @@ public class MockLongJobControllerImpl implements MockLongJobController {
 
             log.info( "Done doin sumpin'" );
 
-            Map<String, Object> model = new HashMap<String, Object>();
+            Map<String, Object> model = new HashMap<>();
             model.put( "answer", "42" );
             return new TaskResult( taskCommand, new ModelAndView( "view", model ) );
         }
-    }
-
-    @Autowired
-    private TaskRunningService taskRunningService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.util.MockLongJobController#runJob(ubic.gemma.core.job.TaskCommand)
-     */
-    @Override
-    public String runJob( TaskCommand command ) {
-        return taskRunningService.submitLocalTask( new WasteOfTime( command ) );
     }
 
 }

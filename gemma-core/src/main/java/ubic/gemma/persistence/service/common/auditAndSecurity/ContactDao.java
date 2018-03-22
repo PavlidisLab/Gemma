@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,23 +18,12 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.persistence.service.BaseDao;
-
-import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.Contact
  */
 public interface ContactDao extends BaseDao<Contact> {
-
-    Contact find( Contact contact );
-
-    Contact findByEmail( java.lang.String email );
-
-    Contact findOrCreate( Contact contact );
-
-    Collection<Investigation> getInvestigations( Contact contact );
 
 }

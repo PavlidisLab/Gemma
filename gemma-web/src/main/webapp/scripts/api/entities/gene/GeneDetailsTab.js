@@ -175,41 +175,12 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
     },
 
     /**
-     * FIXME not fully implemented.
-     *
-     */
-    renderAssociatedExperiments: function (ncbiId, count) {
-        return new Ext.Panel(
-            {
-                border: false,
-                // html : (count > 0 ? '<a href="" + ctxBasePath + "/searcher.html?query=http://purl.org/commons/record/ncbi_gene/'
-                // + ncbiId + '&scope=E">' + count + '</a>' : "No studies known to manipulate this gene"),
-                html: (count > 0 ? '<a href="' + ctxBasePath + '/searcher.html?query=http://purl.org/commons/record/ncbi_gene/'
-                    + ncbiId + '&scope=E">' + count + '</a>'
-                    : ('None; <a href="' + ctxBasePath + '/searcher.html?query=http://purl.org/commons/record/ncbi_gene/">' + 2 + ' on mouse homologue')),
-                listeners: {
-                    'afterrender': function (c) {
-                        jQuery("#studiesHelp").qtip({
-                            content: Gemma.HelpText.WidgetDefaults.GeneDetails.assocExpTT,
-                            style: {
-                                name: 'cream'
-                            }
-                        });
-                    }
-                }
-            });
-    },
-
-    /**
      * @private
      * @param geneDetails
      * @returns {Ext.Panel}
      */
     renderNodeDegree: function (geneDetails) {
 
-        /*
-         * TODO: positive and negative; Show relation of this to other genes using the relative ranks
-         */
         if (geneDetails.nodeDegreesPos && geneDetails.nodeDegreesPos.length > 1) {
             // Note: we need a panel here so we can pick up the rendering event so jquery can do its work.
             return new Ext.Panel(
@@ -224,14 +195,14 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                             /*
                              * Compute cumulative counts
                              */
-                            var cumul = new Array();
+                            var cumul = [];
                             cumul[geneDetails.nodeDegreesPos.length - 1] = 0;
                             for (var j = geneDetails.nodeDegreesPos.length - 1; j >= 0; j--) {
                                 cumul[j - 1] = geneDetails.nodeDegreesPos[j] + cumul[j];
                             }
                             cumul.pop();
 
-                            var cumulNeg = new Array();
+                            var cumulNeg = [];
                             if (geneDetails.nodeDegreesNeg.length > 0) {
                                 cumulNeg[geneDetails.nodeDegreesNeg.length - 1] = 0;
                                 for (var j = geneDetails.nodeDegreesNeg.length - 1; j >= 0; j--) {
@@ -243,8 +214,8 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                             /*
                              * Build array of arrays for plot
                              */
-                            var nd = new Array(); // support values
-                            var ndr = new Array(); // relative ranks
+                            var nd = []; // support values
+                            var ndr = []; // relative ranks
 
                             var max = -1;
                             for (var i = 0; i < cumul.length; i++) {
@@ -256,8 +227,8 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                 }
                             }
 
-                            var ndneg = new Array();
-                            var ndrneg = new Array();
+                            var ndneg = [];
+                            var ndrneg = [];
                             for (var i = 0; i < cumulNeg.length; i++) {
                                 var v = Math.log(cumulNeg[i] + 0.01) / Math.log(10.0);
                                 ndneg.push([i + 1,]);
@@ -267,9 +238,6 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                 }
                             }
 
-                            /*
-                             * TOOD: do something with the relative ranks.
-                             */
 
                             jQuery('#nodeDegreeSpark').sparkline(
                                 nd,
@@ -409,7 +377,6 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                             {
                                 fieldLabel: 'Gene Groups',
                                 html: this.renderGeneSets(geneDetails.geneSets).join(', ')
-                                // FIXME keep from being too long.
                             },
                             {
                                 fieldLabel: 'Functions'
@@ -425,13 +392,9 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                 fieldLabel: 'Phenotypes &nbsp;<i id="phenotypeHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                 items: this.renderPhenotypes(geneDetails),
                                 hidden: !(geneDetails.taxonId == 1 || geneDetails.taxonId == 2
-                                || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)
+                                    || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)
                             },
-                            // {
-                            //     fieldLabel : 'Studies' + '&nbsp;<i id="studiesHelp" class="qtp fa fa-question-circle fa-fw"></i>',
-                            //     items : this.renderAssociatedExperiments( geneDetails.ncbiId, geneDetails.associatedExperimentCount )
-                            //     // FIXME add experiments about homologues
-                            // },
+
                             {
                                 fieldLabel: 'Elements'
                                 + '&nbsp; <i id="elementsHelp" class="qtp fa fa-question-circle fa-fw"></i>',
@@ -446,7 +409,6 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                         + "onClick='Ext.getCmp(&#39;" + this.id
                                         + "&#39;).changeTab(&#39;elements&#39;)'>",
                                         listeners: {
-                                            // FIXME refactor this common code
                                             'afterrender': function (c) {
                                                 jQuery('#elementsHelp')
                                                     .qtip(
@@ -460,11 +422,6 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                         }
                                     })
                             }
-                            // ,
-                            // {
-                            // fieldLabel : 'Notes',
-                            // html : geneDetails.description
-                            // }
                         ]
                     }]);
                 this.syncSize();

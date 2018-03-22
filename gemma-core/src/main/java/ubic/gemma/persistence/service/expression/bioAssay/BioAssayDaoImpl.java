@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,12 +30,12 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -45,7 +45,7 @@ import java.util.List;
  * @author pavlidis
  */
 @Repository
-public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
+public class BioAssayDaoImpl extends AbstractVoEnabledDao<BioAssay, BioAssayValueObject> implements BioAssayDao {
 
     @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
@@ -56,9 +56,9 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
     public Collection<BioAssay> create( final Collection<BioAssay> entities ) {
         this.getSessionFactory().getCurrentSession().doWork( new Work() {
             @Override
-            public void execute( Connection connection ) throws SQLException {
+            public void execute( Connection connection ) {
                 for ( BioAssay entity : entities ) {
-                    create( entity );
+                    BioAssayDaoImpl.this.create( entity );
                 }
             }
         } );
@@ -69,9 +69,9 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
     public void update( final Collection<BioAssay> entities ) {
         this.getSessionFactory().getCurrentSession().doWork( new Work() {
             @Override
-            public void execute( Connection connection ) throws SQLException {
+            public void execute( Connection connection ) {
                 for ( BioAssay entity : entities ) {
-                    update( entity );
+                    BioAssayDaoImpl.this.update( entity );
                 }
             }
         } );
@@ -102,10 +102,23 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
     }
 
     @Override
+    public BioAssay findOrCreate( BioAssay bioAssay ) {
+        BioAssay newBioAssay = this.find( bioAssay );
+        if ( newBioAssay != null ) {
+            if ( AbstractDao.log.isDebugEnabled() )
+                AbstractDao.log.debug( "Found existing bioAssay: " + newBioAssay );
+            return newBioAssay;
+        }
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Creating new bioAssay: " + bioAssay );
+        return this.create( bioAssay );
+    }
+
+    @Override
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select bad from BioAssayDimensionImpl bad inner join bad.bioAssays as ba where :bioAssay in ba " )
+                "select bad from BioAssayDimension bad inner join bad.bioAssays as ba where :bioAssay in ba " )
                 .setParameter( "bioAssay", bioAssay ).list();
     }
 
@@ -121,16 +134,27 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
     }
 
     @Override
-    public BioAssay findOrCreate( BioAssay bioAssay ) {
-        BioAssay newBioAssay = find( bioAssay );
-        if ( newBioAssay != null ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Found existing bioAssay: " + newBioAssay );
-            return newBioAssay;
+    public void thaw( final BioAssay bioAssay ) {
+        try {
+            this.getSessionFactory().getCurrentSession().doWork( new Work() {
+                @Override
+                public void execute( Connection connection ) {
+                    BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
+                    Hibernate.initialize( bioAssay.getArrayDesignUsed() );
+                    Hibernate.initialize( bioAssay.getDerivedDataFiles() );
+                    BioMaterial bm = bioAssay.getSampleUsed();
+                    BioAssayDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
+                    Hibernate.initialize( bm );
+                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                    Hibernate.initialize( bm.getFactorValues() );
+                    BioAssayDaoImpl.this.getSession().evict( bm );
+                    BioAssayDaoImpl.this.getSession().evict( bioAssay );
+                }
+            } );
+        } catch ( Throwable th ) {
+            throw new RuntimeException(
+                    "Error performing 'BioAssayDao.thawRawAndProcessed(BioAssay bioAssay)' --> " + th, th );
         }
-        if ( log.isDebugEnabled() )
-            log.debug( "Creating new bioAssay: " + bioAssay );
-        return create( bioAssay );
     }
 
     @Override
@@ -147,32 +171,26 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
         return ( Collection<BioAssay> ) thawedBioassays;
     }
 
+    /**
+     * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
+     *
+     * @param entities the bio assays to convert into a VO
+     * @param basic    true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
+     * @return a collection of bioAssay value objects
+     */
     @Override
-    public void thaw( final BioAssay bioAssay ) {
-        try {
-            this.getSessionFactory().getCurrentSession().doWork( new Work() {
-                @Override
-                public void execute( Connection connection ) throws SQLException {
-                    getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
-                    Hibernate.initialize( bioAssay.getArrayDesignUsed() );
-                    Hibernate.initialize( bioAssay.getDerivedDataFiles() );
-                    BioMaterial bm = bioAssay.getSampleUsed();
-                    getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
-                    Hibernate.initialize( bm );
-                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                    Hibernate.initialize( bm.getFactorValues() );
-                    getSession().evict( bm );
-                    getSession().evict( bioAssay );
-                }
-            } );
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'BioAssayDao.thaw(BioAssay bioAssay)' --> " + th, th );
+    //TODO remove when FactorValueValueObject usage is phased out
+    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic ) {
+        Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
+        for ( BioAssay e : entities ) {
+            vos.add( new BioAssayValueObject( e, basic ) );
         }
+        return vos;
     }
 
     @Override
     public BioAssayValueObject loadValueObject( BioAssay entity ) {
-        return new BioAssayValueObject( entity );
+        return new BioAssayValueObject( entity, false );
     }
 
     @Override
@@ -180,34 +198,6 @@ public class BioAssayDaoImpl extends VoEnabledDao<BioAssay, BioAssayValueObject>
         Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
         for ( BioAssay e : entities ) {
             vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
-
-    /**
-     * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
-     * @param entity the bio assay to convert into a VO
-     * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
-     * @return a bioAssay value object
-     */
-    //TODO remove when FactorValueValueObject usage is phased out
-    @Override
-    public BioAssayValueObject loadValueObject( BioAssay entity, boolean basic ) {
-        return new BioAssayValueObject( entity, basic );
-    }
-
-    /**
-     * Method that allows specification of FactorValueBasicValueObject in the bioMaterialVOs
-     * @param entities the bio assays to convert into a VO
-     * @param basic true to use FactorValueBasicValueObject, false to use classic FactorValueValueObject
-     * @return a collection of bioAssay value objects
-     */
-    @Override
-    //TODO remove when FactorValueValueObject usage is phased out
-    public Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities , boolean basic) {
-        Collection<BioAssayValueObject> vos = new LinkedHashSet<>();
-        for ( BioAssay e : entities ) {
-            vos.add( this.loadValueObject( e, basic ) );
         }
         return vos;
     }

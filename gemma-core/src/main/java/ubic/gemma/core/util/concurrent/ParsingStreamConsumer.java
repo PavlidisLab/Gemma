@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,20 +18,19 @@
  */
 package ubic.gemma.core.util.concurrent;
 
+import ubic.gemma.core.loader.util.parser.Parser;
+
 import java.io.IOException;
 import java.io.InputStream;
 
-import ubic.gemma.core.loader.util.parser.Parser;
-
 /**
  * See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class ParsingStreamConsumer<T> extends Thread {
-    InputStream is;
-    Parser<T> parser;
+    private final InputStream is;
+    private final Parser<T> parser;
 
     public ParsingStreamConsumer( Parser<T> parser, InputStream is ) {
         this.is = is;

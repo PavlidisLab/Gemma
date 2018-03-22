@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,9 +24,12 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -35,14 +38,14 @@ import java.util.List;
  */
 public abstract class ExpressionExperimentVectorManipulatingService {
 
-    @Autowired
-    protected DesignElementDataVectorService designElementDataVectorService;
+    // ByteArrayConverter is stateless.
+    protected final ByteArrayConverter converter = new ByteArrayConverter();
 
     @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    // ByteArrayConverter is stateless.
-    protected ByteArrayConverter converter = new ByteArrayConverter();
+    @Autowired
+    protected RawExpressionDataVectorService rawExpressionDataVectorService;
 
     /**
      * @param data           where data will be stored, starts out empty
@@ -55,49 +58,54 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
             boolean[] convertedDat = converter.byteArrayToBooleans( rawDat );
             for ( boolean b : convertedDat ) {
-                data.add( Boolean.valueOf( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.CHAR ) ) {
             char[] convertedDat = converter.byteArrayToChars( rawDat );
             for ( char b : convertedDat ) {
-                data.add( Character.valueOf( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             double[] convertedDat = converter.byteArrayToDoubles( rawDat );
             for ( double b : convertedDat ) {
-                data.add( new Double( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.INT ) ) {
             int[] convertedDat = converter.byteArrayToInts( rawDat );
             for ( int b : convertedDat ) {
-                data.add( Integer.valueOf( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.LONG ) ) {
             long[] convertedDat = converter.byteArrayToLongs( rawDat );
             for ( long b : convertedDat ) {
-                data.add( Long.valueOf( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
             String[] convertedDat = converter.byteArrayToStrings( rawDat );
-            for ( String b : convertedDat ) {
-                data.add( b );
-            }
+            data.addAll( Arrays.asList( convertedDat ) );
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );
         }
     }
 
-    protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( ArrayDesign arrayDesign,
+    protected Collection<RawExpressionDataVector> getRawVectorsForOneQuantitationType( ArrayDesign arrayDesign,
             QuantitationType type ) {
-
-        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService
-                .find( arrayDesign, type );
-
+        Collection<RawExpressionDataVector> vectorsForQt = rawExpressionDataVectorService.find( arrayDesign, type );
         if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
             return null;
         }
+        rawExpressionDataVectorService.thaw( vectorsForQt );
+        return vectorsForQt;
+    }
 
-        designElementDataVectorService.thaw( vectorsForQt );
+    protected Collection<ProcessedExpressionDataVector> getProcessedVectorsForOneQuantitationType(
+            ArrayDesign arrayDesign, QuantitationType type ) {
+        Collection<ProcessedExpressionDataVector> vectorsForQt = processedExpressionDataVectorService
+                .find( arrayDesign, type );
+        if ( vectorsForQt == null || vectorsForQt.isEmpty() ) {
+            return null;
+        }
+        processedExpressionDataVectorService.thaw( vectorsForQt );
         return vectorsForQt;
     }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,17 +20,18 @@ package ubic.gemma.core.loader.util.fetcher;
 
 /**
  * Interface defining a class that downloads archives and unpacks them.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public interface ArchiveFetcher extends Fetcher {
 
     /**
      * Should the downloaded archive be deleted after unpacking?
-     * 
-     * @param doDelete
+     *
+     * @param doDelete whether to delete
      */
-    public void setDeleteAfterUnpack( boolean doDelete );
+    @SuppressWarnings("unused")
+    // Possible external use
+    void setDeleteAfterUnpack( boolean doDelete );
 
 }

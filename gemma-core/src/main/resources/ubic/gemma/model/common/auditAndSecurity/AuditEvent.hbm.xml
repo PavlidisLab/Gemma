@@ -4,24 +4,24 @@
 <hibernate-mapping>
     <class mutable="false"
            name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
-        <cache include="all" usage="read-write"/>
+        <cache usage="read-write"/>
         <id access="field" name="id" type="java.lang.Long">
             <column name="ID" sql-type="BIGINT"/>
             <generator class="native"/>
         </id>
-        <property access="field" generated="never" lazy="false" name="date" type="java.util.Date">
+        <property access="field" name="date" type="java.util.Date">
             <column name="DATE" not-null="true" sql-type="DATETIME"/>
         </property>
-        <property access="field" generated="never" lazy="false" name="action"
+        <property access="field" name="action"
                   type="ubic.gemma.model.common.auditAndSecurity.AuditActionEnum">
             <column name="ACTION" not-null="true"
                     sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
         </property>
-        <property access="field" generated="never" lazy="false" name="note"
+        <property access="field" name="note"
                   type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="NOTE" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
         </property>
-        <property access="field" generated="never" lazy="false" name="detail"
+        <property access="field" name="detail"
                   type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="DETAIL" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
         </property>

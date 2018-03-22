@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
@@ -29,6 +30,7 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  *
  * @author paul
  */
+@SuppressWarnings({ "FieldCanBeLocal", "unused" }) // Possible external use
 public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     private boolean generateDatasetSummary = false;
@@ -38,7 +40,10 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         DatabaseViewGeneratorCLI o = new DatabaseViewGeneratorCLI();
-        o.doWork( args );
+        Exception e = o.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -52,11 +57,6 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    public String getShortDesc() {
-        return "Generate views of the database in flat files";
-    }
-
-    @Override
     protected void buildOptions() {
         super.buildStandardOptions();
 
@@ -66,12 +66,12 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
         Option datasetSummary = OptionBuilder.create( 'd' );
 
         OptionBuilder.withDescription(
-                "Will generate a zip file containing a summary of all the tissues in accesable datasets" );
+                "Will generate a zip file containing a summary of all the tissues in accessible datasets" );
         OptionBuilder.withLongOpt( "tissue" );
         Option datasetTissueSummary = OptionBuilder.create( 't' );
 
         OptionBuilder.withDescription(
-                "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" );
+                "Will generate a zip file containing a summary of all the differential expressed genes in accessible datasets" );
         OptionBuilder.withLongOpt( "diffexpression" );
         Option diffExpSummary = OptionBuilder.create( 'x' );
 
@@ -81,10 +81,10 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
         OptionBuilder.withLongOpt( "limit" );
         Option limitOpt = OptionBuilder.create( 'l' );
 
-        addOption( datasetSummary );
-        addOption( datasetTissueSummary );
-        addOption( diffExpSummary );
-        addOption( limitOpt );
+        this.addOption( datasetSummary );
+        this.addOption( datasetTissueSummary );
+        this.addOption( diffExpSummary );
+        this.addOption( limitOpt );
 
     }
 
@@ -94,9 +94,14 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
         if ( err != null )
             return err;
 
-        DatabaseViewGenerator v = getBean( DatabaseViewGenerator.class );
+        DatabaseViewGenerator v = this.getBean( DatabaseViewGenerator.class );
         v.runAll();
         return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Generate views of the database in flat files";
     }
 
     @Override
@@ -118,7 +123,7 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
             try {
                 this.limit = Integer.parseInt( this.getOptionValue( 'l' ) );
             } catch ( NumberFormatException nfe ) {
-                log.warn( "Unable to process limit parameter. Processing all availiable experiments." );
+                AbstractCLI.log.warn( "Unable to process limit parameter. Processing all available experiments." );
                 this.limit = 0;
             }
         }

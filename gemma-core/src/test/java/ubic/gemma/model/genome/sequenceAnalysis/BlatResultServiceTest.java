@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class BlatResultServiceTest extends BaseSpringContextTest {
 
-    BioSequence bs;
+    private BioSequence bs;
 
     @Autowired
     BlatResultService blatResultService;

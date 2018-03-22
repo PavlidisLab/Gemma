@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,6 +38,7 @@ public class SearchSettingsImpl extends SearchSettings {
      *
      * @param query query
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public SearchSettingsImpl( String query ) {
         this.setQuery( query.trim() );
     }
@@ -94,19 +95,6 @@ public class SearchSettingsImpl extends SearchSettings {
         s.setSearchGenes( false );
         s.noSearches();
         s.setSearchExperiments( true );
-        return s;
-    }
-
-    /**
-     * Convenience method to get pre-configured settings.
-     *
-     * @param query query
-     * @return search settings
-     */
-    public static SearchSettingsImpl expressionExperimentSetSearch( String query ) {
-        SearchSettingsImpl s = new SearchSettingsImpl( query );
-        s.noSearches();
-        s.setSearchExperimentSets( true );
         return s;
     }
 

@@ -175,7 +175,7 @@ Ext.ux.StatusBar = Ext.extend(Ext.Toolbar, {
 				Ext.ux.StatusBar.superclass.onLayout.call(this, ct, target);
 
 				if (!this.tr) {
-					this.tr = this.getLayout().leftTr
+					this.tr = this.getLayout().leftTr;
 
 					var right = this.statusAlign == 'right', td = Ext.get(this.nextBlock());
 					if (right) {

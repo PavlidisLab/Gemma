@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -23,7 +23,6 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.net.URL;
 import java.util.List;
 
 /**
@@ -72,61 +71,19 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
 
     }
 
-    public LocalFile findByLocalURL( final String queryString, final URL url, final java.lang.Long size ) {
-
-        List<?> results = this.getHibernateTemplate()
-                .findByNamedParam( queryString, new String[] { "url", "size" }, new Object[] { url, size } );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.get( 0 );
-        }
-        return ( LocalFile ) result;
-    }
-
-    @Override
-    public LocalFile findByLocalURL( final URL url, final java.lang.Long size ) {
-        return this.findByLocalURL( "from LocalFile as localFile where localFile.url = :url and localFile.size = :size",
-                url, size );
-    }
-
-    public LocalFile findByRemoteURL( final java.lang.String queryString, final URL url, final java.lang.Long size ) {
-
-        List<?> results = this.getHibernateTemplate()
-                .findByNamedParam( queryString, new String[] { "url", "size" }, new Object[] { url, size } );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.get( 0 );
-        }
-        return ( LocalFile ) result;
-    }
-
-    @Override
-    public LocalFile findByRemoteURL( final URL url, final java.lang.Long size ) {
-        return this.findByRemoteURL(
-                "from LocalFile as localFile " + "where localFile.url = :url and localFile.size = :size", url, size );
-    }
-
     @Override
     public LocalFile findOrCreate( ubic.gemma.model.common.description.LocalFile localFile ) {
         if ( localFile == null )
             throw new IllegalArgumentException();
-        LocalFile existingLocalFile = find( localFile );
+        LocalFile existingLocalFile = this.find( localFile );
         if ( existingLocalFile != null ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Found existing localFile: " + existingLocalFile.getLocalURL() );
+            if ( AbstractDao.log.isDebugEnabled() )
+                AbstractDao.log.debug( "Found existing localFile: " + existingLocalFile.getLocalURL() );
             return existingLocalFile;
         }
-        if ( log.isDebugEnabled() )
-            log.debug( "Creating new localFile: " + localFile.getLocalURL() );
-        return create( localFile );
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Creating new localFile: " + localFile.getLocalURL() );
+        return this.create( localFile );
     }
 
 }

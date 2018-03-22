@@ -1,45 +1,41 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.loader.expression;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author Paul
- *
  */
 @Service
 public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlatformSwitchHelperService {
-    private static Log log = LogFactory.getLog( ExperimentPlatformSwitchHelperServiceImpl.class );
+    private static final Log log = LogFactory.getLog( ExperimentPlatformSwitchHelperServiceImpl.class );
 
     @Autowired
     private AnalysisUtilService analysisUtilService;
@@ -51,48 +47,37 @@ public class ExperimentPlatformSwitchHelperServiceImpl implements ExperimentPlat
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private DesignElementDataVectorService vectorService;
+    private RawExpressionDataVectorService rawVectorService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.loader.expression.ExperimentPlatformSwitchHelperService#persist(ubic.gemma.model.expression.
-     * experiment
-     * .ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
+    @Autowired
+    private ProcessedExpressionDataVectorService procVectorService;
+
     @Override
     @Transactional
-    public void persist( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
-        expressionExperimentService.update( expExp );
+    public void persist( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
+        expressionExperimentService.update( ee );
 
-        analysisUtilService.deleteOldAnalyses( expExp );
+        analysisUtilService.deleteOldAnalyses( ee );
 
-        update( expExp.getRawExpressionDataVectors() );
-        update( expExp.getProcessedExpressionDataVectors() ); // usually shouldn't be needed.
+        procVectorService.update( ee.getProcessedExpressionDataVectors() );
+        rawVectorService.update( ee.getRawExpressionDataVectors() );
 
-        audit( expExp, "Switch to use " + arrayDesign.getShortName() );
+        this.audit( ee, "Switch to use " + arrayDesign.getShortName() );
 
-        for ( RawExpressionDataVector v : expExp.getRawExpressionDataVectors() ) {
+        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
             if ( !arrayDesign.equals( v.getDesignElement().getArrayDesign() ) ) {
-                throw new IllegalStateException(
-                        "A raw vector for QT =" + v.getQuantitationType() + " was not correctly switched to the target platform " + arrayDesign );
+                throw new IllegalStateException( "A raw vector for QT =" + v.getQuantitationType()
+                        + " was not correctly switched to the target platform " + arrayDesign );
             }
         }
 
-        log.info( "Completing switching " + expExp ); // flush of transaction happens after this, can take a while.
+        ExperimentPlatformSwitchHelperServiceImpl.log
+                .info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ExpressionExperiment ee, String note ) {
         AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( ee, eventType, note );
-    }
-
-    private void update( Collection<? extends DesignElementDataVector> vectorsForQt ) {
-        vectorService.update( vectorsForQt );
     }
 
 }

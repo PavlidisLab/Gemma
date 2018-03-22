@@ -8,12 +8,11 @@ import java.util.Collection;
 
 /**
  * Created by tesarst on 09/03/17.
- *
  * Utility class containing code that would otherwise have to be duplicate in multiple Controllers.
  */
 public class ControllerUtils {
 
-    protected static Log log = LogFactory.getLog( DownloadDataAsTextController.class.getName() );
+    protected static Log log = LogFactory.getLog( ControllerUtils.class.getName() );
 
     /**
      * Returns a collection of {@link Long} ids from strings.
@@ -25,7 +24,7 @@ public class ControllerUtils {
                 try {
                     ids.add( Long.parseLong( s.trim() ) );
                 } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
+                    ControllerUtils.log.warn( "invalid id " + s );
                 }
             }
         }

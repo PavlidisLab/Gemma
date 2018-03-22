@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,8 +36,6 @@ import java.util.Map.Entry;
  * finding the factor with the fewest categories, sorting the samples by the factor values (measurements are treated as
  * numbers if possible), and recursively repeating this for each block, until there are no more factors with more than
  * one value.
- * Note (FIXME) this contains separate methods for entities and value objects, which is a lot of near-duplication of
- * code.
  *
  * @author paul
  */
@@ -53,7 +51,7 @@ public class ExpressionDataMatrixColumnSort {
      * @return map
      */
     public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors ) {
-        return getBaselineLevels( null, factors );
+        return ExpressionDataMatrixColumnSort.getBaselineLevels( null, factors );
     }
 
     /**
@@ -86,7 +84,7 @@ public class ExpressionDataMatrixColumnSort {
                      * Check that this factor value is used by at least one of the given samples. Only matters if this
                      * is a subset of the full data set.
                      */
-                    if ( samplesUsed != null && !used( fv, samplesUsed ) ) {
+                    if ( samplesUsed != null && !ExpressionDataMatrixColumnSort.used( fv, samplesUsed ) ) {
                         // this factorValue cannot be a candidate baseline for this subset.
                         continue;
                     }
@@ -110,23 +108,24 @@ public class ExpressionDataMatrixColumnSort {
                      * Check that this factor value is used by at least one of the given samples. Only matters if this
                      * is a subset of the full data set.
                      */
-                    if ( samplesUsed != null && !used( fv, samplesUsed ) ) {
+                    if ( samplesUsed != null && !ExpressionDataMatrixColumnSort.used( fv, samplesUsed ) ) {
                         // this factorValue cannot be a candidate baseline for this subset.
                         continue;
                     }
 
                     if ( BaselineSelection.isForcedBaseline( fv ) ) {
-                        log.info( "Baseline chosen: " + fv );
+                        ExpressionDataMatrixColumnSort.log.info( "Baseline chosen: " + fv );
                         result.put( factor, fv );
                         break;
                     }
 
                     if ( BaselineSelection.isBaselineCondition( fv ) ) {
                         if ( result.containsKey( factor ) ) {
-                            log.warn( "A second potential baseline was found for " + factor + ": " + fv );
+                            ExpressionDataMatrixColumnSort.log
+                                    .warn( "A second potential baseline was found for " + factor + ": " + fv );
                             continue;
                         }
-                        log.info( "Baseline chosen: " + fv );
+                        ExpressionDataMatrixColumnSort.log.info( "Baseline chosen: " + fv );
                         result.put( factor, fv );
                     }
                 }
@@ -160,7 +159,8 @@ public class ExpressionDataMatrixColumnSort {
                                 "No baseline could be identified for factor:  " + factor + " has " + factor
                                         .getFactorValues().size() + " factor values" );
                     }
-                    log.info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
+                    ExpressionDataMatrixColumnSort.log
+                            .info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     result.put( factor, arbitraryBaselineFV );
                 }
             }
@@ -180,7 +180,7 @@ public class ExpressionDataMatrixColumnSort {
             start.add( bioAssay.getSampleUsed() );
             bm2ba.put( bioAssay.getSampleUsed(), bioAssay );
         }
-        List<BioMaterial> bm = orderByExperimentalDesign( start, null );
+        List<BioMaterial> bm = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null );
         List<BioAssay> newBioAssayOrder = new ArrayList<>();
         for ( BioMaterial bioMaterial : bm ) {
             assert bm2ba.containsKey( bioMaterial );
@@ -194,10 +194,10 @@ public class ExpressionDataMatrixColumnSort {
      * @return bio materials
      */
     public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix<?> mat ) {
-        List<BioMaterial> start = getBms( mat );
+        List<BioMaterial> start = ExpressionDataMatrixColumnSort.getBms( mat );
         assert start != null;
 
-        List<BioMaterial> ordered = orderByExperimentalDesign( start, null );
+        List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null );
 
         assert ordered != null;
         assert ordered.size() == start.size() : "Expected " + start.size() + ", got " + ordered.size();
@@ -226,18 +226,19 @@ public class ExpressionDataMatrixColumnSort {
         if ( factors != null ) {
             unsortedFactors = factors;
         } else {
-            unsortedFactors = getFactors( start );
+            unsortedFactors = ExpressionDataMatrixColumnSort.getFactors( start );
         }
         if ( unsortedFactors.size() == 0 ) {
-            log.debug( "No experimental design, sorting by sample name" );
-            orderByName( start );
+            ExpressionDataMatrixColumnSort.log.debug( "No experimental design, sorting by sample name" );
+            ExpressionDataMatrixColumnSort.orderByName( start );
             return start;
         }
 
         // sort factors
-        List<ExperimentalFactor> sortedFactors = orderFactorsByExperimentalDesign( start, unsortedFactors );
+        List<ExperimentalFactor> sortedFactors = ExpressionDataMatrixColumnSort
+                .orderFactorsByExperimentalDesign( start, unsortedFactors );
         // sort biomaterials using sorted factors
-        return orderBiomaterialsBySortedFactors( start, sortedFactors );
+        return ExpressionDataMatrixColumnSort.orderBiomaterialsBySortedFactors( start, sortedFactors );
     }
 
     private static void orderByName( List<BioMaterial> start ) {
@@ -270,14 +271,14 @@ public class ExpressionDataMatrixColumnSort {
             Collection<ExperimentalFactor> factors ) {
 
         if ( factors == null || factors.isEmpty() ) {
-            log.warn( "No factors supplied for sorting" );
+            ExpressionDataMatrixColumnSort.log.warn( "No factors supplied for sorting" );
             return new LinkedList<>();
         }
 
         LinkedList<ExperimentalFactor> sortedFactors = new LinkedList<>();
         Collection<ExperimentalFactor> factorsToTake = new HashSet<>( factors );
         while ( !factorsToTake.isEmpty() ) {
-            ExperimentalFactor simplest = chooseSimplestFactor( start, factorsToTake );
+            ExperimentalFactor simplest = ExpressionDataMatrixColumnSort.chooseSimplestFactor( start, factorsToTake );
             if ( simplest == null ) {
                 // none of the factors have more than one factor value. One-sided t-tests ...
 
@@ -320,7 +321,7 @@ public class ExpressionDataMatrixColumnSort {
 
         for ( Entry<FactorValue, List<BioMaterial>> e : fv2bms.entrySet() ) {
             List<BioMaterial> biomaterials = e.getValue();
-            sortBioMaterials( biomaterials );
+            ExpressionDataMatrixColumnSort.sortBioMaterials( biomaterials );
         }
 
         return fv2bms;
@@ -422,20 +423,22 @@ public class ExpressionDataMatrixColumnSort {
             }
 
             if ( !found ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( bm + " has no value for factor=" + ef + "; using dummy value" );
+                if ( ExpressionDataMatrixColumnSort.log.isDebugEnabled() )
+                    ExpressionDataMatrixColumnSort.log
+                            .debug( bm + " has no value for factor=" + ef + "; using dummy value" );
                 chunks.get( dummy ).add( bm );
             }
 
         }
 
         if ( chunks.get( dummy ).size() == 0 ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "removing dummy" );
+            if ( ExpressionDataMatrixColumnSort.log.isDebugEnabled() )
+                ExpressionDataMatrixColumnSort.log.debug( "removing dummy" );
             chunks.remove( dummy );
         }
 
-        log.debug( chunks.size() + " chunks for " + ef + ", from current chunk of size " + bms.size() );
+        ExpressionDataMatrixColumnSort.log
+                .debug( chunks.size() + " chunks for " + ef + ", from current chunk of size " + bms.size() );
 
         /*
          * Sanity check
@@ -492,9 +495,9 @@ public class ExpressionDataMatrixColumnSort {
         if ( bms.size() == 1 )
             return bms;
 
-        log.debug( "Ordering " + bms.size() + " biomaterials by " + ef );
+        ExpressionDataMatrixColumnSort.log.debug( "Ordering " + bms.size() + " biomaterials by " + ef );
 
-        sortBioMaterials( bms ); // probably redundant.
+        ExpressionDataMatrixColumnSort.sortBioMaterials( bms ); // probably redundant.
 
         List<FactorValue> factorValues = new ArrayList<>( ef.getFactorValues() );
 
@@ -506,17 +509,17 @@ public class ExpressionDataMatrixColumnSort {
         }
 
         if ( !ExperimentalDesignUtils.isContinuous( ef ) ) {
-            sortByControl( factorValues );
+            ExpressionDataMatrixColumnSort.sortByControl( factorValues );
         } else {
-            sortIfMeasurement( factorValues );
+            ExpressionDataMatrixColumnSort.sortIfMeasurement( factorValues );
         }
 
         LinkedHashMap<FactorValue, List<BioMaterial>> chunks = new LinkedHashMap<>();
         List<BioMaterial> organized = new ArrayList<>();
 
-        organizeByFactorValues( fv2bms, bms, factorValues, chunks, organized );
+        ExpressionDataMatrixColumnSort.organizeByFactorValues( fv2bms, bms, factorValues, chunks, organized );
 
-        if ( log.isDebugEnabled() ) {
+        if ( ExpressionDataMatrixColumnSort.log.isDebugEnabled() ) {
             for ( BioMaterial b : organized ) {
                 for ( FactorValue f : b.getFactorValues() ) {
                     if ( f.getExperimentalFactor().equals( ef ) ) {
@@ -533,9 +536,10 @@ public class ExpressionDataMatrixColumnSort {
 
         if ( organized.size() != bms.size() ) {
             // fail gracefully.
-            log.error( "Could not order by factor: " + ef + " Biomaterial count (" + bms.size()
-                    + ") does not equal the size of the reorganized biomaterial list (" + organized.size()
-                    + "). Check the experimental design for completeness/correctness" );
+            ExpressionDataMatrixColumnSort.log
+                    .error( "Could not order by factor: " + ef + " Biomaterial count (" + bms.size()
+                            + ") does not equal the size of the reorganized biomaterial list (" + organized.size()
+                            + "). Check the experimental design for completeness/correctness" );
             // return bms;
             return null;
         }
@@ -578,9 +582,9 @@ public class ExpressionDataMatrixColumnSort {
          * Order this chunk by the selected factor
          */
 
-        Map<FactorValue, List<BioMaterial>> fv2bms = buildFv2BmMap( start );
+        Map<FactorValue, List<BioMaterial>> fv2bms = ExpressionDataMatrixColumnSort.buildFv2BmMap( start );
 
-        List<BioMaterial> ordered = orderByFactor( simplest, fv2bms, start );
+        List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByFactor( simplest, fv2bms, start );
 
         // Abort ordering, so we are ordered only by the first continuous factor.
         if ( ExperimentalDesignUtils.isContinuous( simplest ) ) {
@@ -599,12 +603,13 @@ public class ExpressionDataMatrixColumnSort {
             return ordered;
         }
 
-        log.debug( "Factors: " + factors.size() );
+        ExpressionDataMatrixColumnSort.log.debug( "Factors: " + factors.size() );
 
         /*
          * Recurse in and order each chunk. First split it up, but retaining the order we just made.
          */
-        LinkedHashMap<FactorValue, List<BioMaterial>> chunks = chunkOnFactor( simplest, ordered );
+        LinkedHashMap<FactorValue, List<BioMaterial>> chunks = ExpressionDataMatrixColumnSort
+                .chunkOnFactor( simplest, ordered );
 
         if ( chunks == null ) {
             // this means we should bail, gracefully.
@@ -621,7 +626,8 @@ public class ExpressionDataMatrixColumnSort {
             if ( chunk.size() < 2 ) {
                 result.addAll( chunk );
             } else {
-                List<BioMaterial> orderedChunk = orderBiomaterialsBySortedFactors( chunk, factorsStillToDo );
+                List<BioMaterial> orderedChunk = ExpressionDataMatrixColumnSort
+                        .orderBiomaterialsBySortedFactors( chunk, factorsStillToDo );
                 result.addAll( orderedChunk );
             }
         }
@@ -729,14 +735,14 @@ public class ExpressionDataMatrixColumnSort {
 
     @SuppressWarnings("unused") // FIXME temporary. See issue 4435
     private static void sortByTimepoint( List<FactorValue> factorValues ) {
-        sortByControl( factorValues );
+        ExpressionDataMatrixColumnSort.sortByControl( factorValues );
     }
 
     /**
      * Sort the factor values by measurement values.
      */
     private static void sortIfMeasurement( List<FactorValue> factorValues ) {
-        log.debug( "Sorting measurements" );
+        ExpressionDataMatrixColumnSort.log.debug( "Sorting measurements" );
         Collections.sort( factorValues, new Comparator<FactorValue>() {
             @Override
             public int compare( FactorValue o1, FactorValue o2 ) {
@@ -762,6 +768,7 @@ public class ExpressionDataMatrixColumnSort {
     /**
      * @return true if the factorvalue is used by at least one of the samples.
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     private static boolean used( FactorValue fv, List<BioMaterial> samplesUsed ) {
         for ( BioMaterial bm : samplesUsed ) {
             for ( FactorValue bfv : bm.getFactorValues() ) {

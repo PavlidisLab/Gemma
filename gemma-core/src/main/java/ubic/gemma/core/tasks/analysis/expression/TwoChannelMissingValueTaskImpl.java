@@ -1,16 +1,15 @@
 package ubic.gemma.core.tasks.analysis.expression;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.tasks.AbstractTask;
+
+import java.util.Collection;
 
 /**
  * Space task for computing two channel missing values.

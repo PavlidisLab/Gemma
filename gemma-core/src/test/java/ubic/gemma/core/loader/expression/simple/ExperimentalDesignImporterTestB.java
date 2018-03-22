@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.testing.BaseSpringContextTest;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,8 +40,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorSe
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
 
 import static org.junit.Assert.*;
 
@@ -91,14 +88,14 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         metaData.setType( StandardQuantitationType.AMOUNT );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( randomName() );
+        ad.setShortName( this.randomName() );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         ad.setName( "foobly foo" );
         ad.setPrimaryTaxon( salmon );
 
         metaData.getArrayDesigns().add( ad );
         try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" )) {
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
 
@@ -117,17 +114,12 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     public final void testParseLoadDelete() throws Exception {
 
         try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" )) {
 
-            experimentalDesignImporter.importDesign( ee, is, false );
-        }
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-            bms.add( bm );
+            experimentalDesignImporter.importDesign( ee, is );
         }
 
-        checkResults( bms );
+        this.checkResults();
 
         this.aclTestUtils.checkEEAcls( ee );
 
@@ -151,11 +143,10 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         }
     }
 
-    private void checkResults( Collection<BioMaterial> bms ) {
+    private void checkResults() {
         // check.
         assertEquals( 25, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        Collection<Long> seenFactorValueIds = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
 
             if ( ef.getName().equals( "Temperature treatment" ) ) {
@@ -163,15 +154,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
             }
 
             for ( FactorValue fv : ef.getFactorValues() ) {
-                if ( fv.getCharacteristics().size() > 0 ) {
-                    VocabCharacteristic c = ( VocabCharacteristic ) fv.getCharacteristics().iterator().next();
-                    assertNotNull( c.getValue() );
-                    assertNotNull( c.getCategoryUri() );
-                } else {
-                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic",
-                            fv.getMeasurement() );
-                }
-                seenFactorValueIds.add( fv.getId() );
+                ExperimentalDesignImporterTest.assertFv( fv );
             }
         }
 

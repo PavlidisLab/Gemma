@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,48 +16,50 @@
  * limitations under the License.
  *
  */
-/**
- * 
- */
-package ubic.gemma.core.apps;
 
-import java.util.Collection;
-import java.util.HashSet;
+package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * CLI for computing and persisting the 'present' calls for two-channel data -- AND creates the processed data vectors
  * (saving you a step!)
- * 
- * @author Paul
  *
+ * @author Paul
  */
 public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingCLI {
 
     private static final String MISSING_VALUE_OPTION = "mvind";
+    private final Collection<Double> extraMissingValueIndicators = new HashSet<>();
+    private RawExpressionDataVectorService rawService;
+    private ProcessedExpressionDataVectorService procService;
+    private PreprocessorService preprocessorService;
+    private QuantitationTypeService quantitationTypeService;
+    private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
+    private TwoChannelMissingValues tcmv;
 
-    /**
-     * @param args
-     */
     public static void main( String[] args ) {
         TwoChannelMissingValueCLI p = new TwoChannelMissingValueCLI();
         try {
@@ -66,91 +68,35 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
                 ex.printStackTrace();
             }
         } catch ( Exception e ) {
-            log.error( e, e );
+            AbstractCLI.log.error( e, e );
         }
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
-    private DesignElementDataVectorService dedvs;
 
-    private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
-
-    private PreprocessorService preprocessorService;
-
-    private QuantitationTypeService quantitationTypeService;
-
-    private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
-
-    private TwoChannelMissingValues tcmv;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
-    @Override
-    public String getCommandName() {
-        return "twoChannelMissingData";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Computes missing value information and updates processed data vectors on two-channel microarray experiments";
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
 
-        Option signal2noiseOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Signal-to-noise" )
-                .withDescription(
-                        "Signal to noise ratio, below which values are considered missing; default="
-                                + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD )
-                .withLongOpt( "signal2noise" ).create( 's' );
+        Option signal2noiseOption = OptionBuilder.hasArg().withArgName( "Signal-to-noise" ).withDescription(
+                "Signal to noise ratio, below which values are considered missing; default="
+                        + TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD ).withLongOpt( "signal2noise" )
+                .create( 's' );
 
-        addOption( signal2noiseOption );
+        this.addOption( signal2noiseOption );
 
         Option extraMissingIndicators = OptionBuilder.hasArg().withArgName( "mv indicators" )
                 .withDescription( "Additional numeric values (comma delimited) to be considered missing values." )
-                .create( MISSING_VALUE_OPTION );
+                .create( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION );
 
-        addOption( extraMissingIndicators );
+        this.addOption( extraMissingIndicators );
 
         super.addDateOption();
         super.addForceOption();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
-    @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = processCommandLine( args );
-        if ( err != null ) return err;
-        for ( BioAssaySet ee : expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                processExperiment( ( ExpressionExperiment ) ee );
-            } else {
-                throw new UnsupportedOperationException( "Can't do two-channel missing values on "
-                        + ee.getClass().getName() );
-            }
-        }
-
-        summarizeProcessing();
-        return null;
     }
 
     @Override
@@ -160,110 +106,132 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             this.s2n = this.getDoubleOptionValue( 's' );
         }
 
-        if ( hasOption( "force" ) ) {
+        if ( this.hasOption( "force" ) ) {
             this.force = true;
         }
-        if ( hasOption( MISSING_VALUE_OPTION ) ) {
-            String o = this.getOptionValue( MISSING_VALUE_OPTION );
+        if ( this.hasOption( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION ) ) {
+            String o = this.getOptionValue( TwoChannelMissingValueCLI.MISSING_VALUE_OPTION );
             String[] vals = StringUtils.split( o, ',' );
             try {
                 for ( String string : vals ) {
                     this.extraMissingValueIndicators.add( new Double( string ) );
                 }
             } catch ( NumberFormatException e ) {
-                log.error( "Arguments to mvind must be numbers" );
+                AbstractCLI.log.error( "Arguments to mvind must be numbers" );
                 this.bail( ErrorCode.INVALID_OPTION );
             }
         }
         tcmv = this.getBean( TwoChannelMissingValues.class );
-        dedvs = this.getBean( DesignElementDataVectorService.class );
+        rawService = this.getBean( RawExpressionDataVectorService.class );
+        procService = this.getBean( ProcessedExpressionDataVectorService.class );
         eeService = this.getBean( ExpressionExperimentService.class );
         quantitationTypeService = this.getBean( QuantitationTypeService.class );
         this.preprocessorService = this.getBean( PreprocessorService.class );
     }
 
-    /**
-     * @param ee
-     */
-    private void processExperiment( ExpressionExperiment ee ) {
-        boolean wasProcessed = processForMissingValues( ee );
-
-        if ( !wasProcessed ) {
-            errorObjects.add( ee.getShortName() );
-        } else {
-            // Aduititing is done separately.
-            successObjects.add( ee.toString() );
-        }
-
+    @Override
+    public String getCommandName() {
+        return "twoChannelMissingData";
     }
 
+    @Override
+    protected Exception doWork( String[] args ) {
 
-    private boolean processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
+        Exception err = this.processCommandLine( args );
+        if ( err != null )
+            return err;
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( ee instanceof ExpressionExperiment ) {
+                this.processForMissingValues( ( ExpressionExperiment ) ee );
+            } else {
+                throw new UnsupportedOperationException(
+                        "Can't do two-channel missing values on " + ee.getClass().getName() );
+            }
+        }
+
+        this.summarizeProcessing();
+        return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Computes missing value information and updates processed data vectors on two-channel microarray experiments";
+    }
+
+    private boolean processExperiment( ExpressionExperiment ee ) {
 
         Collection<QuantitationType> types = eeService.getQuantitationTypes( ee );
 
         ee = this.eeService.thawLite( ee );
 
-        if ( !force && !needToRun( ee, MissingValueAnalysisEvent.class ) ) return false;
+        if ( !force && this.noNeedToRun( ee, MissingValueAnalysisEvent.class ) )
+            return false;
 
         QuantitationType previousMissingValueQt = null;
         for ( QuantitationType qType : types ) {
             if ( qType.getType() == StandardQuantitationType.PRESENTABSENT ) {
                 if ( previousMissingValueQt != null ) {
-                    log.warn( "More than one present/absent quantitationtype!" );
+                    AbstractCLI.log.warn( "More than one present/absent quantitationtype!" );
                 }
                 previousMissingValueQt = qType;
             }
         }
 
         if ( previousMissingValueQt != null && !force ) {
-            log.warn( ee + " already has missing value vectors, skipping" );
+            AbstractCLI.log.warn( ee + " already has missing value vectors, skipping" );
             return false;
         }
 
         if ( force && previousMissingValueQt != null ) {
-            log.info( "Removing old present/absent data" );
-            dedvs.removeDataForQuantitationType( previousMissingValueQt );
+            AbstractCLI.log.info( "Removing old present/absent data" );
+            rawService.removeDataForQuantitationType( previousMissingValueQt );
+            procService.removeDataForQuantitationType( previousMissingValueQt );
             quantitationTypeService.remove( previousMissingValueQt );
         }
 
-        log.info( "Got " + ee + ", thawing..." );
+        AbstractCLI.log.info( "Got " + ee + ", thawing..." );
 
-        log.info( "Computing missing value data.." );
+        AbstractCLI.log.info( "Computing missing value data.." );
 
-        Collection<RawExpressionDataVector> missingValueVectors = tcmv.computeMissingValues( ee, s2n,
-                this.extraMissingValueIndicators );
+        Collection<RawExpressionDataVector> missingValueVectors = tcmv
+                .computeMissingValues( ee, s2n, this.extraMissingValueIndicators );
 
         if ( missingValueVectors.size() == 0 ) {
-            log.warn( "No missing value vectors computed" );
+            AbstractCLI.log.warn( "No missing value vectors computed" );
             return false;
         }
 
         try {
             preprocessorService.process( ee, true );
         } catch ( PreprocessingException e ) {
-            log.error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );
+            AbstractCLI.log
+                    .error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );
         }
 
         return true;
     }
 
-    private boolean processForMissingValues( ExpressionExperiment ee ) {
+    private void processForMissingValues( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
 
         boolean wasProcessed = false;
         for ( ArrayDesign design : arrayDesignsUsed ) {
             TechnologyType tt = design.getTechnologyType();
             if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-                log.info( ee + " uses a two-color array design, processing..." );
+                AbstractCLI.log.info( ee + " uses a two-color array design, processing..." );
                 if ( arrayDesignsUsed.size() == 1 ) {
-                    wasProcessed = processExperiment( ee, null ); // save the slower query.
+                    wasProcessed = this.processExperiment( ee ); // save the slower query.
                 } else {
-                    wasProcessed = processExperiment( ee, design );
+                    wasProcessed = this.processExperiment( ee );
                 }
 
             }
         }
-        return wasProcessed;
+
+        if ( !wasProcessed ) {
+            errorObjects.add( ee.getShortName() );
+        } else {
+            successObjects.add( ee.toString() );
+        }
     }
 }

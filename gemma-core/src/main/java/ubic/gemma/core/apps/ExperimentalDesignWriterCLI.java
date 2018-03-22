@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,95 +18,59 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+
 /**
  * Writes out the experimental design for a given experiment. This can be directly read into R.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
 
-    /**
-     * @param args
-     */
+    private String outFileName;
+
     public static void main( String[] args ) {
         ExperimentalDesignWriterCLI cli = new ExperimentalDesignWriterCLI();
         Exception exc = cli.doWork( args );
         if ( exc != null ) {
-            log.error( exc.getMessage() );
+            AbstractCLI.log.error( exc.getMessage() );
         }
     }
 
-    private String outFileName;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
-       return "printExperimentalDesign"; 
+        return "printExperimentalDesign";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#getShortDesc()
-     */
-    @Override
-    public String getShortDesc() {
-        return "Prints experimental design to a file in a R-friendly format";
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ExpressionExperimentManipulatingCLI#buildOptions()
-     */
-    @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
-        Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" )
-                .withDescription( "File prefix for saving the output (short name will be appended)" )
-                .withLongOpt( "outFilePrefix" ).create( 'o' );
-        addOption( outputFileOption );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
-        processCommandLine( args );
+        Exception e = super.processCommandLine( args );
+        if ( e != null )
+            return e;
 
         for ( BioAssaySet ee : expressionExperiments ) {
 
             if ( ee instanceof ExpressionExperiment ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
-                try (PrintWriter writer = new PrintWriter( outFileName + "_"
-                        + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() ) + ".txt" );) {
+                try (PrintWriter writer = new PrintWriter(
+                        outFileName + "_" + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() )
+                                + ".txt" )) {
 
-                    edWriter.write( writer, ( ExpressionExperiment ) ee, true, true );
+                    edWriter.write( writer, ( ExpressionExperiment ) ee, true );
                     writer.flush();
                     writer.close();
-                } catch ( IOException e ) {
-                    return e;
+                } catch ( IOException exception ) {
+                    return exception;
                 }
             } else {
                 throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
@@ -116,14 +80,24 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ExpressionExperimentManipulatingCLI#processOptions()
-     */
+    @Override
+    public String getShortDesc() {
+        return "Prints experimental design to a file in a R-friendly format";
+    }
+
+    @Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
+        super.buildOptions();
+        Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" )
+                .withDescription( "File prefix for saving the output (short name will be appended)" )
+                .withLongOpt( "outFilePrefix" ).create( 'o' );
+        this.addOption( outputFileOption );
+    }
+
     @Override
     protected void processOptions() {
         super.processOptions();
-        outFileName = getOptionValue( 'o' );
+        outFileName = this.getOptionValue( 'o' );
     }
 }

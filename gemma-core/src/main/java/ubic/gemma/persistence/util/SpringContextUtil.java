@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,11 +23,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.web.context.support.GenericWebApplicationContext;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -41,7 +37,7 @@ import java.util.List;
  * @author pavlidis
  */
 public class SpringContextUtil {
-    private static Log log = LogFactory.getLog( SpringContextUtil.class.getName() );
+    private static final Log log = LogFactory.getLog( SpringContextUtil.class.getName() );
 
     private static BeanFactory ctx = null;
 
@@ -53,24 +49,24 @@ public class SpringContextUtil {
      */
     public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp,
             String[] additionalConfigurationLocations ) {
-        if ( ctx == null ) {
-            String[] paths = getConfigLocations( testing, isWebApp );
+        if ( SpringContextUtil.ctx == null ) {
+            String[] paths = SpringContextUtil.getConfigLocations( testing, isWebApp );
 
             if ( additionalConfigurationLocations != null ) {
-                paths = addPaths( additionalConfigurationLocations, paths );
+                paths = SpringContextUtil.addPaths( additionalConfigurationLocations, paths );
             }
 
             StopWatch timer = new StopWatch();
             timer.start();
-            ctx = new ClassPathXmlApplicationContext( paths );
+            SpringContextUtil.ctx = new ClassPathXmlApplicationContext( paths );
             timer.stop();
-            if ( ctx != null ) {
-                log.info( "Got context in " + timer.getTime() + "ms" );
+            if ( SpringContextUtil.ctx != null ) {
+                SpringContextUtil.log.info( "Got context in " + timer.getTime() + "ms" );
             } else {
-                log.fatal( "Failed to load context!" );
+                SpringContextUtil.log.fatal( "Failed to load context!" );
             }
         }
-        return ctx;
+        return SpringContextUtil.ctx;
     }
 
     private static String[] addPaths( String[] additionalConfigurationLocations, String[] paths ) {
@@ -82,42 +78,6 @@ public class SpringContextUtil {
         return paths;
     }
 
-    // /**
-    // * @param testing If true, it will get a test configured-BeanFactory
-    // * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
-    // * @param isWebApp If true, configuration specific to the web application will be included.
-    // * @return BeanFactory or null if no context could be created.
-    // */
-    // public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp ) {
-    // return getApplicationContext( testing, isWebApp, new String[] {} );
-    // }
-
-    // /**
-    // * @param additionalConfigurationPaths
-    // * @return a minimally-configured standard BeanFactory: no Compass, no Web config, but with the additional
-    // * configuration paths.
-    // */
-    // public static BeanFactory getApplicationContext( String[] additionalConfigurationPaths ) {
-    // return getApplicationContext( false, false, additionalConfigurationPaths );
-    // }
-
-    // /**
-    // * @return a minimally-configured standard BeanFactory: no Web config.
-    // * @see getApplicationContext( boolean testing, boolean compassOn , boolean isWebApp)
-    // */
-    // public static BeanFactory getApplicationContext() {
-    // return getApplicationContext( false, false );
-    // }
-
-    // /**
-    // * Find the configuration file locations. The files must be in your class path for this to work.
-    // *
-    // * @return string[]
-    // */
-    // public static String[] getConfigLocations() {
-    // return getConfigLocations( false, true );
-    // }
-
     /**
      * Find the configuration file locations. The files must be in your class path for this to work.
      *
@@ -125,11 +85,11 @@ public class SpringContextUtil {
      * @param isWebapp is webapp
      * @return string[]
      */
-    public static String[] getConfigLocations( boolean testing, boolean isWebapp ) {
+    private static String[] getConfigLocations( boolean testing, boolean isWebapp ) {
         if ( testing ) {
-            return getTestConfigLocations( isWebapp );
+            return SpringContextUtil.getTestConfigLocations( isWebapp );
         }
-        return getStandardConfigLocations( isWebapp );
+        return SpringContextUtil.getStandardConfigLocations( isWebapp );
 
     }
 
@@ -160,7 +120,7 @@ public class SpringContextUtil {
          * When using a web application, we get the config locations from the web.xml files --- not using this class.
          * However, this IS used during tests, so we need it.
          */
-        File f = new File( getGemmaHomeProperty() );
+        File f = new File( SpringContextUtil.getGemmaHomeProperty() );
         try {
             if ( isWebapp ) {
                 paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/gemma-servlet.xml" );
@@ -171,47 +131,23 @@ public class SpringContextUtil {
     }
 
     private static String[] getStandardConfigLocations( boolean isWebapp ) {
-        List<String> paths = new ArrayList<String>();
+        List<String> paths = new ArrayList<>();
         paths.add( "classpath*:ubic/gemma/dataSource.xml" );
 
         CompassUtils.turnOnCompass( false, paths );
 
-        addCommonConfig( isWebapp, paths );
+        SpringContextUtil.addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
     }
 
     private static String[] getTestConfigLocations( boolean isWebapp ) {
-        List<String> paths = new ArrayList<String>();
+        List<String> paths = new ArrayList<>();
         paths.add( "classpath*:ubic/gemma/testDataSource.xml" );
 
         CompassUtils.turnOnCompass( true, paths );
 
-        addCommonConfig( isWebapp, paths );
+        SpringContextUtil.addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
-    }
-
-    /**
-     * Adds the resource to the application context and sets the parentContext as the parent of the resource
-     *
-     * @param parentContext parent context
-     * @param resource      resource
-     * @return ApplicationContext
-     */
-    public static ApplicationContext addResourceToContext( ApplicationContext parentContext,
-            ClassPathResource resource ) {
-        GenericWebApplicationContext spacesBeans = new GenericWebApplicationContext();
-        XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( spacesBeans );
-        xmlReader.loadBeanDefinitions( resource );
-
-        spacesBeans.setParent( parentContext );
-
-        CommonsConfigurationPropertyPlaceholderConfigurer configurationPropertyConfigurer = ( CommonsConfigurationPropertyPlaceholderConfigurer ) spacesBeans
-                .getBean( "configurationPropertyConfigurer" );
-        configurationPropertyConfigurer.postProcessBeanFactory( spacesBeans.getBeanFactory() );
-
-        spacesBeans.refresh();
-
-        return spacesBeans;
     }
 
 }

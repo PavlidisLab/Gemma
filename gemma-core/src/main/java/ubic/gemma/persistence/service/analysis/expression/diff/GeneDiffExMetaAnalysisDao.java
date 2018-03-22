@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,8 +36,7 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
      * @param analysisId id
      * @return a collection of included result set info value objects using the given meta-analysis id
      */
-    Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
-            long analysisId );
+    Collection<IncludedResultSetInfoValueObject> findIncludedResultSetsInfoById( long analysisId );
 
     /**
      * @param metaAnalysisIds ids
@@ -54,8 +53,6 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
 
     Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
-    Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
-
     GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
 
     GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
@@ -66,8 +63,6 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
             Collection<? extends Investigation> investigations );
 
     Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name );
-
-    Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
 
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression.pca;
 /**
  * A right singular vector (a.k.a. eigengenes)
  */
-public abstract class Eigenvector implements java.io.Serializable {
+public class Eigenvector implements java.io.Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -35,21 +35,6 @@ public abstract class Eigenvector implements java.io.Serializable {
      * No-arg constructor added to satisfy javabean contract
      */
     public Eigenvector() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof Eigenvector ) ) {
-            return false;
-        }
-        final Eigenvector that = ( Eigenvector ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public Integer getComponentNumber() {
@@ -90,15 +75,28 @@ public abstract class Eigenvector implements java.io.Serializable {
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof Eigenvector ) ) {
+            return false;
+        }
+        final Eigenvector that = ( Eigenvector ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
 
+        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance() {
-            return new ubic.gemma.model.analysis.expression.pca.EigenvectorImpl();
+            return new ubic.gemma.model.analysis.expression.pca.Eigenvector();
         }
 
         public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance( Integer componentNumber,
                 byte[] vector ) {
-            final ubic.gemma.model.analysis.expression.pca.Eigenvector entity = new ubic.gemma.model.analysis.expression.pca.EigenvectorImpl();
+            final ubic.gemma.model.analysis.expression.pca.Eigenvector entity = new ubic.gemma.model.analysis.expression.pca.Eigenvector();
             entity.setComponentNumber( componentNumber );
             entity.setVector( vector );
             return entity;

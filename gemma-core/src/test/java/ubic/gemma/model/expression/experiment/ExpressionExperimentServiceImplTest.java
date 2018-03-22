@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,11 +44,11 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     private Collection<ExpressionExperiment> cJustTwelve;
     private ExpressionExperiment ee = null;
     private Person nobody = null;
-    private Person admin = null;
 
     private ExpressionExperimentService svc;
     private ExpressionExperimentDao eeDao;
 
+    @SuppressWarnings("Duplicates") // Not effective to extract
     @Test
     public void testExpressionExperimentFindAll() {
         reset( eeDao );
@@ -70,13 +70,13 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
         eeDao = createMock( ExpressionExperimentDaoImpl.class );
         svc = new ExpressionExperimentServiceImpl( eeDao );
 
         nobody = Person.Factory.newInstance();
-        admin = Person.Factory.newInstance();
+        Person admin = Person.Factory.newInstance();
 
         ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
@@ -115,7 +115,7 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         ee = null;
     }
 }

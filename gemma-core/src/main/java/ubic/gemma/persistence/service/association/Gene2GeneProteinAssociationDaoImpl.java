@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationImpl;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -41,11 +42,12 @@ import java.util.Comparator;
  */
 
 @Repository
-public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociationDaoBase {
+public class Gene2GeneProteinAssociationDaoImpl extends AbstractDao<Gene2GeneProteinAssociation>
+        implements Gene2GeneProteinAssociationDao {
 
     @Autowired
     public Gene2GeneProteinAssociationDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
+        super( Gene2GeneProteinAssociation.class, sessionFactory );
     }
 
     @Override
@@ -75,7 +77,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
                 if ( results.size() == 1 ) {
                     result = results.iterator().next();
                 } else if ( results.size() > 1 ) {
-                    log.error( "Multiple interactions  found for " + gene2GeneProteinAssociation + ":" );
+                    AbstractDao.log.error( "Multiple interactions  found for " + gene2GeneProteinAssociation + ":" );
 
                     Collections.sort( results, new Comparator<Gene2GeneProteinAssociation>() {
                         @Override
@@ -84,7 +86,7 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
                         }
                     } );
                     result = results.iterator().next();
-                    log.error( "Returning arbitrary gene2GeneProteinAssociation: " + result );
+                    AbstractDao.log.error( "Returning arbitrary gene2GeneProteinAssociation: " + result );
                 }
             }
             return ( Gene2GeneProteinAssociation ) result;

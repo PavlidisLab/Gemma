@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -70,24 +70,24 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private Taxon humanTaxon = null;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
-        if ( !dosLoaded ) {
+        if ( !PhenotypeAssociationTest.dosLoaded ) {
             // fails if you have DO loaded
             os.getDiseaseOntologyService().loadTermsInNameSpace(
                     this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
-            dosLoaded = true;
+            PhenotypeAssociationTest.dosLoaded = true;
         }
 
         // create what will be needed for tests
-        createGene();
-        createExternalDatabase();
-        createLiteratureEvidence( this.geneNCBI, TEST_PHENOTYPE_URI );
+        this.createGene();
+        this.createExternalDatabase();
+        this.createLiteratureEvidence( this.geneNCBI, PhenotypeAssociationTest.TEST_PHENOTYPE_URI );
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         this.runAsAdmin();
         Collection<PhenotypeAssociation> toRemove = new HashSet<>();
         for ( Gene g : this.geneService.loadAll() ) {
@@ -107,26 +107,16 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     }
 
-    // copied from AclAdviceTest
-    private void makeUser( String username ) {
-        try {
-            this.userManager.loadUserByUsername( username );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
-        }
-    }
-
     @Test
     public void testFindBibliographicReference() {
-        assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );
+        assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1" ) );
     }
 
     @Test
     public void testFindCandidateGenes() {
 
         Set<String> phenotypesValuesUri = new HashSet<>();
-        phenotypesValuesUri.add( TEST_PHENOTYPE_URI );
+        phenotypesValuesUri.add( PhenotypeAssociationTest.TEST_PHENOTYPE_URI );
 
         Collection<GeneEvidenceValueObject> geneValueObjects = this.phenotypeAssociationManagerService
                 .findCandidateGenes( phenotypesValuesUri, null );
@@ -146,7 +136,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         this.makeUser( userName );
         this.runAsUser( userName );
         String testuri = "http://purl.obolibrary.org/obo/DOID_14566";
-        createLiteratureEvidence( this.geneNCBI, testuri );
+        this.createLiteratureEvidence( this.geneNCBI, testuri );
 
         phenotypesValuesUri.add( "http://purl.obolibrary.org/obo/DOID_14566" );
 
@@ -262,7 +252,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         OntologyTerm term = os.getDiseaseOntologyService().getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
         assertNotNull( term );
 
-        createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );
+        this.createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );
 
         Map<GeneValueObject, OntologyTerm> r = this.phenotypeAssociationManagerService
                 .findGenesForPhenotype( term.getUri(), this.humanTaxon.getId(), true );
@@ -292,17 +282,28 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Test
     public void testLoadEvidenceWithExternalDatabaseName() {
         assertTrue( !this.phenotypeAssociationManagerService
-                .loadEvidenceWithExternalDatabaseName( TEST_EXTERNAL_DATABASE, null, 0 ).isEmpty() );
+                .loadEvidenceWithExternalDatabaseName( PhenotypeAssociationTest.TEST_EXTERNAL_DATABASE, null, 0 )
+                .isEmpty() );
 
         assertTrue( this.phenotypeAssociationManagerService.loadEvidenceWithoutExternalDatabaseName().isEmpty() );
     }
 
+    // copied from AclAdviceTest
+    private void makeUser( String username ) {
+        try {
+            this.userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+        }
+    }
+
     private void createExternalDatabase() {
         ExternalDatabase externalDatabase = ExternalDatabase.Factory.newInstance();
-        externalDatabase.setName( TEST_EXTERNAL_DATABASE );
+        externalDatabase.setName( PhenotypeAssociationTest.TEST_EXTERNAL_DATABASE );
         externalDatabase.setWebUri( "http://www.test.ca/" );
-        externalDatabase = externalDatabaseService.findOrCreate( externalDatabase );
-        assertNotNull( externalDatabaseService.find( TEST_EXTERNAL_DATABASE ) );
+        externalDatabaseService.findOrCreate( externalDatabase );
+        assertNotNull( externalDatabaseService.findByName( PhenotypeAssociationTest.TEST_EXTERNAL_DATABASE ) );
     }
 
     private void createLiteratureEvidence( int geneNCBIid, String uri ) {
@@ -315,7 +316,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         citationValueObject.setPubmedAccession( "1" );
 
         ExternalDatabaseValueObject externalDatabaseValueObject = new ExternalDatabaseValueObject();
-        externalDatabaseValueObject.setName( TEST_EXTERNAL_DATABASE );
+        externalDatabaseValueObject.setName( PhenotypeAssociationTest.TEST_EXTERNAL_DATABASE );
 
         EvidenceSourceValueObject evidenceSourceValueObject = new EvidenceSourceValueObject( "url_link",
                 externalDatabaseValueObject );

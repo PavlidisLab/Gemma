@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,10 +29,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
@@ -75,7 +75,7 @@ public class ExpressionExperimentSetController extends BaseController {
 
         for ( SessionBoundExpressionExperimentSetValueObject eesvo : eeSetVos ) {
 
-            results.add( addSessionGroup( eesvo, modificationBased ) );
+            results.add( this.addSessionGroup( eesvo, modificationBased ) );
         }
 
         return results;
@@ -111,9 +111,9 @@ public class ExpressionExperimentSetController extends BaseController {
 
         }
 
-        result = create( result );
+        result = this.create( result );
 
-        result.addAll( addSessionGroups( sessionResult, true ) );
+        result.addAll( this.addSessionGroups( sessionResult, true ) );
 
         return result;
 
@@ -208,7 +208,8 @@ public class ExpressionExperimentSetController extends BaseController {
         Collection<Long> ids = new ArrayList<>( 1 );
         ids.add( id );
 
-        Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService.loadValueObjectsByIds( ids );
+        Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService
+                .loadValueObjectsByIds( ids );
 
         // security.
         if ( sets == null || sets.isEmpty() ) {
@@ -229,8 +230,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public Collection<ExpressionExperimentSetValueObject> loadAll() {
 
-        return expressionExperimentSetService
-                .loadAllExperimentSetValueObjects( false );
+        return expressionExperimentSetService.loadAllExperimentSetValueObjects( false );
     }
 
     /**
@@ -240,8 +240,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public Collection<SessionBoundExpressionExperimentSetValueObject> loadAllSessionGroups() {
 
-        return sessionListManager
-                .getAllExperimentSets();
+        return sessionListManager.getAllExperimentSets();
     }
 
     /**
@@ -251,7 +250,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public Collection<ExpressionExperimentSetValueObject> loadAllUserAndSessionGroups() {
 
-        Collection<ExpressionExperimentSetValueObject> results = loadAll();
+        Collection<ExpressionExperimentSetValueObject> results = this.loadAll();
 
         Collection<SessionBoundExpressionExperimentSetValueObject> sessionResults = sessionListManager
                 .getAllExperimentSets();
@@ -293,7 +292,6 @@ public class ExpressionExperimentSetController extends BaseController {
     /**
      * @return the entities which were removed.
      */
-    // TODO returning the entities that were removed is weird?
     public Collection<ExpressionExperimentSetValueObject> remove(
             Collection<ExpressionExperimentSetValueObject> entities ) {
         for ( ExpressionExperimentSetValueObject ees : entities ) {
@@ -317,7 +315,6 @@ public class ExpressionExperimentSetController extends BaseController {
     /**
      * AJAX Given valid experiment groups will remove them from the session or the database appropriately.
      */
-    // TODO returning the entities that were removed is weird?
     public Collection<ExpressionExperimentSetValueObject> removeUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> vos ) {
         Collection<ExpressionExperimentSetValueObject> removedSets = new HashSet<>();
@@ -332,8 +329,8 @@ public class ExpressionExperimentSetController extends BaseController {
             }
         }
 
-        sessionCollection = removeSessionGroups( sessionCollection );
-        databaseCollection = remove( databaseCollection );
+        sessionCollection = this.removeSessionGroups( sessionCollection );
+        databaseCollection = this.remove( databaseCollection );
 
         removedSets.addAll( sessionCollection );
         removedSets.addAll( databaseCollection );
@@ -348,7 +345,7 @@ public class ExpressionExperimentSetController extends BaseController {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        ExpressionExperimentSetValueObject eesvo = getExpressionExperimentSetFromRequest( request );
+        ExpressionExperimentSetValueObject eesvo = this.getExpressionExperimentSetFromRequest( request );
 
         mav.addObject( "eeSetId", eesvo.getId() );
         mav.addObject( "eeSetName", eesvo.getName() );
@@ -371,7 +368,7 @@ public class ExpressionExperimentSetController extends BaseController {
                 throw new IllegalArgumentException(
                         "No expression experiment ids provided. Cannot save an empty set." );
             }
-            update( ees );
+            this.update( ees );
         }
         return entities;
     }
@@ -383,6 +380,7 @@ public class ExpressionExperimentSetController extends BaseController {
      * @param groupId id of the gene set being updated
      * @return error message or null if no errors
      */
+    @SuppressWarnings("unused") // Used in front end
     public String updateMembers( Long groupId, Collection<Long> eeIds ) {
 
         expressionExperimentSetService.updateDatabaseEntityMembers( groupId, eeIds );
@@ -432,8 +430,8 @@ public class ExpressionExperimentSetController extends BaseController {
             }
         }
 
-        sessionCollection = updateSessionGroups( sessionCollection );
-        databaseCollection = update( databaseCollection );
+        sessionCollection = this.updateSessionGroups( sessionCollection );
+        databaseCollection = this.update( databaseCollection );
 
         updatedSets.addAll( sessionCollection );
         updatedSets.addAll( databaseCollection );

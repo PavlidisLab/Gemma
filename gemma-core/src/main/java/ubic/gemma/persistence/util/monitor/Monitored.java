@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ public @interface Monitored {
     /**
      * @return Minimum run duration before timing is reported.
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     int minTimeToReport() default 1000;
 
 }

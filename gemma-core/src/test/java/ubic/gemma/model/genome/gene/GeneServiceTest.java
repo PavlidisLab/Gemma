@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,7 +52,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-        Collection<Gene> testGene = geneDao.findByOfficialSymbol( TEST_GENE_NAME );
+        Collection<Gene> testGene = geneDao.findByOfficialSymbol( GeneServiceTest.TEST_GENE_NAME );
         for ( Gene gene : testGene ) {
             geneDao.remove( gene );
         }
@@ -65,7 +65,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         gene.setId( ( long ) 1 );
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
         gene.setNcbiGeneId( id );
-        gene.setName( TEST_GENE_NAME );
+        gene.setName( GeneServiceTest.TEST_GENE_NAME );
 
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
@@ -85,8 +85,8 @@ public class GeneServiceTest extends BaseSpringContextTest {
 
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
         gene.setNcbiGeneId( id );
-        gene.setName( TEST_GENE_NAME );
-        ExternalDatabase ncbi = edbs.find( "Entrez Gene" );
+        gene.setName( GeneServiceTest.TEST_GENE_NAME );
+        ExternalDatabase ncbi = edbs.findByName( "Entrez Gene" );
         DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
         dbe.setAccession( "12345" ); // this gets ignored, because the ncbi id is part of the object.
         dbe.setExternalDatabase( ncbi );
@@ -109,8 +109,8 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Gene gene = Gene.Factory.newInstance();
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
         gene.setNcbiGeneId( id );
-        gene.setName( TEST_GENE_NAME );
-        ExternalDatabase ensembl = edbs.find( "Ensembl" );
+        gene.setName( GeneServiceTest.TEST_GENE_NAME );
+        ExternalDatabase ensembl = edbs.findByName( "Ensembl" );
         DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
         dbe.setAccession( "E129458" );
         dbe.setExternalDatabase( ensembl );
@@ -134,7 +134,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
 
         gene.setNcbiGeneId( id );
-        gene.setName( TEST_GENE_NAME );
+        gene.setName( GeneServiceTest.TEST_GENE_NAME );
 
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
@@ -147,19 +147,19 @@ public class GeneServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testFindEvenThoughHaveSameSymbol() throws Exception {
+    public void testFindEvenThoughHaveSameSymbol() {
         Gene gene = Gene.Factory.newInstance();
 
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
         gene.setNcbiGeneId( id );
-        gene.setName( TEST_GENE_NAME );
-        gene.setOfficialName( TEST_GENE_NAME );
-        gene.setOfficialSymbol( TEST_GENE_NAME );
+        gene.setName( GeneServiceTest.TEST_GENE_NAME );
+        gene.setOfficialName( GeneServiceTest.TEST_GENE_NAME );
+        gene.setOfficialSymbol( GeneServiceTest.TEST_GENE_NAME );
 
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
-        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, getTestPersistentBioSequence(), human );
+        Chromosome chromosome = new Chromosome( "X", null, this.getTestPersistentBioSequence(), human );
         chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
         pl1.setChromosome( chromosome );
         pl1.setNucleotide( 10000010L );
@@ -173,13 +173,13 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Gene gene2 = Gene.Factory.newInstance();
 
         gene2.setNcbiGeneId( null );
-        gene2.setName( TEST_GENE_NAME );
-        gene2.setOfficialName( TEST_GENE_NAME );
-        gene2.setOfficialSymbol( TEST_GENE_NAME );
+        gene2.setName( GeneServiceTest.TEST_GENE_NAME );
+        gene2.setOfficialName( GeneServiceTest.TEST_GENE_NAME );
+        gene2.setOfficialSymbol( GeneServiceTest.TEST_GENE_NAME );
 
         gene2.setTaxon( human );
         PhysicalLocation pl2 = PhysicalLocation.Factory.newInstance();
-        Chromosome chromosome2 = Chromosome.Factory.newInstance( "Y", null, getTestPersistentBioSequence(), human );
+        Chromosome chromosome2 = new Chromosome( "Y", null, this.getTestPersistentBioSequence(), human );
         chromosome2 = ( Chromosome ) persisterHelper.persist( chromosome2 );
         pl2.setChromosome( chromosome2 );
         pl2.setChromosome( chromosome );
@@ -205,9 +205,9 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
 
         gene.setNcbiGeneId( id );
-        gene.setName( TEST_GENE_NAME );
+        gene.setName( GeneServiceTest.TEST_GENE_NAME );
 
-        Collection<GeneAlias> aliases = new ArrayList<GeneAlias>();
+        Collection<GeneAlias> aliases = new ArrayList<>();
         GeneAlias alias = GeneAlias.Factory.newInstance();
         alias.setId( ( long ) 1 );
         alias.setAlias( "GRIN1" );
@@ -225,7 +225,7 @@ public class GeneServiceTest extends BaseSpringContextTest {
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
 
         gene.setNcbiGeneId( id );
-        gene.setName( TEST_GENE_NAME );
+        gene.setName( GeneServiceTest.TEST_GENE_NAME );
 
         // either one of these should work now.
         // gene.setDescription( "Imported from Golden Path: micro RNA or sno RNA" );

@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -78,7 +78,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     @Before
     public void setup() throws IOException {
         try (InputStream io = this.getClass()
-                .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" );) {
+                .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" )) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
             metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
@@ -104,29 +104,29 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     /*
      * NOTE I added a constant probe to this data after I set this up.
-     * 
+     *
      * <pre>
      * expMatFile &lt;- "GSE8441_expmat_8probes.txt"
      * expDesignFile &lt;- "606_GSE8441_expdesign.data.txt"
      * expMat &lt;- log2(read.table(expMatFile, header = TRUE, row.names = 1, sep = "\t", quote=""))
      * expDesign &lt;- read.table(expDesignFile, header = TRUE, row.names = 1, sep = "\t", quote="")
-     * 
+     *
      * expData &lt;- expMat[rownames(expDesign)]
-     * 
+     *
      * names(expData) == row.names(expDesign)
      * attach(expDesign)
      * lf&lt;-lm(unlist(expData["217757_at",])~Treatment*Sex )
      * summary(lf)
      * anova(lf)
-     * 
+     *
      * summary(lm(unlist(expData["202851_at",])~Treatment*Sex ))
-     * anova(lm(unlist(expData["202851_at",])~Treatment*Sex ))  
-     * 
+     * anova(lm(unlist(expData["202851_at",])~Treatment*Sex ))
+     *
      * # etc.
      * </pre>
      */
     @Test
-    public void test() throws Exception {
+    public void test() {
 
         AnalysisType aa = analysisService
                 .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
@@ -148,7 +148,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         DifferentialExpressionAnalysis analysis = result.iterator().next();
 
-        checkResults( analysis );
+        this.checkResults( analysis );
 
         Collection<DifferentialExpressionAnalysis> persistent = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -158,10 +158,10 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         differentialExpressionAnalysisService.thaw( refetched );
         for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
-            ears = differentialExpressionResultService.thaw( ears );
+            differentialExpressionResultService.thaw( ears );
         }
 
-        checkResults( refetched );
+        this.checkResults( refetched );
 
         differentialExpressionAnalyzerService.redoAnalysis( ee, refetched, true );
 
@@ -181,11 +181,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
             if ( rs.getExperimentalFactors().size() == 1 ) {
                 ExperimentalFactor factor = rs.getExperimentalFactors().iterator().next();
-                if ( factor.getName().equals( "Sex" ) ) {
-                    sexFactor = true;
-                } else {
-                    sexFactor = false;
-                }
+                sexFactor = factor.getName().equals( "Sex" );
             } else {
                 interaction = true;
             }
@@ -198,24 +194,28 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
             for ( DifferentialExpressionAnalysisResult r : results ) {
                 CompositeSequence probe = r.getProbe();
                 Double pvalue = r.getPvalue();
-                if ( probe.getName().equals( "205969_at" ) ) {
-                    if ( sexFactor ) {
-                        found1 = true;
-                        assertEquals( 0.3333, pvalue, 0.001 );
-                    } else if ( interaction ) {
-                        found2 = true;
-                        assertEquals( 0.8480, pvalue, 0.001 );
-                    } else {
-                        found3 = true;
-                        assertEquals( 0.1323, pvalue, 0.001 );
-                    }
-                } else if ( probe.getName().equals( "217757_at" ) ) {
-                    if ( interaction ) {
-                        found4 = true;
-                        assertEquals( 0.7621, pvalue, 0.001 );
-                    }
-                } else if ( probe.getName().equals( "constant" ) ) {
-                    fail( "Should not have found a result for constant probe" );
+                switch ( probe.getName() ) {
+                    case "205969_at":
+                        if ( sexFactor ) {
+                            found1 = true;
+                            assertEquals( 0.3333, pvalue, 0.001 );
+                        } else if ( interaction ) {
+                            found2 = true;
+                            assertEquals( 0.8480, pvalue, 0.001 );
+                        } else {
+                            found3 = true;
+                            assertEquals( 0.1323, pvalue, 0.001 );
+                        }
+                        break;
+                    case "217757_at":
+                        if ( interaction ) {
+                            found4 = true;
+                            assertEquals( 0.7621, pvalue, 0.001 );
+                        }
+                        break;
+                    case "constant":
+                        fail( "Should not have found a result for constant probe" );
+                        break;
                 }
             }
 

@@ -1,21 +1,3 @@
-/*
- * The Gemma project.
- * 
- * Copyright (c) 2006-2007 University of British Columbia
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
@@ -23,73 +5,113 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
 
-/**
- * @author Paul
- */
-public interface DesignElementDataVectorService {
-
-    java.lang.Integer countAll();
-
-    @Secured({ "GROUP_USER" })
-    Collection<? extends DesignElementDataVector> create( Collection<? extends DesignElementDataVector> vectors );
+@SuppressWarnings("unused")
+        // Possible external use
+interface DesignElementDataVectorService<T extends DesignElementDataVector> extends BaseService<T> {
 
     /**
-     * Load all vectors meeting the criteria
+     * Thaws all data vectors in the given collection
+     *
+     * @param vectors the vectors to be thawed
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
+    @Secured({ "GROUP_ADMIN" })
+    void thawRawAndProcessed( Collection<DesignElementDataVector> vectors );
 
     /**
-     * @return any vectors that reference the given bioAssayDimensin
+     * Finds all vectors for the given BA Dimension
+     *
+     * @param dim the BA dimension to limit the vector search to
+     * @return the found data vectors
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
-
     @Secured({ "GROUP_ADMIN" })
-    Collection<? extends DesignElementDataVector> find( Collection<QuantitationType> quantitationTypes );
+    Collection<DesignElementDataVector> findRawAndProcessed( BioAssayDimension dim );
 
     /**
-     * Load all vectors meeting the criteria
+     * Finds all vectors for the given quantitation type
+     *
+     * @param qt the quantitation type to limit the vector search to
+     * @return the found data vectors
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    Collection<? extends DesignElementDataVector> find( QuantitationType quantitationType );
-
     @Secured({ "GROUP_ADMIN" })
-    DesignElementDataVector load( java.lang.Long id );
+    Collection<DesignElementDataVector> findRawAndProcessed( QuantitationType qt );
 
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Collection<? extends DesignElementDataVector> vectors );
-
-    @Secured({ "GROUP_ADMIN" })
-    void remove( RawExpressionDataVector designElementDataVector );
-
+    /**
+     * Removes specific type ({@link T}) of vectors for the given CS.
+     *
+     * @param compositeSequence the sequence to remove the data for.
+     */
     @Secured({ "GROUP_ADMIN" })
     void removeDataForCompositeSequence( CompositeSequence compositeSequence );
 
+    /**
+     * Removes specific type ({@link T}) of vectors for the given QT.
+     *
+     * @param quantitationType the QT to remove the data for.
+     */
     @Secured({ "GROUP_ADMIN" })
     void removeDataForQuantitationType( QuantitationType quantitationType );
 
-    void thaw( Collection<? extends DesignElementDataVector> designElementDataVectors );
+    /**
+     * Thaws the given vectors.
+     *
+     * @param designElementDataVectors the vectors to thaw.
+     */
+    void thaw( Collection<T> designElementDataVectors );
 
     /**
-     * <p>
-     * updates an already existing dedv
-     * </p>
+     * Find specific type ({@link T}) of vectors that meet the given criteria.
+     *
+     * @param arrayDesign      the AD
+     * @param quantitationType the QT
+     * @return the found vectors of type {@link T}.
      */
-    @Secured({ "GROUP_USER" })
-    void update( DesignElementDataVector dedv );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<T> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
 
     /**
-     * <p>
-     * updates a collection of designElementDataVectors
-     * </p>
+     * Find specific type (raw or processed, depending on the service) of vectors that meet the given criteria.
+     *
+     * @param bioAssayDimension the BA dimension
+     * @return the found vectors of type {@link T}
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<T> find( BioAssayDimension bioAssayDimension );
+
+    /**
+     * Find specific type ({@link T}) of vectors that meet the given criteria.
+     *
+     * @param quantitationTypes the QTs
+     * @return the found vectors of type {@link T}
+     */
+    @Secured({ "GROUP_ADMIN" })
+    Collection<T> find( Collection<QuantitationType> quantitationTypes );
+
+    /**
+     * Find specific type ({@link T}) of vectors that meet the given criteria.
+     *
+     * @param quantitationType the QT
+     * @return the found vectors of type {@link T}
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<T> find( QuantitationType quantitationType );
+
+    /**
+     * Find specific type ({@link T}) of vectors that meet the given criteria.
+     *
+     * @param designElements   design elements
+     * @param quantitationType the QT
+     * @return the found vectors of type {@link T}
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    Collection<T> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
+
+    @Override
     @Secured({ "GROUP_USER" })
-    void update( java.util.Collection<? extends DesignElementDataVector> dedvs );
+    void update( T dedv );
 
 }

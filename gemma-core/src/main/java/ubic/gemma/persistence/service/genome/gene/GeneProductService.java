@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,29 +34,11 @@ public interface GeneProductService extends BaseVoEnabledService<GeneProduct, Ge
 
     @Override
     @Secured({ "GROUP_USER" })
-    GeneProduct create( GeneProduct entity );
-
-    @Override
-    @Secured({ "GROUP_USER" })
     GeneProduct findOrCreate( GeneProduct geneProduct );
 
-    /**
-     * Returns all the genes that share the given gene product name
-     */
-    Collection<Gene> getGenesByName( String search );
-
-    /**
-     * Returns all the genes that share the given gene product ncbi id
-     */
-    Collection<Gene> getGenesByNcbiId( String search );
-
     @Override
     @Secured({ "GROUP_USER" })
-    void update( GeneProduct entity );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Collection<GeneProduct> entities );
+    GeneProduct create( GeneProduct entity );
 
     @Override
     @Secured({ "GROUP_ADMIN" })
@@ -70,10 +52,26 @@ public interface GeneProductService extends BaseVoEnabledService<GeneProduct, Ge
     @Secured({ "GROUP_ADMIN" })
     void remove( GeneProduct entity );
 
-    GeneProduct findByGi( String string );
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Collection<GeneProduct> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( GeneProduct entity );
+
+    /**
+     * Returns all the genes that share the given gene product name
+     */
+    Collection<Gene> getGenesByName( String search );
+
+    /**
+     * Returns all the genes that share the given gene product ncbi id
+     */
+    Collection<Gene> getGenesByNcbiId( String search );
 
     Collection<GeneProduct> findByName( String name, Taxon taxon );
 
-    GeneProduct thaw(GeneProduct geneProduct);
+    GeneProduct thaw( GeneProduct geneProduct );
 
 }

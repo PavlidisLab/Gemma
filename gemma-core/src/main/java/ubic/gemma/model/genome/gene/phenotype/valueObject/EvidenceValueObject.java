@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -147,7 +147,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
 
     @Override
     public int compareTo( EvidenceValueObject evidenceValueObject ) {
-        int comparison = comparePropertiesTo( evidenceValueObject );
+        int comparison = this.comparePropertiesTo( evidenceValueObject );
 
         if ( comparison == 0 ) {
             // Use id for comparison so that each evidence object is unique.
@@ -163,7 +163,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         EvidenceValueObject other = ( EvidenceValueObject ) obj;
 
@@ -206,6 +206,18 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
     }
 
     @Override
+    public String toString() {
+        return "EvidenceValueObject [id=" + id + ", description=" + description + ", evidenceCode=" + evidenceCode
+                + ", isNegativeEvidence=" + isNegativeEvidence + ", className=" + className + ", phenotypes="
+                + phenotypes + ", evidenceSource=" + evidenceSource + ", externalUrl=" + externalUrl + ", lastUpdated="
+                + lastUpdated + ", evidenceSecurityValueObject=" + evidenceSecurityValueObject + ", geneId=" + geneId
+                + ", geneNCBI=" + geneNCBI + ", geneOfficialSymbol=" + geneOfficialSymbol + ", geneOfficialName="
+                + geneOfficialName + ", taxonCommonName=" + taxonCommonName + ", isHomologueEvidence="
+                + isHomologueEvidence + ", containQueryPhenotype=" + containQueryPhenotype + ", scoreValueObject="
+                + scoreValueObject + "]";
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -220,18 +232,6 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
         result = result + ( ( this.geneNCBI == null ) ? 0 : this.geneNCBI.hashCode() );
 
         return prime * result;
-    }
-
-    @Override
-    public String toString() {
-        return "EvidenceValueObject [id=" + id + ", description=" + description + ", evidenceCode=" + evidenceCode
-                + ", isNegativeEvidence=" + isNegativeEvidence + ", className=" + className + ", phenotypes="
-                + phenotypes + ", evidenceSource=" + evidenceSource + ", externalUrl=" + externalUrl + ", lastUpdated="
-                + lastUpdated + ", evidenceSecurityValueObject=" + evidenceSecurityValueObject + ", geneId=" + geneId
-                + ", geneNCBI=" + geneNCBI + ", geneOfficialSymbol=" + geneOfficialSymbol + ", geneOfficialName="
-                + geneOfficialName + ", taxonCommonName=" + taxonCommonName + ", isHomologueEvidence="
-                + isHomologueEvidence + ", containQueryPhenotype=" + containQueryPhenotype + ", scoreValueObject="
-                + scoreValueObject + "]";
     }
 
     public String getClassName() {
@@ -485,6 +485,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
                     return -1;
                 if ( thisHasNext && !otherHasNext )
                     return 1;
+                //noinspection ConstantConditions // better readability
                 if ( !thisHasNext && !otherHasNext )
                     break;
 
@@ -511,7 +512,7 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
         if ( comparison != 0 )
             return comparison;
 
-        comparison = compareEvidenceSource( evidenceValueObject );
+        comparison = this.compareEvidenceSource( evidenceValueObject );
         if ( comparison != 0 )
             return comparison;
 

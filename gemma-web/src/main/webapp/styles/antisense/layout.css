@@ -560,6 +560,10 @@ i[class*=qtp] {
     color: #8793b9;
 }
 
+i[class*=icon] {
+    font-size: large;
+}
+
 .pre-wrap {
     white-space: pre-wrap; /* Since CSS 2.1 */
     white-space: -moz-pre-wrap; /* Mozilla, since 1999 */

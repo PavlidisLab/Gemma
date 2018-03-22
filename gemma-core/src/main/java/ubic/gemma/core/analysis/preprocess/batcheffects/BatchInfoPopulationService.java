@@ -28,16 +28,6 @@ public interface BatchInfoPopulationService {
      * used may vary. For GEO, the default method is to download the raw data files, and look in them for a date. This
      * is not implemented for every possible type of raw data file.
      *
-     * @param ee the experiment
-     * @return true if information was successfully obtained
-     */
-    boolean fillBatchInformation( ExpressionExperiment ee );
-
-    /**
-     * Attempt to obtain batch information from the data provider and populate it into the given experiment. The method
-     * used may vary. For GEO, the default method is to download the raw data files, and look in them for a date. This
-     * is not implemented for every possible type of raw data file.
-     *
      * @param ee    the experiment
      * @param force whether to force recomputation
      * @return true if information was successfully obtained

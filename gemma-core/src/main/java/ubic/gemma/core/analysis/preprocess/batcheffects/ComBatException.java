@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,29 +21,13 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 /**
  * @author paul
- *
  */
-public class ComBatException extends RuntimeException {
+class ComBatException extends RuntimeException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
-    public ComBatException() {
-        super();
-    }
-
-    public ComBatException( String message ) {
+    ComBatException( String message ) {
         super( message );
-    }
-
-    public ComBatException( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
-    public ComBatException( Throwable cause ) {
-        super( cause );
     }
 
 }

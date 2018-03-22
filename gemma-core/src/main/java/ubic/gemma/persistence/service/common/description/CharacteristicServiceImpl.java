@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,8 @@ import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,7 +42,8 @@ import java.util.Map;
  * @see CharacteristicService
  */
 @Service
-public class CharacteristicServiceImpl extends CharacteristicServiceBase {
+public class CharacteristicServiceImpl extends AbstractVoEnabledService<Characteristic, CharacteristicValueObject>
+        implements CharacteristicService {
 
     /**
      * Classes examined when getting the "parents" of characteristics.
@@ -69,6 +72,43 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
     }
 
     @Override
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString ) {
+        return this.characteristicDao.findByUri( classesToFilterOn, uriString );
+    }
+
+    @Override
+    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris ) {
+        return this.characteristicDao.findByUri( classes, characteristicUris );
+    }
+
+    @Override
+    public Collection<Characteristic> findByUri( Collection<String> uris ) {
+        return this.characteristicDao.findByUri( uris );
+    }
+
+    @Override
+    public Collection<Characteristic> findByUri( String searchString ) {
+        return this.characteristicDao.findByUri( searchString );
+    }
+
+    /**
+     * @see CharacteristicService#findByValue(java.lang.String)
+     */
+    @Override
+    public java.util.Collection<Characteristic> findByValue( java.lang.String search ) {
+        return this.characteristicDao.findByValue( search + '%' );
+    }
+
+    @Override
+    public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics ) {
+        Map<Characteristic, Object> charToParent = new HashMap<>();
+        for ( Class<?> parentClass : CharacteristicServiceImpl.CLASSES_WITH_CHARACTERISTICS ) {
+            charToParent.putAll( this.characteristicDao.getParents( parentClass, characteristics ) );
+        }
+        return charToParent;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
             Collection<Characteristic> characteristics ) {
@@ -80,43 +120,6 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
     }
 
     @Override
-    protected Collection<Characteristic> handleFindByUri( Collection<String> uris ) {
-        return this.characteristicDao.findByUri( uris );
-    }
-
-    @Override
-    protected Collection<Characteristic> handleFindByUri( String searchString ) {
-        return this.characteristicDao.findByUri( searchString );
-    }
-
-    /**
-     * @see CharacteristicService#findByValue(java.lang.String)
-     */
-    @Override
-    protected java.util.Collection<Characteristic> handleFindByValue( java.lang.String search ) {
-        return this.characteristicDao.findByValue( search + '%' );
-    }
-
-    @Override
-    protected Map<Characteristic, Object> handleGetParents( Collection<Characteristic> characteristics ) {
-        Map<Characteristic, Object> charToParent = new HashMap<>();
-        for ( Class<?> parentClass : CLASSES_WITH_CHARACTERISTICS ) {
-            charToParent.putAll( this.characteristicDao.getParents( parentClass, characteristics ) );
-        }
-        return charToParent;
-    }
-
-    @Override
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString ) {
-        return this.characteristicDao.findByUri( classesToFilterOn, uriString );
-    }
-
-    @Override
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris ) {
-        return this.characteristicDao.findByUri( classes, characteristicUris );
-    }
-
-    @Override
     public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string ) {
         return this.characteristicDao.findByValue( classes, string );
     }
@@ -124,11 +127,6 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
     @Override
     public Collection<? extends Characteristic> findByCategory( String query ) {
         return this.characteristicDao.findByCategory( query );
-    }
-
-    @Override
-    public Collection<String> getUsedCategories() {
-        return this.characteristicDao.getUsedCategories();
     }
 
 }

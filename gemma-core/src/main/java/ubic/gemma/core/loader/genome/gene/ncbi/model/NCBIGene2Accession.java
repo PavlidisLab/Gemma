@@ -53,6 +53,7 @@ package ubic.gemma.core.loader.genome.gene.ncbi.model;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public class NCBIGene2Accession {
 
     private int taxId;

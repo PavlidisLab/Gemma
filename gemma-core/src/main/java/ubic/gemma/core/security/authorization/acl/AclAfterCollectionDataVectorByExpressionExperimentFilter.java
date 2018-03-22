@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008-2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,24 +41,24 @@ public class AclAfterCollectionDataVectorByExpressionExperimentFilter
 
     public AclAfterCollectionDataVectorByExpressionExperimentFilter( AclService aclService,
             List<Permission> requirePermission ) {
-        super( aclService, CONFIG_ATTRIBUTE, requirePermission );
+        super( aclService, AclAfterCollectionDataVectorByExpressionExperimentFilter.CONFIG_ATTRIBUTE,
+                requirePermission );
     }
 
     @Override
     public String getProcessConfigAttribute() {
-        return CONFIG_ATTRIBUTE;
+        return AclAfterCollectionDataVectorByExpressionExperimentFilter.CONFIG_ATTRIBUTE;
     }
 
     @Override
     protected ExpressionExperiment getAssociatedSecurable( Object targetDomainObject ) {
         ExpressionExperiment domainObject = null;
         if ( targetDomainObject instanceof DesignElementDataVector ) {
-            domainObject = ( ExpressionExperiment ) ( ( DesignElementDataVector ) targetDomainObject )
-                    .getExpressionExperiment();
+            domainObject = ( ( DesignElementDataVector ) targetDomainObject ).getExpressionExperiment();
         } else if ( targetDomainObject instanceof DataVectorValueObject ) {
             ExpressionExperimentValueObject expressionExperiment = ( ( DataVectorValueObject ) targetDomainObject )
                     .getExpressionExperiment();
-            domainObject = ( ExpressionExperiment ) ExpressionExperiment.Factory.newInstance();
+            domainObject = ExpressionExperiment.Factory.newInstance();
             domainObject.setId( expressionExperiment.getId() );
         }
         return domainObject;

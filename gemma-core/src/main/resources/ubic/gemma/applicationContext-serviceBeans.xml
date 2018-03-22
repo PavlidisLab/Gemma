@@ -1,72 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Somewhat miscellaneous beans. @author Gemma paul -->
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
-   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
+<beans xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
 
-	<!-- Configured here because autowiring doesn't work with static fields. -->
-	<!--<property name="userManager" ref="userManager" /> -->
-	<!--<property name="jobInfoService" ref="jobInfoService" /> -->
-	<!--</bean> -->
+    <aop:aspectj-autoproxy/>
 
-	<aop:aspectj-autoproxy />
+    <!-- Message source for this context, loaded from localized "messages_xx" files -->
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basename" value="messages"/>
+    </bean>
 
-	<!-- MonitorAdvicevice and Monitored. <bean id="monitorAdvice" claMonitorAdvicevice"
-		/> -->
+    <!-- configurationPropertyConfigurer allows you to use variables like ${mail.host} in the spring bean definitions. Variables
+        are listed in a resource. If the resource is in your classpath, list in in 'locations'. Other config files can be added by
+        defining PropertiesConfiguration instances -->
+    <bean id="userPropertiesFileHandler" class="org.apache.commons.configuration.io.FileHandler" init-method="load">
+        <constructor-arg index="0">
+            <ref local="userProperties"/>
+        </constructor-arg>
+        <property name="fileName" value="Gemma.properties"/>
+    </bean>
 
-	<!-- setup/teardown for long-running tasks. <bean id="taskMethodAdvice" claubic.gemma.core.job.job.TaskMethodAdvice"> <property
-		name="spacesUtil" ref="spacesUtil" /> </bean> -->
+    <bean id="userProperties" class="org.apache.commons.configuration.PropertiesConfiguration"/>
 
-	<!-- Message source for this context, loaded from localized "messages_xx" files -->
-	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-		<property name="basename">
-			<value>messages</value>
-		</property>
-	</bean>
-
-
-	<!-- configurationPropertyConfigurer allows you to use variables like ${mail.host} in the spring bean definitions. Variables 
-		are listed in a resource. If the resource is in your classpath, list in in 'locations'. Other config files can be added by 
-		defining PropertiesConfiguration instances -->
-	<bean id="userPropertiesFileHandler" class="org.apache.commons.configuration.io.FileHandler" init-method="load">
-		<constructor-arg index="0">
-			<ref local="userProperties" />
-		</constructor-arg>
-		<property name="fileName">
-			<value>Gemma.properties</value>
-		</property>
-	</bean>
-
-	<bean id="userProperties" class="org.apache.commons.configuration.PropertiesConfiguration" />
-
-	<bean id="configurationPropertyConfigurer" class="ubic.gemma.persistence.util.CommonsConfigurationPropertyPlaceholderConfigurer"
-		depends-on="userPropertiesFileHandler">
-		<property name="configuration">
-			<ref local="userProperties" />
-		</property>
-		<property name="locations">
-			<list>
-				<value>classpath:default.properties</value>
-			</list>
-		</property>
-		<property name="ignoreUnresolvablePlaceholders" value="false" />
-		<property name="ignoreResourceNotFound" value="false" />
-	</bean>
+    <bean id="configurationPropertyConfigurer"
+          class="ubic.gemma.persistence.util.CommonsConfigurationPropertyPlaceholderConfigurer"
+          depends-on="userPropertiesFileHandler">
+        <property name="configuration">
+            <ref local="userProperties"/>
+        </property>
+        <property name="locations">
+            <list>
+                <value>classpath:default.properties</value>
+            </list>
+        </property>
+        <property name="ignoreUnresolvablePlaceholders" value="false"/>
+        <property name="ignoreResourceNotFound" value="false"/>
+    </bean>
 
 
-
-	<!-- Configure Velocity for sending e-mail -->
-	<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
-		<property name="velocityProperties">
-			<props>
-				<prop key="resource.loader">class</prop>
-				<prop key="class.resource.loader.class">
-					org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
-				</prop>
-			</props>
-		</property>
-	</bean>
+    <!-- Configure Velocity for sending e-mail -->
+    <bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+        <property name="velocityProperties">
+            <props>
+                <prop key="resource.loader">class</prop>
+                <prop key="class.resource.loader.class">
+                    org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
+                </prop>
+            </props>
+        </property>
+    </bean>
 
 
 </beans>

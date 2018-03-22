@@ -51,8 +51,6 @@ public interface ExpressionDataMatrixService {
      */
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
 
-    Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee );
-
     DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method );
 

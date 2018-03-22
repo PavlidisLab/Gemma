@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -34,11 +34,11 @@ import java.util.Iterator;
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
  */
 @Repository
-public class UserGroupDaoImpl extends UserGroupDaoBase {
+public class UserGroupDaoImpl extends AbstractDao<UserGroup> implements UserGroupDao {
 
     @Autowired
     public UserGroupDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( UserGroup.class, sessionFactory );
     }
 
     @Override
@@ -55,9 +55,30 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     }
 
     @Override
-    public void addToGroup( UserGroup group, User user ) {
-        group.getGroupMembers().add( user );
-        super.update( group );
+    public UserGroup findByName( String name ) {
+        return ( UserGroup ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "from UserGroup as userGroup where userGroup.name = :name" ).setParameter( "name", name )
+                .uniqueResult();
+    }
+
+    @Override
+    public Collection<UserGroup> findGroupsForUser( User user ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ug from UserGroup ug inner join ug.groupMembers memb where memb = :user" )
+                .setParameter( "user", user ).list();
+    }
+
+    @Override
+    public void removeAuthority( UserGroup group, String authority ) {
+        for ( Iterator<gemma.gsec.model.GroupAuthority> iterator = group.getAuthorities().iterator(); iterator
+                .hasNext(); ) {
+            gemma.gsec.model.GroupAuthority ga = iterator.next();
+            if ( ga.getAuthority().equals( authority ) ) {
+                iterator.remove();
+            }
+        }
+        this.getHibernateTemplate().update( group );
     }
 
     @Override
@@ -75,11 +96,8 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     }
 
     @Override
-    public Collection<UserGroup> findGroupsForUser( User user ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ug from UserGroup ug inner join ug.groupMembers memb where memb = :user" )
-                .setParameter( "user", user ).list();
+    public Integer countAll() {
+        return this.loadAll().size();
     }
 
     @Override
@@ -100,18 +118,6 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     }
 
     @Override
-    public void removeAuthority( UserGroup group, String authority ) {
-        for ( Iterator<gemma.gsec.model.GroupAuthority> iterator = group.getAuthorities().iterator(); iterator
-                .hasNext(); ) {
-            gemma.gsec.model.GroupAuthority ga = iterator.next();
-            if ( ga.getAuthority().equals( authority ) ) {
-                iterator.remove();
-            }
-        }
-        this.getHibernateTemplate().update( group );
-    }
-
-    @Override
     public void update( UserGroup userGroup ) {
         UserGroup groupToUpdate = this.load( userGroup.getId() );
         String name = groupToUpdate.getName();
@@ -125,18 +131,17 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
 
     @Override
     public UserGroup find( UserGroup entity ) {
-        return null;
+        if ( entity.getId() != null ) {
+            return this.load( entity.getId() );
+        } else {
+            return this.findByName( entity.getName() );
+        }
     }
 
     @Override
     public UserGroup findOrCreate( UserGroup entity ) {
         UserGroup found = this.find( entity );
         return found != null ? found : this.create( entity );
-    }
-
-    @Override
-    public Integer countAll() {
-        return this.loadAll().size();
     }
 
 }

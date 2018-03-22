@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,8 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
-import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 /**
  * <p>
@@ -36,9 +35,10 @@ import ubic.gemma.persistence.service.VoEnabledService;
  */
 @Service
 public class BioAssayDimensionServiceImpl
-        extends VoEnabledService<BioAssayDimension, BioAssayDimensionValueObject> implements BioAssayDimensionService {
+        extends AbstractVoEnabledService<BioAssayDimension, BioAssayDimensionValueObject>
+        implements BioAssayDimensionService {
 
-    BioAssayDimensionDao bioAssayDimensionDao;
+    private final BioAssayDimensionDao bioAssayDimensionDao;
 
     @Autowired
     public BioAssayDimensionServiceImpl( BioAssayDimensionDao bioAssayDimensionDao ) {
@@ -50,6 +50,11 @@ public class BioAssayDimensionServiceImpl
     @Transactional(readOnly = true)
     public void thawLite( BioAssayDimension bioAssayDimension ) {
         this.bioAssayDimensionDao.thawLite( bioAssayDimension );
+    }
+
+    @Override
+    public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
+        return this.bioAssayDimensionDao.thaw( bioAssayDimension );
     }
 
 }

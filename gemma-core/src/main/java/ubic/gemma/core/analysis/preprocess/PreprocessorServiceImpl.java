@@ -37,9 +37,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 /**
@@ -82,8 +80,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private ExpressionDataFileService dataFileService;
     @Autowired
-    private ProcessedExpressionDataVectorService dataVectorService;
-    @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
     private ExpressionExperimentBatchCorrectionService expressionExperimentBatchCorrectionService;
@@ -92,7 +88,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private MeanVarianceService meanVarianceService;
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
     @Autowired
@@ -105,7 +101,42 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private OutlierDetectionService outlierDetectionService;
 
     @Override
-    public ExpressionExperiment batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
+    public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
+
+        ee = expressionExperimentService.thaw( ee );
+
+        try {
+            this.removeInvalidatedData( ee );
+            this.processForMissingValues( ee );
+            processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+
+            return this.processExceptForVectorCreate( ee );
+        } catch ( Exception e ) {
+            throw new PreprocessingException( e );
+        }
+    }
+
+    @Override
+    public void process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
+        if ( light ) {
+            try {
+                this.removeInvalidatedData( ee );
+                processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+                this.processForSampleCorrelation( ee );
+                this.processForMeanVarianceRelation( ee );
+                this.processForPca( ee );
+                // analyzerService.deleteAnalyses( ee ); ??
+            } catch ( Exception e ) {
+                throw new PreprocessingException( e );
+            }
+        } else {
+            this.process( ee );
+        }
+
+    }
+
+    @Override
+    public void batchCorrect( ExpressionExperiment ee, boolean force ) throws PreprocessingException {
         String note = "ComBat batch correction";
         String detail = null;
 
@@ -128,7 +159,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         } else {
             note = "[Forced]" + note;
             detail = "Batch correction skipped outlier check.";
-            log.warn( detail );
+            PreprocessorServiceImpl.log.warn( detail );
         }
 
         try {
@@ -136,11 +167,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             Collection<ProcessedExpressionDataVector> vecs = this.getProcessedExpressionDataVectors( ee );
 
             // TODO log-transform if not already, update QT. See https://github.com/PavlidisLab/Gemma/issues/50
-            
+
             ExpressionDataDoubleMatrix correctedData = this.getCorrectedData( ee, vecs );
 
             // Convert to vectors
-            processedExpressionDataVectorCreateService
+            processedExpressionDataVectorService
                     .createProcessedDataVectors( ee, correctedData.toProcessedDataVectors() );
 
             AuditEventType eventType = BatchCorrectionEvent.Factory.newInstance();
@@ -149,53 +180,16 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             if ( bConf != null && force ) {
                 String add = "Batch correction forced over a detected confound: " + bConf;
                 //noinspection ConstantConditions // That is simply false.
-                detail = (detail == null) ? add : detail + "\n" + add;
+                detail = ( detail == null ) ? add : detail + "\n" + add;
             }
             auditTrailService.addUpdateEvent( ee, eventType, note, detail );
 
-            removeInvalidatedData( ee );
-            return processExceptForVectorCreate( ee );
+            this.removeInvalidatedData( ee );
+            this.processExceptForVectorCreate( ee );
 
         } catch ( Exception e ) {
             throw new PreprocessingException( e );
         }
-    }
-
-    @Override
-    public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
-
-        ee = expressionExperimentService.thaw( ee );
-
-        try {
-            removeInvalidatedData( ee );
-            processForMissingValues( ee );
-            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-
-            return processExceptForVectorCreate( ee );
-        } catch ( Exception e ) {
-            throw new PreprocessingException( e );
-        }
-    }
-
-    @Override
-    public ExpressionExperiment process( ExpressionExperiment ee, boolean light ) throws PreprocessingException {
-        if ( light ) {
-            try {
-                removeInvalidatedData( ee );
-                processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-                processForSampleCorrelation( ee );
-                processForMeanVarianceRelation( ee );
-                processForPca( ee );
-                // analyzerService.deleteAnalyses( ee ); ??
-            } catch ( Exception e ) {
-                throw new PreprocessingException( e );
-            }
-        } else {
-            process( ee );
-        }
-
-        return ee;
-
     }
 
     /**
@@ -232,20 +226,20 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         if ( !oldAnalyses.isEmpty() ) {
 
-            log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
-            Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+            PreprocessorServiceImpl.log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
                 try {
-                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe, true ) );
+                    this.analyzerService.redoAnalysis( ee, copyMe, true );
                 } catch ( Exception e ) {
-                    log.error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
+                    PreprocessorServiceImpl.log
+                            .error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
                 }
             }
         }
 
-        processForSampleCorrelation( ee );
-        processForMeanVarianceRelation( ee );
-        processForPca( ee );
+        this.processForSampleCorrelation( ee );
+        this.processForMeanVarianceRelation( ee );
+        this.processForPca( ee );
 
         expressionExperimentService.update( ee );
         assert ee.getNumberOfDataVectors() != null;
@@ -259,11 +253,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             meanVarianceService.findOrCreate( ee );
         } catch ( Exception e ) {
-            log.error( "Could not compute mean-variance relation: " + e.getMessage() );
+            PreprocessorServiceImpl.log.error( "Could not compute mean-variance relation: " + e.getMessage() );
         }
     }
 
-    private boolean processForMissingValues( ExpressionExperiment ee ) {
+    private void processForMissingValues( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         if ( arrayDesignsUsed.size() > 1 ) {
             throw new UnsupportedOperationException( "Skipping postprocessing because experiment uses "
@@ -271,24 +265,22 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         }
 
         ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-        boolean wasProcessed = false;
 
         TechnologyType tt = arrayDesignUsed.getTechnologyType();
         if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            PreprocessorServiceImpl.log
+                    .info( ee + " uses a two-color array design, processing for missing values ..." );
             ee = expressionExperimentService.thawLite( ee );
             twoChannelMissingValueService.computeMissingValues( ee );
-            wasProcessed = true;
         }
 
-        return wasProcessed;
     }
 
     private void processForPca( ExpressionExperiment ee ) {
         try {
             svdService.svd( ee );
         } catch ( Exception e ) {
-            log.error( "SVD could not be performed: " + e.getMessage() );
+            PreprocessorServiceImpl.log.error( "SVD could not be performed: " + e.getMessage() );
         }
     }
 
@@ -299,17 +291,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         try {
             sampleCoexpressionMatrixService.findOrCreate( ee );
         } catch ( Exception e ) {
-            log.error( "SampleCorrelation could not be computed: " + e.getMessage() );
+            PreprocessorServiceImpl.log.error( "SampleCorrelation could not be computed: " + e.getMessage() );
         }
     }
 
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
-
-        try {
-            dataFileService.deleteAllFiles( expExp );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        dataFileService.deleteAllFiles( expExp );
     }
 
     private void checkQuantitationType( ExpressionDataDoubleMatrix correctedData ) {
@@ -349,16 +336,16 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     private Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
-        Collection<ProcessedExpressionDataVector> vecs = dataVectorService.getProcessedDataVectors( ee );
+        Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
 
         if ( vecs == null || vecs.isEmpty() ) {
-            this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-            vecs = dataVectorService.getProcessedDataVectors( ee );
+            vecs = this.processedExpressionDataVectorService.computeProcessedExpressionData( ee );
         }
 
         assert vecs != null;
 
-        dataVectorService.thaw( vecs );
+        processedExpressionDataVectorService.thaw( vecs );
         return vecs;
     }
 
@@ -381,7 +368,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     private void checkOutliers( ExpressionExperiment ee ) throws PreprocessingException {
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
         if ( !outliers.isEmpty() ) {
             Collection<OutlierDetails> knownOutliers = this.getAlreadyKnownOutliers( ee );
             Collection<OutlierDetails> unknownOutliers = new LinkedList<>();

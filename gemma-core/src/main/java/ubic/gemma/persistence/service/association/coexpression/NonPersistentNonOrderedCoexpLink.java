@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -76,32 +76,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
 
     @Override
     public int compareTo( NonPersistentNonOrderedCoexpLink o ) {
-        return getFirstGene().compareTo( o.getFirstGene() );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        NonPersistentNonOrderedCoexpLink other = ( NonPersistentNonOrderedCoexpLink ) obj;
-        if ( g1 == null ) {
-            if ( other.g1 != null )
-                return false;
-        } else if ( !g1.equals( other.g1 ) )
-            return false;
-        if ( g2 == null ) {
-            if ( other.g2 != null )
-                return false;
-        } else if ( !g2.equals( other.g2 ) )
-            return false;
-        if ( positive != other.positive )
-            return false;
-
-        return true;
+        return this.getFirstGene().compareTo( o.getFirstGene() );
     }
 
     /**
@@ -140,13 +115,35 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
         return result;
     }
 
-    public boolean isPositiveCorrelation() {
-        return positive;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        NonPersistentNonOrderedCoexpLink other = ( NonPersistentNonOrderedCoexpLink ) obj;
+        if ( g1 == null ) {
+            if ( other.g1 != null )
+                return false;
+        } else if ( !g1.equals( other.g1 ) )
+            return false;
+        if ( g2 == null ) {
+            if ( other.g2 != null )
+                return false;
+        } else if ( !g2.equals( other.g2 ) )
+            return false;
+        return positive == other.positive;
     }
 
     @Override
     public String toString() {
         return "NPNOCL [g1=" + g1 + ", g2=" + g2 + ", pos=" + positive + "]";
+    }
+
+    public boolean isPositiveCorrelation() {
+        return positive;
     }
 
 }

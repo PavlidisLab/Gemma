@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,34 +51,26 @@ public class GeneTestedInCacheImpl implements InitializingBean, GeneTestedInCach
     private EhCacheManagerFactoryBean cacheManagerFactory;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         CacheManager cacheManager = cacheManagerFactory.getObject();
         assert cacheManager != null;
 
         // Other settings just use the gene2gene ones.
-        int timeToLive = Settings
-                .getInt( "gemma.cache.gene2gene.timetolive", GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = Settings
-                .getInt( "gemma.cache.gene2gene.timetoidle", GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_TIME_TO_IDLE );
-        boolean overFlowToDisk = Settings
-                .getBoolean( "gemma.cache.gene2gene.usedisk", GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean eternal =
-                Settings.getBoolean( "gemma.cache.gene2gene.eternal", GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_ETERNAL )
-                        && timeToLive == 0;
+        int timeToLive = Settings.getInt( "gemma.cache.gene2gene.timetolive",
+                GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = Settings.getInt( "gemma.cache.gene2gene.timetoidle",
+                GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_TIME_TO_IDLE );
+        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.gene2gene.usedisk",
+                GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_OVERFLOW_TO_DISK );
+        boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
+                GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
-        this.cache = CacheUtils.createOrLoadCache( cacheManager, GENE_COEXPRESSIONTESTED_CACHE_NAME, terracottaEnabled,
-                GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_MAX_ELEMENTS, overFlowToDisk, eternal, timeToIdle, timeToLive,
-                diskPersistent );
-    }
-
-    @Override
-    public void cache( Map<Long, GeneCoexpressionTestedIn> idMap ) {
-        for ( GeneCoexpressionTestedIn v : idMap.values() ) {
-            cacheTestedIn( v );
-        }
-
+        this.cache = CacheUtils
+                .createOrLoadCache( cacheManager, GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_NAME,
+                        terracottaEnabled, GeneTestedInCacheImpl.GENE_COEXPRESSIONTESTED_CACHE_DEFAULT_MAX_ELEMENTS,
+                        overFlowToDisk, eternal, timeToIdle, timeToLive, diskPersistent );
     }
 
     @Override
@@ -90,11 +82,6 @@ public class GeneTestedInCacheImpl implements InitializingBean, GeneTestedInCach
     @Override
     public void clearCache() {
         cache.removeAll();
-    }
-
-    @Override
-    public boolean contains( Long geneId ) {
-        return cache.isKeyInCache( geneId );
     }
 
     @Override
@@ -112,6 +99,19 @@ public class GeneTestedInCacheImpl implements InitializingBean, GeneTestedInCach
 
         return ( GeneCoexpressionTestedIn ) o.getObjectValue();
 
+    }
+
+    @Override
+    public void cache( Map<Long, GeneCoexpressionTestedIn> idMap ) {
+        for ( GeneCoexpressionTestedIn v : idMap.values() ) {
+            this.cacheTestedIn( v );
+        }
+
+    }
+
+    @Override
+    public boolean contains( Long geneId ) {
+        return cache.isKeyInCache( geneId );
     }
 
     @Override

@@ -18,21 +18,10 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.reset;
-import static org.easymock.EasyMock.verify;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import ubic.gemma.core.genome.gene.service.GeneServiceImpl;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
@@ -42,21 +31,27 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.service.genome.GeneDaoImpl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.easymock.EasyMock.*;
+
 /**
  * @author daq2101
  */
+@SuppressWarnings({ "MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal" }) // In a test it makes sense
 public class GeneServiceImplTest extends BaseSpringContextTest {
 
     private static final String STRAND = "+";
-    private Collection<Gene> allThree = new HashSet<>();
-    private Collection<Gene> justRab = new HashSet<>();
-    private Collection<Gene> justRabble = new HashSet<>();
+    private final Collection<Gene> allThree = new HashSet<>();
+    private final Collection<Gene> justRab = new HashSet<>();
+    private final Collection<Gene> justRabble = new HashSet<>();
     private GeneServiceImpl svc;
     private Gene g = null;
     private Gene g2 = null;
     private Gene g3 = null;
     private GeneDao geneDaoMock;
-    private Taxon t = null;
 
     @Before
     public void setUp() throws Exception {
@@ -89,13 +84,13 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         g3.setId( ( long ) 1234 );
 
         // For testing need to add physical locations to the gene products of a given gene.
-        Chromosome chromosome = Chromosome.Factory.newInstance( "fakeChromosome", t );
+        Chromosome chromosome = new Chromosome( "fakeChromosome", t );
         FieldUtils.writeField( chromosome, "id", 54321L, true );
 
         // Gene product 1 (Min=100 max=200)
         PhysicalLocation ploc1 = PhysicalLocation.Factory.newInstance();
         ploc1.setChromosome( chromosome );
-        ploc1.setStrand( STRAND );
+        ploc1.setStrand( GeneServiceImplTest.STRAND );
         ploc1.setNucleotide( ( long ) 100 );
         ploc1.setNucleotideLength( 100 );
 
@@ -107,7 +102,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         // gene product 2 (min=110 max = 210)
         PhysicalLocation ploc2 = PhysicalLocation.Factory.newInstance();
         ploc2.setChromosome( chromosome );
-        ploc2.setStrand( STRAND );
+        ploc2.setStrand( GeneServiceImplTest.STRAND );
         ploc2.setNucleotide( ( long ) 110 );
         ploc2.setNucleotideLength( 100 );
 
@@ -119,7 +114,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         // Gene Product 3 (min=90 max=140)
         PhysicalLocation ploc3 = PhysicalLocation.Factory.newInstance();
         ploc3.setChromosome( chromosome );
-        ploc3.setStrand( STRAND );
+        ploc3.setStrand( GeneServiceImplTest.STRAND );
         ploc3.setNucleotide( ( long ) 90 );
         ploc3.setNucleotideLength( 50 );
 
@@ -143,12 +138,12 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
 
         // Gene Product 5 (right strand wrong chromosome should get regected, min 20 max 220)
 
-        Chromosome wrongChromosome = Chromosome.Factory.newInstance( "wrongFakeChromosome", t );
+        Chromosome wrongChromosome = new Chromosome( "wrongFakeChromosome", t );
         FieldUtils.writeField( chromosome, "id", 43215L, true );
 
         PhysicalLocation ploc5 = PhysicalLocation.Factory.newInstance();
         ploc5.setChromosome( wrongChromosome );
-        ploc5.setStrand( STRAND );
+        ploc5.setStrand( GeneServiceImplTest.STRAND );
         ploc5.setNucleotide( ( long ) 20 );
         ploc5.setNucleotideLength( 200 );
 
@@ -178,6 +173,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest {
         allThree.clear();
     }
 
+    @SuppressWarnings("Duplicates") // Not effective to extract
     @Test
     public void testFindAll() {
         reset( geneDaoMock );

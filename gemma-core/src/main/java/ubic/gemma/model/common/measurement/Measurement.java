@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 import java.io.Serializable;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class Measurement implements Identifiable, Serializable {
 
     /**
@@ -38,6 +39,14 @@ public abstract class Measurement implements Identifiable, Serializable {
     private Unit unit;
 
     @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -47,14 +56,6 @@ public abstract class Measurement implements Identifiable, Serializable {
         }
         final Measurement that = ( Measurement ) object;
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
     }
 
     @Override
@@ -114,6 +115,7 @@ public abstract class Measurement implements Identifiable, Serializable {
         this.value = value;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
 
         public static Measurement newInstance() {

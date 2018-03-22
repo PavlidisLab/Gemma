@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,14 +40,9 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 
-    Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
-            long analysisId );
+    Collection<IncludedResultSetInfoValueObject> findIncludedResultSetsInfoById( long analysisId );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
@@ -59,6 +54,7 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
 
     GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( GeneDifferentialExpressionMetaAnalysis analysis );
 

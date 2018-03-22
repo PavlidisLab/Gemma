@@ -170,8 +170,6 @@ public class DatasetsWebService extends
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Required
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        expressionExperimentService.getBioAssayDimensions( ee );
         return Responder.autoCode( datasetArg.getSamples( expressionExperimentService, bioAssayService ), sr );
     }
 
@@ -230,7 +228,7 @@ public class DatasetsWebService extends
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        return outputDataFile( ee, filterData.getValue() );
+        return this.outputDataFile( ee, filterData.getValue() );
     }
 
     /**
@@ -248,7 +246,7 @@ public class DatasetsWebService extends
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         ExpressionExperiment ee = datasetArg.getPersistentObject( expressionExperimentService );
-        return outputDesignFile( ee );
+        return this.outputDesignFile( ee );
     }
 
     /**
@@ -349,7 +347,7 @@ public class DatasetsWebService extends
             // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        checkReqArg( component, "component" );
+        this.checkReqArg( component, "component" );
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasets.getPersistentObjects( expressionExperimentService ), limit.getValue(),
                         component.getValue(), keepNonSpecific.getValue(),
@@ -391,7 +389,7 @@ public class DatasetsWebService extends
             // Optional, default false
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        checkReqArg( diffExSet, "diffExSet" );
+        this.checkReqArg( diffExSet, "diffExSet" );
         return Responder.autoCode( processedExpressionDataVectorService
                 .getExpressionLevelsDiffEx( datasets.getPersistentObjects( expressionExperimentService ),
                         diffExSet.getValue(), threshold.getValue(), limit.getValue(), keepNonSpecific.getValue(),
@@ -401,13 +399,13 @@ public class DatasetsWebService extends
     private Response outputDataFile( ExpressionExperiment ee, boolean filter ) {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateDataFile( ee, false, filter );
-        return outputFile( file, ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
+        return this.outputFile( file, DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
     private Response outputDesignFile( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
         File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
-        return outputFile( file, ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
+        return this.outputFile( file, DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() );
     }
 
     private Response outputFile( File file, String error, String shortName ) {

@@ -23,12 +23,11 @@ import static org.junit.Assert.*;
  * Methods for checking ACLs.
  *
  * @author paul
- *
  */
 @Component
 public class AclTestUtils {
 
-    private static Log log = LogFactory.getLog( AclTestUtils.class );
+    private static final Log log = LogFactory.getLog( AclTestUtils.class );
 
     @Autowired
     private AclService aclService;
@@ -46,12 +45,12 @@ public class AclTestUtils {
      */
     public void checkDeletedAcl( Object f ) {
         try {
-            Acl acl = getAcl( f );
+            Acl acl = this.getAcl( f );
             fail( "Failed to  remove ACL for " + f + ", got " + acl );
         } catch ( NotFoundException okaye ) {
             // okay
-            if ( log.isDebugEnabled() )
-                log.debug( "As expected, there was no acl for " + f.getClass().getSimpleName() );
+            if ( AclTestUtils.log.isDebugEnabled() )
+                AclTestUtils.log.debug( "As expected, there was no acl for " + f.getClass().getSimpleName() );
         }
     }
 
@@ -61,36 +60,36 @@ public class AclTestUtils {
      * @param ee ee
      */
     public void checkDeleteEEAcls( ExpressionExperiment ee ) {
-        checkDeletedAcl( ee );
+        this.checkDeletedAcl( ee );
 
-        checkDeletedAcl( ee.getRawDataFile() );
+        this.checkDeletedAcl( ee.getRawDataFile() );
 
-        checkDeletedAcl( ee.getExperimentalDesign() );
+        this.checkDeletedAcl( ee.getExperimentalDesign() );
 
         for ( ExperimentalFactor f : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            checkDeletedAcl( f );
+            this.checkDeletedAcl( f );
 
             for ( FactorValue fv : f.getFactorValues() ) {
-                checkDeletedAcl( fv );
+                this.checkDeletedAcl( fv );
             }
         }
 
         assertTrue( ee.getBioAssays().size() > 0 );
         for ( BioAssay ba : ee.getBioAssays() ) {
-            checkDeletedAcl( ba );
+            this.checkDeletedAcl( ba );
 
             LocalFile rawDataFile = ba.getRawDataFile();
 
             for ( LocalFile f : ba.getDerivedDataFiles() ) {
-                checkDeletedAcl( f );
+                this.checkDeletedAcl( f );
             }
 
             if ( rawDataFile != null ) {
-                checkDeletedAcl( rawDataFile );
+                this.checkDeletedAcl( rawDataFile );
             }
 
             BioMaterial bm = ba.getSampleUsed();
-            checkDeletedAcl( bm );
+            this.checkDeletedAcl( bm );
         }
 
     }
@@ -102,110 +101,110 @@ public class AclTestUtils {
      */
     public void checkEEAcls( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
-        checkHasAcl( ee );
-        checkHasAces( ee );
+        this.checkHasAcl( ee );
+        this.checkHasAces( ee );
 
         ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
-        checkHasAcl( experimentalDesign );
-        checkHasAclParent( experimentalDesign, ee );
-        checkLacksAces( experimentalDesign );
+        this.checkHasAcl( experimentalDesign );
+        this.checkHasAclParent( experimentalDesign, ee );
+        this.checkLacksAces( experimentalDesign );
 
         if ( ee.getRawDataFile() != null ) {
-            checkHasAcl( ee.getRawDataFile() );
-            checkHasAclParent( ee.getRawDataFile(), ee );
-            checkLacksAces( ee.getRawDataFile() );
+            this.checkHasAcl( ee.getRawDataFile() );
+            this.checkHasAclParent( ee.getRawDataFile(), ee );
+            this.checkLacksAces( ee.getRawDataFile() );
         }
 
         for ( ExperimentalFactor f : experimentalDesign.getExperimentalFactors() ) {
-            checkHasAcl( f );
-            checkHasAclParent( f, ee );
-            checkLacksAces( f );
+            this.checkHasAcl( f );
+            this.checkHasAclParent( f, ee );
+            this.checkLacksAces( f );
 
             for ( FactorValue fv : f.getFactorValues() ) {
-                checkHasAcl( fv );
-                checkHasAclParent( fv, ee );
-                checkLacksAces( fv );
+                this.checkHasAcl( fv );
+                this.checkHasAclParent( fv, ee );
+                this.checkLacksAces( fv );
             }
         }
 
         // make sure ACLs for the child objects are there
         assertTrue( ee.getBioAssays().size() > 0 );
         for ( BioAssay ba : ee.getBioAssays() ) {
-            checkHasAcl( ba );
-            checkHasAclParent( ba, ee );
-            checkLacksAces( ba );
+            this.checkHasAcl( ba );
+            this.checkHasAclParent( ba, ee );
+            this.checkLacksAces( ba );
 
             LocalFile rawDataFile = ba.getRawDataFile();
 
             if ( rawDataFile != null ) {
-                checkHasAcl( rawDataFile );
-                checkHasAclParent( rawDataFile, null );
-                checkLacksAces( rawDataFile );
+                this.checkHasAcl( rawDataFile );
+                this.checkHasAclParent( rawDataFile, null );
+                this.checkLacksAces( rawDataFile );
             }
 
             for ( LocalFile f : ba.getDerivedDataFiles() ) {
-                checkHasAcl( f );
-                checkHasAclParent( f, null );
-                checkLacksAces( f );
+                this.checkHasAcl( f );
+                this.checkHasAclParent( f, null );
+                this.checkLacksAces( f );
             }
 
             BioMaterial bm = ba.getSampleUsed();
-            checkHasAcl( bm );
-            checkHasAclParent( bm, ee );
-            checkLacksAces( bm );
+            this.checkHasAcl( bm );
+            this.checkHasAclParent( bm, ee );
+            this.checkLacksAces( bm );
 
             ArrayDesign arrayDesign = ba.getArrayDesignUsed();
-            checkHasAcl( arrayDesign );
-            assertTrue( getParentAcl( arrayDesign ) == null );
+            this.checkHasAcl( arrayDesign );
+            assertTrue( this.getParentAcl( arrayDesign ) == null );
 
             // make sure the localfiles are associated with the array design, not the ee.
             arrayDesign = arrayDesignService.thawLite( arrayDesign );
             for ( LocalFile lf : arrayDesign.getLocalFiles() ) {
-                checkHasAcl( lf );
-                checkLacksAces( lf );
-                checkHasAclParent( lf, arrayDesign );
+                this.checkHasAcl( lf );
+                this.checkLacksAces( lf );
+                this.checkHasAclParent( lf, arrayDesign );
             }
 
         }
     }
 
     public void checkEESubSetAcls( ExpressionExperimentSubSet eeset ) {
-        checkEEAcls( eeset.getSourceExperiment() );
-        checkHasAcl( eeset );
-        checkLacksAces( eeset );
-        checkHasAclParent( eeset, eeset.getSourceExperiment() );
+        this.checkEEAcls( eeset.getSourceExperiment() );
+        this.checkHasAcl( eeset );
+        this.checkLacksAces( eeset );
+        this.checkHasAclParent( eeset, eeset.getSourceExperiment() );
     }
 
     public void checkHasAces( Object f ) {
-        Acl a = getAcl( f );
+        Acl a = this.getAcl( f );
         assertTrue( "For object " + f + " with ACL " + a + ":doesn't have ACEs, it should", a.getEntries().size() > 0 );
     }
 
     public void checkHasAcl( Object f ) {
         try {
             aclService.readAclById( new AclObjectIdentity( f ) );
-            log.debug( "Have acl for " + f );
+            AclTestUtils.log.debug( "Have acl for " + f );
         } catch ( NotFoundException okaye ) {
             fail( "Failed to create ACL for " + f );
         }
     }
 
     public void checkHasAclParent( Object f, Object parent ) {
-        Acl parentAcl = getParentAcl( f );
+        Acl parentAcl = this.getParentAcl( f );
         assertNotNull( "No ACL for parent of " + f + "; the parent is " + parent, parentAcl );
 
         if ( parent != null ) {
-            Acl b = getAcl( parent );
+            Acl b = this.getAcl( parent );
             assertEquals( b, parentAcl );
         }
 
         assertNotNull( parentAcl );
 
-        log.debug( "ACL has correct parent for " + f + " <----- " + parentAcl.getObjectIdentity() );
+        AclTestUtils.log.debug( "ACL has correct parent for " + f + " <----- " + parentAcl.getObjectIdentity() );
     }
 
     public void checkLacksAces( Object f ) {
-        Acl a = getAcl( f );
+        Acl a = this.getAcl( f );
         assertTrue( f + " has ACEs, it shouldn't: " + a, a.getEntries().size() == 0 );
     }
 
@@ -231,9 +230,8 @@ public class AclTestUtils {
     }
 
     private Acl getParentAcl( Object f ) {
-        Acl a = getAcl( f );
-        Acl parentAcl = a.getParentAcl();
-        return parentAcl;
+        Acl a = this.getAcl( f );
+        return a.getParentAcl();
     }
 
 }

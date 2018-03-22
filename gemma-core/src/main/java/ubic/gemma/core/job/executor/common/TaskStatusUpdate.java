@@ -19,18 +19,11 @@ import ubic.gemma.core.job.SubmittedTask;
 import java.io.Serializable;
 import java.util.Date;
 
-/**
- * TODO: document me
- */
 public class TaskStatusUpdate implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4588971216164467492L;
-    //TODO: maybe add message as well. ex: Cancelled due to running for too long.
-    private SubmittedTask.Status status;
-    private Date statusChangeTime;
+    private final SubmittedTask.Status status;
+    private final Date statusChangeTime;
 
     public TaskStatusUpdate( SubmittedTask.Status status ) {
         this.status = status;

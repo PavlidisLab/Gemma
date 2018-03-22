@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,7 +71,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
@@ -85,7 +85,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.txt" );) {
+        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.txt" )) {
 
             ee = service.create( metaData, data );
         }
@@ -108,7 +108,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
@@ -123,7 +123,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setIsRatio( true );
 
         try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
 
             ee = service.create( metaData, data );
         }
@@ -148,7 +148,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
 
         ads.add( ad );
         metaData.setArrayDesigns( ads );
@@ -163,7 +163,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" );) {
+        try (InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" )) {
 
             ee = service.create( metaData, data );
             fail( "Should have gotten an exception about duplicated row" );

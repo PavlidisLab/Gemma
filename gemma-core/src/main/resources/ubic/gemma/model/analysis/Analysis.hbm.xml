@@ -1,133 +1,146 @@
 <?xml version="1.0" encoding="UTF-8"?>
- 
-<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-	<class name="ubic.gemma.model.analysis.Analysis" table="ANALYSIS" dynamic-insert="false" dynamic-update="false"
-		abstract="true">
-		<cache usage="read-write" />
-		<id name="id" type="java.lang.Long" unsaved-value="null">
-			<column name="ID" sql-type="BIGINT" />
-			<generator class="native">
-			</generator>
-		</id>
-		<discriminator column="class" type="string" />
-		<many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
-			lazy="proxy" fetch="select">
-			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true" />
-		</many-to-one>
-		<property name="name" type="java.lang.String">
-			<column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
-		</property>
-		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
-			<column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
-		</property>
-		<many-to-one name="protocol" class="ubic.gemma.model.common.protocol.Protocol" lazy="proxy" fetch="select">
-			<column name="PROTOCOL_FK" not-null="false" sql-type="BIGINT" />
-		</many-to-one>
-		 
-		<subclass name="ubic.gemma.model.analysis.expression.ExpressionAnalysis" discriminator-value="ExpressionAnalysis"
-			dynamic-insert="false" dynamic-update="false" abstract="true">
-			<subclass name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis"
-				discriminator-value="GeneDifferentialExpressionMetaAnalysis" dynamic-insert="false" dynamic-update="false"
-				abstract="false">
-				<property name="numGenesAnalyzed" type="java.lang.Integer">
-					<column name="NUM_GENES_ANALYZED" not-null="false" unique="false" sql-type="INTEGER" />
-				</property>
-				<property name="qvalueThresholdForStorage" type="java.lang.Double">
-					<column name="QVALUE_THRESHOLD_FOR_STORAGE" not-null="false" unique="false" sql-type="DOUBLE" />
-				</property>
-				<set name="resultSetsIncluded" table="META_ANALYSES2RESULT_SETS_INCLUDED" lazy="true" fetch="select" inverse="false">
-					<key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_META_ANALYSES_FKC">
-						<column name="META_ANALYSES_FK" sql-type="BIGINT" />
-					</key>
-					<many-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet">
-						<column name="RESULT_SETS_INCLUDED_FK" sql-type="BIGINT" />
-					</many-to-many>
-				</set>
-				<set name="results" lazy="true" fetch="select" inverse="false" cascade="all">
-					<cache usage="read-write" />
-					<key foreign-key="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT_GENE_DIFFC">
-						<column name="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_FK" sql-type="BIGINT" />
-					</key>
-					<one-to-many class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultImpl" />
-				</set>
-			</subclass>
-			<subclass name="ubic.gemma.model.analysis.SingleExperimentAnalysis" abstract="true">
-				<property name="numberOfElementsAnalyzed" type="java.lang.Integer">
-					<column name="NUMBER_OF_ELEMENTS_ANALYZED" not-null="false" unique="false" sql-type="INTEGER" />
-				</property>
-				<many-to-one name="experimentAnalyzed" class="ubic.gemma.model.expression.experiment.BioAssaySet" lazy="false"
-					fetch="select">
-					<column name="EXPERIMENT_ANALYZED_FK" not-null="false" sql-type="BIGINT" />
-				</many-to-one>
-				<subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
-					discriminator-value="CoexpressionAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
-					<property name="numberOfLinks" type="java.lang.Integer">
-						<column name="NUMBER_OF_LINKS" not-null="false" unique="false" sql-type="INTEGER" />
-					</property>
-					<many-to-one name="coexpCorrelationDistribution" class="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistributionImpl"
-						cascade="all" lazy="proxy" fetch="select">
-						<column name="COEXP_CORRELATION_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT" />
-					</many-to-one>
-				</subclass>
-				<subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis"
-					discriminator-value="SampleCoexpressionAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
-					<many-to-one name="sampleCoexpressionMatrix" class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrixImpl"
-						cascade="all" lazy="false" fetch="select">
-						<column name="SAMPLE_COEXPRESSION_MATRIX_FK" not-null="false" sql-type="BIGINT" unique="true" />
-					</many-to-one>
-				</subclass>
-				<subclass name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
-					discriminator-value="DifferentialExpressionAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
-					<many-to-one name="subsetFactorValue" class="ubic.gemma.model.expression.experiment.FactorValue"
-						lazy="proxy" fetch="select">
-						<column name="SUBSET_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT" />
-					</many-to-one>
-					<set name="resultSets" lazy="true" fetch="select" inverse="true" cascade="all">
-						<cache usage="read-write" />
-						<key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_ANALYSIS_FKC">
-							<column name="ANALYSIS_FK" sql-type="BIGINT" />
-						</key>
-						<one-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" />
-					</set>
-				</subclass>
-				<subclass name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis"
-					discriminator-value="PrincipalComponentAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
-					<property name="numComponentsStored" type="java.lang.Integer">
-						<column name="NUM_COMPONENTS_STORED" not-null="false" unique="false" sql-type="INTEGER" />
-					</property>
-					<property name="maxNumProbesPerComponent" type="java.lang.Integer">
-						<column name="MAX_NUM_PROBES_PER_COMPONENT" not-null="false" unique="false" sql-type="INTEGER" />
-					</property>
-					<many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimensionImpl"
-						lazy="false" fetch="select">
-						<column name="BIO_ASSAY_DIMENSION_FK" not-null="false" sql-type="BIGINT" />
-					</many-to-one>
-					<set name="probeLoadings" lazy="true" fetch="select" inverse="false" cascade="all">
-						<cache usage="read-write" />
-						<key foreign-key="PROBE_LOADING_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
-							<column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT" />
-						</key>
-						<one-to-many class="ubic.gemma.model.analysis.expression.pca.ProbeLoadingImpl" />
-					</set>
-					<set name="eigenValues" lazy="false" fetch="select" inverse="false" cascade="all">
-						<cache usage="read-write" />
-						<key foreign-key="EIGENVALUE_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
-							<column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT" />
-						</key>
-						<one-to-many class="ubic.gemma.model.analysis.expression.pca.EigenvalueImpl" />
-					</set>
-					<set name="eigenVectors" lazy="false" fetch="select" inverse="false" cascade="all">
-						<cache usage="read-write" />
-						<key foreign-key="EIGENVECTOR_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
-							<column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT" />
-						</key>
-						<one-to-many class="ubic.gemma.model.analysis.expression.pca.EigenvectorImpl" />
-					</set>
-				</subclass>
-			</subclass>
-		</subclass>
-	</class>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="ubic.gemma.model.analysis.Analysis" table="ANALYSIS"
+           abstract="true">
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <discriminator column="class"/>
+        <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" cascade="all"
+                     lazy="proxy" fetch="select">
+            <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+        <property name="name" type="java.lang.String">
+            <column name="NAME" not-null="false" unique="false"
+                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+        </property>
+        <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
+            <column name="DESCRIPTION" not-null="false" unique="false"
+                    sql-type="text character set latin1 collate latin1_swedish_ci"/>
+        </property>
+        <many-to-one name="protocol" class="ubic.gemma.model.common.protocol.Protocol" lazy="proxy" fetch="select">
+            <column name="PROTOCOL_FK" not-null="false" sql-type="BIGINT"/>
+        </many-to-one>
+
+        <subclass name="ubic.gemma.model.analysis.expression.ExpressionAnalysis"
+                  discriminator-value="ExpressionAnalysis"
+                  abstract="true">
+            <subclass name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis"
+                      discriminator-value="GeneDifferentialExpressionMetaAnalysis"
+                      abstract="false">
+                <property name="numGenesAnalyzed" type="java.lang.Integer">
+                    <column name="NUM_GENES_ANALYZED" not-null="false" unique="false" sql-type="INTEGER"/>
+                </property>
+                <property name="qvalueThresholdForStorage" type="java.lang.Double">
+                    <column name="QVALUE_THRESHOLD_FOR_STORAGE" not-null="false" unique="false" sql-type="DOUBLE"/>
+                </property>
+                <set name="resultSetsIncluded" table="META_ANALYSES2RESULT_SETS_INCLUDED" lazy="true" fetch="select"
+                >
+                    <key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_META_ANALYSES_FKC">
+                        <column name="META_ANALYSES_FK" sql-type="BIGINT"/>
+                    </key>
+                    <many-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet">
+                        <column name="RESULT_SETS_INCLUDED_FK" sql-type="BIGINT"/>
+                    </many-to-many>
+                </set>
+                <set name="results" lazy="true" fetch="select" cascade="all">
+                    <cache usage="read-write"/>
+                    <key foreign-key="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT_GENE_DIFFC">
+                        <column name="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_FK" sql-type="BIGINT"/>
+                    </key>
+                    <one-to-many
+                            class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultImpl"/>
+                </set>
+            </subclass>
+            <subclass name="ubic.gemma.model.analysis.SingleExperimentAnalysis" abstract="true">
+                <property name="numberOfElementsAnalyzed" type="java.lang.Integer">
+                    <column name="NUMBER_OF_ELEMENTS_ANALYZED" not-null="false" unique="false" sql-type="INTEGER"/>
+                </property>
+                <many-to-one name="experimentAnalyzed" class="ubic.gemma.model.expression.experiment.BioAssaySet"
+                             lazy="false"
+                             fetch="select">
+                    <column name="EXPERIMENT_ANALYZED_FK" not-null="false" sql-type="BIGINT"/>
+                </many-to-one>
+                <subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
+                          discriminator-value="CoexpressionAnalysis"
+                          abstract="false">
+                    <property name="numberOfLinks" type="java.lang.Integer">
+                        <column name="NUMBER_OF_LINKS" not-null="false" unique="false" sql-type="INTEGER"/>
+                    </property>
+                    <many-to-one name="coexpCorrelationDistribution"
+                                 class="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution"
+                                 cascade="all" lazy="proxy" fetch="select">
+                        <column name="COEXP_CORRELATION_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT"/>
+                    </many-to-one>
+                </subclass>
+                <subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis"
+                          discriminator-value="SampleCoexpressionAnalysis"
+                          abstract="false">
+                    <many-to-one name="sampleCoexpressionMatrix"
+                                 class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrixImpl"
+                                 cascade="all" lazy="false" fetch="select">
+                        <column name="SAMPLE_COEXPRESSION_MATRIX_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+                    </many-to-one>
+                </subclass>
+                <subclass name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
+                          discriminator-value="DifferentialExpressionAnalysis"
+                          abstract="false">
+                    <many-to-one name="subsetFactorValue" class="ubic.gemma.model.expression.experiment.FactorValue"
+                                 lazy="proxy" fetch="select">
+                        <column name="SUBSET_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT"/>
+                    </many-to-one>
+                    <set name="resultSets" lazy="true" fetch="select" inverse="true" cascade="all">
+                        <cache usage="read-write"/>
+                        <key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_ANALYSIS_FKC">
+                            <column name="ANALYSIS_FK" sql-type="BIGINT"/>
+                        </key>
+                        <one-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet"/>
+                    </set>
+                </subclass>
+                <subclass name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis"
+                          discriminator-value="PrincipalComponentAnalysis"
+                          abstract="false">
+                    <property name="numComponentsStored" type="java.lang.Integer">
+                        <column name="NUM_COMPONENTS_STORED" not-null="false" unique="false" sql-type="INTEGER"/>
+                    </property>
+                    <property name="maxNumProbesPerComponent" type="java.lang.Integer">
+                        <column name="MAX_NUM_PROBES_PER_COMPONENT" not-null="false" unique="false" sql-type="INTEGER"/>
+                    </property>
+                    <many-to-one name="bioAssayDimension"
+                                 class="ubic.gemma.model.expression.bioAssayData.BioAssayDimension"
+                                 lazy="false" fetch="select">
+                        <column name="BIO_ASSAY_DIMENSION_FK" not-null="false" sql-type="BIGINT"/>
+                    </many-to-one>
+                    <set name="probeLoadings" lazy="true" fetch="select" cascade="all">
+                        <cache usage="read-write"/>
+                        <key foreign-key="PROBE_LOADING_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
+                            <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
+                        </key>
+                        <one-to-many class="ubic.gemma.model.analysis.expression.pca.ProbeLoading"/>
+                    </set>
+                    <set name="eigenValues" lazy="false" fetch="select" cascade="all">
+                        <cache usage="read-write"/>
+                        <key foreign-key="EIGENVALUE_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
+                            <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
+                        </key>
+                        <one-to-many class="ubic.gemma.model.analysis.expression.pca.Eigenvalue"/>
+                    </set>
+                    <set name="eigenVectors" lazy="false" fetch="select" cascade="all">
+                        <cache usage="read-write"/>
+                        <key foreign-key="EIGENVECTOR_PRINCIPAL_COMPONENT_ANALYSIS_FKC">
+                            <column name="PRINCIPAL_COMPONENT_ANALYSIS_FK" sql-type="BIGINT"/>
+                        </key>
+                        <one-to-many class="ubic.gemma.model.analysis.expression.pca.Eigenvector"/>
+                    </set>
+                </subclass>
+            </subclass>
+        </subclass>
+    </class>
 </hibernate-mapping>

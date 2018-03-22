@@ -66,21 +66,22 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         SearchSettings settings = SearchSettingsImpl.geneSearch( query, taxon );
         List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
-        Collection<Gene> genes = new HashSet<Gene>();
+        Collection<Gene> genes = new HashSet<>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
-            log.info( "No Genes for search: " + query + " taxon=" + taxonId );
-            return new HashSet<GeneValueObject>();
+            GeneCoreServiceImpl.log.info( "No Genes for search: " + query + " taxon=" + taxonId );
+            return new HashSet<>();
         }
-        log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
+        GeneCoreServiceImpl.log
+                .info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
 
         for ( SearchResult sr : geneSearchResults ) {
             Gene g = ( Gene ) sr.getResultObject();
             g = geneService.thaw( g );
             genes.add( g );
-            log.debug( "Gene search result: " + g.getOfficialSymbol() );
+            GeneCoreServiceImpl.log.debug( "Gene search result: " + g.getOfficialSymbol() );
         }
         Collection<GeneValueObject> geneValueObjects = geneService.loadValueObjects( genes );
-        log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
+        GeneCoreServiceImpl.log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
     }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,38 +27,33 @@ public class UnitImpl extends ubic.gemma.model.common.measurement.Unit {
      */
     private static final long serialVersionUID = -6113027641969468902L;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        Unit other = ( Unit ) obj;
-        if ( getId() == null ) {
-            if ( other.getId() != null ) return false;
-        } else if ( !getId().equals( other.getId() ) ) return false;
-        if ( getUnitNameCV() == null ) {
-            if ( other.getUnitNameCV() != null ) return false;
-        } else if ( !getUnitNameCV().equals( other.getUnitNameCV() ) ) return false;
-        return true;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Object#hashCode()
-     */
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( getId() == null ) ? 0 : getId().hashCode() );
-        result = prime * result + ( ( getUnitNameCV() == null ) ? 0 : getUnitNameCV().hashCode() );
+        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
+        result = prime * result + ( ( this.getUnitNameCV() == null ) ? 0 : this.getUnitNameCV().hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        Unit other = ( Unit ) obj;
+        if ( this.getId() == null ) {
+            if ( other.getId() != null )
+                return false;
+        } else if ( !this.getId().equals( other.getId() ) )
+            return false;
+        if ( this.getUnitNameCV() == null ) {
+            return other.getUnitNameCV() == null;
+        } else
+            return this.getUnitNameCV().equals( other.getUnitNameCV() );
     }
 
     @Override

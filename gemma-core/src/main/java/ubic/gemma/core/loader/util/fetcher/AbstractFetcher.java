@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public abstract class AbstractFetcher implements Fetcher {
 
     public AbstractFetcher() {
         super();
-        initConfig();
+        this.initConfig();
     }
 
     /**
@@ -170,8 +171,8 @@ public abstract class AbstractFetcher implements Fetcher {
             targetPath = new File( localBasePath );
 
             if ( !( targetPath.exists() && targetPath.canRead() ) ) {
-                log.warn( "Attempting to create directory '" + localBasePath + "'" );
-                targetPath.mkdirs();
+                AbstractFetcher.log.warn( "Attempting to create directory '" + localBasePath + "'" );
+                EntityUtils.mkdirs( targetPath );
             }
 
             if ( accession == null ) {
@@ -190,10 +191,11 @@ public abstract class AbstractFetcher implements Fetcher {
             } else {
                 tmpDir = new File( systemTempDir + File.separator + accession );
             }
-            log.warn( "Will use local temporary directory for output: " + tmpDir.getAbsolutePath() );
+            AbstractFetcher.log.warn( "Will use local temporary directory for output: " + tmpDir.getAbsolutePath() );
             newDir = tmpDir;
         }
 
+        //noinspection ConstantConditions // Defensiveness for future changes
         if ( newDir == null ) {
             throw new IOException( "Could not create target directory, was null" );
         }
@@ -217,20 +219,20 @@ public abstract class AbstractFetcher implements Fetcher {
         long lastTime = timer.getTime();
         while ( !future.isDone() && !future.isCancelled() ) {
             try {
-                Thread.sleep( INFO_UPDATE_INTERVAL );
+                Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
-                log.info( "Cancelling download" );
+                AbstractFetcher.log.info( "Cancelling download" );
                 boolean cancelled = future.cancel( true );
                 if ( cancelled ) {
-                    log.info( "Download stopped successfully." );
+                    AbstractFetcher.log.info( "Download stopped successfully." );
                     return false;
                 }
                 throw new RuntimeException( "Cancellation failed." );
 
             }
 
-            if ( log.isInfoEnabled() && timer.getTime() > ( lastTime + 2000L ) ) {
-                log.info( "Waiting ... " + timer.getTime() + "ms elapsed...." );
+            if ( AbstractFetcher.log.isInfoEnabled() && timer.getTime() > ( lastTime + 2000L ) ) {
+                AbstractFetcher.log.info( "Waiting ... " + timer.getTime() + "ms elapsed...." );
             }
         }
         return true;
@@ -248,10 +250,10 @@ public abstract class AbstractFetcher implements Fetcher {
         StopWatch idleTimer = new StopWatch();
         while ( !future.isDone() && !future.isCancelled() ) {
             try {
-                Thread.sleep( INFO_UPDATE_INTERVAL );
+                Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
-                if ( log != null ) {
-                    log.info( "Cancelling download" );
+                if ( AbstractFetcher.log != null ) {
+                    AbstractFetcher.log.info( "Cancelling download" );
                 }
                 boolean cancelled = future.cancel( true );
                 if ( cancelled ) {
@@ -263,9 +265,9 @@ public abstract class AbstractFetcher implements Fetcher {
                     return false;
                 }
 
-                if ( log != null ) {
-                    log.error(
-                            "Cancellation of actual download might not have happened? Task says it was not cancelled: "
+                if ( AbstractFetcher.log != null ) {
+                    AbstractFetcher.log
+                            .error( "Cancellation of actual download might not have happened? Task says it was not cancelled: "
                                     + future );
                 }
 
@@ -276,24 +278,25 @@ public abstract class AbstractFetcher implements Fetcher {
             /*
              * Avoid logging too much. If we're waiting for a long download, reduce frequency of updates.
              */
-            if ( outputFile.length() < expectedSize && ( i < NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY
-                    || i % NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY == 0 ) ) {
+            if ( outputFile.length() < expectedSize && (
+                    i < AbstractFetcher.NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY
+                            || i % AbstractFetcher.NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY == 0 ) ) {
 
                 double percent = 100.00 * outputFile.length() / expectedSize;
 
                 // can cause npe error, breaking hot deploy
-                if ( log != null && log.isInfoEnabled() ) {
-                    log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read ("
-                            + String.format( "%.1f", percent ) + "%)" ) );
+                if ( AbstractFetcher.log != null && AbstractFetcher.log.isInfoEnabled() ) {
+                    AbstractFetcher.log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" )
+                            + " bytes read (" + String.format( "%.1f", percent ) + "%)" ) );
                 }
 
                 if ( previousSize == outputFile.length() ) {
                     /*
                      * Possibly consider bailing after a while.
                      */
-                    if ( idleTimer.getTime() > STALLED_BAIL_TIME_LIMIT ) {
-                        if ( log != null ) {
-                            log.warn( "Download does not seem to be happening, bailing" );
+                    if ( idleTimer.getTime() > AbstractFetcher.STALLED_BAIL_TIME_LIMIT ) {
+                        if ( AbstractFetcher.log != null ) {
+                            AbstractFetcher.log.warn( "Download does not seem to be happening, bailing" );
                         }
                         return false;
                     }
@@ -314,8 +317,8 @@ public abstract class AbstractFetcher implements Fetcher {
             i++;
         }
         if ( i == 0 )
-            if ( log != null ) {
-                log.info( "File with size " + outputFile.length() + " bytes." );
+            if ( AbstractFetcher.log != null ) {
+                AbstractFetcher.log.info( "File with size " + outputFile.length() + " bytes." );
             }
         return true;
     }

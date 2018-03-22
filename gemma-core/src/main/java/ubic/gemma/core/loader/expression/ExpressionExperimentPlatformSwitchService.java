@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 
@@ -72,12 +71,12 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * Used to identify design elements that have no sequence associated with them.
      */
     public static final BioSequence NULL_BIOSEQUENCE;
-    private static Log log = LogFactory.getLog( ExpressionExperimentPlatformSwitchService.class.getName() );
+    private static final Log log = LogFactory.getLog( ExpressionExperimentPlatformSwitchService.class.getName() );
 
     static {
         NULL_BIOSEQUENCE = BioSequence.Factory.newInstance();
-        NULL_BIOSEQUENCE.setName( "______NULL______" );
-        NULL_BIOSEQUENCE.setId( -1L );
+        ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE.setName( "______NULL______" );
+        ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE.setId( -1L );
     }
 
     @Autowired
@@ -88,9 +87,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     @Autowired
     private ExperimentPlatformSwitchHelperService helperService;
-
-    @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
     private BioAssayService bioAssayService;
@@ -104,57 +100,32 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     /**
      * If you know the arraydesigns are already in a merged state, you should use switchExperimentToMergedPlatform
      *
-     * @param expExp      ee
+     * @param ee          ee
      * @param arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *                    changed for them.
      */
-    @SuppressWarnings("unchecked")
-    public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
+    public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
         // remove stuff that will be in the way.
-        processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
-        sampleCoexpressionMatrixService.delete( expExp );
-        for ( ExpressionExperimentSubSet subset : expressionExperimentService.getSubSets( expExp ) ) {
-            subsetService.delete( subset );
+        processedExpressionDataVectorService.removeProcessedDataVectors( ee );
+        sampleCoexpressionMatrixService.delete( ee );
+        for ( ExpressionExperimentSubSet subset : expressionExperimentService.getSubSets( ee ) ) {
+            subsetService.remove( subset );
         }
 
         // get relation between sequence and designelements.
         Map<BioSequence, Collection<CompositeSequence>> designElementMap = new HashMap<>();
         Collection<CompositeSequence> elsWithNoSeq = new HashSet<>();
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs == null ) {
-                elsWithNoSeq.add( cs );
-            } else {
-                if ( !designElementMap.containsKey( bs ) ) {
-                    designElementMap.put( bs, new HashSet<CompositeSequence>() );
-                }
-                designElementMap.get( bs ).add( cs );
-            }
-        }
+        this.populateCSeq( arrayDesign, designElementMap, elsWithNoSeq );
 
-        expExp = expressionExperimentService.thaw( expExp );
+        ee = expressionExperimentService.thaw( ee );
 
-        log.info( elsWithNoSeq.size() + " elements on the new platform have no associated sequence." );
-        designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
+        ExpressionExperimentPlatformSwitchService.log
+                .info( elsWithNoSeq.size() + " elements on the new platform have no associated sequence." );
+        designElementMap.put( ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE, elsWithNoSeq );
 
-        boolean multiPlatformPerSample = false;
-        for ( BioAssay assay : expExp.getBioAssays() ) {
-
-            // Switch the assay to use the desired platform
-            assay.setArrayDesignUsed( arrayDesign );
-
-            /*
-             * Side effect: Detect cases of each-sample-run-on-multiple-platforms - we need to merge the bioassays, too.
-             * That means fiddling with the BioAssayDimensions (BADs). We do this check here to avoid unnecessarily
-             * inspecting BADs.
-             */
-            if ( !multiPlatformPerSample && assay.getSampleUsed().getBioAssaysUsedIn().size() > 1 ) {
-                multiPlatformPerSample = true;
-            }
-        }
-
+        boolean multiPlatformPerSample = this.checkMultiPerSample( ee, arrayDesign );
         /*
          * For a multiplatform-per-sample case: (note that some samples might just be on one platform...)
          * 1. Pick a BAD that can be used for all DataVectors (it has all BioAssays in it).
@@ -170,175 +141,27 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         BioAssayDimension maxBAD = null;
         int maxSize = 0;
         if ( multiPlatformPerSample ) {
-            for ( BioAssay ba : expExp.getBioAssays() ) {
-                Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
-                for ( BioAssayDimension bioAssayDim : oldBioAssayDims ) {
-                    unusedBADs.add( bioAssayDim );
-                    int size = bioAssayDim.getBioAssays().size();
-
-                    if ( size > maxSize ) {
-                        maxSize = size;
-                        maxBAD = bioAssayDim;
-                    }
-                }
-            }
-
-            assert unusedBADs.size() > 1; // otherwise we shouldn't be here.
-            unusedBADs.remove( maxBAD );
-
-            /*
-             * Make sure all biomaterials in the study are included in the chosen bioassaydimension. If not, we'd have
-             * to make a new BAD. I haven't implemented that case.
-             */
-            if ( maxBAD != null ) {
-                Collection<BioMaterial> bmsInmaxBAD = new HashSet<>();
-                for ( BioAssay ba : maxBAD.getBioAssays() ) {
-                    bmsInmaxBAD.add( ba.getSampleUsed() );
-                }
-
-                for ( BioAssay ba : expExp.getBioAssays() ) {
-                    if ( !bmsInmaxBAD.contains( ba.getSampleUsed() ) ) {
-
-                        log.warn( "This experiment looked like it had samples run on more than one platform, "
-                                + "but it also has no BioAssayDimension that is eligible to accomodate all samples (Example: "
-                                + ba.getSampleUsed()
-                                + ") The experiment will be switched to the merged platform, but no BioAssayDimension switch will be done." );
-                        multiPlatformPerSample = false;
-                        maxBAD = null;
-                        break;
-                    }
-                }
-
-            }
+            maxBAD = this.doMultiSample( ee, unusedBADs, maxSize );
         }
 
-        Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
+        Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
         Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements = new HashMap<>();
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
-            if ( oldAd.equals( arrayDesign ) )
-                continue;
-
-            oldAd = arrayDesignService.thaw( oldAd );
-
-            if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType()
-                    .equals( TechnologyType.NONE ) ) {
-                /*
-                 * Bug 3451 - this is okay if it is a RNA-seq experiment etc. prior to data upload.
-                 */
-                throw new IllegalStateException( oldAd + " has no elements" );
-            }
-
-            Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp, oldAd );
-            log.info( "Processing " + qts.size() + " quantitation types for vectors on " + oldAd );
-            for ( QuantitationType type : qts ) {
-
-                // use each design element only once per quantitation type + bioassaydimension per array design
-                usedDesignElements.clear();
-
-                Collection<? extends DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd,
-                        type );
-
-                if ( vectorsForQt == null || vectorsForQt.size() == 0 ) {
-                    /*
-                     * This can happen when the quantitation types vary for the array designs.
-                     */
-                    log.debug( "No vectors for " + type + " on " + oldAd );
-                    continue;
-                }
-
-                log.info( "Switching " + vectorsForQt.size() + " vectors for " + type + " from " + oldAd.getShortName()
-                        + " to " + arrayDesign.getShortName() );
-
-                int count = 0;
-                Class<? extends DesignElementDataVector> vectorClass = null;
-                Collection<DesignElementDataVector> unMatched = new HashSet<>();
-                for ( DesignElementDataVector vector : vectorsForQt ) {
-
-                    if ( vectorClass == null ) {
-                        vectorClass = vector.getClass();
-                    }
-
-                    if ( !vector.getClass().equals( vectorClass ) ) {
-                        throw new IllegalStateException( "Two types of vector for one quantitationtype: " + type );
-                    }
-
-                    assert RawExpressionDataVector.class.isAssignableFrom( vector.getClass() ) :
-                            "Unexpected class: " + vector.getClass().getName();
-
-                    CompositeSequence oldDe = vector.getDesignElement();
-
-                    if ( oldDe.getArrayDesign().equals( arrayDesign ) ) {
-                        continue;
-                    }
-
-                    boolean ok = processVector( designElementMap, usedDesignElements, vector, maxBAD );
-
-                    if ( !ok ) {
-                        log.warn( "No new design element available to match " + oldDe + " (seq=" + oldDe
-                                .getBiologicalCharacteristic() + "; array=" + oldDe.getArrayDesign() );
-                        unMatched.add( vector );
-                        /*
-                         * This can happen if there is no biosequence associated with the element.
-                         */
-                    }
-
-                    if ( ++count % 20000 == 0 ) {
-                        log.info( "Found matches for " + count + " vectors for " + type );
-                    }
-                }
-
-                /*
-                 * This is bad.
-                 */
-                if ( unMatched.size() > 0 ) {
-                    throw new IllegalStateException( "There were " + unMatched.size()
-                            + " vectors that couldn't be matched to the new design for: " + type + ", example: "
-                            + unMatched.iterator().next() );
-                }
-
-                if ( RawExpressionDataVector.class.isAssignableFrom( vectorClass ) ) {
-                    int s = expExp.getRawExpressionDataVectors().size();
-                    expExp.getRawExpressionDataVectors().removeAll( vectorsForQt );
-                    assert s > expExp.getRawExpressionDataVectors().size();
-                    expExp.getRawExpressionDataVectors()
-                            .addAll( ( Collection<? extends RawExpressionDataVector> ) vectorsForQt );
-                    assert s == expExp.getRawExpressionDataVectors().size();
-                } else {
-                    int s = expExp.getProcessedExpressionDataVectors().size();
-                    expExp.getProcessedExpressionDataVectors().removeAll( vectorsForQt );
-                    assert s > expExp.getProcessedExpressionDataVectors().size();
-                    expExp.getProcessedExpressionDataVectors()
-                            .addAll( ( Collection<? extends ProcessedExpressionDataVector> ) vectorsForQt );
-                    assert s == expExp.getProcessedExpressionDataVectors().size();
-                }
-            }
+            this.runOldAd( ee, arrayDesign, designElementMap, maxBAD, usedDesignElements, oldAd );
         }
 
-        expExp.setDescription(
-                expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName() + " by Gemma]" );
+        ee.setDescription( ee.getDescription() + " [Switched to use " + arrayDesign.getShortName() + " by Gemma]" );
 
-        helperService.persist( expExp, arrayDesign );
+        helperService.persist( ee, arrayDesign );
 
         /*
          * This might need to be done inside the transaction we're using to make the switch.
          */
         if ( maxBAD != null && !unusedBADs.isEmpty() ) {
-            log.info( "Cleaning up unused BioAssayDimensions and BioAssays after merge" );
-            // Delete them and the bioassays associated with them. 
-            for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
-                List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
-                //    bioAssayDimensionService.remove( bioAssayDimension );
-                for ( BioAssay ba : bioAssays ) {
-                    if ( !maxBAD.getBioAssays().contains( ba ) ) {
-                        log.info( "Unused bioassay: " + ba );
-
-                        //     bioAssayService.remove( bioAssays );
-                    }
-                }
-            }
+            this.checkUnused( unusedBADs, maxBAD );
         }
 
-        return expExp;
+        return ee;
     }
 
     /**
@@ -348,10 +171,207 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @return ee
      */
     public ExpressionExperiment switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
-        ArrayDesign arrayDesign = locateMergedDesign( expExp );
+        ArrayDesign arrayDesign = this.locateMergedDesign( expExp );
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
         return this.switchExperimentToArrayDesign( expExp, arrayDesign );
+    }
+
+    private void checkUnused( Collection<BioAssayDimension> unusedBADs, BioAssayDimension maxBAD ) {
+        ExpressionExperimentPlatformSwitchService.log.info( "Checking for unused BioAssays after merge" );
+
+        for ( BioAssayDimension bioAssayDimension : unusedBADs ) {
+            List<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
+            for ( BioAssay ba : bioAssays ) {
+                if ( !maxBAD.getBioAssays().contains( ba ) ) {
+                    ExpressionExperimentPlatformSwitchService.log.info( "Unused bioassay: " + ba );
+                }
+            }
+        }
+    }
+
+    private void runOldAd( ExpressionExperiment ee, ArrayDesign arrayDesign,
+            Map<BioSequence, Collection<CompositeSequence>> designElementMap, BioAssayDimension maxBAD,
+            Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements, ArrayDesign oldAd ) {
+        if ( oldAd.equals( arrayDesign ) )
+            return;
+
+        oldAd = arrayDesignService.thaw( oldAd );
+
+        if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType().equals( TechnologyType.NONE ) ) {
+            /*
+             * Bug 3451 - this is okay if it is a RNA-seq experiment etc. prior to data upload.
+             */
+            throw new IllegalStateException( oldAd + " has no elements" );
+        }
+
+        Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( ee, oldAd );
+        ExpressionExperimentPlatformSwitchService.log
+                .info( "Processing " + qts.size() + " quantitation types for vectors on " + oldAd );
+        for ( QuantitationType type : qts ) {
+
+            // use each design element only once per quantitation type + bioassaydimension per array design
+            usedDesignElements.clear();
+
+            Collection<RawExpressionDataVector> rawForQt = this.getRawVectorsForOneQuantitationType( oldAd, type );
+            Collection<ProcessedExpressionDataVector> processedForQt = this
+                    .getProcessedVectorsForOneQuantitationType( oldAd, type );
+
+            if ( ( rawForQt == null || rawForQt.size() == 0 ) //
+                    && ( processedForQt == null || processedForQt.size() == 0 ) ) {
+                /*
+                 * This can happen when the quantitation types vary for the array designs.
+                 */
+                ExpressionExperimentPlatformSwitchService.log.debug( "No vectors for " + type + " on " + oldAd );
+                continue;
+            }
+
+            // This check assures we do not mix raw and processed vectors further down the line
+            if ( ( rawForQt != null && rawForQt.size() > 0 ) && ( processedForQt != null
+                    && processedForQt.size() > 0 ) ) {
+                throw new IllegalStateException( "Two types of vector for quantitationType " + type );
+            }
+
+            Collection<DesignElementDataVector> vectors = new HashSet<>();
+
+            if ( rawForQt != null ) {
+                vectors.addAll( rawForQt );
+            }
+            if ( processedForQt != null ) {
+                vectors.addAll( processedForQt );
+            }
+
+            ExpressionExperimentPlatformSwitchService.log
+                    .info( "Switching " + vectors.size() + " vectors for " + type + " from " + oldAd.getShortName()
+                            + " to " + arrayDesign.getShortName() );
+
+            int count = 0;
+            //noinspection MismatchedQueryAndUpdateOfCollection // Only used for logging
+            Collection<DesignElementDataVector> unMatched = new HashSet<>();
+            for ( DesignElementDataVector vector : vectors ) {
+
+                assert RawExpressionDataVector.class.isAssignableFrom( vector.getClass() ) :
+                        "Unexpected class: " + vector.getClass().getName();
+
+                CompositeSequence oldDe = vector.getDesignElement();
+
+                if ( oldDe.getArrayDesign().equals( arrayDesign ) ) {
+                    continue;
+                }
+
+                this.processVector( designElementMap, usedDesignElements, vector, maxBAD );
+
+                if ( ++count % 20000 == 0 ) {
+                    ExpressionExperimentPlatformSwitchService.log
+                            .info( "Found matches for " + count + " vectors for " + type );
+                }
+            }
+
+            /*
+             * This is bad.
+             */
+            if ( unMatched.size() > 0 ) {
+                throw new IllegalStateException(
+                        "There were " + unMatched.size() + " vectors that couldn't be matched to the new design for: "
+                                + type + ", example: " + unMatched.iterator().next() );
+            }
+
+            // Force collection update
+            if ( rawForQt != null && rawForQt.size() > 0 ) {
+                int s = ee.getRawExpressionDataVectors().size();
+                ee.getRawExpressionDataVectors().removeAll( rawForQt );
+                assert s > ee.getRawExpressionDataVectors().size();
+                ee.getRawExpressionDataVectors().addAll( rawForQt );
+                assert s == ee.getRawExpressionDataVectors().size();
+            } else if ( processedForQt != null && processedForQt.size() > 0 ) {
+                int s = ee.getProcessedExpressionDataVectors().size();
+                ee.getProcessedExpressionDataVectors().removeAll( processedForQt );
+                assert s > ee.getProcessedExpressionDataVectors().size();
+                ee.getProcessedExpressionDataVectors().addAll( processedForQt );
+                assert s == ee.getProcessedExpressionDataVectors().size();
+            }
+        }
+    }
+
+    private BioAssayDimension doMultiSample( ExpressionExperiment ee, Collection<BioAssayDimension> unusedBADs,
+            int maxSize ) {
+        BioAssayDimension maxBAD = null;
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
+            for ( BioAssayDimension bioAssayDim : oldBioAssayDims ) {
+                unusedBADs.add( bioAssayDim );
+                int size = bioAssayDim.getBioAssays().size();
+
+                if ( size > maxSize ) {
+                    maxSize = size;
+                    maxBAD = bioAssayDim;
+                }
+            }
+        }
+
+        assert unusedBADs.size() > 1; // otherwise we shouldn't be here.
+        unusedBADs.remove( maxBAD );
+
+        /*
+         * Make sure all biomaterials in the study are included in the chosen bioassaydimension. If not, we'd have
+         * to make a new BAD. I haven't implemented that case.
+         */
+        if ( maxBAD != null ) {
+            Collection<BioMaterial> bmsInmaxBAD = new HashSet<>();
+            for ( BioAssay ba : maxBAD.getBioAssays() ) {
+                bmsInmaxBAD.add( ba.getSampleUsed() );
+            }
+
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( !bmsInmaxBAD.contains( ba.getSampleUsed() ) ) {
+
+                    ExpressionExperimentPlatformSwitchService.log
+                            .warn( "This experiment looked like it had samples run on more than one platform, "
+                                    + "but it also has no BioAssayDimension that is eligible to accomodate all samples (Example: "
+                                    + ba.getSampleUsed()
+                                    + ") The experiment will be switched to the merged platform, but no BioAssayDimension switch will be done." );
+                    maxBAD = null;
+                    break;
+                }
+            }
+
+        }
+        return maxBAD;
+    }
+
+    private boolean checkMultiPerSample( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
+        boolean multiPlatformPerSample = false;
+        for ( BioAssay assay : ee.getBioAssays() ) {
+
+            // Switch the assay to use the desired platform
+            assay.setArrayDesignUsed( arrayDesign );
+
+            /*
+             * Side effect: Detect cases of each-sample-run-on-multiple-platforms - we need to merge the bioassays, too.
+             * That means fiddling with the BioAssayDimensions (BADs). We do this check here to avoid unnecessarily
+             * inspecting BADs.
+             */
+            if ( !multiPlatformPerSample && assay.getSampleUsed().getBioAssaysUsedIn().size() > 1 ) {
+                multiPlatformPerSample = true;
+            }
+        }
+        return multiPlatformPerSample;
+    }
+
+    private void populateCSeq( ArrayDesign arrayDesign,
+            Map<BioSequence, Collection<CompositeSequence>> designElementMap,
+            Collection<CompositeSequence> elsWithNoSeq ) {
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            if ( bs == null ) {
+                elsWithNoSeq.add( cs );
+            } else {
+                if ( !designElementMap.containsKey( bs ) ) {
+                    designElementMap.put( bs, new HashSet<CompositeSequence>() );
+                }
+                designElementMap.get( bs ).add( cs );
+            }
+        }
     }
 
     /**
@@ -394,7 +414,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             // TODO: go up the merge tree to find the root. This is too slow.
             // while ( mergedInto.getMergedInto() != null ) {
-            // mergedInto = arrayDesignService.thaw( mergedInto.getMergedInto() );
+            // mergedInto = arrayDesignService.thawRawAndProcessed( mergedInto.getMergedInto() );
             // }
 
             if ( arrayDesign == null ) {
@@ -420,18 +440,17 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param vector             vector
      * @param bad                BioAssayDimension to use, if necessary. If this is null or already the one used, it's igored.
      *                           Otherwise the vector data will be rewritten to match it.
-     * @return boolean
      * @throws IllegalStateException if there is no (unused) design element matching the vector's biosequence
      */
-    private boolean processVector( Map<BioSequence, Collection<CompositeSequence>> designElementMap,
+    private void processVector( Map<BioSequence, Collection<CompositeSequence>> designElementMap,
             Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements, DesignElementDataVector vector,
             BioAssayDimension bad ) {
         CompositeSequence oldDe = vector.getDesignElement();
 
-        Collection<CompositeSequence> newElCandidates = null;
+        Collection<CompositeSequence> newElCandidates;
         BioSequence seq = oldDe.getBiologicalCharacteristic();
         if ( seq == null ) {
-            newElCandidates = designElementMap.get( NULL_BIOSEQUENCE );
+            newElCandidates = designElementMap.get( ExpressionExperimentPlatformSwitchService.NULL_BIOSEQUENCE );
         } else {
             newElCandidates = designElementMap.get( seq );
         }
@@ -447,7 +466,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 vector.setDesignElement( newEl );
                 usedDesignElements.put( newEl, new HashSet<BioAssayDimension>() );
                 usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
-                //         assert !newEl.getArrayDesign().equals( oldDe.getArrayDesign() );
                 break;
             }
 
@@ -457,21 +475,17 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                  */
                 vector.setDesignElement( newEl );
                 usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
-                //       assert !newEl.getArrayDesign().equals( oldDe.getArrayDesign() );
                 break;
             }
         }
 
         if ( bad != null && !vector.getBioAssayDimension().equals( bad ) ) {
-
             /*
              * 1. Check if they are already the same; then just switch it to the desired BAD
              * 2. If not, then the vector data has to be rewritten.
              */
-            vectorReWrite( vector, bad );
+            this.vectorReWrite( vector, bad );
         }
-
-        return true;
     }
 
     /**
@@ -484,7 +498,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     private void vectorReWrite( DesignElementDataVector vector, BioAssayDimension bad ) {
         List<BioAssay> desiredOrder = bad.getBioAssays();
         List<BioAssay> currentOrder = vector.getBioAssayDimension().getBioAssays();
-        if ( equivalent( currentOrder, desiredOrder ) ) {
+        if ( this.equivalent( currentOrder, desiredOrder ) ) {
             // Easy, we can just switch it.
             vector.setBioAssayDimension( bad );
             return;
@@ -494,7 +508,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
          * We remake the data vector following the new ordering.
          */
         PrimitiveType representation = vector.getQuantitationType().getRepresentation();
-        Object missingVal = null;
+        Object missingVal;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             missingVal = Double.NaN;
         } else if ( representation.equals( PrimitiveType.STRING ) ) {

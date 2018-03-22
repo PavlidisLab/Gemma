@@ -1,8 +1,8 @@
 /*
  * The Gemma_sec1 project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,9 +20,6 @@ package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import gemma.gsec.authentication.UserManager;
-
-import java.lang.reflect.InvocationTargetException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,20 +27,25 @@ import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import ubic.gemma.core.security.audit.AuditAdvice;
 import ubic.gemma.persistence.util.Settings;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Specialization of Spring task-running support so task threads have secure context (without using MODE_GLOBAL!). The
  * thread where Quartz is being run is authenticated as GROUP_AGENT.
- * 
- * @author paul
  *
+ * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobDetailFactoryBean {
 
     private static Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
+    @Autowired
+    ManualAuthenticationService manualAuthenticationService;
+    @Autowired
+    UserManager userManager;
 
     /**
      * @param log the log to set
@@ -52,16 +54,6 @@ public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobD
         SecureMethodInvokingJobDetailFactoryBean.log = log;
     }
 
-    @Autowired
-    ManualAuthenticationService manualAuthenticationService;
-
-    @Autowired
-    UserManager userManager;
-
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.util.MethodInvoker#invoke()
-     */
     @Override
     public Object invoke() throws InvocationTargetException, IllegalAccessException {
 
@@ -75,7 +67,8 @@ public class SecureMethodInvokingJobDetailFactoryBean extends MethodInvokingJobD
             Authentication auth = manualAuthenticationService.attemptAuthentication( serverUserName, serverPassword );
             SecurityContextHolder.getContext().setAuthentication( auth );
         } catch ( AuthenticationException e ) {
-            log.error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous" );
+            SecureMethodInvokingJobDetailFactoryBean.log
+                    .error( "Failed to authenticate schedule job, jobs probably won't work, but trying anonymous" );
             manualAuthenticationService.authenticateAnonymously();
         } finally {
             result = super.invoke();

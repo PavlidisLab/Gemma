@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,12 +41,28 @@ public interface ExpressionExperimentSetService
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
 
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo );
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentSet> load( Collection<Long> ids );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperimentSet load( Long id );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentSet> loadAll();
 
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( ExpressionExperimentSet expressionExperimentSet );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( ExpressionExperimentSet expressionExperimentSet );
+
+    @Secured({ "GROUP_USER" })
+    ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo );
 
     /**
      * Security is handled within method, when the set is loaded
@@ -85,18 +101,6 @@ public interface ExpressionExperimentSetService
 
     boolean isAutomaticallyGenerated( String experimentSetDescription );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSet load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> loadAll();
-
     /**
      * Security at DAO level.
      *
@@ -117,17 +121,6 @@ public interface ExpressionExperimentSetService
     Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects( boolean loadEEIds );
 
     /**
-     * @return ExpressionExperimentSets that have more than 1 experiment in them. Security at DAO level.
-     */
-    Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
-
-    /**
-     * @return sets belonging to current user -- only if they have more than one experiment!
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<ExpressionExperimentSet> loadMySets();
-
-    /**
      * load the user's sets
      *
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
@@ -136,17 +129,6 @@ public interface ExpressionExperimentSetService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects( boolean loadEEIds );
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
-    Collection<ExpressionExperimentSet> loadMySharedSets();
-
-    /**
-     * <p>
-     * Load all ExpressionExperimentSets that belong to the given user.
-     * </p>
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    java.util.Collection<ExpressionExperimentSet> loadUserSets( ubic.gemma.model.common.auditAndSecurity.User user );
 
     /**
      * Get a value object for the id param.
@@ -158,13 +140,6 @@ public interface ExpressionExperimentSetService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ExpressionExperimentSet expressionExperimentSet );
-
-    ExpressionExperimentSet updateAutomaticallyGeneratedExperimentSet(
-            Collection<ExpressionExperiment> expressionExperiments, Taxon taxon );
 
     /**
      * Update corresponding entity based on value object
@@ -190,10 +165,6 @@ public interface ExpressionExperimentSetService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds,
-            boolean loadEEIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );

@@ -1,20 +1,20 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 package ubic.gemma.core.genome.gene.service;
 
@@ -85,7 +85,53 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         this.geneSetValueObjectHelper = geneSetValueObjectHelper;
     }
 
-    // TODO REFACTOR method is much too long -Thea
+    @Override
+    public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
+
+        Taxon tax = taxonService.load( taxonId );
+
+        if ( !StringUtils.isBlank( goId ) && tax != null && goId.toUpperCase().startsWith( "GO" ) ) {
+
+            Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
+            if ( results != null ) {
+                results = geneService.thawLite( results );
+                return geneService.loadValueObjects( results );
+            }
+        }
+
+        return new HashSet<>();
+
+    }
+
+    @Override
+    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<>();
+        Collection<Gene> genes = new ArrayList<>();
+        // if taxon isn't set, get go groups for each possible taxon
+        if ( taxon == null ) {
+            taxaForPhenotypeAssoc.addAll( taxonService.loadAllTaxaWithGenes() );
+        } else {
+            taxaForPhenotypeAssoc.add( taxon );
+        }
+
+        for ( Taxon taxonForPA : taxaForPhenotypeAssoc ) {
+            for ( GeneSet geneSet : geneSetSearch
+                    .findByGoTermName( goQuery, taxonForPA, GeneSearchServiceImpl.MAX_GO_TERMS_TO_PROCESS,
+                            GeneSearchServiceImpl.MAX_GO_GROUP_SIZE ) ) {
+                // don't bother adding empty groups
+                if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
+                    for ( GeneSetMember geneMember : geneSet.getMembers() ) {
+                        genes.add( geneMember.getGene() );
+                    }
+                }
+            }
+        }
+        GeneSearchServiceImpl.log.info( "GO search: " + timer.getTime() + "ms" );
+        return genes;
+    }
+
     @Override
     public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
         Taxon taxon = null;
@@ -93,7 +139,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
-                log.warn( "No such taxon with id=" + taxonId );
+                GeneSearchServiceImpl.log.warn( "No such taxon with id=" + taxonId );
             } else {
                 taxonName = taxon.getCommonName();
             }
@@ -124,7 +170,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         if ( taxon != null )
             settings.setTaxon( taxon ); // this doesn't work yet
 
-        log.debug( "getting results from searchService for " + query );
+        GeneSearchServiceImpl.log.debug( "getting results from searchService for " + query );
 
         Map<Class<?>, List<SearchResult>> results = searchService.speedSearch( settings );
 
@@ -158,15 +204,15 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         if ( taxon != null ) { // filter search results by taxon
 
-            List<SearchResult> taxonCheckedGenes = retainGenesOfThisTaxon( taxonId, geneSearchResults );
+            List<SearchResult> taxonCheckedGenes = this.retainGenesOfThisTaxon( taxonId, geneSearchResults );
 
             // convert result object to a value object to a SearchResultDisplayObject
             for ( SearchResult sr : taxonCheckedGenes ) {
                 genes.add( new SearchResultDisplayObject( sr ) );
             }
 
-            List<SearchResult> taxonCheckedSets = retainGeneSetsOfThisTaxon( taxonId, geneSetSearchResults,
-                    isSetOwnedByUser );
+            List<SearchResult> taxonCheckedSets = this
+                    .retainGeneSetsOfThisTaxon( taxonId, geneSetSearchResults, isSetOwnedByUser );
 
             // convert result object to a value object
             for ( SearchResult sr : taxonCheckedSets ) {
@@ -206,14 +252,15 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)
-        setUserOwnedForGeneSets( geneSets, isSetOwnedByUser );
+        this.setUserOwnedForGeneSets( geneSets, isSetOwnedByUser );
 
         if ( exactGeneSymbolMatch ) {
             // get summary results
-            log.info( "getting Summary results for " + query );
+            GeneSearchServiceImpl.log.info( "getting Summary results for " + query );
 
-            List<SearchResultDisplayObject> summaries = addEntryForAllResults( query, genes, geneSets,
-                    new ArrayList<SearchResultDisplayObject>(), new ArrayList<SearchResultDisplayObject>() );
+            List<SearchResultDisplayObject> summaries = this
+                    .addEntryForAllResults( query, genes, geneSets, new ArrayList<SearchResultDisplayObject>(),
+                            new ArrayList<SearchResultDisplayObject>() );
             displayResults.addAll( summaries );
             displayResults.addAll( genes );
             displayResults.addAll( geneSets );
@@ -222,8 +269,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         List<SearchResultDisplayObject> srDos;
         // get GO group results
-        log.debug( "Getting GO group results for " + query );
-        srDos = getGOGroupResults( query, taxon );
+        GeneSearchServiceImpl.log.debug( "Getting GO group results for " + query );
+        srDos = this.getGOGroupResults( query, taxon );
 
         List<SearchResultDisplayObject> phenotypeSrDos = new ArrayList<>();
 
@@ -231,16 +278,16 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         // if ( ( genes.size() < 1 ) ) {
 
         if ( !query.toUpperCase().startsWith( "GO" ) ) {
-            log.info( "getting Phenotype Association results for " + query );
-            phenotypeSrDos = getPhenotypeAssociationSearchResults( query, taxon );
+            GeneSearchServiceImpl.log.info( "getting Phenotype Association results for " + query );
+            phenotypeSrDos = this.getPhenotypeAssociationSearchResults( query, taxon );
         }
 
         // }
 
         // get summary results
-        log.debug( "Getting Summary results for " + query );
-        List<SearchResultDisplayObject> summaryEntries = addEntryForAllResults( query, genes, geneSets, srDos,
-                phenotypeSrDos );
+        GeneSearchServiceImpl.log.debug( "Getting Summary results for " + query );
+        List<SearchResultDisplayObject> summaryEntries = this
+                .addEntryForAllResults( query, genes, geneSets, srDos, phenotypeSrDos );
 
         // add all results, keeping order of result types
         displayResults.addAll( summaryEntries );
@@ -250,97 +297,14 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         displayResults.addAll( genes );
 
         if ( displayResults.isEmpty() ) {
-            log.info( "No results for search: " + query + " taxon=" + ( ( taxon == null ) ?
+            GeneSearchServiceImpl.log.info( "No results for search: " + query + " taxon=" + ( ( taxon == null ) ?
                     null :
                     taxon.getCommonName() ) );
             return new HashSet<>();
         }
-        log.info( "Results for search: " + query + ", size=" + displayResults.size() );
+        GeneSearchServiceImpl.log.info( "Results for search: " + query + ", size=" + displayResults.size() );
 
         return displayResults;
-    }
-
-    /**
-     * Get all genes that are associated with phenotypes that match the query string param. If taxon is not specified
-     * (null), genes of all taxa will be returned. FIXME not used?
-     *
-     * @param taxon          can be null
-     * @param phenotypeQuery the query
-     * @return collection of genes
-     * @deprecated not used
-     */
-    @Deprecated
-    @Override
-    public Collection<Gene> getPhenotypeAssociatedGenes( String phenotypeQuery, Taxon taxon ) {
-        Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<>();
-        Collection<Gene> genes = new ArrayList<>();
-        // if taxon isn't set, get go groups for each possible taxon
-        if ( taxon == null ) {
-            taxaForPhenotypeAssoc.addAll( taxonService.loadAllTaxaWithGenes() );
-        } else {
-            taxaForPhenotypeAssoc.add( taxon );
-        }
-
-        // FIX THIS SO GENES ARE RETURNED DIRECTLY (or fix caller to use gene ids)
-        for ( Taxon taxonForPA : taxaForPhenotypeAssoc ) {
-            for ( GeneSetValueObject geneSet : geneSetSearch.findByPhenotypeName( phenotypeQuery, taxonForPA ) ) {
-                // don't bother adding empty groups
-                if ( geneSet.getGeneIds() != null && geneSet.getGeneIds().size() != 0 ) {
-                    for ( Long id : geneSet.getGeneIds() ) {
-                        genes.add( geneService.load( id ) );
-                    }
-                }
-            }
-        }
-
-        return genes;
-    }
-
-    @Override
-    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<>();
-        Collection<Gene> genes = new ArrayList<>();
-        // if taxon isn't set, get go groups for each possible taxon
-        if ( taxon == null ) {
-            taxaForPhenotypeAssoc.addAll( taxonService.loadAllTaxaWithGenes() );
-        } else {
-            taxaForPhenotypeAssoc.add( taxon );
-        }
-
-        // TODO Don't loop over taxa
-        for ( Taxon taxonForPA : taxaForPhenotypeAssoc ) {
-            for ( GeneSet geneSet : geneSetSearch
-                    .findByGoTermName( goQuery, taxonForPA, MAX_GO_TERMS_TO_PROCESS, MAX_GO_GROUP_SIZE ) ) {
-                // don't bother adding empty groups
-                if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
-                    for ( GeneSetMember geneMember : geneSet.getMembers() ) {
-                        genes.add( geneMember.getGene() );
-                    }
-                }
-            }
-        }
-        log.info( "GO search: " + timer.getTime() + "ms" );
-        return genes;
-    }
-
-    @Override
-    public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
-
-        Taxon tax = taxonService.load( taxonId );
-
-        if ( !StringUtils.isBlank( goId ) && tax != null && goId.toUpperCase().startsWith( "GO" ) ) {
-
-            Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
-            if ( results != null ) {
-                results = geneService.thawLite( results );
-                return geneService.loadValueObjects( results );
-            }
-        }
-
-        return new HashSet<>();
-
     }
 
     @Override
@@ -352,20 +316,19 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         while ( ( line = reader.readLine() ) != null ) {
             if ( StringUtils.isBlank( line ) )
                 continue;
-            if ( queries.size() > MAX_GENES_PER_QUERY ) {
-                log.warn( "Too many genes, stopping" );
+            if ( queries.size() > GeneSearchServiceImpl.MAX_GENES_PER_QUERY ) {
+                GeneSearchServiceImpl.log.warn( "Too many genes, stopping" );
             }
             queries.add( line );
         }
 
-        Map<String, GeneValueObject> geneMap = searchMultipleGenesGetMap( queries, taxonId );
+        Map<String, GeneValueObject> geneMap = this.searchMultipleGenesGetMap( queries, taxonId );
 
         return geneMap.values();
     }
 
     @Override
-    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )
-            throws IOException {
+    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) {
         Taxon taxon = taxonService.load( taxonId );
 
         if ( taxon == null )
@@ -387,8 +350,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 continue;
             }
 
-            if ( queryToGenes.size() >= MAX_GENES_PER_QUERY ) {
-                log.warn( "Too many genes, stopping (limit=" + MAX_GENES_PER_QUERY + ')' );
+            if ( queryToGenes.size() >= GeneSearchServiceImpl.MAX_GENES_PER_QUERY ) {
+                GeneSearchServiceImpl.log
+                        .warn( "Too many genes, stopping (limit=" + GeneSearchServiceImpl.MAX_GENES_PER_QUERY + ')' );
                 break;
             }
 
@@ -473,30 +437,31 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         if ( taxon != null ) {
 
             if ( query.toUpperCase().startsWith( "GO" ) ) {
-                // FIXME this should be little more careful.
-                log.debug( "Getting results from geneSetSearch.findByGoId for GO prefixed query: " + query );
+                GeneSearchServiceImpl.log
+                        .debug( "Getting results from geneSetSearch.findByGoId for GO prefixed query: " + query );
                 GeneSet goSet = geneSetSearch.findByGoId( query, taxon );
                 if ( goSet != null && goSet.getMembers() != null && goSet.getMembers().size() > 0 ) {
-                    SearchResultDisplayObject sdo = makeGoGroupSearchResult( goSet, query, query, taxon );
+                    SearchResultDisplayObject sdo = this.makeGoGroupSearchResult( goSet, query, query, taxon );
                     srDos.add( sdo );
                 }
             } else {
-                log.debug( "Getting results from geneSetSearch.findByGoTermName for " + query );
+                GeneSearchServiceImpl.log.debug( "Getting results from geneSetSearch.findByGoTermName for " + query );
                 for ( GeneSet geneSet : geneSetSearch
                         .findByGoTermName( query, taxon, GeneSearchServiceImpl.MAX_GO_TERMS_TO_PROCESS,
                                 GeneSearchServiceImpl.MAX_GO_GROUP_SIZE ) ) {
                     // don't bother adding empty GO groups
                     // (should probably do this check elsewhere in case it speeds things up)
                     if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
-                        SearchResultDisplayObject sdo = makeGoGroupSearchResult( geneSet, null, query, taxon );
+                        SearchResultDisplayObject sdo = this.makeGoGroupSearchResult( geneSet, null, query, taxon );
                         srDos.add( sdo );
                     }
                 }
             }
         } else {// taxon is null, search without taxon as a constraint and bag up the results based on taxon
 
-            log.debug( "getting results from geneSetSearch.findByGoId for GO prefixed query: " + query
-                    + " with null taxon" );
+            GeneSearchServiceImpl.log
+                    .debug( "getting results from geneSetSearch.findByGoId for GO prefixed query: " + query
+                            + " with null taxon" );
             if ( query.toUpperCase().startsWith( "GO" ) ) {
                 GeneSet goSet = geneSetSearch.findByGoId( query, null );
                 if ( goSet == null ) {
@@ -504,30 +469,31 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
 
                 // this gene set has genes from all the different taxons, organize them
-                Collection<GeneSet> taxonSpecificSets = organizeMultiTaxaSetIntoTaxonSpecificSets( goSet );
+                Collection<GeneSet> taxonSpecificSets = this.organizeMultiTaxaSetIntoTaxonSpecificSets( goSet );
 
                 for ( GeneSet taxonGeneSet : taxonSpecificSets ) {
 
                     if ( taxonGeneSet != null && taxonGeneSet.getMembers() != null
                             && taxonGeneSet.getMembers().size() > 0 ) {
-                        SearchResultDisplayObject sdo = makeGoGroupSearchResult( taxonGeneSet, query, query,
+                        SearchResultDisplayObject sdo = this.makeGoGroupSearchResult( taxonGeneSet, query, query,
                                 taxonGeneSet.getMembers().iterator().next().getGene().getTaxon() );
                         srDos.add( sdo );
                     }
                 }
             } else {
-                log.debug( "getting results from geneSetSearch.findByGoTermName for " + query + " with null taxon" );
+                GeneSearchServiceImpl.log.debug( "getting results from geneSetSearch.findByGoTermName for " + query
+                        + " with null taxon" );
                 for ( GeneSet geneSet : geneSetSearch
                         .findByGoTermName( query, null, GeneSearchServiceImpl.MAX_GO_TERMS_TO_PROCESS,
                                 GeneSearchServiceImpl.MAX_GO_GROUP_SIZE ) ) {
 
                     // geneSet will have genes from different taxons inside, organize them.
-                    Collection<GeneSet> taxonSpecificSets = organizeMultiTaxaSetIntoTaxonSpecificSets( geneSet );
+                    Collection<GeneSet> taxonSpecificSets = this.organizeMultiTaxaSetIntoTaxonSpecificSets( geneSet );
 
                     for ( GeneSet taxonGeneSet : taxonSpecificSets ) {
 
                         if ( geneSet.getMembers() != null && taxonGeneSet.getMembers().size() != 0 ) {
-                            SearchResultDisplayObject sdo = makeGoGroupSearchResult( taxonGeneSet, null, query,
+                            SearchResultDisplayObject sdo = this.makeGoGroupSearchResult( taxonGeneSet, null, query,
                                     taxonGeneSet.getMembers().iterator().next().getGene().getTaxon() );
                             srDos.add( sdo );
                         }
@@ -539,7 +505,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
         Collections.sort( srDos );
         if ( timer.getTime() > 500 )
-            log.info( "GO search: " + srDos.size() + " results in " + timer.getTime() + "ms" );
+            GeneSearchServiceImpl.log.info( "GO search: " + srDos.size() + " results in " + timer.getTime() + "ms" );
         return srDos;
     }
 
@@ -590,7 +556,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             // don't bother adding empty groups
             // (should probably do this check elsewhere in case it speeds things up)
             if ( geneSet.getGeneIds() != null && geneSet.getGeneIds().size() != 0 ) {
-                SearchResultDisplayObject sdo = makePhenotypeAssociationGroupSearchResult( geneSet, query, taxon );
+                SearchResultDisplayObject sdo = this.makePhenotypeAssociationGroupSearchResult( geneSet, query, taxon );
                 phenotypeSrDos.add( sdo );
                 // phenotypeSets.add( geneSet );
             }
@@ -603,13 +569,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     private SearchResultDisplayObject makeGoGroupSearchResult( GeneSet goSet, String goId, String query,
             Taxon taxonForGo ) {
         GOGroupValueObject ggVo = geneSetValueObjectHelper.convertToGOValueObject( goSet, goId, query );
-        return getSearchResultForSessionBoundGroupValueObject( taxonForGo, ggVo );
+        return this.getSearchResultForSessionBoundGroupValueObject( taxonForGo, ggVo );
     }
 
     private SearchResultDisplayObject makePhenotypeAssociationGroupSearchResult( GeneSetValueObject geneSet,
             String query, Taxon taxonForGS ) {
         PhenotypeGroupValueObject pgVo = PhenotypeGroupValueObject.convertFromGeneSetValueObject( geneSet, query );
-        return getSearchResultForSessionBoundGroupValueObject( taxonForGS, pgVo );
+        return this.getSearchResultForSessionBoundGroupValueObject( taxonForGS, pgVo );
     }
 
     private SearchResultDisplayObject getSearchResultForSessionBoundGroupValueObject( Taxon taxonForGS,
@@ -672,9 +638,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
 
             // if there's a group, get the number of members
-            updateGeneIdsByTaxonId( geneSets, geneIdsByTaxonId );
-            updateGeneIdsByTaxonId( srDos, geneIdsByTaxonId );
-            updateGeneIdsByTaxonId( phenotypeSrDos, geneIdsByTaxonId );
+            this.updateGeneIdsByTaxonId( geneSets, geneIdsByTaxonId );
+            this.updateGeneIdsByTaxonId( srDos, geneIdsByTaxonId );
+            this.updateGeneIdsByTaxonId( phenotypeSrDos, geneIdsByTaxonId );
 
             // make an entry for each taxon
             Long taxonId;
@@ -735,7 +701,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
-                log.warn( "No such taxon with id=" + taxonId );
+                GeneSearchServiceImpl.log.warn( "No such taxon with id=" + taxonId );
             }
         }
 
@@ -747,14 +713,16 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        // get all public sets (if user is admin, these were already loaded with geneSetService.loadMySets() )
+        // get all public sets
         // filtered by security.
         Collection<GeneSet> sets = new ArrayList<>();
         if ( !SecurityUtil.isUserLoggedIn() ) {
             try {
                 sets = geneSetService.loadAll( taxon );
                 if ( watch.getTime() > 100 )
-                    log.info( sets.size() + " sets loaded for taxon =" + taxon + " took: " + watch.getTime() + "ms" );
+                    GeneSearchServiceImpl.log
+                            .info( sets.size() + " sets loaded for taxon =" + taxon + " took: " + watch.getTime()
+                                    + "ms" );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
@@ -765,7 +733,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
              */
             sets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService.loadMyGeneSets();
             if ( watch.getTime() > 100 )
-                log.info( "Loading the user's gene sets took: " + watch.getTime() + "ms" );
+                GeneSearchServiceImpl.log.info( "Loading the user's gene sets took: " + watch.getTime() + "ms" );
         }
 
         if ( sets.isEmpty() ) {
@@ -780,7 +748,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         List<DatabaseBackedGeneSetValueObject> valueObjects = geneSetValueObjectHelper
                 .convertToValueObjects( sets, false );
         if ( watch.getTime() > 500 )
-            log.info( "Database stage done: " + watch.getTime() + "ms" );
+            GeneSearchServiceImpl.log.info( "Database stage done: " + watch.getTime() + "ms" );
 
         for ( DatabaseBackedGeneSetValueObject set : valueObjects ) {
             newSrDo = new SearchResultDisplayObject( set );
@@ -804,7 +772,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         displayResults.addAll( displayResultsPrivate );
         displayResults.addAll( displayResultsPublic );
 
-        log.info( "Results for blank query: " + displayResults.size() + " items, " + watch.getTime() + "ms" );
+        GeneSearchServiceImpl.log
+                .info( "Results for blank query: " + displayResults.size() + " items, " + watch.getTime() + "ms" );
 
         return displayResults;
 

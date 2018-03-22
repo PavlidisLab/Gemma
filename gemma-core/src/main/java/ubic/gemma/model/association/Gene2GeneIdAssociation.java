@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,12 +36,7 @@ public abstract class Gene2GeneIdAssociation implements Serializable {
     final private Long firstGene = null;
     final private Long secondGene = null;
 
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + " [id=" + id + ", firstGene=" + firstGene + ", secondGene="
-                + secondGene + "]";
-    }
-
+    @SuppressWarnings("ConstantConditions")// Hibernate populates fields via reflection.
     @Override
     public int hashCode() {
         if ( this.id != null )
@@ -54,13 +49,14 @@ public abstract class Gene2GeneIdAssociation implements Serializable {
         return result;
     }
 
+    @SuppressWarnings("ConstantConditions")// Hibernate populates fields via reflection.
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
 
         Gene2GeneIdAssociation other = ( Gene2GeneIdAssociation ) obj;
@@ -75,11 +71,15 @@ public abstract class Gene2GeneIdAssociation implements Serializable {
             return false;
 
         if ( secondGene == null ) {
-            if ( other.secondGene != null )
-                return false;
-        } else if ( !secondGene.equals( other.secondGene ) )
-            return false;
-        return true;
+            return other.secondGene == null;
+        } else
+            return secondGene.equals( other.secondGene );
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " [id=" + id + ", firstGene=" + firstGene + ", secondGene="
+                + secondGene + "]";
     }
 
     public Long getFirstGene() {

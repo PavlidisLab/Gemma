@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 
 import java.util.SortedSet;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GenericEvidenceValueObject extends EvidenceValueObject<GenericEvidence> {
 
     private static final long serialVersionUID = 754768748091915831L;

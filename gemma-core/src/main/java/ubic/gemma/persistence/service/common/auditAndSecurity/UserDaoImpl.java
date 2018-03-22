@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -42,23 +42,6 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Autowired
     public UserDaoImpl( SessionFactory sessionFactory ) {
         super( User.class, sessionFactory );
-    }
-
-    @Override
-    public void addAuthority( User user, String roleName ) {
-        throw new UnsupportedOperationException( "Use user group-based authority instead." );
-    }
-
-    @Override
-    public void changePassword( User user, String password ) {
-        user.setPassword( password );
-        this.getSessionFactory().getCurrentSession().update( user );
-    }
-
-    @Override
-    public User find( User user ) {
-        BusinessKey.checkKey( user );
-        return this.findByUserName( user.getUserName() );
     }
 
     @Override
@@ -105,7 +88,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     public void remove( User user ) {
         if ( user.getName() != null && user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
             throw new IllegalArgumentException(
-                    "Cannot delete user " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+                    "Cannot remove user " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
         }
         super.remove( user );
     }
@@ -143,11 +126,17 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
     }
 
+    @Override
+    public User find( User user ) {
+        BusinessKey.checkKey( user );
+        return this.findByUserName( user.getUserName() );
+    }
+
     private User handleFindByEmail( final String email ) {
         //noinspection unchecked
         List<User> list = this.getSessionFactory().getCurrentSession()
                 .createQuery( "from User c where c.email = :email" ).setParameter( "email", email ).list();
-        Set<User> results = new HashSet<User>( list );
+        Set<User> results = new HashSet<>( list );
         User result = null;
         if ( results.size() > 1 ) {
             throw new InvalidDataAccessResourceUsageException(

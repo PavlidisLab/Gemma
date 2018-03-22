@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,53 +18,34 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
+import junit.framework.TestCase;
+
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.zip.GZIPInputStream;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-
 /**
  * @author keshav
- *
  */
 public class NCBIGeneParserTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog( NCBIGeneParserTest.class );
-
     public void testParseGene2Accession() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gene/gene2accession.sample.gz" ) );
-        NcbiGene2AccessionParser ngip = new NcbiGene2AccessionParser();
-        ngip.geneInfo = new HashMap<String, NCBIGeneInfo>();
-        ngip.parse( is, new ArrayBlockingQueue<NcbiGeneData>( 10 ) );
-        assertEquals( 100, ngip.getCount() );
+        InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene2accession.sample.gz" ) );
+        NcbiGene2AccessionParser ncbiGene2AccessionParser = new NcbiGene2AccessionParser();
+        ncbiGene2AccessionParser.geneInfo = new HashMap<>();
+        ncbiGene2AccessionParser.parse( is, new ArrayBlockingQueue<NcbiGeneData>( 10 ) );
+        TestCase.assertEquals( 100, ncbiGene2AccessionParser.getCount() );
     }
 
     public void testParseGeneInfo() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gene/gene_info.sample.gz" ) );
-        NcbiGeneInfoParser ngip = new NcbiGeneInfoParser();
-        ngip.setFilter( false );
-        ngip.parse( is );
-        assertEquals( 99, ngip.getResults().size() );
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+        InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene_info.sample.gz" ) );
+        NcbiGeneInfoParser ncbiGeneInfoParser = new NcbiGeneInfoParser();
+        ncbiGeneInfoParser.setFilter( false );
+        ncbiGeneInfoParser.parse( is );
+        TestCase.assertEquals( 99, ncbiGeneInfoParser.getResults().size() );
     }
 
 }

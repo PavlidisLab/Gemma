@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,19 +40,19 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter
     private static final String CONFIG_ATTRIBUTE = "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
 
     public AclAfterCollectionCompSeqByArrayDesignFilter( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, CONFIG_ATTRIBUTE, requirePermission );
+        super( aclService, AclAfterCollectionCompSeqByArrayDesignFilter.CONFIG_ATTRIBUTE, requirePermission );
     }
 
     @Override
     public String getProcessConfigAttribute() {
-        return CONFIG_ATTRIBUTE;
+        return AclAfterCollectionCompSeqByArrayDesignFilter.CONFIG_ATTRIBUTE;
     }
 
     @Override
     protected ArrayDesign getAssociatedSecurable( Object targetDomainObject ) {
 
         if ( CompositeSequence.class.isAssignableFrom( targetDomainObject.getClass() ) ) {
-            return ( ArrayDesign ) ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
+            return ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
         }
 
         throw new IllegalArgumentException(

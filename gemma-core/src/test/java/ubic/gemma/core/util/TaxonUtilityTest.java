@@ -19,15 +19,14 @@
 
 package ubic.gemma.core.util;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.TaxonUtility;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author kelsey

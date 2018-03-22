@@ -1,5 +1,5 @@
 /**
- * Displays summary of an experimental design. FIXME move somewher emore logical
+ * Displays summary of an experimental design.
  * 
  *
  * @author Luke, Paul

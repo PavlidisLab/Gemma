@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,20 +31,11 @@ import java.util.List;
  */
 public class NcbiGeneHistory {
 
-    LinkedList<String> history = new LinkedList<String>();
+    private final LinkedList<String> history;
 
     public NcbiGeneHistory( String startingId ) {
-        history = new LinkedList<String>();
+        history = new LinkedList<>();
         history.add( startingId );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( obj == null )
-            return false;
-        if ( obj instanceof NcbiGeneHistory )
-            return false;
-        return ( ( NcbiGeneHistory ) obj ).getCurrentId().equals( this.getCurrentId() );
     }
 
     public String getCurrentId() {
@@ -56,6 +47,7 @@ public class NcbiGeneHistory {
      *
      * @return string
      */
+    @SuppressWarnings("unused") // Possible external use
     public String getPreviousId() {
         if ( history.size() == 1 ) {
             return null;
@@ -73,6 +65,16 @@ public class NcbiGeneHistory {
         return this.getCurrentId().hashCode();
     }
 
+    @SuppressWarnings("SimplifiableIfStatement") // Better readability
+    @Override
+    public boolean equals( Object obj ) {
+        if ( obj == null )
+            return false;
+        if ( !( obj instanceof NcbiGeneHistory ) )
+            return false;
+        return ( ( NcbiGeneHistory ) obj ).getCurrentId().equals( this.getCurrentId() );
+    }
+
     @Override
     public String toString() {
         return StringUtils.join( history, "->" );
@@ -88,6 +90,7 @@ public class NcbiGeneHistory {
         this.history.add( history.indexOf( oldId ) + 1, newId );
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public boolean usedToBe( String oldId ) {
         return history.contains( oldId );
     }

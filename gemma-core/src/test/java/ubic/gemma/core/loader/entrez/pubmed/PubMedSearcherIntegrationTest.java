@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,22 +18,22 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import static org.junit.Assert.fail;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
+import static org.junit.Assert.fail;
+
 /**
  * Tests command line. This creates an entire new Spring Context so is pretty heavy.
- * 
+ *
  * @author pavlidis
  *
  */
 public class PubMedSearcherIntegrationTest {
 
-    private static Log log = LogFactory.getLog( PubMedSearcherIntegrationTest.class );
-    PubMedSearcher p = new PubMedSearcher();
+    private static final Log log = LogFactory.getLog( PubMedSearcherIntegrationTest.class );
+    private final PubMedSearcher p = new PubMedSearcher();
 
     /**
      * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
@@ -44,10 +44,10 @@ public class PubMedSearcherIntegrationTest {
         Exception result = p.doWork( new String[] { "-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
         if ( result != null ) {
             if ( result instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped because of UnknownHostException" );
+                PubMedSearcherIntegrationTest.log.warn( "Test skipped because of UnknownHostException" );
                 return;
             } else if ( result.getMessage().contains( "code: 503" ) ) {
-                log.warn( "Test skipped because of a 502 from NCBI" );
+                PubMedSearcherIntegrationTest.log.warn( "Test skipped because of a 502 from NCBI" );
                 return;
             }
             fail( result.getMessage() );

@@ -24,15 +24,15 @@ import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.NativeQueryUtils;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -42,11 +42,12 @@ import java.util.*;
  * @see DifferentialExpressionAnalysis
  */
 @Repository
-public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressionAnalysisDaoBase {
+public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<DifferentialExpressionAnalysis>
+        implements DifferentialExpressionAnalysisDao {
 
     @Autowired
     public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
+        super( DifferentialExpressionAnalysis.class, sessionFactory );
     }
 
     @Override
@@ -60,12 +61,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
         if ( qresult.isEmpty() ) {
-            log.warn( "No count returned" );
+            AbstractDao.log.warn( "No count returned" );
             return 0;
         }
         Long count = ( Long ) qresult.iterator().next();
 
-        log.debug( "Found " + count + " downregulated genes in result set (" + par.getId()
+        AbstractDao.log.debug( "Found " + count + " downregulated genes in result set (" + par.getId()
                 + ") at a corrected pvalue threshold of " + threshold );
 
         return count.intValue();
@@ -82,12 +83,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
         if ( qresult.isEmpty() ) {
-            log.warn( "No count returned" );
+            AbstractDao.log.warn( "No count returned" );
             return 0;
         }
         Long count = ( Long ) qresult.iterator().next();
 
-        log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
+        AbstractDao.log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
                 + ") at a corrected pvalue threshold of " + threshold );
 
         return count.intValue();
@@ -104,26 +105,45 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
         if ( qresult.isEmpty() ) {
-            log.warn( "No count returned" );
+            AbstractDao.log.warn( "No count returned" );
             return 0;
         }
         Long count = ( Long ) qresult.iterator().next();
 
-        log.debug( "Found " + count + " upregulated genes in result set (" + par.getId()
+        AbstractDao.log.debug( "Found " + count + " upregulated genes in result set (" + par.getId()
                 + ") at a corrected pvalue threshold of " + threshold );
 
         return count.intValue();
     }
 
     @Override
+    public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
+            double threshold ) {
+        final String findByResultSet = "select distinct r from DifferentialExpressionAnalysis a"
+                + "   inner join a.experimentAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
+                + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
+                + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
+                + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and rs=:resultSet"
+                + " and r.correctedPvalue < :threshold";
+
+        String[] paramNames = { "gene", "resultSet", "threshold" };
+        Object[] objectValues = { gene, resultSet, threshold };
+
+        //noinspection unchecked
+        return this.getHibernateTemplate().findByNamedParam( findByResultSet, paramNames, objectValues );
+    }
+
+    @Override
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
 
-        // subset factorvalues factors.
-        Collection<DifferentialExpressionAnalysis> result = this.getHibernateTemplate().findByNamedParam(
-                "select distinct a from DifferentialExpressionAnalysis a join a.subsetFactorValue ssf"
-                        + " join ssf.experimentalFactor efa where efa = :ef ", "ef", ef );
+        // subset factorValues factors.
+        @SuppressWarnings("unchecked") Collection<DifferentialExpressionAnalysis> result = this.getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct a from DifferentialExpressionAnalysis a join a.subsetFactorValue ssf"
+                                + " join ssf.experimentalFactor efa where efa = :ef ", "ef", ef );
 
         // factors used in the analysis.
+        //noinspection unchecked
         result.addAll( this.getHibernateTemplate().findByNamedParam(
                 "select distinct a from DifferentialExpressionAnalysis a join a.resultSets rs"
                         + " left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ", "ef",
@@ -133,10 +153,85 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
-        return this.getHibernateTemplate()
-                .findByNamedParam( "select a from DifferentialExpressionAnalysis as a where a.name = :name", "name",
-                        name );
+    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
+            Collection<Long> investigationIds ) {
+
+        Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
+        //language=HQL
+        final String queryString = "select distinct e, a from DifferentialExpressionAnalysis a"
+                + "   inner join a.experimentAnalyzed e where e.id in (:eeIds)";
+        List<?> qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
+        for ( Object o : qresult ) {
+            Object[] oa = ( Object[] ) o;
+            BioAssaySet bas = ( BioAssaySet ) oa[0];
+            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
+            Long id = bas.getId();
+            if ( !results.containsKey( id ) ) {
+                results.put( id, new HashSet<DifferentialExpressionAnalysis>() );
+            }
+            results.get( id ).add( dea );
+        }
+        return results;
+    }
+
+    @Override
+    public Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        Collection<CompositeSequence> probes = CommonQueries
+                .getCompositeSequences( gene, this.getSessionFactory().getCurrentSession() );
+        Collection<BioAssaySet> result = new HashSet<>();
+        if ( probes.size() == 0 ) {
+            return result;
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            AbstractDao.log.info( "Find probes: " + timer.getTime() + " ms" );
+        }
+        timer.reset();
+        timer.start();
+
+        /*
+         * Note: this query misses ExpressionExperimentSubSets. The native query was implemented because HQL was always
+         * constructing a constraint on SubSets. See bug 2173.
+         */
+        final String nativeQuery =
+                "select e.ID from ANALYSIS a inner join INVESTIGATION e ON a.EXPERIMENT_ANALYZED_FK = e.ID "
+                        + "inner join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK=e.ID "
+                        + " inner join BIO_MATERIAL bm ON bm.ID=ba.SAMPLE_USED_FK inner join TAXON t ON bm.SOURCE_TAXON_FK=t.ID "
+                        + " inner join COMPOSITE_SEQUENCE cs ON ba.ARRAY_DESIGN_USED_FK =cs.ARRAY_DESIGN_FK where cs.ID in "
+                        + " (:probes) ";
+
+        final String speciesConstraint = " and t.ID = :taxon";
+        final String parentTaxonConstraint = " and t.PARENT_TAXON_FK = :taxon";
+
+        Taxon taxon = gene.getTaxon();
+        String taxonConstraint = taxon.getIsSpecies() ? speciesConstraint : parentTaxonConstraint;
+
+        String queryToUse = nativeQuery + taxonConstraint;
+
+        int batchSize = 1000;
+        Collection<CompositeSequence> batch = new HashSet<>();
+        for ( CompositeSequence probe : probes ) {
+            batch.add( probe );
+
+            if ( batch.size() == batchSize ) {
+                this.fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
+                batch.clear();
+            }
+        }
+
+        if ( !batch.isEmpty() ) {
+            this.fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            AbstractDao.log.info( "Find experiments: " + timer.getTime() + " ms" );
+        }
+
+        return result;
     }
 
     @Override
@@ -152,20 +247,24 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                         + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues "
                         + " inner join fetch res.hitListSizes where a.experimentAnalyzed.id in (:ees) ";
 
+        //noinspection unchecked
         List<DifferentialExpressionAnalysis> r1 = this.getHibernateTemplate()
                 .findByNamedParam( query, "ees", EntityUtils.getIds( experiments ) );
         int count = 0;
         for ( DifferentialExpressionAnalysis a : r1 ) {
+            //noinspection SuspiciousMethodCalls // Ignoring subsets
             if ( !result.containsKey( a.getExperimentAnalyzed() ) ) {
                 result.put( ( ExpressionExperiment ) a.getExperimentAnalyzed(),
                         new HashSet<DifferentialExpressionAnalysis>() );
             }
+            //noinspection SuspiciousMethodCalls // Ignoring subsets
             result.get( a.getExperimentAnalyzed() ).add( a );
             count++;
         }
         if ( timer.getTime() > 1000 ) {
-            log.info( "Fetch " + count + " analyses for " + result.size() + " experiments: " + timer.getTime()
-                    + "ms; Query was:\n" + NativeQueryUtils.toSql( this.getHibernateTemplate(), query ) );
+            AbstractDao.log
+                    .info( "Fetch " + count + " analyses for " + result.size() + " experiments: " + timer.getTime()
+                            + "ms; Query was:\n" + query );
         }
         timer.reset();
         timer.start();
@@ -179,6 +278,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                 + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues"
                 + " inner join fetch res.hitListSizes  "
                 + " join eess.sourceExperiment see join a.experimentAnalyzed ee  where eess=ee and see.id in (:ees) ";
+        //noinspection unchecked
         List<DifferentialExpressionAnalysis> r2 = this.getHibernateTemplate()
                 .findByNamedParam( q2, "ees", EntityUtils.getIds( experiments ) );
 
@@ -200,9 +300,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                 count++;
             }
             if ( timer.getTime() > 1000 ) {
-                log.info( "Fetch " + count + " subset analyses for " + result.size() + " experiment subsets: " + timer
-                        .getTime() + "ms" );
-                log.debug( "Query for subsets was: " + NativeQueryUtils.toSql( this.getHibernateTemplate(), q2 ) );
+                AbstractDao.log
+                        .info( "Fetch " + count + " subset analyses for " + result.size() + " experiment subsets: "
+                                + timer.getTime() + "ms" );
+                AbstractDao.log.debug( "Query for subsets was: " + q2 );
             }
         }
 
@@ -211,9 +312,59 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     @Override
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
-            Collection<Long> expressionExperimentIds ) {
-        return this.getAnalysesByExperimentIds( expressionExperimentIds, 0, -1 );
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
+        //language=HQL
+        final String queryString = "select distinct e.id from DifferentialExpressionAnalysis a"
+                + " inner join a.experimentAnalyzed e where e.id in (:eeIds)";
+        //noinspection unchecked
+        return this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", idsToFilter );
+    }
+
+    @Override
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
+        //language=HQL
+        final String queryString = "select distinct ee.id from DifferentialExpressionAnalysis"
+                + " as doa inner join doa.experimentAnalyzed as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
+        //noinspection unchecked
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    @Override
+    public void thaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
+        for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
+            this.thaw( ea );
+        }
+    }
+
+    @Override
+    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Session session = this.getSessionFactory().getCurrentSession();
+        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
+        Hibernate.initialize( differentialExpressionAnalysis );
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
+        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis.getExperimentAnalyzed() );
+        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
+
+        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
+
+        if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
+            Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
+        }
+
+        Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
+        Hibernate.initialize( ears );
+        for ( ExpressionAnalysisResultSet ear : ears ) {
+            session.buildLockRequest( LockOptions.NONE ).lock( ear );
+            Hibernate.initialize( ear );
+            Hibernate.initialize( ear.getExperimentalFactors() );
+
+        }
+        if ( timer.getTime() > 1000 ) {
+            AbstractDao.log.info( "Thaw: " + timer.getTime() + "ms" );
+        }
     }
 
     @Override
@@ -221,7 +372,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             Collection<Long> expressionExperimentIds, int offset, int limit ) {
 
         /*
-         * There are three cases to consider: the ids are experiments; the ids are experimentsubsets; the ids are
+         * There are three cases to consider: the ids are experiments; the ids are experiment subsets; the ids are
          * experiments that have subsets.
          */
         Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> r = new HashMap<>();
@@ -236,10 +387,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         Collection<DifferentialExpressionAnalysis> hits = this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct a from DifferentialExpressionAnalysis a join fetch a.experimentAnalyzed e join"
                         + " fetch a.resultSets rs join fetch rs.hitListSizes where e.id in (:eeids)" )
-                .setParameterList( "eeids", expressionExperimentIds )
-                .setFirstResult( offset )
-                .setMaxResults( limit > 0 ? limit : -1 )
-                .list();
+                .setParameterList( "eeids", expressionExperimentIds ).setFirstResult( offset )
+                .setMaxResults( limit > 0 ? limit : -1 ).list();
 
         Map<Long, Collection<FactorValue>> ee2fv = new HashMap<>();
         List<Object[]> fvs;
@@ -251,32 +400,22 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                     "select distinct ee.id, fv from " + "ExpressionExperiment"
                             + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", expressionExperimentIds ).list();
-            for ( Object[] oa : fvs ) {
-                if ( !ee2fv.containsKey( oa[0] ) ) {
-                    ee2fv.put( ( Long ) oa[0], new HashSet<FactorValue>() );
-                }
-                ee2fv.get( oa[0] ).add( ( FactorValue ) oa[1] );
-            }
+            this.addFactorValues( ee2fv, fvs );
 
             // also get factor values for subsets - those not found yet.
             Collection<Long> used = new HashSet<>();
             for ( DifferentialExpressionAnalysis a : hits ) {
                 used.add( a.getExperimentAnalyzed().getId() );
             }
-            Collection<Long> probableSubSetIds = ListUtils.removeAll( used, ee2fv.keySet() );
+
+            List probableSubSetIds = ListUtils.removeAll( used, ee2fv.keySet() );
             if ( !probableSubSetIds.isEmpty() ) {
                 //noinspection unchecked
                 fvs = this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
                                 + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                         .setParameterList( "ees", probableSubSetIds ).list();
-
-                for ( Object[] oa : fvs ) {
-                    if ( !ee2fv.containsKey( oa[0] ) ) {
-                        ee2fv.put( ( Long ) oa[0], new HashSet<FactorValue>() );
-                    }
-                    ee2fv.get( oa[0] ).add( ( FactorValue ) oa[1] );
-                }
+                this.addFactorValues( ee2fv, fvs );
             }
 
         }
@@ -285,17 +424,17 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
          * Subsets of those same experiments (there might not be any)
          */
         //noinspection unchecked
-        List<DifferentialExpressionAnalysis> analysesofSubsets = this.getSessionFactory().getCurrentSession()
+        List<DifferentialExpressionAnalysis> analysesOfSubsets = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct a from " + "ExpressionExperimentSubSet"
                         + " ee, DifferentialExpressionAnalysis a" + " join ee.sourceExperiment see "
                         + " join fetch a.experimentAnalyzed eeanalyzed where see.id in (:eeids) and ee=eeanalyzed" )
                 .setParameterList( "eeids", expressionExperimentIds ).list();
 
-        if ( !analysesofSubsets.isEmpty() ) {
-            hits.addAll( analysesofSubsets );
+        if ( !analysesOfSubsets.isEmpty() ) {
+            hits.addAll( analysesOfSubsets );
 
             Collection<Long> experimentSubsetIds = new HashSet<>();
-            for ( DifferentialExpressionAnalysis a : analysesofSubsets ) {
+            for ( DifferentialExpressionAnalysis a : analysesOfSubsets ) {
                 ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) a.getExperimentAnalyzed();
                 experimentSubsetIds.add( subset.getId() );
             }
@@ -307,21 +446,15 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                     "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
                             + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", experimentSubsetIds ).list();
-            for ( Object[] oa : fvs ) {
-                if ( !ee2fv.containsKey( oa[0] ) ) {
-                    Long subsetId = ( Long ) oa[0];
-                    ee2fv.put( subsetId, new HashSet<FactorValue>() );
-                }
-                ee2fv.get( oa[0] ).add( ( FactorValue ) oa[1] );
-            }
+            this.addFactorValues( ee2fv, fvs );
         }
 
         // postprocesss...
         if ( hits.isEmpty() ) {
             return r;
         }
-        Collection<DifferentialExpressionAnalysisValueObject> summaries = convertToValueObjects( hits, arrayDesignsUsed,
-                ee2fv );
+        Collection<DifferentialExpressionAnalysisValueObject> summaries = this
+                .convertToValueObjects( hits, arrayDesignsUsed, ee2fv );
 
         for ( DifferentialExpressionAnalysisValueObject an : summaries ) {
 
@@ -342,18 +475,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     @Override
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        final String queryString = "select distinct e.id from DifferentialExpressionAnalysis a"
-                + " inner join a.experimentAnalyzed e where e.id in (:eeIds)";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", idsToFilter );
-    }
-
-    @Override
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
-        final String queryString = "select distinct ee.id from DifferentialExpressionAnalysis"
-                + " as doa inner join doa.experimentAnalyzed as ee " + "inner join ee.bioAssays as ba "
-                + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
+        //noinspection unchecked
+        return this.getHibernateTemplate()
+                .findByNamedParam( "select a from DifferentialExpressionAnalysis as a where a.name = :name", "name",
+                        name );
     }
 
     @Override
@@ -383,21 +509,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             q.setParameter( "rsid", rs.getId() );
             contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table remove.
 
-            // will happen by cascade.
-            // // remove HIT_LISTS
-            // String nativeDeleteHLQuery = "DELETE h from HIT_LIST_SIZE h"
-            // + " where h.RESULT_SET_FK = :rsid  ";
-            // q = session.createSQLQuery( nativeDeleteHLQuery );
-            // q.setParameter( "rsid", rs.getId() );
-            // resultsDone += q.executeUpdate();
-            //
-            // // remove P_VALUE_DISTRIBUTION
-            // String nativeDeletePVDQuery = "DELETE p from ANALYSIS_RESULT_SET ars, PVALUE_DISTRIBUTION p"
-            // + " where ars.ID=:rsid AND ars.PVALUE_DISTRIBUTION_FK = p.ID";
-            // q = session.createSQLQuery( nativeDeletePVDQuery );
-            // q.setParameter( "rsid", rs.getId() );
-            // resultsDone += q.executeUpdate();
-
             // Delete AnalysisResults
             String nativeDeleteARQuery =
                     "DELETE d FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d" + " WHERE d.RESULT_SET_FK = :rsid  ";
@@ -409,7 +520,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             session.flush();
             session.clear();
         }
-        log.info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results in " + timer.getTime() + "ms" );
+        AbstractDao.log
+                .info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results in " + timer.getTime()
+                        + "ms" );
 
         analysis = ( DifferentialExpressionAnalysis ) session
                 .load( DifferentialExpressionAnalysis.class, analysis.getId() );
@@ -422,49 +535,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFind( Gene gene, ExpressionAnalysisResultSet resultSet,
-            double threshold ) {
-        final String findByResultSet = "select distinct r from DifferentialExpressionAnalysis a"
-                + "   inner join a.experimentAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
-                + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
-                + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and rs=:resultSet"
-                + " and r.correctedPvalue < :threshold";
-
-        String[] paramNames = { "gene", "resultSet", "threshold" };
-        Object[] objectValues = { gene, resultSet, threshold };
-
-        return this.getHibernateTemplate().findByNamedParam( findByResultSet, paramNames, objectValues );
+    public Collection<DifferentialExpressionAnalysis> findByInvestigation( Investigation investigation ) {
+        return this.getAnalyses( investigation );
     }
 
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
-        return getAnalyses( investigation );
-    }
-
-    @Override
-    protected Map<Long, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigationIds(
-            Collection<Long> investigationIds ) {
-
-        Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Long, Collection<DifferentialExpressionAnalysis>>();
-        final String queryString = "select distinct e, a from DifferentialExpressionAnalysis a"
-                + "   inner join a.experimentAnalyzed e where e.id in (:eeIds)";
-        List<?> qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
-        for ( Object o : qresult ) {
-            Object[] oa = ( Object[] ) o;
-            BioAssaySet bas = ( BioAssaySet ) oa[0];
-            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
-            Long id = bas.getId();
-            if ( !results.containsKey( id ) ) {
-                results.put( id, new HashSet<DifferentialExpressionAnalysis>() );
-            }
-            results.get( id ).add( dea );
-        }
-        return results;
-    }
-
-    @Override
-    protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
+    public Map<Investigation, Collection<DifferentialExpressionAnalysis>> findByInvestigations(
             Collection<Investigation> investigations ) {
 
         Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
@@ -477,117 +553,23 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
-        final String queryString =
-                "select distinct doa from DifferentialExpressionAnalysis as doa inner join doa.experimentAnalyzed as ee "
-                        + "inner join ee.bioAssays as ba " + "inner join ba.sampleUsed as sample "
-                        + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
-
-    @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
+    public Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon ) {
+        //language=HQL
         final String queryString =
                 "select distinct doa from DifferentialExpressionAnalysis as doa inner join doa.experimentAnalyzed as ee "
                         + "inner join ee.bioAssays as ba "
                         + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
+        //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
-    @Override
-    protected Collection<BioAssaySet> handleFindExperimentsWithAnalyses( Gene gene ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        Collection<CompositeSequence> probes = CommonQueries
-                .getCompositeSequences( gene, this.getSessionFactory().getCurrentSession() );
-        Collection<BioAssaySet> result = new HashSet<BioAssaySet>();
-        if ( probes.size() == 0 ) {
-            return result;
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Find probes: " + timer.getTime() + " ms" );
-        }
-        timer.reset();
-        timer.start();
-
-        /*
-         * Note: this query misses ExpressionExperimentSubSets. The native query was implemented because HQL was always
-         * constructing a constraint on SubSets. See bug 2173.
-         */
-        final String nativeQuery =
-                "select e.ID from ANALYSIS a inner join INVESTIGATION e ON a.EXPERIMENT_ANALYZED_FK = e.ID "
-                        + "inner join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK=e.ID "
-                        + " inner join BIO_MATERIAL bm ON bm.ID=ba.SAMPLE_USED_FK inner join TAXON t ON bm.SOURCE_TAXON_FK=t.ID "
-                        + " inner join COMPOSITE_SEQUENCE cs ON ba.ARRAY_DESIGN_USED_FK =cs.ARRAY_DESIGN_FK where cs.ID in "
-                        + " (:probes) ";
-
-        final String speciesConstraint = " and t.ID = :taxon";
-        final String parentTaxonConstraint = " and t.PARENT_TAXON_FK = :taxon";
-
-        Taxon taxon = gene.getTaxon();
-        String taxonConstraint = taxon.getIsSpecies() ? speciesConstraint : parentTaxonConstraint;
-
-        String queryToUse = nativeQuery + taxonConstraint;
-
-        int batchSize = 1000;
-        Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-        for ( CompositeSequence probe : probes ) {
-            batch.add( probe );
-
-            if ( batch.size() == batchSize ) {
-                fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
-                batch.clear();
+    private void addFactorValues( Map<Long, Collection<FactorValue>> ee2fv, List<Object[]> fvs ) {
+        for ( Object[] oa : fvs ) {
+            Long eeId = ( Long ) oa[0];
+            if ( !ee2fv.containsKey( eeId ) ) {
+                ee2fv.put( eeId, new HashSet<FactorValue>() );
             }
-        }
-
-        if ( !batch.isEmpty() ) {
-            fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Find experiments: " + timer.getTime() + " ms" );
-        }
-
-        return result;
-    }
-
-    @Override
-    protected void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
-            handleThaw( ea );
-        }
-    }
-
-    @Override
-    protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Session session = this.getSessionFactory().getCurrentSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
-        Hibernate.initialize( differentialExpressionAnalysis );
-        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
-        session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis.getExperimentAnalyzed() );
-        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
-
-        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
-
-        if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
-            Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
-        }
-
-        Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
-        Hibernate.initialize( ears );
-        for ( ExpressionAnalysisResultSet ear : ears ) {
-            session.buildLockRequest( LockOptions.NONE ).lock( ear );
-            Hibernate.initialize( ear );
-            Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
-
-        }
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Thaw: " + timer.getTime() + "ms" );
+            ee2fv.get( eeId ).add( ( FactorValue ) oa[1] );
         }
     }
 
@@ -659,7 +641,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                 avo.getResultSets().add( desvo );
 
                 assert ee2fv.containsKey( bioAssaySet.getId() );
-                populateWhichFactorValuesUsed( avo, ee2fv.get( bioAssaySet.getId() ) );
+                this.populateWhichFactorValuesUsed( avo, ee2fv.get( bioAssaySet.getId() ) );
 
             }
 
@@ -678,11 +660,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         nativeQ.setParameterList( "probes", EntityUtils.getIds( probes ) );
         nativeQ.setParameter( "taxon", taxon );
         List<?> list = nativeQ.list();
-        Set<Long> ids = new HashSet<Long>();
+        Set<Long> ids = new HashSet<>();
         for ( Object o : list ) {
             ids.add( ( ( BigInteger ) o ).longValue() );
         }
         if ( !ids.isEmpty() ) {
+            //noinspection unchecked
             result.addAll( this.getHibernateTemplate()
                     .findByNamedParam( "from ExpressionExperiment e where e.id in (:ids)", "ids", ids ) );
         }
@@ -693,18 +676,20 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             throw new IllegalArgumentException( "Investigation must not be null" );
         Long id = investigation.getId();
 
-        return getAnalysesForExperiment( id );
+        return this.getAnalysesForExperiment( id );
 
     }
 
     private Collection<DifferentialExpressionAnalysis> getAnalysesForExperiment( Long id ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         final String query = "select distinct a from DifferentialExpressionAnalysis a where a.experimentAnalyzed.id=:eeid ";
+        //noinspection unchecked
         results.addAll( this.getHibernateTemplate().findByNamedParam( query, "eeid", id ) );
 
         /*
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
          */
+        //noinspection unchecked
         results.addAll( this.getHibernateTemplate().findByNamedParam(
                 "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a"
                         + " join eess.sourceExperiment see "
@@ -714,7 +699,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     /**
-     * Figure out which factorValues were used for each of the experimental factors (excluding the subsetfactor)
+     * Figure out which factorValues were used for each of the experimental factors (excluding the subset factor)
      */
     private void populateWhichFactorValuesUsed( DifferentialExpressionAnalysisValueObject avo,
             Collection<FactorValue> fvs ) {

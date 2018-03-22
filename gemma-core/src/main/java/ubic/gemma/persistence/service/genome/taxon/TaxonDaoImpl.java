@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -23,12 +23,12 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -39,11 +39,28 @@ import java.util.List;
  * @see Taxon
  */
 @Repository
-public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
+public class TaxonDaoImpl extends AbstractVoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
         super( Taxon.class, sessionFactory );
+    }
+
+    @Override
+    public Taxon findOrCreate( Taxon taxon ) {
+        Taxon existingTaxon = this.find( taxon );
+        if ( existingTaxon != null ) {
+            if ( AbstractDao.log.isDebugEnabled() )
+                AbstractDao.log.debug( "Found existing taxon: " + taxon );
+            return existingTaxon;
+        }
+
+        if ( StringUtils.isBlank( taxon.getCommonName() ) && StringUtils.isBlank( taxon.getScientificName() ) ) {
+            throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
+        }
+
+        AbstractDao.log.warn( "Creating new taxon: " + taxon );
+        return super.create( taxon );
     }
 
     @Override
@@ -73,23 +90,6 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     }
 
     @Override
-    public Taxon findOrCreate( Taxon taxon ) {
-        Taxon existingTaxon = find( taxon );
-        if ( existingTaxon != null ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Found existing taxon: " + taxon );
-            return existingTaxon;
-        }
-
-        if ( StringUtils.isBlank( taxon.getCommonName() ) && StringUtils.isBlank( taxon.getScientificName() ) ) {
-            throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
-        }
-
-        log.warn( "Creating new taxon: " + taxon );
-        return super.create( taxon );
-    }
-
-    @Override
     public Taxon findByAbbreviation( final String abbreviation ) {
         return this.findOneByStringProperty( "abbreviation", abbreviation );
     }
@@ -105,8 +105,11 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     }
 
     @Override
-    public Taxon findByNcbiId( Long ncbiId ) {
-        return ( Taxon ) this.findByProperty( "ncbiId", ncbiId );
+    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
+                .setParameter( "parentTaxon", parentTaxon ).list();
     }
 
     @Override
@@ -118,29 +121,26 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     }
 
     @Override
-    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
-                .setParameter( "parentTaxon", parentTaxon ).list();
-    }
-
-    @Override
     public void thaw( final Taxon taxon ) {
         this.getSessionFactory().getCurrentSession().doWork( new Work() {
             @Override
-            public void execute( Connection connection ) throws SQLException {
-                getSession().buildLockRequest( LockOptions.NONE ).lock( taxon );
+            public void execute( Connection connection ) {
+                TaxonDaoImpl.this.getSession().buildLockRequest( LockOptions.NONE ).lock( taxon );
                 Hibernate.initialize( taxon.getParentTaxon() );
                 Hibernate.initialize( taxon.getExternalDatabase() );
-                getSession().evict( taxon );
+                TaxonDaoImpl.this.getSession().evict( taxon );
             }
         } );
     }
 
     @Override
+    public Taxon findByNcbiId( Long ncbiId ) {
+        return ( Taxon ) this.findByProperty( "ncbiId", ncbiId );
+    }
+
+    @Override
     public TaxonValueObject loadValueObject( Taxon entity ) {
-        thaw( entity );
+        this.thaw( entity );
         return new TaxonValueObject( entity );
     }
 
@@ -207,13 +207,13 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
                 + "left join " + ObjectFilter.DAO_TAXON_ALIAS + ".parentTaxon.parentTaxon as PTT " // parent p taxon
                 + "where " + ObjectFilter.DAO_TAXON_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += formRestrictionClause( filters, false );
+        queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
         queryString += "group by " + ObjectFilter.DAO_TAXON_ALIAS + ".id ";
-        queryString += formOrderByProperty( orderByProperty, orderDesc );
+        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        addRestrictionParameters( query, filters );
+        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
 
         return query;
     }

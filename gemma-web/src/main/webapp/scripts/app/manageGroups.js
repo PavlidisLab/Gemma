@@ -11,7 +11,7 @@ Ext
       Ext.QuickTips.init();
       Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 
-      var currentGroup; // FIXME Holding onto state info smells bad...
+      var currentGroup;
 
       var groupMembershipChks = new Ext.ux.grid.CheckColumn( {
          header : 'In group',

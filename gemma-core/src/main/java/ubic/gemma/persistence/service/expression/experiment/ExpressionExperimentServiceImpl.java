@@ -50,21 +50,19 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 import ubic.gemma.persistence.util.ObjectFilter;
@@ -79,7 +77,7 @@ import java.util.*;
 @Service
 @Transactional
 public class ExpressionExperimentServiceImpl
-        extends VoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
+        extends AbstractVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
@@ -90,7 +88,7 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private AuditEventDao auditEventDao;
     @Autowired
-    private BioAssayDimensionDao bioAssayDimensionDao;
+    private BioAssayDimensionService bioAssayDimensionService;
     @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
     @Autowired
@@ -158,8 +156,14 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public Integer countNotTroubled() {
+        return this.expressionExperimentDao.countNotTroubled();
+    }
+
+    @Override
     @Transactional
-    public ExpressionExperiment addVectors( ExpressionExperiment ee, Collection<RawExpressionDataVector> newVectors ) {
+    public ExpressionExperiment addRawVectors( ExpressionExperiment ee,
+            Collection<RawExpressionDataVector> newVectors ) {
 
         Collection<BioAssayDimension> BADs = new HashSet<>();
         Collection<QuantitationType> qts = new HashSet<>();
@@ -179,7 +183,7 @@ public class ExpressionExperimentServiceImpl
 
         BioAssayDimension bad = BADs.iterator().next();
 
-        bad = this.bioAssayDimensionDao.findOrCreate( bad );
+        bad = this.bioAssayDimensionService.findOrCreate( bad );
         assert bad.getBioAssays().size() > 0;
 
         QuantitationType newQt = qts.iterator().next();
@@ -187,7 +191,7 @@ public class ExpressionExperimentServiceImpl
         if ( newQt.getId() == null ) {
             newQt = this.quantitationTypeDao.create( newQt );
         } else {
-            log.warn( "Quantitation type already had an ID...:" + newQt );
+            AbstractService.log.warn( "Quantitation type already had an ID...:" + newQt );
         }
 
         /*
@@ -208,7 +212,7 @@ public class ExpressionExperimentServiceImpl
         // this is a denormalization; easy to forget to update this.
         ee.getQuantitationTypes().add( newQt );
 
-        log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
+        AbstractService.log.info( ee.getRawExpressionDataVectors().size() + " vectors for experiment" );
 
         return ee;
     }
@@ -217,17 +221,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
         return this.expressionExperimentDao.browse( start, limit );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        return this.expressionExperimentDao.browse( start, limit, orderField, descending );
-    }
-
-    @Override
-    public Integer countNotTroubled() {
-        return this.expressionExperimentDao.countNotTroubled();
     }
 
     /**
@@ -255,18 +248,18 @@ public class ExpressionExperimentServiceImpl
         return ids;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperiment> findByAccession( String accession ) {
+        return this.expressionExperimentDao.findByAccession( accession );
+    }
+
     /**
      * @see ExpressionExperimentService#findByAccession(DatabaseEntry)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByAccession( final DatabaseEntry accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByAccession( String accession ) {
         return this.expressionExperimentDao.findByAccession( accession );
     }
 
@@ -423,12 +416,6 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional
-    public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.findOrCreate( expressionExperiment );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
@@ -437,7 +424,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
-        ExpressionExperiment expressionExperiment = load( eeId );
+        ExpressionExperiment expressionExperiment = this.load( eeId );
         Collection<AnnotationValueObject> annotations = new ArrayList<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
@@ -448,11 +435,11 @@ public class ExpressionExperimentServiceImpl
             if ( c instanceof VocabCharacteristic ) {
                 VocabCharacteristic vc = ( VocabCharacteristic ) c;
                 annotationValue.setClassUri( vc.getCategoryUri() );
-                String className = getLabelFromUri( vc.getCategoryUri() );
+                String className = this.getLabelFromUri( vc.getCategoryUri() );
                 if ( className != null )
                     annotationValue.setClassName( className );
                 annotationValue.setTermUri( vc.getValueUri() );
-                String termName = getLabelFromUri( vc.getValueUri() );
+                String termName = this.getLabelFromUri( vc.getValueUri() );
                 if ( termName != null )
                     annotationValue.setTermName( termName );
                 annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
@@ -473,7 +460,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public String getBatchConfound( ExpressionExperiment ee ) {
-        ee = thawBioAssays( ee );
+        ee = this.thawBioAssays( ee );
 
         if ( !this.checkHasBatchInfo( ee ) ) {
             return null;
@@ -483,14 +470,14 @@ public class ExpressionExperimentServiceImpl
         try {
             confounds = BatchConfound.test( ee );
         } catch ( NotStrictlyPositiveException e ) {
-            log.error( "Batch confound test threw a NonStrictlyPositiveException! Returning null." );
+            AbstractService.log.error( "Batch confound test threw a NonStrictlyPositiveException! Returning null." );
             return null;
         }
 
         StringBuilder result = new StringBuilder( "" );
 
         for ( BatchConfoundValueObject c : confounds ) {
-            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+            if ( c.getP() < ExpressionExperimentServiceImpl.BATCH_CONFOUND_THRESHOLD ) {
                 String factorName = c.getEf().getName();
                 if ( !result.toString().isEmpty() ) {
                     result.append( ", " );
@@ -514,7 +501,7 @@ public class ExpressionExperimentServiceImpl
         BatchEffectDetails details = new BatchEffectDetails();
 
         details.setDataWasBatchCorrected( false );
-        if ( getHasBeenBatchCorrected( ee ) ) {
+        if ( this.getHasBeenBatchCorrected( ee ) ) {
             details.setDataWasBatchCorrected( true );
             details.setHasBatchInformation( true );
         }
@@ -545,57 +532,22 @@ public class ExpressionExperimentServiceImpl
         return details;
     }
 
-    private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
-        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
-            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
-        BatchEffectDetails batchEffectDetails = getBatchEffect( ee );
+        BatchEffectDetails batchEffectDetails = this.getBatchEffect( ee );
         String result = "";
         if ( batchEffectDetails == null ) {
             result = "";
         } else {
             if ( batchEffectDetails.getDataWasBatchCorrected() ) {
                 result = "Data has been batch-corrected"; // Referenced in ExpressionExperimentDetails.js::renderStatus()
-            } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_THRESHOLD ) {
+            } else if ( batchEffectDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
                 result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
                         + String.format( "%.2g", batchEffectDetails.getPvalue() );
             }
         }
         return Strings.emptyToNull( result );
-    }
-
-    @Override
-    public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
-        boolean hasBatchInformation = false;
-
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                hasBatchInformation = true;
-                break;
-            }
-        }
-        if ( !hasBatchInformation ) {
-            boolean allBAsHaveDate = true;
-            ee = this.thawBioAssays( ee );
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( ba.getProcessingDate() == null ) {
-                    allBAsHaveDate = false;
-                    break;
-                }
-            }
-            if ( allBAsHaveDate ) {
-                hasBatchInformation = true;
-            }
-        }
-        return hasBatchInformation;
     }
 
     @Override
@@ -605,7 +557,7 @@ public class ExpressionExperimentServiceImpl
                 .getBioAssayDimensions( expressionExperiment );
         Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<>();
         for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
-            thawedBioAssayDimensions.add( this.bioAssayDimensionDao.thaw( bioAssayDimension ) );
+            thawedBioAssayDimensions.add( this.bioAssayDimensionService.thaw( bioAssayDimension ) );
         }
         return thawedBioAssayDimensions;
     }
@@ -620,20 +572,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Integer getDesignElementDataVectorCountById( final Long id ) {
         return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DesignElementDataVector> getDesignElementDataVectors(
-            final Collection<CompositeSequence> designElements, final QuantitationType quantitationType ) {
-        return this.expressionExperimentDao.getDesignElementDataVectors( designElements, quantitationType );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DesignElementDataVector> getDesignElementDataVectors(
-            final Collection<QuantitationType> quantitationTypes ) {
-        return this.expressionExperimentDao.getDesignElementDataVectors( quantitationTypes );
     }
 
     @Override
@@ -657,19 +595,19 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastLinkAnalysis( final Collection<Long> ids ) {
-        return getLastEvent( this.load( ids ), LinkAnalysisEvent.Factory.newInstance() );
+        return this.getLastEvent( this.load( ids ), LinkAnalysisEvent.Factory.newInstance() );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastMissingValueAnalysis( final Collection<Long> ids ) {
-        return getLastEvent( this.load( ids ), MissingValueAnalysisEvent.Factory.newInstance() );
+        return this.getLastEvent( this.load( ids ), MissingValueAnalysisEvent.Factory.newInstance() );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastProcessedDataUpdate( final Collection<Long> ids ) {
-        return getLastEvent( this.load( ids ), ProcessedVectorComputationEvent.Factory.newInstance() );
+        return this.getLastEvent( this.load( ids ), ProcessedVectorComputationEvent.Factory.newInstance() );
     }
 
     @Override
@@ -707,12 +645,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getProcessedDataVectors( ee );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long Id ) {
         return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
     }
@@ -739,13 +671,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DesignElementDataVector> getSamplingOfVectors( final QuantitationType quantitationType,
-            final Integer limit ) {
-        return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getSubSets( expressionExperiment );
     }
@@ -760,31 +685,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
         return this.expressionExperimentDao.getTaxon( bioAssaySet );
-    }
-
-    @Override
-    public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
-        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
-        return ads.size() <= 1 && ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
-    }
-
-    /**
-     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
-     *           checking
-     *           the curation details of the object directly, as this method also checks all the array designs the given
-     *           experiment belongs to.
-     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
-     */
-    @Override
-    public boolean isTroubled( ExpressionExperiment ee ) {
-        if ( ee.getCurationDetails().getTroubled() )
-            return true;
-        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
-        for ( ArrayDesign ad : ads ) {
-            if ( ad.getCurationDetails().getTroubled() )
-                return true;
-        }
-        return false;
     }
 
     @Override
@@ -805,12 +705,6 @@ public class ExpressionExperimentServiceImpl
     public Collection<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
             boolean descending, Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
-    }
-
-    @Override
-    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField,
-            boolean descending, Collection<Long> ids, Taxon taxon, int limit, int start ) {
-        return this.expressionExperimentDao.loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override
@@ -839,89 +733,15 @@ public class ExpressionExperimentServiceImpl
         return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
     }
 
-    /**
-     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
-     * description (no but seriously do look it might not work as you would expect).
-     */
     @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
-        return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
-    }
-
-    /**
-     * @see ExpressionExperimentService#remove(ExpressionExperiment)
-     */
-    @Override
-    @Transactional
-    public void remove( ExpressionExperiment expressionExperiment ) {
-        // Can not call DAO directly since we have to do some service-layer level house keeping
-        this.remove( expressionExperiment.getId() );
+    public Collection<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField,
+            boolean descending, Collection<Long> ids, Taxon taxon, int limit, int start ) {
+        return this.expressionExperimentDao.loadDetailsValueObjects( orderField, descending, ids, taxon, limit, start );
     }
 
     @Override
     @Transactional
-    public void remove( Long id ) {
-        final ExpressionExperiment ee = this.load( id );
-
-        if ( !securityService.isEditable( ee ) ) {
-            throw new SecurityException(
-                    "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
-                            + " You do not have permission to edit this experiment." );
-        }
-
-        // Remove subsets
-        Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
-        for ( ExpressionExperimentSubSet subset : subsets ) {
-            expressionExperimentSubSetService.delete( subset );
-        }
-
-        // Remove differential expression analyses
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
-                .findByInvestigation( ee );
-        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            Long toDelete = de.getId();
-            this.differentialExpressionAnalysisDao.remove( toDelete );
-        }
-
-        // remove any sample coexpression matrices
-        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
-
-        // Remove PCA
-        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisService.findByExperiment( ee );
-        for ( PrincipalComponentAnalysis pca : pcas ) {
-            this.principalComponentAnalysisService.remove( pca );
-        }
-
-        /*
-         * FIXME: delete probe coexpression analysis; gene coexpression will linger.
-         * this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
-         */
-
-        /*
-         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
-         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
-         * analyses!
-         */
-        Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
-        for ( ExpressionExperimentSet eeSet : sets ) {
-            if ( eeSet.getExperiments().size() == 1 && eeSet.getExperiments().iterator().next().equals( ee ) ) {
-                log.info( "Removing from set " + eeSet );
-                this.expressionExperimentSetService
-                        .remove( eeSet ); // remove the set because in only contains this experiment
-            } else {
-                log.info( "Removing " + ee + " from " + eeSet );
-                eeSet.getExperiments().remove( ee );
-                this.expressionExperimentSetService.update( eeSet ); // update set to not reference this experiment.
-            }
-        }
-        this.expressionExperimentDao.remove( ee );
-    }
-
-    @Override
-    @Transactional
-    public int removeData( ExpressionExperiment ee, QuantitationType qt ) {
+    public int removeRawVectors( ExpressionExperiment ee, QuantitationType qt ) {
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
         Collection<RawExpressionDataVector> vectorsToRemove = new ArrayList<>();
         for ( RawExpressionDataVector oldV : eeToUpdate.getRawExpressionDataVectors() ) {
@@ -935,14 +755,14 @@ public class ExpressionExperimentServiceImpl
         }
 
         eeToUpdate.getRawExpressionDataVectors().removeAll( vectorsToRemove );
-        log.info( "Removing unused quantitation type: " + qt );
+        AbstractService.log.info( "Removing unused quantitation type: " + qt );
         eeToUpdate.getQuantitationTypes().remove( qt );
         return vectorsToRemove.size();
     }
 
     @Override
     @Transactional
-    public ExpressionExperiment replaceVectors( ExpressionExperiment ee,
+    public ExpressionExperiment replaceRawVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
 
         if ( newVectors == null || newVectors.isEmpty() ) {
@@ -981,15 +801,57 @@ public class ExpressionExperimentServiceImpl
         }
 
         for ( Collection<RawExpressionDataVector> vectors : BADs.values() ) {
-            ee = addVectors( eeToUpdate, vectors );
+            ee = this.addRawVectors( eeToUpdate, vectors );
         }
         return ee;
     }
 
     @Override
-    @Transactional
-    public void update( ExpressionExperiment entity ) {
-        super.update( entity );
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thaw( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+    }
+
+    @Override
+    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+    }
+
+    /**
+     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over
+     *           checking
+     *           the curation details of the object directly, as this method also checks all the array designs the given
+     *           experiment belongs to.
+     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     */
+    @Override
+    public boolean isTroubled( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails().getTroubled() )
+            return true;
+        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
+        for ( ArrayDesign ad : ads ) {
+            if ( ad.getCurationDetails().getTroubled() )
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isRNASeq( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> ads = this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+        return ads.size() <= 1 && ads.iterator().next().getTechnologyType().equals( TechnologyType.NONE );
     }
 
     /**
@@ -1000,9 +862,10 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
-        ee = thawLite( load( ee.getId() ) ); // Necessary to make sure we have the persistent version of the given ee.
+        ee = this.thawLite(
+                this.load( ee.getId() ) ); // Necessary to make sure we have the persistent version of the given ee.
         ontologyService.addExpressionExperimentStatement( vc, ee );
-        update( ee );
+        this.update( ee );
     }
 
     /**
@@ -1015,31 +878,130 @@ public class ExpressionExperimentServiceImpl
     @Override
     public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
         for ( Characteristic characteristic : vc ) {
-            saveExpressionExperimentStatement( characteristic, ee );
+            this.saveExpressionExperimentStatement( characteristic, ee );
         }
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
+    public boolean checkHasBatchInfo( ExpressionExperiment ee ) {
+        boolean hasBatchInformation = false;
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+        if ( !hasBatchInformation ) {
+            boolean allBAsHaveDate = true;
+            ee = this.thawBioAssays( ee );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                if ( ba.getProcessingDate() == null ) {
+                    allBAsHaveDate = false;
+                    break;
+                }
+            }
+            if ( allBAsHaveDate ) {
+                hasBatchInformation = true;
+            }
+        }
+        return hasBatchInformation;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
+    @Transactional
+    public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
+        return this.expressionExperimentDao.findOrCreate( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawWithoutVectors( expressionExperiment );
+    @Transactional
+    public void remove( Long id ) {
+        final ExpressionExperiment ee = this.load( id );
+
+        if ( !securityService.isEditable( ee ) ) {
+            throw new SecurityException(
+                    "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
+                            + " You do not have permission to edit this experiment." );
+        }
+
+        // Remove subsets
+        Collection<ExpressionExperimentSubSet> subsets = this.getSubSets( ee );
+        for ( ExpressionExperimentSubSet subset : subsets ) {
+            expressionExperimentSubSetService.remove( subset );
+        }
+
+        // Remove differential expression analyses
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
+                .findByInvestigation( ee );
+        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
+            this.differentialExpressionAnalysisDao.remove( de );
+        }
+
+        // remove any sample coexpression matrices
+        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
+
+        // Remove PCA
+        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisService.findByExperiment( ee );
+        for ( PrincipalComponentAnalysis pca : pcas ) {
+            this.principalComponentAnalysisService.remove( pca );
+        }
+
+        /*
+         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
+         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
+         * analyses!
+         */
+        Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
+        for ( ExpressionExperimentSet eeSet : sets ) {
+            if ( eeSet.getExperiments().size() == 1 && eeSet.getExperiments().iterator().next().equals( ee ) ) {
+                AbstractService.log.info( "Removing from set " + eeSet );
+                this.expressionExperimentSetService
+                        .remove( eeSet ); // remove the set because in only contains this experiment
+            } else {
+                AbstractService.log.info( "Removing " + ee + " from " + eeSet );
+                eeSet.getExperiments().remove( ee );
+                this.expressionExperimentSetService.update( eeSet ); // update set to not reference this experiment.
+            }
+        }
+
+        this.expressionExperimentDao.remove( ee );
+    }
+
+    /**
+     * @see ExpressionExperimentService#remove(ExpressionExperiment)
+     */
+    @Override
+    @Transactional
+    public void remove( ExpressionExperiment expressionExperiment ) {
+        // Can not call DAO directly since we have to do some service-layer level house keeping
+        this.remove( expressionExperiment.getId() );
     }
 
     @Override
-    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawForFrontEnd( expressionExperiment );
+    @Transactional
+    public void update( ExpressionExperiment entity ) {
+        super.update( entity );
+    }
+
+    /**
+     * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
+     * description (no but seriously do look it might not work as you would expect).
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+        return this.expressionExperimentDao.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filter );
+    }
+
+    private boolean getHasBeenBatchCorrected( ExpressionExperiment ee ) {
+        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
+            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getLabelFromUri( String uri ) {

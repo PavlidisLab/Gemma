@@ -328,7 +328,6 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
             this.setTitle("Expression Experiments For Taxon");
             pageStore.on('load', function (store, records, options) {
                 // problem for salmon because this will be child taxon, not parent
-                // TODO use parent taxon, need to add it to object coming from back end
                 if (records[0]) {
                     this.setTitle("Expression Experiments For Taxon: " + records[0].get('taxon'));
                 }

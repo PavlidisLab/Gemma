@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,7 @@ import java.util.Collection;
  *
  * @author kelsey, paul
  */
+@SuppressWarnings("unused") // Possible external use
 public interface GeneSetService {
 
     @Secured({ "GROUP_USER" })
@@ -237,9 +238,8 @@ public interface GeneSetService {
      *
      * @param groupId group id
      * @param geneIds gene ids
-     * @return string
      */
-    String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds );
+    void updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds );
 
     /**
      * AJAX Updates the database entity (permission permitting) with the fields of the param value object

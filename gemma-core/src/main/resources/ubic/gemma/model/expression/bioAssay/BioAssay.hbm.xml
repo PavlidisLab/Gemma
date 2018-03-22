@@ -3,8 +3,8 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.bioAssay.BioAssay" table="BIO_ASSAY" dynamic-insert="false" dynamic-update="false">
+<hibernate-mapping>
+   <class name="ubic.gemma.model.expression.bioAssay.BioAssay" table="BIO_ASSAY">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -47,7 +47,7 @@
       <many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFile"  cascade="all" lazy="false" fetch="select">
          <column name="RAW_DATA_FILE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <set name="derivedDataFiles" lazy="false" fetch="select" inverse="false" cascade="all">
+      <set name="derivedDataFiles" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="LOCAL_FILE_BIO_ASSAY_FKC">
             <column name="BIO_ASSAY_FK" sql-type="BIGINT"/>

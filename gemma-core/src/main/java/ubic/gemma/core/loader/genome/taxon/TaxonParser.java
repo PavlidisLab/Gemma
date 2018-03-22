@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,24 +18,22 @@
  */
 package ubic.gemma.core.loader.genome.taxon;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
+import ubic.gemma.model.genome.Taxon;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
-import ubic.gemma.model.genome.Taxon;
-
 /**
  * Parse the "names.dmp" file from NCBI, ftp://ftp.ncbi.nih.gov/pub/taxonomy/.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class TaxonParser extends BasicLineMapParser<Integer, Taxon> {
 
-    Map<Integer, Taxon> results = new HashMap<Integer, Taxon>();
+    private final Map<Integer, Taxon> results = new HashMap<>();
 
     @Override
     public boolean containsKey( Integer key ) {
@@ -44,8 +42,7 @@ public class TaxonParser extends BasicLineMapParser<Integer, Taxon> {
 
     @Override
     public Taxon get( Integer key ) {
-        Taxon t = results.get( key );
-        return t;
+        return results.get( key );
     }
 
     @Override

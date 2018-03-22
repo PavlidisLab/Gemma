@@ -35,14 +35,6 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
 
     BioSequence findByAccession( DatabaseEntry accession );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<BioSequence> create( Collection<BioSequence> bioSequences );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BioSequence create( BioSequence bioSequence );
-
     /**
      * <p>
      * Returns matching biosequences for the given genes in a Map (gene to a collection of biosequences). Genes which
@@ -66,9 +58,9 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
     @Secured({ "GROUP_USER" })
     BioSequence findOrCreate( BioSequence bioSequence );
 
-    Collection<Gene> getGenesByAccession( String search );
-
-    Collection<Gene> getGenesByName( String search );
+    @Override
+    @Secured({ "GROUP_USER" })
+    BioSequence create( BioSequence bioSequence );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -77,6 +69,10 @@ public interface BioSequenceService extends BaseVoEnabledService<BioSequence, Bi
     @Override
     @Secured({ "GROUP_USER" })
     void update( BioSequence bioSequence );
+
+    Collection<Gene> getGenesByAccession( String search );
+
+    Collection<Gene> getGenesByName( String search );
 
     Collection<BioSequence> thaw( Collection<BioSequence> bioSequences );
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,25 +24,23 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -68,69 +66,57 @@ import java.util.Set;
  * @author Paul
  */
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
-    protected ExpressionExperimentService eeService;
-    protected Set<BioAssaySet> expressionExperiments = new HashSet<>();
-    protected boolean force = false;
-    protected GeneService geneService;
-    protected SearchService searchService;
-    protected Taxon taxon = null;
-    protected TaxonService taxonService;
+    ExpressionExperimentService eeService;
+    Set<BioAssaySet> expressionExperiments = new HashSet<>();
+    boolean force = false;
+    Taxon taxon = null;
+    TaxonService taxonService;
+    private GeneService geneService;
+    private SearchService searchService;
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
 
-    protected void addForceOption() {
-        this.addForceOption( null );
-    }
-
-    protected void addForceOption( String explanation ) {
-        String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
-        String usedExpl = explanation == null ? defaultExplanation : explanation;
-        @SuppressWarnings("static-access")
-        Option forceOption = OptionBuilder.withArgName( "Force processing" ).withLongOpt( "force" )
-                .withDescription( usedExpl ).create( "force" );
-        addOption( forceOption );
-    }
-
+    @SuppressWarnings("AccessStaticViaInstance") // Cleaner like this
     @Override
-    @SuppressWarnings("static-access")
     protected void buildOptions() {
         Option expOption = OptionBuilder.hasArg().withArgName( "shortname" ).withDescription(
                 "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                         + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
                 .withLongOpt( "experiment" ).create( 'e' );
 
-        addOption( expOption );
+        this.addOption( expOption );
 
         Option eeFileListOption = OptionBuilder.hasArg().withArgName( "file" ).withDescription(
                 "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .withLongOpt( "eeListfile" ).create( 'f' );
-        addOption( eeFileListOption );
+        this.addOption( eeFileListOption );
 
         Option eeSetOption = OptionBuilder.hasArg().withArgName( "eeSetName" )
                 .withDescription( "Name of expression experiment set to use" ).create( "eeset" );
 
-        addOption( eeSetOption );
+        this.addOption( eeSetOption );
 
         Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
                 .withDescription( "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" )
                 .create( 't' );
-        addOption( taxonOption );
+        this.addOption( taxonOption );
 
         Option excludeEeOption = OptionBuilder.hasArg().withArgName( "file" )
                 .withDescription( "File containing list of expression experiments to exclude" )
                 .withLongOpt( "excludeEEFile" ).create( 'x' );
-        addOption( excludeEeOption );
+        this.addOption( excludeEeOption );
 
         Option eeSearchOption = OptionBuilder.hasArg().withArgName( "expressionQuery" )
                 .withDescription( "Use a query string for defining which expression experiments to use" )
                 .withLongOpt( "expressionQuery" ).create( 'q' );
-        addOption( eeSearchOption );
+        this.addOption( eeSearchOption );
 
     }
 
+    @SuppressWarnings("unused") // Possible external use
     protected Gene findGeneByOfficialSymbol( String symbol, Taxon t ) {
         Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
         for ( Gene gene : genes ) {
@@ -148,108 +134,87 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         geneService = this.getBean( GeneService.class );
         taxonService = this.getBean( TaxonService.class );
         searchService = this.getBean( SearchService.class );
-        this.auditEventService = getBean( AuditEventService.class );
-        if ( hasOption( 't' ) ) {
-            this.taxon = setTaxonByName( taxonService );
+        this.auditEventService = this.getBean( AuditEventService.class );
+        if ( this.hasOption( 't' ) ) {
+            this.taxon = this.setTaxonByName( taxonService );
         }
 
-        if ( hasOption( "force" ) ) {
+        if ( this.hasOption( "force" ) ) {
             this.force = true;
         }
 
         if ( this.hasOption( "eeset" ) ) {
-            experimentsFromEeSet( getOptionValue( "eeset" ) );
+            this.experimentsFromEeSet( this.getOptionValue( "eeset" ) );
         } else if ( this.hasOption( 'e' ) ) {
-            experimentsFromCliList();
-        } else if ( hasOption( 'f' ) ) {
-            String experimentListFile = getOptionValue( 'f' );
-            log.info( "Reading experiment list from " + experimentListFile );
+            this.experimentsFromCliList();
+        } else if ( this.hasOption( 'f' ) ) {
+            String experimentListFile = this.getOptionValue( 'f' );
+            AbstractCLI.log.info( "Reading experiment list from " + experimentListFile );
             try {
-                this.expressionExperiments = readExpressionExperimentListFile( experimentListFile );
+                this.expressionExperiments = this.readExpressionExperimentListFile( experimentListFile );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-        } else if ( hasOption( 'q' ) ) {
-            log.info( "Processing all experiments that match query " + getOptionValue( 'q' ) );
-            this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ) );
+        } else if ( this.hasOption( 'q' ) ) {
+            AbstractCLI.log.info( "Processing all experiments that match query " + this.getOptionValue( 'q' ) );
+            this.expressionExperiments = this.findExpressionExperimentsByQuery( this.getOptionValue( 'q' ) );
         } else if ( taxon != null ) {
-            if ( !hasOption( "dataFile" ) ) {
-                log.info( "Processing all experiments for " + taxon.getCommonName() );
+            if ( !this.hasOption( "dataFile" ) ) {
+                AbstractCLI.log.info( "Processing all experiments for " + taxon.getCommonName() );
                 this.expressionExperiments = new HashSet<BioAssaySet>( eeService.findByTaxon( taxon ) );
             }
         } else {
-            if ( !hasOption( "dataFile" ) ) {
-                log.info( "Processing all experiments (further filtering may modify)" );
+            if ( !this.hasOption( "dataFile" ) ) {
+                AbstractCLI.log.info( "Processing all experiments (further filtering may modify)" );
                 this.expressionExperiments = new HashSet<BioAssaySet>( eeService.loadAll() );
             }
         }
 
-        if ( hasOption( 'x' ) ) {
-            excludeFromFile();
+        if ( this.hasOption( 'x' ) ) {
+            this.excludeFromFile();
         }
 
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
-            if ( hasOption( AUTO_OPTION_NAME ) ) {
+            if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
                 this.autoSeek = true;
                 if ( this.autoSeekEventType == null ) {
                     throw new IllegalStateException( "Programming error: there is no 'autoSeekEventType' set" );
                 }
-                log.info( "Filtering for experiments lacking a " + this.autoSeekEventType.getSimpleName() + " event" );
+                AbstractCLI.log.info( "Filtering for experiments lacking a " + this.autoSeekEventType.getSimpleName()
+                        + " event" );
                 auditEventService.retainLackingEvent( this.expressionExperiments, this.autoSeekEventType );
             }
 
-            removeTroubledEes( expressionExperiments );
+            this.removeTroubledEes( expressionExperiments );
         }
 
-        if ( expressionExperiments.size() > 1 ) {
-            log.info( "Final list: " + this.expressionExperiments.size()
+        if ( expressionExperiments != null && expressionExperiments.size() > 1 ) {
+            AbstractCLI.log.info( "Final list: " + this.expressionExperiments.size()
                     + " expressionExperiments (futher filtering may modify)" );
-        } else if ( expressionExperiments.size() == 0 ) {
-            if ( hasOption( "dataFile" ) ) {
-                log.info( "Expression matrix from data file selected" );
+        } else if ( ( expressionExperiments != null && expressionExperiments.size() == 0 )
+                || expressionExperiments == null ) {
+            if ( this.hasOption( "dataFile" ) ) {
+                AbstractCLI.log.info( "Expression matrix from data file selected" );
             } else {
-                log.info( "No experiments selected" );
+                AbstractCLI.log.info( "No experiments selected" );
             }
         }
 
     }
 
-    /**
-     * Read in a list of genes
-     *
-     * @param inFile - file name to read
-     * @return collection of genes
-     */
-    protected Collection<Gene> readGeneListFile( String inFile, Taxon t ) throws IOException {
-        log.info( "Reading " + inFile );
-
-        Collection<Gene> genes = new ArrayList<>();
-        try (BufferedReader in = new BufferedReader( new FileReader( inFile ) )) {
-            String line;
-            while ( ( line = in.readLine() ) != null ) {
-                if ( line.startsWith( "#" ) )
-                    continue;
-                String s = line.trim();
-                Gene gene = findGeneByOfficialSymbol( s, t );
-                if ( gene == null ) {
-                    log.error( "ERROR: Cannot find genes for " + s );
-                    continue;
-                }
-                genes.add( gene );
-            }
-            return genes;
-        }
+    void addForceOption() {
+        String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
+        @SuppressWarnings("static-access") Option forceOption = OptionBuilder.withArgName( "Force processing" )
+                .withLongOpt( "force" ).withDescription( defaultExplanation ).create( "force" );
+        this.addOption( forceOption );
     }
 
-    /**
-     *
-     */
     private void excludeFromFile() {
-        String excludeEeFileName = getOptionValue( 'x' );
+        String excludeEeFileName = this.getOptionValue( 'x' );
         Collection<BioAssaySet> excludeExperiments;
         try {
-            excludeExperiments = readExpressionExperimentListFile( excludeEeFileName );
+            excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -261,28 +226,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         int removed = before - expressionExperiments.size();
 
         if ( removed > 0 )
-            log.info( "Excluded " + removed + " expression experiments" );
+            AbstractCLI.log.info( "Excluded " + removed + " expression experiments" );
     }
 
-    /**
-     *
-     */
     private void experimentsFromCliList() {
         String experimentShortNames = this.getOptionValue( 'e' );
         String[] shortNames = experimentShortNames.split( "," );
 
         for ( String shortName : shortNames ) {
-            ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
+            ExpressionExperiment expressionExperiment = this.locateExpressionExperiment( shortName );
             if ( expressionExperiment == null ) {
-                log.warn( shortName + " not found" );
+                AbstractCLI.log.warn( shortName + " not found" );
                 continue;
             }
             eeService.thawLite( expressionExperiment );
             expressionExperiments.add( expressionExperiment );
         }
         if ( expressionExperiments.size() == 0 ) {
-            log.error( "There were no valid experimnents specified" );
-            bail( ErrorCode.INVALID_OPTION );
+            AbstractCLI.log.error( "There were no valid experimnents specified" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
     }
 
@@ -313,7 +275,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         Collection<SearchResult> eeSearchResults = searchService
                 .search( SearchSettingsImpl.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 
-        log.info( ees.size() + " Expression experiments matched '" + query + "'" );
+        AbstractCLI.log.info( ees.size() + " Expression experiments matched '" + query + "'" );
 
         // Filter out all the ee that are not of correct taxon
         for ( SearchResult sr : eeSearchResults ) {
@@ -337,8 +299,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         ExpressionExperiment experiment = eeService.findByShortName( name );
 
         if ( experiment == null ) {
-            log.error( "No experiment " + name + " found" );
-            bail( ErrorCode.INVALID_OPTION );
+            AbstractCLI.log.error( "No experiment " + name + " found" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return experiment;
     }
@@ -349,7 +311,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
         Set<BioAssaySet> ees = new HashSet<>();
-        for ( String eeName : readListFileToStrings( fileName ) ) {
+        for ( String eeName : AbstractCLIContextCLI.readListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
 
@@ -357,11 +319,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                     Long id = Long.parseLong( eeName );
                     ee = eeService.load( id );
                     if ( ee == null ) {
-                        log.error( "No experiment " + eeName + " found" );
+                        AbstractCLI.log.error( "No experiment " + eeName + " found" );
                         continue;
                     }
                 } catch ( NumberFormatException e ) {
-                    log.error( "No experiment " + eeName + " found" );
+                    AbstractCLI.log.error( "No experiment " + eeName + " found" );
                     continue;
 
                 }
@@ -377,7 +339,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private void removeTroubledEes( Collection<BioAssaySet> ees ) {
         if ( ees == null || ees.size() == 0 ) {
-            log.warn( "No experiments to remove troubled from" );
+            AbstractCLI.log.warn( "No experiments to remove troubled from" );
             return;
         }
 
@@ -397,9 +359,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         if ( newSize != size ) {
             assert newSize < size;
             if ( size == 1 && theOnlyOne != null ) {
-                log.info( theOnlyOne.getName() + " has an active trouble flag" );
+                AbstractCLI.log.info( theOnlyOne.getName() + " has an active trouble flag" );
             } else {
-                log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
+                AbstractCLI.log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving "
+                        + newSize );
             }
         }
     }

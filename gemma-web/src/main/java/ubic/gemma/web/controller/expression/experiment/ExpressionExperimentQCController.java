@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -132,9 +132,9 @@ public class ExpressionExperimentQCController extends BaseController {
             return;
         }
 
-        boolean ok = writeDetailedFactorAnalysis( ee, os );
+        boolean ok = this.writeDetailedFactorAnalysis( ee, os );
         if ( !ok ) {
-            writePlaceholderImage( os );
+            this.writePlaceholderImage( os );
         }
     }
 
@@ -169,7 +169,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
         ee = expressionExperimentService.thawLiter( ee );
-        edWriter.write( writer, ee, bioAssays, false, true, true );
+        edWriter.write( writer, ee, bioAssays, false, true );
 
         ModelAndView mav = new ModelAndView( new TextView() );
         mav.addObject( TextView.TEXT_PARAM, buf.toString() );
@@ -197,7 +197,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
 
         Collection<BioAssay> bioAssays = new HashSet<>();
         if ( !outliers.isEmpty() ) {
@@ -215,7 +215,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
         ee = expressionExperimentService.thawLiter( ee );
-        edWriter.write( writer, ee, bioAssays, false, true, true );
+        edWriter.write( writer, ee, bioAssays, false, true );
 
         ModelAndView mav = new ModelAndView( new TextView() );
         mav.addObject( TextView.TEXT_PARAM, buf.toString() );
@@ -231,7 +231,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id ); // or access denied.
-            writePlaceholderImage( os );
+            this.writePlaceholderImage( os );
             return null;
         }
 
@@ -256,7 +256,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id ); // or access deined.
-            writePlaceholderImage( os );
+            this.writePlaceholderImage( os );
             return null;
         }
 
@@ -265,7 +265,7 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( svdo != null ) {
             this.writePCAScree( os, svdo );
         } else {
-            writePlaceholderImage( os );
+            this.writePlaceholderImage( os );
         }
         return null;
     }
@@ -320,17 +320,18 @@ public class ExpressionExperimentQCController extends BaseController {
 
         ColorMatrix<String, String> cm = new ColorMatrix<>( matrix );
 
-        cleanNames( matrix );
+        this.cleanNames( matrix );
 
         int row = matrix.rows();
-        int cellsize = ( int ) Math.min( MAX_HEATMAP_CELLSIZE, Math.max( 1, size * DEFAULT_QC_IMAGE_SIZE_PX / row ) );
+        int cellsize = ( int ) Math.min( ExpressionExperimentQCController.MAX_HEATMAP_CELLSIZE,
+                Math.max( 1, size * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX / row ) );
 
         MatrixDisplay<String, String> writer = new MatrixDisplay<>( cm );
 
         boolean reallyShowLabels;
         int minimumCellSizeForText = 9;
         if ( forceShowLabels != null && forceShowLabels ) {
-            cellsize = Math.min( MAX_HEATMAP_CELLSIZE, minimumCellSizeForText );
+            cellsize = Math.min( ExpressionExperimentQCController.MAX_HEATMAP_CELLSIZE, minimumCellSizeForText );
             reallyShowLabels = true;
         } else {
             reallyShowLabels = showLabels != null && ( showLabels && cellsize >= minimumCellSizeForText );
@@ -388,7 +389,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return mav;
         }
 
-        writeMeanVariance( os, mvr, size );
+        this.writeMeanVariance( os, mvr, size );
 
         return null;
     }
@@ -402,7 +403,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        writeProbeCorrHistImage( os, ee );
+        this.writeProbeCorrHistImage( os, ee );
         return null; // nothing to return;
     }
 
@@ -427,11 +428,11 @@ public class ExpressionExperimentQCController extends BaseController {
 
         if ( size == null ) {
             if ( !this.writePValueHistImage( os, ee, analysisId, rsid, factorName ) ) {
-                writePlaceholderImage( os );
+                this.writePlaceholderImage( os );
             }
         } else {
             if ( !this.writePValueHistThumbnailImage( os, ee, analysisId, rsid, factorName, size ) ) {
-                writePlaceholderThumbnailImage( os, size );
+                this.writePlaceholderThumbnailImage( os, size );
             }
         }
 
@@ -562,7 +563,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         if ( coexpCorrelationDistribution == null ) {
             // try to get it from the file.
-            return getCorrelHistFromFile( ee );
+            return this.getCorrelHistFromFile( ee );
         }
 
         XYSeries series = new XYSeries( ee.getId(), true, true );
@@ -621,7 +622,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
             if ( !counts.isEmpty() ) {
                 // Backfill.
-                corrDistFileToPersistent( file, ee, counts );
+                this.corrDistFileToPersistent( file, ee, counts );
             }
 
             return series;
@@ -775,7 +776,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
-        Map<Long, String> efs = getFactorNames( ee, maxWidth );
+        Map<Long, String> efs = this.getFactorNames( ee, maxWidth );
         Map<Long, ExperimentalFactor> efIdMap = EntityUtils
                 .getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
         Collection<Long> continuousFactors = new HashSet<>();
@@ -823,7 +824,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 Map<Long, String> categories = new HashMap<>();
 
                 if ( isCategorical ) {
-                    getCategories( efIdMap, efId, categories );
+                    this.getCategories( efIdMap, efId, categories );
                 }
 
                 if ( !charts.containsKey( efId ) ) {
@@ -836,7 +837,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 if ( a != null && !Double.isNaN( a ) ) {
                     String title = plotname + " " + String.format( "%.2f", a );
                     List<Double> values = svdo.getFactors().get( efId );
-                    Double[] eigenGene = getEigenGene( svdo, component );
+                    Double[] eigenGene = this.getEigenGene( svdo, component );
                     assert values.size() == eigenGene.length;
 
                     /*
@@ -1006,7 +1007,7 @@ public class ExpressionExperimentQCController extends BaseController {
          * Plot in a grid, with each factor as a column. FIXME What if we have too many factors to fit on the screen?
          */
         int columns = ( int ) Math.ceil( charts.size() );
-        int perChartSize = DEFAULT_QC_IMAGE_SIZE_PX;
+        int perChartSize = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
         BufferedImage image = new BufferedImage( columns * perChartSize, MAX_COMP * perChartSize,
                 BufferedImage.TYPE_INT_ARGB );
         Graphics2D g2 = image.createGraphics();
@@ -1014,7 +1015,7 @@ public class ExpressionExperimentQCController extends BaseController {
         int currentY = 0;
         for ( Long id : charts.keySet() ) {
             for ( JFreeChart chart : charts.get( id ) ) {
-                addChartToGraphics( chart, g2, currentX, currentY, perChartSize, perChartSize );
+                this.addChartToGraphics( chart, g2, currentX, currentY, perChartSize, perChartSize );
                 if ( currentY + perChartSize < MAX_COMP * perChartSize ) {
                     currentY += perChartSize;
                 } else {
@@ -1050,7 +1051,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         // get data points
-        XYSeriesCollection collection = getMeanVariance( mvr );
+        XYSeriesCollection collection = this.getMeanVariance( mvr );
 
         if ( collection.getSeries().size() == 0 ) {
             return false;
@@ -1096,8 +1097,8 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = ( int ) Math
-                .min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX, size * DEFAULT_QC_IMAGE_SIZE_PX );
+        int finalSize = ( int ) Math.min( MAX_IMAGE_SIZE_PX * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX,
+                size * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
 
         ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
 
@@ -1119,8 +1120,8 @@ public class ExpressionExperimentQCController extends BaseController {
         DoubleArrayList filteredMeans = new DoubleArrayList();
         DoubleArrayList filteredVars = new DoubleArrayList();
 
-        DoubleArrayList zVars = zscore( vars );
-        DoubleArrayList zMeans = zscore( means );
+        DoubleArrayList zVars = this.zscore( vars );
+        DoubleArrayList zMeans = this.zscore( means );
 
         // clip outliers
         for ( int i = 0; i < zMeans.size(); i++ ) {
@@ -1171,13 +1172,13 @@ public class ExpressionExperimentQCController extends BaseController {
         assert ee.getId().equals( svdo.getId() );
 
         if ( factorCorrelations.isEmpty() && dateCorrelations.isEmpty() ) {
-            writePlaceholderImage( os );
+            this.writePlaceholderImage( os );
             return;
         }
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 10;
 
-        Map<Long, String> efs = getFactorNames( ee, maxWidth );
+        Map<Long, String> efs = this.getFactorNames( ee, maxWidth );
 
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
@@ -1235,20 +1236,20 @@ public class ExpressionExperimentQCController extends BaseController {
         /*
          * Give figure more room .. up to a limit
          */
-        int width = DEFAULT_QC_IMAGE_SIZE_PX;
+        int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
         if ( chart.getCategoryPlot().getCategories().size() > 3 ) {
             width = width + 40 * ( chart.getCategoryPlot().getCategories().size() - 2 );
         }
         int MAX_QC_IMAGE_SIZE_PX = 500;
         width = Math.min( width, MAX_QC_IMAGE_SIZE_PX );
-        ChartUtilities.writeChartAsPNG( os, chart, width, DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities.writeChartAsPNG( os, chart, width, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     private boolean writePCAScree( OutputStream os, SVDValueObject svdo ) throws Exception {
         /*
          * Make a scree plot.
          */
-        CategoryDataset series = getPCAScree( svdo );
+        CategoryDataset series = this.getPCAScree( svdo );
 
         if ( series.getColumnCount() == 0 ) {
             return false;
@@ -1264,7 +1265,8 @@ public class ExpressionExperimentQCController extends BaseController {
         renderer.setShadowVisible( false );
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
-        ChartUtilities.writeChartAsPNG( os, chart, DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities.writeChartAsPNG( os, chart, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX,
+                ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }
 
@@ -1272,7 +1274,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * Write a blank image so user doesn't see the broken icon.
      */
     private void writePlaceholderImage( OutputStream os ) throws IOException {
-        int placeholderSize = ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 0.75 );
+        int placeholderSize = ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 0.75 );
         BufferedImage buffer = new BufferedImage( placeholderSize, placeholderSize, BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.lightGray );
@@ -1304,7 +1306,7 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     private boolean writeProbeCorrHistImage( OutputStream os, ExpressionExperiment ee ) throws IOException {
-        XYSeries series = getCorrelHist( ee );
+        XYSeries series = this.getCorrelHist( ee );
 
         if ( series == null || series.getItemCount() == 0 ) {
             return false;
@@ -1321,7 +1323,7 @@ public class ExpressionExperimentQCController extends BaseController {
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setBasePaint( Color.white );
 
-        int size = ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 0.8 );
+        int size = ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 0.8 );
         ChartUtilities.writeChartAsPNG( os, chart, size, size );
 
         return true;
@@ -1333,7 +1335,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private boolean writePValueHistImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
             String factorName ) throws IOException {
 
-        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
+        XYSeries series = this.getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
 
         if ( series == null ) {
             return false;
@@ -1350,8 +1352,9 @@ public class ExpressionExperimentQCController extends BaseController {
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setBasePaint( Color.white );
 
-        ChartUtilities
-                .writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ), DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities.writeChartAsPNG( os, chart,
+                ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ),
+                ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }
 
@@ -1360,7 +1363,7 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
             String factorName, int size ) throws IOException {
-        XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
+        XYSeries series = this.getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
 
         if ( series == null ) {
             return false;
@@ -1401,13 +1404,13 @@ public class ExpressionExperimentQCController extends BaseController {
         private static final long serialVersionUID = 1L;
 
         @Override
-        protected boolean isItemPass( int pass ) {
-            return pass == 0;
+        protected boolean isLinePass( int pass ) {
+            return pass == 1;
         }
 
         @Override
-        protected boolean isLinePass( int pass ) {
-            return pass == 1;
+        protected boolean isItemPass( int pass ) {
+            return pass == 0;
         }
     }
 }

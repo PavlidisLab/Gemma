@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,12 +32,8 @@ import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.CompassUtils;
 import ubic.gemma.persistence.util.SpringContextUtil;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -49,16 +45,13 @@ import java.util.List;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
-    private final Collection<Exception> exceptionCache = new ArrayList<>();
     protected AuditTrailService auditTrailService;
     protected AuditEventService auditEventService;
     protected BeanFactory ctx;
-    private Persister persisterHelper;
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public AbstractSpringAwareCLI() {
         super();
-
-        CompassUtils.deleteCompassLocks();
     }
 
     @Override
@@ -66,23 +59,26 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         return "No description provided";
     }
 
-    public void setCtx( BeanFactory ctx ) {
-        this.ctx = ctx;
-    }
-
     @Override
     protected void buildStandardOptions() {
         super.buildStandardOptions();
-        addUserNameAndPasswordOptions();
+        this.addUserNameAndPasswordOptions();
     }
 
     /**
-     * @param e Adds an exception to a cache. this is useful in the scenario where we don't want the CLI to bomb on the
-     *          exception but continue with its processing. Granted if the exception is fatal then the CLI should
-     *          terminate regardless.
+     * You must override this method to process any options you added.
      */
-    protected void cacheException( Exception e ) {
-        exceptionCache.add( e );
+    @Override
+    protected void processOptions() {
+        this.createSpringContext();
+        this.authenticate();
+        this.auditTrailService = this.getBean( AuditTrailService.class );
+        this.auditEventService = this.getBean( AuditEventService.class );
+    }
+
+    @SuppressWarnings("unused") // Possible external use
+    public void setCtx( BeanFactory ctx ) {
+        this.ctx = ctx;
     }
 
     /**
@@ -115,9 +111,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     protected Persister getPersisterHelper() {
-        if ( persisterHelper != null ) {
-            return persisterHelper;
-        }
         assert ctx != null : "Spring context was not initialized";
         return ( Persister ) ctx.getBean( "persisterHelper" );
     }
@@ -127,9 +120,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @param eventClass can be null
      * @return boolean
      */
-    protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
+    protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
-        Date skipIfLastRunLaterThan = getLimitingDate();
+        Date skipIfLastRunLaterThan = this.getLimitingDate();
         List<AuditEvent> events = this.auditEventService.getEvents( auditable );
 
         boolean okToRun = true; // assume okay unless indicated otherwise
@@ -146,7 +139,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                     && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
                 if ( skipIfLastRunLaterThan != null ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
-                        log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
+                        AbstractCLI.log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
                         errorObjects.add( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
                         needToRun = false;
                     }
@@ -175,59 +168,26 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             }
 
             if ( !okToRun ) {
-                log.info( auditable + ": has an active 'trouble' flag" );
+                AbstractCLI.log.info( auditable + ": has an active 'trouble' flag" );
                 errorObjects.add( auditable + ": has an active 'trouble' flag" );
             }
         }
 
-        return needToRun && okToRun;
-    }
-
-    protected void printExceptions() {
-        log.info( "Displaying cached error messages: " );
-
-        for ( Exception e : exceptionCache ) {
-            log.info( e );
-        }
+        return !needToRun || !okToRun;
     }
 
     /**
-     * @param fileName file name
-     * @return Given a file name returns a collection of strings. Each string represents one line of the file
+     * check if using test or production contexts
      */
-    protected Collection<String> processFile( String fileName ) {
+    protected void createSpringContext() {
 
-        Collection<String> lines = new ArrayList<>();
-        int lineNumber = 0;
-        try (InputStream is = new FileInputStream( fileName );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        ctx = SpringContextUtil.getApplicationContext( this.hasOption( "testing" ), false /* webapp */,
+                this.getAdditionalSpringConfigLocations() );
 
-            String line;
-
-            while ( ( line = br.readLine() ) != null ) {
-                lineNumber++;
-                if ( StringUtils.isBlank( line ) ) {
-                    continue;
-                }
-                lines.add( line.trim().toUpperCase() );
-            }
-        } catch ( IOException ioe ) {
-            log.error(
-                    "At line: " + lineNumber + " an error occurred processing " + fileName + ". \n Error is: " + ioe );
-        }
-
-        return lines;
-    }
-
-    /**
-     * You must override this method to process any options you added.
-     */
-    @Override
-    protected void processOptions() {
-        createSpringContext();
-        authenticate();
-        this.auditTrailService = this.getBean( AuditTrailService.class );
-        this.auditEventService = this.getBean( AuditEventService.class );
+        /*
+         * Guarantee that the security settings are uniform throughout the application (all threads).
+         */
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
     }
 
     /**
@@ -241,48 +201,34 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
         ManualAuthenticationService manAuthentication = ctx.getBean( ManualAuthenticationService.class );
-        if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
-            username = getOptionValue( 'u' );
-            password = getOptionValue( 'p' );
+        if ( this.hasOption( 'u' ) && this.hasOption( 'p' ) ) {
+            username = this.getOptionValue( 'u' );
+            password = this.getOptionValue( 'p' );
 
             if ( StringUtils.isBlank( username ) ) {
                 System.err.println( "Not authenticated. Username was blank" );
-                log.debug( "Username=" + username );
-                bail( ErrorCode.AUTHENTICATION_ERROR );
+                AbstractCLI.log.debug( "Username=" + username );
+                this.bail( ErrorCode.AUTHENTICATION_ERROR );
             }
 
             if ( StringUtils.isBlank( password ) ) {
                 System.err.println( "Not authenticated. You didn't enter a password" );
-                bail( ErrorCode.AUTHENTICATION_ERROR );
+                this.bail( ErrorCode.AUTHENTICATION_ERROR );
             }
 
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
                 System.err.println( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
-                bail( ErrorCode.AUTHENTICATION_ERROR );
+                this.bail( ErrorCode.AUTHENTICATION_ERROR );
             } else {
-                log.info( "Logged in as " + username );
+                AbstractCLI.log.info( "Logged in as " + username );
             }
         } else {
-            log.info( "Logging in as anonymous guest with limited privileges" );
+            AbstractCLI.log.info( "Logging in as anonymous guest with limited privileges" );
             manAuthentication.authenticateAnonymously();
         }
 
-    }
-
-    /**
-     * check if using test or production contexts
-     */
-    protected void createSpringContext() {
-
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
-                getAdditionalSpringConfigLocations() );
-
-        /*
-         * Guarantee that the security settings are uniform throughout the application (all threads).
-         */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
     }
 
 }

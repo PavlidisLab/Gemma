@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 /**
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class BlatResultValueObject extends IdentifiableValueObject<BlatResult> {
 
     private Integer blockCount;
@@ -109,15 +110,13 @@ public class BlatResultValueObject extends IdentifiableValueObject<BlatResult> {
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         BlatResultValueObject other = ( BlatResultValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        return true;
+            return other.id == null;
+        } else
+            return id.equals( other.id );
     }
 
     @Override

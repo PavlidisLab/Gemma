@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,8 +40,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class BioMartEnsemblNcbiFetcherTest {
 
-    private static Log log = LogFactory.getLog( BioMartEnsemblNcbiFetcherTest.class );
-    BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher = null;
+    private static final Log log = LogFactory.getLog( BioMartEnsemblNcbiFetcherTest.class );
+    private BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher = null;
 
     @Before
     public void setUp() {
@@ -52,7 +52,7 @@ public class BioMartEnsemblNcbiFetcherTest {
      * Tests that given a taxon returns the correct attributes
      */
     @Test
-    public void testAttributesToRetrieveFromBioMart() throws Exception {
+    public void testAttributesToRetrieveFromBioMart() {
         String[] attributes = biomartEnsemblNcbiFetcher.attributesToRetrieveFromBioMartForProteinQuery( "hsapiens" );
         assertNotNull( attributes );
         assertTrue( attributes.length == 5 );
@@ -64,7 +64,7 @@ public class BioMartEnsemblNcbiFetcherTest {
      * Tests that given a scientific named taxon taxon name is formatted correctly for biomart
      */
     @Test
-    public void testGetBioMartTaxonName() throws Exception {
+    public void testGetBioMartTaxonName() {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setScientificName( "Homo sapiens" );
 
@@ -86,11 +86,10 @@ public class BioMartEnsemblNcbiFetcherTest {
             assertTrue( ratBiomartFile.canRead() );
 
         } catch ( ConnectException e ) {
-            log.warn( "Connection error, skipping test" );
+            BioMartEnsemblNcbiFetcherTest.log.warn( "Connection error, skipping test" );
         } catch ( IOException e ) {
             if ( e.getMessage().startsWith( "Error from BioMart" ) ) {
-                log.warn( e.getMessage() );
-                return;
+                BioMartEnsemblNcbiFetcherTest.log.warn( e.getMessage() );
             }
         }
 
@@ -98,7 +97,7 @@ public class BioMartEnsemblNcbiFetcherTest {
 
     /*
      * Method that downloads all the files for biomart uncomment if there are problems But will take some time to run
-     * 
+     *
      * @Test public void fetchAllTaxa(){ Collection<Taxon> taxa = new ArrayList<Taxon>(); Taxon taxon =
      * Taxon.Factory.newInstance( "Rattus norvegicus", "", "", "", "", 0, true, true, null, null ); Taxon taxon1 =
      * Taxon.Factory.newInstance( "Homo sapiens", "", "", "", "", 0, true, true, null, null ); Taxon taxon2 =

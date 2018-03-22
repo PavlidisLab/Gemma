@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface BibliographicReferenceService
         extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
@@ -47,15 +48,27 @@ public interface BibliographicReferenceService
 
     List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    BibliographicReference create( BibliographicReference bibliographicReference );
-
     /**
      * check to see if the object already exists
      */
     @Override
     BibliographicReference find( BibliographicReference bibliographicReference );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    BibliographicReference create( BibliographicReference bibliographicReference );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( BibliographicReference BibliographicReference );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void update( BibliographicReference bibliographicReference );
 
     BibliographicReference findByExternalId( DatabaseEntry accession );
 
@@ -68,10 +81,6 @@ public interface BibliographicReferenceService
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      */
     BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
 
     /**
      * <p>
@@ -103,17 +112,9 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_ADMIN" })
     BibliographicReference refresh( String pubMedId );
 
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( BibliographicReference BibliographicReference );
-
     List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
 
     List<BibliographicReferenceValueObject> search( String query );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void update( BibliographicReference bibliographicReference );
 
     BibliographicReference thaw( BibliographicReference bibliographicReference );
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
 
-    private ArrayDesign arrayDesign = null;
+    private ArrayDesign arrayDesign;
 
     /**
      * NOTE: we can't pass in a we command as they are defined in the web module, which messes up the configuration.
@@ -40,6 +40,7 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
      * @param taskId      task id
      * @param arrayDesign ad
      */
+    @SuppressWarnings("unused") // Possible external use
     public ArrayDesignRepeatScanTaskCommand( String taskId, ArrayDesign arrayDesign ) {
         super();
         this.setTaskId( taskId );
@@ -55,6 +56,7 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
         return arrayDesign;
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public void setArrayDesign( ArrayDesign arrayDesign ) {
         this.arrayDesign = arrayDesign;
     }

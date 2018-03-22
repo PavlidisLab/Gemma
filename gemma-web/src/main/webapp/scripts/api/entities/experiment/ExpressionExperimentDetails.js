@@ -242,41 +242,6 @@ Gemma.ExpressionExperimentDetails = Ext
                     return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
                 }
             },
-
-            // FIXME is this used?
-            differentialAnalysisRenderer: function (ee) {
-                var id = ee.id;
-                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                    + this.panelId
-                    + 'eemanager\').doDifferential('
-                    + id
-                    + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
-
-                if (ee.numPopulatedFactors > 0) {
-                    if (ee.dateDifferentialAnalysis) {
-                        var type = ee.differentialAnalysisEventType;
-
-                        var color = "#000";
-                        var suggestRun = true;
-                        var qtip = 'ext:qtip="OK"';
-                        if (type == 'FailedDifferentialExpressionAnalysisEvent') {
-                            color = 'red';
-                            qtip = 'ext:qtip="Failed"';
-                        } else if (record.get('differentialExpressionAnalyses').length == 0) {
-                            // we ran it, but the analyses were apparently deleted.
-                            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-                        }
-
-                        return '<span style="color:' + color + ';" ' + qtip + '>'
-                            + Gemma.Renderers.dateRenderer(ee.dateDifferentialAnalysis) + '&nbsp;'
-                            + (suggestRun ? runurl : '');
-                    } else {
-                        return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-                    }
-                } else {
-                    return '<span style="color:#CCF;">NA</span>';
-                }
-            },
             renderProcessedExpressionVectorCount: function (e) {
                 return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
             },

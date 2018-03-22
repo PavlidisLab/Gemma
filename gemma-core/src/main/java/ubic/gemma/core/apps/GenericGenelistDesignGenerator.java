@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -21,6 +21,7 @@ import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -43,7 +44,6 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +67,6 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     private CompositeSequenceService compositeSequenceService;
     private ExternalDatabaseService externalDatabaseService;
     private GeneService geneService;
-    private TaxonService taxonService;
 
     private Taxon taxon = null;
     private boolean useEnsemblIds = false;
@@ -75,7 +74,10 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
-        b.doWork( args );
+        Exception e = b.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -88,32 +90,31 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         return "genericPlatform";
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Update or create a 'platform' based on the genes for the organism";
-    }
-
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
                 .withDescription( "Taxon of the genes" ).withLongOpt( "taxon" ).isRequired().create( 't' );
-        addOption( taxonOption );
+        this.addOption( taxonOption );
 
-        addOption( OptionBuilder.withDescription( "use NCBI numeric IDs as the identifiers instead of gene symbols" )
-                .create( "ncbiids" ) );
+        this.addOption(
+                OptionBuilder.withDescription( "use NCBI numeric IDs as the identifiers instead of gene symbols" )
+                        .create( "ncbiids" ) );
 
-        addOption( OptionBuilder.withDescription( "use Ensembl identifiers instead of gene symbols" )
+        this.addOption( OptionBuilder.withDescription( "use Ensembl identifiers instead of gene symbols" )
                 .create( "ensembl" ) );
 
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( args );
+        Exception exception = super.processCommandLine( args );
+        if ( exception != null ) {
+            return exception;
+        }
 
-        ExternalDatabase genbank = externalDatabaseService.find( "Genbank" );
-        ExternalDatabase ensembl = externalDatabaseService.find( "Ensembl" );
+        ExternalDatabase genbank = externalDatabaseService.findByName( "Genbank" );
+        ExternalDatabase ensembl = externalDatabaseService.findByName( "Ensembl" );
         assert genbank != null;
         assert ensembl != null;
 
@@ -122,29 +123,26 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
          * exists, we update it.
          */
 
-        String shortName = generateShortName();
+        String shortName = this.generateShortName();
 
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setShortName( shortName );
 
         // common name
         arrayDesign.setPrimaryTaxon( taxon );
-        // fixme this is ugly just use one variable
-        String ncbiIDNameExtra = useNCBIIds ? ", indexed by NCBI IDs" : "";
-        String ensemblNameExtra = useEnsemblIds ? ", indexed by Ensembl IDs" : "";
-
-        arrayDesign.setName( "Generic platform for " + taxon.getScientificName() + ncbiIDNameExtra + ensemblNameExtra );
+        String nameExt = useNCBIIds ? ", indexed by NCBI IDs" : useEnsemblIds ? ", indexed by Ensembl IDs" : "";
+        arrayDesign.setName( "Generic platform for " + taxon.getScientificName() + nameExt );
         arrayDesign.setDescription( "Created by Gemma" );
         arrayDesign.setTechnologyType( TechnologyType.NONE ); // this is key
 
         if ( arrayDesignService.find( arrayDesign ) != null ) {
-            log.info( "Platform for " + taxon + " already exists, will update" );
+            AbstractCLI.log.info( "Platform for " + taxon + " already exists, will update" );
             arrayDesign = arrayDesignService.find( arrayDesign );
             arrayDesignService.deleteGeneProductAssociations( arrayDesign );
             arrayDesign = arrayDesignService.load( arrayDesign.getId() );
 
         } else {
-            log.info( "Creating new 'generic' platform" );
+            AbstractCLI.log.info( "Creating new 'generic' platform" );
             arrayDesign = arrayDesignService.create( arrayDesign );
         }
         arrayDesign = arrayDesignService.thaw( arrayDesign );
@@ -156,17 +154,17 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
          * Load up the genes for the organism.
          */
         Collection<Gene> knownGenes = geneService.loadAll( taxon );
-        log.info( "Taxon has " + knownGenes.size() + " genes" );
+        AbstractCLI.log.info( "Taxon has " + knownGenes.size() + " genes" );
 
         // this would be good for cases where the identifier we are using has changed.
-        Map<Gene, CompositeSequence> existingGeneMap = new HashMap<Gene, CompositeSequence>();
+        Map<Gene, CompositeSequence> existingGeneMap = new HashMap<>();
 
         if ( !useNCBIIds && !useEnsemblIds ) {
             // only using this for symbol changes.
-            existingGeneMap = getExistingGeneMap( arrayDesign );
+            existingGeneMap = this.getExistingGeneMap( arrayDesign );
         }
 
-        Map<String, CompositeSequence> existingSymbolmap = getExistingProbeNameMap( arrayDesign );
+        Map<String, CompositeSequence> existingSymbolMap = this.getExistingProbeNameMap( arrayDesign );
 
         int count = 0;
         int numWithNoTranscript = 0;
@@ -181,7 +179,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
             if ( products.isEmpty() ) {
                 numWithNoTranscript++;
-                log.debug( "No transcript for " + gene );
+                AbstractCLI.log.debug( "No transcript for " + gene );
                 continue;
             }
 
@@ -191,31 +189,32 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
             if ( useNCBIIds ) {
                 if ( gene.getNcbiGeneId() == null ) {
-                    log.debug( "No NCBI ID for " + gene + ", skipping" );
+                    AbstractCLI.log.debug( "No NCBI ID for " + gene + ", skipping" );
                     continue;
                 }
-                if ( existingSymbolmap.containsKey( gene.getNcbiGeneId().toString() ) ) {
-                    csForGene = existingSymbolmap.get( gene.getNcbiGeneId().toString() );
+                if ( existingSymbolMap.containsKey( gene.getNcbiGeneId().toString() ) ) {
+                    csForGene = existingSymbolMap.get( gene.getNcbiGeneId().toString() );
                 }
             } else if ( useEnsemblIds ) {
                 if ( gene.getEnsemblId() == null ) {
-                    log.debug( "No Ensembl ID for " + gene + ", skipping" );
+                    AbstractCLI.log.debug( "No Ensembl ID for " + gene + ", skipping" );
                     continue;
                 }
-                if ( existingSymbolmap.containsKey( gene.getEnsemblId() ) ) {
-                    csForGene = existingSymbolmap.get( gene.getEnsemblId() );
+                if ( existingSymbolMap.containsKey( gene.getEnsemblId() ) ) {
+                    csForGene = existingSymbolMap.get( gene.getEnsemblId() );
                 }
             } else {
 
                 /*
                  * detect when the symbol has changed
                  */
-                if ( existingSymbolmap.containsKey( gene.getOfficialSymbol() ) ) {
-                    csForGene = existingSymbolmap.get( gene.getOfficialSymbol() );
+                if ( existingSymbolMap.containsKey( gene.getOfficialSymbol() ) ) {
+                    csForGene = existingSymbolMap.get( gene.getOfficialSymbol() );
                 } else if ( existingGeneMap.containsKey( gene ) ) {
                     csForGene = existingGeneMap.get( gene );
-                    log.debug( "Gene symbol has changed for: " + gene + "? Current element has name=" + csForGene
-                            .getName() );
+                    AbstractCLI.log
+                            .debug( "Gene symbol has changed for: " + gene + "? Current element has name=" + csForGene
+                                    .getName() );
                     csForGene.setName( gene.getOfficialSymbol() );
                 }
             }
@@ -240,14 +239,12 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 bioSequence.setName( name );
                 bioSequence.setTaxon( taxon );
                 bioSequence.setPolymerType( PolymerType.RNA );
-
-                // FIXME miRNAs (though, we don't really use this field.)
                 bioSequence.setType( SequenceType.mRNA );
                 BioSequence existing = null;
 
                 if ( accessions.isEmpty() ) {
                     // this should not be hit.
-                    log.warn( "No accession for " + name );
+                    AbstractCLI.log.warn( "No accession for " + name );
                     DatabaseEntry de = DatabaseEntry.Factory.newInstance();
                     de.setAccession( name );
                     if ( name.startsWith( "ENS" ) && name.length() > 10 ) {
@@ -256,7 +253,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                         if ( name.matches( "^[A-Z]{1,2}(_?)[0-9]+(\\.[0-9]+)?$" ) ) {
                             de.setExternalDatabase( genbank );
                         } else {
-                            log.info( "Name doesn't look like genbank or ensembl, skipping: " + name );
+                            AbstractCLI.log.info( "Name doesn't look like genbank or ensembl, skipping: " + name );
                             continue;
                         }
                     }
@@ -271,7 +268,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 }
 
                 if ( existing == null ) {
-                    bioSequence = ( BioSequence ) getPersisterHelper().persist( bioSequence );
+                    bioSequence = ( BioSequence ) this.getPersisterHelper().persist( bioSequence );
                 } else {
                     bioSequence = existing;
                 }
@@ -279,14 +276,14 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 assert bioSequence != null && bioSequence.getId() != null;
 
                 if ( bioSequence.getSequenceDatabaseEntry() == null ) {
-                    log.info( "No DB entry for " + bioSequence + "(" + gene
+                    AbstractCLI.log.info( "No DB entry for " + bioSequence + "(" + gene
                             + "), will look for a better sequence to use ..." );
                     continue;
                 }
 
                 if ( csForGene == null ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( "New element " + " with " + bioSequence + " for " + gene );
+                    if ( AbstractCLI.log.isDebugEnabled() )
+                        AbstractCLI.log.debug( "New element " + " with " + bioSequence + " for " + gene );
                     csForGene = CompositeSequence.Factory.newInstance();
                     if ( useNCBIIds ) {
                         if ( gene.getNcbiGeneId() == null ) {
@@ -310,9 +307,10 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     arrayDesign.getCompositeSequences().add( csForGene );
                     numNewElements++;
                 } else {
-                    if ( log.isDebugEnabled() )
-                        log.debug(
-                                "Updating existing element: " + csForGene + " with " + bioSequence + " for " + gene );
+                    if ( AbstractCLI.log.isDebugEnabled() )
+                        AbstractCLI.log
+                                .debug( "Updating existing element: " + csForGene + " with " + bioSequence + " for "
+                                        + gene );
                     csForGene.setArrayDesign( arrayDesign );
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
@@ -341,30 +339,33 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
             }
 
             if ( count % 100 == 0 )
-                log.info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
-                        + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
+                AbstractCLI.log
+                        .info( count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                                + " updated elements; " + numWithNoTranscript
+                                + " genes had no transcript and were skipped." );
         }
 
         // is this necessary? causes an error sometimes.
         // arrayDesignService.update( arrayDesign );
 
-        log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
+        AbstractCLI.log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(),
                 count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
                         + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
-        try {
-            arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
-        } catch ( IOException e ) {
-            log.error( "Problem deleting old annotation files: " + e.getMessage() );
-        }
+        arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
 
-        log.info( "Don't forget to update the annotation files" );
+        AbstractCLI.log.info( "Don't forget to update the annotation files" );
 
         return null;
 
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Update or create a 'platform' based on the genes for the organism";
     }
 
     @Override
@@ -373,20 +374,20 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
         geneService = this.getBean( GeneService.class );
         arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
-        taxonService = getBean( TaxonService.class );
-        bioSequenceService = getBean( BioSequenceService.class );
-        arrayDesignService = getBean( ArrayDesignService.class );
-        compositeSequenceService = getBean( CompositeSequenceService.class );
-        annotationAssociationService = getBean( AnnotationAssociationService.class );
-        externalDatabaseService = getBean( ExternalDatabaseService.class );
-        arrayDesignReportService = getBean( ArrayDesignReportService.class );
+        TaxonService taxonService = this.getBean( TaxonService.class );
+        bioSequenceService = this.getBean( BioSequenceService.class );
+        arrayDesignService = this.getBean( ArrayDesignService.class );
+        compositeSequenceService = this.getBean( CompositeSequenceService.class );
+        annotationAssociationService = this.getBean( AnnotationAssociationService.class );
+        externalDatabaseService = this.getBean( ExternalDatabaseService.class );
+        arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
 
-        if ( hasOption( 't' ) ) {
+        if ( this.hasOption( 't' ) ) {
             this.taxon = this.setTaxonByName( taxonService );
         }
-        if ( hasOption( "ncbiids" ) ) {
+        if ( this.hasOption( "ncbiids" ) ) {
             this.useNCBIIds = true;
-        } else if ( hasOption( "ensembl" ) ) {
+        } else if ( this.hasOption( "ensembl" ) ) {
             this.useEnsemblIds = true;
         }
 
@@ -414,27 +415,28 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
      */
     private Map<Gene, CompositeSequence> getExistingGeneMap( ArrayDesign arrayDesign ) {
 
-        Map<Gene, CompositeSequence> existingElements = new HashMap<Gene, CompositeSequence>();
+        Map<Gene, CompositeSequence> existingElements = new HashMap<>();
 
         if ( arrayDesign.getCompositeSequences().isEmpty() )
             return existingElements;
 
-        log.info( "Loading genes for existing platform ..." );
-        Map<CompositeSequence, Collection<Gene>> genemap = compositeSequenceService
+        AbstractCLI.log.info( "Loading genes for existing platform ..." );
+        Map<CompositeSequence, Collection<Gene>> geneMap = compositeSequenceService
                 .getGenes( arrayDesign.getCompositeSequences() );
 
-        log.info( "Platform has genes already for " + genemap.size() + "/" + arrayDesign.getCompositeSequences().size()
-                + " elements." );
+        AbstractCLI.log
+                .info( "Platform has genes already for " + geneMap.size() + "/" + arrayDesign.getCompositeSequences()
+                        .size() + " elements." );
 
-        for ( CompositeSequence cs : genemap.keySet() ) {
-            Collection<Gene> genes = genemap.get( cs );
+        for ( CompositeSequence cs : geneMap.keySet() ) {
+            Collection<Gene> genes = geneMap.get( cs );
 
             /*
              * Two genes with the same symbol, but might be a mistake from an earlier run.
              */
             Gene g = null;
             if ( genes.size() > 1 ) {
-                log.warn( "More than one gene for: " + cs + ": " + StringUtils.join( genes, ";" ) );
+                AbstractCLI.log.warn( "More than one gene for: " + cs + ": " + StringUtils.join( genes, ";" ) );
                 for ( Gene cg : genes ) {
                     if ( cg.getOfficialSymbol().equals( cs.getName() ) ) {
                         g = cg;
@@ -451,7 +453,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     private Map<String, CompositeSequence> getExistingProbeNameMap( ArrayDesign arrayDesign ) {
 
-        Map<String, CompositeSequence> existingElements = new HashMap<String, CompositeSequence>();
+        Map<String, CompositeSequence> existingElements = new HashMap<>();
 
         if ( arrayDesign.getCompositeSequences().isEmpty() )
             return existingElements;

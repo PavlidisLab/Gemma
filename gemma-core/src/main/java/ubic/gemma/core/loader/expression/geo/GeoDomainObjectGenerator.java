@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,8 +56,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     private boolean doSampleMatching = true;
 
-    private boolean aggressiveQuantitationTypeRemoval;
-
     public GeoDomainObjectGenerator() {
         this.initialize();
     }
@@ -69,30 +67,31 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     @Override
     public Collection<? extends GeoData> generate( String geoAccession ) {
-        log.info( "Generating objects for " + geoAccession + " using " + this.getClass().getSimpleName() );
+        GeoDomainObjectGenerator.log
+                .info( "Generating objects for " + geoAccession + " using " + this.getClass().getSimpleName() );
         Collection<GeoData> result = new HashSet<>();
         if ( geoAccession.startsWith( "GPL" ) ) {
             this.processPlatformsOnly = true;
-            GeoPlatform platform = processPlatform( geoAccession );
+            GeoPlatform platform = this.processPlatform( geoAccession );
             result.add( platform );
         } else if ( geoAccession.startsWith( "GDS" ) ) {
             // common starting point.
             Collection<String> seriesAccessions = DatasetCombiner.findGSEforGDS( geoAccession );
             if ( processPlatformsOnly ) {
-                return processSeriesPlatforms( seriesAccessions ); // FIXME, this is ugly.
+                return this.processSeriesPlatforms( seriesAccessions );
             }
-            log.info( geoAccession + " corresponds to " + seriesAccessions );
+            GeoDomainObjectGenerator.log.info( geoAccession + " corresponds to " + seriesAccessions );
             for ( String seriesAccession : seriesAccessions ) {
-                GeoSeries series = processSeries( seriesAccession );
+                GeoSeries series = this.processSeries( seriesAccession );
                 if ( series == null )
                     continue;
                 result.add( series );
             }
         } else if ( geoAccession.startsWith( "GSE" ) ) {
             if ( processPlatformsOnly ) {
-                return processSeriesPlatforms( geoAccession ); // FIXME, this is ugly.
+                return this.processSeriesPlatforms( geoAccession );
             }
-            GeoSeries series = processSeries( geoAccession );
+            GeoSeries series = this.processSeries( geoAccession );
             if ( series == null )
                 return result;
             result.add( series );
@@ -122,8 +121,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         if ( geoAccession.startsWith( "GSE" ) ) {
             seriesAccession = new StringBuilder( geoAccession );
         } else if ( geoAccession.startsWith( "GPL" ) ) {
-            // hmm.. FIXME
-            log.warn( "Determining if the data already exist for a GPL (" + geoAccession + ") is not implemented." );
+            GeoDomainObjectGenerator.log.warn( "Determining if the data already exist for a GPL (" + geoAccession
+                    + ") is not implemented." );
             return null;
         } else if ( geoAccession.startsWith( "GDS" ) ) {
             Collection<String> seriesAccessions = DatasetCombiner.findGSEforGDS( geoAccession );
@@ -167,24 +166,20 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @param dataSetAccession dataset accession
      */
     public void processDataSet( GeoSeries series, String dataSetAccession ) {
-        log.info( "Processing " + dataSetAccession );
-        GeoDataset gds = processDataSet( dataSetAccession );
+        GeoDomainObjectGenerator.log.info( "Processing " + dataSetAccession );
+        GeoDataset gds = this.processDataSet( dataSetAccession );
         assert gds != null;
 
-        boolean ok = checkDatasetMatchesSeries( series, gds );
+        boolean ok = this.checkDatasetMatchesSeries( series, gds );
         if ( !ok ) {
-            log.warn( dataSetAccession + " does not use a platform associated with the series " + series
-                    + ", ignoring." );
+            GeoDomainObjectGenerator.log
+                    .warn( dataSetAccession + " does not use a platform associated with the series " + series
+                            + ", ignoring." );
             return;
         }
 
         series.addDataSet( gds );
         gds.getSeries().add( series );
-    }
-
-    public void setAggressiveQtRemoval( boolean aggressiveQuantitationTypeRemoval ) {
-        this.aggressiveQuantitationTypeRemoval = aggressiveQuantitationTypeRemoval;
-
     }
 
     public void setDatasetFetcher( Fetcher df ) {
@@ -265,10 +260,10 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         if ( !dataSetAccession.startsWith( "GDS" ) ) {
             throw new IllegalArgumentException( "Invalid GEO dataset accession " + dataSetAccession );
         }
-        String dataSetPath = fetchDataSetToLocalFile( dataSetAccession );
+        String dataSetPath = this.fetchDataSetToLocalFile( dataSetAccession );
         GeoDataset gds;
         try {
-            gds = processDataSet( dataSetAccession, dataSetPath );
+            gds = this.processDataSet( dataSetAccession, dataSetPath );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -329,14 +324,13 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
         if ( fullSeries == null ) {
-            log.warn( "No series file found for " + seriesAccession );
+            GeoDomainObjectGenerator.log.warn( "No series file found for " + seriesAccession );
             return null;
         }
         LocalFile seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath = seriesFile.getLocalURL().getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
-        parser.setAgressiveQtRemoval( this.aggressiveQuantitationTypeRemoval );
 
         try {
             parser.parse( seriesPath );
@@ -355,7 +349,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
         if ( datasetsToProcess != null ) {
             for ( String dataSetAccession : datasetsToProcess ) {
-                processDataSet( series, dataSetAccession );
+                this.processDataSet( series, dataSetAccession );
             }
         }
 
@@ -375,7 +369,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private Collection<GeoPlatform> processSeriesPlatforms( Collection<String> seriesAccessions ) {
         for ( String seriesAccession : seriesAccessions ) {
-            processSeriesPlatforms( seriesAccession );
+            this.processSeriesPlatforms( seriesAccession );
         }
         return ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().values();
 

@@ -31,6 +31,7 @@ import java.util.Set;
  *
  * @author paul
  */
+@SuppressWarnings("unused") // Possible external use
 public interface SVDServiceHelper {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

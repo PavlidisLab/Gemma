@@ -49,6 +49,8 @@ public class ExperimentExpressionLevelsValueObject {
 @SuppressWarnings("unused")
 class GeneElementExpressionsValueObject {
     private static final String AVG_PREFIX = "Averaged from";
+    private static final String MSG_ERR_VECS_MAX = "Can not compute max from null or 1 element vector collection";
+    private static final String MSG_ERR_VECS_VAR = "Can not compute var from null or 1 element vector collection";
     private String geneOfficialSymbol;
     private Integer geneNcbiId;
     private List<VectorElementValueObject> elements = new LinkedList<>();
@@ -75,13 +77,13 @@ class GeneElementExpressionsValueObject {
         if ( vectors.size() > 1 && !Strings.isNullOrEmpty( mode ) ) { // Consolidation requested
             switch ( mode ) {
                 case ( OPT_PICK_MAX ):
-                    elements.add( pickMax( vectors ) );
+                    elements.add( this.pickMax( vectors ) );
                     break;
                 case ( OPT_PICK_VAR ):
-                    elements.add( pickVar( vectors ) );
+                    elements.add( this.pickVar( vectors ) );
                     break;
                 case ( OPT_AVG ):
-                    elements.add( average( vectors ) );
+                    elements.add( this.average( vectors ) );
                     break;
             }
         } else { // Add all vectors
@@ -104,10 +106,13 @@ class GeneElementExpressionsValueObject {
     }
 
     private VectorElementValueObject pickMax( List<DoubleVectorValueObject> vectors ) {
+        if ( vectors == null || vectors.size() <= 1 ) {
+            throw new IllegalArgumentException( GeneElementExpressionsValueObject.MSG_ERR_VECS_MAX );
+        }
         DoubleVectorValueObject max = null;
         Double avgMax = null;
         for ( DoubleVectorValueObject v : vectors ) {
-            double avg = getMean( v.getData() );
+            double avg = this.getMean( v.getData() );
             if ( max == null || avg > avgMax ) {
                 avgMax = avg;
                 max = v;
@@ -117,10 +122,13 @@ class GeneElementExpressionsValueObject {
     }
 
     private VectorElementValueObject pickVar( List<DoubleVectorValueObject> vectors ) {
+        if ( vectors == null || vectors.size() <= 1 ) {
+            throw new IllegalArgumentException( GeneElementExpressionsValueObject.MSG_ERR_VECS_VAR );
+        }
         DoubleVectorValueObject max = null;
         Double varMax = null;
         for ( DoubleVectorValueObject v : vectors ) {
-            double avg = getVariance( v.getData() );
+            double avg = this.getVariance( v.getData() );
             if ( max == null || avg > varMax ) {
                 varMax = avg;
                 max = v;
@@ -130,7 +138,7 @@ class GeneElementExpressionsValueObject {
     }
 
     private VectorElementValueObject average( List<DoubleVectorValueObject> vectors ) {
-        StringBuilder name = new StringBuilder( AVG_PREFIX );
+        StringBuilder name = new StringBuilder( GeneElementExpressionsValueObject.AVG_PREFIX );
         Map<String, Double> bioAssayValues = new HashMap<>();
 
         for ( DoubleVectorValueObject vo : vectors ) {
@@ -157,7 +165,7 @@ class GeneElementExpressionsValueObject {
     }
 
     private double getVariance( double[] arr ) {
-        double mean = getMean( arr );
+        double mean = this.getMean( arr );
         double sum = 0;
 
         for ( double d : arr ) {
@@ -178,18 +186,18 @@ class GeneElementExpressionsValueObject {
     }
 }
 
-// Used in rest api
 @SuppressWarnings("unused")
+        // Used in rest api
 class VectorElementValueObject {
     private String designElementName;
     private Map<String, Double> bioAssayExpressionLevels = new HashMap<>();
 
     VectorElementValueObject( DoubleVectorValueObject vector ) {
         this.designElementName = vector.getDesignElement().getName();
-        extractProbeLevels( vector );
+        this.extractProbeLevels( vector );
     }
 
-    public VectorElementValueObject( String designElementName, Map<String, Double> bioAssayValues ) {
+    VectorElementValueObject( String designElementName, Map<String, Double> bioAssayValues ) {
         this.designElementName = designElementName;
         for ( Map.Entry<String, Double> entry : bioAssayValues.entrySet() ) {
             bioAssayExpressionLevels.put( entry.getKey(), entry.getValue() );

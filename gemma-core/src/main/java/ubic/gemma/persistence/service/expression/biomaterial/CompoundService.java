@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,12 +27,15 @@ import ubic.gemma.persistence.service.BaseService;
  */
 public interface CompoundService extends BaseService<Compound> {
 
+    @Override
     @Secured({ "GROUP_USER" })
     Compound findOrCreate( Compound compound );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( ubic.gemma.model.expression.biomaterial.Compound compound );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( ubic.gemma.model.expression.biomaterial.Compound compound );
 

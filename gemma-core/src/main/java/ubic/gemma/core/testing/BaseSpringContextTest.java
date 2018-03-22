@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,7 +63,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.CompassUtils;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
@@ -93,7 +92,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     private static ExpressionExperiment readOnlyEe = null;
     protected final HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
     };
-    protected final Log log = LogFactory.getLog( getClass() );
+    protected final Log log = LogFactory.getLog( this.getClass() );
     @Autowired
     protected ExternalDatabaseService externalDatabaseService;
     @Autowired
@@ -115,16 +114,14 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     private String sqlScriptEncoding;
 
     @Override
-    final public void afterPropertiesSet() throws Exception {
+    final public void afterPropertiesSet() {
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
         hibernateSupport.setSessionFactory( this.getBean( SessionFactory.class ) );
-
-        CompassUtils.deleteCompassLocks();
 
         this.authenticationTestingUtil = new AuthenticationTestingUtil();
         this.authenticationTestingUtil.setUserManager( this.getBean( UserManager.class ) );
 
-        runAsAdmin();
+        this.runAsAdmin();
 
     }
 
@@ -271,10 +268,11 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
             boolean doSequence, boolean readOnly ) {
         if ( readOnly ) {
-            if ( readOnlyAd == null ) {
-                readOnlyAd = testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
+            if ( BaseSpringContextTest.readOnlyAd == null ) {
+                BaseSpringContextTest.readOnlyAd = testHelper
+                        .getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
             }
-            return readOnlyAd;
+            return BaseSpringContextTest.readOnlyAd;
         }
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
     }
@@ -305,7 +303,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
             compositeSequence.setArrayDesign( ad );
             ad.getCompositeSequences().add( compositeSequence );
 
-            BioSequence bioSequence = getTestPersistentBioSequence();
+            BioSequence bioSequence = this.getTestPersistentBioSequence();
             compositeSequence.setBiologicalCharacteristic( bioSequence );
             bioSequence.setBioSequence2GeneProduct( this.getTestPersistentBioSequence2GeneProducts( bioSequence ) );
 
@@ -391,11 +389,11 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment( boolean readOnly ) {
         if ( readOnly ) {
-            if ( readOnlyEe == null ) {
+            if ( BaseSpringContextTest.readOnlyEe == null ) {
                 log.info( "Initializing test expression experiment (one-time for read-only tests)" );
-                readOnlyEe = testHelper.getTestExpressionExperimentWithAllDependencies();
+                BaseSpringContextTest.readOnlyEe = testHelper.getTestExpressionExperimentWithAllDependencies();
             }
-            return readOnlyEe;
+            return BaseSpringContextTest.readOnlyEe;
         }
 
         return testHelper.getTestExpressionExperimentWithAllDependencies();
@@ -438,7 +436,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return Db entry
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry() {
-        return getTestPersistentDatabaseEntry( null, RandomStringUtils.randomAlphabetic( 10 ) );
+        return this.getTestPersistentDatabaseEntry( null, RandomStringUtils.randomAlphabetic( 10 ) );
     }
 
     /**
@@ -449,11 +447,11 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return Db entry
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry( ExternalDatabase ed ) {
-        return getTestPersistentDatabaseEntry( null, ed );
+        return this.getTestPersistentDatabaseEntry( null, ed );
     }
 
     protected DatabaseEntry getTestPersistentDatabaseEntry( String ed ) {
-        return getTestPersistentDatabaseEntry( null, ed );
+        return this.getTestPersistentDatabaseEntry( null, ed );
     }
 
     /**
@@ -591,7 +589,7 @@ final class AuthenticationTestingUtil {
 
         token.setAuthenticated( true );
 
-        putTokenInContext( token );
+        AuthenticationTestingUtil.putTokenInContext( token );
     }
 
     protected void logOut( ApplicationContext ctx ) {
@@ -604,7 +602,7 @@ final class AuthenticationTestingUtil {
 
         token.setAuthenticated( false );
 
-        putTokenInContext( token );
+        AuthenticationTestingUtil.putTokenInContext( token );
     }
 
     /**
@@ -626,6 +624,6 @@ final class AuthenticationTestingUtil {
         TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing", grantedAuthorities );
         token.setAuthenticated( true );
 
-        putTokenInContext( token );
+        AuthenticationTestingUtil.putTokenInContext( token );
     }
 }

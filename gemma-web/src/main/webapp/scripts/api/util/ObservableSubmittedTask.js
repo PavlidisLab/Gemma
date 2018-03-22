@@ -13,8 +13,6 @@ Ext.namespace( "Gemma" );
  * @extends Ext.util.Observable
  */
 Gemma.ObservableSubmittedTask = Ext.extend( Ext.util.Observable, {
-   // Status ENUM, TODO: any way to share this with server side?
-   // QUEUED, RUNNING, COMPLETED, FAILED, CANCELLING, UNKNOWN
 
    /**
     * @memberOf Gemma. ObservableSubmittedTask
@@ -125,7 +123,7 @@ Gemma.ObservableSubmittedTask = Ext.extend( Ext.util.Observable, {
 
       checkTaskStatus();
 
-      return;
+
 
       /**
        * Grab task status from the sever. Schedule to run the same function after delay if task is not in final state.
@@ -158,7 +156,6 @@ Gemma.ObservableSubmittedTask = Ext.extend( Ext.util.Observable, {
       }
 
       function sync( submittedTask ) {
-         // TODO: As an optimization, do this on-demand only since logs can potentially be large..
          task.logs = submittedTask.logMessages;
 
          if ( task.lastLogMessage !== submittedTask.lastLogMessage ) {

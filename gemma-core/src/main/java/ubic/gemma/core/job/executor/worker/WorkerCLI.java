@@ -1,8 +1,8 @@
 /*
- * The Gemma projec
- * 
+ * The Gemma project
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 package ubic.gemma.core.job.executor.worker;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractSpringAwareCLI;
 import ubic.gemma.persistence.util.SpringContextUtil;
 
@@ -33,7 +34,10 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
 
     public static void main( String[] args ) {
         WorkerCLI me = new WorkerCLI();
-        me.doWork( args );
+        Exception e = me.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -42,15 +46,20 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        // Option mmtxOption = OptionBuilder.withDescription( "Set to force MMTX to be initialized" ).create( "mmtx" );
-        // super.addOption( mmtxOption );
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    @Override
+    protected String[] getAdditionalSpringConfigLocations() {
+        return new String[] { "classpath*:ubic/gemma/workerContext-component-scan.xml",
+                "classpath*:ubic/gemma/workerContext-jms.xml" };
     }
 
     @Override
     protected void createSpringContext() {
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), false /* webapp */,
-                getAdditionalSpringConfigLocations() );
+        ctx = SpringContextUtil.getApplicationContext( this.hasOption( "testing" ), false /* webapp */,
+                this.getAdditionalSpringConfigLocations() );
 
         /*
          * Important to ensure that threads get permissions from their context - not global!
@@ -59,56 +68,44 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
+    public String getCommandName() {
+        return "startWorker";
+    }
+
+    @Override
+    protected void buildOptions() {
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
-        Exception commandArgumentErrors = processCommandLine( args );
+        Exception commandArgumentErrors = this.processCommandLine( args );
         if ( commandArgumentErrors != null ) {
             return commandArgumentErrors;
         }
 
         try {
-            init();
+            this.init();
         } catch ( Exception e ) {
-            log.error( e, e );
+            AbstractCLI.log.error( e, e );
         }
-        return commandArgumentErrors;
+        return null;
     }
 
-    @Override
-    protected String[] getAdditionalSpringConfigLocations() {
-        String[] workerSpecificConfigs = { "classpath*:ubic/gemma/workerContext-component-scan.xml",
-                "classpath*:ubic/gemma/workerContext-jms.xml" };
-        return workerSpecificConfigs;
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        // FIXME
-        // if ( this.hasOption( "mmtx" ) ) {
-        // ExpressionExperimentAnnotator eeAnnotator = this.getBean( ExpressionExperimentAnnotator.class );
-        // eeAnnotator.init();
-        // }
-    }
-
-    private void init() throws Exception {
+    private void init() {
         ShutdownHook shutdownHook = new ShutdownHook();
         Runtime.getRuntime().addShutdownHook( shutdownHook );
 
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
     }
 
-    @Override
-    public String getCommandName() {
-        return "startWorker";
-    }
-
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public class ShutdownHook extends Thread {
         @Override
         public void run() {
-            log.info( "Remote task executor is shutting down..." );
-            log.info( "Attempting to cancel all running tasks..." );
+            AbstractCLI.log.info( "Remote task executor is shutting down..." );
+            AbstractCLI.log.info( "Attempting to cancel all running tasks..." );
             taskRunningService.shutdown();
-            log.info( "Shutdown sequence completed." );
+            AbstractCLI.log.info( "Shutdown sequence completed." );
         }
     }
 }

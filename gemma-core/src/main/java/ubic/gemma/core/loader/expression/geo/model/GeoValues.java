@@ -41,7 +41,6 @@ import java.util.Map.Entry;
  * across the samples.
  *
  * @author pavlidis
- *
  */
 public class GeoValues implements Serializable {
 
@@ -58,57 +57,57 @@ public class GeoValues implements Serializable {
         // http://www.moleculardevices.com/pages/software/gn_genepix_file_formats.html
 
         // these are location and spot size information.
-        skippableQuantitationTypes.add( "X_COORD" );
-        skippableQuantitationTypes.add( "Y_COORD" );
-        skippableQuantitationTypes.add( "X" );
-        skippableQuantitationTypes.add( "Y" );
-        skippableQuantitationTypes.add( "TOP" );
-        skippableQuantitationTypes.add( "BOT" );
-        skippableQuantitationTypes.add( "LEFT" );
-        skippableQuantitationTypes.add( "RIGHT" );
-        skippableQuantitationTypes.add( "DIAMETER" );
-        skippableQuantitationTypes.add( "TOT_SPIX" );
-        skippableQuantitationTypes.add( "TOT_BPIX" );
-        skippableQuantitationTypes.add( "Slide_block" );
-        skippableQuantitationTypes.add( "Slide_row" );
-        skippableQuantitationTypes.add( "B Pixels" );
-        skippableQuantitationTypes.add( "F Pixels" );
-        skippableQuantitationTypes.add( "Bkgd_area" );
-        skippableQuantitationTypes.add( "Spot_area" );
-        skippableQuantitationTypes.add( "Spot_diameter" );
-        skippableQuantitationTypes.add( "Bkgd_diameter" );
-        skippableQuantitationTypes.add( "CH2_BKD_AREA" );
-        skippableQuantitationTypes.add( "CH1_BKD_AREA" );
-        skippableQuantitationTypes.add( "ch1 Area" );
-        skippableQuantitationTypes.add( "ch2 Area" );
-        skippableQuantitationTypes.add( "CH1_AREA" );
-        skippableQuantitationTypes.add( "AREA" );
-        skippableQuantitationTypes.add( "CH2_AREA" );
-        skippableQuantitationTypes.add( "CH2_Spot_Area" );
-        skippableQuantitationTypes.add( "CH1_Spot_Area" );
-        skippableQuantitationTypes.add( "CH1_SIGNAL_AREA" );
-        skippableQuantitationTypes.add( "CH2_SIGNAL_AREA" );
-        skippableQuantitationTypes.add( "Spot Area" );
-        skippableQuantitationTypes.add( "Area To Perimeter" );
-        skippableQuantitationTypes.add( "Background Area" );
-        skippableQuantitationTypes.add( "Signal Area" );
-        skippableQuantitationTypes.add( "Ignored Area" );
-        skippableQuantitationTypes.add( "Probe 1Area%" );
-        skippableQuantitationTypes.add( "BKD_AREA" );
-        skippableQuantitationTypes.add( "Perim-to-area failed" );
-        skippableQuantitationTypes.add( "F_AREA_L" );
-        skippableQuantitationTypes.add( "F_AREA_H" );
-        skippableQuantitationTypes.add( "F_AREA_M" );
-        skippableQuantitationTypes.add( "Probe 2Area%" );
-        skippableQuantitationTypes.add( "Probe 2 %Area" );
-        skippableQuantitationTypes.add( "B_AREA_H" );
-        skippableQuantitationTypes.add( "B_AREA_M" );
-        skippableQuantitationTypes.add( "B_AREA_L" );
-        skippableQuantitationTypes.add( "Bkgd_area" );
-        skippableQuantitationTypes.add( "Dia." );
-        skippableQuantitationTypes.add( "Slide_row" );
-        skippableQuantitationTypes.add( "Slide_column" );
-        skippableQuantitationTypes.add( "Slide_block" );
+        GeoValues.skippableQuantitationTypes.add( "X_COORD" );
+        GeoValues.skippableQuantitationTypes.add( "Y_COORD" );
+        GeoValues.skippableQuantitationTypes.add( "X" );
+        GeoValues.skippableQuantitationTypes.add( "Y" );
+        GeoValues.skippableQuantitationTypes.add( "TOP" );
+        GeoValues.skippableQuantitationTypes.add( "BOT" );
+        GeoValues.skippableQuantitationTypes.add( "LEFT" );
+        GeoValues.skippableQuantitationTypes.add( "RIGHT" );
+        GeoValues.skippableQuantitationTypes.add( "DIAMETER" );
+        GeoValues.skippableQuantitationTypes.add( "TOT_SPIX" );
+        GeoValues.skippableQuantitationTypes.add( "TOT_BPIX" );
+        GeoValues.skippableQuantitationTypes.add( "Slide_block" );
+        GeoValues.skippableQuantitationTypes.add( "Slide_row" );
+        GeoValues.skippableQuantitationTypes.add( "B Pixels" );
+        GeoValues.skippableQuantitationTypes.add( "F Pixels" );
+        GeoValues.skippableQuantitationTypes.add( "Bkgd_area" );
+        GeoValues.skippableQuantitationTypes.add( "Spot_area" );
+        GeoValues.skippableQuantitationTypes.add( "Spot_diameter" );
+        GeoValues.skippableQuantitationTypes.add( "Bkgd_diameter" );
+        GeoValues.skippableQuantitationTypes.add( "CH2_BKD_AREA" );
+        GeoValues.skippableQuantitationTypes.add( "CH1_BKD_AREA" );
+        GeoValues.skippableQuantitationTypes.add( "ch1 Area" );
+        GeoValues.skippableQuantitationTypes.add( "ch2 Area" );
+        GeoValues.skippableQuantitationTypes.add( "CH1_AREA" );
+        GeoValues.skippableQuantitationTypes.add( "AREA" );
+        GeoValues.skippableQuantitationTypes.add( "CH2_AREA" );
+        GeoValues.skippableQuantitationTypes.add( "CH2_Spot_Area" );
+        GeoValues.skippableQuantitationTypes.add( "CH1_Spot_Area" );
+        GeoValues.skippableQuantitationTypes.add( "CH1_SIGNAL_AREA" );
+        GeoValues.skippableQuantitationTypes.add( "CH2_SIGNAL_AREA" );
+        GeoValues.skippableQuantitationTypes.add( "Spot Area" );
+        GeoValues.skippableQuantitationTypes.add( "Area To Perimeter" );
+        GeoValues.skippableQuantitationTypes.add( "Background Area" );
+        GeoValues.skippableQuantitationTypes.add( "Signal Area" );
+        GeoValues.skippableQuantitationTypes.add( "Ignored Area" );
+        GeoValues.skippableQuantitationTypes.add( "Probe 1Area%" );
+        GeoValues.skippableQuantitationTypes.add( "BKD_AREA" );
+        GeoValues.skippableQuantitationTypes.add( "Perim-to-area failed" );
+        GeoValues.skippableQuantitationTypes.add( "F_AREA_L" );
+        GeoValues.skippableQuantitationTypes.add( "F_AREA_H" );
+        GeoValues.skippableQuantitationTypes.add( "F_AREA_M" );
+        GeoValues.skippableQuantitationTypes.add( "Probe 2Area%" );
+        GeoValues.skippableQuantitationTypes.add( "Probe 2 %Area" );
+        GeoValues.skippableQuantitationTypes.add( "B_AREA_H" );
+        GeoValues.skippableQuantitationTypes.add( "B_AREA_M" );
+        GeoValues.skippableQuantitationTypes.add( "B_AREA_L" );
+        GeoValues.skippableQuantitationTypes.add( "Bkgd_area" );
+        GeoValues.skippableQuantitationTypes.add( "Dia." );
+        GeoValues.skippableQuantitationTypes.add( "Slide_row" );
+        GeoValues.skippableQuantitationTypes.add( "Slide_column" );
+        GeoValues.skippableQuantitationTypes.add( "Slide_block" );
         // unfortunately the non-background-subtracted values aren't always available.
         // skippableQuantitationTypes.add( "CH1D_MEAN" );
         // skippableQuantitationTypes.add( "CH2D_MEAN" );
@@ -116,55 +115,56 @@ public class GeoValues implements Serializable {
         // skippableQuantitationTypes.add( "CH2D_MEDIAN" );
 
         // some raw items are skippable.(assumes we use median)
-        skippableQuantitationTypes.add( "SUM_MEAN" );
-        skippableQuantitationTypes.add( "RAT1_MEAN" );
-        skippableQuantitationTypes.add( "RAT2_MEAN" );
-        skippableQuantitationTypes.add( "PIX_RAT2_MEAN" );
-        skippableQuantitationTypes.add( "PIX_RAT2_MEDIAN" );
+        GeoValues.skippableQuantitationTypes.add( "SUM_MEAN" );
+        GeoValues.skippableQuantitationTypes.add( "RAT1_MEAN" );
+        GeoValues.skippableQuantitationTypes.add( "RAT2_MEAN" );
+        GeoValues.skippableQuantitationTypes.add( "PIX_RAT2_MEAN" );
+        GeoValues.skippableQuantitationTypes.add( "PIX_RAT2_MEDIAN" );
 
         // otherwise deemed skippable.
-        skippableQuantitationTypes.add( "PERGTBCH1I_1SD" );
-        skippableQuantitationTypes.add( "PERGTBCH2I_1SD" );
-        skippableQuantitationTypes.add( "PERGTBCH1I_2SD" );
-        skippableQuantitationTypes.add( "PERGTBCH2I_2SD" );
+        GeoValues.skippableQuantitationTypes.add( "PERGTBCH1I_1SD" );
+        GeoValues.skippableQuantitationTypes.add( "PERGTBCH2I_1SD" );
+        GeoValues.skippableQuantitationTypes.add( "PERGTBCH1I_2SD" );
+        GeoValues.skippableQuantitationTypes.add( "PERGTBCH2I_2SD" );
 
         // these removed just in the interest of saving memory!
-        skippableQuantitationTypes.add( "SUM_MEDIAN" );
-        skippableQuantitationTypes.add( "REGR" );
-        skippableQuantitationTypes.add( "CORR" );
-        skippableQuantitationTypes.add( "UNF_VALUE" ); // this is the same as 'value' but with the flagged points still
+        GeoValues.skippableQuantitationTypes.add( "SUM_MEDIAN" );
+        GeoValues.skippableQuantitationTypes.add( "REGR" );
+        GeoValues.skippableQuantitationTypes.add( "CORR" );
+        GeoValues.skippableQuantitationTypes
+                .add( "UNF_VALUE" ); // this is the same as 'value' but with the flagged points still
         // in.
 
         // these occur in some agilent files
-        skippableQuantitationTypes.add( "PositionX" );
-        skippableQuantitationTypes.add( "PositionY" );
-        skippableQuantitationTypes.add( "rNumPix" );
-        skippableQuantitationTypes.add( "gNumPix" );
+        GeoValues.skippableQuantitationTypes.add( "PositionX" );
+        GeoValues.skippableQuantitationTypes.add( "PositionY" );
+        GeoValues.skippableQuantitationTypes.add( "rNumPix" );
+        GeoValues.skippableQuantitationTypes.add( "gNumPix" );
 
         // Remove these if we see them and we're being aggressive
-        aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEAN" );
-        aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2DN_MEAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2IN_MEAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2BN_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2IN_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2DN_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "RAT1N_MEAN" );
-        aggressivelyRemovedQuantitationTypes.add( "RAT1N_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH1DN_MEAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH1IN_MEAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH1BN_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH1IN_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH1DN_MEDIAN" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2I_SD" );
-        aggressivelyRemovedQuantitationTypes.add( "CH1B_SD" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2B_SD" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2I_SD" );
-        aggressivelyRemovedQuantitationTypes.add( "CH1_PER_SAT" );
-        aggressivelyRemovedQuantitationTypes.add( "CH2_PER_SAT" );
-        aggressivelyRemovedQuantitationTypes.add( "RAT2_SD" );
-        aggressivelyRemovedQuantitationTypes.add( "RAT1_SD" );
-        aggressivelyRemovedQuantitationTypes.add( "LOG_RAT2N_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "RAT2N_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2DN_MEAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2IN_MEAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2BN_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2IN_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2DN_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "RAT1N_MEAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "RAT1N_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH1DN_MEAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH1IN_MEAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH1BN_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH1IN_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH1DN_MEDIAN" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2I_SD" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH1B_SD" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2B_SD" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2I_SD" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH1_PER_SAT" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "CH2_PER_SAT" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "RAT2_SD" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "RAT1_SD" );
+        GeoValues.aggressivelyRemovedQuantitationTypes.add( "LOG_RAT2N_MEDIAN" );
 
         String[] moreAgg = new String[] { "gBGPixSDev", "ch1 Background Std Dev", "rBGPixSDev",
                 "ch2 Background Std Dev", "CY3_BKD_SD", "CY5_BKD_SD", "BEAD_STDERR", "CH1_BKD_SD", "CH2_BKD_SD",
@@ -172,70 +172,70 @@ public class GeoValues implements Serializable {
                 "ch1 Signal Noise Ratio", "ch2 Background Std Dev", "ch2 Signal Noise Ratio", "Bkgd_stdev", "F635 SD",
                 "F532 SD" };
 
-        aggressivelyRemovedQuantitationTypes.addAll( Arrays.asList( moreAgg ) );
+        GeoValues.aggressivelyRemovedQuantitationTypes.addAll( Arrays.asList( moreAgg ) );
 
         // We no longer keep "absent-present" calls (affymetrix and others)
-        skippableQuantitationTypes.add( "ABS_CALL" );
-        skippableQuantitationTypes.add( "ABS CALL" );
-        skippableQuantitationTypes.add( "CALL" );
-        skippableQuantitationTypes.add( "Detection Pval" );
-        skippableQuantitationTypes.add( "DETECTION P-VALUE" );
-        skippableQuantitationTypes.add( "Detection_p-value" );
-        skippableQuantitationTypes.add( "Detection_pvalue" );
-        skippableQuantitationTypes.add( "D_P-VALUE" );
+        GeoValues.skippableQuantitationTypes.add( "ABS_CALL" );
+        GeoValues.skippableQuantitationTypes.add( "ABS CALL" );
+        GeoValues.skippableQuantitationTypes.add( "CALL" );
+        GeoValues.skippableQuantitationTypes.add( "Detection Pval" );
+        GeoValues.skippableQuantitationTypes.add( "DETECTION P-VALUE" );
+        GeoValues.skippableQuantitationTypes.add( "Detection_p-value" );
+        GeoValues.skippableQuantitationTypes.add( "Detection_pvalue" );
+        GeoValues.skippableQuantitationTypes.add( "D_P-VALUE" );
 
-        skippableQuantitationTypes.add( "Detection" );
-        skippableQuantitationTypes.add( "Detection call" );
-        skippableQuantitationTypes.add( "rIsWellAboveBG" );
-        skippableQuantitationTypes.add( "gIsWellAboveBG" );
-        skippableQuantitationTypes.add( "CH2_IsWellAboveBG" );
-        skippableQuantitationTypes.add( "CH1_IsWellAboveBG" );
-        skippableQuantitationTypes.add( "COMPUTED.G_IS_WELL_ABOVE_BG" );
-        skippableQuantitationTypes.add( "COMPUTED.R_IS_WELL_ABOVE_BG" );
+        GeoValues.skippableQuantitationTypes.add( "Detection" );
+        GeoValues.skippableQuantitationTypes.add( "Detection call" );
+        GeoValues.skippableQuantitationTypes.add( "rIsWellAboveBG" );
+        GeoValues.skippableQuantitationTypes.add( "gIsWellAboveBG" );
+        GeoValues.skippableQuantitationTypes.add( "CH2_IsWellAboveBG" );
+        GeoValues.skippableQuantitationTypes.add( "CH1_IsWellAboveBG" );
+        GeoValues.skippableQuantitationTypes.add( "COMPUTED.G_IS_WELL_ABOVE_BG" );
+        GeoValues.skippableQuantitationTypes.add( "COMPUTED.R_IS_WELL_ABOVE_BG" );
         // related QC calls that are too hard to use as they have no consistent meaning.
-        skippableQuantitationTypes.add( "FLAG" );
-        skippableQuantitationTypes.add( "FLAGS" );
-        skippableQuantitationTypes.add( "QUALITY_FLAG" );
-        skippableQuantitationTypes.add( "CH2_Flag" );
-        skippableQuantitationTypes.add( "CH1_Flag" );
-        skippableQuantitationTypes.add( "IsManualFlag" );
-        skippableQuantitationTypes.add( "Flag_high_pmt" );
-        skippableQuantitationTypes.add( "Flag_low_pmt" );
-        skippableQuantitationTypes.add( "Autoflag" );
-        skippableQuantitationTypes.add( "FLAGGED" );
-        skippableQuantitationTypes.add( "FlagCy5" );
-        skippableQuantitationTypes.add( "FlagCy3" );
-        skippableQuantitationTypes.add( "FLAG_L" );
-        skippableQuantitationTypes.add( "FLAG_H" );
-        skippableQuantitationTypes.add( "Flagbkgrd" );
-        skippableQuantitationTypes.add( "FLAG_M" );
-        skippableQuantitationTypes.add( "flag1" );
-        skippableQuantitationTypes.add( "Flag.30236" );
-        skippableQuantitationTypes.add( "flag2" );
-        skippableQuantitationTypes.add( "Flagged?" );
-        skippableQuantitationTypes.add( "Pos_Fraction" );
-        skippableQuantitationTypes.add( "Pairs_Used" );
+        GeoValues.skippableQuantitationTypes.add( "FLAG" );
+        GeoValues.skippableQuantitationTypes.add( "FLAGS" );
+        GeoValues.skippableQuantitationTypes.add( "QUALITY_FLAG" );
+        GeoValues.skippableQuantitationTypes.add( "CH2_Flag" );
+        GeoValues.skippableQuantitationTypes.add( "CH1_Flag" );
+        GeoValues.skippableQuantitationTypes.add( "IsManualFlag" );
+        GeoValues.skippableQuantitationTypes.add( "Flag_high_pmt" );
+        GeoValues.skippableQuantitationTypes.add( "Flag_low_pmt" );
+        GeoValues.skippableQuantitationTypes.add( "Autoflag" );
+        GeoValues.skippableQuantitationTypes.add( "FLAGGED" );
+        GeoValues.skippableQuantitationTypes.add( "FlagCy5" );
+        GeoValues.skippableQuantitationTypes.add( "FlagCy3" );
+        GeoValues.skippableQuantitationTypes.add( "FLAG_L" );
+        GeoValues.skippableQuantitationTypes.add( "FLAG_H" );
+        GeoValues.skippableQuantitationTypes.add( "Flagbkgrd" );
+        GeoValues.skippableQuantitationTypes.add( "FLAG_M" );
+        GeoValues.skippableQuantitationTypes.add( "flag1" );
+        GeoValues.skippableQuantitationTypes.add( "Flag.30236" );
+        GeoValues.skippableQuantitationTypes.add( "flag2" );
+        GeoValues.skippableQuantitationTypes.add( "Flagged?" );
+        GeoValues.skippableQuantitationTypes.add( "Pos_Fraction" );
+        GeoValues.skippableQuantitationTypes.add( "Pairs_Used" );
 
         String[] moreSkip = new String[] { "Pos_Fraction", "% > B635+2SD", "% > B635+1SD", "% > B532+2SD",
                 "% > B532+1SD", "F532 % Sat.", "F635 % Sat.", "rIsSaturated", "gIsSaturated", "ch1 Signal Noise Ratio",
                 "ch2 Signal Noise Ratio", "gIsFeatNonUnifOL", "gIsPosAndSignif", "rIsPosAndSignif",
                 "rIsFeatNonUnifOL" };
 
-        skippableQuantitationTypes.addAll( Arrays.asList( moreSkip ) );
+        GeoValues.skippableQuantitationTypes.addAll( Arrays.asList( moreSkip ) );
 
     }
 
     /*
      * Map of platform --> quantitationtype -> designElement -> values; values in same order as sampleVector.
      */
-    private final Map<GeoPlatform, Map<Object, Map<String, List<Object>>>> data = new HashMap<>();
+    private final Map<GeoPlatform, Map<Integer, Map<String, List<Object>>>> data = new HashMap<>();
     private final Map<GeoPlatform, Map<Integer, Collection<String>>> quantitationTypeIndexMap = new HashMap<>();
     private final Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<>();
 
     /*
      * This plays the role of the BioAssayDimension; map of platform --> quantitationType --> samples
      */
-    private final Map<GeoPlatform, Map<Object, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<>();
+    private final Map<GeoPlatform, Map<Integer, LinkedHashSet<GeoSample>>> sampleDimensions = new HashMap<>();
 
     /**
      * @param columnName column name
@@ -263,7 +263,8 @@ public class GeoValues implements Serializable {
         if ( !qtIndexMapForPlatform.containsKey( index ) ) {
             qtIndexMapForPlatform.put( index, new HashSet<String>() );
             qtIndexMapForPlatform.get( index ).add( columnName );
-            log.debug( "Added quantitation type " + columnName + " at index " + index + " for platform " + platform );
+            GeoValues.log.debug( "Added quantitation type " + columnName + " at index " + index + " for platform "
+                    + platform );
         }
 
         // did we get a new column name for the same index?
@@ -275,17 +276,18 @@ public class GeoValues implements Serializable {
              * effectively be used for another; validation will fail in this case because the number of values won't
              * match for all the vectors.
              */
-            log.warn( "Column #" + index + " has an additional name: " + columnName + ", it already has names: "
-                    + StringUtils.join( qtIndexMapForPlatform.get( index ), " " ) );
+            GeoValues.log
+                    .warn( "Column #" + index + " has an additional name: " + columnName + ", it already has names: "
+                            + StringUtils.join( qtIndexMapForPlatform.get( index ), " " ) );
 
             /*
              * We check here to see if the quantitation type is actually an unwanted one, based on the name.
              */
-            boolean newNameIsWanted = isWantedQuantitationType( columnName, false );
+            boolean newNameIsWanted = this.isWantedQuantitationType( columnName );
 
             if ( !newNameIsWanted ) {
-                log.warn(
-                        "Alternate name is an unwanted quantitation type; data may be retaining anyway because of other name" );
+                GeoValues.log
+                        .warn( "Alternate name is an unwanted quantitation type; data may be retaining anyway because of other name" );
             }
 
             qtIndexMapForPlatform.get( index ).add( columnName ); // add it anyway.
@@ -316,8 +318,9 @@ public class GeoValues implements Serializable {
              * some data sets, there is no data provided in the SOFT file (e.g., RNA-seq), so this would be okay.
              */
             if ( sample.isMightNotHaveDataInFile() ) {
-                addSample( sample, 0 );
-                log.warn( "Data not anticipated to be present (RNA-seq etc.), adding dummy quantitation type" );
+                this.addSample( sample, 0 );
+                GeoValues.log
+                        .warn( "Data not anticipated to be present (RNA-seq etc.), adding dummy quantitation type" );
                 return;
                 // throw new IllegalStateException( "Samples must have a platform assigned." );
             }
@@ -325,24 +328,23 @@ public class GeoValues implements Serializable {
             // exon array data sets are sometimes missing the data, which we compute later anyway from CEL files.
             // See bug 3981 and GSE28383 and GSE28886
             if ( GeoPlatform.isAffymetrixExonArray( platform.getGeoAccession() ) ) {
-                addSample( sample, 0 );
+                this.addSample( sample, 0 );
                 sample.setMightNotHaveDataInFile( true );
-                log.warn( "Data not anticipated to be usable (exon arrays), adding dummy quantitation type" );
+                GeoValues.log.warn( "Data not anticipated to be usable (exon arrays), adding dummy quantitation type" );
                 return;
             }
 
-            addSample( sample, 0 );
+            this.addSample( sample, 0 );
             sample.setMightNotHaveDataInFile( true );
-            log.warn( "Sample lacks data, no data will be imported for this data set" );
+            GeoValues.log.warn( "Sample lacks data, no data will be imported for this data set" );
             platform.setUseDataFromGEO( false );
 
             // throw new UnsupportedOperationException(
             // "Can't deal with empty samples when that sample is the first one on its platform." );
 
         } else {
-
-            Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
-            for ( Object quantitationTypeIndex : samplePlatformMap.keySet() ) {
+            Map<Integer, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+            for ( Integer quantitationTypeIndex : samplePlatformMap.keySet() ) {
                 LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
                 sampleQtMap.add( sample );
             }
@@ -381,13 +383,13 @@ public class GeoValues implements Serializable {
                             + designElement );
         }
 
-        GeoPlatform platform = addSample( sample, quantitationTypeIndex );
+        GeoPlatform platform = this.addSample( sample, quantitationTypeIndex );
 
         if ( !data.containsKey( platform ) ) {
-            data.put( platform, new HashMap<Object, Map<String, List<Object>>>() );
+            data.put( platform, new HashMap<Integer, Map<String, List<Object>>>() );
         }
 
-        Map<Object, Map<String, List<Object>>> platformMap = data.get( platform );
+        Map<Integer, Map<String, List<Object>>> platformMap = data.get( platform );
         if ( !platformMap.containsKey( quantitationTypeIndex ) ) {
             platformMap.put( quantitationTypeIndex, new HashMap<String, List<Object>>() );
         }
@@ -399,9 +401,9 @@ public class GeoValues implements Serializable {
 
         qtMap.get( designElement ).add( value );
 
-        if ( log.isTraceEnabled() ) {
-            log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt=" + quantitationTypeIndex
-                    + " de=" + designElement + " value=" + value );
+        if ( GeoValues.log.isTraceEnabled() ) {
+            GeoValues.log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt="
+                    + quantitationTypeIndex + " de=" + designElement + " value=" + value );
         }
     }
 
@@ -425,7 +427,7 @@ public class GeoValues implements Serializable {
         if ( datasetSamples.size() != sampleDimensions.get( platform ).get( quantitationTypeIndex ).size() ) {
             return; // can't really clear
         }
-        log.debug( "Clearing" );
+        GeoValues.log.debug( "Clearing" );
         data.get( platform ).remove( quantitationTypeIndex );
     }
 
@@ -484,13 +486,13 @@ public class GeoValues implements Serializable {
      * @param samplePlatform sample platform
      * @return Collection of Objects representing the quantitation types for the given platform.
      */
-    public Collection<Object> getQuantitationTypes( GeoPlatform samplePlatform ) {
+    public Collection<Integer> getQuantitationTypes( GeoPlatform samplePlatform ) {
         assert samplePlatform != null;
-        assert this.data != null;
         assert this.data.get( samplePlatform ) != null;
         return this.data.get( samplePlatform ).keySet();
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement ) {
         return data.get( platform ).get( quantitationType ).get( designElement );
     }
@@ -504,7 +506,7 @@ public class GeoValues implements Serializable {
     public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement,
             Integer[] indices ) {
         List<Object> result = new ArrayList<>();
-        Map<Object, Map<String, List<Object>>> map = data.get( platform );
+        Map<Integer, Map<String, List<Object>>> map = data.get( platform );
         assert map != null : "No data for platform=" + platform;
         Map<String, List<Object>> map2 = map.get( quantitationType );
         assert map2 != null : "No data for qt " + quantitationType + " on " + platform;
@@ -530,10 +532,10 @@ public class GeoValues implements Serializable {
                 }
                 Object value = rawvals.get( i );
                 if ( value == null ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug(
-                                "No data for index " + i + " (" + designElement + " on " + platform + " quant.type # "
-                                        + quantitationType + ") - vector has " + rawvals.size() + " values." );
+                    if ( GeoValues.log.isDebugEnabled() )
+                        GeoValues.log.debug( "No data for index " + i + " (" + designElement + " on " + platform
+                                + " quant.type # " + quantitationType + ") - vector has " + rawvals.size()
+                                + " values." );
                 }
                 result.add( value );
             }
@@ -550,14 +552,13 @@ public class GeoValues implements Serializable {
      * the system. Skipping these makes loading the data more manageable for some data sets that are very large.
      *
      * @param quantitationTypeName QT name
-     * @param aggressive           To be more aggressive in remove unwanted quantitation types.
      * @return true if the name is NOT on the 'skippable' list.
      */
-    public boolean isWantedQuantitationType( String quantitationTypeName, boolean aggressive ) {
+    public boolean isWantedQuantitationType( String quantitationTypeName ) {
         if ( quantitationTypeName == null )
             throw new IllegalArgumentException( "Quantitation type name cannot be null" );
-        return !skippableQuantitationTypes.contains( quantitationTypeName ) && !aggressivelyRemovedQuantitationTypes
-                .contains( quantitationTypeName );
+        return !GeoValues.skippableQuantitationTypes.contains( quantitationTypeName )
+                && !GeoValues.aggressivelyRemovedQuantitationTypes.contains( quantitationTypeName );
     }
 
     /**
@@ -579,18 +580,18 @@ public class GeoValues implements Serializable {
             GeoPlatform p = s.getPlatforms().iterator().next();
 
             if ( !v.sampleDimensions.containsKey( p ) ) {
-                v.sampleDimensions.put( p, new HashMap<Object, LinkedHashSet<GeoSample>>() );
+                v.sampleDimensions.put( p, new HashMap<Integer, LinkedHashSet<GeoSample>>() );
 
                 // deep copy.
-                for ( Object o : this.sampleDimensions.get( p ).keySet() ) {
+                for ( Integer o : this.sampleDimensions.get( p ).keySet() ) {
                     v.sampleDimensions.get( p ).put( o, new LinkedHashSet<GeoSample>() );
                     for ( GeoSample ss : this.sampleDimensions.get( p ).get( o ) ) {
                         v.sampleDimensions.get( p ).get( o ).add( ss ); // could use add all
                     }
                 }
 
-                v.data.put( p, new HashMap<Object, Map<String, List<Object>>>() );
-                for ( Object o : this.data.get( p ).keySet() ) {
+                v.data.put( p, new HashMap<Integer, Map<String, List<Object>>>() );
+                for ( Integer o : this.data.get( p ).keySet() ) {
                     v.data.get( p ).put( o, new HashMap<String, List<Object>>() );
 
                     for ( String probeId : this.data.get( p ).get( o ).keySet() ) {
@@ -604,7 +605,7 @@ public class GeoValues implements Serializable {
          * Then, subset the data.
          */
         for ( GeoPlatform p : v.sampleDimensions.keySet() ) {
-            for ( Object o : v.sampleDimensions.get( p ).keySet() ) {
+            for ( Integer o : v.sampleDimensions.get( p ).keySet() ) {
                 LinkedHashSet<GeoSample> dimsamples = v.sampleDimensions.get( p ).get( o );
 
                 int i = 0;
@@ -638,11 +639,6 @@ public class GeoValues implements Serializable {
         return v;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
@@ -652,9 +648,9 @@ public class GeoValues implements Serializable {
             assert data.get( platform ) != null : platform;
 
             buf.append( "============== " ).append( platform ).append( " =================\n" );
-            Object[] ar = sampleDimensions.get( platform ).keySet().toArray();
-            Arrays.sort( ar );
-            for ( Object qType : ar ) {
+            List<Integer> ar = new ArrayList<>( sampleDimensions.get( platform ).keySet() );
+            Collections.sort( ar );
+            for ( Integer qType : ar ) {
                 String qTName = StringUtils.join( quantitationTypeIndexMap.get( platform ).get( qType ), "/" );
                 buf.append( "---------------- Platform " ).append( platform ).append( " QuantitationType #" )
                         .append( qType ).append( " (" ).append( qTName ).append( ") ------------------\n" );
@@ -667,9 +663,9 @@ public class GeoValues implements Serializable {
 
                 Map<String, List<Object>> map = data.get( platform ).get( qType );
                 assert map != null;
-                Object[] els = map.keySet().toArray();
-                Arrays.sort( els );
-                for ( Object dEl : els ) {
+                List<String> els = new ArrayList<>( map.keySet() );
+                Collections.sort( els );
+                for ( String dEl : els ) {
                     buf.append( dEl );
 
                     for ( Object val : map.get( dEl ) ) {
@@ -698,15 +694,17 @@ public class GeoValues implements Serializable {
     public void validate() {
         for ( GeoPlatform platform : sampleDimensions.keySet() ) {
 
-            Map<Object, Map<String, List<Object>>> d = data.get( platform );
+            Map<Integer, Map<String, List<Object>>> d = data.get( platform );
 
-            for ( Object qType : sampleDimensions.get( platform ).keySet() ) {
+            for ( Integer qType : sampleDimensions.get( platform ).keySet() ) {
 
                 // This is the number of samples that have been processed so far for the given quantitation type.
                 int numSamples = sampleDimensions.get( platform ).get( qType ).size();
 
-                if ( skippableQuantitationTypes.contains( qType ) )
+                // FIXME! this is not comparing the QT index, not its value!
+                if ( GeoValues.skippableQuantitationTypes.contains( qType ) )
                     continue;
+
                 Map<Integer, Collection<String>> qtMap = quantitationTypeIndexMap.get( platform );
                 if ( qtMap == null ) {
                     // for data sets where there is no data, this could happen.
@@ -727,14 +725,15 @@ public class GeoValues implements Serializable {
                     if ( vals.size() < numSamples ) {
                         int paddingAmount = numSamples - vals.size();
                         if ( !warned )
-                            log.warn( "Padding some vectors with " + paddingAmount + " values for quantitation type "
-                                    + qType + "(" + StringUtils.join( qtNames, "/" ) + ")" );
+                            GeoValues.log.warn( "Padding some vectors with " + paddingAmount
+                                    + " values for quantitation type " + qType + "(" + StringUtils.join( qtNames, "/" )
+                                    + ")" );
                         warned = true;
                         for ( int i = 0; i < paddingAmount; i++ ) {
                             vals.add( null );
                         }
                     } else if ( vals.size() > numSamples ) {
-                        log.error( "Samples so far: " + StringUtils
+                        GeoValues.log.error( "Samples so far: " + StringUtils
                                 .join( sampleDimensions.get( platform ).get( qType ), ',' ) );
                         throw new IllegalStateException(
                                 "Validation failed at platform=" + platform + " designelement=" + designElement
@@ -742,8 +741,9 @@ public class GeoValues implements Serializable {
                                         + "; name(s) for qType are " + StringUtils.join( qtNames, "," ) );
                     }
                 }
-                if ( log.isDebugEnabled() )
-                    log.debug( qType + " ok on " + platform + ", all vectors have " + numSamples + " values" );
+                if ( GeoValues.log.isDebugEnabled() )
+                    GeoValues.log
+                            .debug( qType + " ok on " + platform + ", all vectors have " + numSamples + " values" );
             }
         }
 
@@ -763,10 +763,10 @@ public class GeoValues implements Serializable {
 
         GeoPlatform platform = sample.getPlatforms().iterator().next();
         if ( !sampleDimensions.containsKey( platform ) ) {
-            sampleDimensions.put( platform, new HashMap<Object, LinkedHashSet<GeoSample>>() );
+            sampleDimensions.put( platform, new HashMap<Integer, LinkedHashSet<GeoSample>>() );
         }
 
-        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+        Map<Integer, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
         if ( !samplePlatformMap.containsKey( quantitationTypeIndex ) ) {
             samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<GeoSample>() );
         }

@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ import java.util.Set;
  */
 public class ProbeMapUtils {
 
-    private static Logger log = LoggerFactory.getLogger( ProbeMapUtils.class );
+    private static final Logger log = LoggerFactory.getLogger( ProbeMapUtils.class );
 
     /**
      * Prune a set of results that have the same coordinates and query. See bug 4037
@@ -47,7 +47,7 @@ public class ProbeMapUtils {
         for ( Iterator<BlatResult> it = blatResults.iterator(); it.hasNext(); ) {
             BlatResult br = it.next();
 
-            Integer hash = hashBlatResult( br );
+            Integer hash = ProbeMapUtils.hashBlatResult( br );
 
             if ( hashes.contains( hash ) ) {
                 it.remove();
@@ -57,8 +57,8 @@ public class ProbeMapUtils {
 
         }
 
-        if ( blatResults.size() < init && log.isDebugEnabled() ) {
-            log.debug( "Pruned " + ( init - blatResults.size() ) + "/" + init + " duplicates" );
+        if ( blatResults.size() < init && ProbeMapUtils.log.isDebugEnabled() ) {
+            ProbeMapUtils.log.debug( "Pruned " + ( init - blatResults.size() ) + "/" + init + " duplicates" );
         }
 
     }

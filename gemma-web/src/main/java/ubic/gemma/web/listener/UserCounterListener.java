@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,10 +26,9 @@ import javax.servlet.http.HttpSessionListener;
 
 /**
  * Count active sessions
- * 
+ *
  * @author keshav
  * @author pavlidis
- *
  */
 public class UserCounterListener implements ServletContextListener, HttpSessionListener {
 
@@ -38,49 +37,31 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
 
     private ServletContext servletContext;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
-     */
+    @Override
+    public synchronized void contextInitialized( ServletContextEvent sce ) {
+        this.servletContext = sce.getServletContext();
+        servletContext.setAttribute( ( UserCounterListener.COUNT_KEY ), Integer.toString( 0 ) );
+        servletContext.setAttribute( ( UserCounterListener.AUTH_KEY ), Integer.toString( 0 ) );
+    }
+
     @Override
     public synchronized void contextDestroyed( ServletContextEvent event ) {
         servletContext = null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)
-     */
-    @Override
-    public synchronized void contextInitialized( ServletContextEvent sce ) {
-        this.servletContext = sce.getServletContext();
-        servletContext.setAttribute( ( COUNT_KEY ), Integer.toString( 0 ) );
-        servletContext.setAttribute( ( AUTH_KEY ), Integer.toString( 0 ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.http.HttpSessionListener#sessionCreated(javax.servlet.http.HttpSessionEvent)
-     */
     @Override
     public void sessionCreated( HttpSessionEvent arg0 ) {
         UserTracker.incrementSessions();
-        servletContext.setAttribute( COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );
+        servletContext
+                .setAttribute( UserCounterListener.COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.http.HttpSessionListener#sessionDestroyed(javax.servlet.http.HttpSessionEvent)
-     */
     @Override
     public void sessionDestroyed( HttpSessionEvent arg0 ) {
         UserTracker.decrementSessions();
-        servletContext.setAttribute( COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );
+        servletContext
+                .setAttribute( UserCounterListener.COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );
     }
 
 }

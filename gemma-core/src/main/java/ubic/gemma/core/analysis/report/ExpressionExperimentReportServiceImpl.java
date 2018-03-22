@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.Auditable;
@@ -55,7 +55,7 @@ import java.util.*;
  * @author paul
  * @author klc
  */
-@Component
+@Service
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
 
     private static final String NOTE_UPDATED_CONFOUND = "Updated batch confound";
@@ -91,13 +91,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Cache statsCache;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
         this.statsCache = CacheUtils
-                .createOrLoadCache( cacheManager, EESTATS_CACHE_NAME, terracottaEnabled, 5000, false, false, 0, 300,
-                        diskPersistent );
+                .createOrLoadCache( cacheManager, ExpressionExperimentReportServiceImpl.EESTATS_CACHE_NAME,
+                        terracottaEnabled, 5000, false, false, 0, 300, diskPersistent );
 
     }
 
@@ -114,7 +114,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     public ExpressionExperimentDetailsValueObject generateSummary( Long id ) {
         assert id != null;
         Collection<Long> ids = Collections.singletonList( id );
-        Collection<ExpressionExperimentDetailsValueObject> results = generateSummaryObjects( ids );
+        Collection<ExpressionExperimentDetailsValueObject> results = this.generateSummaryObjects( ids );
         if ( results.size() > 0 ) {
             return results.iterator().next();
         }
@@ -127,21 +127,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjects( null, false, ids, null, 0, 0 );
-        getStats( vos );
-    }
-
-    @Override
-    public Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids ) {
-
-        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
-                .loadDetailsValueObjects( null, false, ids, null, 0, 0 );
-        getStats( vos );
-
-        for ( ExpressionExperimentValueObject vo : vos ) {
-            evictFromCache( vo.getId() );
-            statsCache.put( new Element( vo.getId(), vo ) );
-        }
-        return vos;
+        this.getStats( vos );
     }
 
     /**
@@ -179,31 +165,27 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     /**
      * Fills in event and security information from the database. This will only retrieve the latest event (if any).
      * This is rather slow so should be avoided if the information isn't needed.
-     *
-     * @return Map of EE ids to the most recent update.
      */
     @Override
-    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
+    public void populateEventInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
 
         Collection<Long> ids = EntityUtils.getIds( vos );
 
-        Map<Long, Date> results = new HashMap<>();
-
         // do this ahead to avoid round trips - this also filters...
         Collection<ExpressionExperiment> ees = expressionExperimentService.load( ids );
 
         if ( ees.size() == 0 ) {
-            return results;
+            return;
         }
 
-        Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
+        Map<Long, ExpressionExperiment> eeMap = EntityUtils.getIdMap( ees );
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = getEvents( ees, typesToGet );
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = this.getEvents( ees, typesToGet );
 
         Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
         Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
@@ -213,26 +195,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
         Map<Auditable, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
 
-        Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
-
-        // not necessary - gets filled in by the interceptor.
-        // Map<ExpressionExperiment, Boolean> privacyInfo = securityService.arePrivate( ees );
-        // Map<ExpressionExperiment, Boolean> sharingInfo = securityService.areShared( ees );
+        Map<Long, Collection<AuditEvent>> sampleRemovalEvents = this.getSampleRemovalEvents( ees );
 
         /*
          * add in the last events of interest for all eeVos This step is remarkably slow.
          */
         for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
 
-            /*
-             * Note that in the current incarnation, the last update date is already filled in, so the checks in this
-             * loop are superfluous.
-             */
-            Date mostRecentDate = eeVo.getLastUpdated() == null ? new Date( 0 ) : eeVo.getLastUpdated();
-
             Long id = eeVo.getId();
 
-            ExpressionExperiment ee = eemap.get( id );
+            ExpressionExperiment ee = eeMap.get( id );
 
             if ( linkAnalysisEvents.containsKey( ee ) ) {
                 AuditEvent event = linkAnalysisEvents.get( ee );
@@ -303,21 +275,15 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.auditEvents2SampleRemovedFlags( removalEvents );
 
             }
-
-            if ( mostRecentDate.after( new Date( 0 ) ) )
-                results.put( ee.getId(), mostRecentDate );
         }
 
         if ( timer.getTime() > 1000 )
             log.info( "Retrieving audit events took " + timer.getTime() + "ms" );
-
-        return results;
     }
 
     @Override
-    public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
+    public void populateReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
         StopWatch timer = new StopWatch();
-        Map<Long, Date> result = new HashMap<>();
         timer.start();
 
         List<Long> ids = new ArrayList<>();
@@ -325,7 +291,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             ids.add( vo.getId() );
         }
 
-        Collection<ExpressionExperimentDetailsValueObject> cachedVos = retrieveSummaryObjects( ids );
+        Collection<ExpressionExperimentDetailsValueObject> cachedVos = this.retrieveSummaryObjects( ids );
         Map<Long, ExpressionExperimentDetailsValueObject> id2cachedVo = EntityUtils.getIdMap( cachedVos );
 
         for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
@@ -337,9 +303,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
                 eeVo.setLastUpdated( cacheVo.getLastUpdated() );
-                if ( eeVo.getLastUpdated() != null ) {
-                    result.put( eeVo.getId(), eeVo.getLastUpdated() );
-                }
             }
         }
         timer.stop();
@@ -347,13 +310,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             log.info( vos.size() + " EE reports fetched in " + timer.getTime() + "ms" );
         }
 
-        return result;
     }
 
     @Override
     public Collection<ExpressionExperimentDetailsValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
         Collection<ExpressionExperimentDetailsValueObject> eeValueObjects = new ArrayList<>();
-        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
+        Collection<Long> filteredIds = this.securityFilterExpressionExperimentIds( ids );
 
         int incache = 0;
         for ( Long id : filteredIds ) {
@@ -368,7 +330,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 continue;
             }
 
-            ExpressionExperimentDetailsValueObject valueObject = generateSummary( id );
+            ExpressionExperimentDetailsValueObject valueObject = this.generateSummary( id );
             eeValueObjects.add( valueObject );
         }
         if ( ids.size() > 1 ) {
@@ -393,16 +355,14 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
                 ee.setBatchConfound( confound );
-                auditTrailService
-                        .addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(), NOTE_UPDATED_CONFOUND,
-                                confound );
+                auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+                        ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confound );
                 update = true;
             }
 
             if ( !Objects.equals( effect, ee.getBatchEffect() ) ) {
-                auditTrailService
-                        .addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(), NOTE_UPDATED_EFFECT,
-                                effect );
+                auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.Factory.newInstance(),
+                        ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effect );
                 ee.setBatchEffect( effect );
                 update = true;
             }
@@ -413,6 +373,19 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             }
         }
         log.info( "Finished batch info recalculation task." );
+    }
+
+    private Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids ) {
+
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
+                .loadDetailsValueObjects( null, false, ids, null, 0, 0 );
+        this.getStats( vos );
+
+        for ( ExpressionExperimentValueObject vo : vos ) {
+            this.evictFromCache( vo.getId() );
+            statsCache.put( new Element( vo.getId(), vo ) );
+        }
+        return vos;
     }
 
     private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
@@ -439,7 +412,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         log.debug( "Getting stats for " + vos.size() + " value objects." );
         int count = 0;
         for ( ExpressionExperimentDetailsValueObject object : vos ) {
-            getStats( object );
+            this.getStats( object );
 
             if ( ++count % 10 == 0 ) {
                 log.debug( "Processed " + count + " reports." );
@@ -460,9 +433,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         if ( analysis != null && analysis.containsKey( eeVo ) ) {
             eeVo.setDifferentialExpressionAnalyses( analysis.get( eeVo ) );
         }
-
-        // FIXME could get this from the CoexpressionAnalysis.
-        // eeVo.setCoexpressionLinkCount( geneCoexpressionService.countLinks( id ) );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );

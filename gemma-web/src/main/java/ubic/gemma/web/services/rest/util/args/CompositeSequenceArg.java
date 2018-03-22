@@ -22,7 +22,8 @@ public abstract class CompositeSequenceArg<T>
      * @return instance of CompositeSequenceArg.
      */
     @SuppressWarnings("unused")
-    public static CompositeSequenceArg valueOf( final String s ) {
+    public static MutableArg<?, CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> valueOf(
+            final String s ) {
         try {
             return new CompositeSequenceIdArg( Long.parseLong( s.trim() ) );
         } catch ( NumberFormatException e ) {

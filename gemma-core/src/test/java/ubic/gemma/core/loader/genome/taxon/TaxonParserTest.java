@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,28 +18,24 @@
  */
 package ubic.gemma.core.loader.genome.taxon;
 
-import java.io.InputStream;
-import java.util.Collection;
-
 import junit.framework.TestCase;
 import ubic.gemma.model.genome.Taxon;
 
+import java.io.InputStream;
+import java.util.Collection;
+
 /**
  * @author pavlidis
- *
  */
 public class TaxonParserTest extends TestCase {
 
-    InputStream is;
+    private InputStream is;
 
     public void testParseInputStream() throws Exception {
         TaxonParser tp = new TaxonParser();
         tp.parse( is );
         Collection<Taxon> results = tp.getResults();
-        assertEquals( 75, results.size() );
-        // for ( Taxon taxon : results ) {
-        // assertTrue( "Taxon " + taxon, taxon.getNcbiId() != 2 ); // "Bacteria"
-        // }
+        TestCase.assertEquals( 75, results.size() );
     }
 
     @Override
@@ -50,6 +46,7 @@ public class TaxonParserTest extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
+        super.tearDown();
         is.close();
     }
 

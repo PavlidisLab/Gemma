@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +18,10 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.net.URISyntaxException;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import java.net.URISyntaxException;
 
 /**
  * @author pavlidis
@@ -32,13 +32,13 @@ public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
 
     protected String getTestFileBasePath() throws URISyntaxException {
 
-        return FileTools.resourceToPath( GEO_TEST_DATA_ROOT );
+        return FileTools.resourceToPath( AbstractGeoServiceTest.GEO_TEST_DATA_ROOT );
 
     }
 
     protected String getTestFileBasePath( String subPath ) throws URISyntaxException {
 
-        return FileTools.resourceToPath( GEO_TEST_DATA_ROOT + subPath );
+        return FileTools.resourceToPath( AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + subPath );
 
     }
 }

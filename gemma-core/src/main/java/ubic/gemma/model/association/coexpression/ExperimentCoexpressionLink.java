@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,26 +19,24 @@
 
 package ubic.gemma.model.association.coexpression;
 
-import java.io.Serializable;
-
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+
+import java.io.Serializable;
 
 /**
  * Represents coexpression at the level of experiment, referinng to links stored as Gene2GeneCoexpression.
- * 
- * @author Paul
  *
+ * @author Paul
+ * FIXME the overrides are uselsess, no specific functionality, they can be represented an enumeration field.
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class ExperimentCoexpressionLink implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -3850440587168527052L;
 
     private BioAssaySet experiment;
 
-    /*
+    /**
      * we need to have the genes here as a denormalization. We store these links both ways for efficiency.
      */
     private Long firstGene;
@@ -46,7 +44,7 @@ public abstract class ExperimentCoexpressionLink implements Serializable {
     // This ID is actually pretty useless; the experiment+linkId is a unique key
     private Long id;
 
-    /*
+    /**
      * Note that we do not make this a proper link to a Gene2GeneCoexpression entity, for simplicity, so we cant do some
      * hql stuff.
      */
@@ -54,6 +52,7 @@ public abstract class ExperimentCoexpressionLink implements Serializable {
 
     private Long secondGene;
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public ExperimentCoexpressionLink( BioAssaySet bioAssaySet, Long linkId, Long firstGene, Long secondGene ) {
         this.firstGene = firstGene;
         this.secondGene = secondGene;
@@ -61,39 +60,34 @@ public abstract class ExperimentCoexpressionLink implements Serializable {
         this.experiment = bioAssaySet;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        ExperimentCoexpressionLink other = ( ExperimentCoexpressionLink ) obj;
-
-        if ( id != null ) return this.getId().equals( other.getId() );
-
-        if ( experiment == null ) {
-            if ( other.experiment != null ) return false;
-        } else if ( !experiment.equals( other.experiment ) ) return false;
-        if ( linkId == null ) {
-            if ( other.linkId != null ) return false;
-        } else if ( !linkId.equals( other.linkId ) ) return false;
-        return true;
-    }
-
     public BioAssaySet getExperiment() {
         return experiment;
+    }
+
+    public void setExperiment( BioAssaySet experiment ) {
+        this.experiment = experiment;
     }
 
     public Long getId() {
         return id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public Long getLinkId() {
         return linkId;
     }
 
+    public void setLinkId( Long linkId ) {
+        this.linkId = linkId;
+    }
+
     @Override
     public int hashCode() {
-        if ( id != null ) return id.hashCode();
+        if ( id != null )
+            return id.hashCode();
         final int prime = 31;
         int result = 1;
 
@@ -102,28 +96,40 @@ public abstract class ExperimentCoexpressionLink implements Serializable {
         return result;
     }
 
-    public void setExperiment( BioAssaySet experiment ) {
-        this.experiment = experiment;
-    }
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        ExperimentCoexpressionLink other = ( ExperimentCoexpressionLink ) obj;
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+        if ( id != null )
+            return this.getId().equals( other.getId() );
 
-    public void setLinkId( Long linkId ) {
-        this.linkId = linkId;
+        if ( experiment == null ) {
+            if ( other.experiment != null )
+                return false;
+        } else if ( !experiment.equals( other.experiment ) )
+            return false;
+        if ( linkId == null ) {
+            return other.linkId == null;
+        } else
+            return linkId.equals( other.linkId );
     }
 
     public Long getFirstGene() {
         return firstGene;
     }
 
-    public Long getSecondGene() {
-        return secondGene;
-    }
-
     public void setFirstGene( Long firstGene ) {
         this.firstGene = firstGene;
+    }
+
+    public Long getSecondGene() {
+        return secondGene;
     }
 
     public void setSecondGene( Long secondGene ) {

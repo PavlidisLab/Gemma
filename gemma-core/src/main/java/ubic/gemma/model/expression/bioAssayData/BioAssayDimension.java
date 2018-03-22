@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,9 +27,9 @@ import java.util.List;
  * Stores the order of BioAssays referred to in DataVectors.
  * Note: Not a SecuredChild - maybe should be?
  */
-public abstract class BioAssayDimension extends Describable {
+public class BioAssayDimension extends Describable {
 
-    private static final long serialVersionUID = 34226197127833406L;
+    private static final long serialVersionUID = -3786404705366085672L;
 
     private List<BioAssay> bioAssays = new java.util.ArrayList<>();
 
@@ -44,11 +44,11 @@ public abstract class BioAssayDimension extends Describable {
     public static final class Factory {
 
         public static BioAssayDimension newInstance() {
-            return new BioAssayDimensionImpl();
+            return new BioAssayDimension();
         }
 
         public static BioAssayDimension newInstance( String name, String description, List<BioAssay> bioAssays ) {
-            final BioAssayDimension entity = new BioAssayDimensionImpl();
+            final BioAssayDimension entity = new BioAssayDimension();
             entity.setName( name );
             entity.setDescription( description );
             entity.setBioAssays( bioAssays );

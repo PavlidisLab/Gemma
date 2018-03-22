@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,24 +30,29 @@ import java.util.Collection;
  */
 public interface ExperimentalDesignService extends BaseService<ExperimentalDesign> {
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalDesign find( ExperimentalDesign experimentalDesign );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExperimentalDesign load( Long id );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    Collection<ExperimentalDesign> loadAll();
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( Collection<ExperimentalDesign> entities );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( ExperimentalDesign experimentalDesign );
 
     /**
      * Gets the expression experiment for the specified experimental design object
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalDesign load( Long id );
-
-    @Secured({ "GROUP_ADMIN" })
-    Collection<ExperimentalDesign> loadAll();
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ExperimentalDesign experimentalDesign );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( Collection<ExperimentalDesign> entities );
 }

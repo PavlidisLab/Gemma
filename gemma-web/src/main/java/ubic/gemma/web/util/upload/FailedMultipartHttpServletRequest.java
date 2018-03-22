@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,34 +19,26 @@
 
 package ubic.gemma.web.util.upload;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.multipart.support.AbstractMultipartHttpServletRequest;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Used to allow downstream processing to figure out multipart resolution failed without throwing an exception. This
  * lets us return JSON that our client can understand.
- * 
- * @author paul
  *
+ * @author paul
  */
 public class FailedMultipartHttpServletRequest extends AbstractMultipartHttpServletRequest {
 
     private String errorMessage;
 
-    /**
-     * @param request
-     * @param message
-     */
     public FailedMultipartHttpServletRequest( HttpServletRequest request, String message ) {
         this( request );
         this.errorMessage = message;
     }
 
-    /**
-     * @param request
-     */
     protected FailedMultipartHttpServletRequest( HttpServletRequest request ) {
         super( request );
     }
@@ -60,13 +52,11 @@ public class FailedMultipartHttpServletRequest extends AbstractMultipartHttpServ
 
     @Override
     public HttpHeaders getMultipartHeaders( String arg0 ) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getMultipartContentType( String arg0 ) {
-        // TODO Auto-generated method stub
         return null;
     }
 

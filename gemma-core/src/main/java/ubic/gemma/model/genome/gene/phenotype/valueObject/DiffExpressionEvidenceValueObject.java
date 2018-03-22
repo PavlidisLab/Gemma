@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@ import java.util.SortedSet;
 /**
  * @author stgeorgn
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<DifferentialExpressionEvidence> {
 
     private static final long serialVersionUID = 7262262666070114995L;
@@ -42,8 +43,6 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
     private Long geneDifferentialExpressionMetaAnalysisResultId = 0L;
     private GeneDifferentialExpressionMetaAnalysisSummaryValueObject geneDifferentialExpressionMetaAnalysisSummaryValueObject = null;
     private Long numEvidenceFromSameMetaAnalysis = 0L;
-
-
 
     /**
      * Required when using the class as a spring bean.
@@ -96,24 +95,20 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
         this.geneDifferentialExpressionMetaAnalysisResultId = geneDifferentialExpressionMetaAnalysisResult.getId();
     }
 
-
-
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
             return true;
         if ( !super.equals( obj ) )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         DiffExpressionEvidenceValueObject other = ( DiffExpressionEvidenceValueObject ) obj;
         if ( this.geneDifferentialExpressionMetaAnalysisId == null ) {
-            if ( other.geneDifferentialExpressionMetaAnalysisId != null )
-                return false;
-        } else if ( !this.geneDifferentialExpressionMetaAnalysisId
-                .equals( other.geneDifferentialExpressionMetaAnalysisId ) )
-            return false;
-        return true;
+            return other.geneDifferentialExpressionMetaAnalysisId == null;
+        } else
+            return this.geneDifferentialExpressionMetaAnalysisId
+                    .equals( other.geneDifferentialExpressionMetaAnalysisId );
     }
 
     @Override
@@ -125,8 +120,6 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject<Diffe
                 this.geneDifferentialExpressionMetaAnalysisId.hashCode() );
         return result;
     }
-
-
 
     public Long getGeneDifferentialExpressionMetaAnalysisId() {
         return this.geneDifferentialExpressionMetaAnalysisId;

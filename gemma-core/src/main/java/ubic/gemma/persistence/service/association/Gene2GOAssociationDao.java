@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,28 +35,24 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
     @Override
     Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
 
+    @Override
+    Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
+
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
     Collection<VocabCharacteristic> findByGene( Gene gene );
 
     Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> needToFind );
 
-    Collection<Gene> findByGoTerm( java.lang.String goId );
-
-    Collection<Gene> findByGoTerm( java.lang.String goId, Taxon taxon );
-
-    Collection<Gene> findByGOTerm( Collection<String> goTerms, Taxon taxon );
+    Collection<Gene> findByGoTerm( String goId, Taxon taxon );
 
     Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch );
 
-    @Override
-    Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
-
+    @SuppressWarnings("unused")
+        // Ensures consistency
     Collection<Gene> getGenes( Collection<String> ids );
 
     Collection<Gene> getGenes( Collection<String> ids, Taxon taxon );
-
-    Map<String, Collection<Gene>> getSets( Collection<String> uris );
 
     void removeAll();
 

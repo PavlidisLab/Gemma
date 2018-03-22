@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,9 +54,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      * With a continuous covariate only
      */
     @Test
-    public void testAncovaContinuousCovariate() throws Exception {
+    public void testAncovaContinuousCovariate() {
 
-        configureMocks();
+        this.configureMocks();
 
         /*
          * Add a continuous factor
@@ -65,21 +65,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         experimentalFactorC.setName( "confabulatiliationity" );
         experimentalFactorC.setId( 5399424551L );
         experimentalFactorC.setType( FactorType.CONTINUOUS );
-        for ( int i = 1; i <= 8; i++ ) {
-
-            FactorValue factorValueC = FactorValue.Factory.newInstance();
-            factorValueC.setId( 2000L + i );
-
-            factorValueC.setMeasurement(
-                    Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i, PrimitiveType.DOUBLE ) );
-
-            factorValueC.setExperimentalFactor( experimentalFactorC );
-
-            assert !biomaterials.get( i - 1 ).getFactorValues().contains( factorValueC );
-            super.biomaterials.get( i - 1 ).getFactorValues().add( factorValueC );
-
-            experimentalFactorC.getFactorValues().add( factorValueC );
-        }
+        this.setupFactorValues( experimentalFactorC );
 
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().clear(); // leave off the others.
 
@@ -116,9 +102,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      * With a continuous covariate + two categorical
      */
     @Test
-    public void testAncovaCovariate() throws Exception {
+    public void testAncovaCovariate() {
 
-        configureMocks();
+        this.configureMocks();
 
         /*
          * Add a continuous factor
@@ -127,21 +113,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         experimentalFactorC.setName( "confabulatiliationity" );
         experimentalFactorC.setId( 5399424551L );
         experimentalFactorC.setType( FactorType.CONTINUOUS );
-        for ( int i = 1; i <= 8; i++ ) {
-
-            FactorValue factorValueC = FactorValue.Factory.newInstance();
-            factorValueC.setId( 2000L + i );
-
-            factorValueC.setMeasurement(
-                    Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i, PrimitiveType.DOUBLE ) );
-
-            factorValueC.setExperimentalFactor( experimentalFactorC );
-
-            assert !biomaterials.get( i - 1 ).getFactorValues().contains( factorValueC );
-            super.biomaterials.get( i - 1 ).getFactorValues().add( factorValueC );
-
-            experimentalFactorC.getFactorValues().add( factorValueC );
-        }
+        this.setupFactorValues( experimentalFactorC );
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
@@ -164,9 +136,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-                DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-                CompositeSequence probe = probeAnalysisResult.getProbe();
-                Double pvalue = probeAnalysisResult.getPvalue();
+                CompositeSequence probe = r.getProbe();
+                Double pvalue = r.getPvalue();
 
                 assertNotNull( probe );
 
@@ -178,14 +149,18 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 if ( f.equals( super.experimentalFactorA_Area ) ) {
 
-                    if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.8673, pvalue, 0.001 );
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 4.062e-09, pvalue, 1e-10 );
-                    } else if ( probe.getName().equals( "probe_4" ) ) {
-                        // too few samples
-                        assertEquals( null, pvalue );
-                        // assertEquals( null, stat );
+                    switch ( probe.getName() ) {
+                        case "probe_98":
+                            assertEquals( 0.8673, pvalue, 0.001 );
+                            break;
+                        case "probe_10":
+                            assertEquals( 4.062e-09, pvalue, 1e-10 );
+                            break;
+                        case "probe_4":
+                            // too few samples
+                            assertEquals( null, pvalue );
+                            // assertEquals( null, stat );
+                            break;
                     }
 
                 } else if ( f.equals( super.experimentalFactorB ) ) {
@@ -211,9 +186,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      * Two fixed-level parameters, one of which has three levels
      */
     @Test
-    public void testAncovaTriLevel() throws Exception {
+    public void testAncovaTriLevel() {
 
-        configureMocks();
+        this.configureMocks();
 
         /*
          * Add a factor with three levels (same one used in onewayanovaanalyzertest)
@@ -274,9 +249,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-                DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-                CompositeSequence probe = probeAnalysisResult.getProbe();
-                Double pvalue = probeAnalysisResult.getPvalue();
+                CompositeSequence probe = r.getProbe();
+                Double pvalue = r.getPvalue();
                 if ( f.equals( super.experimentalFactorA_Area ) ) {
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.8060, pvalue, 0.001 );
@@ -287,8 +261,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                     found3 = true;
                 }
 
-                Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-                Double stat = null;
+                Collection<ContrastResult> contrasts = r.getContrasts();
+                Double stat;
                 if ( contrasts.isEmpty() ) {
                     continue;
                 }
@@ -333,9 +307,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      * Two fixed-level parameters
      */
     @Test
-    public void testAncovaTwoway() throws Exception {
+    public void testAncovaTwoway() {
 
-        configureMocks();
+        this.configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( super.experimentalFactors );
@@ -362,7 +336,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                 Double pvalue = probeAnalysisResult.getPvalue();
 
                 Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-                Double stat = null;
+                Double stat;
                 if ( contrasts.isEmpty() ) {
                     continue;
                 }
@@ -376,15 +350,20 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                 ExperimentalFactor f = factors.iterator().next();
 
                 if ( f.equals( super.experimentalFactorA_Area ) ) {
-                    if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.8572, pvalue, 0.001 );
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 4.69e-11, pvalue, 1e-12 );
-                    } else if ( probe.getName().equals( "probe_4" ) ) {
-                        assertEquals( 0.0048, pvalue, 0.0001 );
-                        assertNotNull( stat );
-                        assertEquals( -125.746, stat, 0.001 );
-                        assertEquals( 0.00506, contrasts.iterator().next().getPvalue(), 0.0001 ); // factor1a
+                    switch ( probe.getName() ) {
+                        case "probe_98":
+                            assertEquals( 0.8572, pvalue, 0.001 );
+                            break;
+                        case "probe_10":
+                            assertEquals( 4.69e-11, pvalue, 1e-12 );
+                            break;
+                        case "probe_4":
+                            assertEquals( 0.0048, pvalue, 0.0001 );
+                            assertNotNull( stat );
+                            assertEquals( -125.746, stat, 0.001 );
+                            assertEquals( 0.00506, contrasts.iterator().next().getPvalue(), 0.0001 ); // factor1a
+
+                            break;
                     }
 
                 } else {
@@ -403,9 +382,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      * Two factors with interactions.
      */
     @Test
-    public void testAncovaWithInteraction() throws Exception {
+    public void testAncovaWithInteraction() {
 
-        configureMocks();
+        this.configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
@@ -428,14 +407,13 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-                DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-                CompositeSequence probe = probeAnalysisResult.getProbe();
-                Double pvalue = probeAnalysisResult.getPvalue();
+                CompositeSequence probe = r.getProbe();
+                Double pvalue = r.getPvalue();
 
                 assertNotNull( probe );
 
-                Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-                Double stat = null;
+                Collection<ContrastResult> contrasts = r.getContrasts();
+                Double stat;
                 if ( contrasts.isEmpty() ) {
                     continue;
                 }
@@ -445,12 +423,16 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                 if ( factors.size() == 2 ) { // interaction
                     foundInteractions = true;
 
-                    if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.7893, pvalue, 0.001 );
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 0.04514, pvalue, 0.0001 );
-                    } else if ( probe.getName().equals( "probe_4" ) ) {
-                        assertEquals( null, pvalue );
+                    switch ( probe.getName() ) {
+                        case "probe_98":
+                            assertEquals( 0.7893, pvalue, 0.001 );
+                            break;
+                        case "probe_10":
+                            assertEquals( 0.04514, pvalue, 0.0001 );
+                            break;
+                        case "probe_4":
+                            assertEquals( null, pvalue );
+                            break;
                     }
 
                 } else {
@@ -460,20 +442,25 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                     assertNotNull( f );
 
                     if ( f.equals( super.experimentalFactorA_Area ) ) {
-                        if ( probe.getName().equals( "probe_98" ) ) {
-                            assertEquals( 0.8769, pvalue, 0.001 );
-                        } else if ( probe.getName().equals( "probe_10" ) ) {
-                            assertEquals( 5.158e-10, pvalue, 1e-12 );
-                        } else if ( probe.getName().equals( "probe_4" ) ) {
-                            assertEquals( 0.0048, pvalue, 0.0001 );
-                            assertNotNull( stat );
-                            assertEquals( -125.746, stat, 0.001 );
-                        } else if ( probe.getName().equals( "probe_0" ) ) {
-                            assertEquals( 1, probeAnalysisResult.getContrasts().size() );
-                            ContrastResult contrast = probeAnalysisResult.getContrasts().iterator().next();
-                            assertEquals( super.factorValueA1, contrast.getFactorValue() );
-                            assertEquals( -202.5587, contrast.getLogFoldChange(), 0.001 );
-                            foundContrast = true;
+                        switch ( probe.getName() ) {
+                            case "probe_98":
+                                assertEquals( 0.8769, pvalue, 0.001 );
+                                break;
+                            case "probe_10":
+                                assertEquals( 5.158e-10, pvalue, 1e-12 );
+                                break;
+                            case "probe_4":
+                                assertEquals( 0.0048, pvalue, 0.0001 );
+                                assertNotNull( stat );
+                                assertEquals( -125.746, stat, 0.001 );
+                                break;
+                            case "probe_0":
+                                assertEquals( 1, r.getContrasts().size() );
+                                ContrastResult contrast = r.getContrasts().iterator().next();
+                                assertEquals( super.factorValueA1, contrast.getFactorValue() );
+                                assertEquals( -202.5587, contrast.getLogFoldChange(), 0.001 );
+                                foundContrast = true;
+                                break;
                         }
 
                     } else {
@@ -492,13 +479,30 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         assertTrue( foundContrast );
     }
 
-    @Override
-    protected void configureMocks() throws Exception {
+    private void configureMocks() {
 
-        configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper( 1 );
 
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 
+    }
+
+    private void setupFactorValues( ExperimentalFactor experimentalFactorC ) {
+        for ( int i = 1; i <= 8; i++ ) {
+
+            FactorValue factorValueC = FactorValue.Factory.newInstance();
+            factorValueC.setId( 2000L + i );
+
+            factorValueC.setMeasurement(
+                    Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "" + i, PrimitiveType.DOUBLE ) );
+
+            factorValueC.setExperimentalFactor( experimentalFactorC );
+
+            assert !biomaterials.get( i - 1 ).getFactorValues().contains( factorValueC );
+            super.biomaterials.get( i - 1 ).getFactorValues().add( factorValueC );
+
+            experimentalFactorC.getFactorValues().add( factorValueC );
+        }
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public class GeoReplication {
     private ReplicationType type;
     private String description = "";
@@ -41,14 +42,15 @@ public class GeoReplication {
      * @return replication type
      */
     public static ReplicationType convertStringToRepeatType( String string ) {
-        if ( string.equals( "biological Replicate" ) ) {
-            return ReplicationType.biologicalReplicate;
-        } else if ( string.equals( "technical replicate - extract" ) ) {
-            return ReplicationType.technicalReplicateExtract;
-        } else if ( string.equals( "technical replicate - labeled extract" ) ) {
-            return ReplicationType.technicalReplicateLabeledExtract;
-        } else {
-            throw new IllegalArgumentException( "Unknown replication type " + string );
+        switch ( string ) {
+            case "biological Replicate":
+                return ReplicationType.biologicalReplicate;
+            case "technical replicate - extract":
+                return ReplicationType.technicalReplicateExtract;
+            case "technical replicate - labeled extract":
+                return ReplicationType.technicalReplicateLabeledExtract;
+            default:
+                throw new IllegalArgumentException( "Unknown replication type " + string );
         }
     }
 

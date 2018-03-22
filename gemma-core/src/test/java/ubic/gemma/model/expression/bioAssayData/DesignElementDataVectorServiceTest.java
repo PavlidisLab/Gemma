@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneService;
@@ -29,21 +28,13 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -57,21 +48,13 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
     protected GeoService geoService;
     @Autowired
     ExpressionExperimentService expressionExperimentService;
-    ExpressionExperiment newee = null;
-    DesignElementDataVector dedv;
     @Autowired
     ArrayDesignService arrayDesignService;
-
     @Autowired
     CompositeSequenceService compositeSequenceService;
-
     @Autowired
     GeneService geneService;
-
-    @Before
-    public void setup() {
-        dedv = RawExpressionDataVector.Factory.newInstance();
-    }
+    private ExpressionExperiment newee = null;
 
     @After
     public void tearDown() {
@@ -79,7 +62,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
             if ( newee != null && newee.getId() != null ) {
                 expressionExperimentService.remove( newee );
             }
-        } catch ( Exception e ) {
+        } catch ( Exception ignored ) {
 
         }
 
@@ -91,8 +74,8 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         try {
 
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse432Short" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE432", false, true, false, false );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse432Short" ) ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE432", false, true, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -104,10 +87,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
         newee = this.expressionExperimentService.thawLite( newee );
 
-        DesignElementDataVectorService dedvs = this.getBean( DesignElementDataVectorService.class );
-
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        ees.add( newee );
+        RawExpressionDataVectorService rawService = this.getBean( RawExpressionDataVectorService.class );
 
         QuantitationType qt = null;
         for ( QuantitationType q : newee.getQuantitationTypes() ) {
@@ -119,48 +99,10 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( "QT is null", qt );
 
-        Collection<? extends DesignElementDataVector> preferredVectors = dedvs.find( qt );
+        Collection<? extends DesignElementDataVector> preferredVectors = rawService.findRawAndProcessed( qt );
 
         assertNotNull( preferredVectors );
         assertEquals( 40, preferredVectors.size() );
-    }
-
-    /**
-     * Fill in some fake genes associated with the test ee's array design.
-     *
-     * @return genes
-     */
-    protected Collection<Gene> getGeneAssociatedWithEe() {
-        int i = 0;
-        ArrayDesign ad = newee.getBioAssays().iterator().next().getArrayDesignUsed();
-        Taxon taxon = taxonService.findByCommonName( "mouse" );
-        ad = this.arrayDesignService.thawLite( ad );
-        Collection<Gene> genes = new HashSet<Gene>();
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            if ( i >= 10 )
-                break;
-            Gene g = this.getTestPersistentGene();
-            g = geneService.thaw( g );
-            BlatAssociation blata = BlatAssociation.Factory.newInstance();
-            blata.setGeneProduct( g.getProducts().iterator().next() );
-            BlatResult br = BlatResult.Factory.newInstance();
-            BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs == null ) {
-                bs = BioSequence.Factory.newInstance();
-                bs.setName( RandomStringUtils.random( 10 ) );
-                bs.setTaxon( taxon );
-                bs = ( BioSequence ) persisterHelper.persist( bs );
-                cs.setBiologicalCharacteristic( bs );
-                compositeSequenceService.update( cs );
-            }
-
-            br.setQuerySequence( bs );
-            blata.setBlatResult( br );
-            blata.setBioSequence( bs );
-            persisterHelper.persist( blata );
-            genes.add( g );
-        }
-        return genes;
     }
 
 }

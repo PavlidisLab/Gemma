@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.genome.gene;
 
-public abstract class Multifunctionality implements java.io.Serializable {
+public class Multifunctionality implements java.io.Serializable {
 
     private static final long serialVersionUID = 1842256912459855071L;
     private Double score;
@@ -32,21 +32,6 @@ public abstract class Multifunctionality implements java.io.Serializable {
      * @author Paul
      */
     public Multifunctionality() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof Multifunctionality ) ) {
-            return false;
-        }
-        final Multifunctionality that = ( Multifunctionality ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public Long getId() {
@@ -103,13 +88,25 @@ public abstract class Multifunctionality implements java.io.Serializable {
     }
 
     @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof Multifunctionality ) ) {
+            return false;
+        }
+        final Multifunctionality that = ( Multifunctionality ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
+    @Override
     public String toString() {
         return String.format( "terms=%d score=%.2f rank=%.3f", this.numGoTerms, this.score, this.rank );
     }
 
     public static final class Factory {
         public static Multifunctionality newInstance() {
-            return new MultifunctionalityImpl();
+            return new Multifunctionality();
         }
     }
 

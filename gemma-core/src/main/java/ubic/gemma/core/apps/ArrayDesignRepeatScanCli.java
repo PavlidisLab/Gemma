@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -43,8 +45,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     public static void main( String[] args ) {
         ArrayDesignRepeatScanCli p = new ArrayDesignRepeatScanCli();
-        tryDoWorkNoExit( p, args );
-
+        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
     }
 
     @Override
@@ -52,88 +53,13 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         return GemmaCLI.CommandGroup.PLATFORM;
     }
 
-    @Override
-    public String getCommandName() {
-        return "platformRepeatScan";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Run RepeatMasker on sequences for an Array design";
-    }
-
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
         Option fileOption = OptionBuilder.hasArg().withArgName( ".out file" )
-                .withDescription( "Repeatscan file to use as input" ).withLongOpt( "file" ).create( 'f' );
-        addOption( fileOption );
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-        Exception exception = processCommandLine( args );
-        if ( exception != null )
-            return exception;
-
-        bsService = this.getBean( BioSequenceService.class );
-
-        Date skipIfLastRunLaterThan = getLimitingDate();
-
-        if ( !this.arrayDesignsToProcess.isEmpty() ) {
-            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
-
-                if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
-                    log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
-                    return null;
-                }
-
-                arrayDesign = unlazifyArrayDesign( arrayDesign );
-
-                processArrayDesign( arrayDesign );
-            }
-        } else if ( skipIfLastRunLaterThan != null ) {
-            log.warn( "*** Running Repeatmasker for all Array designs *** " );
-
-            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
-            for ( ArrayDesign design : allArrayDesigns ) {
-
-                if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
-                    log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                    // not really an error, but nice to get notification.
-                    errorObjects
-                            .add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
-                    continue;
-                }
-
-                if ( isSubsumedOrMerged( design ) ) {
-                    log.warn( design + " is subsumed or merged into another design, it will not be run." );
-                    // not really an error, but nice to get notification.
-                    errorObjects
-                            .add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-                    continue;
-                }
-
-                log.info( "============== Start processing: " + design + " ==================" );
-                try {
-                    design = arrayDesignService.thaw( design );
-                    processArrayDesign( design );
-                    successObjects.add( design.getName() );
-                    audit( design, "" );
-                } catch ( Exception e ) {
-                    errorObjects.add( design + ": " + e.getMessage() );
-                    log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-                    log.error( e, e );
-                }
-
-            }
-            summarizeProcessing();
-        } else {
-            bail( ErrorCode.MISSING_ARGUMENT );
-        }
-
-        return null;
+                .withDescription( "RepeatScan file to use as input" ).withLongOpt( "file" ).create( 'f' );
+        this.addOption( fileOption );
     }
 
     @Override
@@ -144,13 +70,89 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         }
     }
 
+    @Override
+    public String getCommandName() {
+        return "platformRepeatScan";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception exception = this.processCommandLine( args );
+        if ( exception != null )
+            return exception;
+
+        bsService = this.getBean( BioSequenceService.class );
+
+        Date skipIfLastRunLaterThan = this.getLimitingDate();
+
+        if ( !this.arrayDesignsToProcess.isEmpty() ) {
+            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+
+                if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
+                    AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                    return null;
+                }
+
+                arrayDesign = this.thaw( arrayDesign );
+
+                this.processArrayDesign( arrayDesign );
+            }
+        } else if ( skipIfLastRunLaterThan != null ) {
+            AbstractCLI.log.warn( "*** Running Repeatmasker for all Array designs *** " );
+
+            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+            for ( ArrayDesign design : allArrayDesigns ) {
+
+                if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
+                    AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                    // not really an error, but nice to get notification.
+                    errorObjects
+                            .add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+                    continue;
+                }
+
+                if ( this.isSubsumedOrMerged( design ) ) {
+                    AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run." );
+                    // not really an error, but nice to get notification.
+                    errorObjects
+                            .add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+                    continue;
+                }
+
+                AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
+                try {
+                    design = arrayDesignService.thaw( design );
+                    this.processArrayDesign( design );
+                    successObjects.add( design.getName() );
+                    this.audit( design, "" );
+                } catch ( Exception e ) {
+                    errorObjects.add( design + ": " + e.getMessage() );
+                    AbstractCLI.log
+                            .error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+                    AbstractCLI.log.error( e, e );
+                }
+
+            }
+            this.summarizeProcessing();
+        } else {
+            this.bail( ErrorCode.MISSING_ARGUMENT );
+        }
+
+        return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Run RepeatMasker on sequences for an Array design";
+    }
+
     private void audit( ArrayDesign arrayDesign, String note ) {
         AuditEventType eventType = ArrayDesignRepeatAnalysisEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
     private void processArrayDesign( ArrayDesign design ) {
-        ArrayDesign thawed = unlazifyArrayDesign( design );
+        ArrayDesign thawed = this.thaw( design );
 
         // no taxon is passed to this method so all sequences will be retrieved even for multi taxon arrays
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentServiceImpl.getSequences( thawed );
@@ -163,15 +165,15 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
             altered = scanner.repeatScan( sequences );
         }
 
-        log.info( "Saving..." );
+        AbstractCLI.log.info( "Saving..." );
         bsService.update( altered );
         if ( this.inputFileName != null ) {
-            audit( thawed,
+            this.audit( thawed,
                     "Repeat scan data from file: " + inputFileName + ", updated " + altered.size() + " sequences." );
         } else {
-            audit( thawed, "Repeat scan done, updated " + altered.size() + " sequences." );
+            this.audit( thawed, "Repeat scan done, updated " + altered.size() + " sequences." );
         }
-        log.info( "Done with " + thawed );
+        AbstractCLI.log.info( "Done with " + thawed );
     }
 
 }

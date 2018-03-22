@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -56,22 +58,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     public static void main( String[] args ) {
         ArrayDesignBlatCli p = new ArrayDesignBlatCli();
-        tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
     }
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
-    }
-
-    @Override
-    public String getCommandName() {
-        return "blatPlatform";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
     }
 
     @SuppressWarnings("static-access")
@@ -94,19 +86,58 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 "Taxon common name (e.g., human); if platform name not given (analysis will be restricted to sequences on that platform for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .create( 't' );
 
-        addOption( taxonOption );
-        addThreadsOption();
-        addOption( blatScoreThresholdOption );
-        addOption( blatResultOption );
+        this.addOption( taxonOption );
+        this.addThreadsOption();
+        this.addOption( blatScoreThresholdOption );
+        this.addOption( blatResultOption );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        if ( this.hasOption( "sensitive" ) ) {
+            this.sensitive = true;
+        }
+
+        if ( this.hasOption( 'b' ) ) {
+            this.blatResultFile = this.getOptionValue( 'b' );
+        }
+
+        if ( this.hasOption( AbstractCLI.THREADS_OPTION ) ) {
+            this.numThreads = this.getIntegerOptionValue( "threads" );
+        }
+
+        if ( this.hasOption( 's' ) ) {
+            this.blatScoreThreshold = this.getDoubleOptionValue( 's' );
+        }
+
+        TaxonService taxonService = this.getBean( TaxonService.class );
+
+        if ( this.hasOption( 't' ) ) {
+            String taxonName = this.getOptionValue( 't' );
+            this.taxon = taxonService.findByCommonName( taxonName );
+            if ( taxon == null ) {
+                throw new IllegalArgumentException( "No taxon named " + taxonName );
+            }
+        }
+
+        arrayDesignSequenceAlignmentService = this.getBean( ArrayDesignSequenceAlignmentService.class );
+
+    }
+
+    @Override
+    public String getCommandName() {
+        return "blatPlatform";
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
+        Exception err = this.processCommandLine( args );
         if ( err != null )
             return err;
 
-        final Date skipIfLastRunLaterThan = getLimitingDate();
+        final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( !this.arrayDesignsToProcess.isEmpty() ) {
 
@@ -116,33 +147,33 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             }
 
             for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
-                if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                    log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                    AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
                     return null;
                 }
 
-                arrayDesign = unlazifyArrayDesign( arrayDesign );
+                arrayDesign = this.thaw( arrayDesign );
                 Collection<BlatResult> persistedResults;
                 try {
                     if ( this.blatResultFile != null ) {
-                        Collection<BlatResult> blatResults = getBlatResultsFromFile( arrayDesign );
+                        Collection<BlatResult> blatResults = this.getBlatResultsFromFile( arrayDesign );
 
                         if ( blatResults == null || blatResults.size() == 0 ) {
                             throw new IllegalStateException( "No blat results in file!" );
                         }
 
-                        log.info( "Got " + blatResults.size() + " blat records" );
+                        AbstractCLI.log.info( "Got " + blatResults.size() + " blat records" );
                         persistedResults = arrayDesignSequenceAlignmentService
                                 .processArrayDesign( arrayDesign, taxon, blatResults );
-                        audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
+                        this.audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
                     } else {
                         // Run blat from scratch.
                         persistedResults = arrayDesignSequenceAlignmentService
                                 .processArrayDesign( arrayDesign, this.sensitive );
-                        audit( arrayDesign, "Based on a fresh alignment analysis; BLAT score threshold was "
+                        this.audit( arrayDesign, "Based on a fresh alignment analysis; BLAT score threshold was "
                                 + this.blatScoreThreshold + "; sensitive mode was " + this.sensitive );
                     }
-                    log.info( "Persisted " + persistedResults.size() + " results" );
+                    AbstractCLI.log.info( "Persisted " + persistedResults.size() + " results" );
                 } catch ( IOException e ) {
                     this.errorObjects.add( e );
                 }
@@ -151,8 +182,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         } else if ( taxon != null ) {
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.findByTaxon( taxon );
-            log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** [" + allArrayDesigns
-                    .size() + " items]" );
+            AbstractCLI.log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
+                    + allArrayDesigns.size() + " items]" );
 
             final SecurityContext context = SecurityContextHolder.getContext();
 
@@ -172,15 +203,15 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
                     x = arrayDesignService.thaw( x );
 
-                    processArrayDesign( skipIfLastRunLaterThan, x );
+                    ArrayDesignBlatCli.this.processArrayDesign( skipIfLastRunLaterThan, x );
 
                 }
             }
 
-            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
             arrayDesigns.addAll( allArrayDesigns );
 
-            Collection<Thread> threads = new ArrayList<Thread>();
+            Collection<Thread> threads = new ArrayList<>();
             for ( int i = 0; i < this.numThreads; i++ ) {
                 Consumer c1 = new BlatCliConsumer( arrayDesigns );
                 Thread k = new Thread( c1 );
@@ -188,52 +219,23 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 k.start();
             }
 
-            waitForThreadPoolCompletion( threads );
+            this.waitForThreadPoolCompletion( threads );
 
             /*
              * All done
              */
-            summarizeProcessing();
+            this.summarizeProcessing();
 
         } else {
-            bail( ErrorCode.MISSING_ARGUMENT );
+            this.bail( ErrorCode.MISSING_ARGUMENT );
         }
 
         return null;
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-
-        if ( hasOption( "sensitive" ) ) {
-            this.sensitive = true;
-        }
-
-        if ( hasOption( 'b' ) ) {
-            this.blatResultFile = this.getOptionValue( 'b' );
-        }
-
-        if ( hasOption( THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( "threads" );
-        }
-
-        if ( hasOption( 's' ) ) {
-            this.blatScoreThreshold = this.getDoubleOptionValue( 's' );
-        }
-
-        TaxonService taxonService = this.getBean( TaxonService.class );
-
-        if ( this.hasOption( 't' ) ) {
-            String taxonName = this.getOptionValue( 't' );
-            this.taxon = taxonService.findByCommonName( taxonName );
-            if ( taxon == null ) {
-                throw new IllegalArgumentException( "No taxon named " + taxonName );
-            }
-        }
-
-        arrayDesignSequenceAlignmentService = this.getBean( ArrayDesignSequenceAlignmentService.class );
-
+    public String getShortDesc() {
+        return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
@@ -249,13 +251,13 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         Taxon arrayDesignTaxon;
         File f = new File( blatResultFile );
         if ( !f.canRead() ) {
-            log.error( "Cannot read from " + blatResultFile );
-            bail( ErrorCode.INVALID_OPTION );
+            AbstractCLI.log.error( "Cannot read from " + blatResultFile );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         // check being running for just one taxon
         arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );
 
-        log.info( "Reading blat results in from " + f.getAbsolutePath() );
+        AbstractCLI.log.info( "Reading blat results in from " + f.getAbsolutePath() );
         BlatResultParser parser = new BlatResultParser();
         parser.setScoreThreshold( this.blatScoreThreshold );
         parser.setTaxon( arrayDesignTaxon );
@@ -264,30 +266,30 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
-            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+        if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
+            AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
             // not really an error, but nice to get notification.
             errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
             return;
         }
 
-        if ( isSubsumedOrMerged( design ) ) {
-            log.warn( design + " is subsumed or merged into another design, it will not be run." );
+        if ( this.isSubsumedOrMerged( design ) ) {
+            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run." );
             // not really an error, but nice to get notification.
             errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
             return;
         }
 
-        log.info( "============== Start processing: " + design + " ==================" );
+        AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
         try {
-            // thaw is already done.
+            // thawRawAndProcessed is already done.
             arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
             successObjects.add( design.getName() );
-            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
+            this.audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
         } catch ( Exception e ) {
             errorObjects.add( design + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            log.error( e, e );
+            AbstractCLI.log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            AbstractCLI.log.error( e, e );
         }
     }
 

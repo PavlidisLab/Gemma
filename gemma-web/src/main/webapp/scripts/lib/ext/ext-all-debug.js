@@ -20044,7 +20044,7 @@ Ext.slider.MultiSlider = Ext.extend(Ext.BoxComponent, {
                     this.moveThumb(i, this.translateValue(v), false);
                 }
             }
-        };
+        }
     },
 
     
@@ -30287,8 +30287,7 @@ Ext.list.ListView = Ext.extend(Ext.DataView, {
                     '</dl>',
                 '</tpl>'
             );
-        };
-
+        }
         var cs = this.columns,
             allocatedWidth = 0,
             colsWithWidth = 0,
@@ -34695,7 +34694,7 @@ Ext.tree.DefaultSelectionModel = Ext.extend(Ext.util.Observable, {
                      this.select(s.parentNode, e);
                  }
              break;
-        };
+        }
     }
 });
 
@@ -42877,9 +42876,7 @@ Ext.form.CheckboxGroup = Ext.extend(Ext.form.Field, {
                         cc.defaults = Ext.apply(cc.defaults || {}, this.defaults);
                     }
                     cols.push(cc);
-                };
-
-                
+                }
                 if(this.vertical){
                     var rows = Math.ceil(this.items.length / numCols), ri = 0;
                     for(var i=0, len=this.items.length; i<len; i++){
@@ -42890,7 +42887,7 @@ Ext.form.CheckboxGroup = Ext.extend(Ext.form.Field, {
                             this.items[i].hideLabel = false;
                         }
                         cols[ri].items.push(this.items[i]);
-                    };
+                    }
                 }else{
                     for(var i=0, len=this.items.length; i<len; i++){
                         var ci = i % numCols;
@@ -42898,7 +42895,7 @@ Ext.form.CheckboxGroup = Ext.extend(Ext.form.Field, {
                             this.items[i].hideLabel = false;
                         }
                         cols[ci].items.push(this.items[i]);
-                    };
+                    }
                 }
 
                 Ext.apply(panelCfg, {
@@ -46799,15 +46796,14 @@ Ext.grid.PivotGrid = Ext.extend(Ext.grid.GridPanel, {
                 dimensions : this.leftAxis || [],
                 store      : this.store
             }));
-        };
-        
+        }
         if (!(this.topAxis instanceof PivotAxis)) {
             this.setTopAxis(new PivotAxis({
                 orientation: 'horizontal',
                 dimensions : this.topAxis || [],
                 store      : this.store
             }));
-        };
+        }
     },
     
     
@@ -49019,7 +49015,7 @@ Ext.grid.PivotGridView = Ext.extend(Ext.grid.GridView, {
     
     
     getColumnHeaders: function() {
-        return this.grid.topAxis.buildHeaders();;
+        return this.grid.topAxis.buildHeaders();
     },
     
     

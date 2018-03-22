@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,20 +58,11 @@ import static org.junit.Assert.*;
  */
 public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTest {
 
+    private final Collection<Gene> genesZebra = new HashSet<>();
     @Autowired
     private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService;
-
-    private Collection<Gene2GeneProteinAssociation> geneAssociationRat = null;
-
-    private Collection<Gene2GeneProteinAssociation> geneAssociationZebra = null;
-
     @Autowired
     private GeneService geneService = null;
-
-    private Collection<Gene> genesRat = new HashSet<Gene>();
-
-    private Collection<Gene> genesZebra = new HashSet<Gene>();
-
     private Taxon rat = null;
     private StringProteinInteractionLoader stringBiomartGene2GeneProteinAssociationLoader = null;
 
@@ -84,7 +75,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
      * @return taxa
      */
     public Collection<Taxon> getTaxonToProcess() {
-        taxa = new ArrayList<Taxon>();
+        taxa = new ArrayList<>();
 
         zebraFish = Taxon.Factory.newInstance();
         zebraFish.setIsGenesUsable( true );
@@ -108,26 +99,28 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     public void getTestPeristentGenesRat() {
 
-        genesRat = new ArrayList<Gene>();
+        //noinspection MismatchedQueryAndUpdateOfCollection
+        Collection<Gene> genesRat = new ArrayList<>();
 
-        Gene geneRatOne = makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "679739" );
+        Gene geneRatOne = this.makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "679739" );
         genesRat.add( geneRatOne );
 
-        Gene geneRatTwo = makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "297433" );
+        Gene geneRatTwo = this.makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "297433" );
         genesRat.add( geneRatTwo );
-        Gene geneRatThree = makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "399475" );
+        Gene geneRatThree = this.makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "399475" );
         genesRat.add( geneRatThree );
 
-        genesRat.add( makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "123445" ) );
-        genesRat.add( makeGene( rat, "FOO2", "85494" ) );
-        genesRat.add( makeGene( rat, "FOO3", "252899" ) );
+        genesRat.add( this.makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "123445" ) );
+        genesRat.add( this.makeGene( rat, "FOO2", "85494" ) );
+        genesRat.add( this.makeGene( rat, "FOO3", "252899" ) );
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
                 .newInstance( geneRatOne, geneRatThree, null, null, null );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationTwo = Gene2GeneProteinAssociation.Factory
                 .newInstance( geneRatOne, geneRatTwo, null, null, null );
 
-        geneAssociationRat = new ArrayList<Gene2GeneProteinAssociation>();
+        //noinspection MismatchedQueryAndUpdateOfCollection
+        Collection<Gene2GeneProteinAssociation> geneAssociationRat = new ArrayList<>();
         geneAssociationRat.add( existingGene2GeneProteinAssociationTwo );
         geneAssociationRat.add( existingGene2GeneProteinAssociationOne );
 
@@ -135,13 +128,13 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     public void getTestPeristentGenesZebra() {
 
-        Gene geneZebraOne = makeGene( zebraFish, "zgc.153184", "751652" );
-        Gene geneZebraTwo = makeGene( zebraFish, "appl1", "571540" );
-        Gene geneZebraThree = makeGene( zebraFish, "LOC568371", "568371" );
-        Gene geneZebraFour = makeGene( zebraFish, "TESTGENE", "30425" );
-        Gene geneZebraFive = makeGene( zebraFish, "TESTGENE2", "503936" );
+        Gene geneZebraOne = this.makeGene( zebraFish, "zgc.153184", "751652" );
+        Gene geneZebraTwo = this.makeGene( zebraFish, "appl1", "571540" );
+        Gene geneZebraThree = this.makeGene( zebraFish, "LOC568371", "568371" );
+        Gene geneZebraFour = this.makeGene( zebraFish, "TESTGENE", "30425" );
+        Gene geneZebraFive = this.makeGene( zebraFish, "TESTGENE2", "503936" );
 
-        genesZebra.add( makeGene( zebraFish, "FOO1", "562059" ) );
+        genesZebra.add( this.makeGene( zebraFish, "FOO1", "562059" ) );
 
         genesZebra.add( geneZebraOne );
 
@@ -156,24 +149,11 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationTwo = Gene2GeneProteinAssociation.Factory
                 .newInstance( geneZebraOne, geneZebraTwo, null, null, null );
 
-        geneAssociationZebra = new ArrayList<Gene2GeneProteinAssociation>();
+        //noinspection MismatchedQueryAndUpdateOfCollection
+        Collection<Gene2GeneProteinAssociation> geneAssociationZebra = new ArrayList<>();
         geneAssociationZebra.add( existingGene2GeneProteinAssociationTwo );
         geneAssociationZebra.add( existingGene2GeneProteinAssociationOne );
 
-    }
-
-    private Gene makeGene( Taxon t, String name, String ncbiId ) {
-        Gene g = Gene.Factory.newInstance();
-        g.setName( name );
-        g.setOfficialName( name );
-        g.setOfficialSymbol( name );
-        g.setNcbiGeneId( Integer.parseInt( ncbiId ) );
-        g.setTaxon( t );
-        Collection<GeneProduct> ggg = new HashSet<GeneProduct>();
-        ggg.add( PersistentDummyObjectHelper.getTestNonPersistentGeneProduct( g ) );
-        g.getProducts().addAll( ggg );
-        g = ( Gene ) persisterHelper.persist( g );
-        return g;
     }
 
     @Before
@@ -185,12 +165,12 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         stringBiomartGene2GeneProteinAssociationLoader.setGeneService( geneService );
         stringBiomartGene2GeneProteinAssociationLoader.setExternalDatabaseService( super.externalDatabaseService );
 
-        taxa = getTaxonToProcess();
-        getTestPeristentGenesZebra();
-        getTestPeristentGenesRat();
+        taxa = this.getTaxonToProcess();
+        this.getTestPeristentGenesZebra();
+        this.getTestPeristentGenesRat();
 
         // make sure all the data is cleared out before starting
-        this.gene2GeneProteinAssociationService.deleteAll( gene2GeneProteinAssociationService.loadAll() );
+        this.gene2GeneProteinAssociationService.removeAll( gene2GeneProteinAssociationService.loadAll() );
         assertTrue( gene2GeneProteinAssociationService.loadAll().isEmpty() );
 
     }
@@ -207,7 +187,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         String fileNameStringZebra = "/data/loader/protein/biomart/biomartzebrafish.txt";
         URL fileNameBiomartZebraURL = this.getClass().getResource( fileNameStringZebra );
 
-        Collection<Taxon> taxaZebraFish = new ArrayList<Taxon>();
+        Collection<Taxon> taxaZebraFish = new ArrayList<>();
         taxaZebraFish.add( zebraFish );
 
         stringBiomartGene2GeneProteinAssociationLoader.load( new File( fileNameStringZebraFishURL.getFile() ), null,
@@ -231,7 +211,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
             }
         }
 
-        this.gene2GeneProteinAssociationService.deleteAll( associations );
+        this.gene2GeneProteinAssociationService.removeAll( associations );
         associations = gene2GeneProteinAssociationService.loadAll();
         assertTrue( associations.isEmpty() );
 
@@ -254,7 +234,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         try {
             stringBiomartGene2GeneProteinAssociationLoader
                     .load( new File( testPPisURL.getFile() ), null, new File( biomartTestfileURL.getFile() ),
-                            getTaxonToProcess() );
+                            this.getTaxonToProcess() );
         } catch ( ConnectException e ) {
             log.warn( "Connection error, skipping test" );
         } catch ( IOException e ) {
@@ -297,7 +277,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         // but make sure they get
         String fileNameStringZebraFish = "/data/loader/protein/string/protein.links.zebrafish.txt";
         URL fileNameStringZebraFishURL = this.getClass().getResource( fileNameStringZebraFish );
-        Collection<Taxon> taxaZebraFish = new ArrayList<Taxon>();
+        Collection<Taxon> taxaZebraFish = new ArrayList<>();
         taxaZebraFish.add( zebraFish );
 
         Collection<Gene2GeneProteinAssociation> associationsBefore = gene2GeneProteinAssociationService.loadAll();
@@ -317,10 +297,24 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
         assertEquals( 2, associations.size() );
 
-        this.gene2GeneProteinAssociationService.deleteAll( associations );
+        this.gene2GeneProteinAssociationService.removeAll( associations );
         associations = gene2GeneProteinAssociationService.loadAll();
         assertTrue( associations.isEmpty() );
 
+    }
+
+    private Gene makeGene( Taxon t, String name, String ncbiId ) {
+        Gene g = Gene.Factory.newInstance();
+        g.setName( name );
+        g.setOfficialName( name );
+        g.setOfficialSymbol( name );
+        g.setNcbiGeneId( Integer.parseInt( ncbiId ) );
+        g.setTaxon( t );
+        Collection<GeneProduct> ggg = new HashSet<>();
+        ggg.add( PersistentDummyObjectHelper.getTestNonPersistentGeneProduct( g ) );
+        g.getProducts().addAll( ggg );
+        g = ( Gene ) persisterHelper.persist( g );
+        return g;
     }
 
 }

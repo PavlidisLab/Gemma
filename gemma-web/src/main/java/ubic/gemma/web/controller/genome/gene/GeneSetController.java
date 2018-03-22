@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -76,7 +76,7 @@ public class GeneSetController {
         Collection<SessionBoundGeneSetValueObject> results = new HashSet<>();
 
         for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
-            results.add( addSessionGroup( gsvo, modificationBased ) );
+            results.add( this.addSessionGroup( gsvo, modificationBased ) );
 
         }
 
@@ -121,9 +121,9 @@ public class GeneSetController {
 
         }
 
-        result = create( result );
+        result = this.create( result );
 
-        result.addAll( addSessionGroups( sessionResult, true ) );
+        result.addAll( this.addSessionGroups( sessionResult, true ) );
 
         return result;
     }
@@ -164,7 +164,7 @@ public class GeneSetController {
                 throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
             }
 
-            results.add( create( geneSetVo ) );
+            results.add( this.create( geneSetVo ) );
 
         }
         return results;
@@ -240,7 +240,7 @@ public class GeneSetController {
 
         Collection<GeneSetValueObject> result = new ArrayList<>();
 
-        Collection<DatabaseBackedGeneSetValueObject> dbresult = getUsersGeneGroups( privateOnly, taxonId );
+        Collection<DatabaseBackedGeneSetValueObject> dbresult = this.getUsersGeneGroups( privateOnly, taxonId );
 
         Collection<SessionBoundGeneSetValueObject> sessionResult = sessionListManager.getAllGeneSets( taxonId );
 
@@ -336,8 +336,8 @@ public class GeneSetController {
             }
         }
 
-        sessionCollection = removeSessionGroups( sessionCollection );
-        databaseCollection = remove( databaseCollection );
+        sessionCollection = this.removeSessionGroups( sessionCollection );
+        databaseCollection = this.remove( databaseCollection );
 
         removedSets.addAll( sessionCollection );
         removedSets.addAll( databaseCollection );
@@ -347,7 +347,6 @@ public class GeneSetController {
 
     /**
      * If the current user has access to given gene group will return the gene ids in the gene group;
-     * FIXME do we use this?
      *
      * @param request request
      * @return model and view
@@ -357,7 +356,7 @@ public class GeneSetController {
 
         ModelAndView mav = new ModelAndView( "geneSet.detail" );
 
-        GeneSetValueObject geneSet = getGeneSetFromRequest( request );
+        GeneSetValueObject geneSet = this.getGeneSetFromRequest( request );
         mav.addObject( "geneSetId", geneSet.getId() );
         mav.addObject( "geneSetName", geneSet.getName() );
 
@@ -382,10 +381,9 @@ public class GeneSetController {
      *
      * @param groupId id of the gene set being updated
      * @param geneIds gene ids
-     * @return string
      */
-    public String updateMembers( Long groupId, Collection<Long> geneIds ) {
-        return geneSetService.updateDatabaseEntityMembers( groupId, geneIds );
+    public void updateMembers( Long groupId, Collection<Long> geneIds ) {
+        geneSetService.updateDatabaseEntityMembers( groupId, geneIds );
     }
 
     /**
@@ -446,8 +444,8 @@ public class GeneSetController {
             }
         }
 
-        sessionCollection = updateSessionGroups( sessionCollection );
-        databaseCollection = update( databaseCollection );
+        sessionCollection = this.updateSessionGroups( sessionCollection );
+        databaseCollection = this.update( databaseCollection );
 
         updatedSets.addAll( sessionCollection );
         updatedSets.addAll( databaseCollection );

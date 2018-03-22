@@ -46,7 +46,6 @@ import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -57,6 +56,8 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
 
@@ -105,8 +106,15 @@ public class DataUpdater {
 
     @Autowired
     private QuantitationTypeService qtService;
+
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     /**
      * For 3' arrays. This only works for single-platform experiments.
@@ -135,20 +143,20 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        experimentService.replaceVectors( ee, vectors );
+        experimentService.replaceRawVectors( ee, vectors );
 
-        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + ad, true );
+        this.audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + ad, true );
 
-        postprocess( ee );
+        this.postprocess( ee );
 
     }
 
-    public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee ) {
+    public void addAffyExonArrayData( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
             throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
         }
-        return addAffyExonArrayData( ee, ads.iterator().next() );
+        this.addAffyExonArrayData( ee, ads.iterator().next() );
     }
 
     /**
@@ -157,7 +165,8 @@ public class DataUpdater {
      * @param ee ee
      * @param ad ad
      */
-    public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public void addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
 
         RawDataFetcher f = new RawDataFetcher();
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
@@ -170,7 +179,7 @@ public class DataUpdater {
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
-        ArrayDesign targetPlatform = prepareTargetPlatformForExonArrays( primaryTaxon );
+        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( primaryTaxon );
 
         assert !targetPlatform.getCompositeSequences().isEmpty();
 
@@ -182,7 +191,7 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        ee = experimentService.replaceVectors( ee, vectors );
+        ee = experimentService.replaceRawVectors( ee, vectors );
 
         if ( !targetPlatform.equals( ad ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -191,10 +200,9 @@ public class DataUpdater {
                             + targetPlatform.getShortName() + ")" );
         }
 
-        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
+        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
 
-        postprocess( ee );
-        return ee;
+        this.postprocess( ee );
     }
 
     /**
@@ -219,7 +227,7 @@ public class DataUpdater {
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
-        ArrayDesign targetPlatform = prepareTargetPlatformForExonArrays( primaryTaxon );
+        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( primaryTaxon );
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
         Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, targetPlatform );
@@ -228,7 +236,7 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        experimentService.replaceVectors( ee, vectors );
+        experimentService.replaceRawVectors( ee, vectors );
 
         if ( !targetPlatform.equals( ad ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
@@ -237,9 +245,10 @@ public class DataUpdater {
                             + targetPlatform.getShortName() + ")" );
         }
 
-        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform, true );
+        this.audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform,
+                true );
 
-        postprocess( ee );
+        this.postprocess( ee );
 
     }
 
@@ -265,46 +274,46 @@ public class DataUpdater {
 
         ee = experimentService.thawLite( ee );
 
-        ee = dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
+        ee = this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
 
-        DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = matchElementsToRowNames( targetArrayDesign,
-                countMatrix );
-        matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
+        DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = this
+                .matchElementsToRowNames( targetArrayDesign, countMatrix );
+        this.matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
 
         assert !properCountMatrix.getColNames().isEmpty();
         assert !properCountMatrix.getRowNames().isEmpty();
 
-        QuantitationType countqt = makeCountQt();
+        QuantitationType countqt = this.makeCountQt();
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, countqt, properCountMatrix );
 
-        QuantitationType log2cpmQt = makelog2cpmQt();
+        QuantitationType log2cpmQt = this.makelog2cpmQt();
         DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
                 .convertToLog2Cpm( properCountMatrix, librarySize );
 
         ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmQt, log2cpmMatrix );
 
-        ee = replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
-        ee = addData( ee, targetArrayDesign, countEEMatrix );
+        ee = this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+        ee = this.addData( ee, targetArrayDesign, countEEMatrix );
 
-        addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
+        this.addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
 
         if ( rpkmMatrix != null ) {
 
-            DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = matchElementsToRowNames( targetArrayDesign,
-                    rpkmMatrix );
-            matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
+            DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = this
+                    .matchElementsToRowNames( targetArrayDesign, rpkmMatrix );
+            this.matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
 
             assert !properRPKMMatrix.getColNames().isEmpty();
             assert !properRPKMMatrix.getRowNames().isEmpty();
 
-            QuantitationType rpkmqt = makeRPKMQt();
+            QuantitationType rpkmqt = this.makeRPKMQt();
             ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, rpkmqt, properRPKMMatrix );
 
-            ee = addData( ee, targetArrayDesign, rpkmEEMatrix );
+            ee = this.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
-        assert !experimentService.getProcessedDataVectors( ee ).isEmpty();
+        assert !processedExpressionDataVectorService.getProcessedDataVectors( ee ).isEmpty();
     }
 
     /**
@@ -346,15 +355,15 @@ public class DataUpdater {
             }
         }
 
-        Collection<RawExpressionDataVector> vectors = makeNewVectors( ee, targetPlatform, data, qt );
+        Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "no vectors!" );
         }
 
-        ee = experimentService.addVectors( ee, vectors );
+        ee = experimentService.addRawVectors( ee, vectors );
 
-        audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
+        this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
 
         // debug code.
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -364,20 +373,21 @@ public class DataUpdater {
         experimentService.update( ee );
 
         if ( qt.getIsPreferred() ) {
-            log.info( "Postprocessing preferred data" );
-            ee = postprocess( ee );
+            DataUpdater.log.info( "Postprocessing preferred data" );
+            ee = this.postprocess( ee );
             assert ee.getNumberOfDataVectors() != null;
         }
 
         return ee;
     }
 
+    @SuppressWarnings("UnusedReturnValue") // Possible external use
     public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
-        return this.experimentService.removeData( ee, qt );
+        return this.experimentService.removeRawVectors( ee, qt );
     }
 
     /**
-     * For backfilling log2cpm when only counts are available. This wouldn't be used routinely, because new experiments
+     * For back filling log2cpm when only counts are available. This wouldn't be used routinely, because new experiments
      * get log2cpm computed when loaded.
      *
      * @param ee ee
@@ -388,13 +398,10 @@ public class DataUpdater {
 
         /*
          * Get the count data; Make sure it is currently preferred (so we don't do this twice by accident)
+         * We need to do this from the Raw data, not the data that has been normalized etc.
          */
-        Collection<DesignElementDataVector> counts = experimentService
-                .getDesignElementDataVectors( Collections.singleton( qt ) );
+        Collection<RawExpressionDataVector> counts = rawExpressionDataVectorService.find( qt );
         ExpressionDataDoubleMatrix countMatrix = new ExpressionDataDoubleMatrix( counts );
-
-        // We need to do this from the Raw data, not the data that has been normalized etc.
-        assert counts.iterator().next() instanceof RawExpressionDataVector;
 
         try {
             /*
@@ -404,7 +411,7 @@ public class DataUpdater {
             qtService.update( qt );
             ee = experimentService.thawLite( ee ); // so updated QT is attached.
 
-            QuantitationType log2cpmQt = makelog2cpmQt();
+            QuantitationType log2cpmQt = this.makelog2cpmQt();
             DoubleMatrix1D librarySize = MatrixStats.colSums( countMatrix.getMatrix() );
             DoubleMatrix<CompositeSequence, BioMaterial> log2cpmMatrix = MatrixStats
                     .convertToLog2Cpm( countMatrix.getMatrix(), librarySize );
@@ -418,9 +425,9 @@ public class DataUpdater {
             if ( platforms.size() > 1 )
                 throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
 
-            ee = addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
+            this.addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
         } catch ( Exception e ) {
-            log.error( e, e );
+            DataUpdater.log.error( e, e );
             // try to recover.
             qt.setIsPreferred( true );
             qtService.update( qt );
@@ -467,18 +474,18 @@ public class DataUpdater {
         QuantitationType qt = qts.iterator().next();
         qt.setIsPreferred( true );
 
-        Collection<RawExpressionDataVector> vectors = makeNewVectors( ee, targetPlatform, data, qt );
+        Collection<RawExpressionDataVector> vectors = this.makeNewVectors( ee, targetPlatform, data, qt );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "no vectors!" );
         }
 
         /*
-         * delete all analyses, etc.
+         * remove all analyses, etc.
          */
         analysisUtilService.deleteOldAnalyses( ee );
 
-        ee = experimentService.replaceVectors( ee, vectors );
+        ee = experimentService.replaceRawVectors( ee, vectors );
 
         // audit if we switched platforms.
         if ( !targetPlatform.equals( originalArrayDesign ) ) {
@@ -488,10 +495,10 @@ public class DataUpdater {
                             .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
-        audit( ee, "Data vector replacement for " + targetPlatform, true );
+        this.audit( ee, "Data vector replacement for " + targetPlatform, true );
         experimentService.update( ee );
 
-        ee = postprocess( ee );
+        ee = this.postprocess( ee );
 
         assert ee.getNumberOfDataVectors() != null;
 
@@ -517,13 +524,14 @@ public class DataUpdater {
      * @param data           data
      * @return ee
      */
+    @SuppressWarnings("UnusedReturnValue") // Possible external use
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform, QuantitationType qt,
             DoubleMatrix<String, String> data ) {
         targetPlatform = this.arrayDesignService.thaw( targetPlatform );
         ee = this.experimentService.thawLite( ee );
 
-        DoubleMatrix<CompositeSequence, BioMaterial> rdata = matchElementsToRowNames( targetPlatform, data );
-        matchBioMaterialsToColNames( ee, data, rdata );
+        DoubleMatrix<CompositeSequence, BioMaterial> rdata = this.matchElementsToRowNames( targetPlatform, data );
+        this.matchBioMaterialsToColNames( ee, data, rdata );
         ExpressionDataDoubleMatrix eematrix = new ExpressionDataDoubleMatrix( ee, qt, rdata );
 
         return this.replaceData( ee, targetPlatform, eematrix );
@@ -533,6 +541,7 @@ public class DataUpdater {
      * @param ee ee
      * @return This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
      */
+    @SuppressWarnings("UnusedReturnValue") // Possible external use
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee ) {
 
         Collection<ArrayDesign> arrayDesignsUsed = this.experimentService.getArrayDesignsUsed( ee );
@@ -550,12 +559,8 @@ public class DataUpdater {
         qt = quantitationTypeService.create( qt );
 
         for ( ArrayDesign ad : arrayDesignsUsed ) {
-            log.info( "Processing data for " + ad );
+            DataUpdater.log.info( "Processing data for " + ad );
             String cdfFileName = this.findCdf( ad ).getAbsolutePath();
-
-            if ( cdfFileName == null ) {
-                throw new RuntimeException( "No CDF is locatable (or configured?) for " + ad );
-            }
 
             ad = arrayDesignService.thaw( ad );
 
@@ -568,14 +573,14 @@ public class DataUpdater {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
 
-        ee = experimentService.replaceVectors( ee, vectors );
-        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils
+        ee = experimentService.replaceRawVectors( ee, vectors );
+        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils
                 .join( arrayDesignsUsed, "; " ), true );
 
         if ( arrayDesignsUsed.size() == 1 ) {
-            postprocess( ee );
+            this.postprocess( ee );
         } else {
-            log.warn( "Skipping postprocessing for mult-platform experiment" );
+            DataUpdater.log.warn( "Skipping postprocessing for mult-platform experiment" );
         }
 
         return ee;
@@ -587,7 +592,7 @@ public class DataUpdater {
             Double[] col = countEEMatrix.getColumn( ba );
             double librarySize = DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
 
-            log.info( ba + " total library size=" + librarySize );
+            DataUpdater.log.info( ba + " total library size=" + librarySize );
 
             ba.setSequenceReadLength( readLength );
             ba.setSequencePairedReads( isPairedReads );
@@ -620,15 +625,13 @@ public class DataUpdater {
         if ( ee.getBioAssays().size() > countMatrix.columns() ) {
             if ( allowMissingSamples ) {
 
-                Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
+                Map<String, BioMaterial> bmMap = this.makeBioMaterialNameMap( ee );
                 List<BioAssay> usedBioAssays = new ArrayList<>();
-                List<BioMaterial> newColNames = new ArrayList<>();
                 for ( String colName : countMatrix.getColNames() ) {
                     BioMaterial bm = bmMap.get( colName );
                     if ( bm == null ) {
                         throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName );
                     }
-                    newColNames.add( bm );
                     usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
                 }
 
@@ -638,7 +641,7 @@ public class DataUpdater {
                 for ( BioAssay ba : ee.getBioAssays() ) {
                     if ( !usedBioAssays.contains( ba ) ) {
                         toRemove.add( ba );
-                        log.info( "Will remove unused bioassay from experiment: " + ba );
+                        DataUpdater.log.info( "Will remove unused bioassay from experiment: " + ba );
                     }
                 }
 
@@ -673,9 +676,9 @@ public class DataUpdater {
     }
 
     private File findCdf( ArrayDesign ad ) {
-        String affyCdfs = Settings.getString( AFFY_POWER_TOOLS_CDF_PATH );
+        String affyCdfs = Settings.getString( DataUpdater.AFFY_POWER_TOOLS_CDF_PATH );
 
-        Map<String, String> cdfNames = loadCdfNames();
+        Map<String, String> cdfNames = this.loadCdfNames();
 
         String shortName = ad.getShortName();
         String cdfName = cdfNames.get( shortName );
@@ -686,13 +689,12 @@ public class DataUpdater {
                             + "or specify via the -cdf option" );
         }
 
-        File f = new File( affyCdfs + File.separatorChar + cdfName );
-        return f;
+        return new File( affyCdfs + File.separatorChar + cdfName );
     }
 
     private Map<String, String> loadCdfNames() {
         try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CDFS_PROPERTIES_FILE_NAME );
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( DataUpdater.AFFY_CDFS_PROPERTIES_FILE_NAME );
             Map<String, String> result = new HashMap<>();
 
             for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
@@ -746,7 +748,7 @@ public class DataUpdater {
     }
 
     private QuantitationType makeCountQt() {
-        QuantitationType countqt = makeQt( false );
+        QuantitationType countqt = this.makeQt( false );
         countqt.setName( "Counts" );
         countqt.setType( StandardQuantitationType.COUNT );
         countqt.setScale( ScaleType.COUNT );
@@ -758,7 +760,7 @@ public class DataUpdater {
     }
 
     private QuantitationType makelog2cpmQt() {
-        QuantitationType qt = makeQt( true );
+        QuantitationType qt = this.makeQt( true );
         qt.setName( "log2cpm" );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -815,7 +817,7 @@ public class DataUpdater {
     private QuantitationType makeQt( boolean preferred ) {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setScale( ScaleType.LINEAR ); // FIXME check this is right for 3' arrays.
+        qt.setScale( ScaleType.LINEAR );
         qt.setIsBackground( false );
         qt.setIsRatio( false );
         qt.setIsBackgroundSubtracted( true );
@@ -829,7 +831,7 @@ public class DataUpdater {
     }
 
     private QuantitationType makeRPKMQt() {
-        QuantitationType rpkmqt = makeQt( false );
+        QuantitationType rpkmqt = this.makeQt( false );
         rpkmqt.setIsRatio( false );
         rpkmqt.setName( "RPKM" );
         rpkmqt.setIsPreferred( false );
@@ -844,9 +846,8 @@ public class DataUpdater {
             DoubleMatrix<CompositeSequence, BioMaterial> finalMatrix ) {
         // match column names to the samples. can have any order so be careful.
         List<String> colNames = rawMatrix.getColNames();
-        Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
+        Map<String, BioMaterial> bmMap = this.makeBioMaterialNameMap( ee );
 
-        List<BioAssay> usedBioAssays = new ArrayList<>();
         List<BioMaterial> newColNames = new ArrayList<>();
         for ( String colName : colNames ) {
             BioMaterial bm = bmMap.get( colName );
@@ -856,7 +857,6 @@ public class DataUpdater {
                                 + StringUtils.join( bmMap.keySet(), "\n" ) );
             }
             newColNames.add( bm );
-            usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
         }
 
         finalMatrix.setColumnNames( newColNames );
@@ -888,10 +888,10 @@ public class DataUpdater {
                  */
                 failedMatch++;
                 if ( timesWarned < 20 ) {
-                    log.warn( "No platform match to element named: " + rowName );
+                    DataUpdater.log.warn( "No platform match to element named: " + rowName );
                 }
                 if ( timesWarned == 20 ) {
-                    log.warn( "Further warnings suppressed" );
+                    DataUpdater.log.warn( "Further warnings suppressed" );
                 }
                 timesWarned++;
                 continue;
@@ -905,7 +905,7 @@ public class DataUpdater {
         }
         DoubleMatrix<CompositeSequence, BioMaterial> finalMatrix;
         if ( failedMatch > 0 ) {
-            log.warn( failedMatch + "/" + rawMatrix.rows()
+            DataUpdater.log.warn( failedMatch + "/" + rawMatrix.rows()
                     + " elements could not be matched to the platform. Lines that did not match will be ignored." );
             DoubleMatrix<String, String> useableData = rawMatrix.subsetRows( usableRowNames );
             finalMatrix = new DenseDoubleMatrix<>( useableData.getRawMatrix() );
@@ -928,7 +928,7 @@ public class DataUpdater {
             ee = preprocessorService.process( ee );
             assert ee.getNumberOfDataVectors() != null;
         } catch ( PreprocessingException e ) {
-            log.error( "Error during postprocessing", e );
+            DataUpdater.log.error( "Error during postprocessing", e );
         }
         return ee;
     }
@@ -972,10 +972,10 @@ public class DataUpdater {
                 geoService.addElements( targetPlatform );
             }
         } else {
-            log.warn(
-                    "The target platform " + targetPlatformAcc + " could not be found in the system. Loading it ..." );
+            DataUpdater.log.warn( "The target platform " + targetPlatformAcc
+                    + " could not be found in the system. Loading it ..." );
 
-            Collection<?> r = geoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );
+            Collection<?> r = geoService.fetchAndLoad( targetPlatformAcc, true, false, false );
 
             if ( r.isEmpty() )
                 throw new IllegalStateException( "Loading target platform failed." );

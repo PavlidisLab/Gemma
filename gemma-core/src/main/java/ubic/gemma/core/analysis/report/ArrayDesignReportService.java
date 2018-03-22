@@ -1,8 +1,8 @@
 /*
  * The Gemma_sec1 project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 package ubic.gemma.core.analysis.report;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 import java.util.Collection;
@@ -27,6 +26,7 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface ArrayDesignReportService {
 
     /**
@@ -43,7 +43,7 @@ public interface ArrayDesignReportService {
     @Secured({ "GROUP_AGENT" })
     void generateArrayDesignReport( ArrayDesignValueObject adVo );
 
-    @Secured( { "GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT" })
     ArrayDesignValueObject generateArrayDesignReport( Long id );
 
     ArrayDesignValueObject getSummaryObject( Long id );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,22 +18,19 @@
  */
 package ubic.gemma.core.job;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 /**
  * @author paul
- *
  */
-public class TaskUtils {
+class TaskUtils {
 
     private static final int KEY_LENGTH = 16;
-
-    private static Set<String> usedIds = new HashSet<String>();
-
-    private static int MAX_ATTEMPTS = 1000;
+    private static final int MAX_ATTEMPTS = 1000;
+    private static final Set<String> usedIds = new HashSet<>();
 
     /**
      * @return a unique (since the JVM was started) task id.
@@ -43,10 +40,10 @@ public class TaskUtils {
          * Ensure we have a unique id.
          */
         int keepTrying = 0;
-        while ( ++keepTrying < MAX_ATTEMPTS ) {
-            String id = RandomStringUtils.randomAlphanumeric( KEY_LENGTH ).toUpperCase();
-            if ( usedIds.isEmpty() || !usedIds.contains( id ) ) {
-                usedIds.add( id );
+        while ( ++keepTrying < TaskUtils.MAX_ATTEMPTS ) {
+            String id = RandomStringUtils.randomAlphanumeric( TaskUtils.KEY_LENGTH ).toUpperCase();
+            if ( TaskUtils.usedIds.isEmpty() || !TaskUtils.usedIds.contains( id ) ) {
+                TaskUtils.usedIds.add( id );
                 return id;
             }
         }
@@ -54,7 +51,8 @@ public class TaskUtils {
         /*
          * Just in case ...
          */
-        throw new IllegalStateException( "Failed to find a unique task id in " + MAX_ATTEMPTS + " iterations" );
+        throw new IllegalStateException(
+                "Failed to find a unique task id in " + TaskUtils.MAX_ATTEMPTS + " iterations" );
     }
 
 }

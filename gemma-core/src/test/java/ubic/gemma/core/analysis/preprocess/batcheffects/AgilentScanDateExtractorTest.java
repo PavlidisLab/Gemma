@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,26 +19,26 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests of parsing various flat file formats used for Agilent slides (and possibly other types)
- * 
- * @author paul
  *
+ * @author paul
  */
 public class AgilentScanDateExtractorTest {
 
     @Test
     public void testExtractGPR() throws Exception {
-        try (InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM393974.gpr.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/rawdata/GSM393974.gpr.txt" )) {
             AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
 
             Date actual = extractor.extract( is );
@@ -52,7 +52,8 @@ public class AgilentScanDateExtractorTest {
 
     @Test
     public void testExtractAgilent() throws Exception {
-        try (InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM361301.agilent.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/rawdata/GSM361301.agilent.txt" )) {
             AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
 
             Date actual = extractor.extract( is );
@@ -63,10 +64,11 @@ public class AgilentScanDateExtractorTest {
             assertEquals( expected, actual );
         }
     }
-    
+
     @Test
     public void testExtractAgilent2() throws Exception {
-        try (InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM1662306.agilent2.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/rawdata/GSM1662306.agilent2.txt" )) {
             AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
 
             Date actual = extractor.extract( is );

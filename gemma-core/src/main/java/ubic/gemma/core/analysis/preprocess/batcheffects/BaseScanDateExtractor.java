@@ -39,8 +39,8 @@ import java.util.regex.Pattern;
 public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
     protected static final String GENEPIX_DATETIME_HEADER_REGEXP = "\"?DateTime=.*";
-    private static final String STANDARD_FORMAT_REGEX_2 = ".+?([0-9]{2}[\\/-][0-9]{2}[\\/-]\\s[0-9]\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+";
-    private static final String STANDARD_FORMAT_REGEX = ".+?([0-9]{2}[\\/-][0-9]{2}[\\/-][0-9]{2}\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+";
+    private static final String STANDARD_FORMAT_REGEX_2 = ".+?([0-9]{2}[/-][0-9]{2}[/-]\\s[0-9]\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+";
+    private static final String STANDARD_FORMAT_REGEX = ".+?([0-9]{2}[/-][0-9]{2}[/-][0-9]{2}\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+";
     private static final String LONG_FORMAT_REGEX = "\\s*Date\\s*(.+)";
     private static final Log log = LogFactory.getLog( BaseScanDateExtractor.class );
 
@@ -60,8 +60,8 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         Date d = null;
         while ( ( line = reader.readLine() ) != null ) {
 
-            if ( line.matches( GENEPIX_DATETIME_HEADER_REGEXP ) ) {
-                d = parseGenePixDateTime( line );
+            if ( line.matches( BaseScanDateExtractor.GENEPIX_DATETIME_HEADER_REGEXP ) ) {
+                d = this.parseGenePixDateTime( line );
                 break;
             }
         }
@@ -120,11 +120,10 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
      * @return date
      */
     protected Date parseLongFormat( String string ) {
-        // // FIXME time-zone dependent.
         try {
             DateFormat f = new SimpleDateFormat( "EEE MMM dd HH:mm:ss zzz yyyy" );
 
-            Pattern regex = Pattern.compile( LONG_FORMAT_REGEX );
+            Pattern regex = Pattern.compile( BaseScanDateExtractor.LONG_FORMAT_REGEX );
 
             Matcher matcher = regex.matcher( string );
             if ( matcher.matches() ) {
@@ -148,7 +147,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         try {
             DateFormat f = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
 
-            Pattern regex = Pattern.compile( STANDARD_FORMAT_REGEX );
+            Pattern regex = Pattern.compile( BaseScanDateExtractor.STANDARD_FORMAT_REGEX );
 
             Matcher matcher = regex.matcher( string );
             if ( matcher.matches() ) {
@@ -160,13 +159,14 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
              * For some reason, it is common to get things like "08/26/ 3 12:30:45" - I infer that is supposed to be a
              * 03.
              */
-            Pattern regex2 = Pattern.compile( STANDARD_FORMAT_REGEX_2 );
+            Pattern regex2 = Pattern.compile( BaseScanDateExtractor.STANDARD_FORMAT_REGEX_2 );
             matcher = regex2.matcher( string );
             if ( matcher.matches() ) {
                 String tok = matcher.group( 1 );
                 tok = tok.replaceFirst( "\\s", "0" );
                 Date d = f.parse( tok );
-                log.warn( "Year was partly missing from date line: " + string + ", inferred " + d );
+                BaseScanDateExtractor.log
+                        .warn( "Year was partly missing from date line: " + string + ", inferred " + d );
                 return d;
             }
 

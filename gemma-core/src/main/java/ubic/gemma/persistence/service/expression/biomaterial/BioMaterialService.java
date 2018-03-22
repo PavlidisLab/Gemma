@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,7 +32,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-@Service
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
 
     /**
@@ -41,10 +40,6 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     BioMaterial copy( BioMaterial bioMaterial );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    BioMaterial create( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
@@ -56,8 +51,13 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     BioMaterial findOrCreate( BioMaterial bioMaterial );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment getExpressionExperiment( Long id );
+    @Override
+    @Secured({ "GROUP_USER" })
+    BioMaterial create( BioMaterial bioMaterial );
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<BioMaterial> load( Collection<Long> ids );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -68,18 +68,8 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     Collection<BioMaterial> loadAll();
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> load( Collection<Long> ids );
-
-    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( BioMaterial bioMaterial );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
-    void thaw( BioMaterial bioMaterial );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
     /**
      * Updates the given biomaterial to the database.
@@ -87,6 +77,15 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioMaterial bioMaterial );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment getExpressionExperiment( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
+    void thaw( BioMaterial bioMaterial );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
     /**
      * Update the biomaterials that are described by the given valueObjects. This is used to update experimental designs

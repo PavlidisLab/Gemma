@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -28,12 +28,12 @@ import java.util.concurrent.Callable;
  */
 public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
-    private Task<T, ?> task;
+    private final Task<T, ?> task;
+    private final String taskId;
+    private final TaskCommand taskCommand;
     // Does not survive serialization.
     private transient TaskLifecycleHandler statusCallback;
     private transient ProgressUpdateAppender progressAppender;
-    private String taskId;
-    private TaskCommand taskCommand;
     private Throwable taskExecutionException;
 
     public ExecutingTask( Task<T, ?> task, TaskCommand taskCommand ) {
@@ -44,8 +44,8 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public final T call() throws Exception {
-        setup();
+    public final T call() {
+        this.setup();
         // From here we are running as user who submitted the task.
 
         statusCallback.onStart();
@@ -57,7 +57,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
             statusCallback.onFailure( e );
             taskExecutionException = e;
         } finally {
-            cleanup();
+            this.cleanup();
         }
         // SecurityContext is cleared at this point.
 
@@ -88,16 +88,15 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
     private void setup() {
         progressAppender.initialize();
 
-        SecurityContextHolder.setContext( taskCommand.getSecurityContext() ); // TODO: one idea is to have
-        // SecurityContextAwareExecutorClass.
+        SecurityContextHolder.setContext( taskCommand.getSecurityContext() );
     }
 
     // These hooks are used to update status of the running task.
     public interface TaskLifecycleHandler {
-        public void onFailure( Throwable e );
+        void onFailure( Throwable e );
 
-        public void onFinish();
+        void onFinish();
 
-        public void onStart();
+        void onStart();
     }
 }

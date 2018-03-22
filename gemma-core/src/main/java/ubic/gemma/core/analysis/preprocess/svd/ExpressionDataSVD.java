@@ -50,7 +50,6 @@ import java.util.List;
  * V matrix columns are the <em>eigengenes</em>. See also http://genome-www.stanford.edu/SVD/.
  * Because SVD can't be done on a matrix with missing values, values are imputed. Rows with no variance are removed, and
  * rows with too many missing values are also removed (MIN_PRESENT_FRACTION_FOR_ROW)
- * FIXME this also includes SVD-based normalization algorithms which might best be refactored out.
  *
  * @author paul
  */
@@ -58,7 +57,7 @@ import java.util.List;
 public class ExpressionDataSVD {
 
     private static final double MIN_PRESENT_FRACTION_FOR_ROW = 0.75;
-    DenseDoubleMatrix2D missingValueInfo; // fixme use booleans
+    DenseDoubleMatrix2D missingValueInfo;
     SingularValueDecomposition<CompositeSequence, BioMaterial> svd;
     private ExpressionDataDoubleMatrix expressionData;
     private boolean normalized = false;
@@ -96,7 +95,7 @@ public class ExpressionDataSVD {
          * Now filter rows.
          */
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
-        rowMissingFilter.setMinPresentFraction( MIN_PRESENT_FRACTION_FOR_ROW );
+        rowMissingFilter.setMinPresentFraction( ExpressionDataSVD.MIN_PRESENT_FRACTION_FOR_ROW );
         this.expressionData = rowMissingFilter.filter( this.expressionData );
 
         /*
@@ -123,7 +122,7 @@ public class ExpressionDataSVD {
         assert matrix.getRowNames().size() > 0;
         assert matrix.getColNames().size() > 0;
 
-        imputeMissing( matrix );
+        this.imputeMissing( matrix );
 
         if ( normalizeMatrix ) {
             matrix = MatrixStats.doubleStandardize( matrix );
@@ -177,7 +176,7 @@ public class ExpressionDataSVD {
      * @return the ith eigengene (column of V)
      */
     public Double[] getEigenGene( int i ) {
-        return getV().getColObj( i );
+        return this.getV().getColObj( i );
     }
 
     /**
@@ -185,7 +184,7 @@ public class ExpressionDataSVD {
      * @return the ith eigensample (column of U)
      */
     public Double[] getEigenSample( int i ) {
-        return getU().getColObj( i );
+        return this.getU().getColObj( i );
     }
 
     /**
@@ -362,23 +361,6 @@ public class ExpressionDataSVD {
                 return this.norm.compareTo( o.norm );
             }
 
-            @Override
-            public boolean equals( Object obj ) {
-                if ( this == obj )
-                    return true;
-                if ( obj == null )
-                    return false;
-                if ( getClass() != obj.getClass() )
-                    return false;
-                NormCmp other = ( NormCmp ) obj;
-                if ( norm == null ) {
-                    if ( other.norm != null )
-                        return false;
-                } else if ( !norm.equals( other.norm ) )
-                    return false;
-                return true;
-            }
-
             public int getRowIndex() {
                 return rowIndex;
             }
@@ -389,6 +371,21 @@ public class ExpressionDataSVD {
                 int result = 1;
                 result = prime * result + ( ( norm == null ) ? 0 : norm.hashCode() );
                 return result;
+            }
+
+            @Override
+            public boolean equals( Object obj ) {
+                if ( this == obj )
+                    return true;
+                if ( obj == null )
+                    return false;
+                if ( this.getClass() != obj.getClass() )
+                    return false;
+                NormCmp other = ( NormCmp ) obj;
+                if ( norm == null ) {
+                    return other.norm == null;
+                } else
+                    return norm.equals( other.norm );
             }
 
         }
@@ -415,7 +412,7 @@ public class ExpressionDataSVD {
             keepers.add( d );
         }
 
-        // / remove genes which are near the origin in SVD space. FIXME: make sure the missing values are still masked.
+        // remove genes which are near the origin in SVD space. FIXME: make sure the missing values are still masked.
         return new ExpressionDataDoubleMatrix( this.expressionData, keepers );
 
     }

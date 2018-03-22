@@ -43,7 +43,7 @@ import java.util.Map;
  *
  * @author ldonnison
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class BiomartEnsemblNcbiFetcher {
 
     public final static String BIOMARTPATH = "protein.biomart.remotepath";

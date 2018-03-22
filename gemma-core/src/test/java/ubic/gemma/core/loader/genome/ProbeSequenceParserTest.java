@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,29 +18,28 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import java.io.InputStream;
-
 import junit.framework.TestCase;
+
+import java.io.InputStream;
 
 /**
  * @author paul
- *
  */
 public class ProbeSequenceParserTest extends TestCase {
 
     public void testParseInputStream() throws Exception {
         ProbeSequenceParser p = new ProbeSequenceParser();
-        try (InputStream i = this.getClass().getResourceAsStream( "/data/loader/genome/probesequence.test.txt" );) {
+        try (InputStream i = this.getClass().getResourceAsStream( "/data/loader/genome/probesequence.test.txt" )) {
             p.parse( i );
         }
-        assertNotNull( p.get( "117" ) );
-        assertEquals( "GE59978", p.get( "117" ).getName() );
-        assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "117" ).getSequence() );
-        assertEquals( 9, p.getResults().size() );
+        TestCase.assertNotNull( p.get( "117" ) );
+        TestCase.assertEquals( "GE59978", p.get( "117" ).getName() );
+        TestCase.assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "117" ).getSequence() );
+        TestCase.assertEquals( 9, p.getResults().size() );
 
-        assertEquals( "GE59979", p.get( "118" ).getName() );
-        assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "118" ).getSequence() );
-        assertEquals( 9, p.getResults().size() );
+        TestCase.assertEquals( "GE59979", p.get( "118" ).getName() );
+        TestCase.assertEquals( "ATGGGTGCTTATTGGTATTGTCTCCTGGGG", p.get( "118" ).getSequence() );
+        TestCase.assertEquals( 9, p.getResults().size() );
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,14 +46,6 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
 
     @Override
     @Secured({ "GROUP_USER" })
-    void remove( Taxon taxon );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Taxon taxon );
-
-    @Override
-    @Secured({ "GROUP_USER" })
     void remove( Collection<Taxon> entities );
 
     @Override
@@ -62,7 +54,15 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
 
     @Override
     @Secured({ "GROUP_USER" })
+    void remove( Taxon taxon );
+
+    @Override
+    @Secured({ "GROUP_USER" })
     void update( Collection<Taxon> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Taxon taxon );
 
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
@@ -90,11 +90,6 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
      * @return List of taxa with array designs in gemma
      */
     Collection<TaxonValueObject> getTaxaWithArrays();
-
-    /**
-     * @return Taxon that are on NeuroCarta evidence
-     */
-    Collection<Taxon> loadTaxonWithEvidence();
 
     void thaw( Taxon taxon );
 }

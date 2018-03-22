@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,11 +29,20 @@ import java.util.Collection;
 /**
  * @author kelsey
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface BlatAssociationService extends BaseService<BlatAssociation> {
 
     @Override
     @Secured({ "GROUP_USER" })
     BlatAssociation create( BlatAssociation blatAssociation );
+
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( BlatAssociation blatAssociation );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( BlatAssociation blatAssociation );
 
     Collection<BlatAssociation> find( BioSequence bioSequence );
 
@@ -42,13 +51,5 @@ public interface BlatAssociationService extends BaseService<BlatAssociation> {
     void thaw( Collection<BlatAssociation> blatAssociations );
 
     void thaw( BlatAssociation blatAssociation );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( BlatAssociation blatAssociation );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( BlatAssociation blatAssociation );
 
 }

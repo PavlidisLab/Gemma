@@ -32,6 +32,7 @@ import java.util.Map;
 /**
  * @author paul
  */
+@SuppressWarnings("unused") // Possible external use
 public interface ExpressionDataFileService {
 
     String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
@@ -59,9 +60,8 @@ public interface ExpressionDataFileService {
      * Delete any existing coexpression, data, or differential expression data files.
      *
      * @param ee the experiment
-     * @throws IOException when there was a problem during write
      */
-    void deleteAllFiles( ExpressionExperiment ee ) throws IOException;
+    void deleteAllFiles( ExpressionExperiment ee );
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
@@ -114,6 +114,8 @@ public interface ExpressionDataFileService {
      * @param filtered fitlered?
      * @return file
      */
+    @SuppressWarnings("UnusedReturnValue")
+    // Possible external use
     File writeDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException;
 
@@ -178,7 +180,7 @@ public interface ExpressionDataFileService {
 
     File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
 
-    void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) throws IOException;
+    void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
 
     /**
      * Writes to the configured gemma.appdata.home

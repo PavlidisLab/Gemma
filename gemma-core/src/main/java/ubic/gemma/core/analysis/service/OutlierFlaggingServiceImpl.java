@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,7 @@ import java.util.Collection;
 public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipulatingService
         implements OutlierFlaggingService {
 
-    private static Log log = LogFactory.getLog( OutlierFlaggingServiceImpl.class );
+    private static final Log log = LogFactory.getLog( OutlierFlaggingServiceImpl.class );
 
     @Autowired
     private BioAssayService bioAssayService;
@@ -61,6 +61,44 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
 
     @Autowired
     private PreprocessorService preprocessorService;
+
+    @Override
+    public void markAsMissing( Collection<BioAssay> bioAssays ) {
+
+        if ( bioAssays == null || bioAssays.size() == 0 )
+            return;
+
+        boolean hasNewOutliers = false;
+
+        /*
+         * FIXME: if there are two (or more) platforms, make sure we flag all bioassays that use the same biomaterial.
+         * However, we are intending to turn all multiplatform datasets into single platform ones
+         */
+        for ( BioAssay ba : bioAssays ) {
+            if ( ba.getIsOutlier() ) {
+                continue;
+            }
+            hasNewOutliers = true;
+            ba.setIsOutlier( true );
+            bioAssayService.update( ba );
+            this.audit( ba, "Sample " + ba.getName() + " marked as missing data." );
+        }
+
+        if ( !hasNewOutliers ) {
+            System.out.println( "No new outliers." );
+            return;
+        }
+        ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(),
+                bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
+
+        try {
+            preprocessorService.process( expExp );
+        } catch ( PreprocessingException e ) {
+            OutlierFlaggingServiceImpl.log
+                    .error( "Error during postprocessing, make sure additional steps are completed", e );
+        }
+    }
 
     @Override
     public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
@@ -94,44 +132,8 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
         try {
             preprocessorService.process( expExp );
         } catch ( PreprocessingException e ) {
-            log.error( "Error during postprocessing, make sure additional steps are completed", e );
-        }
-    }
-
-    @Override
-    public void markAsMissing( Collection<BioAssay> bioAssays ) {
-
-        if ( bioAssays == null || bioAssays.size() == 0 )
-            return;
-
-        boolean hasNewOutliers = false;
-
-        /*
-         * FIXME: if there are two (or more) platforms, make sure we flag all bioassays that use the same biomaterial.
-         * However, we are intending to turn all multiplatform datasets into single platform ones
-         */
-        for ( BioAssay ba : bioAssays ) {
-            if ( ba.getIsOutlier() ) {
-                continue;
-            }
-            hasNewOutliers = true;
-            ba.setIsOutlier( true );
-            bioAssayService.update( ba );
-            audit( ba, "Sample " + ba.getName() + " marked as missing data." );
-        }
-
-        if ( !hasNewOutliers ) {
-            System.out.println( "No new outliers." );
-            return;
-        }
-        ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(),
-                bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
-
-        try {
-            preprocessorService.process( expExp );
-        } catch ( PreprocessingException e ) {
-            log.error( "Error during postprocessing, make sure additional steps are completed", e );
+            OutlierFlaggingServiceImpl.log
+                    .error( "Error during postprocessing, make sure additional steps are completed", e );
         }
     }
 

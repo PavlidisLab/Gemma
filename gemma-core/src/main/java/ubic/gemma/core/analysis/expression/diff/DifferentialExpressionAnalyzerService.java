@@ -23,6 +23,7 @@ import java.util.Collection;
 /**
  * @author Paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface DifferentialExpressionAnalyzerService {
 
     /**

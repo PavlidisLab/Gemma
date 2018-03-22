@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.persistence.Transient;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -86,6 +87,7 @@ public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.S
         this.factorValues = factorValues;
     }
 
+    @Transient
     @Override
     public Securable getSecurityOwner() {
         return null;

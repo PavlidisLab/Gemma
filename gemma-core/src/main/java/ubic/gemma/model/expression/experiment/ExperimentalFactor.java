@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import gemma.gsec.model.SecuredChild;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 
+import javax.persistence.Transient;
 import java.util.Collection;
 
 /**
@@ -62,10 +63,10 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
 
         ExperimentalFactor other = ( ExperimentalFactor ) obj;
 
-        if ( getId() == null ) {
+        if ( this.getId() == null ) {
             if ( other.getId() != null )
                 return false;
-        } else if ( !getId().equals( other.getId() ) )
+        } else if ( !this.getId().equals( other.getId() ) )
             return false;
 
         if ( this.getCategory() == null ) {
@@ -74,19 +75,17 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
         } else if ( !this.getCategory().equals( other.getCategory() ) )
             return false;
 
-        if ( getName() == null ) {
+        if ( this.getName() == null ) {
             if ( other.getName() != null )
                 return false;
-        } else if ( !getName().equals( other.getName() ) )
+        } else if ( !this.getName().equals( other.getName() ) )
             return false;
 
         if ( this.getDescription() == null ) {
-            if ( other.getDescription() != null )
-                return false;
-        } else if ( !getDescription().equals( other.getDescription() ) )
-            return false;
+            return other.getDescription() == null;
+        } else
+            return this.getDescription().equals( other.getDescription() );
 
-        return true;
     }
 
     @Override
@@ -102,6 +101,7 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
         return result;
     }
 
+    @Transient
     @Override
     public Securable getSecurityOwner() {
         return this.securityOwner;

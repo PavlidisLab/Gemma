@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,17 +23,13 @@ import org.aspectj.lang.annotation.Pointcut;
 
 /**
  * General-purpose pointcuts to recognize CRUD operations etc.
- * 
- * @author paul
+ * For help with expressions see http://static.springsource.org/spring/docs/2.5.x/reference/aop.html#6.2.3.4
  *
+ * @author paul
  */
+@SuppressWarnings({ "EmptyMethod", "unused" }) // Expected
 @Aspect
 public class SystemArchitectureAspect {
-
-    /*
-     * 
-     * For help with expressions see http://static.springsource.org/spring/docs/2.5.x/reference/aop.html#6.2.3.4
-     */
 
     /**
      * Methods that create new objects in the persistent store
@@ -70,6 +66,7 @@ public class SystemArchitectureAspect {
     /**
      * Encompasses the 'web' packages
      */
+    @SuppressWarnings("Annotator") // Because it is in a different project
     @Pointcut("within(ubic.gemma.web..*)")
     public void inWebLayer() {
     }
@@ -82,11 +79,11 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * Create, remove or update methods - with the exception of @Services flagged as @Infrastructure TODO can remove
+     * Create, remove or update methods - with the exception of @Services flagged as @Infrastructure
      * that, probably.
      */
     @Pointcut(" ubic.gemma.core.util.SystemArchitectureAspect.creator() || ubic.gemma.core.util.SystemArchitectureAspect.updater() || ubic.gemma.core.util.SystemArchitectureAspect.deleter( )")
-    public void modifier() {//
+    public void modifier() {
     }
 
     /**
@@ -97,7 +94,7 @@ public class SystemArchitectureAspect {
         /*
          * Important document:
          * http://forum.springsource.org/showthread.php?28525-Difference-between-target-and-within-in-Spring-AOP
-         * 
+         *
          * Using @target makes a proxy out of everything, which causes problems if services aren't implementing
          * interfaces -- seems for InitializingBeans in particular. @within doesn't work, at least for the ACLs.
          */
@@ -118,7 +115,7 @@ public class SystemArchitectureAspect {
      * Methods that update items in the persistent store
      */
     @Pointcut("ubic.gemma.core.util.SystemArchitectureAspect.daoMethod() && execution(* update(..))")
-    public void updater() {//
+    public void updater() {
     }
 
 }

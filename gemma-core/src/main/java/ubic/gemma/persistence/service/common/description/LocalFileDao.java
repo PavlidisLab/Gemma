@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import java.net.URL;
-
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -27,24 +25,11 @@ import ubic.gemma.persistence.service.BaseDao;
  * @see LocalFile
  */
 public interface LocalFileDao extends BaseDao<LocalFile> {
-    /**
-     * 
-     */
-    public LocalFile find( LocalFile localFile );
 
-    /**
-     * 
-     */
-    public LocalFile findByLocalURL( URL url, Long size );
+    @Override
+    LocalFile find( LocalFile localFile );
 
-    /**
-     * 
-     */
-    public LocalFile findByRemoteURL( URL url, Long size );
-
-    /**
-     * 
-     */
-    public LocalFile findOrCreate( LocalFile localFile );
+    @Override
+    LocalFile findOrCreate( LocalFile localFile );
 
 }

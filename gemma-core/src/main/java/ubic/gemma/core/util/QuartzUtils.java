@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,25 +24,24 @@ import org.quartz.impl.StdScheduler;
 
 /**
  * @author keshav
- *
  */
 public class QuartzUtils {
-    private static Log log = LogFactory.getLog( QuartzUtils.class );
+    private static final Log log = LogFactory.getLog( QuartzUtils.class );
 
     /**
      * Turn off a scheduler.
-     * 
-     * @param stdScheduler
+     *
+     * @param stdScheduler the scheduler
      */
     public static void disableQuartzScheduler( StdScheduler stdScheduler ) {
 
-        log.debug( "Shutting down quartz" );
+        QuartzUtils.log.debug( "Shutting down quartz" );
         try {
             stdScheduler.shutdown( true );
             if ( stdScheduler.isShutdown() ) {
-                log.debug( "Scheduler shutdown successful" );
+                QuartzUtils.log.debug( "Scheduler shutdown successful" );
             } else {
-                log.warn( "Scheduler could not be shutdown for some reason" );
+                QuartzUtils.log.warn( "Scheduler could not be shutdown for some reason" );
             }
         } catch ( Exception e ) {
             throw new RuntimeException( "Cannot shutdown quartz. Error is: " + e );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,43 +18,32 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
+import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
-import ubic.gemma.core.loader.util.parser.BasicLineMapParser;
 
 /**
  * Parse the NCBI "gene_history" file. File format : tax_id, GeneID,Discontinued_GeneID, Discontinued_Symbol,
  * Discontinue_Date; (tab is used as a separator, pound sign - start of a comment) File is obtained from
  * ftp.ncbi.nih.gov.gene/DATA
- * 
- * @author paul
  *
+ * @author paul
  */
 public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHistory> {
 
     private static final int GENE_HISTORY_FILE_NUM_FIELDS = 5;
 
-    private Map<String, NcbiGeneHistory> id2history = new HashMap<String, NcbiGeneHistory>();
+    private final Map<String, NcbiGeneHistory> id2history = new HashMap<>();
 
-    private Map<Integer, Map<String, String>> discontinuedGenes = new HashMap<Integer, Map<String, String>>();
+    private final Map<Integer, Map<String, String>> discontinuedGenes = new HashMap<>();
 
     @Override
     public boolean containsKey( String key ) {
         return id2history.containsKey( key );
-    }
-
-    /**
-     * @param geneSymbol
-     * @return null, or the NCBI ID of the gene that was discontinued.
-     */
-    public String discontinuedIdForSymbol( String geneSymbol, Integer taxonId ) {
-        if ( !discontinuedGenes.containsKey( taxonId ) ) return null;
-        return discontinuedGenes.get( taxonId ).get( geneSymbol );
     }
 
     @Override
@@ -79,10 +68,11 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
         }
         String[] fields = StringUtils.split( line, '\t' );
 
-        if ( fields.length > GENE_HISTORY_FILE_NUM_FIELDS ) {
+        if ( fields.length > NcbiGeneHistoryParser.GENE_HISTORY_FILE_NUM_FIELDS ) {
             // sanity check.
             throw new IllegalStateException( "NCBI gene_history file has unexpected column count. Expected "
-                    + GENE_HISTORY_FILE_NUM_FIELDS + ", got " + fields.length + " in line=" + line );
+                    + NcbiGeneHistoryParser.GENE_HISTORY_FILE_NUM_FIELDS + ", got " + fields.length + " in line="
+                    + line );
         }
 
         String geneId = fields[1];
@@ -123,6 +113,16 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
     @Override
     protected void put( String key, NcbiGeneHistory value ) {
         id2history.put( key, value );
+    }
+
+    /**
+     * @param geneSymbol gene symbol
+     * @return null, or the NCBI ID of the gene that was discontinued.
+     */
+    public String discontinuedIdForSymbol( String geneSymbol, Integer taxonId ) {
+        if ( !discontinuedGenes.containsKey( taxonId ) )
+            return null;
+        return discontinuedGenes.get( taxonId ).get( geneSymbol );
     }
 
 }

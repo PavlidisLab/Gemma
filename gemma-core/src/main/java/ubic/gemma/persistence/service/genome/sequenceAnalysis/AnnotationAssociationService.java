@@ -20,6 +20,7 @@ import java.util.Collection;
 /**
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface AnnotationAssociationService extends BaseService<AnnotationAssociation> {
 
     @Override
@@ -28,11 +29,7 @@ public interface AnnotationAssociationService extends BaseService<AnnotationAsso
 
     @Override
     @Secured({ "GROUP_USER" })
-    Collection<AnnotationAssociation> create( Collection<AnnotationAssociation> anCollection );
-
-    Collection<AnnotationAssociation> find( BioSequence bioSequence );
-
-    Collection<AnnotationAssociation> find( Gene gene );
+    void remove( Collection<AnnotationAssociation> anCollection );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -40,19 +37,19 @@ public interface AnnotationAssociationService extends BaseService<AnnotationAsso
 
     @Override
     @Secured({ "GROUP_USER" })
-    void remove( Collection<AnnotationAssociation> anCollection );
-
-    void thaw( AnnotationAssociation annotationAssociation );
-
-    void thaw( Collection<AnnotationAssociation> anCollection );
+    void update( Collection<AnnotationAssociation> anCollection );
 
     @Override
     @Secured({ "GROUP_USER" })
     void update( AnnotationAssociation annotationAssociation );
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( Collection<AnnotationAssociation> anCollection );
+    Collection<AnnotationAssociation> find( BioSequence bioSequence );
+
+    Collection<AnnotationAssociation> find( Gene gene );
+
+    void thaw( AnnotationAssociation annotationAssociation );
+
+    void thaw( Collection<AnnotationAssociation> anCollection );
 
     Collection<AnnotationValueObject> removeRootTerms( Collection<AnnotationValueObject> associations );
 }

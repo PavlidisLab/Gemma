@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,21 +18,19 @@
  */
 package ubic.gemma.core.infrastructure.jms;
 
-import java.io.Serializable;
+import org.apache.activemq.command.ActiveMQQueue;
+import ubic.gemma.core.infrastructure.common.MessageSender;
 
 import javax.jms.Queue;
-
-import org.apache.activemq.command.ActiveMQQueue;
-
-import ubic.gemma.core.infrastructure.common.MessageSender;
+import java.io.Serializable;
 
 /**
  * author: anton date: 08/02/13
  */
 public class JmsMessageSender<T extends Serializable> implements MessageSender<T> {
 
-    private JMSHelper jmsHelper;
-    private Queue queue;
+    private final JMSHelper jmsHelper;
+    private final Queue queue;
 
     public JmsMessageSender( JMSHelper jmsHelper, Queue queue ) {
         this.jmsHelper = jmsHelper;

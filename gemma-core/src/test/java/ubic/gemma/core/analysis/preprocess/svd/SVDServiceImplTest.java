@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -52,11 +52,11 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     @Test
     public void testsvd() throws Exception {
 
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "shortTest" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "shortTest" ) ) );
         // also used in the GeoDatasetServiceIntegrationTest.
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE674", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE674", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -88,10 +88,10 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     public void testsvdGapped() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
-                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse482short" ) ) );
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse482short" ) ) );
         // also used in the GeoDatasetServiceIntegrationTest.
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE482", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE482", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -122,7 +122,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
         if ( ee != null ) {
             try {
                 eeService.remove( ee );
-            } catch ( Exception e ) {
+            } catch ( Exception ignored ) {
 
             }
         }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,66 +49,41 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
-    public Collection<GeneSet> findByGene( Gene gene ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select gs from GeneSet gs inner join gs.members m inner join m.gene g where g = :g" )
-                .setParameter( "g", gene ).list();
+    public int getGeneCount( Long id ) {
+        return ( Integer ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(i) from GeneSet g join g.members i where g.id = :id" )
+                .setParameter( "id", id ).uniqueResult();
     }
 
     @Override
-    public Collection<GeneSet> findByName( String name ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select gs from GeneSet gs where gs.name like :name order by gs.name" )
-                .setParameter( "name", name + "%" ).list();
-    }
+    public Taxon getTaxon( Long id ) {
+        // get one gene, check the taxon.
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g from GeneSet gs join gs.members m join m.gene g where gs.id = :id" )
+                .setParameter( "id", id ).setMaxResults( 1 );
 
-    @Override
-    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        if ( StringUtils.isBlank( name ) )
-            return new HashSet<GeneSet>();
-        assert taxon != null;
-        // slow? would it be faster to just findByName and then restrict taxon?
-        List result = this.getSessionFactory().getCurrentSession().createQuery(
-                "select gs from GeneSet gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
-                .setParameter( "query", name + "%" ).setParameter( "taxon", taxon ).list();
-        if ( timer.getTime() > 500 )
-            log.info( "Find geneSets by name took " + timer.getTime() + "ms query=" + name + " taxon=" + taxon );
-        //noinspection unchecked
-        return ( Collection<GeneSet> ) result;
-    }
-
-    @Override
-    public Collection<GeneSet> loadAll( Taxon tax ) {
-        if ( tax == null )
-            return this.loadAll();
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct gs from GeneSet gs join gs.members m join m.gene g where g.taxon = :t" )
-                .setParameter( "t", tax ).list();
+        Gene g = ( Gene ) q.uniqueResult();
+        return g != null ? g.getTaxon() : null;
     }
 
     @Override
     public Collection<GeneSet> loadMyGeneSets() {
-        return loadAll();
+        return this.loadAll();
     }
 
     @Override
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
-        return loadAll( tax );
+        return this.loadAll( tax );
     }
 
     @Override
     public Collection<GeneSet> loadMySharedGeneSets() {
-        return loadAll();
+        return this.loadAll();
     }
 
     @Override
     public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
-        return loadAll( tax );
+        return this.loadAll( tax );
     }
 
     @Override
@@ -133,7 +108,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Override
     public Collection<DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
-        Collection<DatabaseBackedGeneSetValueObject> result = new HashSet<DatabaseBackedGeneSetValueObject>();
+        Collection<DatabaseBackedGeneSetValueObject> result = new HashSet<>();
 
         if ( ids.isEmpty() )
             return result;
@@ -145,7 +120,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                         + " left join g.members m where g.id in (:ids) group by g.id" ).setParameterList( "ids", ids )
                 .list();
 
-        Map<Long, Taxon> taxa = getTaxa( ids );
+        Map<Long, Taxon> taxa = this.getTaxa( ids );
 
         for ( Object[] oa : list ) {
 
@@ -165,47 +140,73 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
-    public int getGeneCount( Long id ) {
-        return ( Integer ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select count(i) from GeneSet g join g.members i where g.id = :id" )
-                .setParameter( "id", id ).uniqueResult();
+    public Collection<GeneSet> findByGene( Gene gene ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select gs from GeneSet gs inner join gs.members m inner join m.gene g where g = :g" )
+                .setParameter( "g", gene ).list();
     }
 
     @Override
-    public Taxon getTaxon( Long id ) {
-        // get one gene, check the taxon.
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select g from GeneSet gs join gs.members m join m.gene g where gs.id = :id" )
-                .setParameter( "id", id ).setMaxResults( 1 );
-
-        Gene g = ( Gene ) q.uniqueResult();
-        return g != null ? g.getTaxon() : null;
+    public Collection<GeneSet> findByName( String name ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select gs from GeneSet gs where gs.name like :name order by gs.name" )
+                .setParameter( "name", name + "%" ).list();
     }
 
-    private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
-        // fast
-        Query q = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct gs.id, t from GeneSet gs join gs.members m"
-                        + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" )
-                .setParameterList( "ids", ids );
+    @Override
+    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        if ( StringUtils.isBlank( name ) )
+            return new HashSet<>();
+        assert taxon != null;
+        // slow? would it be faster to just findByName and then restrict taxon?
+        List result = this.getSessionFactory().getCurrentSession().createQuery(
+                "select gs from GeneSet gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
+                .setParameter( "query", name + "%" ).setParameter( "taxon", taxon ).list();
+        if ( timer.getTime() > 500 )
+            AbstractDao.log
+                    .info( "Find geneSets by name took " + timer.getTime() + "ms query=" + name + " taxon=" + taxon );
+        //noinspection unchecked
+        return ( Collection<GeneSet> ) result;
+    }
 
-        Map<Long, Taxon> result = new HashMap<Long, Taxon>();
-        for ( Object o : q.list() ) {
-            Object[] oa = ( Object[] ) o;
-
-            if ( result.containsKey( oa[0] ) ) {
-                throw new IllegalStateException( "More than one taxon in gene set id= " + oa[0] );
-            }
-
-            result.put( ( Long ) oa[0], ( Taxon ) oa[1] );
-
-        }
-
-        return result;
+    @Override
+    public Collection<GeneSet> loadAll( Taxon tax ) {
+        if ( tax == null )
+            return this.loadAll();
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct gs from GeneSet gs join gs.members m join m.gene g where g.taxon = :t" )
+                .setParameter( "t", tax ).list();
     }
 
     @Override
     public GeneSet find( GeneSet entity ) {
         return this.findByName( entity.getName() ).iterator().next();
+    }
+
+    private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
+        // fast
+        //noinspection unchecked
+        List<Object[]> q = this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct gs.id, t from GeneSet gs join gs.members m"
+                        + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" )
+                .setParameterList( "ids", ids ).list();
+
+        Map<Long, Taxon> result = new HashMap<>();
+        for ( Object[] o : q ) {
+            //noinspection RedundantCast // Without casting we get suspicious call warning
+            if ( result.containsKey( ( Long ) o[0] ) ) {
+                throw new IllegalStateException( "More than one taxon in gene set id= " + o[0] );
+            }
+
+            result.put( ( Long ) o[0], ( Taxon ) o[1] );
+
+        }
+
+        return result;
     }
 }

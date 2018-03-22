@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,16 +22,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.AbstractService;
 
 /**
+ * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalDesignService</code>, provides
+ * access to all services and entities referenced by this service.
+ *
  * @author pavlidis
  * @author keshav
  * @see ExperimentalDesignService
  */
 @Service
-public class ExperimentalDesignServiceImpl extends ExperimentalDesignServiceBase {
+public class ExperimentalDesignServiceImpl extends AbstractService<ExperimentalDesign>
+        implements ExperimentalDesignService {
 
-    ExperimentalDesignDao experimentalDesignDao;
+    private final ExperimentalDesignDao experimentalDesignDao;
 
     @Autowired
     public ExperimentalDesignServiceImpl( ExperimentalDesignDao experimentalDesignDao ) {
@@ -40,7 +45,7 @@ public class ExperimentalDesignServiceImpl extends ExperimentalDesignServiceBase
     }
 
     @Override
-    protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign ) {
+    public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign ) {
         return this.experimentalDesignDao.getExpressionExperiment( experimentalDesign );
     }
 

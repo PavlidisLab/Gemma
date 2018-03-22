@@ -74,7 +74,7 @@ public class DatasetCombiner {
 
     static final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     @SuppressWarnings("Annotator")
-    private static final String PUNCTUATION_REGEXP = "[\\(\\)\\s-\\._]";
+    private static final String PUNCTUATION_REGEXP = "[()\\s-._]";
     /**
      * Careful, GEO changes this sometimes.
      */
@@ -96,30 +96,30 @@ public class DatasetCombiner {
 
     static {
         // note : all lower case!
-        microarrayNameStrings.put( "u133", new HashSet<String>() );
-        microarrayNameStrings.put( "u95", new HashSet<String>() );
-        microarrayNameStrings.put( "u74", new HashSet<String>() );
-        microarrayNameStrings.put( "v2", new HashSet<String>() );
-        microarrayNameStrings.put( "chip", new HashSet<String>() );
-        microarrayNameStrings.get( "u133" ).add( "u133A" );
-        microarrayNameStrings.get( "u133" ).add( "u133B" );
-        microarrayNameStrings.get( "u95" ).add( "u95A" );
-        microarrayNameStrings.get( "u95" ).add( "u95B" );
-        microarrayNameStrings.get( "u95" ).add( "u95C" );
-        microarrayNameStrings.get( "u95" ).add( "u95D" );
-        microarrayNameStrings.get( "u95" ).add( "u95E" );
-        microarrayNameStrings.get( "u74" ).add( "u74A" );
-        microarrayNameStrings.get( "u74" ).add( "u74B" );
-        microarrayNameStrings.get( "u74" ).add( "u74C" );
-        microarrayNameStrings.get( "v2" ).add( "av2" );
-        microarrayNameStrings.get( "v2" ).add( "av2" );
-        microarrayNameStrings.get( "v2" ).add( "av2" );
-        microarrayNameStrings.get( "chip" ).add( "chip a" );
-        microarrayNameStrings.get( "chip" ).add( "chip b" );
-        microarrayNameStrings.get( "chip" ).add( "chip c" );
-        microarrayNameStrings.get( "chip" ).add( "chipa" );
-        microarrayNameStrings.get( "chip" ).add( "chipb" );
-        microarrayNameStrings.get( "chip" ).add( "chipc" );
+        DatasetCombiner.microarrayNameStrings.put( "u133", new HashSet<String>() );
+        DatasetCombiner.microarrayNameStrings.put( "u95", new HashSet<String>() );
+        DatasetCombiner.microarrayNameStrings.put( "u74", new HashSet<String>() );
+        DatasetCombiner.microarrayNameStrings.put( "v2", new HashSet<String>() );
+        DatasetCombiner.microarrayNameStrings.put( "chip", new HashSet<String>() );
+        DatasetCombiner.microarrayNameStrings.get( "u133" ).add( "u133A" );
+        DatasetCombiner.microarrayNameStrings.get( "u133" ).add( "u133B" );
+        DatasetCombiner.microarrayNameStrings.get( "u95" ).add( "u95A" );
+        DatasetCombiner.microarrayNameStrings.get( "u95" ).add( "u95B" );
+        DatasetCombiner.microarrayNameStrings.get( "u95" ).add( "u95C" );
+        DatasetCombiner.microarrayNameStrings.get( "u95" ).add( "u95D" );
+        DatasetCombiner.microarrayNameStrings.get( "u95" ).add( "u95E" );
+        DatasetCombiner.microarrayNameStrings.get( "u74" ).add( "u74A" );
+        DatasetCombiner.microarrayNameStrings.get( "u74" ).add( "u74B" );
+        DatasetCombiner.microarrayNameStrings.get( "u74" ).add( "u74C" );
+        DatasetCombiner.microarrayNameStrings.get( "v2" ).add( "av2" );
+        DatasetCombiner.microarrayNameStrings.get( "v2" ).add( "av2" );
+        DatasetCombiner.microarrayNameStrings.get( "v2" ).add( "av2" );
+        DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chip a" );
+        DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chip b" );
+        DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chip c" );
+        DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chipa" );
+        DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chipb" );
+        DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chipc" );
     }
 
     // Maps of sample accessions to other useful bits.
@@ -128,7 +128,7 @@ public class DatasetCombiner {
     private final LinkedHashMap<String, String> accToDataset = new LinkedHashMap<>();
     private final LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<>();
     private final LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<>();
-    private boolean doSampleMatching = true;
+    private boolean doSampleMatching;
 
     public DatasetCombiner() {
         this.doSampleMatching = true;
@@ -152,7 +152,7 @@ public class DatasetCombiner {
         Collection<String> associatedDatasetAccessions = new HashSet<>();
 
         for ( String seriesAccession : seriesAccessions ) {
-            associatedDatasetAccessions.addAll( findGDSforGSE( seriesAccession ) );
+            associatedDatasetAccessions.addAll( DatasetCombiner.findGDSforGSE( seriesAccession ) );
         }
         return associatedDatasetAccessions;
 
@@ -179,7 +179,7 @@ public class DatasetCombiner {
             XPathExpression xgds = xpath.compile(
                     "/eSummaryResult/DocSum[Item/@Name=\"entryType\" and (Item=\"GDS\")]/Item[@Name=\"GDS\"][1]/text()" );
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
+            DocumentBuilder builder = DatasetCombiner.factory.newDocumentBuilder();
 
             /*
              * Bug 2690. There must be a better way.
@@ -221,12 +221,13 @@ public class DatasetCombiner {
         // grep on "GDS[[digits]] record"
         URL url = null;
 
-        Pattern pat = Pattern.compile( GSE_RECORD_REGEXP );
+        Pattern pat = Pattern.compile( DatasetCombiner.GSE_RECORD_REGEXP );
 
         Collection<String> associatedSeriesAccession = new HashSet<>();
 
         try {
-            url = new URL( ENTREZ_GEO_QUERY_URL_BASE + datasetAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
+            url = new URL( DatasetCombiner.ENTREZ_GEO_QUERY_URL_BASE + datasetAccession
+                    + DatasetCombiner.ENTREZ_GEO_QUERY_URL_SUFFIX );
             URLConnection conn = url.openConnection();
             conn.connect();
 
@@ -244,10 +245,10 @@ public class DatasetCombiner {
                 is.close();
             }
         } catch ( MalformedURLException e ) {
-            log.error( e, e );
+            DatasetCombiner.log.error( e, e );
             throw new RuntimeException( "Invalid URL " + url, e );
         } catch ( IOException e ) {
-            log.error( e, e );
+            DatasetCombiner.log.error( e, e );
             throw new RuntimeException( "Could not get data from remote server", e );
         }
 
@@ -278,7 +279,7 @@ public class DatasetCombiner {
      * Given a GEO dataset it, find all GDS ids that are associated with it.
      */
     public Collection<String> findGDSforGDS( String datasetAccession ) {
-        return findGDSforGSE( findGSEforGDS( datasetAccession ) );
+        return DatasetCombiner.findGDSforGSE( DatasetCombiner.findGSEforGDS( datasetAccession ) );
     }
 
     /**
@@ -294,11 +295,11 @@ public class DatasetCombiner {
             throw new IllegalArgumentException( "No datasets!" );
         }
 
-        checkPlatformsMatchSeries( dataSets );
+        this.checkPlatformsMatchSeries( dataSets );
 
-        fillAccessionMaps( dataSets );
+        this.fillAccessionMaps( dataSets );
         int numDatasets = dataSets.size();
-        return findCorrespondence( numDatasets );
+        return this.findCorrespondence( numDatasets );
     }
 
     /**
@@ -310,7 +311,7 @@ public class DatasetCombiner {
     public GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
         Collection<GeoDataset> datasets = series.getDatasets();
         if ( datasets != null && datasets.size() > 0 ) {
-            fillAccessionMaps( datasets );
+            this.fillAccessionMaps( datasets );
 
             // make sure all samples are accounted for - just informative
             Collection<GeoSample> missed = new HashSet<>();
@@ -320,14 +321,14 @@ public class DatasetCombiner {
                 }
             }
             if ( !missed.isEmpty() ) {
-                log.warn( "There were one or more samples missing from the datasets: " + StringUtils
+                DatasetCombiner.log.warn( "There were one or more samples missing from the datasets: " + StringUtils
                         .join( missed, " | " ) );
             }
-            return findGSECorrespondence( datasets );
+            return this.findGSECorrespondence( datasets );
         }
 
-        int numPlatforms = fillAccessionMaps( series );
-        return findCorrespondence( numPlatforms );
+        int numPlatforms = this.fillAccessionMaps( series );
+        return this.findCorrespondence( numPlatforms );
     }
 
     /**
@@ -357,7 +358,7 @@ public class DatasetCombiner {
             if ( !found ) {
 
                 if ( seenPlatforms.size() == 1 ) {
-                    log.warn( dataset + " is associated with wrong platform? " + platform
+                    DatasetCombiner.log.warn( dataset + " is associated with wrong platform? " + platform
                             + ", switching it to use series platform " + seenPlatforms.iterator().next() );
                     dataset.setPlatform( seenPlatforms.iterator().next() );
                 } else {
@@ -385,7 +386,7 @@ public class DatasetCombiner {
         }
         accToDataset.put( sample.getGeoAccession(), owner.getGeoAccession() );
         accToSecondaryTitle.put( sample.getGeoAccession(), sample.getTitleInDataset() ); // could be null.
-        String organism = getSampleOrganism( sample );
+        String organism = this.getSampleOrganism( sample );
         if ( StringUtils.isNotBlank( organism ) ) {
             accToOrganism.put( sample.getGeoAccession(), organism );
         }
@@ -404,7 +405,7 @@ public class DatasetCombiner {
 
                         if ( sample.getPlatforms().size() == 0 )
                             sample.addPlatform( platform );
-                        fillAccessionMap( sample, dataset );
+                        this.fillAccessionMap( sample, dataset );
                     }
                 }
             } else {
@@ -414,7 +415,7 @@ public class DatasetCombiner {
                         if ( sample.getPlatforms().size() == 0 )
                             sample.addPlatform( platform );
 
-                        fillAccessionMap( sample, dataset );
+                        this.fillAccessionMap( sample, dataset );
                     }
                 }
             }
@@ -429,12 +430,12 @@ public class DatasetCombiner {
      */
     private int fillAccessionMaps( GeoSeries series ) {
 
-        Map<GeoPlatform, List<GeoSample>> platformSamples = getPlatformSampleMap( series );
+        Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( series );
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
             for ( GeoSample sample : platformSamples.get( platform ) ) {
                 assert sample != null : "Null sample for platform " + platform.getDescription();
-                fillAccessionMap( sample, platform );
+                this.fillAccessionMap( sample, platform );
             }
         }
 
@@ -456,7 +457,7 @@ public class DatasetCombiner {
         assert sampleAccs.size() > 0;
 
         if ( numDatasetsOrPlatforms <= 1 || !this.doSampleMatching ) {
-            log.debug( "Each bioassay will get a distinct biomaterial" );
+            DatasetCombiner.log.debug( "Each bioassay will get a distinct biomaterial" );
             for ( String sample : sampleAccs ) {
                 result.addCorrespondence( sample, null );
             }
@@ -465,12 +466,12 @@ public class DatasetCombiner {
 
         String commonPrefix = StringUtil.commonPrefix( accToTitle.values() );
         if ( commonPrefix != null ) {
-            log.debug( "Common prefix = " + commonPrefix );
+            DatasetCombiner.log.debug( "Common prefix = " + commonPrefix );
             commonPrefix = commonPrefix.toLowerCase();
         }
         String commonSuffix = StringUtil.commonSuffix( accToTitle.values() );
         if ( commonSuffix != null ) {
-            log.debug( "Common suffix = " + commonSuffix );
+            DatasetCombiner.log.debug( "Common suffix = " + commonSuffix );
             commonSuffix = commonSuffix.toLowerCase();
         }
 
@@ -482,284 +483,320 @@ public class DatasetCombiner {
         // do it by data set, so we constrain comparing items in _this_ data set to ones in _other_ data sets (or other
         // platforms)
         // The inner loops are just to get the samples in the data set (platform) being considered.
+        //noinspection MismatchedQueryAndUpdateOfCollection // I do not dare to touch this method without proper refactoring
         Collection<String> alreadyTestedDatasetsOrPlatforms = new HashSet<>();
 
-        List<String> dataSets = new ArrayList<>();
-        dataSets.addAll( new HashSet<>( accToDataset.values() ) );
+        List<String> dataSets = new ArrayList<>( new HashSet<>( accToDataset.values() ) );
 
-        List<String> platforms = new ArrayList<>();
-        platforms.addAll( new HashSet<>( accToPlatform.values() ) );
+        List<String> platforms = new ArrayList<>( new HashSet<>( accToPlatform.values() ) );
 
         List<String> valuesToUse;
         LinkedHashMap<String, String> accToDatasetOrPlatform;
 
         if ( dataSets.size() > 0 ) {
             valuesToUse = dataSets;
-            sortDataSets( sampleAccs, valuesToUse );
+            this.sortDataSets( sampleAccs, valuesToUse );
             accToDatasetOrPlatform = accToDataset;
             result.setAccToDatasetOrPlatformMap( accToDataset );
-            log.debug( dataSets.size() + " datasets" );
+            DatasetCombiner.log.debug( dataSets.size() + " datasets" );
         } else {
             valuesToUse = platforms;
-            sortPlatforms( sampleAccs, valuesToUse );
+            this.sortPlatforms( sampleAccs, valuesToUse );
             accToDatasetOrPlatform = accToPlatform;
             result.setAccToDatasetOrPlatformMap( accToPlatform );
-            log.debug( platforms.size() + " platforms" );
+            DatasetCombiner.log.debug( platforms.size() + " platforms" );
         }
 
-        // we start with the smallest dataset/platform.
+        this.processDatasets( result, sampleAccs, commonPrefix, commonSuffix, alreadyMatched,
+                alreadyTestedDatasetsOrPlatforms, valuesToUse, accToDatasetOrPlatform );
+
+        DatasetCombiner.log.debug( result );
+        return result;
+    }
+
+    private void processDatasets( GeoSampleCorrespondence result, List<String> sampleAccs, String commonPrefix,
+            String commonSuffix, Map<String, Collection<String>> alreadyMatched,
+            Collection<String> alreadyTestedDatasetsOrPlatforms, List<String> valuesToUse,
+            LinkedHashMap<String, String> accToDatasetOrPlatform ) {
 
         Collection<String> allMatched = new HashSet<>();
+
+        // we start with the smallest dataset/platform.
         for ( String datasetOrPlatformA : valuesToUse ) {
             alreadyTestedDatasetsOrPlatforms.add( datasetOrPlatformA );
-            log.debug( "Finding matches for samples in " + datasetOrPlatformA );
+            DatasetCombiner.log.debug( "Finding matches for samples in " + datasetOrPlatformA );
 
             // for each sample in this data set...
             for ( int j = 0; j < sampleAccs.size(); j++ ) {
+                this.processSample( result, sampleAccs, commonPrefix, commonSuffix, alreadyMatched, valuesToUse,
+                        accToDatasetOrPlatform, allMatched, datasetOrPlatformA, j );
+            }
+        }
+    }
 
-                boolean wasTied = false;
-                String targetAcc = sampleAccs.get( j );
+    private void processSample( GeoSampleCorrespondence result, List<String> sampleAccs, String commonPrefix,
+            String commonSuffix, Map<String, Collection<String>> alreadyMatched, List<String> valuesToUse,
+            LinkedHashMap<String, String> accToDatasetOrPlatform, Collection<String> allMatched,
+            String datasetOrPlatformA, int j ) {
 
-                // skip samples that are not in this data set.
-                if ( !accToDataset.get( targetAcc ).equals( datasetOrPlatformA ) ) {
-                    continue;
+        String targetAcc = sampleAccs.get( j );
+
+        // skip samples that are not in this data set.
+        if ( !accToDataset.get( targetAcc ).equals( datasetOrPlatformA ) ) {
+            return;
+        }
+        if ( allMatched.contains( targetAcc ) )
+            return;
+
+        if ( !accToTitle.containsKey( targetAcc ) ) {
+            return;
+        }
+        String targetTitle = accToTitle.get( targetAcc ).toLowerCase();
+        String targetSecondaryTitle = null;
+        if ( accToSecondaryTitle.get( targetAcc ) != null ) {
+            targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
+        }
+
+        DatasetCombiner.log.debug( "Target: " + targetAcc + " (" + datasetOrPlatformA + ") " + targetTitle + (
+                targetSecondaryTitle == null ?
+                        "" :
+                        " a.k.a " + targetSecondaryTitle ) );
+        if ( StringUtils.isBlank( targetTitle ) )
+            throw new IllegalArgumentException( "Can't have blank titles for samples" );
+
+        Collection<String> bonusWords = this.getMicroarrayStringsToMatch( targetTitle );
+
+        /*
+         * For each of the other data sets
+         */
+        boolean wasTied = false;
+        for ( String datasetOrPlatformB : valuesToUse ) {
+            wasTied = this.processSecondDataset( result, sampleAccs, commonPrefix, commonSuffix, alreadyMatched,
+                    accToDatasetOrPlatform, allMatched, datasetOrPlatformA, wasTied, targetAcc, targetTitle,
+                    targetSecondaryTitle, bonusWords, datasetOrPlatformB );
+        }
+    }
+
+    private boolean processSecondDataset( GeoSampleCorrespondence result, List<String> sampleAccs, String commonPrefix,
+            String commonSuffix, Map<String, Collection<String>> alreadyMatched,
+            LinkedHashMap<String, String> accToDatasetOrPlatform, Collection<String> allMatched,
+            String datasetOrPlatformA, boolean wasTied, String targetAcc, String targetTitle,
+            String targetSecondaryTitle, Collection<String> bonusWords, String datasetOrPlatformB ) {
+
+        if ( datasetOrPlatformB.equals( datasetOrPlatformA ) ) {
+            return wasTied;
+        }
+
+        // initialize data structure.
+        if ( alreadyMatched.get( targetAcc ) == null ) {
+            alreadyMatched.put( targetAcc, new HashSet<String>() );
+        }
+
+        /*
+         * Keep us from getting multiple matches.
+         */
+        if ( alreadyMatched.get( targetAcc ).contains( datasetOrPlatformB ) ) {
+            return wasTied;
+        }
+
+        wasTied = this.findBestSampleHit( result, sampleAccs, commonPrefix, commonSuffix, alreadyMatched,
+                accToDatasetOrPlatform, allMatched, datasetOrPlatformA, wasTied, targetAcc, targetTitle,
+                targetSecondaryTitle, bonusWords, datasetOrPlatformB );
+
+        return wasTied;
+    }
+
+    private boolean findBestSampleHit( GeoSampleCorrespondence result, List<String> sampleAccs, String commonPrefix,
+            String commonSuffix, Map<String, Collection<String>> alreadyMatched,
+            LinkedHashMap<String, String> accToDatasetOrPlatform, Collection<String> allMatched,
+            String datasetOrPlatformA, boolean wasTied, String targetAcc, String targetTitle,
+            String targetSecondaryTitle, Collection<String> bonusWords, String datasetOrPlatformB ) {
+        // find the best match in this data set.
+        double minDistance = Double.MAX_VALUE;
+        String bestMatch = null;
+        String bestMatchAcc = null;
+
+        int numTested = 0;
+        for ( String testAcc : sampleAccs ) {
+
+            if ( this.checkCanSkip( alreadyMatched, accToDatasetOrPlatform, allMatched, datasetOrPlatformA, targetAcc,
+                    datasetOrPlatformB, testAcc ) )
+                continue;
+
+            numTested++;
+
+            if ( !accToTitle.containsKey( testAcc ) ) {
+                continue;
+            }
+
+            String testTitle = accToTitle.get( testAcc ).toLowerCase();
+            String testSecondaryTitle = null;
+            if ( accToSecondaryTitle.get( testAcc ) != null ) {
+                testSecondaryTitle = accToSecondaryTitle.get( testAcc ).toLowerCase();
+            }
+
+            if ( StringUtils.isBlank( testTitle ) )
+                throw new IllegalArgumentException( "Can't have blank titles for samples" );
+
+            double bonus = this.calculateBonus( targetTitle, bonusWords, testTitle );
+
+            /*
+             * If one name is much longer than the other, presumably the author didn't use the same naming
+             * scheme for all samples; we need to trim the longer one to match the shorter one; we use the
+             * prefix.
+             */
+            String trimmedTest = testTitle;
+            String trimmedTarget = targetTitle;
+
+            if ( commonPrefix != null ) {
+                trimmedTest = trimmedTest.replaceFirst( "^" + Pattern.quote( commonPrefix ), "" );
+                trimmedTarget = trimmedTarget.replaceFirst( "^" + Pattern.quote( commonPrefix ), "" );
+            }
+            if ( commonSuffix != null ) {
+                trimmedTest = trimmedTest.replaceFirst( Pattern.quote( commonSuffix ) + "$", "" );
+                trimmedTarget = trimmedTarget.replaceFirst( Pattern.quote( commonSuffix ) + "$", "" );
+            }
+
+            // remove some punctuation
+            trimmedTest = trimmedTest.replaceAll( DatasetCombiner.PUNCTUATION_REGEXP, "" );
+            trimmedTarget = trimmedTarget.replaceAll( DatasetCombiner.PUNCTUATION_REGEXP, "" );
+
+            // Computing the distance
+            double distance = this.computeDistance( trimmedTest, trimmedTarget );
+
+            distance -= bonus;
+
+            double normalizedDistance = distance / Math.max( trimmedTarget.length(), trimmedTest.length() );
+
+            double secondaryDistance;
+            if ( targetSecondaryTitle != null && testSecondaryTitle != null ) {
+                secondaryDistance = this.computeDistance( targetSecondaryTitle, testSecondaryTitle );
+
+                if ( secondaryDistance < distance ) {
+                    distance = secondaryDistance;
+                    normalizedDistance =
+                            distance / Math.max( targetSecondaryTitle.length(), testSecondaryTitle.length() );
                 }
-                if ( allMatched.contains( targetAcc ) )
-                    continue;
+            }
 
-                if ( !accToTitle.containsKey( targetAcc ) ) {
-                    continue;
-                }
-                String targetTitle = accToTitle.get( targetAcc ).toLowerCase();
-                String targetSecondaryTitle = null;
-                if ( accToSecondaryTitle.get( targetAcc ) != null ) {
-                    targetSecondaryTitle = accToSecondaryTitle.get( targetAcc ).toLowerCase();
-                }
+            if ( !this.meetsMinimalThreshold( normalizedDistance ) ) {
+                continue;
+            }
 
-                log.debug( "Target: " + targetAcc + " (" + datasetOrPlatformA + ") " + targetTitle + (
-                        targetSecondaryTitle == null ?
-                                "" :
-                                " a.k.a " + targetSecondaryTitle ) );
-                if ( StringUtils.isBlank( targetTitle ) )
-                    throw new IllegalArgumentException( "Can't have blank titles for samples" );
+            // better than last one?
+            if ( distance > minDistance ) {
+                continue;
+            }
 
-                Collection<String> bonusWords = getMicroarrayStringsToMatch( targetTitle );
-
-                // log.debug( bonusWords.size() + " bonus words" );
-
-                /*
-                 * For each of the other data sets
-                 */
-                for ( String datasetOrPlatformB : valuesToUse ) {
-
-                    // if ( alreadyTestedDatasets.contains( datasetB ) ) {
-                    // log.debug( "Skip self" );
-                    // continue;
-                    // }
-                    if ( datasetOrPlatformB.equals( datasetOrPlatformA ) ) {
+            // Try to resolve the tie. Messy, yes.
+            if ( distance == minDistance ) {
+                wasTied = true;
+                double prefixWeightedDistanceA = StringDistance
+                        .prefixWeightedHammingDistance( targetAcc, bestMatchAcc, 1.0 );
+                double prefixWeightedDistanceB = StringDistance
+                        .prefixWeightedHammingDistance( targetAcc, testAcc, 1.0 );
+                if ( prefixWeightedDistanceA == prefixWeightedDistanceB ) {
+                    double suffixWeightedDistanceA = StringDistance
+                            .suffixWeightedHammingDistance( targetAcc, bestMatchAcc, 1.0 );
+                    double suffixWeightedDistanceB = StringDistance
+                            .suffixWeightedHammingDistance( targetAcc, testAcc, 1.0 );
+                    if ( prefixWeightedDistanceA == prefixWeightedDistanceB ) {
+                        continue; // still tied, keep old one
+                    } else if ( suffixWeightedDistanceA < suffixWeightedDistanceB ) {
+                        // new one is better.
+                        minDistance = distance;
+                        bestMatch = testTitle;
+                        bestMatchAcc = testAcc;
+                        DatasetCombiner.log
+                                .debug( "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB + ") "
+                                        + testTitle + ( testSecondaryTitle == null ?
+                                        "" :
+                                        " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                        wasTied = false;
+                    }
+                    if ( suffixWeightedDistanceA > suffixWeightedDistanceB ) {
+                        // old one is still better.
+                        wasTied = false;
+                        //noinspection UnnecessaryContinue // better for readability
                         continue;
                     }
+                } else if ( prefixWeightedDistanceA > prefixWeightedDistanceB ) {
+                    // new one is better.
+                    minDistance = distance;
+                    bestMatch = testTitle;
+                    bestMatchAcc = testAcc;
+                    DatasetCombiner.log
+                            .debug( "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB + ") "
+                                    + testTitle + ( testSecondaryTitle == null ?
+                                    "" :
+                                    " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                    wasTied = false;
+                } else if ( prefixWeightedDistanceA < prefixWeightedDistanceB ) {
+                    wasTied = false;
+                    //noinspection UnnecessaryContinue // better for readability
+                    continue; // old best is still better.
+                }
+            } else {
+                // definite new winner no tie
+                minDistance = distance;
+                bestMatch = testTitle;
+                bestMatchAcc = testAcc;
+                DatasetCombiner.log
+                        .debug( "Current best match: " + testAcc + " (" + datasetOrPlatformB + ") " + testTitle + (
+                                testSecondaryTitle == null ?
+                                        "" :
+                                        " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
+                wasTied = false;
+            }
 
-                    // initialize data structure.
-                    if ( alreadyMatched.get( targetAcc ) == null ) {
-                        alreadyMatched.put( targetAcc, new HashSet<String>() );
-                    }
+        } // end loop over samples in second data set.
+        DatasetCombiner.log.debug( "Tested " + numTested + " samples" );
 
-                    /*
-                     * Keep us from getting multiple matches.
-                     */
-                    if ( alreadyMatched.get( targetAcc ).contains( datasetOrPlatformB ) ) {
-                        continue;
-                    }
+        /*
+         * Now have the best hit for sample from the outer dataset, in the inner data set.
+         */
+        if ( bestMatchAcc == null || wasTied ) {
+            if ( DatasetCombiner.log.isDebugEnabled() )
+                DatasetCombiner.log
+                        .debug( "No match found in " + datasetOrPlatformB + " for " + targetAcc + "\t" + targetTitle
+                                + " (" + datasetOrPlatformA
+                                + ") (This can happen if sample was not run on all the platforms used; or if there were ties that could not be broken; or when we were unable to match)" );
+            result.addCorrespondence( targetAcc, null );
+            allMatched.add( targetAcc );
+        } else {
+            if ( DatasetCombiner.log.isDebugEnabled() )
+                DatasetCombiner.log
+                        .debug( "Match:\n" + targetAcc + "\t" + targetTitle + " (" + accToDataset.get( targetAcc ) + ")"
+                                + "\n" + bestMatchAcc + "\t" + bestMatch + " (" + accToDataset.get( bestMatchAcc ) + ")"
+                                + " (Distance: " + minDistance + ")" );
+            result.addCorrespondence( targetAcc, bestMatchAcc );
+            alreadyMatched.get( bestMatchAcc ).add( datasetOrPlatformA );
+            alreadyMatched.get( targetAcc ).add( datasetOrPlatformB );
+            allMatched.add( targetAcc );
+            allMatched.add( bestMatchAcc );
+        }
+        return wasTied;
+    }
 
-                    // find the best match in this data set.
-                    double minDistance = Double.MAX_VALUE;
-                    String bestMatch = null;
-                    String bestMatchAcc = null;
+    private boolean checkCanSkip( Map<String, Collection<String>> alreadyMatched,
+            LinkedHashMap<String, String> accToDatasetOrPlatform, Collection<String> allMatched,
+            String datasetOrPlatformA, String targetAcc, String datasetOrPlatformB, String testAcc ) {
+        return allMatched.contains( testAcc ) || !this
+                .shouldTest( accToDatasetOrPlatform, alreadyMatched, datasetOrPlatformA, targetAcc, datasetOrPlatformB,
+                        testAcc );
+    }
 
-                    int numTested = 0;
-                    for ( String testAcc : sampleAccs ) {
-
-                        if ( allMatched.contains( testAcc ) )
-                            continue;
-
-                        boolean shouldTest = shouldTest( accToDatasetOrPlatform, alreadyMatched, datasetOrPlatformA,
-                                targetAcc, datasetOrPlatformB, testAcc );
-
-                        if ( !shouldTest )
-                            continue;
-
-                        numTested++;
-
-                        if ( !accToTitle.containsKey( testAcc ) ) {
-                            continue;
-                        }
-
-                        String testTitle = accToTitle.get( testAcc ).toLowerCase();
-                        String testSecondaryTitle = null;
-                        if ( accToSecondaryTitle.get( testAcc ) != null ) {
-                            testSecondaryTitle = accToSecondaryTitle.get( testAcc ).toLowerCase();
-                        }
-
-                        if ( StringUtils.isBlank( testTitle ) )
-                            throw new IllegalArgumentException( "Can't have blank titles for samples" );
-
-                        double bonus = 0.0;
-                        bonusWords.addAll( getMicroarrayStringsToMatch( testTitle ) );
-                        for ( String n : bonusWords ) {
-                            if ( testTitle.contains( n ) ) {
-                                log.debug( testTitle + " gets a bonus in matching " + targetTitle );
-                                bonus = 1; // this basically means we discount that difference.
-                                break;
-                            }
-                        }
-
-                        /*
-                         * If one name is much longer than the other, presumably the author didn't use the same naming
-                         * scheme for all samples; we need to trim the longer one to match the shorter one; we use the
-                         * prefix.
-                         */
-                        String trimmedTest = testTitle;
-                        String trimmedTarget = targetTitle;
-
-                        if ( commonPrefix != null ) {
-                            trimmedTest = trimmedTest.replaceFirst( "^" + Pattern.quote( commonPrefix ), "" );
-                            trimmedTarget = trimmedTarget.replaceFirst( "^" + Pattern.quote( commonPrefix ), "" );
-                        }
-                        if ( commonSuffix != null ) {
-                            trimmedTest = trimmedTest.replaceFirst( Pattern.quote( commonSuffix ) + "$", "" );
-                            trimmedTarget = trimmedTarget.replaceFirst( Pattern.quote( commonSuffix ) + "$", "" );
-                        }
-
-                        // remove some punctuation
-                        trimmedTest = trimmedTest.replaceAll( PUNCTUATION_REGEXP, "" );
-                        trimmedTarget = trimmedTarget.replaceAll( PUNCTUATION_REGEXP, "" );
-
-                        // Computing the distance
-                        double distance = computeDistance( trimmedTest, trimmedTarget );
-
-                        distance -= bonus;
-
-                        double normalizedDistance = distance / Math.max( trimmedTarget.length(), trimmedTest.length() );
-
-                        double secondaryDistance;
-                        if ( targetSecondaryTitle != null && testSecondaryTitle != null ) {
-                            secondaryDistance = computeDistance( targetSecondaryTitle, testSecondaryTitle );
-
-                            if ( secondaryDistance < distance ) {
-                                distance = secondaryDistance;
-                                normalizedDistance = distance / Math
-                                        .max( targetSecondaryTitle.length(), testSecondaryTitle.length() );
-                            }
-                        }
-
-                        if ( !meetsMinimalThreshold( normalizedDistance ) ) {
-                            continue;
-                        }
-
-                        // better than last one?
-                        if ( distance > minDistance ) {
-                            // log.debug( "Didn't beat best previous match, " + bestMatch );
-                            continue;
-                        }
-
-                        // handle ties
-                        if ( distance == minDistance ) {
-                            wasTied = true;
-                            /*
-                             * Try to resolve the tie. Messy, yes.
-                             */
-                            double prefixWeightedDistanceA = StringDistance
-                                    .prefixWeightedHammingDistance( targetAcc, bestMatchAcc, 1.0 );
-                            double prefixWeightedDistanceB = StringDistance
-                                    .prefixWeightedHammingDistance( targetAcc, testAcc, 1.0 );
-                            if ( prefixWeightedDistanceA == prefixWeightedDistanceB ) {
-                                double suffixWeightedDistanceA = StringDistance
-                                        .suffixWeightedHammingDistance( targetAcc, bestMatchAcc, 1.0 );
-                                double suffixWeightedDistanceB = StringDistance
-                                        .suffixWeightedHammingDistance( targetAcc, testAcc, 1.0 );
-                                if ( prefixWeightedDistanceA == prefixWeightedDistanceB ) {
-                                    continue; // still tied, keep old one
-                                } else if ( suffixWeightedDistanceA < suffixWeightedDistanceB ) {
-                                    // new one is better.
-                                    minDistance = distance;
-                                    bestMatch = testTitle;
-                                    bestMatchAcc = testAcc;
-                                    log.debug( "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB
-                                            + ") " + testTitle + ( testSecondaryTitle == null ?
-                                            "" :
-                                            " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
-                                    wasTied = false;
-                                }
-                                if ( suffixWeightedDistanceA > suffixWeightedDistanceB ) {
-                                    // old one is still better.
-                                    wasTied = false;
-                                    //noinspection UnnecessaryContinue // better for readability
-                                    continue;
-                                }
-                            } else if ( prefixWeightedDistanceA > prefixWeightedDistanceB ) {
-                                // new one is better.
-                                minDistance = distance;
-                                bestMatch = testTitle;
-                                bestMatchAcc = testAcc;
-                                log.debug(
-                                        "Current best match (tie broken): " + testAcc + " (" + datasetOrPlatformB + ") "
-                                                + testTitle + ( testSecondaryTitle == null ?
-                                                "" :
-                                                " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
-                                wasTied = false;
-                            } else if ( prefixWeightedDistanceA < prefixWeightedDistanceB ) {
-                                wasTied = false;
-                                //noinspection UnnecessaryContinue // better for readability
-                                continue; // old best is still better.
-                            }
-                        } else {
-                            // definite new winner no tie
-                            minDistance = distance;
-                            bestMatch = testTitle;
-                            bestMatchAcc = testAcc;
-                            log.debug(
-                                    "Current best match: " + testAcc + " (" + datasetOrPlatformB + ") " + testTitle + (
-                                            testSecondaryTitle == null ?
-                                                    "" :
-                                                    " a.k.a " + testSecondaryTitle + ", distance = " + distance ) );
-                            wasTied = false;
-                        }
-
-                    } // end loop over samples in second data set.
-                    log.debug( "Tested " + numTested + " samples" );
-
-                    /*
-                     * Now have the best hit for sample from the outer dataset, in the inner data set.
-                     */
-                    if ( bestMatchAcc == null || wasTied ) {
-                        if ( log.isDebugEnabled() )
-                            log.debug(
-                                    "No match found in " + datasetOrPlatformB + " for " + targetAcc + "\t" + targetTitle
-                                            + " (" + datasetOrPlatformA
-                                            + ") (This can happen if sample was not run on all the platforms used; or if there were ties that could not be broken; or when we were unable to match)" );
-                        result.addCorrespondence( targetAcc, null );
-                        allMatched.add( targetAcc );
-                    } else {
-                        if ( log.isDebugEnabled() )
-                            log.debug(
-                                    "Match:\n" + targetAcc + "\t" + targetTitle + " (" + accToDataset.get( targetAcc )
-                                            + ")" + "\n" + bestMatchAcc + "\t" + bestMatch + " (" + accToDataset
-                                            .get( bestMatchAcc ) + ")" + " (Distance: " + minDistance + ")" );
-                        result.addCorrespondence( targetAcc, bestMatchAcc );
-                        alreadyMatched.get( bestMatchAcc ).add( datasetOrPlatformA );
-                        alreadyMatched.get( targetAcc ).add( datasetOrPlatformB );
-                        allMatched.add( targetAcc );
-                        allMatched.add( bestMatchAcc );
-                    }
-
-                } // loop second data sets
-
-            } // loop over samples in first data set
-        } // loop over data sets
-
-        log.debug( result );
-        return result;
+    private double calculateBonus( String targetTitle, Collection<String> bonusWords, String testTitle ) {
+        double bonus = 0.0;
+        bonusWords.addAll( this.getMicroarrayStringsToMatch( testTitle ) );
+        for ( String n : bonusWords ) {
+            if ( testTitle.contains( n ) ) {
+                DatasetCombiner.log.debug( testTitle + " gets a bonus in matching " + targetTitle );
+                bonus = 1; // this basically means we discount that difference.
+                break;
+            }
+        }
+        return bonus;
     }
 
     /**
@@ -768,9 +805,9 @@ public class DatasetCombiner {
      */
     private Collection<String> getMicroarrayStringsToMatch( String title ) {
         Collection<String> result = new HashSet<>();
-        for ( String key : microarrayNameStrings.keySet() ) {
+        for ( String key : DatasetCombiner.microarrayNameStrings.keySet() ) {
             if ( title.contains( key ) ) {
-                for ( String value : microarrayNameStrings.get( key ) ) {
+                for ( String value : DatasetCombiner.microarrayNameStrings.get( key ) ) {
                     if ( title.contains( value ) ) {
                         result.add( value );
                     }
@@ -790,7 +827,7 @@ public class DatasetCombiner {
     }
 
     private boolean meetsMinimalThreshold( double normalizedDistance ) {
-        return !( normalizedDistance > SIMILARITY_THRESHOLD );
+        return !( normalizedDistance > DatasetCombiner.SIMILARITY_THRESHOLD );
     }
 
     /**
@@ -821,7 +858,7 @@ public class DatasetCombiner {
         }
 
         if ( !accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
-            log.debug( testAcc + " From wrong organism" );
+            DatasetCombiner.log.debug( testAcc + " From wrong organism" );
             shouldTest = false;
         }
         return shouldTest;

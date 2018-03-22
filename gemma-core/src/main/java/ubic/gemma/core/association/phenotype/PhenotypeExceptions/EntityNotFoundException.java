@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,22 +21,14 @@ package ubic.gemma.core.association.phenotype.PhenotypeExceptions;
 /**
  * Used to signifity that an entity was not found in the system.
  * <hr>
- * <p>
  * Copyright (c) 2004-2006 University of British Columbia
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class EntityNotFoundException extends RuntimeException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -4361183252269974829L;
 
-    /**
-     * @param string
-     */
     public EntityNotFoundException( String string ) {
         super( string );
     }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@ package ubic.gemma.core.loader.protein.string;
 
 import org.apache.commons.configuration.ConfigurationException;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.HttpArchiveFetcherInterface;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
@@ -41,13 +42,7 @@ import java.util.Collection;
  */
 public class StringProteinFileFetcher extends HttpFetcher implements HttpArchiveFetcherInterface {
 
-    public final static String INTERACTION = "protein.string.linksdetailed.remotepath";
-
-    /**
-     * Current version of string
-     */
-    public final static String STRING_VERSION_NUMBER = "";
-
+    private final static String INTERACTION = "protein.string.linksdetailed.remotepath";
     /**
      * Name of string protein file to download
      */
@@ -68,7 +63,7 @@ public class StringProteinFileFetcher extends HttpFetcher implements HttpArchive
             this.setStringProteinLinksDetailedFileName( stringProteinFileNameToFetch );
         }
 
-        log.info( "Starting download of protein STRING File at " + stringProteinFileName );
+        AbstractFetcher.log.info( "Starting download of protein STRING File at " + stringProteinFileName );
         return super.fetch( stringProteinFileName );
     }
 
@@ -78,12 +73,13 @@ public class StringProteinFileFetcher extends HttpFetcher implements HttpArchive
      * @throws RuntimeException (ConfigurationException) one of the file download paths in the properties file was not configured
      *                          correctly.
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     @Override
     public void initConfig() {
-
-        stringProteinFileName = Settings.getString( INTERACTION );
+        stringProteinFileName = Settings.getString( StringProteinFileFetcher.INTERACTION );
         if ( stringProteinFileName == null || stringProteinFileName.length() == 0 )
-            throw new RuntimeException( new ConfigurationException( INTERACTION + " was null or empty" ) );
+            throw new RuntimeException(
+                    new ConfigurationException( StringProteinFileFetcher.INTERACTION + " was null or empty" ) );
     }
 
     /**

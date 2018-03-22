@@ -2,7 +2,7 @@ Ext.namespace( 'Gemma' );
 
 /**
  * 
- * Top level container for all sections of gene group info Sections are: 1. Summary (has editing tools) TODO ...
+ * Top level container for all sections of gene group info Sections are: 1. Summary (has editing tools)
  * 
  * @class Gemma.GeneSetPage
  * @extends Ext.TabPanel

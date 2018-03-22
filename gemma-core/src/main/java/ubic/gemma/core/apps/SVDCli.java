@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,110 +21,77 @@ package ubic.gemma.core.apps;
 
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
- *
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
+
+    public static void main( String[] args ) {
+        SVDCli s = new SVDCli();
+        Exception e = s.doWork( args );
+
+        if ( e != null ) {
+            AbstractCLI.log.error( e, e );
+        }
+        System.exit( 0 ); // dangling threads?
+    }
 
     @Override
     public String getShortDesc() {
         return "Run PCA (using SVD) on data sets";
     }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        SVDCli s = new SVDCli();
-        Exception e = s.doWork( args );
-
-        if ( e != null ) {
-            log.error( e, e );
-        }
-        System.exit( 0 ); // dangling threads?
-
-    }
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
-    private boolean postAnalysisOnly = false;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        super.addForceOption();
+    }
+
     @Override
     public String getCommandName() {
         return "pca";
     }
 
-    // @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addForceOption();
-
-        // Option postanalyzeOnlyOpt = OptionBuilder
-        // .withLongOpt( "post" )
-        // .withDescription(
-        // "Don't perform SVD if possible, just update the statistics of comparisons with factors etc. Implies -force" )
-        // .create();
-        // super.addOption( postanalyzeOnlyOpt );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = super.processCommandLine( args );
 
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
-        SVDService svdser = this.getBean( SVDService.class );
+        SVDService svdService = this.getBean( SVDService.class );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
 
-            if ( !postAnalysisOnly && !force && !needToRun( bas, PCAAnalysisEvent.class ) ) {
+            if ( !force && this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
                 this.errorObjects.add( bas + ": Already has PCA; use -force to override" );
                 continue;
             }
 
             try {
-                log.info( "Processing: " + bas );
+                AbstractCLI.log.info( "Processing: " + bas );
                 ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-                // if ( postAnalysisOnly ) {
-                // /not stored in the database, so this is useless.
-                // svdser.getSvdFactorAnalysis( ee.getId() );
-                // } else {
-                svdser.svd( ee.getId() );
-                // }
-                this.successObjects.add( bas.toString() );
 
+                svdService.svd( ee.getId() );
+
+                this.successObjects.add( bas.toString() );
             } catch ( Exception e ) {
-                log.error( e, e );
+                AbstractCLI.log.error( e, e );
                 this.errorObjects.add( bas + ": " + e.getMessage() );
             }
         }
-        summarizeProcessing();
+        this.summarizeProcessing();
         return null;
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        // if ( hasOption( "post" ) ) {
-        // this.postAnalysisOnly = true;
-        // }
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,10 +26,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLParser;
-import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -67,7 +67,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
 
         try {
             Collection<BibliographicReference> brl = pmp
-                    .parse( getClass().getResourceAsStream( "/data/pubmed-test.xml" ) );
+                    .parse( this.getClass().getResourceAsStream( "/data/pubmed-test.xml" ) );
             br = brl.iterator().next();
 
             /* set the bib ref's pubmed accession number to the database entry. */

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,7 +57,7 @@ import static org.junit.Assert.*;
  */
 public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoServiceTest {
 
-    Collection<ExpressionExperiment> ees;
+    private Collection<ExpressionExperiment> ees;
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
     @Autowired
@@ -84,7 +84,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
     @Before
     public void before() throws Exception {
-        ees = getDataset();
+        ees = this.getDataset();
     }
 
     /**
@@ -110,7 +110,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );
         assertEquals( 40, v.size() );
 
-        Collection<Gene> genes = getGeneAssociatedWithEe( ee );
+        Collection<Gene> genes = this.getGeneAssociatedWithEe( ee );
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
 
@@ -127,10 +127,10 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         ExpressionExperiment ee;
         try {
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse432Short" ) ) );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse432Short" ) ) );
             //noinspection unchecked
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                    .fetchAndLoad( "GSE432", false, true, false, false );
+                    .fetchAndLoad( "GSE432", false, true, false );
             ee = results.iterator().next();
 
             TwoChannelMissingValues tcmv = this.getBean( TwoChannelMissingValues.class );
@@ -160,7 +160,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
     private Collection<Gene> getGeneAssociatedWithEe( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = this.expressionExperimentService.getArrayDesignsUsed( ee );
-        Collection<Gene> genes = new HashSet<Gene>();
+        Collection<Gene> genes = new HashSet<>();
         for ( ArrayDesign ad : ads ) {
             Taxon taxon = this.getTaxon( "mouse" );
             ad = this.arrayDesignService.thaw( ad );

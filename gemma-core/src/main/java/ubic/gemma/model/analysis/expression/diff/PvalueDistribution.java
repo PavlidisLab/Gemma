@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,27 +18,12 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-public abstract class PvalueDistribution implements java.io.Serializable {
+public class PvalueDistribution implements java.io.Serializable {
 
     private static final long serialVersionUID = -4783507721422402289L;
     private Integer numBins;
     private byte[] binCounts;
     private Long id;
-    
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof PvalueDistribution ) ) {
-            return false;
-        }
-        final PvalueDistribution that = ( PvalueDistribution ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
 
     public byte[] getBinCounts() {
         return this.binCounts;
@@ -75,9 +60,21 @@ public abstract class PvalueDistribution implements java.io.Serializable {
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof PvalueDistribution ) ) {
+            return false;
+        }
+        final PvalueDistribution that = ( PvalueDistribution ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
         public static PvalueDistribution newInstance() {
-            return new PvalueDistributionImpl();
+            return new PvalueDistribution();
         }
     }
 

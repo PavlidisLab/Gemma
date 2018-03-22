@@ -18,13 +18,12 @@
  */
 package ubic.gemma.core.loader.expression.arrayExpress;
 
-import java.io.File;
-
 import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.gemma.core.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
 
 /**
  * Fetch the SRDF file
@@ -48,8 +47,7 @@ public class SDRFFetcher extends FtpFetcher {
     @Override
     protected String formRemoteFilePath( String identifier ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" ).replaceFirst( "E-", "" );
-        String seekFile = remoteBaseDir + dirName + "/" + identifier + "/" + identifier + ".sdrf.txt";
-        return seekFile;
+        return remoteBaseDir + dirName + "/" + identifier + "/" + identifier + ".sdrf.txt";
     }
 
     @Override

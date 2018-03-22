@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS,  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -39,6 +39,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -55,7 +56,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private static final boolean CLEAN_UP = true;
 
-    private static Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
+    private static final Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
     @Autowired
     private BatchInfoPopulationHelperService batchInfoPopulationHelperService = null;
     @Autowired
@@ -92,46 +93,35 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     @Override
-    public boolean fillBatchInformation( ExpressionExperiment ee ) {
-        return this.fillBatchInformation( ee, false );
-    }
-
-    @Override
     public boolean fillBatchInformation( ExpressionExperiment ee, boolean force ) {
 
-        boolean needed = force || needToRun( ee );
+        boolean needed = force || this.needToRun( ee );
 
         if ( !needed ) {
-            log.info(
-                    "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
+            BatchInfoPopulationServiceImpl.log
+                    .info( "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
             return false;
         }
 
         Collection<LocalFile> files = null;
         try {
-            files = fetchRawDataFiles( ee );
-
+            files = this.fetchRawDataFiles( ee );
             if ( files == null || files.isEmpty() ) {
                 this.auditTrailService
                         .addUpdateEvent( ee, FailedBatchInformationMissingEvent.class, "No files were found", "" );
                 return false;
             }
-
-            boolean success = getBatchDataFromRawFiles( ee, files ); // does audit as well.
-
-            return success;
-            // throw new RuntimeException();
-
+            return this.getBatchDataFromRawFiles( ee, files );
         } catch ( Exception e ) {
-            log.info( e, e );
+            BatchInfoPopulationServiceImpl.log.info( e, e );
             this.auditTrailService.addUpdateEvent( ee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getStackTrace( e ) );
 
             return false;
         } finally {
-            if ( CLEAN_UP && files != null ) {
+            if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
                 for ( LocalFile localFile : files ) {
-                    localFile.asFile().delete();
+                    EntityUtils.deleteFile( localFile.asFile() );
                 }
             }
         }
@@ -147,8 +137,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         RawDataFetcher fetcher = new RawDataFetcher();
         DatabaseEntry accession = ee.getAccession();
         if ( accession == null ) {
-            log.warn( "No accession for " + ee.getShortName() );
-            return new HashSet<LocalFile>();
+            BatchInfoPopulationServiceImpl.log.warn( "No accession for " + ee.getShortName() );
+            return new HashSet<>();
         }
         return fetcher.fetch( accession.getAccession() );
     }
@@ -170,7 +160,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
 
-        removeExistingBatchFactor( ee );
+        this.removeExistingBatchFactor( ee );
 
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
 
@@ -178,12 +168,13 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             int numberOfBatches =
                     factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues().size();
 
-            List<Date> allDates = new ArrayList<Date>();
-            allDates.addAll( dates.values() );
+            List<Date> allDates = new ArrayList<>( dates.values() );
             Collections.sort( allDates );
             String datesString = StringUtils.join( allDates, "\n" );
 
-            log.info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches + " batches." );
+            BatchInfoPopulationServiceImpl.log
+                    .info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches
+                            + " batches." );
             this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class,
                     batchInfoParser.getScanDateExtractor().getClass().getSimpleName() + "; " + numberOfBatches
                             + " batches.", "Dates of sample runs: " + datesString );
@@ -204,13 +195,14 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         assert eevo != null;
 
         if ( StringUtils.isBlank( eevo.getAccession() ) ) {
-            log.info( ee
+            BatchInfoPopulationServiceImpl.log.info( ee
                     + " lacks an external accession to use for fetching, will not attempt to fetch raw data files." );
             return false;
         }
 
         if ( eevo.getTechnologyType().equals( "NONE" ) ) {
-            log.info( ee + " has technology type 'NONE', will not attempt to fetch raw data files" );
+            BatchInfoPopulationServiceImpl.log
+                    .info( ee + " has technology type 'NONE', will not attempt to fetch raw data files" );
             return false;
         }
 
@@ -244,7 +236,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
 
-            if ( isBatchFactor( ef ) ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 toRemove = ef;
                 break;
                 /*
@@ -257,7 +249,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             return;
         }
 
-        log.info( "Removing existing batch factor: " + toRemove );
+        BatchInfoPopulationServiceImpl.log.info( "Removing existing batch factor: " + toRemove );
         experimentalFactorService.delete( toRemove );
         ee.getExperimentalDesign().getExperimentalFactors().remove( toRemove );
         this.expressionExperimentService.update( ee );

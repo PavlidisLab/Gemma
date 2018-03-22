@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Driver script for the Gemma CLI.
 
 
@@ -12,4 +13,4 @@ JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
 CMD="$JAVACMD -classpath ${GEMMA_LIB}:${JARS} GemmaCLI $APPARGS"
 
-$CMD
+${CMD}

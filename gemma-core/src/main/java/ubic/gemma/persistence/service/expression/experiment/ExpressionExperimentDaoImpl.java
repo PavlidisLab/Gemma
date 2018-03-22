@@ -36,15 +36,16 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.util.*;
 
 import java.util.*;
@@ -61,9 +62,12 @@ public class ExpressionExperimentDaoImpl
     private static final int BATCH_SIZE = 1000;
     private static final int NON_ADMIN_QUERY_FILTER_COUNT = 2;
 
+    private BioAssayDao bioAssayDao;
+
     @Autowired
-    public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
+    public ExpressionExperimentDaoImpl( SessionFactory sessionFactory, BioAssayDao bioAssayDao ) {
         super( ExpressionExperiment.class, sessionFactory );
+        this.bioAssayDao = bioAssayDao;
     }
 
     @Override
@@ -73,192 +77,6 @@ public class ExpressionExperimentDaoImpl
                         + " ee.bioAssays as ba left join ba.arrayDesignUsed as ad"
                         + " where ee.curationDetails.troubled = false and ad.curationDetails.troubled = false" )
                 .uniqueResult() ).intValue();
-    }
-
-    @Override
-    public ExpressionExperiment findOrCreate( ExpressionExperiment entity ) {
-        if ( entity.getShortName() == null && entity.getName() == null && entity.getAccession() == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment must have name or external accession." );
-        }
-        return super.findOrCreate( entity );
-    }
-
-    /**
-     * @deprecated use the service layer ({@link ExpressionExperimentService}) for EE removal. There is mandatory house
-     * keeping before you can
-     * remove the experiment. Attempting to call this method directly will likely result in
-     * org.hibernate.exception.ConstraintViolationException
-     */
-    @Override
-    @Deprecated
-    public void remove( Long id ) {
-        throw new NotImplementedException(
-                "Use the EEService.remove(ExpressionExperiment) instead, this method would not do what you want it to." );
-    }
-
-    @Override
-    public void remove( final ExpressionExperiment toDelete ) {
-
-        if ( toDelete == null )
-            throw new IllegalArgumentException();
-
-        Session session = this.getSessionFactory().getCurrentSession();
-
-        try {
-            // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
-
-            // At this point, the ee is probably still in the session, as the service already has gotten it
-            // in this transaction.
-            session.flush();
-            session.clear();
-
-            session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
-
-            Hibernate.initialize( toDelete.getAuditTrail() );
-
-            Set<BioAssayDimension> dims = new HashSet<>();
-            Set<QuantitationType> qts = new HashSet<>();
-            Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
-            Hibernate.initialize( designElementDataVectors );
-            toDelete.setRawExpressionDataVectors( null );
-
-            /*
-             * We don't delete the investigators, just breaking the association.
-             */
-            toDelete.getInvestigators().clear();
-
-            int count = 0;
-            if ( designElementDataVectors != null ) {
-                log.info( "Removing Design Element Data Vectors ..." );
-                for ( RawExpressionDataVector dv : designElementDataVectors ) {
-                    BioAssayDimension bad = dv.getBioAssayDimension();
-                    dims.add( bad );
-                    QuantitationType qt = dv.getQuantitationType();
-                    qts.add( qt );
-                    dv.setBioAssayDimension( null );
-                    dv.setQuantitationType( null );
-                    session.delete( dv );
-                    if ( ++count % 1000 == 0 ) {
-                        session.flush();
-                    }
-                    // put back...
-                    dv.setBioAssayDimension( bad );
-                    dv.setQuantitationType( qt );
-
-                    if ( count % 20000 == 0 ) {
-                        log.info( count + " design Element data vectors deleted" );
-                    }
-                }
-                count = 0;
-                // designElementDataVectors.clear();
-            }
-
-            Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
-
-            Hibernate.initialize( processedVectors );
-            if ( processedVectors != null && processedVectors.size() > 0 ) {
-
-                toDelete.setProcessedExpressionDataVectors( null );
-
-                for ( ProcessedExpressionDataVector dv : processedVectors ) {
-                    BioAssayDimension bad = dv.getBioAssayDimension();
-                    dims.add( bad );
-                    QuantitationType qt = dv.getQuantitationType();
-                    qts.add( qt );
-                    dv.setBioAssayDimension( null );
-                    dv.setQuantitationType( null );
-                    session.delete( dv );
-                    if ( ++count % 1000 == 0 ) {
-                        session.flush();
-                    }
-                    if ( count % 20000 == 0 ) {
-                        log.info( count + " processed design Element data vectors deleted" );
-                    }
-
-                    // put back..
-                    dv.setBioAssayDimension( bad );
-                    dv.setQuantitationType( qt );
-                }
-                // processedVectors.clear();
-            }
-
-            session.flush();
-            session.clear();
-            session.update( toDelete );
-
-            log.info( "Removing BioAssay Dimensions ..." );
-            for ( BioAssayDimension dim : dims ) {
-                dim.getBioAssays().clear();
-                session.update( dim );
-                session.delete( dim );
-            }
-            dims.clear();
-            session.flush();
-
-            log.info( "Removing Bioassays and biomaterials ..." );
-
-            // keep to put back in the object.
-            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
-
-            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
-            Collection<BioAssay> bioAssays = toDelete.getBioAssays();
-
-            for ( BioAssay ba : bioAssays ) {
-                // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-                // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
-
-                BioMaterial biomaterial = ba.getSampleUsed();
-
-                if ( biomaterial == null )
-                    continue; // shouldn't...
-
-                bioMaterialsToDelete.add( biomaterial );
-
-                copyOfRelations.put( ba, biomaterial );
-
-                session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
-
-                Hibernate.initialize( biomaterial );
-
-                // this can easily end up with an unattached object.
-                Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
-
-                biomaterial.getFactorValues().clear();
-                biomaterial.getBioAssaysUsedIn().clear();
-
-                ba.setSampleUsed( null );
-            }
-
-            log.info( "Last bits ..." );
-
-            // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
-            for ( BioMaterial bm : bioMaterialsToDelete ) {
-                session.delete( bm );
-            }
-
-            for ( QuantitationType qt : qts ) {
-                session.delete( qt );
-            }
-
-            session.flush();
-            session.delete( toDelete );
-
-            /*
-             * Put transient instances back. This is possibly useful for clearing ACLS.
-             */
-            toDelete.setProcessedExpressionDataVectors( processedVectors );
-            toDelete.setRawExpressionDataVectors( designElementDataVectors );
-            for ( BioAssay ba : toDelete.getBioAssays() ) {
-                ba.setSampleUsed( copyOfRelations.get( ba ) );
-            }
-
-            log.info( "Deleted " + toDelete );
-        } catch ( Exception e ) {
-            log.error( e );
-        } finally {
-            log.info( "Finalising remove method." );
-            // session.disconnect();
-        }
     }
 
     @Override
@@ -282,7 +100,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment thawForFrontEnd( final ExpressionExperiment expressionExperiment ) {
-        return this.thawLiter( expressionExperiment, false );
+        return this.thawLiter( expressionExperiment );
     }
 
     @Override
@@ -303,78 +121,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         return result;
-    }
-
-    /**
-     * @param offset      amount of EEs to skip.
-     * @param limit       maximum amount of EEs to retrieve.
-     * @param orderBy     the property to order by.
-     * @param asc         whether the ordering is ascending or descending.
-     * @param filters     An array representing either a conjunction (AND) or disjunction (OR) of filters.
-     * @param disjunction true to signal that the filters property is a disjunction (OR). False will cause the
-     *                    filters property to be treated as a conjunction (AND).
-     *                    If you are passing a single filter, using <code>false</code> is slightly more effective;
-     * @return a hibernate Query object ready to be used for EEVO retrieval.
-     */
-    private Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit,
-            String orderBy, boolean asc, ObjectFilter[] filters, boolean disjunction ) {
-        if ( filters == null ) {
-            return this.loadValueObjectsPreFilter( offset, limit, orderBy, asc, null );
-        }
-
-        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( disjunction ? filters.length : 1 );
-        if ( disjunction ) {
-            ObjectFilter[] filterArray = new ObjectFilter[filters.length];
-            int i = 0;
-            for ( ObjectFilter filter : filters ) {
-                filterArray[i++] = filter;
-            }
-            filterList.add( filterArray );
-        } else {
-            for ( ObjectFilter filter : filters ) {
-                filterList.add( new ObjectFilter[] { filter } );
-            }
-        }
-
-        return this.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filterList );
-    }
-
-    /**
-     * Loads value objects of experiments matching the given criteria using a query that pre-filters for EEs
-     * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
-     * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
-     *
-     * @param offset  amount of EEs to skip.
-     * @param limit   maximum amount of EEs to retrieve.
-     * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
-     *                be a property of EE itself, or any nested property that hibernate can reach.
-     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
-     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
-     * @param filter  see this#formRestrictionClause(ArrayList) filters argument for description.
-     * @return list of value objects representing the EEs that matched the criteria.
-     */
-    @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
-            boolean asc, ArrayList<ObjectFilter[]> filter ) {
-
-        String orderByProperty = this.getOrderByProperty( orderBy );
-
-        // Compose query
-        Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
-        query.setCacheable( true );
-        query.setMaxResults( limit > 0 ? limit : -1 );
-        query.setFirstResult( offset );
-
-        //noinspection unchecked
-        List<Object[]> list = query.list();
-        List<ExpressionExperimentValueObject> vos = new ArrayList<>( list.size() );
-
-        for ( Object[] row : list ) {
-            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( row );
-            vos.add( vo );
-        }
-
-        return vos;
     }
 
     /**
@@ -402,8 +148,8 @@ public class ExpressionExperimentDaoImpl
         }
 
         // Compose query
-        Query query = this.getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {{ add( filters ); }},
-                getOrderByProperty( orderBy ), descending );
+        Query query = this.getLoadValueObjectsQueryString( new ArrayList<ObjectFilter[]>() {{ this.add( filters ); }},
+                this.getOrderByProperty( orderBy ), descending );
 
         query.setCacheable( true );
         if ( limit > 0 ) {
@@ -424,13 +170,13 @@ public class ExpressionExperimentDaoImpl
 
             // QTs
             if ( row[24] != null && vo.getTechnologyType() != null ) {
-                fillQuantitationTypeInfo( ( QuantitationType ) row[24], vo );
+                this.fillQuantitationTypeInfo( ( QuantitationType ) row[24], vo );
             }
 
             vos.add( vo );
         }
 
-        populateAnalysisInformation( vos );
+        this.populateAnalysisInformation( vos );
 
         return vos;
     }
@@ -444,64 +190,6 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection unchecked
         return query.list();
-    }
-
-    @Override
-    public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        Query query = this.getSessionFactory().getCurrentSession()
-                .createQuery( "from ExpressionExperiment order by " + orderField + " " + ( descending ? "desc" : "" ) );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
-        query.setFirstResult( start );
-
-        //noinspection unchecked
-        return query.list();
-    }
-
-    @Override
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
-        Query query = this.getSessionFactory().getCurrentSession()
-                .createQuery( "from ExpressionExperiment where id in (:ids) " );
-        query.setParameterList( "ids", ids );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
-        query.setFirstResult( start );
-
-        //noinspection unchecked
-        return query.list();
-    }
-
-    @Override
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
-            boolean descending, Collection<Long> ids ) {
-
-        Query query = this.getSessionFactory().getCurrentSession().createQuery(
-                "from ExpressionExperiment where id in (:ids) order by " + orderField + " " + ( descending ?
-                        "desc" :
-                        "" ) );
-        query.setParameterList( "ids", ids );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
-        query.setFirstResult( start );
-
-        //noinspection unchecked
-        return query.list();
-    }
-
-    @Override
-    public ExpressionExperiment find( ExpressionExperiment entity ) {
-
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
-
-        if ( entity.getAccession() != null ) {
-            criteria.add( Restrictions.eq( "accession", entity.getAccession() ) );
-        } else if ( entity.getShortName() != null ) {
-            criteria.add( Restrictions.eq( "shortName", entity.getShortName() ) );
-        } else {
-            criteria.add( Restrictions.eq( "name", entity.getName() ) );
-        }
-
-        return ( ExpressionExperiment ) criteria.uniqueResult();
     }
 
     @Override
@@ -527,6 +215,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
+        //language=HQL
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
                         + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
@@ -577,16 +266,6 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
-        if ( date == null )
-            return Collections.emptyList();
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated > :date" )
-                .setDate( "date", date ).list();
-    }
-
-    @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
 
         ExpressionExperiment ee;
@@ -608,7 +287,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
-        String queryString = "select distinct b from BioAssayDimensionImpl b, ExpressionExperiment e "
+        String queryString = "select distinct b from BioAssayDimension b, ExpressionExperiment e "
                 + "inner join b.bioAssays bba inner join e.bioAssays eb where eb = bba and e = :ee ";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -623,33 +302,9 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
-            ExpressionExperiment expressionExperiment ) {
-        final String queryString = "from ProcessedExpressionDataVectorImpl where expressionExperiment = :ee";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ee", expressionExperiment ).list();
-    }
-
-    @Override
-    public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
-        return this.loadValueObject( entity.getId() );
-    }
-
-    @Override
-    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
-        return this.loadValueObjects( EntityUtils.getIds( entities ), false );
-    }
-
-    @Override
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
-        return loadValueObjectsPreFilter( 0, -1, null, true, null );
-    }
-
-    @Override
     public Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField,
             boolean descending ) {
-        return loadValueObjectsPreFilter( 0, -1, orderField, !descending, null, true );
+        return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, null, true );
     }
 
     @Override
@@ -658,7 +313,7 @@ public class ExpressionExperimentDaoImpl
                 new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ),
                 new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
 
-        return loadValueObjectsPreFilter( 0, -1, null, true, filter, true );
+        return this.loadValueObjectsPreFilter( 0, -1, null, true, filter, true );
     }
 
     @Override
@@ -670,7 +325,7 @@ public class ExpressionExperimentDaoImpl
         ObjectFilter[] filter = new ObjectFilter[] {
                 new ObjectFilter( "id", ids, ObjectFilter.in, ObjectFilter.DAO_EE_ALIAS ) };
 
-        return loadValueObjectsPreFilter( 0, -1, orderField, !descending, filter, true );
+        return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, filter, true );
     }
 
     @Override
@@ -681,7 +336,7 @@ public class ExpressionExperimentDaoImpl
                 new ObjectFilter( "id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ),
                 new ObjectFilter( "parentTaxon.id", taxon.getId(), ObjectFilter.is, ObjectFilter.DAO_TAXON_ALIAS ) };
 
-        return loadValueObjectsPreFilter( 0, -1, orderField, !descending, filter, true );
+        return this.loadValueObjectsPreFilter( 0, -1, orderField, !descending, filter, true );
     }
 
     @Override
@@ -739,7 +394,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         if ( finalValues.isEmpty() ) {
-            log.error( "No values were retrieved for the ids provided" );
+            AbstractDao.log.error( "No values were retrieved for the ids provided" );
         }
 
         if ( isList ) {
@@ -747,11 +402,11 @@ public class ExpressionExperimentDaoImpl
         }
 
         return finalValues;
-
     }
 
     @Override
     public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID ) {
+        //language=HQL
         final String queryString =
                 "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
                         + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
@@ -764,13 +419,14 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByBioAssay( BioAssay ba ) {
 
+        //language=HQL
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba";
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ba", ba )
                 .list();
 
         if ( list.size() == 0 ) {
-            log.warn( "No expression experiment for " + ba );
+            AbstractDao.log.warn( "No expression experiment for " + ba );
             return null;
         }
 
@@ -778,7 +434,7 @@ public class ExpressionExperimentDaoImpl
             /*
              * This really shouldn't happen!
              */
-            log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba
+            AbstractDao.log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba
                     + " Only 1 returned." );
         }
         return ( ExpressionExperiment ) list.iterator().next();
@@ -787,6 +443,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public ExpressionExperiment findByBioMaterial( BioMaterial bm ) {
 
+        //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee "
                 + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample = :bm";
 
@@ -794,14 +451,15 @@ public class ExpressionExperimentDaoImpl
                 .list();
 
         if ( list.size() == 0 ) {
-            log.warn( "No expression experiment for " + bm );
+            AbstractDao.log.warn( "No expression experiment for " + bm );
             return null;
         }
         if ( list.size() > 1 ) {
             /*
              * This really shouldn't happen!
              */
-            log.warn( "Found " + list.size() + " expression experiment for the given bm: " + bm + " Only 1 returned." );
+            AbstractDao.log.warn( "Found " + list.size() + " expression experiment for the given bm: " + bm
+                    + " Only 1 returned." );
         }
         return ( ExpressionExperiment ) list.iterator().next();
     }
@@ -811,6 +469,7 @@ public class ExpressionExperimentDaoImpl
         if ( bms == null || bms.size() == 0 ) {
             return new HashSet<>();
         }
+        //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee "
                 + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample in (:bms)";
 
@@ -819,7 +478,7 @@ public class ExpressionExperimentDaoImpl
 
         for ( BioMaterial o : bms ) {
             batch.add( o );
-            if ( batch.size() == BATCH_SIZE ) {
+            if ( batch.size() == ExpressionExperimentDaoImpl.BATCH_SIZE ) {
 
                 //noinspection unchecked
                 results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -841,6 +500,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank ) {
 
+        //language=MySQL
         final String queryString = "SELECT DISTINCT ee.ID AS eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, PROCESSED_EXPRESSION_DATA_VECTOR dedv, INVESTIGATION ee "
                 + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID"
@@ -872,6 +532,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByFactor( ExperimentalFactor ef ) {
+        //language=HQL
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
                         + "inner join ed.experimentalFactors ef where ef = :ef ";
@@ -880,7 +541,7 @@ public class ExpressionExperimentDaoImpl
                 .list();
 
         if ( results.size() == 0 ) {
-            log.info( "There is no expression experiment that has factor = " + ef );
+            AbstractDao.log.info( "There is no expression experiment that has factor = " + ef );
             return null;
         }
         return ( ExpressionExperiment ) results.iterator().next();
@@ -888,11 +549,12 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByFactorValue( FactorValue fv ) {
-        return findByFactorValue( fv.getId() );
+        return this.findByFactorValue( fv.getId() );
     }
 
     @Override
     public ExpressionExperiment findByFactorValue( Long factorValueId ) {
+        //language=HQL
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee inner join ee.experimentalDesign ed "
                         + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv.id = :fvId ";
@@ -902,7 +564,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "fvId", factorValueId ).list();
 
         if ( results.size() == 0 ) {
-            log.info( "There is no expression experiment that has factorValue ID= " + factorValueId );
+            AbstractDao.log.info( "There is no expression experiment that has factorValue ID= " + factorValueId );
             return null;
         }
 
@@ -926,12 +588,13 @@ public class ExpressionExperimentDaoImpl
             return new HashSet<>();
         }
 
+        //language=HQL
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign in (:eds) ";
         Collection<ExpressionExperiment> results = new HashSet<>();
         Collection<ExperimentalDesign> batch = new HashSet<>();
         for ( ExperimentalDesign o : eds ) {
             batch.add( o );
-            if ( batch.size() == BATCH_SIZE ) {
+            if ( batch.size() == ExpressionExperimentDaoImpl.BATCH_SIZE ) {
 
                 //noinspection unchecked
                 results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -957,6 +620,7 @@ public class ExpressionExperimentDaoImpl
         /*
          * uses GENE2CS table.
          */
+        //language=MySQL
         final String queryString = "SELECT DISTINCT ee.ID AS eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, INVESTIGATION ee "
                 + "WHERE g2s.CS = cs.ID AND ad.ID = cs.ARRAY_DESIGN_FK AND ba.ARRAY_DESIGN_USED_FK = ad.ID AND"
@@ -981,6 +645,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperiment> findByParentTaxon( Taxon taxon ) {
+        //language=HQL
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
                         + "inner join ba.sampleUsed as sample "
@@ -993,6 +658,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType ) {
+        //language=HQL
         final String queryString =
                 "select ee from ExpressionExperiment as ee " + "inner join ee.quantitationTypes qt where qt = :qt ";
 
@@ -1010,6 +676,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperiment> findByTaxon( Taxon taxon ) {
+        //language=HQL
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
                         + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon";
@@ -1032,13 +699,14 @@ public class ExpressionExperimentDaoImpl
         List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        addIdsToResults( results, res );
+        this.addIdsToResults( results, res );
         return results;
     }
 
     @Override
     @Deprecated
     public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids ) {
+        //language=HQL
         final String queryString =
                 "select ee.id, ad.id, event " + "from ExpressionExperiment ee " + "inner join ee.bioAssays b "
                         + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
@@ -1075,6 +743,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
+        //language=HQL
         final String queryString =
                 "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
                         + " where ee.id in (:ids) ";
@@ -1089,7 +758,7 @@ public class ExpressionExperimentDaoImpl
             Long id = ( Long ) row[0];
             AuditEvent event = ( AuditEvent ) row[1];
 
-            addEventsToMap( eventMap, id, event );
+            this.addEventsToMap( eventMap, id, event );
         }
         // add in expression experiment ids that do not have events. Set
         // their values to null.
@@ -1105,6 +774,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Integer getBioAssayCountById( long Id ) {
+        //language=HQL
         final String queryString =
                 "select count(ba) from ExpressionExperiment ee " + "inner join ee.bioAssays ba where ee.id = :ee";
 
@@ -1112,7 +782,7 @@ public class ExpressionExperimentDaoImpl
                 .list();
 
         if ( list.size() == 0 ) {
-            log.warn( "No vectors for experiment with id " + Id );
+            AbstractDao.log.warn( "No vectors for experiment with id " + Id );
             return 0;
         }
 
@@ -1121,6 +791,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Integer getBioMaterialCount( ExpressionExperiment expressionExperiment ) {
+        //language=HQL
         final String queryString =
                 "select count(distinct sample) from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
                         + "inner join ba.sampleUsed as sample where ee.id = :eeId ";
@@ -1138,13 +809,14 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Integer getDesignElementDataVectorCountById( long Id ) {
 
+        //language=HQL
         final String queryString = "select count(dedv) from ExpressionExperiment ee "
                 + "inner join ee.rawExpressionDataVectors dedv where ee.id = :ee";
 
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", Id )
                 .list();
         if ( list.size() == 0 ) {
-            log.warn( "No vectors for experiment with id " + Id );
+            AbstractDao.log.warn( "No vectors for experiment with id " + Id );
             return 0;
         }
         return ( ( Long ) list.iterator().next() ).intValue();
@@ -1152,54 +824,8 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<DesignElementDataVector> getDesignElementDataVectors(
-            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
-        if ( designElements == null || designElements.size() == 0 )
-            return new HashSet<>();
-
-        assert quantitationType.getId() != null;
-
-        final String queryString =
-                "select dev from RawExpressionDataVectorImpl as dev inner join dev.designElement as de "
-                        + " where de in (:des) and dev.quantitationType = :qt";
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
-    }
-
-    @Override
-    public Collection<DesignElementDataVector> getDesignElementDataVectors(
-            Collection<QuantitationType> quantitationTypes ) {
-
-        if ( quantitationTypes.isEmpty() ) {
-            throw new IllegalArgumentException( "Must provide at least one quantitation type" );
-        }
-
-        // this essentially does a partial thaw.
-        String queryString =
-                "select dev from RawExpressionDataVectorImpl dev" + " inner join fetch dev.bioAssayDimension bd "
-                        + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
-
-        List results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "qts", quantitationTypes ).list();
-
-        if ( results.isEmpty() ) {
-            queryString = "select dev from ProcessedExpressionDataVectorImpl dev"
-                    + " inner join fetch dev.bioAssayDimension bd "
-                    + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
-
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "qts", quantitationTypes ).list() );
-        }
-
-        //noinspection unchecked
-        return ( Collection<DesignElementDataVector> ) results;
-    }
-
-    @Override
     public Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments ) {
+        //language=HQL
         final String queryString = "select ee.id, max(s.lastUpdated) from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed a join a.curationDetails s "
                 + " where ee in (:ees) group by ee.id ";
@@ -1222,6 +848,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Date getLastArrayDesignUpdate( ExpressionExperiment ee ) {
 
+        //language=HQL
         final String queryString = "select max(s.lastUpdated) from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed a join a.curationDetails s " + " where ee = :ee ";
 
@@ -1307,7 +934,7 @@ public class ExpressionExperimentDaoImpl
         List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", ids ).list();
 
-        addIdsToResults( results, res );
+        this.addIdsToResults( results, res );
         return results;
     }
 
@@ -1332,13 +959,14 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "name", ExperimentalFactorService.BATCH_FACTOR_NAME ) // set batch name
                 .list();
 
-        addIdsToResults( results, res );
+        this.addIdsToResults( results, res );
         return results;
     }
 
     @Override
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( Long id ) {
 
+        //language=HQL
         final String queryString = "select quantType,count(*) as count "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
                 + "inner join ee.rawExpressionDataVectors as vectors "
@@ -1359,6 +987,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
+        //language=HQL
         final String queryString =
                 "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
                         + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
@@ -1372,9 +1001,10 @@ public class ExpressionExperimentDaoImpl
     public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
             ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) {
-            return getQuantitationTypes( expressionExperiment );
+            return this.getQuantitationTypes( expressionExperiment );
         }
 
+        //language=HQL
         final String queryString =
                 "select distinct quantType " + "from ubic.gemma.model.expression.experiment.ExpressionExperiment ee "
                         + "inner join  ee.quantitationTypes as quantType " + "inner join ee.bioAssays as ba "
@@ -1390,6 +1020,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments ) {
+        //language=HQL
         final String queryString = "select ee,ev from ExpressionExperiment ee inner join ee.bioAssays ba "
                 + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
@@ -1407,26 +1038,6 @@ public class ExpressionExperimentDaoImpl
             AuditEvent ae = ( AuditEvent ) ol[1];
             result.get( e ).add( ae );
         }
-        return result;
-    }
-
-    @Override
-    public Collection<DesignElementDataVector> getSamplingOfVectors( QuantitationType quantitationType,
-            Integer limit ) {
-        final String queryString = "select dev from RawExpressionDataVectorImpl dev "
-                + "inner join dev.quantitationType as qt where qt.id = :qtId";
-
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "qtId", quantitationType.getId() ) // Set parameter
-                .setMaxResults( limit * 20 ) // Set the maximum result
-                .list();
-        Collection<DesignElementDataVector> result = new ArrayList<>();
-        Collections.shuffle( list );
-
-        for ( Object aList : list ) {
-            result.add( ( DesignElementDataVector ) aList );
-        }
-
         return result;
     }
 
@@ -1501,6 +1112,315 @@ public class ExpressionExperimentDaoImpl
         }
 
         return result;
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
+        if ( date == null )
+            return Collections.emptyList();
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select e from ExpressionExperiment e join e.curationDetails cd where cd.lastUpdated > :date" )
+                .setDate( "date", date ).list();
+    }
+
+    /**
+     * @deprecated use the service layer ({@link ExpressionExperimentService}) for EE removal. There is mandatory house
+     * keeping before you can
+     * remove the experiment. Attempting to call this method directly will likely result in
+     * org.hibernate.exception.ConstraintViolationException
+     */
+    @Override
+    @Deprecated
+    public void remove( Long id ) {
+        throw new NotImplementedException(
+                "Use the EEService.remove(ExpressionExperiment) instead, this method would not do what you want it to." );
+    }
+
+    @Override
+    public void remove( final ExpressionExperiment ee ) {
+
+        if ( ee == null )
+            throw new IllegalArgumentException();
+
+        Session session = this.getSessionFactory().getCurrentSession();
+
+        try {
+            // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
+
+            // At this point, the ee is probably still in the session, as the service already has gotten it
+            // in this transaction.
+            session.flush();
+            session.clear();
+
+            session.buildLockRequest( LockOptions.NONE ).lock( ee );
+
+            Hibernate.initialize( ee.getAuditTrail() );
+
+            Set<BioAssayDimension> dims = new HashSet<>();
+            Set<QuantitationType> qts = new HashSet<>();
+            Collection<RawExpressionDataVector> designElementDataVectors = ee.getRawExpressionDataVectors();
+            Hibernate.initialize( designElementDataVectors );
+            ee.setRawExpressionDataVectors( null );
+
+            /*
+             * We don't remove the investigators, just breaking the association.
+             */
+            ee.getInvestigators().clear();
+
+            int count = 0;
+            if ( designElementDataVectors != null ) {
+                count = this.removeDataVectors( session, dims, qts, designElementDataVectors, count );
+            }
+
+            Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
+
+            Hibernate.initialize( processedVectors );
+            if ( processedVectors != null && processedVectors.size() > 0 ) {
+                ee.setProcessedExpressionDataVectors( null );
+                this.removeProcessedVectors( session, dims, qts, count, processedVectors );
+            }
+
+            session.flush();
+            session.clear();
+            session.update( ee );
+
+            AbstractDao.log.info( "Removing BioAssay Dimensions ..." );
+            for ( BioAssayDimension dim : dims ) {
+                dim.getBioAssays().clear();
+                session.update( dim );
+                session.delete( dim );
+            }
+            dims.clear();
+            session.flush();
+
+            AbstractDao.log.info( "Removing Bioassays and biomaterials ..." );
+
+            // keep to put back in the object.
+            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
+
+            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
+            Collection<BioAssay> bioAssays = ee.getBioAssays();
+            this.removeBioAssays( session, copyOfRelations, bioMaterialsToDelete, bioAssays );
+
+            AbstractDao.log.info( "Last bits ..." );
+
+            // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
+            for ( BioMaterial bm : bioMaterialsToDelete ) {
+                session.delete( bm );
+            }
+
+            for ( QuantitationType qt : qts ) {
+                session.delete( qt );
+            }
+
+            session.flush();
+            session.delete( ee );
+
+            /*
+             * Put transient instances back. This is possibly useful for clearing ACLS.
+             */
+            ee.setProcessedExpressionDataVectors( processedVectors );
+            ee.setRawExpressionDataVectors( designElementDataVectors );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                ba.setSampleUsed( copyOfRelations.get( ba ) );
+            }
+
+            AbstractDao.log.info( "Deleted " + ee );
+        } catch ( Exception e ) {
+            AbstractDao.log.error( e );
+        } finally {
+            AbstractDao.log.info( "Finalising remove method." );
+        }
+    }
+
+    @Override
+    public ExpressionExperiment find( ExpressionExperiment entity ) {
+
+        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
+
+        if ( entity.getAccession() != null ) {
+            criteria.add( Restrictions.eq( "accession", entity.getAccession() ) );
+        } else if ( entity.getShortName() != null ) {
+            criteria.add( Restrictions.eq( "shortName", entity.getShortName() ) );
+        } else {
+            criteria.add( Restrictions.eq( "name", entity.getName() ) );
+        }
+
+        return ( ExpressionExperiment ) criteria.uniqueResult();
+    }
+
+    @Override
+    public ExpressionExperiment findOrCreate( ExpressionExperiment entity ) {
+        if ( entity.getShortName() == null && entity.getName() == null && entity.getAccession() == null ) {
+            throw new IllegalArgumentException( "ExpressionExperiment must have name or external accession." );
+        }
+        return super.findOrCreate( entity );
+    }
+
+    @Override
+    public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
+        return this.loadValueObject( entity.getId() );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
+        return this.loadValueObjects( EntityUtils.getIds( entities ), false );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
+        return this.loadValueObjectsPreFilter( 0, -1, null, true, null );
+    }
+
+    /**
+     * Loads value objects of experiments matching the given criteria using a query that pre-filters for EEs
+     * that the currently logged-in user can access. This way the returned amount and offset is always guaranteed
+     * to be correct, since the ACL interceptors will not remove any more objects from the returned collection.
+     *
+     * @param offset  amount of EEs to skip.
+     * @param limit   maximum amount of EEs to retrieve.
+     * @param orderBy the field to order the EEs by. Has to be a valid identifier, or exception is thrown. Can either
+     *                be a property of EE itself, or any nested property that hibernate can reach.
+     *                E.g. "curationDetails.lastUpdated". Works for multi-level nesting as well.
+     * @param asc     true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param filter  see this#formRestrictionClause(ArrayList) filters argument for description.
+     * @return list of value objects representing the EEs that matched the criteria.
+     */
+    @Override
+    public Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter ) {
+
+        String orderByProperty = this.getOrderByProperty( orderBy );
+
+        // Compose query
+        Query query = this.getLoadValueObjectsQueryString( filter, orderByProperty, !asc );
+        query.setCacheable( true );
+        query.setMaxResults( limit > 0 ? limit : -1 );
+        query.setFirstResult( offset );
+
+        //noinspection unchecked
+        List<Object[]> list = query.list();
+        List<ExpressionExperimentValueObject> vos = new ArrayList<>( list.size() );
+
+        for ( Object[] row : list ) {
+            ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( row );
+            vos.add( vo );
+        }
+
+        return vos;
+    }
+
+    private void removeBioAssays( Session session, Map<BioAssay, BioMaterial> copyOfRelations,
+            Collection<BioMaterial> bioMaterialsToDelete, Collection<BioAssay> bioAssays ) {
+        for ( BioAssay ba : bioAssays ) {
+            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
+            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassaySet (experiment) owns the bioAssay.
+            BioMaterial biomaterial = ba.getSampleUsed();
+
+            if ( biomaterial == null )
+                continue; // shouldn't...
+
+            bioMaterialsToDelete.add( biomaterial );
+
+            copyOfRelations.put( ba, biomaterial );
+
+            session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
+
+            Hibernate.initialize( biomaterial );
+
+            // this can easily end up with an unattached object.
+            Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
+
+            biomaterial.getFactorValues().clear();
+            biomaterial.getBioAssaysUsedIn().clear();
+
+            ba.setSampleUsed( null );
+        }
+    }
+
+    private void removeProcessedVectors( Session session, Set<BioAssayDimension> dims, Set<QuantitationType> qts,
+            int count, Collection<ProcessedExpressionDataVector> processedVectors ) {
+        for ( ProcessedExpressionDataVector dv : processedVectors ) {
+            BioAssayDimension bad = dv.getBioAssayDimension();
+            dims.add( bad );
+            QuantitationType qt = dv.getQuantitationType();
+            qts.add( qt );
+            dv.setBioAssayDimension( null );
+            dv.setQuantitationType( null );
+            session.delete( dv );
+            if ( ++count % 1000 == 0 ) {
+                session.flush();
+            }
+            if ( count % 20000 == 0 ) {
+                AbstractDao.log.info( count + " processed design Element data vectors deleted" );
+            }
+
+            // put back..
+            dv.setBioAssayDimension( bad );
+            dv.setQuantitationType( qt );
+        }
+    }
+
+    private int removeDataVectors( Session session, Set<BioAssayDimension> dims, Set<QuantitationType> qts,
+            Collection<RawExpressionDataVector> designElementDataVectors, int count ) {
+        AbstractDao.log.info( "Removing Design Element Data Vectors ..." );
+        for ( RawExpressionDataVector dv : designElementDataVectors ) {
+            BioAssayDimension bad = dv.getBioAssayDimension();
+            dims.add( bad );
+            QuantitationType qt = dv.getQuantitationType();
+            qts.add( qt );
+            dv.setBioAssayDimension( null );
+            dv.setQuantitationType( null );
+            session.delete( dv );
+            if ( ++count % 1000 == 0 ) {
+                session.flush();
+            }
+            // put back...
+            dv.setBioAssayDimension( bad );
+            dv.setQuantitationType( qt );
+
+            if ( count % 20000 == 0 ) {
+                AbstractDao.log.info( count + " design Element data vectors deleted" );
+            }
+        }
+        count = 0;
+        return count;
+    }
+
+    /**
+     * @param offset      amount of EEs to skip.
+     * @param limit       maximum amount of EEs to retrieve.
+     * @param orderBy     the property to order by.
+     * @param asc         whether the ordering is ascending or descending.
+     * @param filters     An array representing either a conjunction (AND) or disjunction (OR) of filters.
+     * @param disjunction true to signal that the filters property is a disjunction (OR). False will cause the
+     *                    filters property to be treated as a conjunction (AND).
+     *                    If you are passing a single filter, using <code>false</code> is slightly more effective;
+     * @return a hibernate Query object ready to be used for EEVO retrieval.
+     */
+    @SuppressWarnings("SameParameterValue") // Better reusability
+    private Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit,
+            String orderBy, boolean asc, ObjectFilter[] filters, boolean disjunction ) {
+        if ( filters == null ) {
+            return this.loadValueObjectsPreFilter( offset, limit, orderBy, asc, null );
+        }
+
+        ArrayList<ObjectFilter[]> filterList = new ArrayList<>( disjunction ? filters.length : 1 );
+        if ( disjunction ) {
+            ObjectFilter[] filterArray = new ObjectFilter[filters.length];
+            int i = 0;
+            for ( ObjectFilter filter : filters ) {
+                filterArray[i++] = filter;
+            }
+            filterList.add( filterArray );
+        } else {
+            for ( ObjectFilter filter : filters ) {
+                filterList.add( new ObjectFilter[] { filter } );
+            }
+        }
+
+        return this.loadValueObjectsPreFilter( offset, limit, orderBy, asc, filterList );
     }
 
     /**
@@ -1616,8 +1536,8 @@ public class ExpressionExperimentDaoImpl
             }
         }
 
-        thawReferences( result );
-        thawMeanVariance( result );
+        this.thawReferences( result );
+        this.thawMeanVariance( result );
 
         if ( vectorsAlso ) {
             /*
@@ -1634,11 +1554,10 @@ public class ExpressionExperimentDaoImpl
     /**
      * Method for the front end display
      *
-     * @param ee          expression experiment to be thawed
-     * @param vectorsAlso whether to include raw and processed data vectors. Can cause the query to be very slow.
+     * @param ee expression experiment to be thawed
      * @return thawed expression experiment.
      */
-    private ExpressionExperiment thawLiter( ExpressionExperiment ee, boolean vectorsAlso ) {
+    private ExpressionExperiment thawLiter( ExpressionExperiment ee ) {
         if ( ee == null ) {
             return null;
         }
@@ -1670,13 +1589,8 @@ public class ExpressionExperimentDaoImpl
             Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
         }
 
-        thawReferences( result );
-        thawMeanVariance( result );
-
-        if ( vectorsAlso ) {
-            Hibernate.initialize( result.getRawExpressionDataVectors() );
-            Hibernate.initialize( result.getProcessedExpressionDataVectors() );
-        }
+        this.thawReferences( result );
+        this.thawMeanVariance( result );
 
         return result;
     }
@@ -1694,9 +1608,9 @@ public class ExpressionExperimentDaoImpl
         // Restrict to non-troubled EEs for non-administrators
         if ( !SecurityUtil.isUserAdmin() ) {
             if ( filters == null ) {
-                filters = new ArrayList<>( NON_ADMIN_QUERY_FILTER_COUNT );
+                filters = new ArrayList<>( ExpressionExperimentDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
             } else {
-                filters.ensureCapacity( filters.size() + NON_ADMIN_QUERY_FILTER_COUNT );
+                filters.ensureCapacity( filters.size() + ExpressionExperimentDaoImpl.NON_ADMIN_QUERY_FILTER_COUNT );
             }
             // Both restrictions have to be met (AND) therefore they have to be added as separate arrays.
             filters.add( new ObjectFilter[] { new ObjectFilter( "curationDetails.troubled", false, ObjectFilter.is,
@@ -1748,15 +1662,15 @@ public class ExpressionExperimentDaoImpl
                 + ObjectFilter.DAO_EE_ALIAS + ".geeq as " + ObjectFilter.DAO_GEEQ_ALIAS + " "
                 + "left join s.lastNoteUpdateEvent as eNote left join s.lastTroubledEvent as eTrbl ";
 
-        queryString += formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
+        queryString += AbstractVoEnabledDao.formAclSelectClause( ObjectFilter.DAO_EE_ALIAS,
                 "ubic.gemma.model.expression.experiment.ExpressionExperiment" );
-        queryString += formRestrictionClause( filters );
+        queryString += AbstractVoEnabledDao.formRestrictionClause( filters );
         queryString += "group by " + ObjectFilter.DAO_EE_ALIAS + ".id ";
-        queryString += formOrderByProperty( orderByProperty, orderDesc );
+        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        addRestrictionParameters( query, filters );
+        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
 
         return query;
     }
@@ -1778,7 +1692,7 @@ public class ExpressionExperimentDaoImpl
      */
     private void populateAnalysisInformation( Collection<ExpressionExperimentDetailsValueObject> vos ) {
 
-        Map<Long, ExpressionExperimentDetailsValueObject> voIdMap = getExpressionExperimentValueObjectMap( vos );
+        Map<Long, ExpressionExperimentDetailsValueObject> voIdMap = this.getExpressionExperimentValueObjectMap( vos );
 
         if ( voIdMap.isEmpty() ) {
             return;
@@ -1806,7 +1720,8 @@ public class ExpressionExperimentDaoImpl
         }
 
         if ( timer.getTime() > 200 ) {
-            log.info( "Populate analysis info for " + voIdMap.size() + " eevos: " + timer.getTime() + "ms" );
+            AbstractDao.log
+                    .info( "Populate analysis info for " + voIdMap.size() + " eevos: " + timer.getTime() + "ms" );
         }
 
     }

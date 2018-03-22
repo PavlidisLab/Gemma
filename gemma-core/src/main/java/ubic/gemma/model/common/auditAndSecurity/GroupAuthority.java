@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,22 +35,8 @@ public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority 
      *
      * @author Paul
      */
+    @SuppressWarnings("WeakerAccess") // Required by Spring
     public GroupAuthority() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof GroupAuthority ) ) {
-            return false;
-        }
-        final GroupAuthority that = ( GroupAuthority ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     @Override
@@ -79,6 +65,18 @@ public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority 
         hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
 
         return hashCode;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof GroupAuthority ) ) {
+            return false;
+        }
+        final GroupAuthority that = ( GroupAuthority ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
     public static final class Factory {

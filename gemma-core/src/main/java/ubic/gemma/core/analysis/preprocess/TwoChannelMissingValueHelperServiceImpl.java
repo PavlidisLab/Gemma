@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,19 +19,18 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
 
 /**
  * @author paul
@@ -39,7 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 @Service
 public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissingValueHelperService {
 
-    private static Log log = LogFactory.getLog( TwoChannelMissingValueHelperServiceImpl.class );
+    private static final Log log = LogFactory.getLog( TwoChannelMissingValueHelperServiceImpl.class );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -52,7 +51,7 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
     public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
             Collection<RawExpressionDataVector> results ) {
         expressionExperimentService.update( source );
-        log.info( "Persisting " + results.size() + " vectors ... " );
+        TwoChannelMissingValueHelperServiceImpl.log.info( "Persisting " + results.size() + " vectors ... " );
         source.getRawExpressionDataVectors().addAll( results );
         expressionExperimentService.update( source ); // this is needed to get the QT filled in properly.
         auditTrailService.addUpdateEvent( source, MissingValueAnalysisEvent.Factory.newInstance(),

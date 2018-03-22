@@ -9,11 +9,11 @@ import ubic.gemma.core.tasks.AbstractTask;
 
 /**
  * @author keshav
- *
  */
 @Component
 @Scope("prototype")
-public class LinkAnalysisTaskImpl extends AbstractTask<TaskResult, LinkAnalysisTaskCommand> implements LinkAnalysisTask {
+public class LinkAnalysisTaskImpl extends AbstractTask<TaskResult, LinkAnalysisTaskCommand>
+        implements LinkAnalysisTask {
 
     @Autowired
     private LinkAnalysisService linkAnalysisService;
@@ -23,8 +23,7 @@ public class LinkAnalysisTaskImpl extends AbstractTask<TaskResult, LinkAnalysisT
         linkAnalysisService.process( taskCommand.getExpressionExperiment(), taskCommand.getFilterConfig(),
                 taskCommand.getLinkAnalysisConfig() );
 
-        TaskResult result = new TaskResult( taskCommand, null );
-        return result;
+        return new TaskResult( taskCommand, null );
 
     }
 }

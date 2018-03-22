@@ -53,21 +53,17 @@ import static org.junit.Assert.*;
 public class GeoConverterTest extends BaseSpringContextTest {
 
     private static boolean doneSetup = false;
-
+    private final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private GeoConverter gc;
 
-    private ByteArrayConverter bac = new ByteArrayConverter();
-
-    private boolean skipSlowTests = true;
-
     @Before
-    public void setUp() throws Exception {
-        if ( doneSetup )
+    public void setUp() {
+        if ( GeoConverterTest.doneSetup )
             return;
         super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
 
-        doneSetup = true;
+        GeoConverterTest.doneSetup = true;
     }
 
     /*
@@ -78,7 +74,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
     public void test5091() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
         try (InputStream is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );) {
+                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) )) {
 
             parser.parse( is );
         }
@@ -107,7 +103,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
      *
      */
     @Test
-    public final void test5C() throws Exception {
+    public final void test5C() {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
         GeoSeries series = ( GeoSeries ) g.generate( "GSE35721" ).iterator().next();
@@ -203,30 +199,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( revertedResult[2], -394949 );
     }
 
-    /*
-     * for bug 3977
-     *
-     */
-    // @Test
-    // public void testGSE11504RMALog2() throws Exception {
-    // InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/GSE11504.soft.gz" ) );
-    // GeoFamilyParser parser = new GeoFamilyParser();
-    // parser.parse( is );
-    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE11504" );
-    // DatasetCombiner datasetCombiner = new DatasetCombiner();
-    // GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-    // series.setSampleCorrespondence( correspondence );
-    // ExpressionExperiment result = ( ExpressionExperiment ) ( ( Set<?> ) this.gc.convert( series ) ).iterator()
-    // .next();
-    // Collection<QuantitationType> quantitationTypes = result.getQuantitationTypes();
-    //
-    // assertEquals( 1, quantitationTypes.size() );
-    // QuantitationType qt = quantitationTypes.iterator().next();
-    // assertTrue( qt.getIsPreferred() );
-    // assertEquals( ScaleType.LOG2, qt.getScale() );
-    // }
-
     @Test
     public void testConvertGenePix() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass()
@@ -265,10 +237,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      */
     @Test
     public void testConvertGSE18Stress() throws Exception {
-        if ( this.skipSlowTests ) {
-            return;
-        }
-
         InputStream is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/gse18short/GSE18.soft.gz" ) );
 
@@ -470,15 +438,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
 
         ExpressionExperiment ee = ees.iterator().next();
-        boolean ok = false;
-        for ( DesignElementDataVector dedv : ee.getRawExpressionDataVectors() ) {
-            QuantitationType qt = dedv.getQuantitationType();
-            if ( qt.getIsPreferred() ) {
-                ok = true;
-                assertEquals( "VALUE", qt.getName() );
-            }
-        }
-
+        boolean ok = this.checkQts( ee );
         assertTrue( ok );
     }
 
@@ -516,7 +476,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
     public void testConvertGSE5091() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
         try (InputStream is = new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );) {
+                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) )) {
 
             parser.parse( is );
         }
@@ -564,19 +524,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Object result = this.gc.convert( series );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         ExpressionExperiment ee = ees.iterator().next();
-        boolean ok = false;
-        for ( DesignElementDataVector dedv : ee.getRawExpressionDataVectors() ) {
-            QuantitationType qt = dedv.getQuantitationType();
-
-            if ( qt.getIsPreferred() ) {
-                ok = true;
-                assertEquals( "VALUE", qt.getName() );
-                // ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, dedv.getBioAssayDimension(), qt
-                // );
-                // System.err.println( qt );
-                // System.err.print( mat );
-            }
-        }
+        boolean ok = this.checkQts( ee );
 
         assertTrue( ok );
     }
@@ -659,16 +607,24 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 4, ads.size() );
         for ( ArrayDesign ad : ads.keySet() ) {
             Integer count = ads.get( ad );
-            if ( ad.getName().equals( "SHAC" ) ) {
-                assertEquals( 8, count.intValue() ); // ok
-            } else if ( ad.getName().equals( "SVJ" ) ) {
-                assertEquals( 1, count.intValue() );// ok
-            } else if ( ad.getName().equals( "SVL_SVM_SVN_SVO" ) ) {
-                assertEquals( 32, count.intValue() );
-            } else if ( ad.getName().equals( "SVC" ) ) {
-                assertEquals( 44, count.intValue() );
-            } else {
-                fail( "Name was " + ad.getName() );
+            switch ( ad.getName() ) {
+                case "SHAC":
+                    assertEquals( 8, count.intValue() ); // ok
+
+                    break;
+                case "SVJ":
+                    assertEquals( 1, count.intValue() );// ok
+
+                    break;
+                case "SVL_SVM_SVN_SVO":
+                    assertEquals( 32, count.intValue() );
+                    break;
+                case "SVC":
+                    assertEquals( 44, count.intValue() );
+                    break;
+                default:
+                    fail( "Name was " + ad.getName() );
+                    break;
             }
         }
     }
@@ -767,7 +723,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
      * Test logic to evaluate a primary array taxon Either from platform taxon, common parent taxon or probe taxon.
      */
     @Test
-    public final void testGetPrimaryArrayTaxon() throws Exception {
+    public final void testGetPrimaryArrayTaxon() {
         Collection<Taxon> platformTaxa = new HashSet<>();
         Collection<String> probeTaxa = new ArrayList<>();
         Taxon salmonid = taxonService.findByCommonName( "salmonid" );
@@ -808,7 +764,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.setProcessPlatformsOnly( true );
         try (InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GPL6096_family.soft.gz" ) );) {
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GPL6096_family.soft.gz" ) )) {
 
             parser.parse( is );
         }
@@ -819,9 +775,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         gc.setElementLimitForStrictness( 500 );
         Object result = this.gc.convert( platform );
         assertNotNull( result );
-        // ArrayDesign ad = ( ArrayDesign ) result;
-        // FIXME currently we reject probes, so this count is different.
-        // assertEquals( 168, ad.getCompositeSequences().size() );
     }
 
     /*
@@ -982,7 +935,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
         assertNotNull( ad );
         Set<Taxon> taxa = new HashSet<>();
-        BioSequence bs = null;
+        BioSequence bs;
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
 
             bs = cs.getBiologicalCharacteristic();
@@ -1039,8 +992,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
         GeoSeries series = result.getSeries().values().iterator().next();
 
-        series.getValues();
-
         DatasetCombiner datasetCombiner = new DatasetCombiner( false );
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
@@ -1068,7 +1019,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
         assertNotNull( ad );
         Set<Taxon> listPossibleTaxonValues = new HashSet<>();
-        BioSequence bs = null;
+        BioSequence bs;
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             bs = cs.getBiologicalCharacteristic();
             if ( bs != null ) {
@@ -1133,7 +1084,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.setProcessPlatformsOnly( true );
         try (InputStream is = new GZIPInputStream(
-                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GPL890_family.soft.gz" ) );) {
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GPL890_family.soft.gz" ) )) {
 
             parser.parse( is );
         }
@@ -1149,6 +1100,18 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
         }
         fail( "No sequences!" );
+    }
+
+    private boolean checkQts( ExpressionExperiment ee ) {
+        boolean ok = false;
+        for ( DesignElementDataVector dedv : ee.getRawExpressionDataVectors() ) {
+            QuantitationType qt = dedv.getQuantitationType();
+            if ( qt.getIsPreferred() ) {
+                ok = true;
+                assertEquals( "VALUE", qt.getName() );
+            }
+        }
+        return ok;
     }
 
 }

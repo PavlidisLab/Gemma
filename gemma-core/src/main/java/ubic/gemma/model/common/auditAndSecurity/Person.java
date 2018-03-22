@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,11 +18,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import javax.persistence.Transient;
+
 public class Person extends Contact implements gemma.gsec.model.Person {
 
     private static final long serialVersionUID = -7873047856249494633L;
     private String lastName;
 
+    @Transient
     @Override
     public String getFullName() {
         return this.getName() + " " + this.getLastName();

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,8 +23,8 @@ import java.util.Date;
 
 /**
  * @author jsantos
- *
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class AuditableObject implements Serializable {
     // small holder struct to ease serialization of the list
 
@@ -33,34 +33,28 @@ public class AuditableObject implements Serializable {
     public Long id = null;
     public Date date = null;
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        final AuditableObject other = ( AuditableObject ) obj;
-        if ( date == null ) {
-            if ( other.date != null ) return false;
-        } else if ( !date.equals( other.date ) ) return false;
-        if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
-        if ( type == null ) {
-            if ( other.type != null ) return false;
-        } else if ( !type.equals( other.type ) ) return false;
-        return true;
-    }
-
     public Date getDate() {
         return date;
+    }
+
+    public void setDate( Date date ) {
+        this.date = date;
     }
 
     public Long getId() {
         return id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public String getType() {
         return type;
+    }
+
+    public void setType( String type ) {
+        this.type = type;
     }
 
     @Override
@@ -73,16 +67,29 @@ public class AuditableObject implements Serializable {
         return result;
     }
 
-    public void setDate( Date date ) {
-        this.date = date;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        final AuditableObject other = ( AuditableObject ) obj;
+        if ( date == null ) {
+            if ( other.date != null )
+                return false;
+        } else if ( !date.equals( other.date ) )
+            return false;
+        if ( id == null ) {
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
+        if ( type == null ) {
+            return other.type == null;
+        } else
+            return type.equals( other.type );
     }
 
 }

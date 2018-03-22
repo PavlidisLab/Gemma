@@ -6,6 +6,7 @@ import ubic.gemma.model.common.Identifiable;
  * Created by tesarst on 31/05/17.
  * Interface for value objects representing persistent objects
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Frontend use
 public abstract class IdentifiableValueObject<O extends Identifiable> implements Identifiable {
 
     protected Long id = null;
@@ -32,9 +33,10 @@ public abstract class IdentifiableValueObject<O extends Identifiable> implements
 
     /**
      * Only used by the spring java-beans in jsp files. Should be called immediately after the no-arg constructor.
+     *
      * @param id the id of this object.
      */
-    public void setId( Long id ) {
+    final public void setId( Long id ) {
         this.id = id;
     }
 

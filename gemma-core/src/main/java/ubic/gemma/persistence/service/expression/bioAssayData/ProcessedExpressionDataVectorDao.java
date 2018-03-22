@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,6 @@
 
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -49,14 +46,9 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
-    Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
-
-    Collection<ProcessedExpressionDataVector> find( Collection<QuantitationType> quantitationType );
-
-    Collection<ProcessedExpressionDataVector> find( QuantitationType quantitationType );
-
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment );
 
+    @SuppressWarnings("unused") // Possible external use
     Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment,
             Collection<Long> genes );
 

@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,9 +22,9 @@ package ubic.gemma.core.job;
  * author: anton date: 10/02/13
  */
 public class EmailNotificationContext {
-    private String taskId;
-    private String submitter;
-    private String taskName;
+    private final String taskId;
+    private final String submitter;
+    private final String taskName;
 
     public EmailNotificationContext( String taskId, String submitter, String taskName ) {
         this.taskId = taskId;

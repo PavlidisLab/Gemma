@@ -28,35 +28,29 @@ import ubic.gemma.core.job.executor.common.TaskStatusUpdate;
 import java.util.Date;
 import java.util.Deque;
 import java.util.Queue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * SubmittedTask implementation representing the task running on remote worker host. The implementation relies on JMS
  * Senders/Receivers to send/receive data from the remote worker application. This proxy is synced with remote state
  * only when client is accessing its methods otherwise the state is stored in messages on the jms queues.
- * 
  *
  * @author anton
  */
 public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstract<T> {
 
-    private Deque<String> progressUpdates = new LinkedBlockingDeque<String>();
-
-    private TaskResult taskResult;
-
-    // These are used to get remote state of submitted task.
-    private MessageReceiver<TaskResult> resultReceiver;
-    private MessageReceiver<TaskStatusUpdate> statusUpdateReceiver;
-    private MessageReceiver<String> progressUpdateReceiver;
-
-    // This is used to send 'cancel' or 'add email notification' request.
-    private MessageSender<TaskControl> taskControlSender;
-
     // Two separate locks: result and updates shouldn't block each other.
     // Use-case where one thread is waiting on the result while other is trying to check status.
     private final Object resultLock = new Object();
     private final Object lifeCycleStateLock = new Object();
+    private final Deque<String> progressUpdates = new LinkedBlockingDeque<>();
+    // These are used to get remote state of submitted task.
+    private final MessageReceiver<TaskResult> resultReceiver;
+    private final MessageReceiver<TaskStatusUpdate> statusUpdateReceiver;
+    private final MessageReceiver<String> progressUpdateReceiver;
+    // This is used to send 'cancel' or 'add email notification' request.
+    private final MessageSender<TaskControl> taskControlSender;
+    private TaskResult taskResult;
 
     public SubmittedTaskProxy( TaskCommand taskCommand, MessageReceiver<TaskResult> resultReceiver,
             MessageReceiver<TaskStatusUpdate> statusUpdateReceiver, MessageReceiver<String> progressUpdateReceiver,
@@ -72,7 +66,7 @@ public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstr
     @Override
     public Queue<String> getProgressUpdates() {
         synchronized ( lifeCycleStateLock ) {
-            syncProgressUpdates();
+            this.syncProgressUpdates();
             return progressUpdates;
         }
     }
@@ -83,71 +77,61 @@ public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstr
     }
 
     @Override
-    public boolean isDone() {
+    public Date getSubmissionTime() {
         synchronized ( lifeCycleStateLock ) {
-            syncLifeCycle();
-            return super.isDone();
+            this.syncLifeCycle();
+            return this.submissionTime;
         }
     }
 
     @Override
     public Date getStartTime() {
         synchronized ( lifeCycleStateLock ) {
-            syncLifeCycle();
+            this.syncLifeCycle();
             return this.startTime;
-        }
-    }
-
-    @Override
-    public Date getSubmissionTime() {
-        synchronized ( lifeCycleStateLock ) {
-            syncLifeCycle();
-            return this.submissionTime;
         }
     }
 
     @Override
     public Date getFinishTime() {
         synchronized ( lifeCycleStateLock ) {
-            syncLifeCycle();
+            this.syncLifeCycle();
             return this.finishTime;
         }
     }
 
-    // TODO: Can task return null? It shouldn't. Should return TaskResult with getAnswer null. BUT DOUBLE CHECK
+    @Override
+    public Status getStatus() {
+        synchronized ( lifeCycleStateLock ) {
+            this.syncLifeCycle();
+            return this.status;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Override
-    public T getResult() throws ExecutionException, InterruptedException {
+    public T getResult() {
         synchronized ( resultLock ) {
             if ( taskResult == null ) {
-                syncResult(); // blocks until result is available.
+                this.syncResult(); // blocks until result is available.
             }
             return ( T ) taskResult;
         }
     }
 
-    // TODO: Support case where TaskCommand has not yet reached RemoteTaskRunningService i.e. it's still in JMS queue.
     @Override
     public void requestCancellation() {
         taskControlSender.send( new TaskControl( taskId, TaskControl.Request.CANCEL ) );
     }
 
     @Override
-    public Status getStatus() {
+    public void addEmailAlert() {
         synchronized ( lifeCycleStateLock ) {
-            syncLifeCycle();
-            return this.status;
+            if ( emailAlert )
+                return; // Trying to prevent multiple email notifications being added.
+            emailAlert = true;
+            taskControlSender.send( new TaskControl( taskId, TaskControl.Request.ADD_EMAIL_NOTIFICATION ) );
         }
-    }
-
-    /**
-     * Since this a submitted task proxy it always is running remotely.
-     * 
-     * @return true
-     */
-    @Override
-    public boolean isRunningRemotely() {
-        return true;
     }
 
     @Override
@@ -157,12 +141,21 @@ public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstr
         }
     }
 
+    /**
+     * Since this a submitted task proxy it always is running remotely.
+     *
+     * @return true
+     */
     @Override
-    public void addEmailAlert() {
+    public boolean isRunningRemotely() {
+        return true;
+    }
+
+    @Override
+    public boolean isDone() {
         synchronized ( lifeCycleStateLock ) {
-            if ( emailAlert ) return; // Trying to prevent multiple email notifications being added.
-            emailAlert = true;
-            taskControlSender.send( new TaskControl( taskId, TaskControl.Request.ADD_EMAIL_NOTIFICATION ) );
+            this.syncLifeCycle();
+            return super.isDone();
         }
     }
 
@@ -181,11 +174,11 @@ public class SubmittedTaskProxy<T extends TaskResult> extends SubmittedTaskAbstr
     private void syncLifeCycle() {
         TaskStatusUpdate statusUpdate;
         while ( ( statusUpdate = statusUpdateReceiver.receive() ) != null ) {
-            applyStatusUpdate( statusUpdate );
+            this.applyStatusUpdate( statusUpdate );
         }
     }
 
     private void applyStatusUpdate( TaskStatusUpdate statusUpdate ) {
-        setTimeStampAndStatus( statusUpdate.getStatus(), statusUpdate.getStatusChangeTime() );
+        this.setTimeStampAndStatus( statusUpdate.getStatus(), statusUpdate.getStatusChangeTime() );
     }
 }

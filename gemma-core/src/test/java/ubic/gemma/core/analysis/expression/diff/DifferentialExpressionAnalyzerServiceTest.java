@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,7 +38,10 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -99,8 +102,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         if ( ee == null ) {
 
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gds994Short" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Short" ) ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
         }
@@ -180,7 +183,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Test for bug 2026, not a subsetted analysis.
      */
     @Test
-    public void testAnalyzeAndDeleteSpecificAnalysis() throws Exception {
+    public void testAnalyzeAndDeleteSpecificAnalysis() {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
@@ -203,7 +206,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * Tests running with a subset factor, then deleting.
      */
     @Test
-    public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() throws Exception {
+    public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() {
 
         ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors()
                 .toArray( new ExperimentalFactor[] {} );
@@ -239,8 +242,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         if ( ee == null ) {
 
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE32136", false, true, false, false );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE32136", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
         }
@@ -326,7 +329,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     @Test
-    public void testWritePValuesHistogram() throws Exception {
+    public void testWritePValuesHistogram() {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );

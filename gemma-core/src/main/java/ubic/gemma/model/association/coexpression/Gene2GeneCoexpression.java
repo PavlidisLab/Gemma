@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,11 +18,14 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.jfree.util.Log;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.association.Gene2GeneIdAssociation;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Represents coexpression of a pair of genes.
@@ -42,10 +45,21 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
     // we assume 1 in case we don't yet have it populated directly from the db - it has to be at least 1...
     private Integer numDataSetsSupporting = 1;
 
+    static void tryWriteFields( Double effect, Long firstGene, Long secondGene, Object entity ) {
+        try {
+            FieldUtils.writeField( entity, "firstGene", firstGene, true );
+            FieldUtils.writeField( entity, "secondGene", secondGene, true );
+            FieldUtils.writeField( entity, "positiveCorrelation", effect > 0, true );
+            FieldUtils.writeField( entity, "numDataSetsSupporting", 1, true );
+        } catch ( IllegalAccessException e ) {
+            Log.error( e );
+        }
+    }
+
     @Override
     public int compareTo( Gene2GeneCoexpression o ) {
-        if ( numDataSetsSupporting != null && o.getNumDatasetsSupporting() != null && numDataSetsSupporting != o
-                .getNumDatasetsSupporting() ) {
+        if ( numDataSetsSupporting != null && o.getNumDatasetsSupporting() != null && !Objects
+                .equals( numDataSetsSupporting, o.getNumDatasetsSupporting() ) ) {
             return -this.numDataSetsSupporting.compareTo( o.getNumDatasetsSupporting() );
         }
 
@@ -58,14 +72,7 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
         return 0;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( !super.equals( obj ) )
-            return false;
-
-        return this.isPositiveCorrelation().equals( ( ( Gene2GeneCoexpression ) obj ).isPositiveCorrelation() );
-    }
-
+    @SuppressWarnings("unused") // Possible external use
     public Collection<Long> getDataSetsSupporting() {
         /*
          * We may be making this available more than one way.
@@ -92,7 +99,7 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
      */
     public void setNumDatasetsSupporting( Integer numDataSets ) {
         if ( this.supportDetails != null ) {
-            updateNumDatasetsSupporting();
+            this.updateNumDatasetsSupporting();
         }
         this.numDataSetsSupporting = numDataSets;
     }
@@ -105,6 +112,15 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
         this.supportDetails = supportDetails;
     }
 
+    public Boolean isPositiveCorrelation() {
+        return positiveCorrelation;
+    }
+
+    public boolean isSupportedBy( BioAssaySet bioAssaySet ) {
+        assert this.supportDetails != null;
+        return this.supportDetails.isIncluded( bioAssaySet.getId() );
+    }
+
     @Override
     public int hashCode() {
         if ( this.getId() != null )
@@ -112,30 +128,25 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
 
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( isPositiveCorrelation() != null ) ? 0 : isPositiveCorrelation().hashCode() );
-        result = prime * result + ( ( getFirstGene() == null ) ? 0 : getFirstGene().hashCode() );
-        result = prime * result + ( ( getSecondGene() == null ) ? 0 : getSecondGene().hashCode() );
+        result = prime * result + ( ( this.isPositiveCorrelation() != null ) ?
+                0 :
+                this.isPositiveCorrelation().hashCode() );
+        result = prime * result + ( ( this.getFirstGene() == null ) ? 0 : this.getFirstGene().hashCode() );
+        result = prime * result + ( ( this.getSecondGene() == null ) ? 0 : this.getSecondGene().hashCode() );
         return result;
     }
 
-    public Boolean isPositiveCorrelation() {
-        return positiveCorrelation;
-    }
-
-    /*
-     * TODO optimize.
-     *
-
-     */
-    public boolean isSupportedBy( BioAssaySet bioAssaySet ) {
-        assert this.supportDetails != null;
-        return this.supportDetails.isIncluded( bioAssaySet.getId() );
+    @Override
+    public boolean equals( Object obj ) {
+        return super.equals( obj ) && this.isPositiveCorrelation()
+                .equals( ( ( Gene2GeneCoexpression ) obj ).isPositiveCorrelation() );
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + " [id=" + getId() + ", firstGene=" + getFirstGene() + ", secondGene="
-                + getSecondGene() + ", pos=" + positiveCorrelation + "; support=" + getNumDatasetsSupporting() + "]";
+        return this.getClass().getSimpleName() + " [id=" + this.getId() + ", firstGene=" + this.getFirstGene()
+                + ", secondGene=" + this.getSecondGene() + ", pos=" + positiveCorrelation + "; support=" + this
+                .getNumDatasetsSupporting() + "]";
     }
 
     /**

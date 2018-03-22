@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -33,6 +33,7 @@ import java.util.List;
  *
  * @see Characteristic
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
 public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
         implements Comparable<CharacteristicValueObject> {
 
@@ -40,7 +41,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * id used by url on the client side
      */
-    protected String urlId = "";
+    String urlId = "";
     private boolean alreadyPresentInDatabase = false;
     private boolean alreadyPresentOnGene = false;
     private String category = "";
@@ -81,28 +82,30 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         super( characteristic.getId() );
         if ( characteristic instanceof VocabCharacteristic ) {
             this.valueUri = characteristic.getValueUri();
-            parseUrlId();
+            this.parseUrlId();
         }
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
 
         if ( this.value == null ) {
-            log.warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
-                    + this.categoryUri );
+            CharacteristicValueObject.log
+                    .warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                            + this.categoryUri );
         }
     }
 
     public CharacteristicValueObject( Long id, String valueUri ) {
         super( id );
         this.valueUri = valueUri;
-        parseUrlId();
+        this.parseUrlId();
         if ( StringUtils.isNotBlank( this.urlId ) ) {
             try {
                 // we don't always populate from the database, give it an id anyway
                 this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
             } catch ( Exception e ) {
-                log.error( "Problem making an id for Phenotype: " + this.urlId + ": " + e.getMessage() );
+                CharacteristicValueObject.log
+                        .error( "Problem making an id for Phenotype: " + this.urlId + ": " + e.getMessage() );
             }
         }
     }
@@ -111,8 +114,9 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         this( id, valueUri );
         this.value = value;
         if ( this.value == null ) {
-            log.warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
-                    + this.categoryUri );
+            CharacteristicValueObject.log
+                    .warn( "Characteristic with null value. Id: " + this.id + " cat: " + this.category + " cat uri: "
+                            + this.categoryUri );
         }
     }
 
@@ -154,11 +158,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     @Override
-    public String toString() {
-        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
-    }
-
-    @Override
     public int compareTo( CharacteristicValueObject o ) {
         return ComparisonChain.start()
                 .compare( category, o.category, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
@@ -173,7 +172,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
         if ( this.valueUri == null ) {
@@ -184,12 +183,15 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         }
 
         if ( this.value == null ) {
-            if ( other.value != null )
-                return false;
-        } else if ( !this.value.equals( other.value ) )
-            return false;
+            return other.value == null;
+        } else
+            return this.value.equals( other.value );
 
-        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
     }
 
     public String getCategory() {

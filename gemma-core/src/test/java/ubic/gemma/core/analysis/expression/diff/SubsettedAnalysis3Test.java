@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,20 +19,10 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-import java.util.HashSet;
-
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -44,14 +34,19 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
- *
  */
 public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
@@ -70,7 +65,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private GeoService geoService;
@@ -82,7 +77,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
                 FileTools.resourceToPath( "/data/analysis/expression/gse26927short" ) ) );
 
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE26927", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE26927", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
@@ -91,8 +86,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
-        toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+        Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
             experimentalFactorService.delete( ef );
             ee.getExperimentalDesign().getExperimentalFactors().remove( ef );
@@ -101,7 +95,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
 
         ee = expressionExperimentService.thaw( ee );
 
@@ -110,13 +104,8 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
     }
 
-    @After
-    public void teardown() throws Exception {
-        // if ( ee != null ) expressionExperimentService.remove( ee );
-    }
-
     @Test
-    public void test() throws Exception {
+    public void test() {
 
         ee = expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
@@ -131,12 +120,16 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
         ExperimentalFactor disease = null;
         ExperimentalFactor diseasegroup = null;
         for ( ExperimentalFactor ef : factors ) {
-            if ( ef.getCategory().getValue().equals( "study design" ) ) {
-                diseasegroup = ef;
-            } else if ( ef.getCategory().getValue().equals( "disease" ) ) {
-                disease = ef;
-            } else if ( ef.getCategory().getValue().equals( "organism part" ) ) {
-                organismpart = ef;
+            switch ( ef.getCategory().getValue() ) {
+                case "study design":
+                    diseasegroup = ef;
+                    break;
+                case "disease":
+                    disease = ef;
+                    break;
+                case "organism part":
+                    organismpart = ef;
+                    break;
             }
         }
         assertNotNull( diseasegroup );
@@ -162,6 +155,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
             for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
                 ExperimentalFactor factor = rs.getExperimentalFactors().iterator().next();
+                //noinspection LoopStatementThatDoesntLoop
                 for ( DifferentialExpressionAnalysisResult res : rs.getResults() ) {
                     Collection<ContrastResult> contrasts = res.getContrasts();
 

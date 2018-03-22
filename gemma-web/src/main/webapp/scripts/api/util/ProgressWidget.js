@@ -2,16 +2,16 @@ Ext.namespace( 'Gemma' );
 
 /**
  * Task progress window that wraps ObservableSubmittedTask.
- * 
+ *
  * Config options;
- * 
+ *
  * @param {ObservableSubmittedTask}
  *           task
  * @param [displayOptions] -
  *           showLogButton {boolean} - showBackgroundButton {boolean} -- show/hide 'Run in background' button -
  *           showLogOnTaskFailure {boolean} -- if true, expands log panel on task failure - closeOnTaskSuccess {boolean} --
  *           if true, hides progress widget window on task completion.
- * 
+ *
  * @class Gemma.ProgressWindow
  * @extends Ext.Window
  */
@@ -52,7 +52,7 @@ Gemma.ProgressWindow = Ext.extend( Ext.Window, {
 
 /**
  * Config options:
- * 
+ *
  * @param taskId
  *           (required)
  * @class Gemma.ProgressWidget
@@ -185,7 +185,7 @@ Gemma.ProgressWidget = Ext.extend( Ext.Panel, {
 
    /**
     * Start the progressbar in motion.
-    * 
+    *
     * @private
     */
    startProgressBarAnimation : function() {
@@ -202,7 +202,7 @@ Gemma.ProgressWidget = Ext.extend( Ext.Panel, {
    },
 
    /**
-    * 
+    *
     * @private
     */
    startListening : function() {
@@ -241,7 +241,7 @@ Gemma.ProgressWidget = Ext.extend( Ext.Panel, {
    },
 
    /**
-    * 
+    *
     * @private
     */
    stopListening : function() {
@@ -253,7 +253,7 @@ Gemma.ProgressWidget = Ext.extend( Ext.Panel, {
    },
 
    /**
-    * 
+    *
     * @private
     */
    showLogMessages : function() {
@@ -262,26 +262,10 @@ Gemma.ProgressWidget = Ext.extend( Ext.Panel, {
    },
 
    /**
-    * 
+    *
     * @private
     */
    hideLogMessages : function() {
       this.logPanel.hide();
-   },
-
-   // TODO: handle at the call site
-   findTaskId : function() {
-      // try to get from query string
-
-      var queryStart = document.URL.indexOf( "?" );
-      if ( queryStart > -1 ) {
-         var param = Ext.urlDecode( document.URL.substr( queryStart + 1 ) );
-         if ( param.taskId ) {
-            return param.taskId;
-         }
-      }
-
-      // try to get from hidden input field.
-      return dwr.util.getValue( "taskId" );
    }
 } );

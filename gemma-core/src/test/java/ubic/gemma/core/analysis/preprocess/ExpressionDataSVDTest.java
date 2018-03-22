@@ -42,8 +42,8 @@ import static org.junit.Assert.*;
  */
 public class ExpressionDataSVDTest {
 
-    ExpressionDataDoubleMatrix testData = null;
-    ExpressionDataSVD svd = null;
+    private ExpressionDataDoubleMatrix testData = null;
+    private ExpressionDataSVD svd = null;
 
     @Before
     public void setUp() throws Exception {

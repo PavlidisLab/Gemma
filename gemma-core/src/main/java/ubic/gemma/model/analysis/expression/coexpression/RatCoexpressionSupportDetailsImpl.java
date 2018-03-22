@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,10 +22,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
- *
  */
 public class RatCoexpressionSupportDetailsImpl extends SupportDetails {
 
@@ -34,11 +31,13 @@ public class RatCoexpressionSupportDetailsImpl extends SupportDetails {
     public RatCoexpressionSupportDetailsImpl( Gene firstGene, Gene secondGene, Boolean isPositive ) {
         super( firstGene, secondGene, isPositive );
     }
+
     public RatCoexpressionSupportDetailsImpl( Long firstGene, Long secondGene, Boolean isPositive ) {
         super( firstGene, secondGene, isPositive );
     }
+
     public RatCoexpressionSupportDetailsImpl() {
-        this( (Long)null, null, null );
+        this( ( Long ) null, null, null );
 
     }
 }

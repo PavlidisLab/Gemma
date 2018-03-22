@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,57 +18,35 @@
  */
 package ubic.gemma.web.taglib;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.persistence.util.Settings;
+
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.Tag;
+import javax.servlet.jsp.tagext.TagSupport;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * @author joseph
  */
 public class ShortBibliographicReferenceTag extends TagSupport {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -7325678534991860679L;
 
     private static Log log = LogFactory.getLog( ShortBibliographicReferenceTag.class );
 
     private BibliographicReference citation;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
-     */
-    @Override
-    public int doEndTag() {
-
-        log.debug( "end tag" );
-
-        return EVAL_PAGE;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
-     */
     @Override
     public int doStartTag() throws JspException {
 
-        log.debug( "start tag" );
+        ShortBibliographicReferenceTag.log.debug( "start tag" );
 
         StringBuilder buf = new StringBuilder();
         if ( this.citation == null ) {
@@ -83,9 +61,9 @@ public class ShortBibliographicReferenceTag extends TagSupport {
                 if ( authors.length == 0 ) {
 
                 } else if ( authors.length == 1 ) {
-                    buf.append( authors[0] + " " );
+                    buf.append( authors[0] ).append( " " );
                 } else {
-                    buf.append( authors[0] + " et al. " );
+                    buf.append( authors[0] ).append( " et al. " );
                 }
             } else {
                 buf.append( "Null author list" );
@@ -97,7 +75,7 @@ public class ShortBibliographicReferenceTag extends TagSupport {
 
             if ( publicationDate != null ) {
                 pubDate.setTime( publicationDate );
-                buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
+                buf.append( "(" ).append( pubDate.get( Calendar.YEAR ) ).append( ") " );
             } else {
                 buf.append( "Null publication date" );
             }
@@ -109,15 +87,16 @@ public class ShortBibliographicReferenceTag extends TagSupport {
                 if ( StringUtils.isNotBlank( pubMedId ) ) {
                     String link = citationVO.getPubmedURL();
 
-                    buf.append( "<a target='_blank' href='" + link
-                            + "' ><img src='" + Settings.getRootContext() + "/images/pubmed.gif' /> </a>&nbsp;" );
+                    buf.append( "<a target='_blank' href='" ).append( link ).append( "' ><img src='" )
+                            .append( Settings.getRootContext() ).append( "/images/pubmed.gif' /> </a>&nbsp;" );
 
                     /*
                      * Add link to edit page within Gemma
                      */
 
-                    buf.append( "<a target='_blank' href='" + Settings.getRootContext() + "/bibRef/bibRefView.html?accession=" + pubMedId
-                            + "'><img src='" + Settings.getRootContext() + "/images/magnifier.png' /></a>" );
+                    buf.append( "<a target='_blank' href='" ).append( Settings.getRootContext() )
+                            .append( "/bibRef/bibRefView.html?accession=" ).append( pubMedId ).append( "'><img src='" )
+                            .append( Settings.getRootContext() ).append( "/images/magnifier.png' /></a>" );
 
                 }
             }
@@ -129,12 +108,17 @@ public class ShortBibliographicReferenceTag extends TagSupport {
         } catch ( Exception ex ) {
             throw new JspException( this.getClass().getName() + ex.getMessage() );
         }
-        return SKIP_BODY;
+        return Tag.SKIP_BODY;
     }
 
-    /**
-     * @param citation
-     */
+    @Override
+    public int doEndTag() {
+
+        ShortBibliographicReferenceTag.log.debug( "end tag" );
+
+        return Tag.EVAL_PAGE;
+    }
+
     public void setCitation( BibliographicReference citation ) {
         this.citation = citation;
     }

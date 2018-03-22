@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,18 +30,6 @@ public class UserQuery implements java.io.Serializable, gemma.gsec.model.Secured
     private Integer autoRunFrequencyHours;
     private Long id;
     private SearchSettings searchSettings;
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof UserQuery ) ) {
-            return false;
-        }
-        final UserQuery that = ( UserQuery ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
 
     /**
      * @return How often to auto-run this query, given in hours.
@@ -103,6 +91,19 @@ public class UserQuery implements java.io.Serializable, gemma.gsec.model.Secured
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof UserQuery ) ) {
+            return false;
+        }
+        final UserQuery that = ( UserQuery ) object;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
+    }
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
 
         public static UserQuery newInstance() {

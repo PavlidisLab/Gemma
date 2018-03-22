@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,17 +18,8 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -37,11 +28,18 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * Tests the one way anova analyzer. See test/data/stat-tests/README.txt for R code.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
@@ -61,7 +59,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         super.configureTestDataForOneWayAnova();
 
-        configureMocks();
+        this.configureMocks();
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
@@ -94,7 +92,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         super.configureTestDataForOneWayAnova();
 
-        configureMocks();
+        this.configureMocks();
         /*
          * Add a factor with three levels
          */
@@ -143,9 +141,8 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-            CompositeSequence probe = probeAnalysisResult.getProbe();
-            Double pvalue = probeAnalysisResult.getPvalue();
+            CompositeSequence probe = r.getProbe();
+            Double pvalue = r.getPvalue();
 
             // if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );
@@ -154,27 +151,25 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
             // resultSet.getExperimentalFactors().iterator().next().getName()
             // + "; p-value: " + pvalue + "; T=" + stat );
 
-            if ( probe.getName().equals( "probe_98" ) ) {
-                assertEquals( 0.1604, pvalue, 0.001 );
-            } else if ( probe.getName().equals( "probe_10" ) ) {
-                assertEquals( 0.8014, pvalue, 0.0001 );
-            } else if ( probe.getName().equals( "probe_4" ) ) {
-                assertEquals( 0.6531, pvalue, 0.0001 );
+            switch ( probe.getName() ) {
+                case "probe_98":
+                    assertEquals( 0.1604, pvalue, 0.001 );
+                    break;
+                case "probe_10":
+                    assertEquals( 0.8014, pvalue, 0.0001 );
+                    break;
+                case "probe_4":
+                    assertEquals( 0.6531, pvalue, 0.0001 );
+                    break;
             }
 
         }
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
-    @Override
-    protected void configureMocks() throws Exception {
+    private void configureMocks() {
 
-        configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper( 1 );
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 
     }

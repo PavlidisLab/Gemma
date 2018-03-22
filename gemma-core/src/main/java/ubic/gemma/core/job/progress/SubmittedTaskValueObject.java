@@ -1,35 +1,18 @@
 package ubic.gemma.core.job.progress;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.job.SubmittedTask;
+import ubic.gemma.core.job.TaskResult;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.job.SubmittedTask;
-import ubic.gemma.core.job.TaskResult;
-
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class SubmittedTaskValueObject implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 6757089319713433356L;
-
-    public static Collection<SubmittedTaskValueObject> convert2ValueObjects(
-            Collection<SubmittedTask<? extends TaskResult>> submittedTasks ) {
-
-        Collection<SubmittedTaskValueObject> converted = new HashSet<SubmittedTaskValueObject>();
-        if ( submittedTasks == null ) return converted;
-
-        for ( SubmittedTask<?> submittedTask : submittedTasks ) {
-            converted.add( new SubmittedTaskValueObject( submittedTask ) );
-        }
-
-        return converted;
-    }
-
     private String taskId;
     private Date submissionTime;
     private Date startTime;
@@ -40,18 +23,18 @@ public class SubmittedTaskValueObject implements Serializable {
     private boolean runningRemotely;
     private boolean done;
     private boolean emailAlert;
-
     private String taskStatus;
-
     private String lastLogMessage;
 
+    @SuppressWarnings({ "WeakerAccess", "unused" }) // Required by Spring
     public SubmittedTaskValueObject() {
     }
 
     public SubmittedTaskValueObject( SubmittedTask<?> submittedTask ) {
         this.taskId = submittedTask.getTaskId();
-        this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ? "Not specified"
-                : submittedTask.getTaskCommand().getTaskClass().getSimpleName();
+        this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ?
+                "Not specified" :
+                submittedTask.getTaskCommand().getTaskClass().getSimpleName();
         this.submitter = submittedTask.getTaskCommand().getSubmitter();
         this.submissionTime = submittedTask.getSubmissionTime();
         this.startTime = submittedTask.getStartTime();
@@ -62,6 +45,20 @@ public class SubmittedTaskValueObject implements Serializable {
         this.emailAlert = submittedTask.isEmailAlert();
         this.logMessages = StringUtils.join( submittedTask.getProgressUpdates(), "\n" );
         this.lastLogMessage = submittedTask.getLastProgressUpdates();
+    }
+
+    public static Collection<SubmittedTaskValueObject> convert2ValueObjects(
+            Collection<SubmittedTask<? extends TaskResult>> submittedTasks ) {
+
+        Collection<SubmittedTaskValueObject> converted = new HashSet<>();
+        if ( submittedTasks == null )
+            return converted;
+
+        for ( SubmittedTask<?> submittedTask : submittedTasks ) {
+            converted.add( new SubmittedTaskValueObject( submittedTask ) );
+        }
+
+        return converted;
     }
 
     public boolean getDone() {

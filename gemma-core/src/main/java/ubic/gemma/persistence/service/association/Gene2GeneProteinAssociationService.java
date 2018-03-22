@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,56 +18,59 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
 
 /**
  * Service class for Gene2GeneProteinAssociation classes.
- * 
- * @author ldonnison
  *
+ * @author ldonnison
  */
-public interface Gene2GeneProteinAssociationService {
-
-    /**
-     * Create a gene2geneProteinAssociation
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public Gene2GeneProteinAssociation create( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-
-    /**
-     * remove the given gene2geneProteinAssociation
-     */
-    @Secured({ "GROUP_ADMIN" })
-    public void delete( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
+public interface Gene2GeneProteinAssociationService extends BaseService<Gene2GeneProteinAssociation> {
 
     /**
      * Delete all gene2geneProteinAssociation
      */
     @Secured({ "GROUP_ADMIN" })
-    public void deleteAll( Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociation );
+    void removeAll( Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociation );
 
     /**
      * Find a gene2geneProteinAssociation
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
+    Gene2GeneProteinAssociation find( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
+
+    /**
+     * Create a gene2geneProteinAssociation
+     */
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    Gene2GeneProteinAssociation create( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
     /**
      * Load all gene2geneProteinAssociation
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public Collection<Gene2GeneProteinAssociation> loadAll();
+    Collection<Gene2GeneProteinAssociation> loadAll();
 
     /**
-     * Does a 'thaw' of a Gene2GeneProteinAssociation
+     * remove the given gene2geneProteinAssociation
+     */
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
+
+    /**
+     * Does a 'thawRawAndProcessed' of a Gene2GeneProteinAssociation
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public void thaw( Gene2GeneProteinAssociation association );
+    void thaw( Gene2GeneProteinAssociation association );
 
     /**
      * Finds Gene2GeneProteinAssociation for a given gene

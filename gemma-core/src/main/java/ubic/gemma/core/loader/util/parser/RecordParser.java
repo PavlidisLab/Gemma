@@ -26,7 +26,7 @@ public abstract class RecordParser<T> implements Parser<T> {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
         try (FileInputStream stream = new FileInputStream( file )) {
-            parse( stream );
+            this.parse( stream );
         }
     }
 
@@ -60,18 +60,18 @@ public abstract class RecordParser<T> implements Parser<T> {
             if ( lastRecord == null )
                 continue;
 
-            Object newItem = parseOneRecord( lastRecord );
+            Object newItem = this.parseOneRecord( lastRecord );
 
             if ( newItem != null ) {
-                addResult( newItem );
+                this.addResult( newItem );
                 recordsParsed++;
             } else {
-                log.debug( "Got null parse from " + line );
+                RecordParser.log.debug( "Got null parse from " + line );
                 nullRecords++;
             }
-            if ( recordsParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+            if ( recordsParsed % Parser.PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + recordsParsed + " records ...";
-                log.debug( message );
+                RecordParser.log.debug( message );
             }
 
             if ( line == null ) { // EOF.
@@ -80,8 +80,8 @@ public abstract class RecordParser<T> implements Parser<T> {
 
         }
 
-        if ( log.isInfoEnabled() && recordsParsed > 0 ) {
-            log.info( "Successfully parsed " + recordsParsed + " records." + ( nullRecords > 0 ?
+        if ( RecordParser.log.isInfoEnabled() && recordsParsed > 0 ) {
+            RecordParser.log.info( "Successfully parsed " + recordsParsed + " records." + ( nullRecords > 0 ?
                     " Another " + nullRecords + " records yielded no parse result." :
                     "" ) );
         }
@@ -91,18 +91,18 @@ public abstract class RecordParser<T> implements Parser<T> {
     @Override
     public void parse( String filename ) throws IOException {
         File infile = new File( filename );
-        parse( infile );
+        this.parse( infile );
+    }
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public void setRecordSeparator( String recordSeparator ) {
+        this.recordSeparator = recordSeparator;
     }
 
     /**
      * Handle the parsing of a single record from the input.
      */
-    public abstract Object parseOneRecord( String record );
-
-    @SuppressWarnings("WeakerAccess") // Possible external use
-    public void setRecordSeparator( String recordSeparator ) {
-        this.recordSeparator = recordSeparator;
-    }
+    protected abstract Object parseOneRecord( String record );
 
     /**
      * Add an object to the results collection.

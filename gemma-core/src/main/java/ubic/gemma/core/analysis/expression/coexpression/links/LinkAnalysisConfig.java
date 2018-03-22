@@ -37,7 +37,7 @@ public class LinkAnalysisConfig implements Serializable {
      * probes with more links than this are ignored. Zero means this doesn't do anything.
      */
 
-    @SuppressWarnings("WeakerAccess") // Possible external use
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 0;
     private static final long serialVersionUID = 1L;
     private boolean absoluteValue = false;

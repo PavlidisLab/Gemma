@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -27,6 +27,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
@@ -42,41 +44,27 @@ import java.util.Map;
  * @see BioMaterialService
  */
 @Service
-public class BioMaterialServiceImpl extends BioMaterialServiceBase {
+public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial, BioMaterialValueObject>
+        implements BioMaterialService {
+
+    private final BioMaterialDao bioMaterialDao;
+    private final FactorValueDao factorValueDao;
+    private final BioAssayDao bioAssayDao;
+    private final ExperimentalFactorDao experimentalFactorDao;
 
     @Autowired
     public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
             BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao ) {
-        super( bioMaterialDao, factorValueDao, bioAssayDao, experimentalFactorDao );
+        super( bioMaterialDao );
+        this.bioMaterialDao = bioMaterialDao;
+        this.factorValueDao = factorValueDao;
+        this.bioAssayDao = bioAssayDao;
+        this.experimentalFactorDao = experimentalFactorDao;
     }
 
     @Override
-    public void associateBatchFactor( final Map<BioMaterial, Date> dates, final Map<Date, FactorValue> d2fv ) {
-
-        for ( final BioMaterial bm : dates.keySet() ) {
-
-            final BioMaterial toUpdate = this.bioMaterialDao.load( bm.getId() );
-
-            if ( !d2fv.isEmpty() ) {
-                toUpdate.getFactorValues().add( d2fv.get( dates.get( toUpdate ) ) );
-            }
-
-            for ( final BioAssay ba : toUpdate.getBioAssaysUsedIn() ) {
-
-                if ( ba.getProcessingDate() != null ) {
-                    if ( !ba.getProcessingDate().equals( dates.get( toUpdate ) ) ) {
-                        ba.setProcessingDate( dates.get( toUpdate ) );
-                        bioAssayDao.update( ba );
-                    }
-
-                } else {
-                    ba.setProcessingDate( dates.get( toUpdate ) );
-                    bioAssayDao.update( ba );
-                }
-            }
-            bioMaterialDao.update( toUpdate );
-        }
-
+    public BioMaterial copy( BioMaterial bioMaterial ) {
+        return this.bioMaterialDao.copy( bioMaterial );
     }
 
     @Override
@@ -113,7 +101,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     @Transactional
     public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
 
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        Collection<BioMaterial> bms = new HashSet<>();
         for ( BioMaterialValueObject bioMaterialValueObject : valueObjects ) {
             BioMaterial updatedBm = this.update( bioMaterialValueObject );
             // the map FactorIdToFactorValueId contains values for all factors, including empty ones.
@@ -124,22 +112,57 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     }
 
     @Override
-    protected BioMaterial handleCopy( BioMaterial bioMaterial ) {
-        return this.bioMaterialDao.copy( bioMaterial );
+    public void associateBatchFactor( final Map<BioMaterial, Date> dates, final Map<Date, FactorValue> d2fv ) {
+
+        for ( final BioMaterial bm : dates.keySet() ) {
+
+            final BioMaterial toUpdate = this.bioMaterialDao.load( bm.getId() );
+
+            if ( !d2fv.isEmpty() ) {
+                toUpdate.getFactorValues().add( d2fv.get( dates.get( toUpdate ) ) );
+            }
+
+            for ( final BioAssay ba : toUpdate.getBioAssaysUsedIn() ) {
+
+                if ( ba.getProcessingDate() != null ) {
+                    if ( !ba.getProcessingDate().equals( dates.get( toUpdate ) ) ) {
+                        ba.setProcessingDate( dates.get( toUpdate ) );
+                        bioAssayDao.update( ba );
+                    }
+
+                } else {
+                    ba.setProcessingDate( dates.get( toUpdate ) );
+                    bioAssayDao.update( ba );
+                }
+            }
+            bioMaterialDao.update( toUpdate );
+        }
+
+    }
+
+    @Override
+    public String getBioMaterialIdList( Collection<BioMaterial> bioMaterials ) {
+        StringBuilder buf = new StringBuilder();
+        for ( BioMaterial bm : bioMaterials ) {
+            buf.append( bm.getId() );
+            buf.append( "," );
+        }
+        return buf.toString().replaceAll( ",$", "" );
+
     }
 
     /**
      * @see BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
-    protected BioMaterial handleFindOrCreate( BioMaterial bioMaterial ) {
+    public BioMaterial findOrCreate( BioMaterial bioMaterial ) {
         return this.bioMaterialDao.findOrCreate( bioMaterial );
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {
-        BioMaterial bm = load( bmvo.getId() );
+        BioMaterial bm = this.load( bmvo.getId() );
 
-        Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
+        Collection<FactorValue> updatedFactorValues = new HashSet<>();
         Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
         for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
             String factorValueString = factorIdToFactorValueId.get( factorIdString );
@@ -147,8 +170,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
             assert factorIdString.matches( "factor\\d+" );
             Long factorId = Long.parseLong( factorIdString.substring( 6 ) );
 
+            //noinspection StatementWithEmptyBody // no value provided, that's okay, the curator can fill it in later.
             if ( StringUtils.isBlank( factorValueString ) ) {
-                // no value provided, that's okay, the curator can fill it in later.
             } else if ( factorValueString.matches( "fv\\d+" ) ) {
                 // categorical
                 long fvId = Long.parseLong( factorValueString.substring( 2 ) );
@@ -169,11 +192,12 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
                             throw new IllegalStateException(
                                     "Should have been a measurement associated with fv=" + fv + ", cannot update." );
                         } else if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
-                            log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor=" + fv
-                                    .getExperimentalFactor() + " value= '" + factorValueString + "'" );
+                            AbstractService.log
+                                    .debug( "Updating continuous value on biomaterial:" + bmvo + ", factor=" + fv
+                                            .getExperimentalFactor() + " value= '" + factorValueString + "'" );
                             fv.getMeasurement().setValue( factorValueString );
                         } else {
-                            log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
+                            AbstractService.log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
                         }
 
                         // always add...
@@ -191,7 +215,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
                     ExperimentalFactor ef = experimentalFactorDao.load( factorId );
 
                     // note that this type of factorvalues are not reused for continuous ones.
-                    log.info( "Adding factor value for " + ef + ": " + factorValueString + " to " + bm );
+                    AbstractService.log
+                            .info( "Adding factor value for " + ef + ": " + factorValueString + " to " + bm );
 
                     FactorValue fv = FactorValue.Factory.newInstance();
                     fv.setExperimentalFactor( ef );
@@ -200,7 +225,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
                     m.setType( MeasurementType.ABSOLUTE );
                     m.setValue( fv.getValue() );
                     try {
-                        Double.parseDouble( fv.getValue() ); // check if it is a number, don't need the value.
+                        //noinspection ResultOfMethodCallIgnored // check if it is a number, don't need the value.
+                        Double.parseDouble( fv.getValue() );
                         m.setRepresentation( PrimitiveType.DOUBLE );
                     } catch ( NumberFormatException e ) {
                         m.setRepresentation( PrimitiveType.STRING );
@@ -224,19 +250,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         bm.getFactorValues().clear();
         bm.getFactorValues().addAll( updatedFactorValues );
         assert !bm.getFactorValues().isEmpty();
-        update( bm );
+        this.update( bm );
         assert !bm.getFactorValues().isEmpty();
         return bm;
-    }
-
-    @Override
-    public String getBioMaterialIdList( Collection<BioMaterial> bioMaterials ) {
-        StringBuilder buf = new StringBuilder();
-        for ( BioMaterial bm : bioMaterials ) {
-            buf.append( bm.getId() );
-            buf.append( "," );
-        }
-        return buf.toString().replaceAll( ",$", "" );
-
     }
 }

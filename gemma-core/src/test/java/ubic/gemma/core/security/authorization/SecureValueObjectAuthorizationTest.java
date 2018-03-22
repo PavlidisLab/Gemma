@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,45 +18,39 @@
  */
 package ubic.gemma.core.security.authorization;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author cmcdonald
  */
 public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
+    private final String ownerUsername = RandomStringUtils.randomAlphabetic( 5 );
+    private final String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
     @Autowired
     private UserManager userManager;
-
     @Autowired
     private SecurityService securityService;
-
     @Autowired
     private ExpressionExperimentService eeService;
-
-    private final String ownerUsername = RandomStringUtils.randomAlphabetic( 5 );
-
-    private final String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
-
     private Long ownersExpressionExperimentId;
 
     private Long publicExpressionExperimentId;
@@ -64,7 +58,7 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
     private ExpressionExperiment ee;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         ExpressionExperiment publicEe = super.getTestPersistentBasicExpressionExperiment();
         securityService.makePublic( publicEe );
@@ -75,16 +69,16 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
         ownersExpressionExperimentId = ee.getId();
 
-        makeUser( ownerUsername );
+        this.makeUser( ownerUsername );
 
         this.securityService.makeOwnedByUser( ee, ownerUsername );
 
-        makeUser( aDifferentUsername );
+        this.makeUser( aDifferentUsername );
 
     }
 
     @Test
-    public void testSecuredExpressionExperimentValueObject() throws Exception {
+    public void testSecuredExpressionExperimentValueObject() {
 
         ArrayList<Long> eeIds = new ArrayList<>();
 
@@ -114,8 +108,8 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
         try {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 

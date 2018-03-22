@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
+import javax.persistence.Transient;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -61,14 +62,12 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
         if ( this.getId() != null && that.getId() != null )
             return this.getId().equals( that.getId() );
 
+        //noinspection SimplifiableIfStatement // Better readability
         if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
             return false;
 
-        if ( this.getDescription() != null && that.getDescription() != null && !this.getDescription()
-                .equals( that.getDescription() ) )
-            return false;
-
-        return true;
+        return this.getDescription() == null || that.getDescription() == null || this.getDescription()
+                .equals( that.getDescription() );
     }
 
     @Override
@@ -76,11 +75,11 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
         int hashCode;
 
         if ( this.getId() != null ) {
-            return 29 * getId().hashCode();
+            return 29 * this.getId().hashCode();
         }
-        int nameHash = this.getName() == null ? 0 : getName().hashCode();
+        int nameHash = this.getName() == null ? 0 : this.getName().hashCode();
 
-        int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
+        int descHash = this.getDescription() == null ? 0 : this.getDescription().hashCode();
         hashCode = 29 * nameHash + descHash;
 
         return hashCode;
@@ -156,6 +155,7 @@ public class BioAssay extends AbstractAuditable implements gemma.gsec.model.Secu
         this.sampleUsed = sampleUsed;
     }
 
+    @Transient
     @Override
     public Securable getSecurityOwner() {
         return null;

@@ -95,8 +95,8 @@ Gemma.SecurityManager.managePermissions = function( elid, clazz, id, securityFor
       var availableGroups = securityInfo.availableGroups;
       var clazz = securityInfo.entityClazz;
 
-      var readerChecks = new Array();
-      var writerChecks = new Array();
+      var readerChecks = [];
+      var writerChecks = [];
 
       if ( availableGroups.length === 0 ) {
          readerChecks = [ {
@@ -417,9 +417,6 @@ Gemma.SecurityManager.getSecurityLink = function( clazz, id, isPublic, isShared,
  * @return {} html for the link
  */
 Gemma.SecurityManager.getSecurityUrl = function( clazz, id ) {
-
-   // FIXME: make method wait for callback method to return ends prematurly
-   // return no link at all.
 
    SecurityController.getSecurityInfo( {
       classDelegatingFor : clazz,

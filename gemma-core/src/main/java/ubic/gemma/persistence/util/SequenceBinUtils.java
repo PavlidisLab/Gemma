@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,14 +32,15 @@ public class SequenceBinUtils {
      * shifts gives an offset.
      */
 
-    private static int _binFirstShift = 17; /* How much to shift to get to finest bin. */
-    private static int _binNextShift = 3; /* How much to shift to get to next larger bin. */
+    private static final int _binFirstShift = 17; /* How much to shift to get to finest bin. */
+    private static final int _binNextShift = 3; /* How much to shift to get to next larger bin. */
 
-    private static int binOffsetsExtended[] = { 4096 + 512 + 64 + 8 + 1, 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1, 0 };
+    private static final int[] binOffsetsExtended = { 4096 + 512 + 64 + 8 + 1, 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1,
+            0 };
 
-    private static int binOffsets[] = { 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1, 0 };
-    private static int BINRANGE_MAXEND_512M = ( 512 * 1024 * 1024 );
-    private static int _binOffsetOldToExtended = 4681;
+    private static final int[] binOffsets = { 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1, 0 };
+    private static final int BINRANGE_MAXEND_512M = ( 512 * 1024 * 1024 );
+    private static final int _binOffsetOldToExtended = 4681;
 
     /**
      * Directly ported from jksrc binRange.c and hdb.c
@@ -53,10 +54,10 @@ public class SequenceBinUtils {
      * @return clause that will restrict to relevant bins to query. This should be ANDed into your WHERE clause.
      */
     public static String addBinToQuery( String table, Long start, Long end ) {
-        if ( end <= BINRANGE_MAXEND_512M ) {
-            return hAddBinToQueryStandard( table, start, end, Boolean.TRUE );
+        if ( end <= SequenceBinUtils.BINRANGE_MAXEND_512M ) {
+            return SequenceBinUtils.hAddBinToQueryStandard( table, start, end, Boolean.TRUE );
         }
-        return hAddBinToQueryExtended( table, start, end );
+        return SequenceBinUtils.hAddBinToQueryExtended( table, start, end );
     }
 
     /**
@@ -67,10 +68,10 @@ public class SequenceBinUtils {
      * @return bin
      */
     public static int binFromRange( int start, int end ) {
-        if ( end <= BINRANGE_MAXEND_512M )
-            return binFromRangeStandard( start, end );
+        if ( end <= SequenceBinUtils.BINRANGE_MAXEND_512M )
+            return SequenceBinUtils.binFromRangeStandard( start, end );
 
-        return binFromRangeExtended( start, end );
+        return SequenceBinUtils.binFromRangeExtended( start, end );
     }
 
     /**
@@ -84,16 +85,8 @@ public class SequenceBinUtils {
      * @return bin
      */
     private static int binFromRangeExtended( int start, int end ) {
-        int startBin = start, endBin = end - 1, i;
-        startBin >>= _binFirstShift;
-        endBin >>= _binFirstShift;
-        for ( i = 0; i < binOffsetsExtended.length; ++i ) {
-            if ( startBin == endBin )
-                return _binOffsetOldToExtended + binOffsetsExtended[i] + startBin;
-            startBin >>= _binNextShift;
-            endBin >>= _binNextShift;
-        }
-        throw new IllegalArgumentException( "start " + start + ", end " + end + " out of range (max is 512M)" );
+        return SequenceBinUtils.binFromRangeParam( start, end, SequenceBinUtils.binOffsetsExtended,
+                SequenceBinUtils._binOffsetOldToExtended );
     }
 
     /**
@@ -106,32 +99,23 @@ public class SequenceBinUtils {
      * @return bin
      */
     private static int binFromRangeStandard( int start, int end ) {
-        int startBin = start, endBin = end - 1, i;
-        startBin >>= _binFirstShift;
-        endBin >>= _binFirstShift;
-        for ( i = 0; i < binOffsets.length; ++i ) {
-            if ( startBin == endBin )
-                return binOffsets[i] + startBin;
-            startBin >>= _binNextShift;
-            endBin >>= _binNextShift;
-        }
-        throw new IllegalArgumentException( "start " + start + ", end " + end + " out of range (max is 512M)" );
+        return SequenceBinUtils.binFromRangeParam( start, end, SequenceBinUtils.binOffsets, 0 );
     }
 
     /**
      * Return offset for bins of a given level.
      */
     private static int binOffset( int level ) {
-        assert ( level >= 0 && level < binOffsets.length );
-        return binOffsets[level];
+        assert ( level >= 0 && level < SequenceBinUtils.binOffsets.length );
+        return SequenceBinUtils.binOffsets[level];
     }
 
     /**
      * Return offset for bins of a given level.
      */
     private static int binOffsetExtended( int level ) {
-        assert ( level >= 0 && level < binOffsetsExtended.length );
-        return binOffsetsExtended[level] + _binOffsetOldToExtended;
+        assert ( level >= 0 && level < SequenceBinUtils.binOffsetsExtended.length );
+        return SequenceBinUtils.binOffsetsExtended[level] + SequenceBinUtils._binOffsetOldToExtended;
     }
 
     /**
@@ -155,23 +139,24 @@ public class SequenceBinUtils {
      * Add clause that will restrict to relevant bins to query.
      */
     private static String hAddBinToQueryExtended( String table, long start, long end ) {
-        int bFirstShift = _binFirstShift, bNextShift = _binNextShift;
+        int bFirstShift = SequenceBinUtils._binFirstShift, bNextShift = SequenceBinUtils._binNextShift;
         long startBin = ( start >> bFirstShift ), endBin = ( ( end - 1 ) >> bFirstShift );
-        int i, levels = binOffsetsExtended.length;
+        int i, levels = SequenceBinUtils.binOffsetsExtended.length;
         String column = table + ".bin";
         String query = " (";
 
-        if ( start < BINRANGE_MAXEND_512M ) {
-            query = query + hAddBinToQueryStandard( table, start, BINRANGE_MAXEND_512M, false );
+        if ( start < SequenceBinUtils.BINRANGE_MAXEND_512M ) {
+            query = query + SequenceBinUtils
+                    .hAddBinToQueryStandard( table, start, SequenceBinUtils.BINRANGE_MAXEND_512M, false );
             query = query + " or ";
         }
 
         for ( i = 0; i < levels; ++i ) {
-            int offset = binOffsetExtended( i );
+            int offset = SequenceBinUtils.binOffsetExtended( i );
             if ( i != 0 ) {
                 query = query + " or ";
             }
-            query = getClause( startBin, endBin, column, query, offset );
+            query = SequenceBinUtils.getClause( startBin, endBin, column, query, offset );
             startBin >>= bNextShift;
             endBin >>= bNextShift;
         }
@@ -188,9 +173,9 @@ public class SequenceBinUtils {
      * @return Add clause that will restrict to relevant bins to query.
      */
     private static String hAddBinToQueryStandard( String table, long start, long end, boolean selfContained ) {
-        int bFirstShift = _binFirstShift, bNextShift = _binNextShift;
+        int bFirstShift = SequenceBinUtils._binFirstShift, bNextShift = SequenceBinUtils._binNextShift;
         long startBin = ( start >> bFirstShift ), endBin = ( ( end - 1 ) >> bFirstShift );
-        int i, levels = binOffsets.length;
+        int i, levels = SequenceBinUtils.binOffsets.length;
 
         String column = table + ".bin";
 
@@ -199,21 +184,34 @@ public class SequenceBinUtils {
             query = query + " (";
         }
         for ( i = 0; i < levels; ++i ) {
-            int offset = binOffset( i );
+            int offset = SequenceBinUtils.binOffset( i );
             if ( i != 0 ) {
                 query = query + " or ";
             }
 
-            query = getClause( startBin, endBin, column, query, offset );
+            query = SequenceBinUtils.getClause( startBin, endBin, column, query, offset );
 
             startBin >>= bNextShift;
             endBin >>= bNextShift;
         }
         if ( selfContained ) {
-            query = query + " or  " + column + " = " + _binOffsetOldToExtended;
+            query = query + " or  " + column + " = " + SequenceBinUtils._binOffsetOldToExtended;
         }
         query = query + ")";
         return query;
+    }
+
+    private static int binFromRangeParam( int start, int end, int[] offsets, int oldOffset ) {
+        int startBin = start, endBin = end - 1, i;
+        startBin >>= SequenceBinUtils._binFirstShift;
+        endBin >>= SequenceBinUtils._binFirstShift;
+        for ( i = 0; i < offsets.length; ++i ) {
+            if ( startBin == endBin )
+                return oldOffset + offsets[i] + startBin;
+            startBin >>= SequenceBinUtils._binNextShift;
+            endBin >>= SequenceBinUtils._binNextShift;
+        }
+        throw new IllegalArgumentException( "start " + start + ", end " + end + " out of range (max is 512M)" );
     }
 
 }

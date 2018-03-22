@@ -34,22 +34,23 @@ public class ArrayDatasetArg
     @SuppressWarnings("unused")
     public static ArrayDatasetArg valueOf( final String s ) {
         if ( Strings.isNullOrEmpty( s ) ) {
-            return new ArrayDatasetArg( String.format( ERROR_MSG, s ),
-                    new IllegalArgumentException( ERROR_MSG_DETAIL ) );
+            return new ArrayDatasetArg( String.format( ArrayDatasetArg.ERROR_MSG, s ),
+                    new IllegalArgumentException( ArrayDatasetArg.ERROR_MSG_DETAIL ) );
         }
-        return new ArrayDatasetArg( Arrays.asList( splitString( s ) ) );
-    }
-
-    @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_EE_ALIAS;
+        return new ArrayDatasetArg( Arrays.asList( ArrayEntityArg.splitString( s ) ) );
     }
 
     @Override
     protected String getPropertyName( ExpressionExperimentService service ) {
         String value = this.getValue().get( 0 );
-        DatasetArg arg = DatasetArg.valueOf( value );
-        return checkPropertyNameString( arg, value, service );
+        MutableArg<?, ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> arg = DatasetArg
+                .valueOf( value );
+        return this.checkPropertyNameString( arg, value, service );
+    }
+
+    @Override
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_EE_ALIAS;
     }
 
 }

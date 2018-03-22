@@ -74,15 +74,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     @Override
     @Transactional
     public void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException {
-        this.importDesign( experiment, is, false );
-    }
-
-    @Override
-    @Transactional
-    public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
         this.efoService = this.ontologyService.getExperimentalFactorOntologyService();
 
-        log.debug( "Parsing input file" );
+        ExperimentalDesignImporterImpl.log.debug( "Parsing input file" );
         boolean readHeader = false;
 
         BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
@@ -92,7 +86,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
 
         if ( !experimentalDesign.getExperimentalFactors().isEmpty() ) {
-            log.warn( "Experimental design already has factors, import will add new ones" );
+            ExperimentalDesignImporterImpl.log
+                    .warn( "Experimental design already has factors, import will add new ones" );
         }
 
         experimentalDesign.setDescription( "Parsed from file." );
@@ -102,7 +97,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         List<String> factorValueLines = new ArrayList<>();
 
         while ( ( line = r.readLine() ) != null ) {
-            if ( line.startsWith( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) ) {
+            if ( line.startsWith( ExperimentalDesignImporterImpl.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) ) {
                 experimentalFactorLines.add( line );
             } else if ( line.startsWith( "#" ) || StringUtils.isBlank( line ) ) {
                 //noinspection UnnecessaryContinue // Better for readability
@@ -118,13 +113,13 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         Collection<BioMaterial> experimentBioMaterials = this.bioMaterialService.findByExperiment( experiment );
 
-        validateFileComponents( experimentalFactorLines, sampleHeaderLine, factorValueLines );
-        validateExperimentalFactorFileContent( experimentalFactorLines, sampleHeaderLine );
-        validateFactorFileContent( experimentalFactorLines.size(), factorValueLines );
-        validateBioMaterialFileContent( experiment, experimentBioMaterials, factorValueLines );
+        this.validateFileComponents( experimentalFactorLines, sampleHeaderLine, factorValueLines );
+        this.validateExperimentalFactorFileContent( experimentalFactorLines, sampleHeaderLine );
+        this.validateFactorFileContent( experimentalFactorLines.size(), factorValueLines );
+        this.validateBioMaterialFileContent( experimentBioMaterials, factorValueLines );
 
         // build up the composite: create experimental factor then add the experimental value
-        addExperimentalFactorsToExperimentalDesign( experimentalDesign, experimentalFactorLines, headerFields,
+        this.addExperimentalFactorsToExperimentalDesign( experimentalDesign, experimentalFactorLines, headerFields,
                 factorValueLines );
 
         assert !experimentalDesign.getExperimentalFactors().isEmpty();
@@ -132,17 +127,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         experimentalDesignService.update( experimentalDesign );
 
-        Collection<BioMaterial> bioMaterialsWithFactorValues = addFactorValuesToBioMaterialsInExpressionExperiment(
-                experiment, experimentBioMaterials, experimentalDesign, factorValueLines, headerFields );
+        Collection<BioMaterial> bioMaterialsWithFactorValues = this
+                .addFactorValuesToBioMaterialsInExpressionExperiment( experimentBioMaterials, experimentalDesign,
+                        factorValueLines, headerFields );
 
         for ( BioMaterial bioMaterial : bioMaterialsWithFactorValues ) {
             this.bioMaterialService.update( bioMaterial );
-
-            // just a debugging sanity check.
-            //            BioMaterial bbm = this.bioMaterialService.load( bioMaterial.getId() );
-            //            if ( log.isDebugEnabled() )
-            //                log.debug( bbm + ": " + bbm.getFactorValues().size() + " factor values: "
-            //                        + StringUtils.join( bbm.getFactorValues(), " ; " ) );
         }
 
     }
@@ -168,7 +158,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 try {
                     Thread.sleep( 10000 );
                     if ( maxWait++ > 10 ) {
-                        log.error( "EFO is not loaded and gave up waiting" );
+                        ExperimentalDesignImporterImpl.log.error( "EFO is not loaded and gave up waiting" );
                         break;
                         // this is okay, we can get by using OntologyTermSimple.
                     }
@@ -183,16 +173,17 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             experimentalDesign.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         }
 
-        Map<String, Set<String>> mapFactorSampleValues = getMapFactorSampleValues( headerFields, factorValueLines );
+        Map<String, Set<String>> mapFactorSampleValues = this
+                .getMapFactorSampleValues( headerFields, factorValueLines );
 
         for ( String experimentalFactorFileLine : experimentalFactorFileLines ) {
 
             // $Run time : Category=EnvironmentalHistory Type=categorical
             String[] experimentalFactorfields = experimentalFactorFileLine.split( ":" );
 
-            String factorValue = ( StringUtils.strip( experimentalFactorfields[0]
-                    .replaceFirst( Pattern.quote( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) + "\\s*", "" ) ) )
-                    .trim();
+            String factorValue = ( StringUtils.strip( experimentalFactorfields[0].replaceFirst(
+                    Pattern.quote( ExperimentalDesignImporterImpl.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR )
+                            + "\\s*", "" ) ) ).trim();
             String categoryAndType = StringUtils.strip( experimentalFactorfields[1] );
             String[] categoryAndTypeFields = StringUtils.split( categoryAndType );
 
@@ -203,7 +194,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             ExperimentalFactor experimentalFactorFromFile = ExperimentalFactor.Factory.newInstance();
             experimentalFactorFromFile.setExperimentalDesign( experimentalDesign );
-            VocabCharacteristic vc = termForCategoryLookup( categoryValue, terms );
+            VocabCharacteristic vc = this.termForCategoryLookup( categoryValue, terms );
 
             // e.g. Category=EnvironmentalHistory
             String categoryTypeValue = categoryAndTypeFields[1];
@@ -217,12 +208,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             experimentalFactorFromFile.setType(
                     factorType.equalsIgnoreCase( "CATEGORICAL" ) ? FactorType.CATEGORICAL : FactorType.CONTINUOUS );
 
-            addFactorValuesToExperimentalFactor( experimentalFactorFromFile, mapFactorSampleValues, factorType );
+            this.addFactorValuesToExperimentalFactor( experimentalFactorFromFile, mapFactorSampleValues, factorType );
 
-            if ( !checkForDuplicateExperimentalFactorOnExperimentalDesign( experimentalDesign,
+            if ( !this.checkForDuplicateExperimentalFactorOnExperimentalDesign( experimentalDesign,
                     experimentalFactorFromFile ) ) {
                 experimentalDesign.getExperimentalFactors().add( experimentalFactorFromFile );
-                log.info( "Added " + experimentalFactorFromFile );
+                ExperimentalDesignImporterImpl.log.info( "Added " + experimentalFactorFromFile );
             }
         }
 
@@ -231,7 +222,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     /**
      * Add the factor values to the biomaterials
      *
-     * @param experiment             EE
      * @param experimentBioMaterials Current expression experiment's biomaterials.
      * @param experimentalDesign     experimental design
      * @param factorValueLines       Lines from file containing factor values and biomaterial ids
@@ -240,9 +230,10 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * bioassay (first one retrieved)
      */
     private Collection<BioMaterial> addFactorValuesToBioMaterialsInExpressionExperiment(
-            ExpressionExperiment experiment, Collection<BioMaterial> experimentBioMaterials,
-            ExperimentalDesign experimentalDesign, List<String> factorValueLines, String[] headerFields ) {
-        log.debug( "Adding factors values to biomaterials: " + experimentalDesign.getId() );
+            Collection<BioMaterial> experimentBioMaterials, ExperimentalDesign experimentalDesign,
+            List<String> factorValueLines, String[] headerFields ) {
+        ExperimentalDesignImporterImpl.log
+                .debug( "Adding factors values to biomaterials: " + experimentalDesign.getId() );
         Collection<ExperimentalFactor> experimentalFactorsInExperiment = experimentalDesign.getExperimentalFactors();
         Collection<BioMaterial> biomaterialsWithFactorValuesInExperiment = new HashSet<>();
 
@@ -258,8 +249,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             if ( hasExternalId ) {
                 externalId = factorValueFields[1];
             }
-            BioMaterial currentBioMaterial = getBioMaterialFromExpressionExperiment( experiment, experimentBioMaterials,
-                    factorValueFields[0], externalId );
+            BioMaterial currentBioMaterial = this
+                    .getBioMaterialFromExpressionExperiment( experimentBioMaterials, factorValueFields[0], externalId );
 
             if ( currentBioMaterial == null ) {
                 throw new IllegalStateException( "No biomaterial for " + factorValueFields[0] );
@@ -323,15 +314,17 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                  * If we can't find the factorvalue that matches this, we don't get a value for this biomaterial.
                  */
                 if ( currentFactorValue == null ) {
-                    log.error( "No factor value for " + currentExperimentalFactor + " matches the text value="
-                            + currentFVtext );
+                    ExperimentalDesignImporterImpl.log
+                            .error( "No factor value for " + currentExperimentalFactor + " matches the text value="
+                                    + currentFVtext );
                 } else {
-                    if ( !checkForDuplicateFactorOnBioMaterial( currentBioMaterial, currentFactorValue ) ) {
+                    if ( !this.checkForDuplicateFactorOnBioMaterial( currentBioMaterial, currentFactorValue ) ) {
                         currentBioMaterial.getFactorValues().add( currentFactorValue );
                     }
                 }
 
-                log.debug( "Added factor value " + currentFactorValue + " to biomaterial " + currentBioMaterial );
+                ExperimentalDesignImporterImpl.log
+                        .debug( "Added factor value " + currentFactorValue + " to biomaterial " + currentBioMaterial );
                 biomaterialsWithFactorValuesInExperiment.add( currentBioMaterial );
 
                 if ( !factorsAssociatedWithBioMaterials.containsKey( currentExperimentalFactor ) ) {
@@ -348,8 +341,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
          */
         for ( ExperimentalFactor ef : factorsAssociatedWithBioMaterials.keySet() ) {
             if ( !factorsAssociatedWithBioMaterials.get( ef ).containsAll( experimentBioMaterials ) ) {
-                log.warn(
-                        "File did not contain values for all factor - biomaterial combinations: Missing at least one for "
+                ExperimentalDesignImporterImpl.log
+                        .warn( "File did not contain values for all factor - biomaterial combinations: Missing at least one for "
                                 + ef + " [populated " + factorsAssociatedWithBioMaterials.get( ef ).size() + "/"
                                 + experimentBioMaterials.size() + " ]" );
             }
@@ -367,7 +360,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      */
     private void addFactorValuesToExperimentalFactor( ExperimentalFactor experimentalFactor,
             Map<String, Set<String>> factorSampleValues, String factorType ) {
-        log.debug( "Addding factors values to experimental factor: " + experimentalFactor.getName() );
+        ExperimentalDesignImporterImpl.log
+                .debug( "Addding factors values to experimental factor: " + experimentalFactor.getName() );
         VocabCharacteristic category = ( VocabCharacteristic ) experimentalFactor.getCategory();
 
         Set<String> values = factorSampleValues.get( experimentalFactor.getName() );
@@ -377,7 +371,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             factorValue.setValue( value );
 
             if ( factorType.equalsIgnoreCase( "CATEGORICAL" ) ) {
-                log.debug( "Factor is categorical" );
+                ExperimentalDesignImporterImpl.log.debug( "Factor is categorical" );
                 VocabCharacteristic newVc = VocabCharacteristic.Factory.newInstance();
                 String category2 = category.getCategory();
                 assert category2 != null;
@@ -387,13 +381,14 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 newVc.setEvidenceCode( GOEvidenceCode.IC );
                 factorValue.getCharacteristics().add( newVc );
             } else {
-                log.debug( "Factor is continous" );
-                addMeasurementToFactorValueOfTypeContinous( factorValue );
+                ExperimentalDesignImporterImpl.log.debug( "Factor is continous" );
+                this.addMeasurementToFactorValueOfTypeContinous( factorValue );
             }
             // set bidirectional relationship
             experimentalFactor.getFactorValues().add( factorValue );
             factorValue.setExperimentalFactor( experimentalFactor );
-            log.debug( "Added factor value " + factorValue + " to experimental factor " + experimentalFactor );
+            ExperimentalDesignImporterImpl.log
+                    .debug( "Added factor value " + factorValue + " to experimental factor " + experimentalFactor );
         }
 
     }
@@ -408,14 +403,15 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         m.setType( MeasurementType.ABSOLUTE );
         m.setValue( factorValue.getValue() );
         try {
-            Double.parseDouble( factorValue.getValue() ); // check if it is a number, don't need the value.
+            //noinspection ResultOfMethodCallIgnored // check if it is a number, don't need the value.
+            Double.parseDouble( factorValue.getValue() );
             m.setRepresentation( PrimitiveType.DOUBLE );
         } catch ( NumberFormatException e ) {
             m.setRepresentation( PrimitiveType.STRING );
         }
 
         factorValue.setMeasurement( m );
-        log.debug( "Created " + factorValue + " for experimental factor " );
+        ExperimentalDesignImporterImpl.log.debug( "Created " + factorValue + " for experimental factor " );
 
     }
 
@@ -430,7 +426,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         boolean foundMatch = false;
         for ( ExperimentalFactor existingExperimentalFactors : experimentalDesign.getExperimentalFactors() ) {
             if ( existingExperimentalFactors.getName().equals( experimentalFactorFromFile.getName() ) ) {
-                log.info( experimentalFactorFromFile + " matches existing " + existingExperimentalFactors );
+                ExperimentalDesignImporterImpl.log
+                        .info( experimentalFactorFromFile + " matches existing " + existingExperimentalFactors );
                 experimentalFactorFromFile = existingExperimentalFactors;
                 foundMatch = true;
             }
@@ -449,8 +446,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         for ( FactorValue existingfv : bioMaterial.getFactorValues() ) {
             if ( factorValue.equals( existingfv ) || existingfv.getExperimentalFactor()
                     .equals( factorValue.getExperimentalFactor() ) ) {
-                log.warn( bioMaterial + " already has a factorvalue for " + factorValue.getExperimentalFactor() + " ["
-                        + factorValue + " matched existing: " + existingfv + "]" );
+                ExperimentalDesignImporterImpl.log
+                        .warn( bioMaterial + " already has a factorvalue for " + factorValue.getExperimentalFactor()
+                                + " [" + factorValue + " matched existing: " + existingfv + "]" );
                 foundMatch = true;
                 break;
             }
@@ -464,32 +462,28 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * file. If no biomaterial is found then null is returned, indicating that a biomaterial name was given in the file
      * which does not match those stored for the expression experiment.
      *
-     * @param ee                      The current expression experiment
      * @param biomaterialNameFromFile - A factor value file line whose first column contains biomaterial name
      * @param externalId              - the external id stored in the file, which might not be available (so this can be null or
      *                                blank)
      * @return The biomaterial in the expression experiment set matching the biosource name given in the first column of
      * the factor value line.
      */
-    private BioMaterial getBioMaterialFromExpressionExperiment( ExpressionExperiment ee,
-            Collection<BioMaterial> bioMaterials, String biomaterialNameFromFile, String externalId ) {
+    private BioMaterial getBioMaterialFromExpressionExperiment( Collection<BioMaterial> bioMaterials,
+            String biomaterialNameFromFile, String externalId ) {
 
-        Map<String, BioMaterial> biomaterialsInExpressionExperiment = mapBioMaterialsToNamePossibilities(
-                bioMaterials );
+        Map<String, BioMaterial> biomaterialsInExpressionExperiment = this
+                .mapBioMaterialsToNamePossibilities( bioMaterials );
 
         // format the biomaterial name gemma style
-        String bioMaterialNameFormatedWithShortName = SimpleExpressionDataLoaderServiceImpl
-                .makeBioMaterialName( ee, biomaterialNameFromFile );
 
         BioMaterial bioMaterial = biomaterialsInExpressionExperiment.get( biomaterialNameFromFile );
         if ( bioMaterial == null ) {
             // try alternative format...
-            bioMaterial = biomaterialsInExpressionExperiment.get( bioMaterialNameFormatedWithShortName );
+            bioMaterial = biomaterialsInExpressionExperiment.get( biomaterialNameFromFile );
         }
 
         if ( bioMaterial == null && StringUtils.isNotBlank( externalId ) ) {
-            // FIXME document this better. If there are two or more GSM's grouped together we list them in the file
-            // separated by '/'.
+            // If there are two or more GSM's grouped together we list them in the file separated by '/'.
             String[] externalIds = StringUtils.split( externalId, "/" );
 
             for ( String id : externalIds ) {
@@ -587,16 +581,17 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     private VocabCharacteristic termForCategoryLookup( String category, Collection<OntologyTerm> terms ) {
 
         OntologyTerm t = null;
+        String lookup = category.replaceAll( "_", " " ).toLowerCase();
         for ( OntologyTerm to : terms ) {
             if ( to.getTerm().equals( category ) || to.getTerm()
-                    .equals( category.replaceAll( "_", " " ).toLowerCase() ) ) {
+                    .equals( lookup ) ) {
                 t = to;
                 break;
             }
         }
 
         if ( t == null ) {
-            throw new IllegalArgumentException( "No term matches '" + category + "'" );
+            throw new IllegalArgumentException( "No term matches '" + category + "' - formalized to: "+lookup );
         }
 
         VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
@@ -614,11 +609,10 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * for cases where a single 'design' file is to be used for multiple microarray studies. Biomaterial ids should
      * match what is stored
      *
-     * @param experiment       Current experiment
      * @param factorValueLines Lines containing biomaterial names and their factor values
      */
-    private void validateBioMaterialFileContent( ExpressionExperiment experiment, Collection<BioMaterial> bioMaterials,
-            List<String> factorValueLines ) throws IllegalArgumentException {
+    private void validateBioMaterialFileContent( Collection<BioMaterial> bioMaterials, List<String> factorValueLines )
+            throws IllegalArgumentException {
 
         for ( String factorValueLine : factorValueLines ) {
             String[] vals = StringUtils.splitPreserveAllTokens( factorValueLine, '\t' );
@@ -626,8 +620,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 throw new IllegalArgumentException(
                         "Expected a file with at least two columns separated by tabs, got " + factorValueLine );
             }
-            BioMaterial bioMaterialInFile = getBioMaterialFromExpressionExperiment( experiment, bioMaterials, vals[0],
-                    vals[1] );
+            BioMaterial bioMaterialInFile = this
+                    .getBioMaterialFromExpressionExperiment( bioMaterials, vals[0], vals[1] );
             if ( bioMaterialInFile == null ) {
                 throw new IllegalArgumentException(
                         "The uploaded file has a biomaterial name that does not match the study: " + StringUtils
@@ -656,8 +650,9 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 throw new IOException(
                         "EF description must have two fields with a single ':' in between (" + line + ")" );
             }
-            String factorName = StringUtils.strip( fields[0]
-                    .replaceFirst( Pattern.quote( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) + "\\s*", "" ) );
+            String factorName = StringUtils.strip( fields[0].replaceFirst(
+                    Pattern.quote( ExperimentalDesignImporterImpl.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR )
+                            + "\\s*", "" ) );
 
             experimentalFactorValueNames.add( factorName );
             String category = StringUtils.strip( fields[1] );
@@ -670,7 +665,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         }
 
-        validateSampleHeaderFileContent( experimentalFactorValueNames, experimentalFactorLines.size(),
+        this.validateSampleHeaderFileContent( experimentalFactorValueNames, experimentalFactorLines.size(),
                 sampleHeaderLine );
 
     }
@@ -686,10 +681,11 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             throws IOException {
         for ( String factorValueLine : factorValueList ) {
             String[] fields = StringUtils.splitPreserveAllTokens( factorValueLine, "\t" );
-            if ( fields.length > numberOfExperimentalFactors + NUMBER_OF_EXTRA_COLUMNS_ALLOWED ) {
-                throw new IOException(
-                        "Expected no more than " + ( numberOfExperimentalFactors + NUMBER_OF_EXTRA_COLUMNS_ALLOWED )
-                                + " columns based on EF descriptions (plus id column), got " + fields.length );
+            if ( fields.length
+                    > numberOfExperimentalFactors + ExperimentalDesignImporterImpl.NUMBER_OF_EXTRA_COLUMNS_ALLOWED ) {
+                throw new IOException( "Expected no more than " + ( numberOfExperimentalFactors
+                        + ExperimentalDesignImporterImpl.NUMBER_OF_EXTRA_COLUMNS_ALLOWED )
+                        + " columns based on EF descriptions (plus id column), got " + fields.length );
             }
             if ( fields.length <= numberOfExperimentalFactors ) {
                 throw new IOException( "Expected at least " + ( numberOfExperimentalFactors + 1 )
@@ -737,8 +733,10 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         String[] headerFields = StringUtils.splitPreserveAllTokens( sampleHeaderLine, "\t" );
 
         // we might have the ids, and the external id.
-        if ( headerFields.length > numberOfExperimentalFactors + NUMBER_OF_EXTRA_COLUMNS_ALLOWED ) {
-            throw new IOException( "Expected " + ( numberOfExperimentalFactors + NUMBER_OF_EXTRA_COLUMNS_ALLOWED )
+        if ( headerFields.length
+                > numberOfExperimentalFactors + ExperimentalDesignImporterImpl.NUMBER_OF_EXTRA_COLUMNS_ALLOWED ) {
+            throw new IOException( "Expected " + ( numberOfExperimentalFactors
+                    + ExperimentalDesignImporterImpl.NUMBER_OF_EXTRA_COLUMNS_ALLOWED )
                     + " columns based on EF descriptions (plus id column), got " + headerFields.length );
         }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,16 +85,16 @@ public class GeoBrowser {
 
         List<GeoRecord> records = new ArrayList<>();
         URL searchUrl = new URL(
-                ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
+                GeoBrowser.ESEARCH + searchTerms + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y" );
         Document searchDocument;
         URLConnection conn = searchUrl.openConnection();
         conn.connect();
         try (InputStream is = conn.getInputStream()) {
 
-            docFactory.setIgnoringComments( true );
-            docFactory.setValidating( false );
+            GeoBrowser.docFactory.setIgnoringComments( true );
+            GeoBrowser.docFactory.setValidating( false );
 
-            DocumentBuilder builder = docFactory.newDocumentBuilder();
+            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             searchDocument = builder.parse( is );
         } catch ( ParserConfigurationException | SAXException e ) {
             throw new RuntimeException( e );
@@ -124,14 +124,14 @@ public class GeoBrowser {
         String cookie = XMLUtils.getTextValue( cookieEl );
 
         URL fetchUrl = new URL(
-                EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retstart=" + start + "&retmax=" + pageSize
-                        + "&WebEnv=" + cookie );
+                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + queryId + "&retstart=" + start + "&retmax="
+                        + pageSize + "&WebEnv=" + cookie );
 
         conn = fetchUrl.openConnection();
         conn.connect();
         Document summaryDocument;
         try (InputStream is = conn.getInputStream()) {
-            DocumentBuilder builder = docFactory.newDocumentBuilder();
+            DocumentBuilder builder = GeoBrowser.docFactory.newDocumentBuilder();
             summaryDocument = builder.parse( is );
 
             XPathFactory xFactory = XPathFactory.newInstance();
@@ -173,13 +173,13 @@ public class GeoBrowser {
                 Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
                 record.setReleaseDate( date );
 
-                record.setOrganisms( getTaxonCollection( orgnNodes.item( i ).getTextContent() ) );
+                record.setOrganisms( this.getTaxonCollection( orgnNodes.item( i ).getTextContent() ) );
 
                 records.add( record );
             }
 
             if ( records.isEmpty() ) {
-                log.warn( "No records obtained" );
+                GeoBrowser.log.warn( "No records obtained" );
             }
         } catch ( ParserConfigurationException | ParseException | XPathExpressionException | SAXException e ) {
             throw new IOException( "Could not parse data: " + searchUrl, e );
@@ -203,11 +203,12 @@ public class GeoBrowser {
             throw new IllegalArgumentException( "Values must be greater than zero " );
 
         List<GeoRecord> records = new ArrayList<>();
-        URL url = null;
+        URL url;
         try {
             url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
         } catch ( MalformedURLException e ) {
-            throw new RuntimeException( "Invalid URL " + url, e );
+            throw new RuntimeException( "Invalid URL: " + GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize,
+                    e );
         }
 
         URLConnection conn = url.openConnection();
@@ -234,8 +235,8 @@ public class GeoBrowser {
 
                 GeoRecord geoRecord = new GeoRecord();
                 geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
-                geoRecord.setTitle( StringUtils
-                        .strip( fields[columnNameToIndex.get( "Title" )].replaceAll( FLANKING_QUOTES_REGEX, "" ) ) );
+                geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )]
+                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ) ) );
 
                 String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
                 if ( StringUtils.isNotBlank( sampleCountS ) ) {
@@ -245,18 +246,17 @@ public class GeoBrowser {
                         throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
                     }
                 } else {
-                    log.warn( "No sample count for " + geoRecord.getGeoAccession() );
+                    GeoBrowser.log.warn( "No sample count for " + geoRecord.getGeoAccession() );
                 }
                 geoRecord.setContactName(
-                        fields[columnNameToIndex.get( "Contact" )].replaceAll( FLANKING_QUOTES_REGEX, "" ) );
+                        fields[columnNameToIndex.get( "Contact" )].replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ) );
 
-                String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )].replaceAll( FLANKING_QUOTES_REGEX, "" )
-                        .split( ";" );
+                String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )]
+                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ).split( ";" );
                 geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
 
-                Date date = DateUtils.parseDate(
-                        fields[columnNameToIndex.get( "Release Date" )].replaceAll( FLANKING_QUOTES_REGEX, "" ),
-                        DATE_FORMATS );
+                Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
+                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ), DATE_FORMATS );
                 geoRecord.setReleaseDate( date );
 
                 geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
@@ -267,7 +267,7 @@ public class GeoBrowser {
         }
 
         if ( records.isEmpty() ) {
-            log.warn( "No records obtained" );
+            GeoBrowser.log.warn( "No records obtained" );
         }
         return records;
 

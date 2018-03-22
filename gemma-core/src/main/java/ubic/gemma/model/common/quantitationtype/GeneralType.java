@@ -20,6 +20,7 @@ package ubic.gemma.model.common.quantitationtype;
 
 import java.util.*;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class GeneralType implements java.io.Serializable, Comparable<GeneralType> {
     public static final GeneralType QUANTITATIVE = new GeneralType( "QUANTITATIVE" );
     public static final GeneralType CATEGORICAL = new GeneralType( "CATEGORICAL" );
@@ -29,26 +30,29 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      */
     private static final long serialVersionUID = 2881229542950441811L;
     private static final Map<String, GeneralType> values = new LinkedHashMap<>( 3, 1 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> literals = new ArrayList<>( 3 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<String> names = new ArrayList<>( 3 );
+    @SuppressWarnings("UnusedAssignment") // Not redundant, using static initialization
     private static List<GeneralType> valueList = new ArrayList<>( 3 );
 
     static {
-        values.put( QUANTITATIVE.value, QUANTITATIVE );
-        valueList.add( QUANTITATIVE );
-        literals.add( QUANTITATIVE.value );
-        names.add( "QUANTITATIVE" );
-        values.put( CATEGORICAL.value, CATEGORICAL );
-        valueList.add( CATEGORICAL );
-        literals.add( CATEGORICAL.value );
-        names.add( "CATEGORICAL" );
-        values.put( UNKNOWN.value, UNKNOWN );
-        valueList.add( UNKNOWN );
-        literals.add( UNKNOWN.value );
-        names.add( "UNKNOWN" );
-        valueList = Collections.unmodifiableList( valueList );
-        literals = Collections.unmodifiableList( literals );
-        names = Collections.unmodifiableList( names );
+        GeneralType.values.put( GeneralType.QUANTITATIVE.value, GeneralType.QUANTITATIVE );
+        GeneralType.valueList.add( GeneralType.QUANTITATIVE );
+        GeneralType.literals.add( GeneralType.QUANTITATIVE.value );
+        GeneralType.names.add( "QUANTITATIVE" );
+        GeneralType.values.put( GeneralType.CATEGORICAL.value, GeneralType.CATEGORICAL );
+        GeneralType.valueList.add( GeneralType.CATEGORICAL );
+        GeneralType.literals.add( GeneralType.CATEGORICAL.value );
+        GeneralType.names.add( "CATEGORICAL" );
+        GeneralType.values.put( GeneralType.UNKNOWN.value, GeneralType.UNKNOWN );
+        GeneralType.valueList.add( GeneralType.UNKNOWN );
+        GeneralType.literals.add( GeneralType.UNKNOWN.value );
+        GeneralType.names.add( "UNKNOWN" );
+        GeneralType.valueList = Collections.unmodifiableList( GeneralType.valueList );
+        GeneralType.literals = Collections.unmodifiableList( GeneralType.literals );
+        GeneralType.names = Collections.unmodifiableList( GeneralType.names );
     }
 
     private String value;
@@ -56,7 +60,7 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
     /**
      * The default constructor allowing super classes to access it.
      */
-    protected GeneralType() {
+    GeneralType() {
     }
 
     private GeneralType( String value ) {
@@ -70,7 +74,7 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      * @return general type
      */
     public static GeneralType fromString( String value ) {
-        final GeneralType typeValue = values.get( value );
+        final GeneralType typeValue = GeneralType.values.get( value );
         if ( typeValue == null ) {
             /*
              * Customization to permit database values to change before code does. Previously this would throw an
@@ -88,7 +92,7 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      * @return A List containing the actual literals defined by this enumeration, this list can not be modified.
      */
     public static List<String> literals() {
-        return literals;
+        return GeneralType.literals;
     }
 
     /**
@@ -98,7 +102,7 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      * modified.
      */
     public static List<String> names() {
-        return names;
+        return GeneralType.names;
     }
 
     /**
@@ -107,18 +111,12 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
      * @return A List containing the actual enumeration instance values.
      */
     public static List<GeneralType> values() {
-        return valueList;
+        return GeneralType.valueList;
     }
 
     @Override
     public int compareTo( GeneralType that ) {
         return ( this == that ) ? 0 : this.getValue().compareTo( ( that ).getValue() );
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        return ( this == object ) || ( object instanceof GeneralType && ( ( GeneralType ) object ).getValue()
-                .equals( this.getValue() ) );
     }
 
     /**
@@ -133,6 +131,12 @@ public class GeneralType implements java.io.Serializable, Comparable<GeneralType
     @Override
     public int hashCode() {
         return this.getValue().hashCode();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        return ( this == object ) || ( object instanceof GeneralType && ( ( GeneralType ) object ).getValue()
+                .equals( this.getValue() ) );
     }
 
     @Override

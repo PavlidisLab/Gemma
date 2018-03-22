@@ -13,12 +13,12 @@ public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {
         this.value = s;
-        setNullCause( "short name", "Dataset" );
+        this.setNullCause( "short name", "Dataset" );
     }
 
     @Override
     public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
-        return check( Strings.isNullOrEmpty( this.value ) ? null : service.findByShortName( this.value ) );
+        return this.check( Strings.isNullOrEmpty( this.value ) ? null : service.findByShortName( this.value ) );
     }
 
     @Override

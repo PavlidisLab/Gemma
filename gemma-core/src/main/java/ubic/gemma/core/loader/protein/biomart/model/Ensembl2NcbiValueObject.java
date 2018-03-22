@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,33 +27,41 @@ import java.util.HashSet;
  * structure: ensembleGeneId enemblTranscriptId entrez gene ensembl_peptide_id and optionally for humans hgnc_id. There
  * is a many to many relationship between Ensembl genes ids and entrez gene. As such this value object holds a
  * collection of entrez gene strings.
- * 
- * @author ldonnison
  *
+ * @author ldonnison
  */
 public class Ensembl2NcbiValueObject implements Serializable {
 
     private static final long serialVersionUID = -859220901359582113L;
-
+    private final Collection<String> ncbiGenes = new HashSet<>();
     private String enemblTranscriptId = "";
-
     private String ensembleGeneId = "";
     private String ensemblPeptideId = "";
     private String hgcnId = "";
-    private Collection<String> ncbiGenes = new HashSet<String>();
-
     private Integer ncbiTaxonId = 0;
 
     public String getEnsemblGeneId() {
         return ensembleGeneId;
     }
 
+    public void setEnsemblGeneId( String ensembleGeneId ) {
+        this.ensembleGeneId = ensembleGeneId;
+    }
+
     public String getEnsemblPeptideId() {
         return ensemblPeptideId;
     }
 
+    public void setEnsemblPeptideId( String ensemblPeptideId ) {
+        this.ensemblPeptideId = ensemblPeptideId;
+    }
+
     public String getEnsemblTranscriptId() {
         return enemblTranscriptId;
+    }
+
+    public void setEnsemblTranscriptId( String enemblTranscriptId ) {
+        this.enemblTranscriptId = enemblTranscriptId;
     }
 
     /**
@@ -68,24 +76,12 @@ public class Ensembl2NcbiValueObject implements Serializable {
         return hgcnId;
     }
 
-    public Integer getNcbiTaxonId() {
-        return ncbiTaxonId;
-    }
-
-    public void setEnsemblGeneId( String ensembleGeneId ) {
-        this.ensembleGeneId = ensembleGeneId;
-    }
-
-    public void setEnsemblPeptideId( String ensemblPeptideId ) {
-        this.ensemblPeptideId = ensemblPeptideId;
-    }
-
-    public void setEnsemblTranscriptId( String enemblTranscriptId ) {
-        this.enemblTranscriptId = enemblTranscriptId;
-    }
-
     public void setHgnc_id( String hgcnId ) {
         this.hgcnId = hgcnId;
+    }
+
+    public Integer getNcbiTaxonId() {
+        return ncbiTaxonId;
     }
 
     public void setNcbiTaxonId( Integer ncbiTaxonId ) {

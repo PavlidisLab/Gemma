@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,40 +18,30 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import org.apache.commons.lang3.StringUtils;
+
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Holds information about GEO samples that "go together" across datasets (GDS), because they came from the same sample
  * (or so we infer)
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class GeoSampleCorrespondence implements Serializable {
 
     private static final long serialVersionUID = -5285504953530483114L;
 
-    private Collection<Set<String>> sets = new LinkedHashSet<Set<String>>();
+    private final Collection<Set<String>> sets = new LinkedHashSet<>();
 
-    private Map<String, String> accToTitle = new HashMap<String, String>();
-    private Map<String, String> accToDataset = new HashMap<String, String>();
+    private Map<String, String> accToTitle = new HashMap<>();
+    private Map<String, String> accToDataset = new HashMap<>();
 
     /**
-     * @param gsmNumberA
+     * @param gsmNumberA number A
      * @param gsmNumberB If null, interpreted as meaning there is no correspondence to worry about, though they can be
-     *        added later.
+     *                   added later.
      */
     public void addCorrespondence( String gsmNumberA, String gsmNumberB ) {
 
@@ -62,13 +52,15 @@ public class GeoSampleCorrespondence implements Serializable {
         boolean found = false;
         for ( Set<String> set : sets ) {
             if ( set.contains( gsmNumberA ) && gsmNumberB != null ) {
-                if ( !sanity( gsmNumberB ) ) return;
+                if ( this.insanity( gsmNumberB ) )
+                    return;
                 set.add( gsmNumberB );
                 found = true;
                 break;
                 // gsmNumberB will be null if there is just one data set - that is, no correspondence.
             } else if ( gsmNumberB != null && set.contains( gsmNumberB ) ) {
-                if ( !sanity( gsmNumberA ) ) return;
+                if ( this.insanity( gsmNumberA ) )
+                    return;
                 set.add( gsmNumberA );
 
                 found = true;
@@ -77,10 +69,10 @@ public class GeoSampleCorrespondence implements Serializable {
         }
 
         if ( !found ) {
-            if ( !sanity( gsmNumberA ) || !sanity( gsmNumberB ) ) {
+            if ( this.insanity( gsmNumberA ) || this.insanity( gsmNumberB ) ) {
                 return;
             }
-            Set<String> newSet = new LinkedHashSet<String>();
+            Set<String> newSet = new LinkedHashSet<>();
             newSet.add( gsmNumberA );
             if ( gsmNumberB != null ) {
                 newSet.add( gsmNumberB );
@@ -95,8 +87,7 @@ public class GeoSampleCorrespondence implements Serializable {
         GeoSampleCorrespondence r = new GeoSampleCorrespondence();
 
         for ( Set<String> s : sets ) {
-            Set<String> sc = new HashSet<String>();
-            sc.addAll( s );
+            Set<String> sc = new HashSet<>( s );
             r.sets.add( sc );
         }
 
@@ -107,7 +98,7 @@ public class GeoSampleCorrespondence implements Serializable {
     }
 
     /**
-     * @param gsmNumber
+     * @param gsmNumber gsm number
      * @return Collection of sample accession values that correspond to the argument.
      */
     public Collection<String> getCorrespondingSamples( String gsmNumber ) {
@@ -120,20 +111,17 @@ public class GeoSampleCorrespondence implements Serializable {
         return null; // not found!
     }
 
-    /**
-     * 
-     */
     public Iterator<Set<String>> iterator() {
         return sets.iterator();
     }
 
     /**
      * Remove a sample from the maps
-     * 
-     * @param gsmNumber
+     *
+     * @param gsmNumber gsm number
      */
     public void removeSample( String gsmNumber ) {
-        Collection<Set<String>> toRemove = new ArrayList<Set<String>>();
+        Collection<Set<String>> toRemove = new ArrayList<>();
         for ( Set<String> set : sets ) {
             set.remove( gsmNumber );
             if ( set.isEmpty() ) {
@@ -160,56 +148,53 @@ public class GeoSampleCorrespondence implements Serializable {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
-        StringBuffer singletons = new StringBuffer();
-        SortedSet<String> groupStrings = new TreeSet<String>();
+        StringBuilder singletons = new StringBuilder();
+        SortedSet<String> groupStrings = new TreeSet<>();
         for ( Set<String> set : sets ) {
-            String group = "";
-            SortedSet<String> sortedSet = new TreeSet<String>( set );
+            StringBuilder group = new StringBuilder();
+            SortedSet<String> sortedSet = new TreeSet<>( set );
             for ( String accession : sortedSet ) {
-                group = group
-                        + accession
-                        + " ('"
-                        + ( accToTitle != null && accToTitle.containsKey( accession ) ? accToTitle.get( accession )
-                                : "[no title]" ) + "'"
-                        + ( accToDataset != null ? ( " in " + accToDataset.get( accession ) ) : "" ) + ")";
+                group.append( accession ).append( " ('" ).append(
+                        accToTitle != null && accToTitle.containsKey( accession ) ?
+                                accToTitle.get( accession ) :
+                                "[no title]" ).append( "'" )
+                        .append( accToDataset != null ? ( " in " + accToDataset.get( accession ) ) : "" ).append( ")" );
 
                 if ( sortedSet.size() == 1 ) {
-                    singletons.append( group + "\n" );
-                    group = group + ( " - singleton" );
+                    singletons.append( group ).append( "\n" );
+                    group.append( " - singleton" );
                 } else {
-                    group = group + ( "\t<==>\t" );
+                    group.append( "\t<==>\t" );
                 }
             }
-            group = group + "\n";
-            groupStrings.add( group );
+            group.append( "\n" );
+            groupStrings.add( group.toString() );
         }
 
         for ( String string : groupStrings ) {
             buf.append( string );
         }
 
-        return buf.toString().replaceAll( "\\t<==>\\t\\n", "\n" )
-                + ( singletons.length() > 0 ? "\nSingletons:\n" + singletons.toString() : "" );
+        return buf.toString().replaceAll( "\\t<==>\\t\\n", "\n" ) + ( singletons.length() > 0 ?
+                "\nSingletons:\n" + singletons.toString() :
+                "" );
     }
 
     /**
      * Make sure only one set contains gsmNumberB
-     * 
-     * @param gsmNumberB
+     *
+     * @param gsmNumber gsm number
      */
-    private boolean sanity( String gsmNumber ) {
+    private boolean insanity( String gsmNumber ) {
         int count = 0;
         for ( Set<String> set : sets ) {
             if ( set.contains( gsmNumber ) ) {
                 ++count;
             }
         }
-        if ( count != 0 ) {
-            return false;
-        }
-        return true;
+        return count != 0;
     }
 
 }

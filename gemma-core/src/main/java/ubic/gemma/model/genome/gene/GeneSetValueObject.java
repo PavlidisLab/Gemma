@@ -1,9 +1,9 @@
 /*
 
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,28 +80,6 @@ public class GeneSetValueObject implements SecureValueObject {
         return result;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) {
-            return true;
-        }
-        if ( obj == null ) {
-            return false;
-        }
-        if ( getClass() != obj.getClass() ) {
-            return false;
-        }
-        GeneSetValueObject other = ( GeneSetValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null ) {
-                return false;
-            }
-        } else if ( !id.equals( other.id ) ) {
-            return false;
-        }
-        return true;
-    }
-
     public String getDescription() {
         return this.description;
     }
@@ -149,17 +127,37 @@ public class GeneSetValueObject implements SecureValueObject {
 
     }
 
+    @Override
+    public Class<? extends Securable> getSecurableClass() {
+        return GeneSet.class;
+    }
+
+    @Override
+    public boolean getUserCanWrite() {
+        return this.userOwned;
+    }
+
+    @Override
+    public void setUserCanWrite( boolean userCanWrite ) {
+        this.userOwned = userCanWrite;
+    }
+
+    @Override
+    public boolean getUserOwned() {
+        return this.currentUserIsOwner;
+    }
+
+    @Override
+    public void setUserOwned( boolean isUserOwned ) {
+        this.currentUserIsOwner = isUserOwned;
+    }
+
     public String getName() {
         return this.name;
     }
 
     public void setName( String name ) {
         this.name = name;
-    }
-
-    @Override
-    public Class<? extends Securable> getSecurableClass() {
-        return GeneSet.class;
     }
 
     /**
@@ -197,31 +195,29 @@ public class GeneSetValueObject implements SecureValueObject {
     }
 
     @Override
-    public boolean getUserCanWrite() {
-        return this.userOwned;
-    }
-
-    @Override
-    public void setUserCanWrite( boolean userCanWrite ) {
-        this.userOwned = userCanWrite;
-    }
-
-    @Override
-    public boolean getUserOwned() {
-        return this.currentUserIsOwner;
-    }
-
-    @Override
-    public void setUserOwned( boolean isUserOwned ) {
-        this.currentUserIsOwner = isUserOwned;
-    }
-
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
+            return true;
+        }
+        if ( obj == null ) {
+            return false;
+        }
+        if ( this.getClass() != obj.getClass() ) {
+            return false;
+        }
+        GeneSetValueObject other = ( GeneSetValueObject ) obj;
+        if ( id == null ) {
+            return other.id == null;
+        } else
+            return id.equals( other.id );
     }
 
 }

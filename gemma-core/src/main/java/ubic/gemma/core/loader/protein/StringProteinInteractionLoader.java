@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,17 +59,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class StringProteinInteractionLoader {
 
     private static final int QUEUE_SIZE = 1000;
-    private static Log log = LogFactory.getLog( StringProteinInteractionLoader.class );
-    protected Persister persisterHelper;
-
-    protected GeneService geneService;
-
-    protected ExternalDatabaseService externalDatabaseService;
-
-    protected TaxonService taxonService;
+    private static final Log log = LogFactory.getLog( StringProteinInteractionLoader.class );
+    private final AtomicBoolean converterDone;
+    private final AtomicBoolean loaderDone;
+    private Persister persisterHelper;
+    private GeneService geneService;
+    private ExternalDatabaseService externalDatabaseService;
     private int loadedGeneCount = 0;
-    private AtomicBoolean converterDone;
-    private AtomicBoolean loaderDone;
 
     /**
      * Constructor ensure that the concurrent flags are set.
@@ -97,8 +92,7 @@ public class StringProteinInteractionLoader {
             File localEnsembl2EntrezMappingFile, Collection<Taxon> taxa ) throws IOException {
 
         // very basic validation before any processing done
-        validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote, localEnsembl2EntrezMappingFile,
-                taxa );
+        this.validateLoadParameters( stringProteinFileNameLocal, taxa );
 
         // retrieve STRING protein protein interactions
         StringProteinProteinInteractionObjectGenerator stringProteinProteinInteractionObjectGenerator = new StringProteinProteinInteractionObjectGenerator(
@@ -109,17 +103,143 @@ public class StringProteinInteractionLoader {
         /*
          * Get ENSEMBL to NCBI id mappings so we can store the STRING interactions
          */
-        Map<String, Ensembl2NcbiValueObject> bioMartStringEntreGeneMapping = getIdMappings(
-                localEnsembl2EntrezMappingFile, taxa );
+        Map<String, Ensembl2NcbiValueObject> bioMartStringEntreGeneMapping = this
+                .getIdMappings( localEnsembl2EntrezMappingFile, taxa );
 
         // To one taxon at a time to reduce memory use
         for ( Taxon taxon : map.keySet() ) {
-            log.debug( "Loading for taxon " + taxon );
+            StringProteinInteractionLoader.log.debug( "Loading for taxon " + taxon );
             Collection<StringProteinProteinInteraction> proteinInteractions = map.get( taxon );
-            log.info( "Found " + proteinInteractions.size() + " STRING interactions for: " + taxon );
-            loadOneTaxonAtATime( bioMartStringEntreGeneMapping, proteinInteractions );
+            StringProteinInteractionLoader.log
+                    .info( "Found " + proteinInteractions.size() + " STRING interactions for: " + taxon );
+            this.loadOneTaxonAtATime( bioMartStringEntreGeneMapping, proteinInteractions );
         }
 
+    }
+
+    /**
+     * Method to generate and load Gene2GeneProteinAssociation one taxon at a time
+     *
+     * @param ensembl2ncbi                Map of peptide ids to NCBI gene ids
+     * @param proteinInteractionsOneTaxon The protein interactions representing one taxon
+     */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public void loadOneTaxonAtATime( Map<String, Ensembl2NcbiValueObject> ensembl2ncbi,
+            Collection<StringProteinProteinInteraction> proteinInteractionsOneTaxon ) {
+        long startTime = System.currentTimeMillis();
+        converterDone.set( false );
+        loaderDone.set( false );
+        loadedGeneCount = 0;
+        // generate gemma objects
+        StringProteinProteinInteractionConverter converter = new StringProteinProteinInteractionConverter(
+                ensembl2ncbi );
+        converter.setStringExternalDatabase( this.getExternalDatabaseForString() );
+
+        // create queue for String objects to be converted
+        final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue = new ArrayBlockingQueue<>(
+                StringProteinInteractionLoader.QUEUE_SIZE );
+        converter.setProducerDoneFlag( converterDone );
+        converter.convert( gene2GeneProteinAssociationQueue, proteinInteractionsOneTaxon );
+
+        // Threaded consumer. Consumes Gene objects and persists them into the database
+        this.load( gene2GeneProteinAssociationQueue );
+        StringProteinInteractionLoader.log.debug( "Time taken to load data in minutes is "
+                + ( ( ( System.currentTimeMillis() / 1000 ) - ( startTime ) / 1000 ) ) / 60 );
+
+    }
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public ExternalDatabase getExternalDatabaseForString() {
+        return externalDatabaseService.findByName( "STRING" );
+    }
+
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+
+    }
+
+    /**
+     * PersisterHelper bean.
+     *
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( Persister persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * Number of genes successfully loaded.
+     *
+     * @return the loadedGeneCount
+     */
+    @SuppressWarnings("unused")  // Possible external use
+    public int getLoadedGeneCount() {
+        return loadedGeneCount;
+    }
+
+    /**
+     * @param geneService the geneService to set
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    @SuppressWarnings("unused") // Possible external use
+    public boolean isLoaderDone() {
+        return loaderDone.get();
+    }
+
+    /**
+     * Poll the queue to see if any Gene2GeneProteinAssociation to load into database. If so firstly check to see if the
+     * genes are in the gemma db as these identifiers came from biomart If both genes found load.
+     *
+     * @param gene2GeneProteinAssociationQueue queue of Gene2GeneProteinAssociation to load
+     */
+    private void doLoad( final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue ) {
+        StringProteinInteractionLoader.log.info( "starting processing " );
+        while ( !( converterDone.get() && gene2GeneProteinAssociationQueue.isEmpty() ) ) {
+
+            try {
+                Gene2GeneProteinAssociation gene2GeneProteinAssociation = gene2GeneProteinAssociationQueue.poll();
+                if ( gene2GeneProteinAssociation == null ) {
+                    continue;
+                }
+                // check they are genes gemma knows about
+                Gene geneOne = geneService.findByNCBIId( gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId() );
+                Gene geneTwo = geneService.findByNCBIId( gene2GeneProteinAssociation.getSecondGene().getNcbiGeneId() );
+
+                if ( geneOne == null ) {
+                    StringProteinInteractionLoader.log
+                            .warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId()
+                                    + " not in Gemma" );
+                    continue;
+                }
+                if ( geneTwo == null ) {
+                    StringProteinInteractionLoader.log
+                            .warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getSecondGene().getNcbiGeneId()
+                                    + " not in Gemma" );
+                    continue;
+                }
+
+                FieldUtils.writeField( gene2GeneProteinAssociation, "firstGene", geneOne, true );
+                FieldUtils.writeField( gene2GeneProteinAssociation, "secondGene", geneTwo, true );
+
+                persisterHelper.persist( gene2GeneProteinAssociation );
+
+                if ( ++loadedGeneCount % 1000 == 0 ) {
+                    StringProteinInteractionLoader.log
+                            .info( "Proceesed " + loadedGeneCount + " protein protein interactions. "
+                                    + "Current queue has " + gene2GeneProteinAssociationQueue.size() + " items." );
+                }
+
+            } catch ( Exception e ) {
+                StringProteinInteractionLoader.log.error( e, e );
+                loaderDone.set( true );
+                throw new RuntimeException( e );
+            }
+        }
+        StringProteinInteractionLoader.log.info( "Loaded " + loadedGeneCount + " protein protein interactions. " );
+        loaderDone.set( true );
     }
 
     /**
@@ -134,53 +254,17 @@ public class StringProteinInteractionLoader {
         // ensemble ids
         BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
         biomartEnsemblNcbiObjectGenerator.setBioMartFileName( ensembl2entrezMappingFile );
-        Map<String, Ensembl2NcbiValueObject> bioMartStringEntreGeneMapping = biomartEnsemblNcbiObjectGenerator
-                .generate( taxa );
-        return bioMartStringEntreGeneMapping;
-    }
-
-    /**
-     * Method to generate and load Gene2GeneProteinAssociation one taxon at a time
-     *
-     * @param ensembl2ncbi                Map of peptide ids to NCBI gene ids
-     * @param proteinInteractionsOneTaxon The protein interactions representing one taxon
-     */
-    public void loadOneTaxonAtATime( Map<String, Ensembl2NcbiValueObject> ensembl2ncbi,
-            Collection<StringProteinProteinInteraction> proteinInteractionsOneTaxon ) {
-        long startTime = System.currentTimeMillis();
-        converterDone.set( false );
-        loaderDone.set( false );
-        loadedGeneCount = 0;
-        // generate gemma objects
-        StringProteinProteinInteractionConverter converter = new StringProteinProteinInteractionConverter(
-                ensembl2ncbi );
-        converter.setStringExternalDatabase( this.getExternalDatabaseForString() );
-
-        // create queue for String objects to be converted
-        final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue = new ArrayBlockingQueue<Gene2GeneProteinAssociation>(
-                QUEUE_SIZE );
-        converter.setProducerDoneFlag( converterDone );
-        converter.convert( gene2GeneProteinAssociationQueue, proteinInteractionsOneTaxon );
-
-        // Threaded consumer. Consumes Gene objects and persists them into the database
-        this.load( gene2GeneProteinAssociationQueue );
-        log.debug( "Time taken to load data in minutes is "
-                + ( ( ( System.currentTimeMillis() / 1000 ) - ( startTime ) / 1000 ) ) / 60 );
-
+        return biomartEnsemblNcbiObjectGenerator.generate( taxa );
     }
 
     /**
      * Validate input parameters before processing with parsing and fetching. Should have been done already but should
      * not rely on calling class. Ensure that there are some valid taxa and that all files are ready to be processed.
      *
-     * @param stringProteinFileNameLocal  The name of the string file on the local system
-     * @param stringProteinFileNameRemote The name of the string file on the remote system (just in case the string name
-     *                                    proves to be too variable)
-     * @param stringBiomartFile           The name of the local biomart file FIXME this is actual the ensemble mapping?
-     * @param taxa                        taxa to load data for. List of taxon to process
+     * @param stringProteinFileNameLocal The name of the string file on the local system
+     * @param taxa                       taxa to load data for. List of taxon to process
      */
-    private void validateLoadParameters( File stringProteinFileNameLocal, String stringProteinFileNameRemote,
-            File stringBiomartFile, Collection<Taxon> taxa ) {
+    private void validateLoadParameters( File stringProteinFileNameLocal, Collection<Taxon> taxa ) {
 
         if ( taxa == null || taxa.isEmpty() ) {
             throw new RuntimeException( "No taxon found to process please provide some" );
@@ -214,7 +298,7 @@ public class StringProteinInteractionLoader {
             @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
-                doLoad( gene2GeneProteinAssociationQueue );
+                StringProteinInteractionLoader.this.doLoad( gene2GeneProteinAssociationQueue );
             }
 
         }, "Loading" );
@@ -227,109 +311,6 @@ public class StringProteinInteractionLoader {
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Poll the queue to see if any Gene2GeneProteinAssociation to load into database. If so firstly check to see if the
-     * genes are in the gemma db as these identifiers came from biomart If both genes found load.
-     *
-     * @param gene2GeneProteinAssociationQueue queue of Gene2GeneProteinAssociation to load
-     */
-    void doLoad( final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue ) {
-        log.info( "starting processing " );
-        while ( !( converterDone.get() && gene2GeneProteinAssociationQueue.isEmpty() ) ) {
-
-            try {
-                Gene2GeneProteinAssociation gene2GeneProteinAssociation = gene2GeneProteinAssociationQueue.poll();
-                if ( gene2GeneProteinAssociation == null ) {
-                    continue;
-                }
-                // check they are genes gemma knows about
-                Gene geneOne = geneService.findByNCBIId( gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId() );
-                Gene geneTwo = geneService.findByNCBIId( gene2GeneProteinAssociation.getSecondGene().getNcbiGeneId() );
-
-                if ( geneOne == null ) {
-                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId()
-                            + " not in Gemma" );
-                    continue;
-                }
-                if ( geneTwo == null ) {
-                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getSecondGene().getNcbiGeneId()
-                            + " not in Gemma" );
-                    continue;
-                }
-
-                FieldUtils.writeField( gene2GeneProteinAssociation, "firstGene", geneOne, true );
-                FieldUtils.writeField( gene2GeneProteinAssociation, "secondGene", geneTwo, true );
-
-                persisterHelper.persist( gene2GeneProteinAssociation );
-
-                if ( ++loadedGeneCount % 1000 == 0 ) {
-                    log.info( "Proceesed " + loadedGeneCount + " protein protein interactions. " + "Current queue has "
-                            + gene2GeneProteinAssociationQueue.size() + " items." );
-                }
-
-            } catch ( Exception e ) {
-                log.error( e, e );
-                loaderDone.set( true );
-                throw new RuntimeException( e );
-            }
-        }
-        log.info( "Loaded " + loadedGeneCount + " protein protein interactions. " );
-        loaderDone.set( true );
-    }
-
-    public ExternalDatabase getExternalDatabaseForString() {
-        ExternalDatabase externalDatabase = externalDatabaseService.find( "STRING" );
-        return externalDatabase;
-    }
-
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
-
-    }
-
-    /**
-     * @return the persisterHelper
-     */
-    public Persister getPersisterHelper() {
-        return persisterHelper;
-    }
-
-    /**
-     * PersisterHelper bean.
-     *
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * Number of genes successfully loaded.
-     *
-     * @return the loadedGeneCount
-     */
-    public int getLoadedGeneCount() {
-        return loadedGeneCount;
-    }
-
-    /**
-     * @return the geneService
-     */
-    public GeneService getGeneService() {
-        return geneService;
-    }
-
-    /**
-     * @param geneService the geneService to set
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    public boolean isLoaderDone() {
-        return loaderDone.get();
     }
 
 }
