@@ -384,13 +384,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      */
     void configureMockAnalysisServiceHelper( int numMethodCalls ) {
         this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixServiceImpl.class );
-
-        org.easymock.EasyMock
-                .expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
+        EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
                 .andReturn( new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
-        org.easymock.EasyMock
-                .expect( processedExpressionDataVectorService.getProcessedDataVectors( expressionExperiment ) )
-                .andReturn( this.vectors ).times( numMethodCalls );
         EasyMock.replay( expressionDataMatrixService );
     }
 
