@@ -73,7 +73,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return GemmaCLI.CommandGroup.PLATFORM;
     }
 
-    @SuppressWarnings({ "AccessStaticViaInstance", "static-access" })
+    @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
     @Override
     protected void buildOptions() {
         super.buildOptions();
@@ -107,7 +107,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + " - search refseq track for genes (best to leave on)\n"
 
                         + ArrayDesignProbeMapperCli.OPTION_KNOWNGENE
-                        + " - search refseq track for genes (best to leave on, but track may be missing for some organisms)\n"
+                        + " - search knownGene track for genes (best to leave on, but track may be missing for some organisms)\n"
 
                         + ArrayDesignProbeMapperCli.OPTION_MICRORNA + " - search miRNA track for genes (doesn't hurt)\n"
 
@@ -366,9 +366,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( err != null )
             return err;
 
-        if ( directAnnotationInputFileName == null )
-            this.configure();
-
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         allowSubsumedOrMerged = true;
@@ -412,6 +409,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         System.out.print( config );
                     }
 
+                    this.configure( arrayDesign );
+
                     arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
                     if ( useDB ) {
 
@@ -434,7 +433,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 throw new IllegalStateException(
                         "Sorry, you can't provide an input mapping file when doing multiple arrays at once" );
             }
-
+            this.configure( null );
             this.batchRun( skipIfLastRunLaterThan );
 
         } else {
@@ -508,19 +507,25 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.summarizeProcessing();
     }
 
-    private void configure() {
+    private void configure( ArrayDesign arrayDesign ) {
         this.config = new ProbeMapperConfig();
 
         /*
          * Hackery to work around rn6 problems
          */
-        boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "rat" ) && Settings
+        boolean isRat = false;
+        if ( this.taxon == null ) {
+            assert arrayDesign != null;
+            Taxon t = arrayDesignService.getTaxon( arrayDesign.getId() );
+            isRat = t.getCommonName().equals( "rat" );
+        } else {
+            isRat = taxon.getCommonName().equals( "rat" );
+        }
+
+        boolean isMissingTracks = isRat && Settings
                 .getString( "gemma.goldenpath.db.rat" ).equals( "rn6" );
 
         if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
-            // if ( isMissingTracks ) {
-            // throw new IllegalArgumentException( "There is no miRNA track for this taxon." );
-            // }
             AbstractCLI.log.info( "Micro RNA only mode" );
             config.setAllTracksOff();
             config.setUseMiRNA( true );
