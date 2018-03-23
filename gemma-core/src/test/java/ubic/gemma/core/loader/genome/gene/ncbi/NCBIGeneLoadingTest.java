@@ -146,7 +146,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         assertEquals( "ENSG00000121410", g.getEnsemblId() );
         
         // test remove...
-        geneProductService.remove( g.getProducts() );
+        geneProductService.remove( products );
 
     }
 
