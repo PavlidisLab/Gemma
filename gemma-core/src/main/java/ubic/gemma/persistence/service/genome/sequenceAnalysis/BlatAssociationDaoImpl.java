@@ -138,7 +138,7 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
                 Collections.emptySet() :
                 this.getSessionFactory().getCurrentSession()
                         .createQuery( "select b from BlatAssociation b join b.geneProduct gp where gp in (:gps)" )
-                        .setParameter( "gps", gps ).list();
+                        .setParameterList( "gps", gps ).list();
     }
 
     private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {

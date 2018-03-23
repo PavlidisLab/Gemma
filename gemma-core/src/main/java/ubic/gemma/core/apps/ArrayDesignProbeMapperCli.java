@@ -47,13 +47,11 @@ import java.util.concurrent.BlockingQueue;
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     private static final String CONFIG_OPTION = "config";
     private static final String MIRNA_ONLY_MODE_OPTION = "mirna";
-    private final static String OPTION_ASEMBLY = "a";
     private final static String OPTION_ENSEMBL = "n";
     private final static String OPTION_EST = "e"; // usually off
     private final static String OPTION_KNOWNGENE = "k";
     private final static String OPTION_MICRORNA = "i";
     private final static String OPTION_MRNA = "m";
-    private final static String OPTION_NSCAN = "s";
     private final static String OPTION_REFSEQ = "r";
 
     private String[] probeNames = null;
@@ -75,7 +73,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return GemmaCLI.CommandGroup.PLATFORM;
     }
 
-    @SuppressWarnings("AccessStaticViaInstance")
+    @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
     @Override
     protected void buildOptions() {
         super.buildOptions();
@@ -92,16 +90,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         this.addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
                 "Minimum fraction of probe overlap with exons, default = "
-                        + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION ).withLongOpt( "overlapThreshold" )
+                        + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
+                .withLongOpt( "overlapThreshold" )
                 .create( 'o' ) );
 
         this.addOption( OptionBuilder.withDescription(
-                "Assign non-gene mappings to a ProbeAlignedRegion including creation of new ones (default="
-                        + ProbeMapperConfig.DEFAULT_ALLOW_PARS + ")" ).create( "usePars" ) );
-
-        this.addOption( OptionBuilder.withDescription(
                 "Allow mapping to predicted genes (overrides Acembly, Ensembl and Nscan; default="
-                        + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" ).create( "usePred" ) );
+                        + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" )
+                .create( "usePred" ) );
 
         this.addOption( OptionBuilder.hasArg().withArgName( "configstring" ).withDescription(
                 "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set,"
@@ -111,7 +107,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + " - search refseq track for genes (best to leave on)\n"
 
                         + ArrayDesignProbeMapperCli.OPTION_KNOWNGENE
-                        + " - search refseq track for genes (best to leave on)\n"
+                        + " - search knownGene track for genes (best to leave on, but track may be missing for some organisms)\n"
 
                         + ArrayDesignProbeMapperCli.OPTION_MICRORNA + " - search miRNA track for genes (doesn't hurt)\n"
 
@@ -120,20 +116,18 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + ArrayDesignProbeMapperCli.OPTION_MRNA
                         + " - search mRNA track for transcripts (Default=false)\n"
 
-                        + ArrayDesignProbeMapperCli.OPTION_ASEMBLY + " - search Acembly track for predicted genes\n"
-
-                        + ArrayDesignProbeMapperCli.OPTION_ENSEMBL + " - search Ensembl track for predicted genes \n"
-
-                        + ArrayDesignProbeMapperCli.OPTION_NSCAN + " - search NScan track for predicted genes\n" )
+                        + ArrayDesignProbeMapperCli.OPTION_ENSEMBL + " - search Ensembl track for predicted genes (Default=false) \n" )
                 .create( ArrayDesignProbeMapperCli.CONFIG_OPTION ) );
 
         this.addOption( OptionBuilder.withDescription(
                 "Only seek miRNAs; this is the same as '-config " + ArrayDesignProbeMapperCli.OPTION_MICRORNA
-                        + "; overrides -config." ).create( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) );
+                        + "; overrides -config." )
+                .create( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) );
 
         Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
                 "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all"
-                        + " ArrayDesigns from that taxon (overrides -a)" ).create( 't' );
+                        + " ArrayDesigns from that taxon (overrides -a)" )
+                .create( 't' );
 
         this.addOption( taxonOption );
 
@@ -145,7 +139,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 "Import annotations from a file rather than our own analysis. You must provide the taxon option. "
                         + "File format: 2 columns with column 1= probe name in Gemma, "
                         + "column 2=sequence name (not required, and not used for direct gene-based annotation)"
-                        + " column 3 = gene symbol (will be matched to that in Gemma)" ).hasArg().withArgName( "file" )
+                        + " column 3 = gene symbol (will be matched to that in Gemma)" )
+                .hasArg().withArgName( "file" )
                 .create( "import" );
 
         this.addOption( directAnnotation );
@@ -250,10 +245,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         /*
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
          */
-        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) || !(
-                arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE ) || arrayDesign.getTechnologyType()
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE )
+                || !( arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE ) || arrayDesign.getTechnologyType()
                         .equals( TechnologyType.ONECOLOR ) || arrayDesign.getTechnologyType()
-                        .equals( TechnologyType.TWOCOLOR ) ) ) {
+                                .equals( TechnologyType.TWOCOLOR ) ) ) {
             AbstractCLI.log.info( "Skipping because it is not a microarray platform" );
             return false;
         }
@@ -371,9 +366,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( err != null )
             return err;
 
-        if ( directAnnotationInputFileName == null )
-            this.configure();
-
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         allowSubsumedOrMerged = true;
@@ -417,6 +409,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         System.out.print( config );
                     }
 
+                    this.configure( arrayDesign );
+
                     arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
                     if ( useDB ) {
 
@@ -424,7 +418,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                             this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
                         } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
                             this.audit( arrayDesign, "Run with configuration=" + this
-                                            .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
+                                    .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
                                     new AlignmentBasedGeneMappingEvent() );
                         } else {
                             this.audit( arrayDesign, "Run with default parameters",
@@ -439,7 +433,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 throw new IllegalStateException(
                         "Sorry, you can't provide an input mapping file when doing multiple arrays at once" );
             }
-
+            this.configure( null );
             this.batchRun( skipIfLastRunLaterThan );
 
         } else {
@@ -513,19 +507,25 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.summarizeProcessing();
     }
 
-    private void configure() {
+    private void configure( ArrayDesign arrayDesign ) {
         this.config = new ProbeMapperConfig();
 
         /*
-         * Hackery to work around hg19 problems.; no longer an issue for miRNA
+         * Hackery to work around rn6 problems
          */
-        boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "human" ) && Settings
-                .getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
+        boolean isRat = false;
+        if ( this.taxon == null ) {
+            assert arrayDesign != null;
+            Taxon t = arrayDesignService.getTaxon( arrayDesign.getId() );
+            isRat = t.getCommonName().equals( "rat" );
+        } else {
+            isRat = taxon.getCommonName().equals( "rat" );
+        }
+
+        boolean isMissingTracks = isRat && Settings
+                .getString( "gemma.goldenpath.db.rat" ).equals( "rn6" );
 
         if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
-            // if ( isMissingTracks ) {
-            // throw new IllegalArgumentException( "There is no miRNA track for this taxon." );
-            // }
             AbstractCLI.log.info( "Micro RNA only mode" );
             config.setAllTracksOff();
             config.setUseMiRNA( true );
@@ -536,15 +536,15 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             if ( !configString.matches(
                     "[" + ArrayDesignProbeMapperCli.OPTION_REFSEQ + ArrayDesignProbeMapperCli.OPTION_KNOWNGENE
                             + ArrayDesignProbeMapperCli.OPTION_MICRORNA + ArrayDesignProbeMapperCli.OPTION_EST
-                            + ArrayDesignProbeMapperCli.OPTION_MRNA + ArrayDesignProbeMapperCli.OPTION_ASEMBLY
-                            + ArrayDesignProbeMapperCli.OPTION_ENSEMBL + ArrayDesignProbeMapperCli.OPTION_NSCAN
+                            + ArrayDesignProbeMapperCli.OPTION_MRNA
+                            + ArrayDesignProbeMapperCli.OPTION_ENSEMBL
                             + "]+" ) ) {
                 throw new IllegalArgumentException(
                         "Configuration string must only contain values [" + ArrayDesignProbeMapperCli.OPTION_REFSEQ
                                 + ArrayDesignProbeMapperCli.OPTION_KNOWNGENE + ArrayDesignProbeMapperCli.OPTION_MICRORNA
                                 + ArrayDesignProbeMapperCli.OPTION_EST + ArrayDesignProbeMapperCli.OPTION_MRNA
-                                + ArrayDesignProbeMapperCli.OPTION_ASEMBLY + ArrayDesignProbeMapperCli.OPTION_ENSEMBL
-                                + ArrayDesignProbeMapperCli.OPTION_NSCAN + "]" );
+                                + ArrayDesignProbeMapperCli.OPTION_ENSEMBL
+                                + "]" );
             }
 
             config.setAllTracksOff();
@@ -553,10 +553,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             config.setUseMrnas( configString.contains( ArrayDesignProbeMapperCli.OPTION_MRNA ) );
             config.setUseMiRNA( configString.contains( ArrayDesignProbeMapperCli.OPTION_MICRORNA ) );
             config.setUseEnsembl( configString.contains( ArrayDesignProbeMapperCli.OPTION_ENSEMBL ) );
-            config.setUseNscan( configString.contains( ArrayDesignProbeMapperCli.OPTION_NSCAN ) );
             config.setUseRefGene( configString.contains( ArrayDesignProbeMapperCli.OPTION_REFSEQ ) );
             config.setUseKnownGene( configString.contains( ArrayDesignProbeMapperCli.OPTION_KNOWNGENE ) );
-            config.setUseAcembly( configString.contains( ArrayDesignProbeMapperCli.OPTION_ASEMBLY ) );
         }
 
         if ( this.hasOption( 's' ) ) {
@@ -565,11 +563,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
             }
             config.setBlatScoreThreshold( blatscorethresh );
-        }
-
-        if ( this.hasOption( "usePars" ) ) {
-            config.setAllowMakeProbeAlignedRegion( true );
-            config.setAllowProbeAlignedRegions( true );
         }
 
         if ( this.hasOption( "usePred" ) ) {
@@ -592,13 +585,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             config.setMinimumExonOverlapFraction( option );
         }
 
-        // if ( isMissingTracks && config.isUseMiRNA() ) {
-        // log.warn( "At last check hg19 did not have miRNA tracks, turning option off" );
-        // config.setUseMiRNA( false );
-        // }
-        if ( isMissingTracks && config.isUseAcembly() ) {
-            AbstractCLI.log.warn( "At last check hg19 did not have acembly tracks, turning option off" );
-            config.setUseAcembly( false );
+        if ( isMissingTracks && config.isUseKnownGene() ) {
+            AbstractCLI.log.warn( "Genome does not have knowngene track, turning option off" );
+            config.setUseKnownGene( false );
         }
 
         AbstractCLI.log.info( config );

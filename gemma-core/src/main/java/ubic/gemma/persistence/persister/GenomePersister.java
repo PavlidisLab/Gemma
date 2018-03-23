@@ -141,7 +141,8 @@ abstract public class GenomePersister extends CommonPersister {
                 if ( !found ) {
                     throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
                             + " has changed and the previous NCBI id on record with NCBI (" + newGeneInfo
-                            .getPreviousNcbiId() + ") doesn't match." );
+                                    .getPreviousNcbiId()
+                            + ") doesn't match." );
                 }
             }
 
@@ -224,32 +225,45 @@ abstract public class GenomePersister extends CommonPersister {
                     existingGene.getProducts().add( newGeneProductInfo );
                 } else {
                     /*
-                     * This can only happen if this gene product is associated with a different gene. This happens when
-                     * a transcript is associated with two genes in NCBI, so the switching is actually not useful to us,
-                     * but we do it anyway to be consistent (and in case it really does matter). It is rare. Causes can
-                     * be 1) bicistronic genes such as human LUZP6 and MTPN; 2) genome-duplicated genes; or 3) an error
-                     * in the data source. The problem for us is at this point in processing, we don't know if the gene
-                     * is going to get 'reattached' to its original gene.
+                     * This can only happen if this gene product is associated with a different gene. This generally
+                     * happens when a transcript is associated with two genes in NCBI, so the switching is actually not
+                     * useful to us, but we do it anyway to be consistent (and in case it really does matter). It is
+                     * rare. Causes can be 1) bicistronic genes such as human LUZP6 and MTPN; 2) genome-duplicated
+                     * genes; or 3) an error in the data source. The problem for us is at this point in processing, we
+                     * don't know if the gene is going to get 'reattached' to its original gene.
                      */
                     existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
                     Gene oldGeneForExistingGeneProduct = existingGeneProduct.getGene();
                     if ( oldGeneForExistingGeneProduct != null ) {
                         Gene geneInfo = newGeneProductInfo.getGene(); // transient.
                         if ( !oldGeneForExistingGeneProduct.equals( geneInfo ) ) {
+
                             AbstractPersister.log
                                     .warn( "Switching gene product from one gene to another: " + existingGeneProduct
                                             + " switching to " + geneInfo
-                                            + " (often this means an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
+                                            + " (this can also happen if an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
 
-                            // / Here we just remove its old association.
+                            // Here we just remove its old association.
                             oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
+                            log.info( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
+                                    + existingGeneProduct.getNcbiGi() );
                             geneDao.update( oldGeneForExistingGeneProduct );
 
                             if ( oldGeneForExistingGeneProduct.getProducts().isEmpty() ) {
                                 AbstractPersister.log
                                         .warn( "Gene has no products left after removing that gene product (but it might change later): "
                                                 + oldGeneForExistingGeneProduct );
+
+                                /*
+                                 * On occasion, we run into problems with sequences that have two diffent NCBI GI
+                                 * IDs (due to an update) and which is also associated with two genes - almost
+                                 * always in Drosophila. A recent example was GenBank: BT099970, which had the GI
+                                 * 289666832 but after an update was GI 1108657489 associated with both Lcp65Ab1 and
+                                 * Lcp65Ab2 in gene2accession. It's proven hard to track down exactly how to fix this as
+                                 * the failure happens at the transaction flush - but using --restart seems to fix it.
+                                 */
+
                             }
                         }
 

@@ -40,7 +40,7 @@ import java.util.concurrent.BlockingQueue;
  */
 public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo> implements QueuingParser<String> {
 
-    private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 15;
+    private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 16;
     private final Map<String, NCBIGeneInfo> results = new HashMap<>();
     private BlockingQueue<String> resultsKeys;
     private boolean filter = true;
@@ -72,7 +72,8 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
 
         if ( fields.length != NcbiGeneInfoParser.NCBI_GENEINFO_FIELDS_PER_ROW ) {
             //noinspection StatementWithEmptyBody // backwards compatibility, old format, hopefully okay
-            if ( fields.length == 13 || fields.length == 14 ) {
+            if ( fields.length == 13 || fields.length == 14 || fields.length == 15 ) {
+                // They keep adding fields at the end...we only need the first few.
             } else {
                 throw new FileFormatException(
                         "Line + " + line + " is not in the right format: has " + fields.length + " fields, expected "
@@ -89,8 +90,10 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                     return null;
                 }
             }
-
+            
+            // See ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README
             // #Format:
+            
             // tax_id
             // GeneID
             // Symbol
@@ -106,6 +109,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             // Nomenclature_status
             // Other_designations
             // Modification_date
+            // Feature type
 
             geneInfo.setTaxId( taxonId );
             geneInfo.setGeneId( fields[1] );
