@@ -61,11 +61,7 @@ public class ProbeMapperConfig {
      */
     public static final double REPEAT_FRACTION_MAXIMUM = 0.3;
     private int warnings = 0;
-    /**
-     * Should we allow new PARs to be created. This used to be of interest but we have decided they are no longer
-     * workable, so this is now false by default.
-     */
-    private boolean allowMakeProbeAlignedRegion = false;
+
     /**
      * Whether "non-canonical" chromsomes such as 6_cox_hap2 should be omitted from the results if there is a mapping to
      * a canonical one. If true, we trim them; If false, we don't do anything.
@@ -75,10 +71,7 @@ public class ProbeMapperConfig {
      * Allow predicted genes; setting this to false overrides the effect of useAcembly, useNscan and useEnsembl.
      */
     private boolean allowPredictedGenes = ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED;
-    /**
-     * Allow existing PARs to be mapped to probes.
-     */
-    private boolean allowProbeAlignedRegions = ProbeMapperConfig.DEFAULT_ALLOW_PARS;
+
     /**
      * Limit below which BLAT results are ignored. If BLAT was run with a threshold higher than this, it won't have any
      * effect.
@@ -89,13 +82,11 @@ public class ProbeMapperConfig {
     private double minimumExonOverlapFraction = ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION;
     private double nonRepeatNonSpecificSiteCountThreshold = ProbeMapperConfig.NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD;
     private double nonSpecificSiteCountThreshold = ProbeMapperConfig.NON_SPECIFIC_SITE_THRESHOLD;
-    private boolean useAcembly = false;
     private boolean useEnsembl = false;
     private boolean useEsts = false;
-    private boolean useKnownGene = true;
+    private boolean useKnownGene = true; // as of rn6, cannot be used for rat genome
     private boolean useMiRNA = true;
     private boolean useMrnas = false; // doesn't add much.
-    private boolean useNscan = false;
     private boolean useRefGene = true;
 
     /**
@@ -170,14 +161,6 @@ public class ProbeMapperConfig {
         this.nonSpecificSiteCountThreshold = nonSpecificSiteCountThreshold;
     }
 
-    public boolean isAllowMakeProbeAlignedRegion() {
-        return allowMakeProbeAlignedRegion;
-    }
-
-    public void setAllowMakeProbeAlignedRegion( boolean allowMakeProbeAlignedRegion ) {
-        this.allowMakeProbeAlignedRegion = allowMakeProbeAlignedRegion;
-    }
-
     public boolean isAllowPredictedGenes() {
         return allowPredictedGenes;
     }
@@ -186,30 +169,8 @@ public class ProbeMapperConfig {
         this.allowPredictedGenes = allowPredictedGenes;
     }
 
-    public boolean isAllowProbeAlignedRegions() {
-        return allowProbeAlignedRegions;
-    }
-
-    public void setAllowProbeAlignedRegions( boolean allowProbeAlignedRegions ) {
-        this.allowProbeAlignedRegions = allowProbeAlignedRegions;
-    }
-
     public boolean isTrimNonCanonicalChromosomehits() {
         return trimNonCanonicalChromosomeHits;
-    }
-
-    /**
-     * @return the useAcembly
-     */
-    public boolean isUseAcembly() {
-        return useAcembly;
-    }
-
-    /**
-     * @param useAcembly the useAcembly to set
-     */
-    public void setUseAcembly( boolean useAcembly ) {
-        this.useAcembly = useAcembly;
     }
 
     /**
@@ -283,20 +244,6 @@ public class ProbeMapperConfig {
     }
 
     /**
-     * @return the useNscan
-     */
-    public boolean isUseNscan() {
-        return useNscan;
-    }
-
-    /**
-     * @param useNscan the useNscan to set
-     */
-    public void setUseNscan( boolean useNscan ) {
-        this.useNscan = useNscan;
-    }
-
-    /**
      * @return the useRefGene
      */
     public boolean isUseRefGene() {
@@ -318,10 +265,8 @@ public class ProbeMapperConfig {
         this.setUseMrnas( false );
         this.setUseMiRNA( false );
         this.setUseEnsembl( false );
-        this.setUseNscan( false );
         this.setUseRefGene( false );
         this.setUseKnownGene( false );
-        this.setUseAcembly( false );
     }
 
     /**
@@ -332,10 +277,8 @@ public class ProbeMapperConfig {
         this.setUseMrnas( true );
         this.setUseMiRNA( true );
         this.setUseEnsembl( true );
-        this.setUseNscan( true );
         this.setUseRefGene( true );
         this.setUseKnownGene( true );
-        this.setUseAcembly( true );
     }
 
     public void setTrimNonCanonicalChromosomeHits( boolean trimNonCanonicalChromosomeHits ) {
@@ -349,10 +292,9 @@ public class ProbeMapperConfig {
                 + "\n# nonSpecificSiteCountThreshold=" + this.nonSpecificSiteCountThreshold
                 + "\n# nonRepeatNonSpecificSiteCountThreshold=" + this.nonRepeatNonSpecificSiteCountThreshold
                 + "\n# minimumExonOverlapFraction=" + this.minimumExonOverlapFraction + "\n# useRefGene="
-                + this.useRefGene + "\n# useAcembly=" + this.useAcembly + "\n# useNscan=" + this.useNscan
-                + "\n# useEnsembl=" + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA="
+                + this.useRefGene + "\n# useEnsembl=" + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA="
                 + this.useMiRNA + "\n# useEsts=" + this.useEsts + "\n# useKnownGene=" + this.useKnownGene
-                + "\n# allowMakeProbeAlignedRegions=" + this.allowMakeProbeAlignedRegion + "\n";
+                + "\n";
 
     }
 
