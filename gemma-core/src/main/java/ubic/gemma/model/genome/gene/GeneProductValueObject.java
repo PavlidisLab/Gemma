@@ -33,6 +33,8 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
     private String chromosome;
     private String strand;
     private Long nucleotideStart;
+
+    @Deprecated
     private Long nucleotideEnd;
 
     /**
@@ -96,10 +98,12 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
         this.ncbiId = ncbiId;
     }
 
+    @Deprecated
     public Long getNucleotideEnd() {
         return this.nucleotideEnd;
     }
 
+    @Deprecated
     public void setNucleotideEnd( Long nucleotideEnd ) {
         this.nucleotideEnd = nucleotideEnd;
     }

@@ -46,13 +46,14 @@
                 </key>
                 <one-to-many class="ubic.gemma.model.common.description.DatabaseEntry"/>
             </set>
+            <!-- exons is not used, not populated in the db except in transient instances, we are going to remove this association to avoid unnecessary queries.
             <set name="exons" lazy="true" fetch="select" cascade="all">
                 <cache usage="read-write"/>
                 <key foreign-key="PHYSICAL_LOCATION_EXON_LOCATION_GENE_PRODUCT_FKC">
                     <column name="EXON_LOCATION_GENE_PRODUCT_FK" sql-type="BIGINT"/>
                 </key>
                 <one-to-many class="ubic.gemma.model.genome.PhysicalLocation"/>
-            </set>
+            </set>-->
             <many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="proxy" fetch="select">
                 <column name="GENE_FK" not-null="false" sql-type="BIGINT"/>
             </many-to-one>
