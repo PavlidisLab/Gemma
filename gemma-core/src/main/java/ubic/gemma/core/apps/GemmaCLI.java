@@ -124,7 +124,7 @@ public class GemmaCLI {
     }
 
     public static String getOptStringForLogging( Object[] argsToPass ) {
-        return java.util.regex.Pattern.compile( "(-(-)?p(assword)?)\\s+(.+?)\\s" )
+        return java.util.regex.Pattern.compile( "(-(-)?p(assword)?)\\s+(.+?)\b" )
                 .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX " );
     }
 
