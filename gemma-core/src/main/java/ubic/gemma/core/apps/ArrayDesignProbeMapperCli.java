@@ -166,6 +166,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.addOption( probesToDoOption );
     }
 
+    TaxonService taxonService;
+
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
      *
@@ -175,7 +177,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     protected void processOptions() {
         super.processOptions();
         arrayDesignProbeMapperService = this.getBean( ArrayDesignProbeMapperService.class );
-        TaxonService taxonService = this.getBean( TaxonService.class );
+        taxonService = this.getBean( TaxonService.class );
 
         if ( this.hasOption( AbstractCLI.THREADS_OPTION ) ) {
             this.numThreads = this.getIntegerOptionValue( "threads" );
@@ -517,6 +519,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( this.taxon == null ) {
             assert arrayDesign != null;
             Taxon t = arrayDesignService.getTaxon( arrayDesign.getId() );
+            taxonService.thaw( t );
             isRat = t.getCommonName().equals( "rat" );
         } else {
             isRat = taxon.getCommonName().equals( "rat" );
