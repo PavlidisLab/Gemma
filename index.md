@@ -14,14 +14,14 @@ This documentation is licensed under the [Creative Commons Attribution-ShareAlik
 
 The rest of this section concerns the use of the [Gemma website](https://gemma.msl.ubc.ca/) and the Gemma Web Services, including the Gemma RESTful API, as [documented here](https://gemma.msl.ubc.ca/resources/restapidocs/).
 
+Please **[read the full agreement after clicking here](terms.md)**!
+
 ### Non-binding summary of terms:
 - We will not use or redistribute non-public data without permission, nor share your registration details with anyone.
 - Uploaded data from published work will be considered public. Please consider putting your data in GEO or another public database instead of loading it directly into Gemma. We will load public datasets from GEO on request.
 - Use of the site is at your own risk. Users should not upload highly sensitive data.
 - Users **must not** upload data that contains identifiable patient information.
 - There is no warranty associated with the use of the site or the data provided.
-
-Please **[read the full agreement](terms.md)**!
 
 ## Credits
 If you use our tool for your research, please cite:
