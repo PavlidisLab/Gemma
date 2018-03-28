@@ -21,7 +21,7 @@ The rest of this section concerns the use of the [Gemma website](https://gemma.m
 - Users **must not** upload data that contains identifiable patient information.
 - There is no warranty associated with the use of the site or the data provided.
 
-Please **[read the full agreement](temrs.md)**!
+Please **[read the full agreement](terms.md)**!
 
 ## Credits
 If you use our tool for your research, please cite:
