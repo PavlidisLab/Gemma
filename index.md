@@ -54,6 +54,6 @@ Please **[read the full agreement after clicking here](terms.md)**!
 
 ## Credits
 If you use any of Gemma tools for your research, please cite:
-*Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.* [(Link to paper)](http://dx.doi.org/doi:10.1093/bioinformatics/bts430)
+> *[Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.](http://dx.doi.org/doi:10.1093/bioinformatics/bts430)*
 
 Copyright © University of British Columbia
