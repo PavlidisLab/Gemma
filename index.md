@@ -53,7 +53,7 @@ Please **[read the full agreement after clicking here](terms.md)**!
 - There is no warranty associated with the use of the site or the data provided.
 
 ## Credits
-If you use our tool for your research, please cite:
+If you use any of Gemma tools for your research, please cite:
 *Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.* [(Link to paper)](http://dx.doi.org/doi:10.1093/bioinformatics/bts430)
 
 Copyright © University of British Columbia
