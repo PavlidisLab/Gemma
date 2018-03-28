@@ -41,7 +41,7 @@ Yes; see the question about noisy data. We have been working hard to ensure that
 ## Terms and Conditions 
 This documentation is licensed under the [Creative Commons Attribution-ShareAlike 3.0 Unported License](https://creativecommons.org/licenses/by-sa/3.0/)
 
-The rest of this section concerns the use of the [Gemma website](https://gemma.msl.ubc.ca/) and the Gemma Web Services, including the Gemma RESTful API, as [documented here](https://gemma.msl.ubc.ca/resources/restapidocs/).
+The rest of this section concerns the use of the [Gemma website](https://gemma.msl.ubc.ca/) and the Gemma Web Services, including the Gemma RESTful API (which is [documented here](https://gemma.msl.ubc.ca/resources/restapidocs/)).
 
 Please **[read the full agreement after clicking here](terms.md)**!
 
