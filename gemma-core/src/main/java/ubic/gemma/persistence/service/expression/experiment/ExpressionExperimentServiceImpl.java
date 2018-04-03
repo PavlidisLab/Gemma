@@ -494,30 +494,22 @@ public class ExpressionExperimentServiceImpl
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
         ee = this.thawLiter( ee );
 
-        if ( !this.checkHasBatchInfo( ee ) ) {
-            return null;
-        }
+        BatchEffectDetails details = new BatchEffectDetails( this.checkHasBatchInfo( ee ),
+                this.getHasBeenBatchCorrected( ee ) );
 
-        BatchEffectDetails details = new BatchEffectDetails();
-
-        details.setDataWasBatchCorrected( false );
-        if ( this.getHasBeenBatchCorrected( ee ) ) {
-            details.setDataWasBatchCorrected( true );
-            details.setHasBatchInformation( true );
-        }
+        if ( details.hasNoBatchInfo() )
+            return details;
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                details.setHasBatchInformation( true );
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
                 if ( svd == null )
                     break;
                 double minP = 1.0;
-
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
-
                     Double pVal = cmpEffects.get( ef.getId() );
+
                     if ( pVal != null && pVal < minP ) {
                         details.setPvalue( pVal );
                         details.setComponent( component + 1 );
@@ -535,16 +527,18 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public String getBatchEffectDescription( ExpressionExperiment ee ) {
-        BatchEffectDetails batchEffectDetails = this.getBatchEffect( ee );
+        BatchEffectDetails beDetails = this.getBatchEffect( ee );
         String result = "";
-        if ( batchEffectDetails == null ) {
+        if ( beDetails == null || beDetails.hasNoBatchInfo() ) {
             result = "";
         } else {
-            if ( batchEffectDetails.getDataWasBatchCorrected() ) {
-                result = "Data has been batch-corrected"; // Referenced in ExpressionExperimentDetails.js::renderStatus()
-            } else if ( batchEffectDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
-                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
-                        + String.format( "%.2g", batchEffectDetails.getPvalue() );
+            if ( beDetails.getDataWasBatchCorrected() ) {
+                result = "Data has been batch-corrected"; // Checked for in ExpressionExperimentDetails.js::renderStatus()
+            } else if ( beDetails.getComponent() != null
+                    && beDetails.getPvalue() < ExpressionExperimentServiceImpl.BATCH_EFFECT_THRESHOLD ) {
+                String pc = beDetails.getComponent() != null ? " (PC " + beDetails.getComponent() + ")" : "";
+                result = "This data set may have a batch artifact" + pc + ", p=" + String
+                        .format( "%.2g", beDetails.getPvalue() );
             }
         }
         return Strings.emptyToNull( result );
