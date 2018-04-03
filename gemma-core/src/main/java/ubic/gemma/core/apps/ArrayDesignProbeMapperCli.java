@@ -41,6 +41,10 @@ import java.util.concurrent.BlockingQueue;
  * </ol>
  * This can also allow directly associating probes with genes (via products) based on an input file, without any
  * sequence analysis.
+ * 
+ * In batch mode, platforms that are "children" (mergees or subsumees) of other platforms will be skipped. Platforms
+ * which are themselves merged or subsumers, when run, will result in the child platforms being updated implicitly (via
+ * an audit event and report update)
  *
  * @author pavlidis
  */
@@ -402,7 +406,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
                         this.audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEvent() );
                     } catch ( IOException e ) {
-                        return e;
+                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
+                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
+                        AbstractCLI.log.error( e, e );
                     }
                 } else {
 
@@ -411,24 +417,35 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         System.out.print( config );
                     }
 
-                    this.configure( arrayDesign );
+                    try {
+                        this.configure( arrayDesign );
 
-                    arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
-                    if ( useDB ) {
+                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
+                        if ( useDB ) {
 
-                        if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
-                            this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
-                        } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
-                            this.audit( arrayDesign, "Run with configuration=" + this
-                                    .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
-                                    new AlignmentBasedGeneMappingEvent() );
-                        } else {
-                            this.audit( arrayDesign, "Run with default parameters",
-                                    new AlignmentBasedGeneMappingEvent() );
+                            if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
+                                this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
+                            } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
+                                this.audit( arrayDesign, "Run with configuration=" + this
+                                        .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
+                                        new AlignmentBasedGeneMappingEvent() );
+                            } else {
+                                this.audit( arrayDesign, "Run with default parameters",
+                                        new AlignmentBasedGeneMappingEvent() );
+                            }
+                            updateMergedOrSubsumed( arrayDesign );
                         }
+
+                        successObjects.add( arrayDesign );
+                    } catch ( Exception e ) {
+                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
+                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
+                        AbstractCLI.log.error( e, e );
                     }
                 }
+
             }
+            this.summarizeProcessing();
         } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
 
             if ( directAnnotationInputFileName != null ) {
@@ -632,14 +649,39 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             design = arrayDesignService.thaw( design );
 
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
-            successObjects.add( design.getName() );
+            successObjects.add( design );
             ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
             this.audit( design, "Part of a batch job", eventType );
+
+            updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
             errorObjects.add( design + ": " + e.getMessage() );
             AbstractCLI.log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
             AbstractCLI.log.error( e, e );
+        }
+    }
+
+    /**
+     * When we analyze a platform that has mergees or subsumed platforms, we can treat them as if they were analyzed as
+     * well. We simply add an audit event, and update the report for the platform.
+     * 
+     * @param design
+     * @param eventType
+     */
+    public void updateMergedOrSubsumed( ArrayDesign design ) {
+        /*
+         * Update merged or subsumed platforms.
+         */
+        ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
+
+        Collection<ArrayDesign> toUpdate = new HashSet<>();
+        toUpdate.addAll( design.getMergees() );
+        toUpdate.addAll( design.getSubsumedArrayDesigns() );
+        for ( ArrayDesign ad : toUpdate ) {
+            log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
+            this.audit( ad, "Parent design was processed (merged or subsumed by this)", eventType );
+            arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
     }
 
