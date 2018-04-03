@@ -407,15 +407,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 }, this);
                 return String.format("<span style='cursor:pointer' "
                     + "onClick='Ext.getCmp(&quot;eemanager&quot;).redoExperimentAnalysis({0},{1},false)'>"
-                    + "<i class='icon green fa fa-cog fa-fw' ext:qtip='Re-run this analysis'></i></span>", this.ee.id, analysis.id);
+                    + "<i class='icon green fa fa-refresh fa-fw' ext:qtip='Re-run this analysis'></i></span>", this.ee.id, analysis.id);
             },
 
             /**
              * We can remove this, as it was just for helping deal with corrupt etc. data.
-             *
-             * @param {}
-             *           analysis
-             * @return {}
+             * @param analysis
+             * the analysis
              */
             getRefreshStatsLink: function (analysis) {
                 var manager = new Gemma.EEManager({
@@ -431,7 +429,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 }, this);
                 return String.format("<span style='cursor:pointer' "
                     + "onClick='Ext.getCmp(&quot;eemanager&quot;).refreshDiffExStats({0},{1},false)'>"
-                    + "<i class='icon green fa fa-refresh fa-fw' ext:qtip='Refresh the summary stats'></i></span>",
+                    + "<i class='icon green fa fa-retweet fa-fw' ext:qtip='Refresh the summary stats'></i></span>",
                     this.ee.id, analysis.id);
             },
 
@@ -479,7 +477,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                 var pValueDistImageSize = 16;
                 var strippedFactorName = Ext.util.Format.stripTags(factor);
-                // factorName is for backwards compatiility. Deprecated in favor of using the resultSetId.
+                // factorName is for backwards compatibility. Deprecated in favor of using the resultSetId.
                 var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                     + resultSet.analysisId + '&rsid=' + resultSet.resultSetId + '&factorName=' + escape(strippedFactorName);
                 var methodWithArguments = 'showPValueDistributionWindow(\'' + escape(factor) + '\', \'' + imageUrl
