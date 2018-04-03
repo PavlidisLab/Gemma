@@ -6,8 +6,8 @@ Gemma is a set of tools for genomics data meta-analysis, currently primarily tar
 - Support for a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays and RNA-seq data.
 - Manual and automated annotation of datasets, that enhance usability of data.
 - Access through RESTful web services allows incorporation of data and capabilities of Gemma in any other software.
-- Users have the option to securely upload their own data, with an option to be privately shared with other users of their choice. 
-- Possibility to create and save gene sets or dataset groups for ease of use in queries.
+- Registration is optional, and unregistered users can access all public data.
+- Registered users have the option to securely upload their own data, which can be privately shared with other users of their choice, and to create and save gene sets or dataset groups for ease of use in queries.
 
 ### Important Q&A
 ##### How do you pronounce ‘Gemma’?
