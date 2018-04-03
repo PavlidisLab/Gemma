@@ -45,6 +45,15 @@ The rest of this section concerns the use of the [Gemma website](https://gemma.m
 
 Please **[read the full agreement after clicking here](terms.md)**!
 
+## Using Gemma website
+Guides to using various gemma features.
+**[Coexpression and differential expression search](search.md)**
+
+## RESTful API
+The API has its own interactive documentation, where you will find all necessary information on how to interact with gemma
+programatically. 
+Please follow **[this link to the RESTful API documentation](https://gemma.msl.ubc.ca/resources/restapidocs/)**
+
 ### Non-binding summary of terms:
 - We will not use or redistribute non-public data without permission, nor share your registration details with anyone.
 - Uploaded data from published work will be considered public. Please consider putting your data in GEO or another public database instead of loading it directly into Gemma. We will load public datasets from GEO on request.
