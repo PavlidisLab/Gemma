@@ -1,4 +1,4 @@
 theme: jekyll-theme-cayman
 title: Gemma Documentation
 description: Documentation for Gemma - Tools and database for meta-analysis of functional genomics data
-keep_files:  ['img']
+baseurl: /Gemma
