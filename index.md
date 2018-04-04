@@ -65,8 +65,10 @@ The API has its own interactive documentation, where you will find all necessary
 programatically. 
 Please follow **[this link to the RESTful API documentation](https://gemma.msl.ubc.ca/resources/restapidocs/)**
 
-## Credits
+## Contact & Credits
 If you use any of Gemma tools for your research, please cite:
 > *[Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.](http://dx.doi.org/doi:10.1093/bioinformatics/bts430)*
+
+If you find a problem or need help, you can file a new github issue, or contact us at [pavlab-support@msl.ubc.ca](mailto:pavlab-support@msl.ubc.ca).
 
 Copyright © University of British Columbia
