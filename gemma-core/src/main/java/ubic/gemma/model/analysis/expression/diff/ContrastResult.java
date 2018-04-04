@@ -18,15 +18,21 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.FactorValue;
+
+import java.io.Serializable;
 
 /**
  * Represents a contrast between "conditions". In practice, this is the comparison between a factor level and the
  * baseline; for interactions it is the difference of comparisons.
  */
-public abstract class ContrastResult implements java.io.Serializable {
+public class ContrastResult implements Identifiable, Serializable {
 
-    private static final long serialVersionUID = 7800859456071333232L;
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -4310735803120153778L;
     private Double pvalue;
     private Double tStat;
     private Double coefficient;
@@ -58,6 +64,7 @@ public abstract class ContrastResult implements java.io.Serializable {
         this.factorValue = factorValue;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
@@ -133,15 +140,20 @@ public abstract class ContrastResult implements java.io.Serializable {
         return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
+    @Override
+    public String toString() {
+        return "Contrast for " + this.getFactorValue().toString();
+    }
+
     public static final class Factory {
         public static ContrastResult newInstance() {
-            return new ContrastResultImpl();
+            return new ContrastResult();
         }
 
         @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static ContrastResult newInstance( Double pvalue, Double tstat, Double coefficient, Double logFoldChange,
                 FactorValue factorValue, FactorValue secondFactorValue ) {
-            final ContrastResult entity = new ContrastResultImpl();
+            final ContrastResult entity = new ContrastResult();
             entity.setPvalue( pvalue );
             entity.setTstat( tstat );
             entity.setCoefficient( coefficient );

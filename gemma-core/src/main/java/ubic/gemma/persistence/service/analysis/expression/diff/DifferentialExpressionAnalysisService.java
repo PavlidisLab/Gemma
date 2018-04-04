@@ -68,7 +68,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
             ExpressionAnalysisResultSet resultSet, double threshold );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
@@ -76,7 +76,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
+    Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );

@@ -265,8 +265,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( Long fvId : fvCol ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fvId );
-            // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "FactorValue deleted: " + fvId,
-            // null );
             this.experimentReportService.evictFromCache( ee.getId() );
         }
 

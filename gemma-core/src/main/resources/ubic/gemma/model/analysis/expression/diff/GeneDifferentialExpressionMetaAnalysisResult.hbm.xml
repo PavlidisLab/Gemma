@@ -4,7 +4,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultImpl"
+    <class name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"
            table="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT">
         <cache usage="read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
@@ -34,7 +34,7 @@
             <key foreign-key="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_METAANALYSES_FKC">
                 <column name="METAANALYSES_FK" sql-type="BIGINT"/>
             </key>
-            <many-to-many class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl">
+            <many-to-many class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult">
                 <column name="RESULTS_USED_FK" sql-type="BIGINT"/>
             </many-to-many>
         </set>

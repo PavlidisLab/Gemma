@@ -31,12 +31,11 @@ import java.util.HashSet;
  * associated contrasts.
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class DifferentialExpressionAnalysisResult implements Identifiable, Serializable {
-
+public class DifferentialExpressionAnalysisResult implements Identifiable, Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = 4986999013709498648L;
+    private static final long serialVersionUID = 8952834115689524169L;
     private Double pvalue;
     /**
      * Typically actually a qvalue.
@@ -55,23 +54,59 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     public DifferentialExpressionAnalysisResult() {
     }
 
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * ( hashCode + ( id == null ? 0 : id.hashCode() ) );
-        return hashCode;
+    private static int getBin( Double value ) {
+        return ( int ) Math.min( 5, Math.floor( -Math.log10( value ) ) );
     }
 
     @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
+
+        if ( this.getId() == null ) {
+            result = prime * result + ( ( this.getResultSet() == null ) ? 0 : this.getResultSet().hashCode() );
+            result = prime * result + ( ( this.getProbe() == null ) ? 0 : this.getProbe().hashCode() );
+        }
+        return result;
+    }
+
+    @SuppressWarnings("SimplifiableIfStatement") // Better readability
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
             return true;
-        }
-        if ( !( object instanceof DifferentialExpressionAnalysisResult ) ) {
+        if ( obj == null )
             return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        DifferentialExpressionAnalysisResult other = ( DifferentialExpressionAnalysisResult ) obj;
+
+        if ( this.getId() == null ) {
+            if ( other.getId() != null )
+                return false;
+        } else if ( !this.getId().equals( other.getId() ) ) {
+            return false;
+        } else {
+            return this.getId().equals( other.getId() );
         }
-        final DifferentialExpressionAnalysisResult that = ( DifferentialExpressionAnalysisResult ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+
+        // fallback.
+        if ( this.getResultSet() == null ) {
+            if ( other.getResultSet() != null )
+                return false;
+        } else if ( !this.getResultSet().equals( other.getResultSet() ) )
+            return false;
+        if ( this.getProbe() == null ) {
+            return other.getProbe() == null;
+        } else
+            return this.getProbe().equals( other.getProbe() );
+    }
+
+    @Override
+    public String toString() {
+        return "DiffExRes[" + this.getId() + "]: " + this.getProbe() + " p=" + String.format( "%g", this.getPvalue() )
+                + " ressetId=" + ( this.getResultSet() == null ? "" : this.getResultSet().getId() );
     }
 
     /**
@@ -94,7 +129,18 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
     }
 
     public void setCorrectedPvalue( Double correctedPvalue ) {
+
+        if ( correctedPvalue == null )
+            return;
+
         this.correctedPvalue = correctedPvalue;
+
+        /*
+         * See bug 2013. Here we ensure that the bin is always set. The maximum value is 5, representing qvalues better
+         * than 10e-5. 0.1-1 -> 0; 0.01-0.099 -> 1; 0.001-0.00999 -> 2; 0.0001- 0.000999 -> 3 etc. Thus "p<0.01" is
+         * equivalent to "bin >=2"
+         */
+        this.setCorrectedPValueBin( DifferentialExpressionAnalysisResult.getBin( correctedPvalue ) );
     }
 
     /**
@@ -158,7 +204,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
 
     public static final class Factory {
         public static DifferentialExpressionAnalysisResult newInstance() {
-            return new DifferentialExpressionAnalysisResultImpl();
+            return new DifferentialExpressionAnalysisResult();
         }
     }
 

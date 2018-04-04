@@ -56,7 +56,7 @@
                         <column name="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_FK" sql-type="BIGINT"/>
                     </key>
                     <one-to-many
-                            class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultImpl"/>
+                            class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"/>
                 </set>
             </subclass>
             <subclass name="ubic.gemma.model.analysis.SingleExperimentAnalysis" abstract="true">

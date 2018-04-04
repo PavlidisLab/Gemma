@@ -105,7 +105,7 @@
                     <column name="SELECTION_THRESHOLD" not-null="false" unique="false" sql-type="DOUBLE"/>
                 </property>
                 <many-to-one name="geneDifferentialExpressionMetaAnalysisResult"
-                             class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultImpl"
+                             class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult"
                              lazy="proxy"
                              fetch="select">
                     <column name="GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT_FK" not-null="false"

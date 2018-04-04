@@ -27,6 +27,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.Serializable;
 import java.util.Collection;

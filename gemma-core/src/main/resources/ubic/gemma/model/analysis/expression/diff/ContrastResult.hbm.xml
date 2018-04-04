@@ -4,7 +4,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="ubic.gemma.model.analysis.expression.diff.ContrastResultImpl" table="CONTRAST_RESULT"
+    <class name="ubic.gemma.model.analysis.expression.diff.ContrastResult" table="CONTRAST_RESULT"
     >
         <cache usage="read-write"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">

@@ -341,7 +341,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
     public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         StopWatch timer = new StopWatch();
         timer.start();
+
         Session session = this.getSessionFactory().getCurrentSession();
+        session.clear();
+
         session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis );
         Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
@@ -489,49 +492,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
         }
 
         Session session = this.getSessionFactory().getCurrentSession(); // hopefully okay.
-        session.flush();
-        session.clear();
-
-        session.buildLockRequest( LockOptions.NONE ).lock( analysis );
-        int contrastsDone = 0;
-        int resultsDone = 0;
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
-
-            // Delete contrasts
-            final String nativeDeleteContrastsQuery =
-                    "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                            + " WHERE d.RESULT_SET_FK = :rsid AND d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
-            SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
-            q.setParameter( "rsid", rs.getId() );
-            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table remove.
-
-            // Delete AnalysisResults
-            String nativeDeleteARQuery =
-                    "DELETE d FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d" + " WHERE d.RESULT_SET_FK = :rsid  ";
-            q = session.createSQLQuery( nativeDeleteARQuery );
-            q.setParameter( "rsid", rs.getId() );
-            resultsDone += q.executeUpdate();
-            // could do in a loop with limit , might be faster.
-
-            session.flush();
-            session.clear();
-        }
-        AbstractDao.log
-                .info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results in " + timer.getTime()
-                        + "ms" );
-
-        analysis = ( DifferentialExpressionAnalysis ) session
-                .load( DifferentialExpressionAnalysis.class, analysis.getId() );
 
         session.delete( analysis );
-
         session.flush();
         session.clear();
-
     }
 
     @Override
