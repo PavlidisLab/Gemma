@@ -1,3 +1,13 @@
+## Table of contents
+
+- [Running a Search](#running-a-search)
+  * [Setting up the query](#setting-up-the-query)
+  * [Viewing, refining and saving your selections](#viewing--refining-and-saving-your-selections)
+  * [Taxon mode](#taxon-mode)
+- [Search results](#search-results)
+  * [Differential Expression results](#differential-expression-results)
+  * [Coexpression results](#coexpression-results)
+
 ## Running a Search
 ### Setting up the query
 #### 1. Select whether you want to search for Differential Expression or Coexpression. See figure 1 below.
