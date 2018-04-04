@@ -41,6 +41,10 @@ import java.util.concurrent.BlockingQueue;
  * </ol>
  * This can also allow directly associating probes with genes (via products) based on an input file, without any
  * sequence analysis.
+ * 
+ * In batch mode, platforms that are "children" (mergees or subsumees) of other platforms will be skipped. Platforms
+ * which are themselves merged or subsumers, when run, will result in the child platforms being updated implicitly (via
+ * an audit event and report update)
  *
  * @author pavlidis
  */
@@ -166,6 +170,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         this.addOption( probesToDoOption );
     }
 
+    TaxonService taxonService;
+
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
      *
@@ -175,7 +181,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     protected void processOptions() {
         super.processOptions();
         arrayDesignProbeMapperService = this.getBean( ArrayDesignProbeMapperService.class );
-        TaxonService taxonService = this.getBean( TaxonService.class );
+        taxonService = this.getBean( TaxonService.class );
 
         if ( this.hasOption( AbstractCLI.THREADS_OPTION ) ) {
             this.numThreads = this.getIntegerOptionValue( "threads" );
@@ -376,21 +382,29 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     + " Array designs, troubled platforms may be skipped *** " );
         }
 
+        /*
+         * This is a separate method frmo batchRun...processArrayDesign because there are more possibilities.
+         */
         if ( !this.arrayDesignsToProcess.isEmpty() ) {
             for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
-
                 if ( this.probeNames != null ) {
+                    // only one platform possible
+                    if ( arrayDesignsToProcess.size() > 1 )
+                        throw new IllegalArgumentException( "Can only use probe names when processing a single platform" );
                     this.processProbes( arrayDesign );
                     break;
                 }
 
-                if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
-                    AbstractCLI.log.warn( arrayDesign + " not ready to run" );
-                    return null;
+                AbstractCLI.log.info( "============== Start processing: " + arrayDesign + " ==================" );
+
+                if ( !shouldRun( skipIfLastRunLaterThan, arrayDesign ) ) {
+                    continue;
                 }
 
                 arrayDesign = this.thaw( arrayDesign );
                 if ( directAnnotationInputFileName != null ) {
+                    if ( arrayDesignsToProcess.size() > 1 )
+                        throw new IllegalArgumentException( "Can only use direct annotation from a file when processing a single platform" );
                     try {
                         File f = new File( this.directAnnotationInputFileName );
                         if ( !f.canRead() ) {
@@ -400,7 +414,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
                         this.audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEvent() );
                     } catch ( IOException e ) {
-                        return e;
+                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
+                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
+                        AbstractCLI.log.error( e, e );
                     }
                 } else {
 
@@ -409,24 +425,37 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         System.out.print( config );
                     }
 
-                    this.configure( arrayDesign );
-
-                    arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
-                    if ( useDB ) {
-
-                        if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
-                            this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
-                        } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
-                            this.audit( arrayDesign, "Run with configuration=" + this
-                                    .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
-                                    new AlignmentBasedGeneMappingEvent() );
-                        } else {
-                            this.audit( arrayDesign, "Run with default parameters",
-                                    new AlignmentBasedGeneMappingEvent() );
+                    try {
+                        this.configure( arrayDesign );
+                        if ( !getRelatedDesigns( arrayDesign ).isEmpty() ) {
+                            log.info( getRelatedDesigns( arrayDesign ).size() + " subsumed or merged platforms will be implicitly updated" );
                         }
+                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
+                        if ( useDB ) {
+
+                            if ( this.hasOption( ArrayDesignProbeMapperCli.MIRNA_ONLY_MODE_OPTION ) ) {
+                                this.audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
+                            } else if ( this.hasOption( ArrayDesignProbeMapperCli.CONFIG_OPTION ) ) {
+                                this.audit( arrayDesign, "Run with configuration=" + this
+                                        .getOptionValue( ArrayDesignProbeMapperCli.CONFIG_OPTION ),
+                                        new AlignmentBasedGeneMappingEvent() );
+                            } else {
+                                this.audit( arrayDesign, "Run with default parameters",
+                                        new AlignmentBasedGeneMappingEvent() );
+                            }
+                            updateMergedOrSubsumed( arrayDesign );
+                        }
+
+                        successObjects.add( arrayDesign );
+                    } catch ( Exception e ) {
+                        errorObjects.add( arrayDesign + ": " + e.getMessage() );
+                        AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ****" );
+                        AbstractCLI.log.error( e, e );
                     }
                 }
+
             }
+            this.summarizeProcessing();
         } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
 
             if ( directAnnotationInputFileName != null ) {
@@ -517,6 +546,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( this.taxon == null ) {
             assert arrayDesign != null;
             Taxon t = arrayDesignService.getTaxon( arrayDesign.getId() );
+            taxonService.thaw( t );
             isRat = t.getCommonName().equals( "rat" );
         } else {
             isRat = taxon.getCommonName().equals( "rat" );
@@ -599,18 +629,50 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return;
         }
 
+        if ( !shouldRun( skipIfLastRunLaterThan, design ) ) {
+            return;
+        }
+
+        AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
+        try {
+
+            design = arrayDesignService.thaw( design );
+            this.configure( design );
+            if ( !getRelatedDesigns( design ).isEmpty() ) {
+                log.info( getRelatedDesigns( design ).size() + " subsumed or merged platforms will be implicitly updated" );
+            }
+            arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
+            successObjects.add( design );
+            ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
+            this.audit( design, "Part of a batch job", eventType );
+
+            updateMergedOrSubsumed( design );
+
+        } catch ( Exception e ) {
+            errorObjects.add( design + ": " + e.getMessage() );
+            AbstractCLI.log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            AbstractCLI.log.error( e, e );
+        }
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     */
+    public boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design ) {
         if ( !allowSubsumedOrMerged && this.isSubsumedOrMerged( design ) ) {
-            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run." );
+            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
+
             // not really an error, but nice to get notification.
             errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-            return;
+            return false;
         }
 
         if ( design.getTechnologyType().equals( TechnologyType.NONE ) ) {
             AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
             // not really an error, but nice to get notification.
             errorObjects.add( design + ": " + "Skipped because it is not a microarray platform." );
-            return;
+            return false;
         }
 
         if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
@@ -621,23 +683,42 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 AbstractCLI.log.warn( design + " seems to be up to date or is not ready to run" );
                 errorObjects.add( design + " seems to be up to date or is not ready to run" );
             }
-            return;
+            return false;
         }
+        return true;
+    }
 
-        AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
-        try {
-            design = arrayDesignService.thaw( design );
+    /**
+     * When we analyze a platform that has mergees or subsumed platforms, we can treat them as if they were analyzed as
+     * well. We simply add an audit event, and update the report for the platform.
+     * 
+     * @param design
+     * @param eventType
+     */
+    public void updateMergedOrSubsumed( ArrayDesign design ) {
+        /*
+         * Update merged or subsumed platforms.
+         */
 
-            arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
-            successObjects.add( design.getName() );
-            ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
-            this.audit( design, "Part of a batch job", eventType );
-
-        } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            AbstractCLI.log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            AbstractCLI.log.error( e, e );
+        Collection<ArrayDesign> toUpdate = getRelatedDesigns( design );
+        for ( ArrayDesign ad : toUpdate ) {
+            log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
+            this.audit( ad, "Parent design was processed (merged or subsumed by this)", new AlignmentBasedGeneMappingEvent() );
+            arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
+    }
+
+    /**
+     * Mergees or subsumees of the platform.
+     * 
+     * @param design
+     * @return
+     */
+    public Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
+        Collection<ArrayDesign> toUpdate = new HashSet<>();
+        toUpdate.addAll( design.getMergees() );
+        toUpdate.addAll( design.getSubsumedArrayDesigns() );
+        return toUpdate;
     }
 
     private void processProbes( ArrayDesign arrayDesign ) {

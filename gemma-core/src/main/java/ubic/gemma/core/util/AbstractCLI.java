@@ -43,7 +43,7 @@ import java.util.*;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class AbstractCLI {
 
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2015 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2018 University of British Columbia.";
     protected static final String AUTO_OPTION_NAME = "auto";
     protected static final String THREADS_OPTION = "threads";
     protected static final Log log = LogFactory.getLog( AbstractCLI.class );

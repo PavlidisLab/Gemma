@@ -284,7 +284,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         List<BlatResult> toDelete = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", arrayDesign ).list();
 
-        AbstractDao.log.info( "Deleting " + toDelete + " alignments for sequences on " + arrayDesign
+        AbstractDao.log.info( "Deleting " + toDelete.size() + " alignments for sequences on " + arrayDesign
                 + " (will affect other designs that use any of the same sequences)" );
 
         for ( BlatResult r : toDelete ) {

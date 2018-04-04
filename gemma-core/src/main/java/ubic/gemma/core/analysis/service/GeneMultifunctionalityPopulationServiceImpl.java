@@ -238,6 +238,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                         .getAllParents( GeneOntologyServiceImpl.getTermForURI( t.getValueUri() ) );
 
                 for ( OntologyTerm p : parents ) {
+                    if ( p == null ) continue;
                     termsForGene.add( p.getTerm() );
                 }
             }

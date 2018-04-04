@@ -159,7 +159,7 @@ public class NCBIGene2GOAssociationLoader {
                 }
 
                 // just some timing information.
-                if ( count % 1000 == 0 ) {
+                if ( count % 10000 == 0 ) {
                     cpt++;
                     double secsperthousand = ( System.currentTimeMillis() - millis ) / 1000.0;
                     secspt += secsperthousand;
