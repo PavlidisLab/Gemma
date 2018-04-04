@@ -699,12 +699,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         /*
          * Update merged or subsumed platforms.
          */
-        ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
 
         Collection<ArrayDesign> toUpdate = getRelatedDesigns( design );
         for ( ArrayDesign ad : toUpdate ) {
             log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
-            this.audit( ad, "Parent design was processed (merged or subsumed by this)", eventType );
+            this.audit( ad, "Parent design was processed (merged or subsumed by this)", new AlignmentBasedGeneMappingEvent() );
             arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
     }
