@@ -56,8 +56,9 @@ Please **[read the full agreement after clicking here](terms.md)**!
 
 ## Using the Gemma website
 These guides will help you navigate and use the tools provided through the [gemma website](https://gemma.msl.ubc.ca/).
-
-**[Coexpression and differential expression search](search.md)**
+- **[Coexpression and differential expression search](search.md)**
+- **[Gene and Experiment sets](gene_experiment_sets.md)**
+- **[Experimental Designs](designs.md)**
 
 ## RESTful API
 The API has its own interactive documentation, where you will find all necessary information on how to interact with gemma
