@@ -121,7 +121,7 @@ Search results contain (up to) the top 200 results per gene in your query gene l
 
 In addition to these top 200 results, we also display all results between query genes regardless of the support.
 
-##### Note about large searches (over 20 query genes): 
+##### Note about large searches (over 20 query genes)
 
 If you gene set search list has more than 20 genes in it, then your search will be run as a ‘query genes only’ search.  This means that all of the results(if any) will display only coexpression links between genes in your gene set search list.
 
