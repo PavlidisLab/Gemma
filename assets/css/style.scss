@@ -3,6 +3,10 @@
 
 @import "{{ site.theme }}";
 
+table.image{
+  display: table;
+}
+
 .image caption{
   font-size: smaller;
   color: $code-text-color;
