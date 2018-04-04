@@ -6,41 +6,24 @@
 
 2. Select genes to find differential expression data for. 
 This can be done by selecting a pre-made group or by searching for experiments and using the results.
-
-  a. Selecting a pre-made group
-  
+  1. Selecting a pre-made group
    - When you click in the gene search box, you may be prompted with a list of gene groups.
-    
    - Prompted groups can include groups made by Gemma administrators, groups you have saved (if you are logged in) and temporary (unsaved) groups
-    
-  b. Searching for genes
-  
-   - Genes can be found by key word, which will match to gene symbols, names, ontology associations and group names
-    
+  2. Searching for genes
+   - Genes can be found by key word, which will match to gene symbols, names, ontology associations and group names 
    - Use quotation marks to search for phrases, e.g _"cell junction"_.
-  c. Using a list of symbols or NCBI IDs
-  
-   - If you already know which genes you want to use for your search, you can paste them in by symbol or NCBI ID
-    
+  3. Using a list of symbols or NCBI IDs 
+   - If you already know which genes you want to use for your search, you can paste them in by symbol or NCBI ID 
    - Click on the button just to the left of the gene search box to open a window to paste in your list (See figure 1, box B).
    - Each gene should be on one line.
-    
 3. Select experiments from which we’ll pull expression data.
-
-  a. Selecting a pre-made group:
-  
-   - When you click in the experiment search box, you will be prompted with a list of experiment groups.
-    
-   - Prompted groups can include groups made by Gemma administrators, groups you have saved (if you are logged in) and temporary (unsaved) groups.
-    
-  b. Searching for experiments:
-  
-   - Gemma has thousands of experiments for you to use.
-    
-   - Try searching these experiments by keyword (_hippocampus, autism_), array design (_GPL96_) or GEO id (_GSE28521_).
-    
-   - Keyword searches look for matches in experiment accessions, names, descriptions, array designs, curator-assigned tags and group names.
-    
+  1. Selecting a pre-made group:
+   - When you click in the experiment search box, you will be prompted with a list of experiment groups.    
+   - Prompted groups can include groups made by Gemma administrators, groups you have saved (if you are logged in) and temporary (unsaved) groups.    
+  2. Searching for experiments:  
+   - Gemma has thousands of experiments for you to use.    
+   - Try searching these experiments by keyword (_hippocampus, autism_), array design (_GPL96_) or GEO id (_GSE28521_).   
+   - Keyword searches look for matches in experiment accessions, names, descriptions, array designs, curator-assigned tags and group names.   
    - You can search using word roots, like "hypothala".
     
 ### Viewing, refining and saving your selections
