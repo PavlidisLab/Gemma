@@ -1,10 +1,10 @@
 ## Running a Search
 ### Setting up the query
-1. Select whether you want to search for Differential Expression or Coexpression. See figure 1 below.
+#### 1. Select whether you want to search for Differential Expression or Coexpression. See figure 1 below.
 
 {% include image.html url="/assets/img/search1.png" description="Figure 1 - Initial state of the expression search form" %}
 
-2. Select genes to find differential expression data for. 
+#### 2. Select genes to find differential expression data for. 
 This can be done by selecting a pre-made group or by searching for experiments and using the results.
   1. Selecting a pre-made group
    - When you click in the gene search box, you may be prompted with a list of gene groups.
@@ -16,7 +16,7 @@ This can be done by selecting a pre-made group or by searching for experiments a
    - If you already know which genes you want to use for your search, you can paste them in by symbol or NCBI ID 
    - Click on the button just to the left of the gene search box to open a window to paste in your list (See figure 1, box B).
    - Each gene should be on one line.
-3. Select experiments from which we’ll pull expression data.
+#### 3. Select experiments from which we’ll pull expression data.
   1. Selecting a pre-made group:
    - When you click in the experiment search box, you will be prompted with a list of experiment groups.    
    - Prompted groups can include groups made by Gemma administrators, groups you have saved (if you are logged in) and temporary (unsaved) groups.    
