@@ -3,7 +3,7 @@ Gemma is a set of tools for genomics data meta-analysis, currently primarily tar
 
 ### Key features:
 - Re-annotated expression platforms at the sequence level, which allows for more consistent cross-platform comparisons.
-  + You can read about the full [data curation process here](curation.md).
+  + You can read about the full **[data curation process here](curation.md)**.
 - Support for a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays and RNA-seq data.
 - Manual and automated annotation of datasets, that enhance usability of data.
 - Access through RESTful web services allows incorporation of data and capabilities of Gemma in any other software.
