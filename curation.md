@@ -1,5 +1,12 @@
-## Data Curation
+## Table of Contents
+- [Data Curation](#data-curation)
+  * [Workflow](#workflow)
+  * [Data Sources](#data-sources)
+  * [Sequence analysis and annotation](#sequence-analysis-and-annotation)
+  * [Data Annotation](#data-annotation)
+  * [Quality control](#quality-control)
 
+## Data Curation
 ### Workflow
 
 {% include image.html url="/assets/img/curation1.png" description="Figure 1 - data curation workflow" %}
