@@ -5,6 +5,12 @@
 
 table.image{
   display: table;
+  width: 100%;
+}
+
+table.image tbody {
+    display: table-row-group;
+    width: 100%;
 }
 
 .image caption{
