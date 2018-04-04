@@ -100,7 +100,7 @@ You can change the layout of your results to discover and clarify patterns. The 
 Save an image of your chart or save a text version (file format is described in the file header) of the results using the "Download" button at the top right of the visualiser.
 
 #### Create gene and experiment sets
-You can select genes and conditions by holding down the CTRL key and clicking on row and column headers. You can save your selections as gene and experiment sets in Gemma using the "Save Selected" button in the top toolbar. You can also get a text version of your selections by pressing this button and then clicking on "Export" in the window that pops up. For more information visit our [Gene and Experiment Sets guide](gene_experiments.md).
+You can select genes and conditions by holding down the CTRL key and clicking on row and column headers. You can save your selections as gene and experiment sets in Gemma using the "Save Selected" button in the top toolbar. You can also get a text version of your selections by pressing this button and then clicking on "Export" in the window that pops up. For more information visit our [Gene and Experiment Sets guide](gene_experiment_sets.md).
 
 ### Coexpression results
 Your results are displayed in two formats: tabular and visualisation (node-edge chart).
