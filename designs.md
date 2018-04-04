@@ -75,8 +75,6 @@ Whichever method you use, you must click ‘save’ to make your changes permane
 Double-click on the cell you want to edit. You will be able to choose or enter a value. Then click “save”.
 
 **Entering values in batch mode**
-
-Follow these steps:
 1. Select the factor and factor value you want to apply from the toolbar.
 2. Select the rows of the table you want to change (using click+shift or click+ctrl to select multiple rows)
 3. Click the “apply” button.
