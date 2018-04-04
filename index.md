@@ -6,7 +6,8 @@ Gemma is a set of tools for genomics data meta-analysis, currently primarily tar
   + You can read about the full **[data curation process here](curation.md)**.
 - Support for a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays and RNA-seq data.
 - Manual and automated annotation of datasets, that enhance usability of data.
-- Access through RESTful web services allows incorporation of data and capabilities of Gemma in any other software.
+- Access through the [Gemma website](https://gemma.msl.ubc.ca) provides a graphical interface for easy access.
+- Access through [RESTful web services](https://gemma.msl.ubc.ca/resources/restapidocs/) allows incorporation of data and computational capabilities of Gemma with any other software.
 - Registration is optional, and unregistered users can access all public data.
 - Registered users have the option to securely upload their own data, which can be privately shared with other users of their choice, and to create and save gene sets or dataset groups for ease of use in queries.
 
@@ -53,8 +54,8 @@ Please **[read the full agreement after clicking here](terms.md)**!
 - Users **must not** upload data that contains identifiable patient information.
 - There is no warranty associated with the use of the site or the data provided.
 
-## Using Gemma website
-Guides to using various gemma features.
+## Using the Gemma website
+These guides will help you navigate and use the tools provided through the [gemma website](https://gemma.msl.ubc.ca/).
 
 **[Coexpression and differential expression search](search.md)**
 
