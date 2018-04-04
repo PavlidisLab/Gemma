@@ -382,22 +382,29 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     + " Array designs, troubled platforms may be skipped *** " );
         }
 
+        /*
+         * This is a separate method frmo batchRun...processArrayDesign because there are more possibilities.
+         */
         if ( !this.arrayDesignsToProcess.isEmpty() ) {
             for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
                 if ( this.probeNames != null ) {
+                    // only one platform possible
+                    if ( arrayDesignsToProcess.size() > 1 )
+                        throw new IllegalArgumentException( "Can only use probe names when processing a single platform" );
                     this.processProbes( arrayDesign );
                     break;
                 }
 
                 AbstractCLI.log.info( "============== Start processing: " + arrayDesign + " ==================" );
 
-                if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
-                    AbstractCLI.log.warn( arrayDesign + " not ready to run" );
-                    return null;
+                if ( !shouldRun( skipIfLastRunLaterThan, arrayDesign ) ) {
+                    continue;
                 }
 
                 arrayDesign = this.thaw( arrayDesign );
                 if ( directAnnotationInputFileName != null ) {
+                    if ( arrayDesignsToProcess.size() > 1 )
+                        throw new IllegalArgumentException( "Can only use direct annotation from a file when processing a single platform" );
                     try {
                         File f = new File( this.directAnnotationInputFileName );
                         if ( !f.canRead() ) {
@@ -420,7 +427,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                     try {
                         this.configure( arrayDesign );
-
+                        if ( !getRelatedDesigns( arrayDesign ).isEmpty() ) {
+                            log.info( getRelatedDesigns( arrayDesign ).size() + " subsumed or merged platforms will be implicitly updated" );
+                        }
                         arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
                         if ( useDB ) {
 
@@ -620,35 +629,18 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return;
         }
 
-        if ( !allowSubsumedOrMerged && this.isSubsumedOrMerged( design ) ) {
-            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run." );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-            return;
-        }
-
-        if ( design.getTechnologyType().equals( TechnologyType.NONE ) ) {
-            AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is not a microarray platform." );
-            return;
-        }
-
-        if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
-            if ( skipIfLastRunLaterThan != null ) {
-                AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
-            } else {
-                AbstractCLI.log.warn( design + " seems to be up to date or is not ready to run" );
-                errorObjects.add( design + " seems to be up to date or is not ready to run" );
-            }
+        if ( !shouldRun( skipIfLastRunLaterThan, design ) ) {
             return;
         }
 
         AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
         try {
-            design = arrayDesignService.thaw( design );
 
+            design = arrayDesignService.thaw( design );
+            this.configure( design );
+            if ( !getRelatedDesigns( design ).isEmpty() ) {
+                log.info( getRelatedDesigns( design ).size() + " subsumed or merged platforms will be implicitly updated" );
+            }
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
             successObjects.add( design );
             ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
@@ -664,6 +656,39 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     */
+    public boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+        if ( !allowSubsumedOrMerged && this.isSubsumedOrMerged( design ) ) {
+            AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
+
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return false;
+        }
+
+        if ( design.getTechnologyType().equals( TechnologyType.NONE ) ) {
+            AbstractCLI.log.warn( design + " is not a microarray platform, it will not be run" );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is not a microarray platform." );
+            return false;
+        }
+
+        if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
+            if ( skipIfLastRunLaterThan != null ) {
+                AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            } else {
+                AbstractCLI.log.warn( design + " seems to be up to date or is not ready to run" );
+                errorObjects.add( design + " seems to be up to date or is not ready to run" );
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * When we analyze a platform that has mergees or subsumed platforms, we can treat them as if they were analyzed as
      * well. We simply add an audit event, and update the report for the platform.
      * 
@@ -676,14 +701,25 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          */
         ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
 
-        Collection<ArrayDesign> toUpdate = new HashSet<>();
-        toUpdate.addAll( design.getMergees() );
-        toUpdate.addAll( design.getSubsumedArrayDesigns() );
+        Collection<ArrayDesign> toUpdate = getRelatedDesigns( design );
         for ( ArrayDesign ad : toUpdate ) {
             log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)", eventType );
             arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
+    }
+
+    /**
+     * Mergees or subsumees of the platform.
+     * 
+     * @param design
+     * @return
+     */
+    public Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
+        Collection<ArrayDesign> toUpdate = new HashSet<>();
+        toUpdate.addAll( design.getMergees() );
+        toUpdate.addAll( design.getSubsumedArrayDesigns() );
+        return toUpdate;
     }
 
     private void processProbes( ArrayDesign arrayDesign ) {
