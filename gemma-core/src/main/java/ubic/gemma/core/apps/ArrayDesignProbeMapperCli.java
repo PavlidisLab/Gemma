@@ -384,11 +384,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( !this.arrayDesignsToProcess.isEmpty() ) {
             for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
-
                 if ( this.probeNames != null ) {
                     this.processProbes( arrayDesign );
                     break;
                 }
+
+                AbstractCLI.log.info( "============== Start processing: " + arrayDesign + " ==================" );
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
                     AbstractCLI.log.warn( arrayDesign + " not ready to run" );
