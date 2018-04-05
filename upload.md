@@ -1,6 +1,6 @@
 # Uploading data
 
-Gemma users are allowed to upload their own experiments (as long as they comply with our [terms and conditions](terms.md) so they can use the analytical tools of Gemma with their data.
+Gemma users are allowed to upload their own experiments (as long as they comply with our [terms and conditions](terms.md)) so they can use the analytical tools of Gemma with their data.
 To access the data upload form, you have to be registered and logged in. The go to My Gemma -> Load Data.
 
 ## File format
