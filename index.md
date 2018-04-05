@@ -3,7 +3,7 @@ Gemma is a set of tools for genomics data meta-analysis, currently primarily tar
 
 This webpage serves as an introduction and end-user documentation.
 
-## Table of Contents
+## Table of contents
 - [Key features:](#key-features-)
 - [Important Q&A](#important-q-a)
 - [Glossary](#glossary)
