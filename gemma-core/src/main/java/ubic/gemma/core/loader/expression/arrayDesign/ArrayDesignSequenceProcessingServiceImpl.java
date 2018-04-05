@@ -166,6 +166,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             collapsed.setPolymerType( PolymerType.DNA );
             collapsed.setTaxon( taxon );
 
+            // DEBUG CODE
+            if ( log.isDebugEnabled() ) {
+                log.debug( newCompositeSequence.getName() + "\t" + collapsed.getSequence() + "\n" );
+            }
+            // END DEBUG CODE
+
             sequenceBuffer.add( collapsed );
             if ( csBuffer.containsKey( sequenceName ) )
                 throw new IllegalArgumentException( "All probes must have unique names" );
@@ -188,6 +194,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 percent = this.updateProgress( total, done, percent );
             }
         }
+
         this.flushBuffer( bioSequences, sequenceBuffer, csBuffer );
         this.updateProgress( total, done, percent );
 
@@ -548,7 +555,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * Update a single sequence in the system.
      *
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *              information in the BioSequence will be overwritten.
+     *        information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
     @Override
@@ -566,7 +573,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * If there are 0 or more than one taxon on the array design throw an error as this programme can only be run for 1
      * taxon at a time if processing from a file.
      *
-     * @param taxon       Taxon as passed in on the command line
+     * @param taxon Taxon as passed in on the command line
      * @param arrayDesign Array design to process
      * @return taxon Taxon to process
      * @throws IllegalArgumentException Thrown when there is not exactly 1 taxon.
@@ -628,10 +635,10 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * @param found a new (non-persistent) biosequence that can be used to create a new entry or update an existing one
-     *              with the sequence. The sequence would have come from Genbank.
+     *        with the sequence. The sequence would have come from Genbank.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *              information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if the
-     *              actual sequence information was missing in our DB and 'found' has a sequence.
+     *        information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if the
+     *        actual sequence information was missing in our DB and 'found' has a sequence.
      * @return persistent BioSequence.
      */
     private BioSequence createOrUpdateGenbankSequence( BioSequence found, boolean force ) {
@@ -728,7 +735,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * Copy sequences into the original versions, or create new sequences in the DB, as needed.
      *
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *              information in the BioSequence will be overwritten.
+     *        information in the BioSequence will be overwritten.
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Collection<String> accessionsToFetch,
@@ -750,11 +757,11 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     /**
      * Copy sequences into the original versions, or create new sequences in the DB, as needed.
      *
-     * @param accessionsToFetch  accessions that we need to fill in
+     * @param accessionsToFetch accessions that we need to fill in
      * @param retrievedSequences candidate sequence information for copying into the database.
-     * @param force              If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *                           information in the BioSequence will be overwritten.
-     * @param taxa               Representing taxa on array
+     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
+     * @param taxa Representing taxa on array
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
@@ -798,8 +805,23 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return found;
     }
 
+    /**
+     * for affymetrix processing
+     * 
+     * @param bioSequences
+     * @param sequenceBuffer
+     * @param csBuffer
+     */
     private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
             Map<String, CompositeSequence> csBuffer ) {
+        /*
+         * NOTE because 'findOrCreate' doesn't check the actual sequence (that would cause other problems) if we're
+         * trying to correct a problem with the sequences (e.g. misassembly from affymetrix probes), this won't update
+         * them. This is a rare but annoying circumstance. The best solution would be to force the sequence to be
+         * updated in any found BioSequences, which would require rewriting this quite substantially. The workaround is
+         * to delete the sequences from the database
+         * manually.
+         */
         Collection<BioSequence> newOnes = bioSequenceService.findOrCreate( sequenceBuffer );
         bioSequences.addAll( newOnes );
         for ( BioSequence sequence : newOnes ) {
@@ -904,13 +926,11 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     }
 
     private void notifyAboutMissingSequences( int numWithNoSequence, CompositeSequence compositeSequence ) {
-        if ( numWithNoSequence
-                == ArrayDesignSequenceProcessingServiceImpl.MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
+        if ( numWithNoSequence == ArrayDesignSequenceProcessingServiceImpl.MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
             ArrayDesignSequenceProcessingServiceImpl.log.warn( "More than "
                     + ArrayDesignSequenceProcessingServiceImpl.MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS
                     + " compositeSequences do not have" + " biologicalCharacteristics, skipping further details." );
-        } else if ( numWithNoSequence
-                < ArrayDesignSequenceProcessingServiceImpl.MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
+        } else if ( numWithNoSequence < ArrayDesignSequenceProcessingServiceImpl.MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
             ArrayDesignSequenceProcessingServiceImpl.log
                     .warn( "No sequence match for " + compositeSequence + " (Description=" + compositeSequence
                             .getDescription() + "); it will not have a biologicalCharacteristic!" );
