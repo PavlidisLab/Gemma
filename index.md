@@ -75,7 +75,7 @@ If you find a problem or need help, you can file a new github issue, or contact 
 
 |   |   |   |   |
 | :---: | :---: | :---: | :---: |
-| <img src="{{site.imgurl}}/logo_NIH.png" alt="National Insitute of Health"/> | <img src="{{site.imgurl}}/logo_CFI.png" alt="Canada foundation for innovation"/> | <img src="{{site.imgurl}}/logo_MSFHR.png" alt="Michael Smith Foundation for Health Research"/> | <img src="{{site.imgurl}}/logo_NDN.png" alt="Neuro dev net"/> | 
+| [<img src="{{site.imgurl}}/logo_NIH.png" alt="National Insitute of Health"/>](https://www.nih.gov/) | <img src="{{site.imgurl}}/logo_CFI.png" alt="Canada foundation for innovation"/> | <img src="{{site.imgurl}}/logo_MSFHR.png" alt="Michael Smith Foundation for Health Research"/> | <img src="{{site.imgurl}}/logo_NDN.png" alt="Neuro dev net"/> | 
 | (NIGMS/NIMH) Grant: GM0769990 | <img src="{{site.imgurl}}/logo_CIHR.png" alt="Canadian Institute of Health Research"/> |  <img src="{{site.imgurl}}/logo_GBC.gif" alt="Genome British Columbia"/> | <img src="{{site.imgurl}}/logo_NSERC.png" alt="NSERC"/> |  
 
 
