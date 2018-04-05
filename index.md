@@ -65,10 +65,75 @@ The API has its own interactive documentation, where you will find all necessary
 programatically. 
 Please follow **[this link to the RESTful API documentation](https://gemma.msl.ubc.ca/resources/restapidocs/)**
 
-## Contact & Credits
-If you use any of Gemma tools for your research, please cite:
-> *[Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.](http://dx.doi.org/doi:10.1093/bioinformatics/bts430)*
+## Contact
 
 If you find a problem or need help, you can file a new github issue, or contact us at [pavlab-support@msl.ubc.ca](mailto:pavlab-support@msl.ubc.ca).
+
+## Credits
+
+### Financial support
+
+|   |   |   |   |
+| :---: | :---: | :---: | :---: |
+| <img src="{{site.baseurl}}/logo_NIH.png" alt="National Insitute of Health"/> | <img src="{{site.baseurl}}/logo_CFI.png" alt="Canada foundation for innovation"/> | <img src="{{site.baseurl}}/logo_MSFHR.png" alt="Michael Smith Foundation for Health Research"/> | <img src="{{site.baseurl}}/logo_NDN.png" alt="Neuro dev net"/> | 
+| (NIGMS/NIMH) Grant: GM0769990 | <img src="{{site.baseurl}}/logo_CIHR.png" alt="Canadian Institute of Health Research"/> |  <img src="{{site.baseurl}}/logo_GBC.png" alt="Genome British Columbia"/> | <img src="{{site.baseurl}}/logo_NSERC.png" alt="NSERC"/> |  
+
+
+
+### Publications
+
+**If you use any of Gemma tools for your research, please cite:**
+> *[Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012.](http://dx.doi.org/doi:10.1093/bioinformatics/bts430)*
+
+**Other publications**
+>[Lee, H.K., et al., Coexpression analysis of human genes across many microarray data sets. Genome Research, 2004. 14: p. 1085-1094.](https://www.ncbi.nlm.nih.gov/pubmed/15173114?dopt=Abstract)
+
+### Contributors
+
+**Project lead**
+[Paul Pavlidis, Ph.D.](http://pavlab.msl.ubc.ca/paul-pavlidis/).
+
+**Developers**
+Matthew Jacobson, Justin Leong, Manuel Belmadani, Stepan Tesar.
+
+**Data curation**
+Brenna Li, James Liu, Patrick Savage, Nathan Holmes, Jenni Hantula, Nathan Eveleigh, John Choi, Artemis Lai, Cathy Kwok, Celia Siu, Luchia Tseng, Lydia Xu, Mark Lee, Olivia Marais, Roland Au, Suzanne Lane, Tianna Koreman, Willie Kwok, Yiqi Chen,
+Brandown Huntington, John Phan, Jimmy Liu, Cindy-Lee Crichlow, Sophia Ly, Ellie Hogan
+
+**System administration**
+Kevin Griffin, Stephen Macdonald, Dima Vavilov
+
+#### Research
+The following people have contributed code, algorithms, implementations of algorithms, or other computational work relating to Gemma.
+
+- Elodie Portales-Casamar – _Phenocarta_
+- Jesse Gillis – _Coexpression analysis_
+- Leon French – _Ontologies and annotations_
+- Meeta Mistry – _Gene Ontology metrics, differential expression_
+- Raymond Lim – _Differential expression meta-analysis_
+- Vaneet Lotay – _Coexpression algorithm testing_
+- Xiang Wan – _Coexpression analysis_
+
+#### Alumni
+- Anton Zoubarev – Lead programmer (2010 – 2014)
+- Cameron McDonald – Programmer (2011 – 2014)
+- Frances Lui – Programmer (2011 – 2013)
+- Nicolas St-Georges – Programmer (2011 – 2014)
+- Gavin Ha – Undergraduate research assistant – web services (2008)
+- Joseph “JR” Santos – Programmer (2006-2007)
+- Kelsey Hamer – Lead programmer (2006-2010)
+- Kiran Keshav – Developer (2005) and consultant
+- Louise Donnison – Developer (2009-2010)
+- Luke Mccarthy – Programmer (2007- Feb 2008)
+- Thea Van Rossum – Programmer (2011 – 2012)
+- Celia Siu – Systems
+- Hugh Brown – Systems
+
+Other contributers to early stages of Gemma include David Quigley, Anshu Sinha and Gozde Cozen. Gemma’s precursor was [https://home.pavlab.msl.ubc.ca/tmm/](TMM), which was developed by Homin Lee, Jon Sajdak, Jie Qin and Amy Hsu. Martin Krzywinski has provided helpful advice on visualization.
+
+### Data sources
+We are indebted to the many researchers who have made data publicly available. Lists of published papers that relate to the data included in Gemma are available [https://gemma.msl.ubc.ca/bibRef/showAllEeBibRefs.html](here (full list)) and [https://gemma.msl.ubc.ca/bibRef/searchBibRefs.html](here (search)) . If your data is in Gemma, and your paper is not listed, please let us know.
+
+
 
 Copyright © University of British Columbia
