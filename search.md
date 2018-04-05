@@ -12,7 +12,7 @@
 ### Setting up the query
 #### 1. Select whether you want to search for Differential Expression or Coexpression. See figure 1 below.
 
-{% include image.html url="/assets/img/search1.png" description="Figure 1 - Initial state of the expression search form" %}
+{% include image.html url="/search1.png" description="Figure 1 - Initial state of the expression search form" %}
 
 #### 2. Select genes to find differential expression data for. 
 This can be done by selecting a pre-made group or by searching for experiments and using the results.
@@ -44,7 +44,7 @@ Once you have made a selection, you can add to it using the search boxes in the 
 
 To remove elements from your selection or to save your selection, use the edit/save icon in the top right of the preview areas (See figure 2, box A).
 
-{% include image.html url="/assets/img/search2.png" description="Figure 2 - post-selection state of the expression search form" %}
+{% include image.html url="/search2.png" description="Figure 2 - post-selection state of the expression search form" %}
 
 For example, let’s say you search for "hippocampus" and select the "hippocampus development" Gene Ontology (GO) group. The gene preview pane now shows you a preview of the genes you have selected. If you want to see all the genes included in this GO group, you can press the "# more…" link at the bottom of the selection pane. (See figure 2, box B) This will bring up a list of the genes in your selection. You can use the "X" buttons on every line to remove genes from your selection or use the search box at the top to add genes.
 
@@ -72,7 +72,7 @@ For more details, click on the "Color Legend" button in the top toolbar.
 
 Clicking on a cell brings up a heatmap of the expression levels for that gene and condition, broken down by probe and factor value (see figure 3, box A).
 
-{% include image.html url="/assets/img/search3.png" description="Figure 3 - Differential Expression Visualisation" %}
+{% include image.html url="/search3.png" description="Figure 3 - Differential Expression Visualisation" %}
 
 > **Condition enrichment:** This is a p-value associated with hypergeometric test (or binomial approximation). It shows how enriched for differential expression your set of genes is with respect to all other genes under that condition.
 
@@ -129,4 +129,4 @@ If the results of this large search is over 2000 results, we trim the result set
 
 Please use the Gemma web services if you wish to retrieve a more complete list of search results.
 
-{% include image.html url="/assets/img/search4.png" description="Figure 4 - Coexpression results Visualisation" %}
+{% include image.html url="/search4.png" description="Figure 4 - Coexpression results Visualisation" %}
