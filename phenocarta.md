@@ -1,6 +1,6 @@
 # Phenocarta
 
-## Table of content
+## Table of contents
 
 - [About](#about)
 - [Data sources](#data-sources)
