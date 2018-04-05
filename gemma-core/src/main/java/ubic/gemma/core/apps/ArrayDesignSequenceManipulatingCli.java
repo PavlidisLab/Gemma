@@ -123,8 +123,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     /**
      * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
-     * design. In the case of subsumption, this only works if the array design has been either analyzed for
-     * subsuming status. (the analysis is not done as part of this call).
+     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
+     *         subsuming status. (the analysis is not done as part of this call).
      */
     boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
@@ -142,30 +142,17 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     /**
      * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
      * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
-     * analysis was run before skipIfLastRunLaterThan. false otherwise.
+     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
      */
     boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
-        if ( skipIfLastRunLaterThan == null )
-            return true;
-        if ( !autoSeek )
-            return true;
-
-        ArrayDesign subsumingArrayDesign = arrayDesign.getSubsumingArrayDesign();
-
-        if ( subsumingArrayDesign != null ) {
-            boolean needToRunSubsumer = this.needToRun( skipIfLastRunLaterThan, subsumingArrayDesign, eventClass );
-            if ( !needToRunSubsumer ) {
-                AbstractCLI.log.info( "Subsumer  " + subsumingArrayDesign + " was run more recently than "
-                        + skipIfLastRunLaterThan );
-                return false;
-            }
-        }
-
         if ( autoSeek ) {
             return this.needToAutoRun( arrayDesign, eventClass );
         }
+
+        if ( skipIfLastRunLaterThan == null )
+            return true;
 
         List<AuditEvent> events = this.getEvents( arrayDesign, eventClass );
         if ( events.size() == 0 ) {
@@ -234,8 +221,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * @return whether the array design needs updating based on the criteria outlined above.
      */
     private boolean needToAutoRun( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        if ( !autoSeek )
+        if ( !autoSeek ) {
             return false;
+        }
 
         List<AuditEvent> eventsOfCurrentType = this.getEvents( arrayDesign, eventClass );
         List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
@@ -267,7 +255,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
             // we only care about ArrayDesignAnalysisEvent events.
             if ( !ArrayDesignAnalysisEvent.class.isAssignableFrom( currentEventClass ) ) {
-                AbstractCLI.log.debug( currentEventClass.getSimpleName() + " is not of interest" );
                 continue;
             }
 
@@ -281,7 +268,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                     .getEventType().getClass().getSimpleName() + " (OK)" );
 
         }
-        AbstractCLI.log.info( arrayDesign + " does not need an update" );
+        AbstractCLI.log.debug( arrayDesign + " does not need an update" );
         return false;
     }
 
