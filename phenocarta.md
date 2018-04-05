@@ -17,11 +17,14 @@ Previously known as _Neurocarta_, Phenocarta is a knowledgebase that consolidate
 
 Phenocarta is a one-stop shop for researchers looking for candidate genes for any disorder of interest. In Phenocarta, they can review the evidence linking genes to phenotypes and filter out the evidence they’re not interested in. In addition, researchers can enter their own annotations from their experiments and analyze them in the context of existing public annotations.
 
-The phenocarta tool has its own [UI within the Gemma Website](https://gemma.msl.ubc.ca/phenotypes.html).
+**The phenocarta tool has its own [UI within the Gemma Website](https://gemma.msl.ubc.ca/phenotypes.html).**
 
 **Publication:**
 >[Portales-Casamar, E., et al., Phenocarta: aggregating and sharing disease-gene relations for the neurosciences. BMC Genomics. 2013 Feb 26;14(1):129.](http://www.biomedcentral.com/1471-2164/14/129/abstract)
 
+## Data download
+
+Phenocarta data are regularly exported into tab delimited files that can be downloaded from [here](https://gemma.msl.ubc.ca/phenocarta/LatestEvidenceExport/).
 
 ## Data sources
 
