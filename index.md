@@ -1,6 +1,22 @@
 # Overview
 Gemma is a set of tools for genomics data meta-analysis, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential expression results.
 
+This webpage serves as an introduction and end-user documentation.
+
+## Table of Contents
+- [Key features:](#key-features-)
+- [Important Q&A](#important-q-a)
+- [Glossary](#glossary)
+- [Terms and Conditions](#terms-and-conditions)
+- [Using the Gemma website](#using-the-gemma-website)
+- [RESTful API](#restful-api)
+- [Contact](#contact)
+- [Credits](#credits)
+  * [Financial support](#financial-support)
+  * [Publications](#publications)
+  * [Contributors](#contributors)
+  * [Data sources](#data-sources)
+
 ## Key features:
 - Re-annotated expression platforms at the sequence level, which allows for more consistent cross-platform comparisons.
   + You can read about the full **[data curation process here](curation.md)**.
