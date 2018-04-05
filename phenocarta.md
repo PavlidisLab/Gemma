@@ -3,12 +3,12 @@
 ## Table of content
 
 - [About](#about)
-  * [Data sources](#data-sources)
-  * [Extraction](#extraction)
-  * [Disease mapping from external sources to Disease Ontology (DO) terminology](#disease-mapping-from-external-sources-to-disease-ontology--do--terminology)
-  * [Manual curation of the literature](#manual-curation-of-the-literature)
-  * [References](#references)
-  * [Abbreviations](#abbreviations)
+- [Data sources](#data-sources)
+- [Extraction](#extraction)
+- [Disease mapping from external sources to Disease Ontology (DO) terminology](#disease-mapping-from-external-sources-to-disease-ontology--do--terminology)
+- [Manual curation of the literature](#manual-curation-of-the-literature)
+- [References](#references)
+- [Abbreviations](#abbreviations)
 
 ## About
 
