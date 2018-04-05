@@ -1,4 +1,15 @@
-## Experimental Designs
+# Experimental Designs
+
+## Table of contents
+
+- [Experimental Designs](#experimental-designs)
+  * [About](#about)
+  * [Browsing the design](#browsing-the-design)
+  * [Creating a design for your experiments](#creating-a-design-for-your-experiments)
+    + [File upload](#file-upload)
+    + [Editing through the website UI](#editing-through-the-website-ui)
+
+## About
 
 An experimental design describes the characteristics of each sample as is relevant to the analysis of the experiment. Experimental designs are not populated for all studies, as this has to be done manually in many cases. Some studies were annotated by GEO curators and those annotations appear in Gemma.
 
