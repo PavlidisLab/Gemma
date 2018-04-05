@@ -1,3 +1,5 @@
+# Coexpression and Differential Expression search
+
 ## Table of contents
 
 - [Running a Search](#running-a-search)
