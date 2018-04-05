@@ -1,7 +1,7 @@
-## Overview
+# Overview
 Gemma is a set of tools for genomics data meta-analysis, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential expression results.
 
-### Key features:
+## Key features:
 - Re-annotated expression platforms at the sequence level, which allows for more consistent cross-platform comparisons.
   + You can read about the full **[data curation process here](curation.md)**.
 - Support for a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays and RNA-seq data.
@@ -11,7 +11,7 @@ Gemma is a set of tools for genomics data meta-analysis, currently primarily tar
 - Registration is optional, and unregistered users can access all public data.
 - Registered users have the option to securely upload their own data, which can be privately shared with other users of their choice, and to create and save gene sets or dataset groups for ease of use in queries.
 
-### Important Q&A
+## Important Q&A
 ##### How do you pronounce ‘Gemma’?
 The ‘G’ is soft, as in ‘general’.
 
@@ -24,7 +24,7 @@ Yes, sometimes. This is a motivation for performing meta-analyses: to look for r
 ##### Isn’t data quality a problem?
 Yes; see the question about noisy data. We have been working hard to ensure that data sets we use for analysis are of high quality, or to “clean up” those that have problems. One problem we have observed is the presence of outlier samples, which are flagged and removed. Batch correction is implemented where possible and we analyze data from raw sources (CEL files or FASTQ files) where possible.
 
-### Glossary
+## Glossary
 - **Array Design, Platform**: A microarray design. For example, the HG-U133A is a specific Array Design.
 - **BioMaterial**: An RNA sample, along with the description of where and how it was obtained and prepared. For data collected on ratiometric arrays, this may reflect a combination of two RNA samples, one of which was used as a reference. (Near-synonym: **sample**)
 - **BioAssay, Assay**: The combination of a BioMaterial with an ArrayDesign Represents a RNA sample run on a single microarray. (Near-synonym: **sample**)
@@ -74,12 +74,9 @@ If you find a problem or need help, you can file a new github issue, or contact 
 
 ### Financial support
 
-
 | [<img src="{{site.imgurl}}/logo_NIH.png" alt="National Insitute of Health"/>](https://www.nih.gov/) | [<img src="{{site.imgurl}}/logo_CFI.png" alt="Canada foundation for innovation"/>](https://www.innovation.ca/) | [<img src="{{site.imgurl}}/logo_MSFHR.jpg" alt="Michael Smith Foundation for Health Research"/>](http://www.msfhr.org/) | [<img src="{{site.imgurl}}/logo_NDN.png" alt="Neuro dev net"/>](http://www.neurodevnet.ca/) | 
 | :---: | :---: | :---: | :---: |
 | (NIGMS/NIMH) Grant: GM0769990 | [<img src="{{site.imgurl}}/logo_CIHR.png" alt="Canadian Institute of Health Research"/>](http://www.cihr-irsc.gc.ca/) |  [<img src="{{site.imgurl}}/logo_GBC.gif" alt="Genome British Columbia"/>](https://www.genomebc.ca/) | [<img src="{{site.imgurl}}/logo_NSERC.png" alt="Natural Sciences and Engineering Research Council of Canada"/>](http://www.nserc-crsng.gc.ca/) |
-
-
 
 ### Publications
 
