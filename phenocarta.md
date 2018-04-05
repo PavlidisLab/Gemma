@@ -1,4 +1,17 @@
-# About Phenocarta
+# Phenocarta
+
+## Table of content
+
+- [About](#about)
+  * [Data sources](#data-sources)
+  * [Extraction](#extraction)
+    + [Disease-specific databases:](#disease-specific-databases-)
+  * [Disease mapping from external sources to Disease Ontology (DO) terminology](#disease-mapping-from-external-sources-to-disease-ontology--do--terminology)
+  * [Manual curation of the literature](#manual-curation-of-the-literature)
+  * [References](#references)
+  * [Abbreviations](#abbreviations)
+
+## About
 
 Previously known as _Neurocarta_, Phenocarta is a knowledgebase that consolidates information on genes and phenotypes across multiple resources and allows tracking and exploring of the associations. The system enables automatic and manual curation of evidence supporting each association, as well as user-enabled entry of their own annotations. Phenotypes are recorded using controlled vocabularies such as the Disease Ontology to facilitate computational inference and linking to external data sources. The gene-to-phenotype associations are filtered by stringent criteria to focus on the annotations most likely to be relevant. Phenocarta is constantly growing and currently holds more than 40,000 lines of evidence linking over 9,000 genes to 2,000 different phenotypes. In addition to the data coming from external resources, Phenocarta includes a set of in-house manually curated annotations of neurodevelopmental disorders.
 
@@ -65,22 +78,22 @@ If the authors describe an endophenotype that is related to the disease, the gen
 
 ## References
 
-1. Amberger J, Bocchini CA, Scott AF, Hamosh A. McKusick’s Online Mendelian Inheritance in Man (OMIM). Nucleic Acids Res. 2009, 37: D793–796.
-2. Laulederkind SJF, Tutaj M, Shimoyama M, Hayman GT, Lowry TF, Nigam R, Petri V, Smith JR, Wang S-J, de Pons J, Dwinell MR, Jacob HJ. Ontology searching and browsing at the Rat Genome Database. Database 2012, 2012: bas016–bas016.
-3. Davis AP, King BL, Mockus S, Murphy CG, Saraceni-Richards C, Rosenstein M, Wiegers T, Mattingly CJ. The Comparative Toxicogenomics Database: update 2011. Nucleic Acids Res. 2011, 39: D1067–1072.
-4. Banerjee-Basu S, Packer A. SFARI Gene: an evolving database for the autism research community. Dis Model Mech 2010, 3: 133–135.
-5. Lill CM, Roehr JT, McQueen MB, Kavvoura FK, Bagade S, Schjeide B-MM, Schjeide LM, Meissner E, Zauft U, Allen NC, Liu T, Schilling M, Anderson KJ, Beecham G, Berg D, Biernacka JM, Brice A, DeStefano AL, Do CB, Eriksson N, Factor SA, Farrer MJ, Foroud T, Gasser T, Hamza T, Hardy JA, Heutink P, Hill-Burns EM, Klein C, Latourelle JC, Maraganore DM, Martin ER, Martinez M, Myers RH, Nalls MA, Pankratz N, Payami H, Satake W, Scott WK, Sharma M, Singleton AB, Stefansson K, Toda T, Tung JY, Vance J, Wood NW, Zabetian CP, Young P, Tanzi RE, Khoury MJ, Zipp F, Lehrach H, Ioannidis JPA, Bertram L. Comprehensive research synopsis and systematic meta-analyses in Parkinson’s disease genetics: The PDGene database. PLoS Genet. 2012, 8: e1002548.
-6. Bertram L, McQueen MB, Mullin K, Blacker D, Tanzi RE. Systematic meta-analyses of Alzheimer disease genetic association studies: the AlzGene database. Nat. Genet. 2007, 39: 17–23.
-7. Lill CM, Roehr JT, McQueen MB, Bagade S, Schjeide BM, Zipp F, Bertram L. The MSGene Database. Alzheimer Research Forum. Available at http://www.msgene.org/.
-8. Zhang L, Chang S, Li Z, Zhang K, Du Y, Ott J, Wang J. ADHDgene: a genetic database for attention deficit hyperactivity disorder. Nucleic Acids Research 2011, 40: D1003–D1009.
-9. Abel O, Powell JF, Andersen PM, Al-Chalabi A: ALSoD: A user-friendly online bioinformatics tool for amyotrophic lateral sclerosis genetics. Hum. Mutat. 2012, 33:1345–1351.
-10. http://gfuncpathdb.ucdenver.edu/iddrc/iddrc/home.php
-11. Tan NCK, Berkovic SF: The Epilepsy Genetic Association Database (epiGAD): analysis of 165 genetic association studies, 1996-2008. Epilepsia 2010, 51:686–689.
-12. Ioannidis JPA, Boffetta P, Little J, O’Brien TR, Uitterlinden AG, Vineis P, Balding DJ, Chokkalingam A, Dolan SM, Flanders WD, Higgins JPT, McCarthy MI, McDermott DH, Page GP, Rebbeck TR, Seminara D, Khoury MJ: Assessment of cumulative evidence on genetic associations: interim guidelines. Int J Epidemiol 2008, 37:120–132.
-13. Khoury MJ, Bertram L, Boffetta P, Butterworth AS, Chanock SJ, Dolan SM, Fortier I, Garcia-Closas M, Gwinn M, Higgins JPT, Janssens ACJW, Ostell J, Owen RP, Pagon RA, Rebbeck TR, Rothman N, Bernstein JL, Burton PR, Campbell H, Chockalingam A, Furberg H, Little J, O’Brien TR, Seminara D, Vineis P, Winn DM, Yu W, Ioannidis JPA: Genome-wide association studies, field synopses, and the development of the knowledge base on genetic variation and human diseases. Am. J. Epidemiol. 2009, 170:269–279.
-14. Ioannidis JPA: Effect of formal statistical significance on the credibility of observational associations. Am. J. Epidemiol. 2008, 168:374–383; discussion 384–390.
-15. Stephens M, Balding DJ: Bayesian statistical methods for genetic association studies. Nat. Rev. Genet. 2009, 10:681–690.
-16. Hindorff LA, Sethupathy P, Junkins HA, Ramos EM, Mehta JP, Collins FS, Manolio TA: Potential etiologic and functional implications of genome-wide association loci for human diseases and traits. Proc Natl Acad Sci U S A. 2009, 106:9362-7.
+1. Amberger J, Bocchini CA, Scott AF, Hamosh A. **McKusick’s Online Mendelian Inheritance in Man (OMIM)**. _Nucleic Acids Res_. 2009, **37**: D793–796.
+2. Laulederkind SJF, Tutaj M, Shimoyama M, Hayman GT, Lowry TF, Nigam R, Petri V, Smith JR, Wang S-J, de Pons J, Dwinell MR, Jacob HJ. **Ontology searching and browsing at the Rat Genome Database**. _Database_ 2012, **2012**: bas016–bas016.
+3. Davis AP, King BL, Mockus S, Murphy CG, Saraceni-Richards C, Rosenstein M, Wiegers T, Mattingly CJ. **The Comparative Toxicogenomics Database: update 2011**. __Nucleic Acids Res__. 2011, **39**: D1067–1072.
+4. Banerjee-Basu S, Packer A. **SFARI Gene: an evolving database for the autism research community**. _Dis Model Mech_ 2010, **3**: 133–135.
+5. Lill CM, Roehr JT, McQueen MB, Kavvoura FK, Bagade S, Schjeide B-MM, Schjeide LM, Meissner E, Zauft U, Allen NC, Liu T, Schilling M, Anderson KJ, Beecham G, Berg D, Biernacka JM, Brice A, DeStefano AL, Do CB, Eriksson N, Factor SA, Farrer MJ, Foroud T, Gasser T, Hamza T, Hardy JA, Heutink P, Hill-Burns EM, Klein C, Latourelle JC, Maraganore DM, Martin ER, Martinez M, Myers RH, Nalls MA, Pankratz N, Payami H, Satake W, Scott WK, Sharma M, Singleton AB, Stefansson K, Toda T, Tung JY, Vance J, Wood NW, Zabetian CP, Young P, Tanzi RE, Khoury MJ, Zipp F, Lehrach H, Ioannidis JPA, Bertram L. **Comprehensive research synopsis and systematic meta-analyses in Parkinson’s disease genetics: The PDGene database**. _PLoS Genet_. 2012, **8**: e1002548.
+6. Bertram L, McQueen MB, Mullin K, Blacker D, Tanzi RE. **Systematic meta-analyses of Alzheimer disease genetic association studies: the AlzGene database**. _Nat. Genet._ 2007, **39**: 17–23.
+7. Lill CM, Roehr JT, McQueen MB, Bagade S, Schjeide BM, Zipp F, Bertram L. **The MSGene Database**. Alzheimer Research Forum. Available at [http://www.msgene.org/].
+8. Zhang L, Chang S, Li Z, Zhang K, Du Y, Ott J, Wang J. **ADHDgene: a genetic database for attention deficit hyperactivity disorder**. _Nucleic Acids Research_ 2011, **40**: D1003–D1009.
+9. Abel O, Powell JF, Andersen PM, Al-Chalabi A: **ALSoD: A user-friendly online bioinformatics tool for amyotrophic lateral sclerosis genetics**. _Hum. Mutat_. 2012, **33**:1345–1351.
+10. (http://gfuncpathdb.ucdenver.edu/iddrc/iddrc/home.php)
+11. Tan NCK, Berkovic SF: **The Epilepsy Genetic Association Database (epiGAD): analysis of 165 genetic association studies, 1996-2008**. _Epilepsia_ 2010, **51**:686–689.
+12. Ioannidis JPA, Boffetta P, Little J, O’Brien TR, Uitterlinden AG, Vineis P, Balding DJ, Chokkalingam A, Dolan SM, Flanders WD, Higgins JPT, McCarthy MI, McDermott DH, Page GP, Rebbeck TR, Seminara D, Khoury MJ: **Assessment of cumulative evidence on genetic associations: interim guidelines**. _Int J Epidemiol_ 2008, **37**:120–132.
+13. Khoury MJ, Bertram L, Boffetta P, Butterworth AS, Chanock SJ, Dolan SM, Fortier I, Garcia-Closas M, Gwinn M, Higgins JPT, Janssens ACJW, Ostell J, Owen RP, Pagon RA, Rebbeck TR, Rothman N, Bernstein JL, Burton PR, Campbell H, Chockalingam A, Furberg H, Little J, O’Brien TR, Seminara D, Vineis P, Winn DM, Yu W, Ioannidis JPA: **Genome-wide association studies, field synopses, and the development of the knowledge base on genetic variation and human diseases**. _Am. J. Epidemiol_. 2009, **170**:269–279.
+14. Ioannidis JPA: **Effect of formal statistical significance on the credibility of observational associations**. _Am. J. Epidemiol_. 2008, **168**:374–383; discussion 384–390.
+15. Stephens M, Balding DJ: **Bayesian statistical methods for genetic association studies**. _Nat. Rev. Genet_. 2009, **10**:681–690.
+16. Hindorff LA, Sethupathy P, Junkins HA, Ramos EM, Mehta JP, Collins FS, Manolio TA: **Potential etiologic and functional implications of genome-wide association loci for human diseases and traits**. _Proc Natl Acad Sci U S A_. 2009, **106**:9362-7.
 
 ## Abbreviations
 - **OMIM** - Online Mendelian Inheritance in Man
@@ -98,5 +111,3 @@ If the authors describe an endophenotype that is related to the disease, the gen
 - **ID** - Intellectual Disability
 - **epiGAD** - Epilepsy Genetic Association Database
 - **ALSoD** - Amyotrophic Lateral Sclerosis Online Genetics Database
-
-
