@@ -5,7 +5,6 @@
 - [About](#about)
   * [Data sources](#data-sources)
   * [Extraction](#extraction)
-    + [Disease-specific databases:](#disease-specific-databases-)
   * [Disease mapping from external sources to Disease Ontology (DO) terminology](#disease-mapping-from-external-sources-to-disease-ontology--do--terminology)
   * [Manual curation of the literature](#manual-curation-of-the-literature)
   * [References](#references)
