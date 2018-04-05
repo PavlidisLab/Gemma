@@ -1,6 +1,4 @@
-#Gemma code repository
-
-[![Build Status](https://jenkins.pavlab.msl.ubc.ca/buildStatus/icon?job=Gemma)](https://jenkins.pavlab.msl.ubc.ca/job/Gemma/)
+# Gemma code repository
 
 If you are looking for the public instance of Gemma, you can either access it through the
 [Gemma Website](https://gemma.msl.ubc.ca/), or check out our [RESTful API](https://gemma.msl.ubc.ca/resources/restapidocs/).
