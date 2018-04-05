@@ -36,6 +36,7 @@ The SFARI<sup>[4]</sup> annotation files (autism-gene-dataset.csv, gene-score.cs
 The PDGene<sup>[5]</sup>, AlzGene<sup>[6]</sup>, and MSGene<sup>[7]</sup> “Top Results” are extracted from their respective websites. All three databases assess their results for their epidemiological credibility using two methods: 
 1. The HuGENet interim criteria for the cumulative assessment of genetic associations<sup>[12, 13]</sup>
 2. Bayesian analyses<sup>[14, 15]</sup>. 
+
 Only meta-analysis results with P-values <0.00001 are considered.The “Hot gene list” from ADHDgene<sup>[8]</sup> is extracted from their website. This list includes all genes that have been identified in at least five independent studies. The ALSoD<sup>[9]</sup> top 20 genes are identified through the credibility score analysis provided on their website. The genes are ranked by number of affected patients and by number of mutations per gene, and the ranks are summed to determine the final rank for each gene. 
 
 For the IDGene<sup>[10]</sup> and EpiGAD<sup>[11]</sup> databases, we wanted to extract more information than what was readily accessible through the websites. We manually reviewed the genes listed in each database and used that information as a seed for targeted PubMed searches and manual curation of relevant publications.
@@ -55,6 +56,7 @@ While the Phenocarta framework is generic, our curation team is focusing on anno
 3. “Fetal Alcohol Spectrum Disorder” (FASD; DOID_0050696); 
 4. “Epilepsy” (DOID_1826); and 
 5. “Intellectual disability” (DOID_1059). 
+
 When necessary, phenotype descriptions were complemented with more descriptive Human or Mammalian Phenotype Ontology terms such as “Memory impairment” (HP_0002354), “EEG abnormality” (HP_0002353), or “decreased brain size” (MP_0000774). Curators review the literature using PubMed searches across all fields (that is, the default PubMed setting) using queries such as “epilepsy” AND “genetics”. We avoid making searches that are gene-centric, except as a secondary mechanism to find additional citations on a gene-phenotype relationship identified through initial screening. When possible, review papers are used to identify primary research papers, which are then curated as “Experimental Type Evidence”. 
 
 The curators record details about the experiment using controlled vocabularies, categorized as (for example) “Bio Source”, “Experiment Design”, or “Developmental Stage”. The criterion for inclusion is an experimentally-supported statement linking the gene to the phenotype. The exception is genome-wide studies where the results were not yet confirmed by follow-up experiments. The curated papers involve a wide variety of experiments including both animal models and human studies. For the former, if the authors describe the animal model as a specific model for the disorder of interest, the curators associate the gene studied in the paper directly to the human disease. 
