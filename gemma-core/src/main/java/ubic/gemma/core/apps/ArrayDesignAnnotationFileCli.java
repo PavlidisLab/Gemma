@@ -360,7 +360,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 errorObjects.add( ad + " " + e.getMessage() );
                 continue;
             }
-            successObjects.add( ad );
         }
 
         this.summarizeProcessing();
@@ -590,6 +589,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         } else {
             AbstractCLI.log.info( af + " exists, will not overwrite" );
         }
+
+        successObjects.add( ad );
+
     }
 
     private void waitForGeneOntologyReady() {
