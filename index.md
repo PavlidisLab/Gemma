@@ -73,10 +73,10 @@ If you find a problem or need help, you can file a new github issue, or contact 
 
 ### Financial support
 
-|   |   |   |   |
+|       |       |       |       |
 | :---: | :---: | :---: | :---: |
 | [<img src="{{site.imgurl}}/logo_NIH.png" alt="National Insitute of Health"/>](https://www.nih.gov/) | [<img src="{{site.imgurl}}/logo_CFI.png" alt="Canada foundation for innovation"/>](https://www.innovation.ca/) | [<img src="{{site.imgurl}}/logo_MSFHR.jpg" alt="Michael Smith Foundation for Health Research"/>](http://www.msfhr.org/) | [<img src="{{site.imgurl}}/logo_NDN.png" alt="Neuro dev net"/>](http://www.neurodevnet.ca/) | 
-| (NIGMS/NIMH) Grant: GM0769990 | [<img src="{{site.imgurl}}/logo_CIHR.png" alt="Canadian Institute of Health Research"/>](http://www.cihr-irsc.gc.ca/) |  [<img src="{{site.imgurl}}/logo_GBC.gif" alt="Genome British Columbia"/>](https://www.genomebc.ca/) | [<img src="{{site.imgurl}}/logo_NSERC.png" alt="Natural Sciences and Engineering Research Council of Canada"/>](http://www.nserc-crsng.gc.ca/) |  
+| (NIGMS/NIMH) Grant: GM0769990 | [<img src="{{site.imgurl}}/logo_CIHR.png" alt="Canadian Institute of Health Research"/>](http://www.cihr-irsc.gc.ca/) |  [<img src="{{site.imgurl}}/logo_GBC.gif" alt="Genome British Columbia"/>](https://www.genomebc.ca/) | [<img src="{{site.imgurl}}/logo_NSERC.png" alt="Natural Sciences and Engineering Research Council of Canada"/>](http://www.nserc-crsng.gc.ca/) |
 
 
 
