@@ -75,8 +75,8 @@ If you find a problem or need help, you can file a new github issue, or contact 
 
 |   |   |   |   |
 | :---: | :---: | :---: | :---: |
-| <img src="{{site.baseurl}}/logo_NIH.png" alt="National Insitute of Health"/> | <img src="{{site.baseurl}}/logo_CFI.png" alt="Canada foundation for innovation"/> | <img src="{{site.baseurl}}/logo_MSFHR.png" alt="Michael Smith Foundation for Health Research"/> | <img src="{{site.baseurl}}/logo_NDN.png" alt="Neuro dev net"/> | 
-| (NIGMS/NIMH) Grant: GM0769990 | <img src="{{site.baseurl}}/logo_CIHR.png" alt="Canadian Institute of Health Research"/> |  <img src="{{site.baseurl}}/logo_GBC.png" alt="Genome British Columbia"/> | <img src="{{site.baseurl}}/logo_NSERC.png" alt="NSERC"/> |  
+| <img src="{{site.baseurl}}{{site.imgurl}}/logo_NIH.png" alt="National Insitute of Health"/> | <img src="{{site.baseurl}}{{site.imgurl}}/logo_CFI.png" alt="Canada foundation for innovation"/> | <img src="{{site.baseurl}}{{site.imgurl}}/logo_MSFHR.png" alt="Michael Smith Foundation for Health Research"/> | <img src="{{site.baseurl}}{{site.imgurl}}/logo_NDN.png" alt="Neuro dev net"/> | 
+| (NIGMS/NIMH) Grant: GM0769990 | <img src="{{site.baseurl}}{{site.imgurl}}/logo_CIHR.png" alt="Canadian Institute of Health Research"/> |  <img src="{{site.baseurl}}{{site.imgurl}}/logo_GBC.png" alt="Genome British Columbia"/> | <img src="{{site.baseurl}}{{site.imgurl}}/logo_NSERC.png" alt="NSERC"/> |  
 
 
 
