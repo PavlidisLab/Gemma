@@ -6,6 +6,7 @@ Gemma is a set of tools for genomics data meta-analysis, currently primarily tar
   + You can read about the full **[data curation process here](curation.md)**.
 - Support for a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one channel and ratiometric cDNA arrays and RNA-seq data.
 - Manual and automated annotation of datasets, that enhance usability of data.
+- Contains *Phenocarta*, which consolidates information on genes and phenotypes across multiple resources and allows tracking and exploring of the associations.
 - Access through the [Gemma website](https://gemma.msl.ubc.ca) provides a graphical interface for easy access.
 - Access through [RESTful web services](https://gemma.msl.ubc.ca/resources/restapidocs/) allows incorporation of data and computational capabilities of Gemma with any other software.
 - Registration is optional, and unregistered users can access all public data.
@@ -60,6 +61,7 @@ These guides will help you navigate and use the tools provided through the [gemm
 - **[Uploading your own experimental data](upload.md)**
 - **[Manging gene and experiment sets](gene_experiment_sets.md)**
 - **[Browsing and managing experimental designs](designs.md)**
+- **[About Phenocarta](phenocarta.md)**
 
 ## RESTful API
 The API has its own interactive documentation, where you will find all necessary information on how to interact with gemma
