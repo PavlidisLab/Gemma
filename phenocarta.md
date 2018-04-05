@@ -23,7 +23,7 @@ Phenocarta is a one-stop shop for researchers looking for candidate genes for an
 
 ## Data download
 
-Phenocarta data are regularly exported into tab delimited files that can be downloaded from [here](https://gemma.msl.ubc.ca/phenocarta/LatestEvidenceExport/).
+Phenocarta data are regularly exported as tab delimited files, which can be downloaded from [here](https://gemma.msl.ubc.ca/phenocarta/LatestEvidenceExport/).
 
 ## Data sources
 
