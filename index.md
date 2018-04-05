@@ -90,17 +90,17 @@ If you find a problem or need help, you can file a new github issue, or contact 
 
 ### Contributors
 
-**Project lead**
-[Paul Pavlidis, Ph.D.](http://pavlab.msl.ubc.ca/paul-pavlidis/).
+**Project lead:**
+[Paul Pavlidis, Ph.D.](http://pavlab.msl.ubc.ca/paul-pavlidis/)
 
-**Developers**
+**Developers:**
 Matthew Jacobson, Justin Leong, Manuel Belmadani, Stepan Tesar.
 
-**Data curation**
+**Data curation:**
 Brenna Li, James Liu, Patrick Savage, Nathan Holmes, Jenni Hantula, Nathan Eveleigh, John Choi, Artemis Lai, Cathy Kwok, Celia Siu, Luchia Tseng, Lydia Xu, Mark Lee, Olivia Marais, Roland Au, Suzanne Lane, Tianna Koreman, Willie Kwok, Yiqi Chen,
 Brandown Huntington, John Phan, Jimmy Liu, Cindy-Lee Crichlow, Sophia Ly, Ellie Hogan
 
-**System administration**
+**System administration:**
 Kevin Griffin, Stephen Macdonald, Dima Vavilov
 
 #### Research
@@ -129,11 +129,13 @@ The following people have contributed code, algorithms, implementations of algor
 - Celia Siu – Systems
 - Hugh Brown – Systems
 
-Other contributers to early stages of Gemma include David Quigley, Anshu Sinha and Gozde Cozen. Gemma’s precursor was [https://home.pavlab.msl.ubc.ca/tmm/](TMM), which was developed by Homin Lee, Jon Sajdak, Jie Qin and Amy Hsu. Martin Krzywinski has provided helpful advice on visualization.
+Other contributers to early stages of Gemma include David Quigley, Anshu Sinha and Gozde Cozen. Gemma’s precursor was [TMM](https://home.pavlab.msl.ubc.ca/tmm/), which was developed by Homin Lee, Jon Sajdak, Jie Qin and Amy Hsu. Martin Krzywinski has provided helpful advice on visualization.
 
 ### Data sources
-We are indebted to the many researchers who have made data publicly available. Lists of published papers that relate to the data included in Gemma are available [https://gemma.msl.ubc.ca/bibRef/showAllEeBibRefs.html](here (full list)) and [https://gemma.msl.ubc.ca/bibRef/searchBibRefs.html](here (search)) . If your data is in Gemma, and your paper is not listed, please let us know.
+We are indebted to the many researchers who have made data publicly available. Lists of published papers that relate to the data included in Gemma are available [here (full list)](https://gemma.msl.ubc.ca/bibRef/showAllEeBibRefs.html) and [here (search)](https://gemma.msl.ubc.ca/bibRef/searchBibRefs.html).
 
+If your data is in Gemma, and your paper is not listed, please let us know.
 
+___
 
 Copyright © University of British Columbia
