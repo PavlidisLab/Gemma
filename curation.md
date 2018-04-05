@@ -9,7 +9,7 @@
 ## Data Curation
 ### Workflow
 
-{% include image.html url="/assets/img/curation1.png" description="Figure 1 - data curation workflow" %}
+{% include image.html url="/curation1.png" description="Figure 1 - data curation workflow" %}
 
 Figure 1 above briefly outlines the steps that are taken to gather data and prepare it for use in Gemma. Data are downloaded and imported into Gemma’s database. Currently Gemma supports data uploads from GEO and ArrayExpress (the latter with some restrictions) or from ad hoc sources in a tab-delimited format. In addition to the expression values, data loaders also attempt to import annotations and meta-data about the study where possible. The ‘array design’ (describing the transcript entities that were assayed), the experimental data and the experimental design (describing the conditions the samples represent, such as “tumor” vs. “control”) are then processed. The array design is subjected to sequence analysis and gene assignment. The experimental data is checked for quality and the experimental design provided with a structured description. The data are then analyzed and the results are stored in the system for later retrieval. Some of these steps are discussed in more detail in the following sections.
 
