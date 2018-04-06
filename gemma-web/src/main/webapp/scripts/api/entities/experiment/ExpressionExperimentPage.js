@@ -1,8 +1,37 @@
 Ext.namespace('Gemma');
 
+function scoreToColor(i) {
+    // normalize from [-1,1] to [0,1]
+    i = i + 1;
+    i = i / 2;
+    // hsl red = 0° and green = 120°
+    var hue = i * 120;
+    return 'hsl(' + hue + ', 100%, 70%)';
+}
+
 function getStatusBadge(faIconClass, colorClass, title, qTip) {
     return '<span class="ee-status-badge bg-' + colorClass + ' " ext:qtip="' + qTip + '" >' +
         '<i class=" fa fa-' + faIconClass + ' fa-lg"></i> ' + title + '</span>';
+}
+
+function getGeeqBadges(quality, suitability){
+    return '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColor(Number(quality)) + '" ' +
+            'ext:qtip="Quality:&nbsp;'+roundScore(quality, 1)+'" >' +
+            getGeeqIcon(Number(quality)) + "" +
+        "</span>" +
+        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColor(Number(suitability)) + '" ' +
+            'ext:qtip="Suitability:&nbsp;'+roundScore(suitability, 1)+'" >' +
+            getGeeqIcon(Number(suitability)) + "" +
+        "</span>";
+}
+
+function getGeeqIcon(score){
+    var smileyCls = score > 0.3 ? "fa-smile-o" : score > -0.3 ? "fa-meh-o" : "fa-frown-o";
+    return "<i class='fa fa-lg " + smileyCls + "'></i></span>";
+}
+
+function roundScore(value, valDecimals){
+    return (Math.round(Number(value) * (Math.pow(10, valDecimals))) / Math.pow(10, valDecimals)).toFixed(valDecimals);
 }
 
 function getBatchInfoBadges(ee) {
@@ -158,6 +187,9 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
          * @param experimentDetails.pubmedId
          * @param experimentDetails.expressionExperimentSets
          * @param experimentDetails.lastArrayDesignUpdateDate
+         * @param experimentDetails.needsAttention
+         * @param experimentDetails.geeq.publicQualityScore,
+         * @param experimentDetails.geeq.publicSuitabilityScore
          */
         this.experimentDetails = experimentDetails;
         this.editable = experimentDetails.currentUserHasWritePermission || isAdmin;
