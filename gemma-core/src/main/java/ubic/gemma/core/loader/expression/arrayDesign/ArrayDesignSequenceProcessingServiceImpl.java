@@ -19,10 +19,13 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.geneontology.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.social.OperationNotPermittedException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
@@ -139,7 +142,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         ArrayDesignSequenceProcessingServiceImpl.log.info( "Processing Affymetrix design" );
         // arrayDesignService.thawRawAndProcessed( arrayDesign );
-        boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
+        boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0; // this would be unusual
         taxon = this.validateTaxon( taxon, arrayDesign );
         Collection<BioSequence> bioSequences = new HashSet<>();
 
@@ -166,11 +169,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             collapsed.setPolymerType( PolymerType.DNA );
             collapsed.setTaxon( taxon );
 
-            // DEBUG CODE
             if ( log.isDebugEnabled() ) {
-                log.debug( newCompositeSequence.getName() + "\t" + collapsed.getSequence() + "\n" );
+                System.err.println( newCompositeSequence.getName() + collapsed.getSequence() + "\n" );
             }
-            // END DEBUG CODE
 
             sequenceBuffer.add( collapsed );
             if ( csBuffer.containsKey( sequenceName ) )
@@ -183,7 +184,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             if ( wasOriginallyLackingCompositeSequences ) {
                 arrayDesign.getCompositeSequences().add( newCompositeSequence );
             } else {
+                // usual case. Note that 'force' is currently always true.
                 if ( force ) {
+                    if ( log.isDebugEnabled() ) log.debug( "Persisting sequence: " + collapsed.getName() );
                     collapsed = this.persistSequence( collapsed );
                     assert collapsed.getTaxon().equals( taxon );
                 }
@@ -199,6 +202,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         this.updateProgress( total, done, percent );
 
         if ( !wasOriginallyLackingCompositeSequences ) {
+            // usual case.
             percent = 0;
             done = 0;
             int numWithNoSequence = 0;
@@ -213,9 +217,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                     continue;
                 }
 
-                ArrayDesignSequenceProcessingServiceImpl.log
-                        .debug( originalCompositeSequence + " matches " + compositeSequenceFromParse + " seq is "
-                                + compositeSequenceFromParse.getBiologicalCharacteristic() );
+                if ( log.isDebugEnabled() ) log.debug( originalCompositeSequence + " matches " + compositeSequenceFromParse + " seq is "
+                        + compositeSequenceFromParse.getBiologicalCharacteristic() );
 
                 originalCompositeSequence
                         .setBiologicalCharacteristic( compositeSequenceFromParse.getBiologicalCharacteristic() );

@@ -480,6 +480,9 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalStateException( refPath + " is not a valid directory" );
         }
 
+        /*
+         * Instead of this we should use a config file like we do for CDFs.
+         */
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
         String base;

@@ -569,6 +569,9 @@ abstract public class GenomePersister extends CommonPersister {
         // the sequence is the main field we might update.
         if ( bioSequence.getSequence() != null && !bioSequence.getSequence()
                 .equals( existingBioSequence.getSequence() ) ) {
+            if ( AbstractPersister.log.isDebugEnabled() )
+                log.debug( "Updating sequence:" + bioSequence.getName() + "\nFROM:" + existingBioSequence.getSequence()
+                        + "\nTO:" + bioSequence.getSequence() + "\n" );
             existingBioSequence.setSequence( bioSequence.getSequence() );
         }
 

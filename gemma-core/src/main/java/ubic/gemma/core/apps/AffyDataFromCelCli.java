@@ -99,7 +99,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 AbstractCLI.log.info( "Loading data from " + aptFile );
                 if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && GeoPlatform
                         .isAffymetrixExonArray( ad.getShortName() ) ) || ad.getName().toLowerCase()
-                        .contains( "exon" ) ) {
+                                .contains( "exon" ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
                         .contains( "affy" ) ) {
@@ -147,8 +147,23 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  */
                 if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && GeoPlatform
                         .isAffymetrixExonArray( ad.getShortName() ) ) || ad.getName().toLowerCase()
-                        .contains( "exon" ) ) {
+                                .contains( "exon" ) ) {
                     AbstractCLI.log.info( thawedEe + " looks like affy exon array" );
+
+                    /*
+                     * TODO: make this work with non-exon arrays that don't have CDFs (some platforms have 'unsupported'
+                     * CDFs that we use, but these don't even have that)
+                     * 
+                     * # GPL11533=MoGene-1_1 - no cdf
+                     * # GPL17962=HuGene-2_1 - no cdf
+                     * # GPL16686=HuGene-2_0 - no cdf
+                     * # GPL16570=MoGene-2_0 - no cdf
+                     * # GPL11532=HuGene-1_1 - no cdf
+                     * # GPL23159=Clariom_s_Human - no cdf
+                     * # GPL17117=RaGene-2_0 - no cdf
+                     * # GPL17400=MoGene-2_1 - no cdf
+                     */
+
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );

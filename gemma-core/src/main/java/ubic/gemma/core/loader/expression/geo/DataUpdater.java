@@ -682,6 +682,10 @@ public class DataUpdater {
 
         String shortName = ad.getShortName();
         String cdfName = cdfNames.get( shortName );
+        
+        /*
+         * TODO: for certain platforms that don't have CDFs, we have MPS etc. files
+         */
         if ( cdfName == null ) {
             throw new IllegalArgumentException(
                     "No CDF could be located for " + ad + ", please provide correct affy.power.tools.cdf.path "
