@@ -138,10 +138,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     @Override
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
-            Taxon taxon, boolean force ) throws IOException {
+            Taxon taxon ) throws IOException {
 
         ArrayDesignSequenceProcessingServiceImpl.log.info( "Processing Affymetrix design" );
-        // arrayDesignService.thawRawAndProcessed( arrayDesign );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0; // this would be unusual
         taxon = this.validateTaxon( taxon, arrayDesign );
         Collection<BioSequence> bioSequences = new HashSet<>();
@@ -170,7 +169,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             collapsed.setTaxon( taxon );
 
             if ( log.isDebugEnabled() ) {
-                System.err.println( newCompositeSequence.getName() + collapsed.getSequence() + "\n" );
+                System.err.println( newCompositeSequence.getName() + " " + collapsed.getSequence() + "\n" );
             }
 
             sequenceBuffer.add( collapsed );
@@ -184,12 +183,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             if ( wasOriginallyLackingCompositeSequences ) {
                 arrayDesign.getCompositeSequences().add( newCompositeSequence );
             } else {
-                // usual case. Note that 'force' is currently always true.
-                if ( force ) {
-                    if ( log.isDebugEnabled() ) log.debug( "Persisting sequence: " + collapsed.getName() );
-                    collapsed = this.persistSequence( collapsed );
-                    assert collapsed.getTaxon().equals( taxon );
-                }
+                /*
+                 * usual case. We try to update the sequence itself by default. This is generally safe for affymetrix
+                 * probes because affy doesn't reuse probe names. These updates actually only affect the sequence itself
+                 * in situations where we have a misparse.
+                 */
+                collapsed = this.persistSequence( collapsed );
                 quickFindMap.put( newCompositeSequence.getName(), newCompositeSequence );
             }
 
@@ -259,7 +258,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         // arrayDesign = arrayDesignService.thawRawAndProcessed( arrayDesign );
 
         if ( sequenceType.equals( SequenceType.AFFY_PROBE ) ) {
-            return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon, true );
+            return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon );
         } else if ( sequenceType.equals( SequenceType.OLIGO ) ) {
             return this.processOligoDesign( arrayDesign, sequenceFile, taxon );
         }

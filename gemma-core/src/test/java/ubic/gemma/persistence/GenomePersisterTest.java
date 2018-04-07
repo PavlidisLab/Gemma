@@ -20,19 +20,28 @@ package ubic.gemma.persistence;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author pavlidis
  */
 public class GenomePersisterTest extends BaseSpringContextTest {
+
+    @Autowired
+    BioSequenceService biosequenceService;
 
     @Test
     public void testPersistGene() {
@@ -83,6 +92,28 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
         assertNotNull( gp.getId() );
         assertNotNull( gp.getGene().getId() );
+    }
+
+    @Test
+    public void testUpdateBioSequence() {
+        Taxon h = this.getTaxon( "human" );
+
+        BioSequence b = BioSequence.Factory.newInstance();
+        b.setName( "foo" );
+        b.setSequence( "A" );
+        b.setTaxon( h );
+
+        Long id = ( ( BioSequence ) this.persisterHelper.persist( b ) ).getId();
+
+        BioSequence br = BioSequence.Factory.newInstance();
+        br.setName( "foo" );
+        br.setSequence( "T" );
+        br.setTaxon( h );
+        this.persisterHelper.persistOrUpdate( br );
+
+        BioSequence bpl = biosequenceService.load( id );
+        assertEquals( "T", bpl.getSequence() );
+
     }
 
 }
