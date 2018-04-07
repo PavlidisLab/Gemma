@@ -617,7 +617,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         // I don't fully understand what's going on here, but if we don't do this we fail to synchronize changes.
         this.getSession().evict( existingBioSequence );
-        bioSequenceDao.update( existingBioSequence ); // also tried merge, without the update.
+        bioSequenceDao.update( existingBioSequence ); // also tried merge, without the update, doesn't work.
         return existingBioSequence;
 
     }

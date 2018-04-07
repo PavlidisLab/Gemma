@@ -45,6 +45,30 @@ import java.util.concurrent.BlockingQueue;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
 
+    abstract class Consumer implements Runnable {
+        private final SecurityContext context;
+        private final BlockingQueue<ArrayDesign> queue;
+
+        Consumer( BlockingQueue<ArrayDesign> q, SecurityContext context ) {
+            this.queue = q;
+            this.context = context;
+        }
+
+        @Override
+        public void run() {
+            SecurityContextHolder.setContext( this.context );
+            while ( true ) {
+                ArrayDesign ad = queue.poll();
+                if ( ad == null ) {
+                    break;
+                }
+                this.consume( ad );
+            }
+        }
+
+        abstract void consume( ArrayDesign x );
+    }
+
     boolean allowSubsumedOrMerged = false;
 
     ArrayDesignReportService arrayDesignReportService;
@@ -56,61 +80,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
-    }
-
-    @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" )
-                .withDescription( "Array design name (or short name); or comma-delimited list" ).withLongOpt( "array" )
-                .create( 'a' );
-
-        this.addOption( arrayDesignOption );
-
-        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "Array Design list file" ).withDescription(
-                "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
-                .withLongOpt( "eeListfile" ).create( 'f' );
-        this.addOption( eeFileListOption );
-
-        this.addDateOption();
-
-        this.addAutoOption();
-
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-
-        arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
-        arrayDesignService = this.getBean( ArrayDesignService.class );
-
-        if ( this.hasOption( 'a' ) ) {
-            this.arraysFromCliList();
-        } else if ( this.hasOption( 'f' ) ) {
-            String experimentListFile = this.getOptionValue( 'f' );
-            AbstractCLI.log.info( "Reading arrayDesigns list from " + experimentListFile );
-            try {
-                this.arrayDesignsToProcess = this.readListFile( experimentListFile );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-
-        if ( this.hasOption( "mdate" ) ) {
-            super.mDate = this.getOptionValue( "mdate" );
-            if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
-
-        if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
-            this.autoSeek = true;
-            if ( this.hasOption( "mdate" ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
-
     }
 
     ArrayDesignReportService getArrayDesignReportService() {
@@ -166,6 +135,74 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     ArrayDesign thaw( ArrayDesign arrayDesign ) {
         return arrayDesignService.thaw( arrayDesign );
+    }
+
+    @Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" )
+                .withDescription( "Array design name (or short name); or comma-delimited list" ).withLongOpt( "array" )
+                .create( 'a' );
+
+        this.addOption( arrayDesignOption );
+
+        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "Array Design list file" ).withDescription(
+                "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
+                .withLongOpt( "eeListfile" ).create( 'f' );
+        this.addOption( eeFileListOption );
+
+        this.addDateOption();
+
+        this.addAutoOption();
+
+    }
+
+    /**
+     * Mergees or subsumees of the platform.
+     * 
+     * @param design
+     * @return
+     */
+    protected Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
+        Collection<ArrayDesign> toUpdate = new HashSet<>();
+        toUpdate.addAll( design.getMergees() );
+        toUpdate.addAll( design.getSubsumedArrayDesigns() );
+        return toUpdate;
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
+        arrayDesignService = this.getBean( ArrayDesignService.class );
+
+        if ( this.hasOption( 'a' ) ) {
+            this.arraysFromCliList();
+        } else if ( this.hasOption( 'f' ) ) {
+            String experimentListFile = this.getOptionValue( 'f' );
+            AbstractCLI.log.info( "Reading arrayDesigns list from " + experimentListFile );
+            try {
+                this.arrayDesignsToProcess = this.readListFile( experimentListFile );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        if ( this.hasOption( "mdate" ) ) {
+            super.mDate = this.getOptionValue( "mdate" );
+            if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
+            }
+        }
+
+        if ( this.hasOption( AbstractCLI.AUTO_OPTION_NAME ) ) {
+            this.autoSeek = true;
+            if ( this.hasOption( "mdate" ) ) {
+                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
+            }
+        }
+
     }
 
     private void arraysFromCliList() {
@@ -298,30 +335,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             ees.add( ee );
         }
         return ees;
-    }
-
-    abstract class Consumer implements Runnable {
-        private final BlockingQueue<ArrayDesign> queue;
-        private final SecurityContext context;
-
-        Consumer( BlockingQueue<ArrayDesign> q, SecurityContext context ) {
-            this.queue = q;
-            this.context = context;
-        }
-
-        @Override
-        public void run() {
-            SecurityContextHolder.setContext( this.context );
-            while ( true ) {
-                ArrayDesign ad = queue.poll();
-                if ( ad == null ) {
-                    break;
-                }
-                this.consume( ad );
-            }
-        }
-
-        abstract void consume( ArrayDesign x );
     }
 
 }
