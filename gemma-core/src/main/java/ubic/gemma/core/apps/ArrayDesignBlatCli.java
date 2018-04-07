@@ -139,6 +139,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
+        /*
+         * FIXME skip subsumed or merged platforms unless -force, and if a subsumee or mergee is run, update the
+         * merged/subsumed as having been updated. See related code in ArrayDesignProbeMapper.
+         */
+
         if ( !this.arrayDesignsToProcess.isEmpty() ) {
 
             if ( this.blatResultFile != null && this.arrayDesignsToProcess.size() > 1 ) {

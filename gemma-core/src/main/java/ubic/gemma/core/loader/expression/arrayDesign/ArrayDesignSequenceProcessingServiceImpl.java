@@ -172,24 +172,24 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 System.err.println( newCompositeSequence.getName() + " " + collapsed.getSequence() + "\n" );
             }
 
+            if ( wasOriginallyLackingCompositeSequences ) {
+                arrayDesign.getCompositeSequences().add( newCompositeSequence );
+            } else {
+                /*
+                 * usual case. If it already exists, we try to update the sequence itself by default. This is generally
+                 * safe for affymetrix probes because affy doesn't reuse probe names. These updates actually only affect
+                 * the sequence itself in situations where we have a misparse.
+                 */
+                collapsed = this.persistSequence( collapsed );
+                quickFindMap.put( newCompositeSequence.getName(), newCompositeSequence );
+            }
+
             sequenceBuffer.add( collapsed );
             if ( csBuffer.containsKey( sequenceName ) )
                 throw new IllegalArgumentException( "All probes must have unique names" );
             csBuffer.put( sequenceName, newCompositeSequence );
             if ( sequenceBuffer.size() == ArrayDesignSequenceProcessingServiceImpl.BATCH_SIZE ) {
                 this.flushBuffer( bioSequences, sequenceBuffer, csBuffer );
-            }
-
-            if ( wasOriginallyLackingCompositeSequences ) {
-                arrayDesign.getCompositeSequences().add( newCompositeSequence );
-            } else {
-                /*
-                 * usual case. We try to update the sequence itself by default. This is generally safe for affymetrix
-                 * probes because affy doesn't reuse probe names. These updates actually only affect the sequence itself
-                 * in situations where we have a misparse.
-                 */
-                collapsed = this.persistSequence( collapsed );
-                quickFindMap.put( newCompositeSequence.getName(), newCompositeSequence );
             }
 
             if ( ++done % 1000 == 0 ) {
@@ -200,14 +200,15 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         this.flushBuffer( bioSequences, sequenceBuffer, csBuffer );
         this.updateProgress( total, done, percent );
 
+        /*
+         * 
+         */
         if ( !wasOriginallyLackingCompositeSequences ) {
             // usual case.
             percent = 0;
             done = 0;
             int numWithNoSequence = 0;
             for ( CompositeSequence originalCompositeSequence : arrayDesign.getCompositeSequences() ) {
-                // go back and fill this information into the composite sequences, namely the database entry
-                // information.
 
                 CompositeSequence compositeSequenceFromParse = quickFindMap.get( originalCompositeSequence.getName() );
                 if ( compositeSequenceFromParse == null ) {
@@ -816,19 +817,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      */
     private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
             Map<String, CompositeSequence> csBuffer ) {
-        /*
-         * NOTE because 'findOrCreate' doesn't check the actual sequence (that would cause other problems) if we're
-         * trying to correct a problem with the sequences (e.g. misassembly from affymetrix probes), this won't update
-         * them. This is a rare but annoying circumstance. The best solution would be to force the sequence to be
-         * updated in any found BioSequences, which would require rewriting this quite substantially. The workaround is
-         * to delete the sequences from the database
-         * manually.
-         */
         Collection<BioSequence> newOnes = bioSequenceService.findOrCreate( sequenceBuffer );
         bioSequences.addAll( newOnes );
         for ( BioSequence sequence : newOnes ) {
             CompositeSequence cs = csBuffer.get( sequence.getName() );
             assert cs != null;
+            if ( log.isDebugEnabled() ) {
+                log.debug( "Updating " + cs + " to sequence " + sequence + ": " + sequence.getSequence() );
+            }
             cs.setBiologicalCharacteristic( sequence );
         }
         csBuffer.clear();
