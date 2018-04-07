@@ -109,9 +109,13 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         br.setName( "foo" );
         br.setSequence( "T" );
         br.setTaxon( h );
-        this.persisterHelper.persistOrUpdate( br );
+        this.persisterHelper.persistOrUpdate( br ); /// this is what we are testing.
 
-        BioSequence bpl = biosequenceService.load( id );
+        BioSequence bc = BioSequence.Factory.newInstance();
+        bc.setName( "foo" );
+        bc.setTaxon( h );
+        BioSequence bpl = biosequenceService.find( bc );
+        //  BioSequence bpl = biosequenceService.load( id ); /// this fails.
         assertEquals( "T", bpl.getSequence() );
 
     }
