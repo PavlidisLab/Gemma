@@ -160,13 +160,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                     AbstractCLI.log.info( thawedEe + " looks like affy exon or gene array (no CDF)" );
 
                     serv.addAffyExonArrayData( thawedEe );
-                    this.successObjects.add( thawedEe.toString() );
+                    this.successObjects.add( thawedEe );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
                         .contains( "affy" ) ) {
                     AbstractCLI.log.info( thawedEe + " looks like a affy 3-prime array" );
                     serv.reprocessAffyThreePrimeArrayData( thawedEe );
-                    this.successObjects.add( thawedEe.toString() );
+                    this.successObjects.add( thawedEe );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );
                 } else {
                     AbstractCLI.log.warn( ee

@@ -93,17 +93,31 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
+     * For 3' arrays or situations when we are definitely not switching platforms
+     * 
+     * @param ee ee * @param aptOutputFileToRead file
+     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
+     * @return raw data vectors
+     */
+    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
+            ArrayDesign targetPlatform ) throws IOException {
+        return this.processData( ee, aptOutputFileToRead, targetPlatform, targetPlatform );
+    }
+
+    /**
      * For either 3' or Exon arrays.
      *
      * @param ee ee
      * @param aptOutputFileToRead file
      * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
+     * @param originalPlatform can be the same as the targetPlatform. But we specify this in case there is more than one
+     *        original platform, so we're not trying to match up bioassays that are not relevant.
      * @return raw data vectors
      * @throws IOException io problem
      * @throws FileNotFoundException file not found
      */
     public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
-            ArrayDesign targetPlatform ) throws IOException {
+            ArrayDesign targetPlatform, ArrayDesign originalPlatform ) throws IOException {
 
         AffyPowerToolsProbesetSummarize.log.info( "Parsing " + aptOutputFileToRead );
 
@@ -121,15 +135,19 @@ public class AffyPowerToolsProbesetSummarize {
 
             Collection<BioAssay> bioAssaysToUse = new HashSet<>();
             for ( BioAssay bioAssay : allBioAssays ) {
-                if ( bioAssay.getArrayDesignUsed().equals( targetPlatform ) ) {
+                if ( bioAssay.getArrayDesignUsed().equals( originalPlatform ) ) {
                     bioAssaysToUse.add( bioAssay );
                 }
+            }
+
+            if ( bioAssaysToUse.isEmpty() ) {
+                throw new IllegalStateException( "No bioassays were on the platform: " + originalPlatform );
             }
 
             if ( allBioAssays.size() > bioAssaysToUse.size() ) {
                 AffyPowerToolsProbesetSummarize.log
                         .info( "Using " + bioAssaysToUse.size() + "/" + allBioAssays.size() + " bioassays (those on "
-                                + targetPlatform.getShortName() + ")" );
+                                + originalPlatform.getShortName() + ")" );
             }
 
             if ( matrix.columns() < bioAssaysToUse.size() ) {
@@ -141,7 +159,7 @@ public class AffyPowerToolsProbesetSummarize {
 
             AffyPowerToolsProbesetSummarize.log
                     .info( "Read " + matrix.rows() + " x " + matrix.columns() + ", matching with " + bioAssaysToUse
-                            .size() + " samples on " + targetPlatform );
+                            .size() + " samples on " + originalPlatform );
 
             BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
             bad.setName( "For " + ee.getShortName() + " on " + targetPlatform );
@@ -162,6 +180,8 @@ public class AffyPowerToolsProbesetSummarize {
                 bmap.put( bioAssay.getName(), bioAssay );
             }
 
+            log.info( "Will attempt to match " + bmap.size() + " bioAssays in data set to apt output" );
+
             if ( AffyPowerToolsProbesetSummarize.log.isDebugEnabled() )
                 AffyPowerToolsProbesetSummarize.log
                         .debug( "Will match result data file columns to bioassays referred to by any of the following strings:\n"
@@ -181,11 +201,11 @@ public class AffyPowerToolsProbesetSummarize {
                 if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
                     String geoAcc = sampleName.split( "_" )[0];
 
-                    AffyPowerToolsProbesetSummarize.log.info( "Found column for " + geoAcc );
+                    AffyPowerToolsProbesetSummarize.log.info( "Found column " + columnName + "in data file with acc=" + geoAcc );
                     if ( bmap.containsKey( geoAcc ) ) {
                         assay = bmap.get( geoAcc );
                     } else {
-                        AffyPowerToolsProbesetSummarize.log.warn( "No bioassay for " + geoAcc );
+                        AffyPowerToolsProbesetSummarize.log.warn( "No bioassay found " + geoAcc );
                     }
                 } else {
 
@@ -203,7 +223,7 @@ public class AffyPowerToolsProbesetSummarize {
                         throw new IllegalStateException(
                                 "No bioassay could be matched to CEL file identified by " + sampleName );
                     }
-                    AffyPowerToolsProbesetSummarize.log.warn( "No bioassay for " + sampleName );
+                    AffyPowerToolsProbesetSummarize.log.warn( "No bioassay found yet for " + sampleName );
                     continue;
                 }
 
@@ -237,11 +257,12 @@ public class AffyPowerToolsProbesetSummarize {
      * @param ee ee
      * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
      *        not happen for exon arrays)
+     * @param originalPlatform might be the same as targetPlatform
      * @param files list of CEL files (any other files included will be ignored)
      * @return raw data vectors
      */
     public Collection<RawExpressionDataVector> processExonOrGeneArrayData( ExpressionExperiment ee,
-            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
+            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<LocalFile> files ) {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
 
@@ -253,7 +274,7 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "Target design had no elements" );
         }
 
-        return this.tryRun( ee, targetPlatform, files, null, false );
+        return this.tryRun( ee, targetPlatform, originalPlatform, files, null, false );
     }
 
     /**
@@ -286,8 +307,8 @@ public class AffyPowerToolsProbesetSummarize {
                 accessionsOfInterest.add( ba.getAccession().getAccession() );
             }
         }
-
-        return this.tryRun( ee, targetPlatform, files, accessionsOfInterest, true );
+        // note that the targetplatform is always the same as the original for these platforms.
+        return this.tryRun( ee, targetPlatform, targetPlatform, files, accessionsOfInterest, true );
     }
 
     private void checkFileReadable( String f ) {
@@ -297,7 +318,8 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * Stolen from SimpleExpressionDataLoaderService
+     * Stolen from SimpleExpressionDataLoaderService. This is where we switch platforms if necessary (e.g., going from
+     * exon-level to gene-level)
      *
      * @param expressionExperiment ee
      * @param bioAssayDimension BA dim
@@ -553,7 +575,18 @@ public class AffyPowerToolsProbesetSummarize {
         return reader.read( data );
     }
 
-    private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
+    /**
+     * 
+     * @param ee
+     * @param targetPlatform
+     * @param originalPlatform - only really necessary if we are switching platforms AND there are multiple platforms
+     *        for the data set, which is actually a situation we don't currently support.
+     * @param files
+     * @param accessionsOfInterest
+     * @param threePrime
+     * @return
+     */
+    private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform, ArrayDesign originalPlatform,
             Collection<LocalFile> files, Collection<String> accessionsOfInterest, boolean threePrime ) {
 
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
@@ -607,7 +640,7 @@ public class AffyPowerToolsProbesetSummarize {
 
             return this.processData( ee,
                     outputPath + File.separator + AffyPowerToolsProbesetSummarize.METHOD + ".summary.txt",
-                    targetPlatform );
+                    targetPlatform, originalPlatform );
 
         } catch ( InterruptedException | IOException e ) {
             throw new RuntimeException( e );

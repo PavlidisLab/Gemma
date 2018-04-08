@@ -509,7 +509,7 @@ public abstract class AbstractCLI {
             buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
                     .append( " objects:\n" );
             for ( Object object : successObjects ) {
-                buf.append( "Success" ).append( object ).append( "\n" );
+                buf.append( "Success\t" ).append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
 

@@ -163,16 +163,7 @@ public class DataUpdater {
         if ( ads.size() > 1 ) {
             throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
         }
-        this.addAffyExonOrGeneArrayData( ee, ads.iterator().next() );
-    }
-
-    /**
-     * Replaces any existing "preferred" data. Must be a single-platform study
-     *
-     * @param ee ee
-     * @param ad ad
-     */
-    private void addAffyExonOrGeneArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
+        ArrayDesign originalPlatform = ads.iterator().next();
 
         RawDataFetcher f = new RawDataFetcher();
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
@@ -182,13 +173,13 @@ public class DataUpdater {
         }
         ee = experimentService.thawLite( ee );
 
-        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( ad );
+        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( originalPlatform );
 
         assert !targetPlatform.getCompositeSequences().isEmpty();
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
-        Collection<RawExpressionDataVector> vectors = apt.processExonOrGeneArrayData( ee, targetPlatform, files );
+        Collection<RawExpressionDataVector> vectors = apt.processExonOrGeneArrayData( ee, targetPlatform, originalPlatform, files );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors were returned for " + ee );
@@ -196,10 +187,10 @@ public class DataUpdater {
 
         ee = experimentService.replaceRawVectors( ee, vectors );
 
-        if ( !targetPlatform.equals( ad ) ) {
+        if ( !targetPlatform.equals( originalPlatform ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + ad.getShortName() + " to "
+                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform.getShortName() + " to "
                             + targetPlatform.getShortName() + ")" );
         }
 
@@ -224,17 +215,14 @@ public class DataUpdater {
                     "Can't handle experiments with more than one platform when passing APT output file" );
         }
 
-        ArrayDesign ad = ads.iterator().next();
+        ArrayDesign originalPlatform = ads.iterator().next();
 
-        //  ad = arrayDesignService.thaw( ad );
         ee = experimentService.thawLite( ee );
 
-        // Taxon primaryTaxon = ad.getPrimaryTaxon();
-
-        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( ad );
+        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( originalPlatform );
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
-        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, targetPlatform );
+        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, targetPlatform, originalPlatform );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors were returned for " + ee );
@@ -242,10 +230,10 @@ public class DataUpdater {
 
         experimentService.replaceRawVectors( ee, vectors );
 
-        if ( !targetPlatform.equals( ad ) ) {
+        if ( !targetPlatform.equals( originalPlatform ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + ad.getShortName() + " to "
+                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform.getShortName() + " to "
                             + targetPlatform.getShortName() + ")" );
         }
 
@@ -542,6 +530,9 @@ public class DataUpdater {
     }
 
     /**
+     * You can now analyze CEL file data for data sets that have more than one platform (affyFromCel). However, this has
+     * to be done before the data set is switched to a merged platform.
+     * 
      * @param ee ee
      * @return This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
      */
@@ -549,10 +540,6 @@ public class DataUpdater {
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee ) {
 
         Collection<ArrayDesign> arrayDesignsUsed = this.experimentService.getArrayDesignsUsed( ee );
-
-        if ( arrayDesignsUsed.size() > 1 ) {
-            throw new UnsupportedOperationException( "Merge/match platforms/samples before using this." );
-        }
 
         ee = experimentService.thawLite( ee );
         RawDataFetcher f = new RawDataFetcher();
@@ -567,7 +554,7 @@ public class DataUpdater {
         QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
         qt = quantitationTypeService.create( qt );
 
-        for ( ArrayDesign ad : arrayDesignsUsed ) { // only allow 1
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
             DataUpdater.log.info( "Processing data for " + ad );
 
             ad = arrayDesignService.thaw( ad );
