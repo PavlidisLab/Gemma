@@ -911,8 +911,8 @@ public class DataUpdater {
     /**
      * determine the target array design. We use filtered versions of these platforms from GEO.
      *
-     * @param primaryTaxon taxon
-     * @return ad
+     * @param ad array design we are starting with
+     * @return platform we should actually use. It can be the same as the input.
      */
     private ArrayDesign prepareTargetPlatformForExonArrays( ArrayDesign ad ) {
 
