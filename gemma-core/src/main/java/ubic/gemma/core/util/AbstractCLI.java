@@ -507,7 +507,7 @@ public abstract class AbstractCLI {
         if ( successObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
-                    .append( "objects:\n" );
+                    .append( " objects:\n" );
             for ( Object object : successObjects ) {
                 buf.append( "Success" ).append( object ).append( "\n" );
             }
