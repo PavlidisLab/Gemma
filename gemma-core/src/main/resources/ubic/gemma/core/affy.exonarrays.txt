@@ -125,8 +125,8 @@ GPL6543=GPL6247
 
 # gene arrays, lack CDFs so run as an exon array (some of these have exon-level versions as well)
 # MoGene-1_1          
-GPL11537=GPL11533
 GPL11533=GPL11533
+GPL11537=GPL11533
 GPL16695=GPL11533
 GPL17153=GPL11533
 GPL17997=GPL11533
