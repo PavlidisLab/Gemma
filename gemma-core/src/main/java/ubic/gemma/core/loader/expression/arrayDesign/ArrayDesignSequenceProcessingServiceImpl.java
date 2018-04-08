@@ -19,13 +19,10 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.geneontology.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.social.OperationNotPermittedException;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
@@ -142,6 +139,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         ArrayDesignSequenceProcessingServiceImpl.log.info( "Processing Affymetrix design" );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0; // this would be unusual
+        log.info( "Platform has " + arrayDesign.getCompositeSequences().size() + " elements" );
+        
         taxon = this.validateTaxon( taxon, arrayDesign );
         Collection<BioSequence> bioSequences = new HashSet<>();
 

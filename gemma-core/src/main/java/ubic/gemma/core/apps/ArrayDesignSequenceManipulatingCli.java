@@ -148,7 +148,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
         Option eeFileListOption = OptionBuilder.hasArg().withArgName( "Array Design list file" ).withDescription(
                 "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
-                .withLongOpt( "eeListfile" ).create( 'f' );
+                .withLongOpt( "adListFile" ).create( 'f' );
         this.addOption( eeFileListOption );
 
         this.addDateOption();
