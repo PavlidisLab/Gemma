@@ -106,13 +106,13 @@ public class DataUpdater {
     private PreprocessorService preprocessorService;
 
     @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
     private QuantitationTypeService qtService;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
@@ -188,6 +188,9 @@ public class DataUpdater {
         ee = experimentService.replaceRawVectors( ee, vectors );
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
+
+            switchBioAssaysToTargetPlatform( ee, targetPlatform );
+
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
                     "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform.getShortName() + " to "
@@ -231,6 +234,9 @@ public class DataUpdater {
         experimentService.replaceRawVectors( ee, vectors );
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
+
+            switchBioAssaysToTargetPlatform( ee, targetPlatform );
+
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
                     "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform.getShortName() + " to "
@@ -936,6 +942,27 @@ public class DataUpdater {
         }
 
         return targetPlatform;
+    }
+
+    /**
+     * Only when there is a single platform!
+     * 
+     * @param ee presumed thawed
+     * @param targetPlatform
+     */
+    private void switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform ) {
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException(
+                    "Can't handle experiments with more than one platform" );
+        }
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.setArrayDesignUsed( targetPlatform );
+        }
+
+        experimentService.update( ee );
+
     }
 
 }
