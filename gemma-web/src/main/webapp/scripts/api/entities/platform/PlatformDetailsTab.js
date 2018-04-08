@@ -26,23 +26,20 @@ Gemma.PlatformDetails = Ext
          },
 
          renderTaxon : function( platformDetails ) {
-            return new Ext.Panel(
-               {
-                  border : false,
-                  html : platformDetails.taxon,
-                  listeners : {
-                     'afterrender' : function( c ) {
-                        jQuery( '#taxonHelp' )
-                           .qtip(
-                              {
-                                 content : "The primary taxon for sequences on this platform (i.e., what it was designed for).",
-                                 style : {
-                                    name : 'cream'
-                                 }
-                              } );
-                     }
+            return new Ext.Panel( {
+               border : false,
+               html : platformDetails.taxon,
+               listeners : {
+                  'afterrender' : function( c ) {
+                     jQuery( '#taxonHelp' ).qtip( {
+                        content : "The primary taxon for sequences on this platform (i.e., what it was designed for).",
+                        style : {
+                           name : 'cream'
+                        }
+                     } );
                   }
-               } );
+               }
+            } );
          },
 
          /**
@@ -216,14 +213,15 @@ Gemma.PlatformDetails = Ext
                   if ( db == "GEO" ) {
                      text = text + ac + "&nbsp;<a "
                         + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + ac
-                        + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath + "/images/logo/geoTiny.png' /></a>";
+                        + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath
+                        + "/images/logo/geoTiny.png' /></a>";
                   } else if ( db == "ArrayExpress" ) {
                      text = text
                         + ac
                         + "&nbsp;<a title='ArrayExpress page for this entry'"
                         + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
-                        + ac
-                        + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath + "/images/logo/arrayExpressTiny.png' /></a>";
+                        + ac + "'><img  ext:qtip='NCBI page for this entry' src='" + ctxBasePath
+                        + "/images/logo/arrayExpressTiny.png' /></a>";
 
                   } else {
                      text = text + "&nbsp;" + ac + " (" + databaseEntry.getExternalDatabase().getName() + ")";
@@ -310,8 +308,9 @@ Gemma.PlatformDetails = Ext
          renderExperimentLink : function( platformDetails ) {
             var text = platformDetails.expressionExperimentCount + "";
             if ( platformDetails.expressionExperimentCount > 0 ) {
-               text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View the experiments tab'"
-                  + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;experiments&#39;)'>";
+               text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath
+                  + "/images/magnifier.png' ext:qtip='View the experiments tab'" + "onClick='Ext.getCmp(&#39;"
+                  + this.id + "&#39;).changeTab(&#39;experiments&#39;)'>";
             }
             return new Ext.Panel( {
                border : false,
@@ -330,8 +329,7 @@ Gemma.PlatformDetails = Ext
                listeners : {
                   'afterrender' : Gemma.helpTip( "#descriptionHelp",
                      "The description includes that obtained from the data provider (i.e., GEO)"
-                        + " but may include additional information added by Gemma, such as "
-                        + "information on samples removed due to overlap with other data sets." )
+                        + " but may include additional information added by Gemma." )
                }
             } );
          },
@@ -340,8 +338,8 @@ Gemma.PlatformDetails = Ext
             var text = '';
 
             if ( platformDetails.troubled ) {
-               text = '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                  + platformDetails.troubleDetails + '"></i> Unusable';
+               text = '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="' + platformDetails.troubleDetails
+                  + '"></i> Unusable';
             }
 
             return new Ext.Panel( {
@@ -356,8 +354,9 @@ Gemma.PlatformDetails = Ext
 
          renderElementsLink : function( platformDetails ) {
             var text = platformDetails.designElementCount;
-            text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View the elements tab'"
-               + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;elements&#39;)'>";
+            text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath
+               + "/images/magnifier.png' ext:qtip='View the elements tab'" + "onClick='Ext.getCmp(&#39;" + this.id
+               + "&#39;).changeTab(&#39;elements&#39;)'>";
             return new Ext.Panel( {
                border : false,
                html : text,
@@ -375,12 +374,10 @@ Gemma.PlatformDetails = Ext
 
             var isAdmin = Ext.get( "hasAdmin" ).getValue() == 'true';
             if ( isAdmin ) {
-               text = text
-                  + '&nbsp;<img  style="cursor:pointer" onClick="Ext.getCmp(&#39;'
-                  + this.id
-                  + '&#39;).promptForAlternateName('
-                  + platformDetails.id
-                  + ');return false;" ext:qtip="Add a new alternate name for this design" src="' + ctxBasePath + '/images/icons/add.png" />';
+               text = text + '&nbsp;<img  style="cursor:pointer" onClick="Ext.getCmp(&#39;' + this.id
+                  + '&#39;).promptForAlternateName(' + platformDetails.id
+                  + ');return false;" ext:qtip="Add a new alternate name for this design" src="' + ctxBasePath
+                  + '/images/icons/add.png" />';
             }
             return new Ext.Panel( {
                border : false,
@@ -509,12 +506,11 @@ Gemma.PlatformDetails = Ext
                                              + '&nbsp<i id="annotationHelp"  class="qtp fa fa-question-circle fa-fw"></i>',
                                           items : this.renderAnnotationFileLinks( platformDetails )
                                        } );
-                                    pan
-                                       .add( {
-                                          fieldLabel : 'Gene map summary'
-                                             + '&nbsp<i id="reportHelp"  class="qtp fa fa-question-circle fa-fw"></i>',
-                                          items : this.renderReport( platformDetails )
-                                       } );
+                                    pan.add( {
+                                       fieldLabel : 'Gene map summary'
+                                          + '&nbsp<i id="reportHelp"  class="qtp fa fa-question-circle fa-fw"></i>',
+                                       items : this.renderReport( platformDetails )
+                                    } );
                                  }
 
                                  this.syncSize();
