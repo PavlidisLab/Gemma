@@ -19,7 +19,10 @@
 
 package ubic.gemma.core.apps;
 
+import java.util.Collection;
+
 import org.apache.commons.lang3.StringUtils;
+
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.util.AbstractCLI;
@@ -30,8 +33,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.util.Collection;
-
 /**
  * Add (or possibly replace) the data associated with an affymetrix data set, going back to the CEL files. Can handle
  * exon or 3' arrays.
@@ -41,10 +42,6 @@ import java.util.Collection;
 public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
-    private static final String CDF_FILE_OPT = "cdfFile";
-    private String aptFile = null;
-    // /space/grp/databases/arrays/cdfs...
-    private String cdfFile = null;
 
     public static void main( String[] args ) {
         AffyDataFromCelCli c = new AffyDataFromCelCli();
@@ -54,8 +51,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public boolean checkForAlreadyDone( BioAssaySet ee ) {
+    private String aptFile = null;
+
+    private boolean checkForAlreadyDone( BioAssaySet ee ) {
         for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
             if ( qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
                 return true;
@@ -65,8 +63,28 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.EXPERIMENT;
+    }
+
+    @Override
     public String getCommandName() {
         return "affyFromCel";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Reanalyze Affymetrix data from CEL files, if available; affy-power-tools must be configured.";
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        super.addOption( AffyDataFromCelCli.APT_FILE_OPT, true,
+                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
+
+        super.addForceOption();
+
     }
 
     @Override
@@ -98,8 +116,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             try {
                 AbstractCLI.log.info( "Loading data from " + aptFile );
                 if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && GeoPlatform
-                        .isAffymetrixExonArray( ad.getShortName() ) ) || ad.getName().toLowerCase()
-                                .contains( "exon" ) ) {
+                        .isAffymetrixExonArray( ad.getShortName() ) ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
                         .contains( "affy" ) ) {
@@ -112,13 +129,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 return exception;
             }
             return null;
-        }
-
-        if ( StringUtils.isNotBlank( cdfFile ) ) {
-            if ( arrayDesignsUsed.size() > 1 ) {
-                throw new IllegalArgumentException( "Cannot use " + AffyDataFromCelCli.CDF_FILE_OPT
-                        + " for experiment that uses multiple platforms" );
-            }
         }
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
@@ -146,23 +156,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * problem :) (seriously, we could check...)
                  */
                 if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && GeoPlatform
-                        .isAffymetrixExonArray( ad.getShortName() ) ) || ad.getName().toLowerCase()
-                                .contains( "exon" ) ) {
-                    AbstractCLI.log.info( thawedEe + " looks like affy exon array" );
-
-                    /*
-                     * TODO: make this work with non-exon arrays that don't have CDFs (some platforms have 'unsupported'
-                     * CDFs that we use, but these don't even have that)
-                     * 
-                     * # GPL11533=MoGene-1_1 - no cdf
-                     * # GPL17962=HuGene-2_1 - no cdf
-                     * # GPL16686=HuGene-2_0 - no cdf
-                     * # GPL16570=MoGene-2_0 - no cdf
-                     * # GPL11532=HuGene-1_1 - no cdf
-                     * # GPL23159=Clariom_s_Human - no cdf
-                     * # GPL17117=RaGene-2_0 - no cdf
-                     * # GPL17400=MoGene-2_1 - no cdf
-                     */
+                        .isAffymetrixExonArray( ad.getShortName() ) ) ) {
+                    AbstractCLI.log.info( thawedEe + " looks like affy exon or gene array (no CDF)" );
 
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
@@ -193,36 +188,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    public String getShortDesc() {
-        return "Reanalyze Affymetrix data from CEL files, if available; affy-power-tools must be configured.";
-    }
-
-    @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.EXPERIMENT;
-    }
-
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        super.addOption( AffyDataFromCelCli.APT_FILE_OPT, true,
-                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; don't use with "
-                        + AffyDataFromCelCli.CDF_FILE_OPT );
-        super.addOption( AffyDataFromCelCli.CDF_FILE_OPT, true,
-                "CDF file for Affy 3' arrays; otherwise will try to find automatically using the value of affy.power.tools.cdf.path; don't use with "
-                        + AffyDataFromCelCli.APT_FILE_OPT );
-        super.addForceOption();
-
-    }
-
-    @Override
     protected void processOptions() {
         super.processOptions();
         if ( this.hasOption( AffyDataFromCelCli.APT_FILE_OPT ) ) {
             this.aptFile = this.getOptionValue( AffyDataFromCelCli.APT_FILE_OPT );
-        }
-        if ( this.hasOption( AffyDataFromCelCli.CDF_FILE_OPT ) ) {
-            this.cdfFile = this.getOptionValue( AffyDataFromCelCli.CDF_FILE_OPT );
         }
 
     }

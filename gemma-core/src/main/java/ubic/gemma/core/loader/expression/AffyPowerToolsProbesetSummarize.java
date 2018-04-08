@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.loader.expression;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -22,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.basecode.util.ConfigUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.util.TimeUtil;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
@@ -33,7 +36,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
@@ -45,37 +47,15 @@ import java.util.*;
  */
 public class AffyPowerToolsProbesetSummarize {
 
+    private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/affy.cdfs.properties";
+    private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/affy.mps.properties";
+
+    private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
+
     private static final long AFFY_UPDATE_INTERVAL_MS = 1000 * 30;
-
-    /*
-     * Current as of May 2012
-     */
-    private static final String h = "HuEx-1_0-st-v2.r2";
-
-    /*
-     * These are supplied by Affymetrix. Current as of May 2012
-     */
-    private static final String hg = "hg18";
-    private static final String m = "MoEx-1_0-st-v1.r2";
-    private static final String METHOD = "rma";
-    private static final String mm = "mm9";
-    private static final String r = "RaEx-1_0-st-v1.r2";
-    private static final String rn = "rn4";
     private static final Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
-    private QuantitationType quantitationType;
 
-    public AffyPowerToolsProbesetSummarize() {
-        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-    }
-
-    /**
-     * This constructor is used for multiplatform situations where the same QT must be used for each platform.
-     *
-     * @param qt qt
-     */
-    public AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
-        this.quantitationType = qt;
-    }
+    private static final String METHOD = "rma";
 
     public static QuantitationType makeAffyQuantitationType() {
         QuantitationType result = QuantitationType.Factory.newInstance();
@@ -97,14 +77,29 @@ public class AffyPowerToolsProbesetSummarize {
         return result;
     }
 
+    private QuantitationType quantitationType;
+
+    public AffyPowerToolsProbesetSummarize() {
+        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+    }
+
+    /**
+     * This constructor is used for multiplatform situations where the same QT must be used for each platform.
+     *
+     * @param qt qt
+     */
+    public AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
+        this.quantitationType = qt;
+    }
+
     /**
      * For either 3' or Exon arrays.
      *
-     * @param ee                  ee
+     * @param ee ee
      * @param aptOutputFileToRead file
-     * @param targetPlatform      deal with data from this platform (call multiple times if there is more than one platform)
+     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
      * @return raw data vectors
-     * @throws IOException           io problem
+     * @throws IOException io problem
      * @throws FileNotFoundException file not found
      */
     public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
@@ -239,13 +234,13 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param ee             ee
+     * @param ee ee
      * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
-     *                       not happen for exon arrays)
-     * @param files          list of CEL files (any other files included will be ignored)
+     *        not happen for exon arrays)
+     * @param files list of CEL files (any other files included will be ignored)
      * @return raw data vectors
      */
-    public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
+    public Collection<RawExpressionDataVector> processExonOrGeneArrayData( ExpressionExperiment ee,
             ArrayDesign targetPlatform, Collection<LocalFile> files ) {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
@@ -258,19 +253,18 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "Target design had no elements" );
         }
 
-        return this.tryRun( ee, targetPlatform, files, null, false, null );
+        return this.tryRun( ee, targetPlatform, files, null, false );
     }
 
     /**
      * Call once for each platform used by the experiment.
      *
-     * @param ee             ee
-     * @param cdfFileName    e.g. HG_U95Av2.CDF. Path configured by - can be null, we will try to guess (?)
+     * @param ee ee
      * @param targetPlatform to match the CDF file
-     * @param files          files
+     * @param files files
      * @return raw data vectors
      */
-    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee, String cdfFileName,
+    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee,
             ArrayDesign targetPlatform, Collection<LocalFile> files ) {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
@@ -293,67 +287,7 @@ public class AffyPowerToolsProbesetSummarize {
             }
         }
 
-        return this.tryRun( ee, targetPlatform, files, accessionsOfInterest, true, cdfFileName );
-    }
-
-    private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
-            Collection<LocalFile> files, Collection<String> accessionsOfInterest, boolean threePrime,
-            String cdfFileName ) {
-
-        List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
-        AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );
-        String outputPath = this.getOutputFilePath( ee );
-        String cmd;
-
-        if ( threePrime ) {
-            cmd = this.getThreePrimeSummarizationCommand( targetPlatform, cdfFileName, celFiles, outputPath );
-        } else {
-            cmd = this.getCommand( targetPlatform, celFiles, outputPath );
-        }
-
-        AffyPowerToolsProbesetSummarize.log.info( "Running: " + cmd );
-
-        int exitVal = Integer.MIN_VALUE;
-
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        try {
-            final Process run = Runtime.getRuntime().exec( cmd );
-            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
-            GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
-            gscErr.start();
-            gscIn.start();
-
-            while ( exitVal == Integer.MIN_VALUE ) {
-                try {
-                    exitVal = run.exitValue();
-                } catch ( IllegalThreadStateException e ) {
-                    // okay, still waiting.
-                }
-                Thread.sleep( AffyPowerToolsProbesetSummarize.AFFY_UPDATE_INTERVAL_MS );
-
-                File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
-                Long size = outputFile.length();
-
-                String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                AffyPowerToolsProbesetSummarize.log
-                        .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
-                                + " kb (" + minutes + " minutes elapsed)" );
-            }
-
-            overallWatch.stop();
-            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-            AffyPowerToolsProbesetSummarize.log
-                    .info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
-
-            return this.processData( ee,
-                    outputPath + File.separator + AffyPowerToolsProbesetSummarize.METHOD + ".summary.txt",
-                    targetPlatform );
-
-        } catch ( InterruptedException | IOException e ) {
-            throw new RuntimeException( e );
-        }
+        return this.tryRun( ee, targetPlatform, files, accessionsOfInterest, true );
     }
 
     private void checkFileReadable( String f ) {
@@ -366,9 +300,9 @@ public class AffyPowerToolsProbesetSummarize {
      * Stolen from SimpleExpressionDataLoaderService
      *
      * @param expressionExperiment ee
-     * @param bioAssayDimension    BA dim
-     * @param arrayDesign          target design
-     * @param matrix               matrix
+     * @param bioAssayDimension BA dim
+     * @param arrayDesign target design
+     * @param matrix matrix
      * @return raw data vectors
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
@@ -405,8 +339,26 @@ public class AffyPowerToolsProbesetSummarize {
         return vectors;
     }
 
+    private File findCdf( ArrayDesign ad ) {
+        String affyCdfs = Settings.getString( AFFY_POWER_TOOLS_CDF_PATH );
+
+        Map<String, String> cdfNames = this.loadCdfNames();
+
+        String shortName = ad.getShortName();
+        String cdfName = cdfNames.get( shortName );
+
+        if ( cdfName == null ) {
+            throw new IllegalArgumentException(
+                    "No CDF could be located for " + ad + ", please provide correct affy.power.tools.cdf.path "
+                            + "and a valid affy.cdfs.properties file in your classpath, "
+                            + "or specify via the -cdf option" );
+        }
+
+        return new File( affyCdfs + File.separatorChar + cdfName );
+    }
+
     /**
-     * @param files                files
+     * @param files files
      * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return strings
      */
@@ -453,17 +405,19 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * For exon arrays. Like
+     * For exon arrays and others that don't have CDFs. Like
+     * 
      * <pre>
      * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m
      * HuEx-1_0-st-v2.r2.dt1.hg18.core.mps -qc-probesets HuEx-1_0-st-v2.r2.qcc -o GSE13344.genelevel.data
      * /bigscratch/GSE13344/*.CEL
      * </pre>
+     * 
      * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
      * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
      *
-     * @param ad         ad
-     * @param celfiles   celfiles
+     * @param ad ad
+     * @param celfiles celfiles
      * @param outputPath directory
      * @return string
      */
@@ -480,34 +434,13 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalStateException( refPath + " is not a valid directory" );
         }
 
-        /*
-         * Instead of this we should use a config file like we do for CDFs.
-         */
-        Taxon primaryTaxon = ad.getPrimaryTaxon();
+        Map<String, Map<String, String>> mpsnames = loadMpsNames();
+        String p = ad.getShortName();
 
-        String base;
-        String genome;
-        switch ( primaryTaxon.getCommonName() ) {
-            case "human":
-                base = AffyPowerToolsProbesetSummarize.h;
-                genome = AffyPowerToolsProbesetSummarize.hg;
-                break;
-            case "mouse":
-                base = AffyPowerToolsProbesetSummarize.m;
-                genome = AffyPowerToolsProbesetSummarize.mm;
-                break;
-            case "rat":
-                base = AffyPowerToolsProbesetSummarize.r;
-                genome = AffyPowerToolsProbesetSummarize.rn;
-                break;
-            default:
-                throw new IllegalArgumentException( "Cannot use " + primaryTaxon );
-        }
-
-        String pgf = refPath + File.separator + base + ".pgf";
-        String clf = refPath + File.separator + base + ".clf";
-        String mps = refPath + File.separator + base + ".dt1." + genome + ".core.mps";
-        String qcc = refPath + File.separator + base + ".qcc";
+        String pgf = refPath + File.separator + mpsnames.get( p ).get( "pgf" );
+        String clf = refPath + File.separator + mpsnames.get( p ).get( "clf" );
+        String mps = refPath + File.separator + mpsnames.get( p ).get( "mps" );
+        String qcc = refPath + File.separator + mpsnames.get( p ).get( "qcc" );
 
         this.checkFileReadable( pgf );
         this.checkFileReadable( clf );
@@ -526,15 +459,16 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For 3' arrays. Run RMA with quantile normalization.
+     * 
      * <pre>
      * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
      * /bigscratch/GSE123/*.CEL
      * </pre>
      *
      * @param targetPlatform ad
-     * @param cdfFileName    e g. HG-U133A_2.cdf
-     * @param celfiles       celfiles
-     * @param outputPath     path
+     * @param cdfFileName e g. HG-U133A_2.cdf
+     * @param celfiles celfiles
+     * @param outputPath path
      * @return string
      */
     private String getThreePrimeSummarizationCommand( ArrayDesign targetPlatform, String cdfFileName,
@@ -569,9 +503,115 @@ public class AffyPowerToolsProbesetSummarize {
                 + " " + StringUtils.join( celfiles, " " );
     }
 
+    private Map<String, String> loadCdfNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CDFS_PROPERTIES_FILE_NAME );
+            Map<String, String> result = new HashMap<>();
+
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                result.put( k, pc.getString( k ) );
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Map of GPLXXXX -> {mps, pgc, qcc, clf} -> file name
+     * 
+     * @return
+     */
+    protected Map<String, Map<String, String>> loadMpsNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_MPS_PROPERTIES_FILE_NAME );
+            Map<String, Map<String, String>> result = new HashMap<>();
+
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                String[] k2 = k.split( "\\." );
+                String platform = k2[0];
+                String type = k2[1];
+
+                if ( !result.containsKey( platform ) ) {
+                    result.put( platform, new HashMap<String, String>() );
+                }
+                result.get( platform ).put( type, pc.getString( k ) );
+
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     private DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         return reader.read( data );
+    }
+
+    private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            Collection<LocalFile> files, Collection<String> accessionsOfInterest, boolean threePrime ) {
+
+        List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
+        AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );
+        String outputPath = this.getOutputFilePath( ee );
+        String cmd;
+
+        if ( threePrime /* cdf based */ ) {
+            String cdfFileName = this.findCdf( targetPlatform ).getAbsolutePath();
+            cmd = this.getThreePrimeSummarizationCommand( targetPlatform, cdfFileName, celFiles, outputPath );
+        } else {
+            /* mps based */
+            cmd = this.getCommand( targetPlatform, celFiles, outputPath );
+        }
+
+        AffyPowerToolsProbesetSummarize.log.info( "Running: " + cmd );
+
+        int exitVal = Integer.MIN_VALUE;
+
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+
+        try {
+            final Process run = Runtime.getRuntime().exec( cmd );
+            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
+            GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
+            gscErr.start();
+            gscIn.start();
+
+            while ( exitVal == Integer.MIN_VALUE ) {
+                try {
+                    exitVal = run.exitValue();
+                } catch ( IllegalThreadStateException e ) {
+                    // okay, still waiting.
+                }
+                Thread.sleep( AffyPowerToolsProbesetSummarize.AFFY_UPDATE_INTERVAL_MS );
+
+                File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
+                Long size = outputFile.length();
+
+                String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+                AffyPowerToolsProbesetSummarize.log
+                        .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
+                                + " kb (" + minutes + " minutes elapsed)" );
+            }
+
+            overallWatch.stop();
+            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+            AffyPowerToolsProbesetSummarize.log
+                    .info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
+
+            return this.processData( ee,
+                    outputPath + File.separator + AffyPowerToolsProbesetSummarize.METHOD + ".summary.txt",
+                    targetPlatform );
+
+        } catch ( InterruptedException | IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 }
