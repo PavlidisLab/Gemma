@@ -487,10 +487,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         return null;
     }
 
-    /**
-     * Delete outdated annotation and associated experiment files.
-     */
-    private void deleteOldFiles( ArrayDesign arrayDesign ) {
+    @Override
+    public void deleteOldFiles( ArrayDesign arrayDesign ) {
         arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
         Collection<ExpressionExperiment> ees4platform = arrayDesignService.getExpressionExperiments( arrayDesign );
         ArrayDesignProbeMapperServiceImpl.log.info( "Removing invalidated files for up to " + ees4platform.size()

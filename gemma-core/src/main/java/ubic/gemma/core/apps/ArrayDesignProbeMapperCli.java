@@ -705,6 +705,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         for ( ArrayDesign ad : toUpdate ) {
             log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)", AlignmentBasedGeneMappingEvent.Factory.newInstance() );
+            arrayDesignProbeMapperService.deleteOldFiles( ad );
             arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
     }
