@@ -76,8 +76,9 @@ GPL6247=GPL6247
 GPL17378=GPL6247
 GPL17896=GPL6247
 
-# gene arrays, lack CDFs so run as an exon array
-# MoGene-1_0; this has a CDF actually.
+# gene arrays, some lack CDFs so run as an exon array
+
+# MoGene-1_0; this has a CDF actually
 GPL6246=GPL6246
 GPL19485=GPL6246
 GPL9525=GPL6246
