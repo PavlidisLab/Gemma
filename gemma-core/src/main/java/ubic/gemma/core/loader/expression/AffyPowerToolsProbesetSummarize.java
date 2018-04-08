@@ -119,6 +119,11 @@ public class AffyPowerToolsProbesetSummarize {
     public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
             ArrayDesign targetPlatform, ArrayDesign originalPlatform ) throws IOException {
 
+        File f = new File( aptOutputFileToRead );
+        if ( !f.canRead() ) {
+            throw new IOException( "No readable APT output file: " + aptOutputFileToRead );
+        }
+
         AffyPowerToolsProbesetSummarize.log.info( "Parsing " + aptOutputFileToRead );
 
         try (InputStream is = new FileInputStream( aptOutputFileToRead )) {
@@ -372,8 +377,7 @@ public class AffyPowerToolsProbesetSummarize {
         if ( cdfName == null ) {
             throw new IllegalArgumentException(
                     "No CDF could be located for " + ad + ", please provide correct affy.power.tools.cdf.path "
-                            + "and a valid affy.cdfs.properties file in your classpath, "
-                            + "or specify via the -cdf option" );
+                            + "and a valid " + AFFY_CDFS_PROPERTIES_FILE_NAME + " file in your classpath" );
         }
 
         return new File( affyCdfs + File.separatorChar + cdfName );
@@ -457,7 +461,13 @@ public class AffyPowerToolsProbesetSummarize {
         }
 
         Map<String, Map<String, String>> mpsnames = loadMpsNames();
+
         String p = ad.getShortName();
+
+        if ( mpsnames == null || !mpsnames.containsKey( p ) ) {
+            throw new IllegalArgumentException(
+                    "There is no MPS configuration for " + ad.getShortName() + ", check " + AFFY_MPS_PROPERTIES_FILE_NAME );
+        }
 
         String pgf = refPath + File.separator + mpsnames.get( p ).get( "pgf" );
         String clf = refPath + File.separator + mpsnames.get( p ).get( "clf" );
@@ -611,7 +621,7 @@ public class AffyPowerToolsProbesetSummarize {
 
         try {
             final Process run = Runtime.getRuntime().exec( cmd );
-            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
+            GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream(), true );
             GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
             gscErr.start();
             gscIn.start();
@@ -631,6 +641,10 @@ public class AffyPowerToolsProbesetSummarize {
                 AffyPowerToolsProbesetSummarize.log
                         .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
                                 + " kb (" + minutes + " minutes elapsed)" );
+
+                /*
+                 * we're not good at detecting immediate failures
+                 */
             }
 
             overallWatch.stop();
