@@ -296,7 +296,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     .format(
                         "<span class='link'"
                         + " onClick='fetchDiffExpressionData({0})' > " +
-                        "<i class='icon gray-blue fa fa-cloud-download fa-lg' ext:qtip='Download all differential expression data for this analysis in a tab-delimited format'></i></span>",
+                        "<i class='gray-blue fa fa-cloud-download fa-lg' ext:qtip='Download all differential expression data for this analysis in a tab-delimited format'></i></span>",
                         analysis.id);
             },
             getANOVAtypeText: function (numberOfFactors) {
@@ -392,7 +392,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 }, this);
                 return String.format("<span style='cursor:pointer' "
                     + "onClick='Ext.getCmp(&quot;eemanager&quot;).deleteExperimentAnalysis({0},{1},false)'>"
-                    + "<i class='icon red fa fa-remove fa-fw' ext:qtip='Delete this analysis'></i></span>", this.ee.id, analysis.id);
+                    + "<i class='red fa fa-remove fa-lg fa-fw' ext:qtip='Delete this analysis'></i></span>", this.ee.id, analysis.id);
             },
 
             getRedoLink: function (analysis) {
@@ -407,15 +407,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 }, this);
                 return String.format("<span style='cursor:pointer' "
                     + "onClick='Ext.getCmp(&quot;eemanager&quot;).redoExperimentAnalysis({0},{1},false)'>"
-                    + "<i class='icon green fa fa-cog fa-fw' ext:qtip='Re-run this analysis'></i></span>", this.ee.id, analysis.id);
+                    + "<i class='green fa fa-refresh fa-lg fa-fw' ext:qtip='Re-run this analysis'></i></span>", this.ee.id, analysis.id);
             },
 
             /**
              * We can remove this, as it was just for helping deal with corrupt etc. data.
-             *
-             * @param {}
-             *           analysis
-             * @return {}
+             * @param analysis
+             * the analysis
              */
             getRefreshStatsLink: function (analysis) {
                 var manager = new Gemma.EEManager({
@@ -429,9 +427,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 manager.on('reportUpdated', function () {
                     this.fireEvent('analysisRedone');
                 }, this);
-                return String.format("<span style='cursor:pointer' "
+                return String.format("<span class='fa-stack' style='cursor:pointer' "
                     + "onClick='Ext.getCmp(&quot;eemanager&quot;).refreshDiffExStats({0},{1},false)'>"
-                    + "<i class='icon green fa fa-refresh fa-fw' ext:qtip='Refresh the summary stats'></i></span>",
+                    + "<i class='gold fa fa-circle fa-fw fa-lg fa-stack-1x' ext:qtip='Refresh the summary stats'></i>"
+                    + "<i class='orange fa fa-refresh fa-fw fa-lg fa-stack-1x' ext:qtip='Refresh the summary stats'></i>"
+                    + "</span>",
                     this.ee.id, analysis.id);
             },
 
@@ -475,11 +475,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
                     + resultSet.resultSetId + '\',\'' + escape(factor)
                     + '\')">&nbsp;'
-                    + "<i class='icon orange fa fa-area-chart fa-fw' ext:qtip='" + tipText + "'></i></span>";
+                    + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
 
                 var pValueDistImageSize = 16;
                 var strippedFactorName = Ext.util.Format.stripTags(factor);
-                // factorName is for backwards compatiility. Deprecated in favor of using the resultSetId.
+                // factorName is for backwards compatibility. Deprecated in favor of using the resultSetId.
                 var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                     + resultSet.analysisId + '&rsid=' + resultSet.resultSetId + '&factorName=' + escape(strippedFactorName);
                 var methodWithArguments = 'showPValueDistributionWindow(\'' + escape(factor) + '\', \'' + imageUrl

@@ -951,7 +951,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     @Override
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
         //language=HQL
-        final String queryString = "from DifferentialExpressionAnalysisResultImpl dea where dea.id in (:ids)";
+        final String queryString = "from DifferentialExpressionAnalysisResult dea where dea.id in (:ids)";
 
         Collection<DifferentialExpressionAnalysisResult> probeResults = new HashSet<>();
 
@@ -976,15 +976,35 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         return probeResults;
     }
-
-    @Override
-    public DifferentialExpressionAnalysisResult load( Long id ) {
-        return this.getHibernateTemplate().get( DifferentialExpressionAnalysisResultImpl.class, id );
-    }
-
     @Override
     public Collection<DifferentialExpressionAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
+    }
+
+    @Override
+    public void remove( Collection<DifferentialExpressionAnalysisResult> entities ) {
+        if(entities == null || entities.size() < 1) return;
+        Collection<Long> cIds = new HashSet<>();
+
+        // Read contrast ids and wipe references
+        for ( DifferentialExpressionAnalysisResult r : entities ) {
+            cIds.addAll( EntityUtils.getIds( r.getContrasts() ) );
+            r.setContrasts( new HashSet<ContrastResult>() );
+        }
+
+        // Remove contrasts
+        if(cIds.size() > 0) {
+            AbstractDao.log.info( "Removing contrasts..." );
+            this.getSessionFactory().getCurrentSession().createQuery( "delete from ContrastResult e where e.id in (:ids)" ).setParameterList( "ids", cIds )
+                    .executeUpdate();
+
+        }
+
+        // Remove results
+        AbstractDao.log.info( "Removing DEA results" );
+        this.getSessionFactory().getCurrentSession()
+                .createQuery( "delete from DifferentialExpressionAnalysisResult e where e.id in (:ids)" )
+                .setParameterList( "ids", EntityUtils.getIds( entities ) ).executeUpdate();
     }
 
     /**
@@ -1224,5 +1244,4 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
         return needToQuery;
     }
-
 }

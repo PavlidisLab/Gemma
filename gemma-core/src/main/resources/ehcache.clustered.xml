@@ -1822,7 +1822,7 @@
         </terracotta>
     </cache>
 
-    <cache name="ubic.gemma.model.analysis.expression.diff.ContrastResultImpl" maxElementsOnDisk="10000"
+    <cache name="ubic.gemma.model.analysis.expression.diff.ContrastResult" maxElementsOnDisk="10000"
            maxElementsInMemory="50000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
            overflowToDisk="false">
         <terracotta>
@@ -1832,7 +1832,7 @@
         </terracotta>
     </cache>
 
-    <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl.contrasts"
+    <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult.contrasts"
            maxElementsOnDisk="10000" maxElementsInMemory="50000" eternal="false" timeToIdleSeconds="1200"
            timeToLiveSeconds="1200"
            overflowToDisk="false">
@@ -1853,7 +1853,7 @@
         </terracotta>
     </cache>
 
-    <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl"
+    <cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"
            maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
            timeToLiveSeconds="1200"
            overflowToDisk="false">

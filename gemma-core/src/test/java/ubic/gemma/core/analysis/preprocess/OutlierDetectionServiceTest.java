@@ -21,17 +21,13 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
-import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,54 +38,49 @@ import static org.junit.Assert.assertEquals;
  */
 public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
 
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private static final int MATRIX_SIZE = 20;
 
-    @Autowired
-    private GeoService geoService;
-
-    @Autowired
-    private ExpressionExperimentService eeService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private Random random = new Random();
 
     @Autowired
     private OutlierDetectionService outlierDetectionService;
 
     @Test
-    public void testIdentifyOutliers() throws URISyntaxException {
-        ExpressionExperiment ee = eeService.findByShortName( "GSE2982" );
-
-        if ( ee == null ) {
-            geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse2982Short" ) ) );
-
-            Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
-
-            ee = ( ExpressionExperiment ) results.iterator().next();
-        }
-
-        ee = processedExpressionDataVectorService.createProcessedDataVectors( ee );
-
-        // Forced recomputation with no regression
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.create( ee, false, false );
+    public void testIdentifyOutliers() {
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = this.createMockMatrix();
 
         // 1 outlier initially
-        Collection<OutlierDetails> output = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
-        assertEquals( 1, output.size() );
+        Collection<OutlierDetails> output = outlierDetectionService
+                .identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
+        assertEquals( 0, output.size() );
 
-        // modify a sample to be the outlier
+        // modify 2 samples to be outliers
         int outlierIdx = 1;
+        int outlierIdx2 = 14;
         for ( int j = 0; j < sampleCorrelationMatrix.columns(); j++ ) {
-            sampleCorrelationMatrix.set( j, outlierIdx, -0.5 + j / 100.0 );
-            sampleCorrelationMatrix.set( outlierIdx, j, -0.5 + j / 100.0 );
+            Double val = 0.8 + ( random.nextDouble() / 10 );
+            sampleCorrelationMatrix.set( j, outlierIdx, val );
+            sampleCorrelationMatrix.set( outlierIdx, j, val );
+            val = 0.8 + ( random.nextDouble() / 10 );
+            sampleCorrelationMatrix.set( j, outlierIdx2, val );
+            sampleCorrelationMatrix.set( outlierIdx2, j, val );
         }
 
         // now we expect one new outlier from the modified matrix
         output = outlierDetectionService.identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
         assertEquals( 2, output.size() );
         assertEquals( sampleCorrelationMatrix.getColName( outlierIdx ), output.iterator().next().getBioAssay() );
+    }
+
+    private DoubleMatrix<BioAssay, BioAssay> createMockMatrix() {
+        DoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( OutlierDetectionServiceTest.MATRIX_SIZE,
+                OutlierDetectionServiceTest.MATRIX_SIZE );
+        for ( int i = 0; i < OutlierDetectionServiceTest.MATRIX_SIZE; i++ ) {
+            for ( int j = 0; j < OutlierDetectionServiceTest.MATRIX_SIZE; j++ ) {
+                matrix.set( i, j, 0.9 + ( random.nextDouble() / 10 ) );
+            }
+        }
+        return matrix;
     }
 
 }

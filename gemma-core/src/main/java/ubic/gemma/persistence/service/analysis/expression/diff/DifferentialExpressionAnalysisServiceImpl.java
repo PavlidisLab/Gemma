@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.apache.commons.lang3.time.StopWatch;
+import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -36,6 +39,7 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -52,6 +56,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+    @Autowired
+    private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
 
     @Override
     @Transactional(readOnly = true)
@@ -192,6 +198,19 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     @Override
     @Transactional
     public void remove( DifferentialExpressionAnalysis toDelete ) {
+        // Thaw
+        toDelete = this.expressionAnalysisResultSetDao.thawFully( toDelete );
+
+        // Remove meta analyses that use the analyzed experiment
+        Log.info( this.getClass(), "Removing meta analyses with this experiment..." );
+        Collection<GeneDifferentialExpressionMetaAnalysis> metas = this.geneDiffExMetaAnalysisDao
+                .findByInvestigation( toDelete.getExperimentAnalyzed() );
+        geneDiffExMetaAnalysisDao.remove( metas );
+
+        // Remove result sets
+        this.removeResultSets( toDelete );
+
+        // Remove the DEA
         this.differentialExpressionAnalysisDao.remove( toDelete );
     }
 
@@ -253,6 +272,29 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> loadAll() {
         return this.differentialExpressionAnalysisDao.loadAll();
+    }
+
+    private void removeResultSets( DifferentialExpressionAnalysis toDelete ) {
+        Collection<ExpressionAnalysisResultSet> rss = toDelete.getResultSets();
+
+        // Wipe references
+        toDelete.setResultSets( new HashSet<ExpressionAnalysisResultSet>() );
+        this.update( toDelete );
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        int rsCnt = 0;
+        int rCnt = 0;
+
+        // remove from database
+        for ( ExpressionAnalysisResultSet rs : rss ) {
+            rCnt = rs.getResults().size();
+            this.expressionAnalysisResultSetDao.remove( rs );
+            rsCnt++;
+        }
+
+        sw.stop();
+        Log.info( this.getClass(), "Removed " + rCnt + " results in " + rsCnt + " result sets." );
     }
 
 }

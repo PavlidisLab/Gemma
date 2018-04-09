@@ -43,7 +43,7 @@
                         <column name="RESULT_SET_FK" sql-type="BIGINT"/>
                     </key>
                     <one-to-many
-                            class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl"/>
+                            class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult"/>
                 </set>
                 <many-to-one name="analysis"
                              class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"

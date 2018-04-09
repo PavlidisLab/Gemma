@@ -23,10 +23,11 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.jfree.util.Log;
+import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -42,9 +43,13 @@ import java.util.List;
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAnalysisResultSet>
         implements ExpressionAnalysisResultSetDao {
 
+    private DifferentialExpressionResultDao resultDao;
+
     @Autowired
-    public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
+    public ExpressionAnalysisResultSetDaoImpl( DifferentialExpressionResultDao resultDao,
+            SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
+        this.resultDao = resultDao;
     }
 
     /**
@@ -63,14 +68,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
                         + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
                         + "where r = :rs " ).setParameter( "rs", resultSet ).list();
 
-        if ( timer.getTime() > 1000 ) {
-            Log.info( "Thaw resultSet: " + timer.getTime() + "ms" );
-        }
-
         assert !res.isEmpty();
 
-        return res.get( 0 );
+        if ( timer.getTime() > 1000 ) {
+            Log.info( this.getClass(), "Thaw resultSet " + res.get( 0 ).getId() + " took " + timer.getTime() + "ms" );
+        }
 
+        return res.get( 0 );
     }
 
     @Override
@@ -102,8 +106,13 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
         differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession()
                 .load( DifferentialExpressionAnalysis.class, differentialExpressionAnalysis.getId() );
         Collection<ExpressionAnalysisResultSet> thawed = new HashSet<>();
-        for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
+        Collection<ExpressionAnalysisResultSet> rss = differentialExpressionAnalysis.getResultSets();
+        int size = rss.size();
+        int cnt = 0;
+        for ( ExpressionAnalysisResultSet rs : rss ) {
             thawed.add( this.thaw( rs ) );
+            cnt++;
+            Log.info( this.getClass(), "Thawed " + cnt + "/" + size + " resultSets" );
         }
         boolean changed = differentialExpressionAnalysis.getResultSets().addAll( thawed );
         assert !changed; // they are the same objects, just updated.
@@ -127,12 +136,36 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
                         + "where r = :rs " ).setParameter( "rs", resultSet ).list();
 
         if ( timer.getTime() > 1000 ) {
-            Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
+            Log.info( this.getClass(), "Thaw resultset: " + timer.getTime() + "ms" );
         }
 
         assert !res.isEmpty();
 
         return res.get( 0 );
 
+    }
+
+    @Override
+    public void remove( ExpressionAnalysisResultSet entity ) {
+        Collection<DifferentialExpressionAnalysisResult> rss = entity.getResults();
+
+        int size = rss.size();
+
+        // Wipe references
+        entity.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
+        this.update( entity );
+
+        // Remove results
+        if ( size > 0 ) {
+            AbstractDao.log.info( "Bulk removing " + size + " dea results." );
+            resultDao.remove( rss );
+            AbstractDao.log.info( "Done, flushing..." );
+            this.getSessionFactory().getCurrentSession().flush();
+        }
+
+        // Remove result set
+        AbstractDao.log.info( "Removing result set " + entity.getId() );
+        super.remove( entity );
+        this.getSessionFactory().getCurrentSession().flush();
     }
 }

@@ -360,38 +360,10 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.4.1</version>
-                <configuration>
-                    <allowTimestampedSnapshots>
-                        true
-                    </allowTimestampedSnapshots>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
                     <reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                            <version>2.7</version>
-                            <reportSets>
-                                <reportSet>
-                                    <reports>
-                                        <report>index</report>
-                                        <report>dependencies</report>
-                                        <report>license</report>
-                                        <report>scm</report>
-                                        <report>summary</report>
-                                        <report>dependency-convergence</report>
-                                    </reports>
-                                </reportSet>
-                            </reportSets>
-                        </plugin>
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-javadoc-plugin</artifactId>
@@ -420,32 +392,10 @@
                                 </configuration>
                             </configuration>
                         </plugin>
-                        <plugin>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>jdepend-maven-plugin</artifactId>
-                            <version>2.0-beta-2</version>
-                        </plugin>
                     </reportPlugins>
                 </configuration>
             </plugin>
-            <plugin>
-                <!-- used when running cobertura outside of the 'site' plugin call. -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.5.2</version>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <outputDirectory>${cobertura.outputDirectory}/${project.artifactId}</outputDirectory>
-                </configuration>
-            </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh-external</artifactId>
-                <version>2.4</version>
-            </extension>
-        </extensions>
     </build>
     <repositories>
         <repository>
@@ -612,11 +562,6 @@
                 </property>
             </activation>
             <distributionManagement>
-                <site>
-                    <id>localDeploy</id>
-                    <name>localDeploy</name>
-                    <url>file:///space/gemmaData/gemma-devsite</url>
-                </site>
                 <repository>
                     <id>repo</id>
                     <name>Pavlab</name>
@@ -631,12 +576,6 @@
         </profile>
     </profiles>
     <distributionManagement>
-        <site>
-            <id>website</id>
-            <url>
-                scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
-            </url>
-        </site>
         <repository>
             <id>repo</id>
             <name>Pavlab</name>

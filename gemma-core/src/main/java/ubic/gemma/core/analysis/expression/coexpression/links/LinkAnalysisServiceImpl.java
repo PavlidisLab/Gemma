@@ -438,7 +438,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 return;
             }
 
-            if ( !batchEffect.isHasBatchInformation() ) {
+            if ( batchEffect.hasNoBatchInfo() ) {
                 // we may change this behaviour...
                 throw new UnsuitableForAnalysisException( ee,
                         "No batch information available, out of an abundance of caution we are skipping" );
@@ -449,8 +449,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 double componentVarianceProportion = batchEffect.getComponentVarianceProportion();
                 Integer component = batchEffect.getComponent();
                 // don't worry if it is a "minor" component. remember that is must be one of the first few to make it
-                // this
-                // far.
+                // this far.
                 if ( component > 2 && componentVarianceProportion < 0.1 ) {
                     return;
                 }
