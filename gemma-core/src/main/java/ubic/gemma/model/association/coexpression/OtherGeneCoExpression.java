@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,26 +18,17 @@
  */
 package ubic.gemma.model.association.coexpression;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-
 public abstract class OtherGeneCoExpression extends Gene2GeneCoexpression {
 
     private static final long serialVersionUID = 7730779544234187004L;
 
     public static final class Factory {
 
+        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static OtherGeneCoExpression newInstance( Double effect, Long firstGene, Long secondGene ) {
             final OtherGeneCoExpression entity = new OtherGeneCoExpressionImpl();
             assert effect != null && firstGene != null && secondGene != null;
-            try {
-                FieldUtils.writeField( entity, "firstGene", firstGene, true );
-                FieldUtils.writeField( entity, "secondGene", secondGene, true );
-                FieldUtils.writeField( entity, "positiveCorrelation", effect > 0, true );
-                FieldUtils.writeField( entity, "numDataSetsSupporting", 1, true );
-
-            } catch ( IllegalAccessException e ) {
-                System.err.println( e );
-            }
+            Gene2GeneCoexpression.tryWriteFields( effect, firstGene, secondGene, entity );
 
             return entity;
         }

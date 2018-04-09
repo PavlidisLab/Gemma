@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,13 +19,20 @@
 
 package ubic.gemma.persistence.service.association;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,7 +44,51 @@ import java.util.Map;
  * @see Gene2GOAssociationService
  */
 @Service
-public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase {
+public class Gene2GOAssociationServiceImpl extends AbstractService<Gene2GOAssociation>
+        implements Gene2GOAssociationService, InitializingBean {
+
+    private static final String G2G_CACHE_NAME = "Gene2GoServiceCache";
+    private final Gene2GOAssociationDao gene2GOAssociationDao;
+    private final CacheManager cacheManager;
+    private Cache gene2goCache;
+
+    @Autowired
+    public Gene2GOAssociationServiceImpl( Gene2GOAssociationDao mainDao, CacheManager cacheManager ) {
+        super( mainDao );
+        this.gene2GOAssociationDao = mainDao;
+        this.cacheManager = cacheManager;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
+        cacheManager.addCache( gene2goCache );
+        this.gene2goCache = CacheUtils
+                .createOrLoadCache( cacheManager, Gene2GOAssociationServiceImpl.G2G_CACHE_NAME, terracottaEnabled, 5000,
+                        false, false, 1000, 500, false );
+
+    }
+
+    @Override
+    public Collection<Gene2GOAssociation> findAssociationByGene( Gene gene ) {
+        return this.gene2GOAssociationDao.findAssociationByGene( gene );
+    }
+
+    @Override
+    public Collection<VocabCharacteristic> findByGene( Gene gene ) {
+
+        Element element = this.gene2goCache.get( gene );
+
+        if ( element != null ) //noinspection unchecked
+            return ( Collection<VocabCharacteristic> ) element.getObjectValue();
+
+        Collection<VocabCharacteristic> re = this.gene2GOAssociationDao.findByGene( gene );
+
+        this.gene2goCache.put( new Element( gene, re ) );
+
+        return re;
+
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -55,90 +106,32 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
                 needToFind.add( gene );
         }
 
-        result.putAll( this.getGene2GOAssociationDao().findByGenes( needToFind ) );
+        result.putAll( this.gene2GOAssociationDao.findByGenes( needToFind ) );
 
         return result;
 
     }
 
-    /**
-     * @see Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
-     */
     @Override
-    protected Gene2GOAssociation handleCreate( Gene2GOAssociation gene2GOAssociation ) {
-        return this.getGene2GOAssociationDao().create( gene2GOAssociation );
-    }
-
-    /**
-     * @see Gene2GOAssociationService#find(Gene2GOAssociation)
-     */
-    @Override
-    protected Gene2GOAssociation handleFind( Gene2GOAssociation gene2GOAssociation ) {
-        return this.getGene2GOAssociationDao().find( gene2GOAssociation );
+    public Collection<Gene> findByGOTerm( String goID, Taxon taxon ) {
+        return this.gene2GOAssociationDao.findByGoTerm( goID, taxon );
     }
 
     @Override
-    protected Collection<Gene2GOAssociation> handleFindAssociationByGene( Gene gene ) {
-        return this.getGene2GOAssociationDao().findAssociationByGene( gene );
-    }
-
-    @Override
-    protected Collection<VocabCharacteristic> handleFindByGene( Gene gene ) {
-
-        Element element = this.gene2goCache.get( gene );
-
-        if ( element != null ) //noinspection unchecked
-            return ( Collection<VocabCharacteristic> ) element.getObjectValue();
-
-        Collection<VocabCharacteristic> re = this.getGene2GOAssociationDao().findByGene( gene );
-
-        this.gene2goCache.put( new Element( gene, re ) );
-
-        return re;
-
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<String, Collection<Gene>> getSets( Collection<String> uris ) {
-        return this.getGene2GOAssociationDao().getSets( uris );
-    }
-
-    @Override
-    protected Collection<Gene> handleFindByGOTerm( String goID, Taxon taxon ) {
-        return this.getGene2GOAssociationDao().findByGoTerm( goID, taxon );
-    }
-
-    /**
-     * @see Gene2GOAssociationService#findOrCreate(Gene2GOAssociation)
-     */
-    @Override
-    protected Gene2GOAssociation handleFindOrCreate( Gene2GOAssociation gene2GOAssociation ) {
-        return this.getGene2GOAssociationDao().findOrCreate( gene2GOAssociation );
-    }
-
-    @Override
-    protected void handleRemoveAll() {
-        this.getGene2GOAssociationDao().removeAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch ) {
-        return this.getGene2GOAssociationDao().getGenes( termsToFetch );
+    public void removeAll() {
+        this.gene2GOAssociationDao.removeAll();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon ) {
-        return this.getGene2GOAssociationDao().getGenes( termsToFetch, taxon );
-
+        return this.gene2GOAssociationDao.getGenes( termsToFetch, taxon );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch ) {
-        return this.getGene2GOAssociationDao().findByGoTermsPerTaxon( termsToFetch );
+        return this.gene2GOAssociationDao.findByGoTermsPerTaxon( termsToFetch );
     }
 
 }

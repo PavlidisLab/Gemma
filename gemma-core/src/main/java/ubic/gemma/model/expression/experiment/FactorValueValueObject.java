@@ -26,6 +26,7 @@ import java.util.Iterator;
  * type has been completely phased out, revise the BioMaterialValueObject and relevant DAOs and Services.
  */
 @Deprecated
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
@@ -57,14 +58,14 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     public FactorValueValueObject( FactorValue fv ) {
         super( fv.getId() );
         if ( fv.getCharacteristics().size() == 1 ) {
-            init( fv, fv.getCharacteristics().iterator().next() );
+            this.init( fv, fv.getCharacteristics().iterator().next() );
         } else if ( fv.getCharacteristics().size() > 1 ) {
             /*
-             * FIXME Inadequate! Want to capture them all.
+             * Inadequate! Want to capture them all - use FactorValueBasicValueObject!
              */
-            init( fv, fv.getCharacteristics().iterator().next() );
+            this.init( fv, fv.getCharacteristics().iterator().next() );
         } else {
-            init( fv, null );
+            this.init( fv, null );
         }
     }
 
@@ -74,11 +75,11 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      *              confuses things.
      *              If c is null, the plain "value" is used.
      * @param value value
-     * @deprecated FIXME this makes no sense and we _do_ pass in the EF category in several places.s
+     * @deprecated see class deprecated note
      */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
         super( value.getId() );
-        init( value, c );
+        this.init( value, c );
     }
 
     static String getSummaryString( FactorValue fv ) {
@@ -106,7 +107,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         FactorValueValueObject other = ( FactorValueValueObject ) obj;
         if ( charId == null ) {
@@ -122,11 +123,14 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
             return id.equals( other.id ) && id.equals( other.id );
 
         if ( value == null ) {
-            if ( other.value != null )
-                return false;
-        } else if ( !value.equals( other.value ) )
-            return false;
-        return true;
+            return other.value == null;
+        } else
+            return value.equals( other.value );
+    }
+
+    @Override
+    public String toString() {
+        return "FactorValueValueObject [factor=" + factor + ", value=" + value + "]";
     }
 
     /**
@@ -237,13 +241,8 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
         this.measurement = measurement;
     }
 
-    @Override
-    public String toString() {
-        return "FactorValueValueObject [factor=" + factor + ", value=" + value + "]";
-    }
-
     private void init( FactorValue val, Characteristic c ) {
-        this.setFactorValue( getSummaryString( val ) );
+        this.setFactorValue( FactorValueValueObject.getSummaryString( val ) );
         this.setFactorId( val.getExperimentalFactor().getId() );
         this.isBaseline = val.getIsBaseline() != null ? val.getIsBaseline() : this.isBaseline;
 

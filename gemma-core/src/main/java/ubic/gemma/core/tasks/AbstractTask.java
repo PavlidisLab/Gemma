@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import ubic.gemma.core.job.TaskResult;
 public abstract class AbstractTask<T extends TaskResult, C extends TaskCommand> implements Task<T, C> {
     protected C taskCommand;
 
+    @SuppressWarnings("WeakerAccess") // Spring requirement
     public AbstractTask() {
     }
 
@@ -36,13 +37,13 @@ public abstract class AbstractTask<T extends TaskResult, C extends TaskCommand> 
     }
 
     @Override
-    public void setTaskCommand( C taskCommand ) {
-        assert taskCommand != null;
-        this.taskCommand = taskCommand;
+    public C getTaskCommand() {
+        return this.taskCommand;
     }
 
     @Override
-    public C getTaskCommand() {
-        return this.taskCommand;
+    public void setTaskCommand( C taskCommand ) {
+        assert taskCommand != null;
+        this.taskCommand = taskCommand;
     }
 }

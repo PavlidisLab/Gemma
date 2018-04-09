@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,48 +21,42 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
-import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 
 /**
  * Command line interface to gene parsing and loading
- * 
- * @author joseph
  *
+ * @author joseph
  */
 public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
+    private static final String GENE_INFO_FILE = "gene_info.gz";
+    private static final String GENE2ACCESSION_FILE = "gene2accession.gz";
+    private static final String GENE_HISTORY_FILE = "gene_history.gz";
+    private static final String GENE2ENSEMBL_FILE = "gene2ensembl.gz";
     private NcbiGeneLoader loader;
-
-    private String GENEINFO_FILE = "gene_info.gz";
-    private String GENE2ACCESSION_FILE = "gene2accession.gz";
-    private String GENEHISTORY_FILE = "gene_history.gz";
-    private String GENE2ENSEMBL_FILE = "gene2ensembl.gz";
-
     private String filePath = null;
 
     private String taxonCommonName = null;
 
     private boolean skipDownload = false;
 
-    private Integer startNcbiid = null;
+    private Integer startNcbiId = null;
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public NcbiGeneLoaderCLI() {
         super();
     }
 
     public static void main( String[] args ) {
         NcbiGeneLoaderCLI p = new NcbiGeneLoaderCLI();
-        try {
-            p.doWork( args );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        AbstractCLIContextCLI.tryDoWork( p, args );
     }
 
     @Override
@@ -70,16 +64,49 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         return CommandGroup.SYSTEM;
     }
 
+    /**
+     * @return Returns the loader
+     */
+    @SuppressWarnings("unused") // Possible external use
+    public NcbiGeneLoader getLoader() {
+        return this.loader;
+    }
+
+    @Override
+    public String getCommandName() {
+        return "geneUpdate";
+    }
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" )
+                .withDescription( "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" )
+                .create( 'f' );
+
+        this.addOption( pathOption );
+
+        this.addOption( "taxon", true, "Specific taxon for which to update genes" );
+
+        this.addOption( "nodownload", false, "Set to suppress NCBI file download" );
+
+        this.addOption( "restart", true, "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
+                + "and assumes you have the right -taxon option, if any)" );
+
+        this.requireLogin();
+    }
+
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        Exception err = this.processCommandLine( args );
+        if ( err != null )
+            return err;
         loader = new NcbiGeneLoader();
         TaxonService taxonService = this.getBean( TaxonService.class );
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.getPersisterHelper() );
         loader.setSkipDownload( this.skipDownload );
-        loader.setStartingNcbiId( startNcbiid );
+        loader.setStartingNcbiId( startNcbiId );
 
         Taxon t = null;
         if ( StringUtils.isNotBlank( taxonCommonName ) ) {
@@ -90,16 +117,16 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         }
 
         if ( filePath != null ) {
-            String geneInfoFile = filePath + File.separatorChar + GENEINFO_FILE;
-            String gene2AccFile = filePath + File.separatorChar + GENE2ACCESSION_FILE;
-            String geneHistoryFile = filePath + File.separatorChar + GENEHISTORY_FILE;
-            String geneEnsemblFile = filePath + File.separatorChar + GENE2ENSEMBL_FILE;
+            String geneInfoFile = filePath + File.separatorChar + NcbiGeneLoaderCLI.GENE_INFO_FILE;
+            String gene2AccFile = filePath + File.separatorChar + NcbiGeneLoaderCLI.GENE2ACCESSION_FILE;
+            String geneHistoryFile = filePath + File.separatorChar + NcbiGeneLoaderCLI.GENE_HISTORY_FILE;
+            String geneEnsemblFile = filePath + File.separatorChar + NcbiGeneLoaderCLI.GENE2ENSEMBL_FILE;
 
             if ( t != null ) {
                 loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, t );
             } else {
                 loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, true ); // do filtering of
-                                                                                                   // taxa
+                // taxa
             }
         } else { /* defaults to download files remotely. */
             if ( t != null ) {
@@ -112,69 +139,28 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         return null;
     }
 
-    /**
-     * @return Returns the loader
-     */
-    public NcbiGeneLoader getLoader() {
-        return this.loader;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.AbstractSpringAwareCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
-        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" )
-                .withDescription( "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" )
-                .create( 'f' );
-
-        addOption( pathOption );
-
-        addOption( "taxon", true, "Specific taxon for which to update genes" );
-
-        addOption( "nodownload", false, "Set to suppress NCBI file download" );
-
-        addOption( "restart", true, "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
-                + "and assumes you have the right -taxon option, if any)" );
-
-        requireLogin();
+    public String getShortDesc() {
+        return "Load/update gene information";
     }
 
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'f' ) ) {
-            filePath = getOptionValue( 'f' );
+        if ( this.hasOption( 'f' ) ) {
+            filePath = this.getOptionValue( 'f' );
         }
-        if ( hasOption( "taxon" ) ) {
-            this.taxonCommonName = getOptionValue( "taxon" );
+        if ( this.hasOption( "taxon" ) ) {
+            this.taxonCommonName = this.getOptionValue( "taxon" );
         }
-        if ( hasOption( "restart" ) ) {
-            this.startNcbiid = Integer.parseInt( getOptionValue( "restart" ) );
-            log.info( "Will attempt to pick up at ncbi gene id=" + startNcbiid );
+        if ( this.hasOption( "restart" ) ) {
+            this.startNcbiId = Integer.parseInt( this.getOptionValue( "restart" ) );
+            AbstractCLI.log.info( "Will attempt to pick up at ncbi gene id=" + startNcbiId );
             this.skipDownload = true;
         }
-        if ( hasOption( "nodownload" ) ) {
+        if ( this.hasOption( "nodownload" ) ) {
             this.skipDownload = true;
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
-    @Override
-    public String getCommandName() {
-        return "geneUpdate";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Load/update gene information";
     }
 
 }

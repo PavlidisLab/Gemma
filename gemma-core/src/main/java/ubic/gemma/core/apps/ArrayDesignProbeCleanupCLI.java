@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,9 +22,12 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 import java.io.*;
@@ -38,22 +41,18 @@ import java.io.*;
 public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingCli {
 
     private CompositeSequenceService compositeSequenceService;
-    private DesignElementDataVectorService designElementDataVectorService;
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     private String file;
 
     public static void main( String[] args ) {
         ArrayDesignProbeCleanupCLI p = new ArrayDesignProbeCleanupCLI();
-        tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
     }
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
-    }
-
-    @Override
-    public String getCommandName() {
-        return "deletePlatformElements";
     }
 
     @Override
@@ -64,21 +63,37 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
                 .withDescription( "File (tabbed) with element ids in the first column" ).withLongOpt( "file" )
                 .create( 'f' );
 
-        addOption( fileOption );
+        this.addOption( fileOption );
 
     }
 
     @Override
+    protected void processOptions() {
+        super.processOptions();
+        this.compositeSequenceService = this.getBean( CompositeSequenceService.class );
+        this.rawExpressionDataVectorService = this.getBean( RawExpressionDataVectorService.class );
+        this.processedExpressionDataVectorService = this.getBean( ProcessedExpressionDataVectorService.class );
+        if ( this.hasOption( 'f' ) ) {
+            file = this.getOptionValue( 'f' );
+        }
+    }
+
+    @Override
+    public String getCommandName() {
+        return "deletePlatformElements";
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
+        Exception err = this.processCommandLine( args );
 
         if ( err != null )
             return err;
 
         File f = new File( file );
         if ( !f.canRead() ) {
-            log.fatal( "Cannot read from " + file );
-            bail( ErrorCode.INVALID_OPTION );
+            AbstractCLI.log.fatal( "Cannot read from " + file );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
 
         if ( this.arrayDesignsToProcess.size() > 1 ) {
@@ -103,27 +118,18 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
                 CompositeSequence cs = compositeSequenceService.findByName( arrayDesign, probe );
                 if ( cs != null ) {
-                    log.info( "Removing: " + cs );
-                    designElementDataVectorService.removeDataForCompositeSequence( cs );
+                    AbstractCLI.log.info( "Removing: " + cs );
+                    rawExpressionDataVectorService.removeDataForCompositeSequence( cs );
+                    processedExpressionDataVectorService.removeDataForCompositeSequence( cs );
                     compositeSequenceService.remove( cs );
                     count++;
                 }
             }
-            log.info( "Deleted " + count + " probes" );
+            AbstractCLI.log.info( "Deleted " + count + " probes" );
         } catch ( IOException e ) {
             return e;
         }
 
         return null;
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        this.compositeSequenceService = getBean( CompositeSequenceService.class );
-        this.designElementDataVectorService = getBean( DesignElementDataVectorService.class );
-        if ( this.hasOption( 'f' ) ) {
-            file = this.getOptionValue( 'f' );
-        }
     }
 }

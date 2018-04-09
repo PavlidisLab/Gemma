@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,36 +18,41 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.util.Collection;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.service.AbstractService;
+
+import java.io.*;
+import java.net.MalformedURLException;
 
 /**
  * @author pavlidis
- *
  */
 @Service
-public class LocalFileServiceImpl extends LocalFileServiceBase {
+public class LocalFileServiceImpl extends AbstractService<LocalFile> implements LocalFileService {
+
+    private final LocalFileDao localFileDao;
+
+    @Autowired
+    public LocalFileServiceImpl( LocalFileDao mainDao ) {
+        super( mainDao );
+        this.localFileDao = mainDao;
+    }
 
     /**
      * @see LocalFileService#copyFile(LocalFile, LocalFile)
      */
     @Override
-    protected LocalFile handleCopyFile( LocalFile sourceFile, LocalFile targetFile ) throws IOException {
+    public LocalFile copyFile( LocalFile sourceFile, LocalFile targetFile ) throws IOException {
         File src = sourceFile.asFile();
-        if ( src == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
+        if ( src == null )
+            throw new IOException( "Could not convert LocalFile into java.io.File" );
 
         File dst = targetFile.asFile();
-        if ( dst == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
-        try (InputStream in = new FileInputStream( src ); OutputStream out = new FileOutputStream( dst );) {
+        if ( dst == null )
+            throw new IOException( "Could not convert LocalFile into java.io.File" );
+        try (InputStream in = new FileInputStream( src ); OutputStream out = new FileOutputStream( dst )) {
             // Transfer bytes from in to out
             byte[] buf = new byte[1024];
             int len;
@@ -61,7 +66,7 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
 
             targetFile.setSize( size );
 
-            this.getLocalFileDao().create( targetFile );
+            this.localFileDao.create( targetFile );
             return targetFile;
         }
     }
@@ -70,11 +75,13 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
      * @see LocalFileService#deleteFile(ubic.gemma.model.common.description.LocalFile)
      */
     @Override
-    protected void handleDeleteFile( ubic.gemma.model.common.description.LocalFile localFile ) throws IOException {
+    public void deleteFile( LocalFile localFile ) throws IOException {
 
-        if ( localFile == null ) return;
+        if ( localFile == null )
+            return;
         File file = localFile.asFile();
-        if ( file == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
+        if ( file == null )
+            throw new IOException( "Could not convert LocalFile into java.io.File" );
 
         boolean success = false;
         if ( file.exists() ) {
@@ -84,28 +91,11 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
         if ( file.exists() || !success ) {
             throw new IOException( "Cannot remove file" );
         }
-        this.getLocalFileDao().remove( localFile );
+        this.localFileDao.remove( localFile );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * LocalFileServiceBase#handleFind(ubic.gemma.model.common.description.LocalFile
-     * )
-     */
     @Override
-    protected LocalFile handleFind( LocalFile localFile ) {
-        return this.getLocalFileDao().find( localFile );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see LocalFileServiceBase#handleFindByPath(java.lang.String)
-     */
-    @Override
-    protected LocalFile handleFindByPath( String path ) {
+    public LocalFile findByPath( String path ) {
         File f = new File( path );
         LocalFile seek = LocalFile.Factory.newInstance();
         try {
@@ -113,53 +103,12 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( e );
         }
-        return this.getLocalFileDao().find( seek );
+        return this.localFileDao.find( seek );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * LocalFileServiceBase#handleFindOrCreate(ubic.gemma.model.common.description
-     * .LocalFile)
-     */
     @Override
-    protected LocalFile handleFindOrCreate( LocalFile localFile ) {
-        return this.getLocalFileDao().findOrCreate( localFile );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * LocalFileServiceBase#handleSave(ubic.gemma.model.common.description.LocalFile
-     * )
-     */
-    @Override
-    protected LocalFile handleSave( LocalFile localFile ) {
-        return this.getLocalFileDao().create( localFile );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see LocalFileServiceBase#handleUpdate(ubic.gemma.model.common.description.
-     * LocalFile )
-     */
-    @Override
-    protected void handleUpdate( LocalFile localFile ) {
-        this.getLocalFileDao().update( localFile );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see LocalFileService#loadAll()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public Collection<LocalFile> loadAll() {
-        return ( Collection<LocalFile> ) this.getLocalFileDao().loadAll();
+    public LocalFile save( LocalFile localFile ) {
+        return this.localFileDao.create( localFile );
     }
 
 }

@@ -220,8 +220,6 @@ Gemma.SearchForm = Ext.extend( Ext.form.FormPanel, {
    // width : 500,
 
    /**
-    * Restore state ... fixme.
-    * 
     * @memberOf Gemma.SearchForm
     */
    restoreState : function() {

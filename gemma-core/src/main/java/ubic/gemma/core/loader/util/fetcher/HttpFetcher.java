@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,30 +38,26 @@ import java.util.concurrent.FutureTask;
  *
  * @author pavlidis
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class HttpFetcher extends AbstractFetcher {
 
     @Override
     public Collection<LocalFile> fetch( String url ) {
-        return fetch( url, null );
+        return this.fetch( url, null );
     }
 
     public Collection<LocalFile> fetch( String url, String outputFileName ) {
-        log.info( "Seeking " + url );
+        AbstractFetcher.log.info( "Seeking " + url );
 
         this.localBasePath = Settings.getDownloadPath();
 
         try {
 
             String host = ( new URL( url ) ).getHost();
-            String filePath = ( new URL( url ) ).getPath();
+            String filePath;
 
             if ( StringUtils.isBlank( host ) ) {
                 throw new IllegalArgumentException( url + " was not parsed into a valid URL" );
-            }
-
-            if ( StringUtils.isBlank( filePath ) ) {
-                filePath = "index.html";
             }
 
             filePath = url.replace( host, "" );
@@ -72,16 +68,15 @@ public class HttpFetcher extends AbstractFetcher {
             filePath = filePath.replace( '/', '_' );
             filePath = filePath.replaceFirst( "^_", "" );
 
-            File newDir = mkdir( host );
+            File newDir = this.mkdir( host );
 
             final String output;
             if ( outputFileName == null ) {
-                output = formLocalFilePath( filePath, newDir );
+                output = this.formLocalFilePath( filePath, newDir );
             } else {
                 output = outputFileName;
             }
 
-            // FIXME if the file doesn't exist, we still get a response with a 404.
             FutureTask<Boolean> future = this.defineTask( output, url );
             return this.doTask( future, url, output );
         } catch ( IOException e ) {
@@ -94,7 +89,7 @@ public class HttpFetcher extends AbstractFetcher {
             @Override
             @SuppressWarnings("synthetic-access")
             public Boolean call() throws IOException {
-                log.info( "Fetching " + seekFile );
+                AbstractFetcher.log.info( "Fetching " + seekFile );
                 URL urlPattern = new URL( seekFile );
 
                 InputStream inputStream = new BufferedInputStream( urlPattern.openStream() );
@@ -119,14 +114,14 @@ public class HttpFetcher extends AbstractFetcher {
 
             while ( !future.isDone() ) {
                 try {
-                    Thread.sleep( INFO_UPDATE_INTERVAL );
+                    Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
                 } catch ( InterruptedException ignored ) {
 
                 }
-                log.info( ( new File( outputFileName ).length() + " bytes read" ) );
+                AbstractFetcher.log.info( ( new File( outputFileName ).length() + " bytes read" ) );
             }
             if ( future.get() ) {
-                return listFiles( seekFile, outputFileName );
+                return this.listFiles( seekFile, outputFileName );
             }
         } catch ( ExecutionException | IOException e ) {
             throw new RuntimeException( "Couldn't fetch file for " + seekFile, e );
@@ -153,7 +148,7 @@ public class HttpFetcher extends AbstractFetcher {
     protected Collection<LocalFile> listFiles( String seekFile, String outputFileName ) throws IOException {
         Collection<LocalFile> result = new HashSet<>();
         File file = new File( outputFileName );
-        log.info( "Downloaded: " + file );
+        AbstractFetcher.log.info( "Downloaded: " + file );
         LocalFile newFile = LocalFile.Factory.newInstance();
         newFile.setLocalURL( file.toURI().toURL() );
         newFile.setRemoteURL( new URL( seekFile ) );

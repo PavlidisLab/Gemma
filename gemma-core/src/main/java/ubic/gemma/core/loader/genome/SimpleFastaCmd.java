@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.core.util.concurrent.ParsingStreamConsumer;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.*;
@@ -40,12 +41,9 @@ public class SimpleFastaCmd implements FastaCmd {
     // this name should be eventually changed to blastdbCmd.exe, since NCBI BLAST changed the name of the program.
     public static final String FASTA_CMD_ENV_VAR = "fastaCmd.exe";
 
-    private static Log log = LogFactory.getLog( SimpleFastaCmd.class.getName() );
-
-    private static String fastaCmdExecutable = Settings.getString( FASTA_CMD_ENV_VAR );
-
-    private static String blastDbHome = System.getenv( "BLASTDB" );
-
+    private static final Log log = LogFactory.getLog( SimpleFastaCmd.class.getName() );
+    private static final String blastDbHome = System.getenv( "BLASTDB" );
+    private static String fastaCmdExecutable = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
     private String dbOption = "d";
     private String queryOption = "s";
     private String entryBatchOption = "i";
@@ -54,15 +52,57 @@ public class SimpleFastaCmd implements FastaCmd {
         super();
 
         if ( System.getProperty( "os.name" ) != null && System.getProperty( "os.name" ).startsWith( "Windows" )
-                && !fastaCmdExecutable.endsWith( "\"" ) ) {
-            fastaCmdExecutable = StringUtils.strip( fastaCmdExecutable, "\"\'" );
-            fastaCmdExecutable = "\"" + fastaCmdExecutable + "\"";
+                && !SimpleFastaCmd.fastaCmdExecutable.endsWith( "\"" ) ) {
+            SimpleFastaCmd.fastaCmdExecutable = StringUtils.strip( SimpleFastaCmd.fastaCmdExecutable, "\"\'" );
+            SimpleFastaCmd.fastaCmdExecutable = "\"" + SimpleFastaCmd.fastaCmdExecutable + "\"";
         }
 
-        if ( fastaCmdExecutable.contains( "blastdbcmd" ) ) {
+        if ( SimpleFastaCmd.fastaCmdExecutable.contains( "blastdbcmd" ) ) {
             dbOption = "db";
             queryOption = "entry";
             entryBatchOption = "entry_batch";
+        }
+    }
+
+    @Override
+    public BioSequence getByAccession( String accession, String database ) {
+        return this.getByAccession( accession, database, SimpleFastaCmd.blastDbHome );
+    }
+
+    @Override
+    public BioSequence getByIdentifier( int identifier, String database ) {
+        try {
+            return this.getSingle( identifier, database, SimpleFastaCmd.blastDbHome );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database ) {
+        return this.getBatchAccessions( accessions, database, SimpleFastaCmd.blastDbHome );
+    }
+
+    @Override
+    public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database ) {
+        return this.getBatchIdentifiers( identifiers, database, SimpleFastaCmd.blastDbHome );
+    }
+
+    @Override
+    public BioSequence getByAccession( String accession, String database, String blastHome ) {
+        try {
+            return this.getSingle( accession, database, blastHome );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
+        try {
+            return this.getSingle( identifier, database, blastHome );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -87,43 +127,35 @@ public class SimpleFastaCmd implements FastaCmd {
 
     }
 
-    @Override
-    public BioSequence getByAccession( String accession, String database, String blastHome ) {
-        try {
-            return getSingle( accession, database, blastHome );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    private Collection<BioSequence> getMultiple( Collection<? extends Object> keys, String database, String blastHome )
+    private Collection<BioSequence> getMultiple( Collection<?> keys, String database, String blastHome )
             throws IOException {
 
-        if ( StringUtils.isBlank( fastaCmdExecutable ) )
-            throw new IllegalStateException(
-                    "No fastacmd executable: You must set " + FASTA_CMD_ENV_VAR + " in your environment." );
+        if ( StringUtils.isBlank( SimpleFastaCmd.fastaCmdExecutable ) )
+            throw new IllegalStateException( "No fastacmd executable: You must set " + SimpleFastaCmd.FASTA_CMD_ENV_VAR
+                    + " in your environment." );
 
         if ( blastHome == null ) {
             throw new IllegalArgumentException(
                     "No blast database location specified, you must set this in your environment" );
         }
         File tmp = File.createTempFile( "sequenceIds", ".txt" );
-        try (Writer tmpOut = new FileWriter( tmp );) {
+        try (Writer tmpOut = new FileWriter( tmp )) {
 
             for ( Object object : keys ) {
                 tmpOut.write( object.toString() + "\n" );
             }
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = fastaCmdExecutable + " -" + dbOption + " " + database + " -" + entryBatchOption + " " + tmp
-                .getAbsolutePath();
-        log.debug( command );
-        Process pr = null;
-        log.debug( "BLASTDB=" + blastHome );
+        String command =
+                SimpleFastaCmd.fastaCmdExecutable + " -" + dbOption + " " + database + " -" + entryBatchOption + " "
+                        + tmp.getAbsolutePath();
+        SimpleFastaCmd.log.debug( command );
+        Process pr;
+        SimpleFastaCmd.log.debug( "BLASTDB=" + blastHome );
         pr = Runtime.getRuntime().exec( command, opts );
 
-        Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
-        tmp.delete();
+        Collection<BioSequence> sequences = this.getSequencesFromFastaCmdOutput( pr );
+        EntityUtils.deleteFile( tmp );
         return sequences;
 
     }
@@ -131,11 +163,11 @@ public class SimpleFastaCmd implements FastaCmd {
     private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) throws IOException {
 
         try (final InputStream is = new BufferedInputStream( pr.getInputStream() );
-                InputStream err = pr.getErrorStream();) {
+                InputStream err = pr.getErrorStream()) {
 
             final FastaParser parser = new FastaParser();
 
-            ParsingStreamConsumer<BioSequence> sg = new ParsingStreamConsumer<BioSequence>( parser, is );
+            ParsingStreamConsumer<BioSequence> sg = new ParsingStreamConsumer<>( parser, is );
             GenericStreamConsumer gsc = new GenericStreamConsumer( err );
             sg.start();
             gsc.start();
@@ -143,7 +175,8 @@ public class SimpleFastaCmd implements FastaCmd {
             try {
                 int exitVal = pr.waitFor();
                 Thread.sleep( 200 ); // Makes sure results are flushed.
-                log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
+                SimpleFastaCmd.log
+                        .debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
 
                 return parser.getResults();
             } catch ( InterruptedException e ) {
@@ -159,14 +192,15 @@ public class SimpleFastaCmd implements FastaCmd {
      */
     private BioSequence getSingle( Object key, String database, String blastHome ) throws IOException {
         if ( blastHome == null ) {
-            blastHome = blastDbHome;
+            blastHome = SimpleFastaCmd.blastDbHome;
         }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        String command = fastaCmdExecutable + " -" + dbOption + " " + database + " -" + queryOption + " " + key;
+        String command =
+                SimpleFastaCmd.fastaCmdExecutable + " -" + dbOption + " " + database + " -" + queryOption + " " + key;
         Process pr = Runtime.getRuntime().exec( command, opts );
-        if ( log.isDebugEnabled() )
-            log.debug( command + " ( " + opts[0] + ")" );
-        Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
+        if ( SimpleFastaCmd.log.isDebugEnabled() )
+            SimpleFastaCmd.log.debug( command + " ( " + opts[0] + ")" );
+        Collection<BioSequence> sequences = this.getSequencesFromFastaCmdOutput( pr );
         if ( sequences.size() == 0 ) {
             return null;
         }
@@ -174,39 +208,6 @@ public class SimpleFastaCmd implements FastaCmd {
             return sequences.iterator().next();
         }
         throw new IllegalStateException( "Got more than one sequence!" );
-    }
-
-    @Override
-    public BioSequence getByIdentifier( int identifier, String database ) {
-        try {
-            return getSingle( identifier, database, blastDbHome );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    public BioSequence getByIdentifier( int identifier, String database, String blastHome ) {
-        try {
-            return getSingle( identifier, database, blastHome );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database ) {
-        return this.getBatchAccessions( accessions, database, blastDbHome );
-    }
-
-    @Override
-    public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database ) {
-        return this.getBatchIdentifiers( identifiers, database, blastDbHome );
-    }
-
-    @Override
-    public BioSequence getByAccession( String accession, String database ) {
-        return this.getByAccession( accession, database, blastDbHome );
     }
 
 }

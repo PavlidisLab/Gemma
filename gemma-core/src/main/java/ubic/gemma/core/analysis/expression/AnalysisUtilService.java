@@ -12,6 +12,8 @@ public interface AnalysisUtilService {
      * @return true if all the analyses were deleted, false if there are associations (or other exceptional
      * circumstances) which block any of the deletions.
      */
+    @SuppressWarnings("UnusedReturnValue")
+    // Possible external use
     boolean deleteOldAnalyses( ExpressionExperiment expExp );
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,12 +24,19 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
  * remove missing values.
  */
-public abstract class ProcessedExpressionDataVector extends DesignElementDataVector {
-
-    private static final long serialVersionUID = 6524582647944439375L;
+public class ProcessedExpressionDataVector extends DesignElementDataVector {
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -3948846630785289034L;
     private Double rankByMean;
     private Double rankByMax;
     private ExpressionExperiment expressionExperiment;
+
+    @Override
+    public String toString() {
+        return "ProcessedExpressionDataVector [ID=" + this.getId() + "]";
+    }
 
     @Override
     public ExpressionExperiment getExpressionExperiment() {
@@ -75,7 +82,7 @@ public abstract class ProcessedExpressionDataVector extends DesignElementDataVec
     public static final class Factory {
 
         public static ProcessedExpressionDataVector newInstance() {
-            return new ProcessedExpressionDataVectorImpl();
+            return new ProcessedExpressionDataVector();
         }
 
     }

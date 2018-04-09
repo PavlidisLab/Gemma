@@ -1,58 +1,43 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
+import ubic.gemma.persistence.util.EntityUtils;
+
+import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Class used to load evidence into Neurocarta The file used to import the evidence must have at least those columns:
  * (GeneSymbol, GeneId, EvidenceCode, Comments, IsNegative, Phenotypes) The order of the column is not important,
  * EvidenceImporterAbstractCLI contain the naming rules of those colunms
- * 
- * @author nicolas
  *
+ * @author nicolas
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     public static void main( String[] args ) {
@@ -60,12 +45,12 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         EvidenceImporterCLI evidenceImporterCLI = new EvidenceImporterCLI();
 
         try {
-            Exception ex = null;
+            Exception ex;
 
-            String[] argsToTake = null;
+            String[] argsToTake;
 
             if ( args.length == 0 ) {
-                argsToTake = initArguments();
+                argsToTake = EvidenceImporterCLI.initArguments();
             } else {
                 argsToTake = args;
             }
@@ -100,11 +85,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         return args;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "evidenceImport";
@@ -113,24 +93,26 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        Exception err = this.processCommandLine( args );
+        if ( err != null )
+            return err;
 
         try {
-            createWriteFolder();
+            this.createWriteFolder();
 
-            FileWriter fstream = new FileWriter( WRITE_FOLDER + File.separator + "EvidenceImporter.log" );
+            FileWriter fstream = new FileWriter(
+                    EvidenceImporterAbstractCLI.WRITE_FOLDER + File.separator + "EvidenceImporter.log" );
             this.logFileWriter = new BufferedWriter( fstream );
 
-            log.info( "File: " + this.inputFile );
-            log.info( "Create in Database: " + this.createInDatabase );
+            AbstractCLI.log.info( "File: " + this.inputFile );
+            AbstractCLI.log.info( "Create in Database: " + this.createInDatabase );
 
             this.br = new BufferedReader( new FileReader( this.inputFile ) );
 
-            String typeOfEvidence = findTypeOfEvidence();
+            String typeOfEvidence = this.findTypeOfEvidence();
 
             // take the file received and create the real objects from it
-            Collection<EvidenceValueObject> evidenceValueObjects = file2Objects( typeOfEvidence );
+            Collection<EvidenceValueObject> evidenceValueObjects = this.file2Objects( typeOfEvidence );
 
             // make sure all pubmed exists
             if ( !this.errorMessage.isEmpty() ) {
@@ -142,7 +124,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
 
             if ( !this.warningMessage.isEmpty() ) {
-                log.info( this.warningMessage );
+                AbstractCLI.log.info( this.warningMessage );
             }
 
             if ( this.createInDatabase ) {
@@ -164,57 +146,56 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                             throw ex;
                         }
                     } catch ( RuntimeException ex1 ) {
-                        log.error( ExceptionUtils.getStackTrace( ex1 ) );
+                        AbstractCLI.log.error( ExceptionUtils.getStackTrace( ex1 ) );
                         System.out.println( ex1.getMessage() );
                         this.writeError( "RuntimeException trying to make evidence again 1: " + e.getGeneNCBI() );
                         System.out.println( e.toString() );
 
                         try {
                             // something is wrong with the pubmed api, wait it out
-                            log.info( "tring again 1: waiting 10 sec" );
+                            AbstractCLI.log.info( "tring again 1: waiting 10 sec" );
                             Thread.sleep( 10000 );
                             // create the evidence in neurocarta
                             this.phenotypeAssociationService.makeEvidence( e );
                         } catch ( RuntimeException ex2 ) {
-                            log.error( ExceptionUtils.getStackTrace( ex2 ) );
+                            AbstractCLI.log.error( ExceptionUtils.getStackTrace( ex2 ) );
                             this.writeError( "RuntimeException trying to make evidence again 2: " + e.getGeneNCBI() );
                             // something is wrong with the pubmed api, wait it out more 5000 seconds, this often run at
                             // night so make it wait doesn't matter
-                            log.info( "tring again 2: waiting 100 sec" );
+                            AbstractCLI.log.info( "tring again 2: waiting 100 sec" );
                             Thread.sleep( 100000 );
                             try {
                                 this.phenotypeAssociationService.makeEvidence( e );
-                            }
-
-                            catch ( RuntimeException ex3 ) {
-                                log.error( ExceptionUtils.getStackTrace( ex3 ) );
-                                this.writeError( "RuntimeException trying to make evidence again 3: " + e.getGeneNCBI() );
+                            } catch ( RuntimeException ex3 ) {
+                                AbstractCLI.log.error( ExceptionUtils.getStackTrace( ex3 ) );
+                                this.writeError(
+                                        "RuntimeException trying to make evidence again 3: " + e.getGeneNCBI() );
                                 // something is wrong with the pubmed api, wait it out more 5000 seconds, this often run
                                 // at night so make it wait doesn't matter
-                                log.info( "tring again 3: waiting 1000 sec" );
+                                AbstractCLI.log.info( "tring again 3: waiting 1000 sec" );
                                 Thread.sleep( 1000000 );
                                 try {
                                     this.phenotypeAssociationService.makeEvidence( e );
                                 } catch ( RuntimeException ex4 ) {
-                                    log.error( ExceptionUtils.getStackTrace( ex4 ) );
-                                    this.writeError( "RuntimeException trying to make evidence again 4: "
-                                            + e.getGeneNCBI() );
+                                    AbstractCLI.log.error( ExceptionUtils.getStackTrace( ex4 ) );
+                                    this.writeError(
+                                            "RuntimeException trying to make evidence again 4: " + e.getGeneNCBI() );
                                     // something is wrong with the pubmed api, wait it out more 4 hours, this often
                                     // run at night so make it wait doesn't matter
-                                    log.info( "tring again 4: waiting 15000 sec" );
+                                    AbstractCLI.log.info( "tring again 4: waiting 15000 sec" );
                                     Thread.sleep( 15000000 );
                                     this.phenotypeAssociationService.makeEvidence( e );
                                 }
                             }
                         }
                     }
-                    log.info( "created evidence " + i++ );
+                    AbstractCLI.log.info( "created evidence " + i++ );
                 }
             }
 
             this.logFileWriter.close();
 
-            log.info( "Import of evidence is finish" );
+            AbstractCLI.log.info( "Import of evidence is finish" );
             // when we import a file in production we keep a copy of the imported file and keep track of when the file
             // was imported in a log file
 
@@ -273,55 +254,31 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
 
         } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
-
-            if ( officialSymbol.equalsIgnoreCase( "Hsd3b2" ) ) {
-                newOfficialSymbol = "Hsd3b1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-coi" ) || officialSymbol.equalsIgnoreCase( "Mt-co1" ) ) {
-                newOfficialSymbol = "COX1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-cyb" ) ) {
-                newOfficialSymbol = "CYTB";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd1" ) ) {
-                newOfficialSymbol = "ND1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-co2" ) ) {
-                newOfficialSymbol = "COX2";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd5" ) ) {
-                newOfficialSymbol = "ND5";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd3" ) ) {
-                newOfficialSymbol = "ND3";
-            } else if ( officialSymbol.equalsIgnoreCase( "Srebf1_v2" ) ) {
-                newOfficialSymbol = "Srebf1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Naip6" ) ) {
-                newOfficialSymbol = "Naip2";
-            } else if ( officialSymbol.equalsIgnoreCase( "Slco1a4" ) ) {
-                newOfficialSymbol = "Slco1a2";
-            } else if ( officialSymbol.equalsIgnoreCase( "Klk1b3" ) ) {
-                newOfficialSymbol = "Klk1";
-            }
+            newOfficialSymbol = SymbolChangeAndLoggingAbstract.populateRatSymbol( officialSymbol );
         }
 
         if ( newOfficialSymbol != null ) {
-            return findGeneId( newOfficialSymbol, evidenceTaxon );
+            return this.findGeneId( newOfficialSymbol, evidenceTaxon );
         }
 
         return null;
-
     }
 
     /**
      * convert for LiteratureEvidenceValueObject
      */
     private EvidenceValueObject convert2LiteratureOrGenereicVO( String[] tokens ) throws IOException {
-        EvidenceValueObject evidence = null;
+        EvidenceValueObject evidence;
 
         String primaryReferencePubmeds = tokens[this.mapColumns.get( "PrimaryPubMeds" )].trim();
 
         if ( primaryReferencePubmeds.equalsIgnoreCase( "" ) ) {
-            evidence = new GenericEvidenceValueObject(-1L);
+            evidence = new GenericEvidenceValueObject( -1L );
         } else {
-            evidence = new LiteratureEvidenceValueObject(-1L);
+            evidence = new LiteratureEvidenceValueObject( -1L );
         }
 
-        populateCommonFields( evidence, tokens );
+        this.populateCommonFields( evidence, tokens );
 
         return evidence;
     }
@@ -332,8 +289,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     private ExperimentalEvidenceValueObject convertFileLine2ExperimentalValueObjects( String[] tokens )
             throws IOException {
 
-        ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject(-1L);
-        populateCommonFields( evidence, tokens );
+        ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject( -1L );
+        this.populateCommonFields( evidence, tokens );
 
         String reviewReferencePubmed = tokens[this.mapColumns.get( "OtherPubMed" )].trim();
 
@@ -346,29 +303,32 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         for ( String relevantPubMedID : relevantPublicationsPubmed ) {
             CitationValueObject relevantPublicationValueObject = new CitationValueObject();
             relevantPublicationValueObject.setPubmedAccession( relevantPubMedID );
-            evidence.getPhenotypeAssPubVO().add(
-                    PhenotypeAssPubValueObject.createRelevantPublication( relevantPubMedID ) );
+            evidence.getPhenotypeAssPubVO()
+                    .add( PhenotypeAssPubValueObject.createRelevantPublication( relevantPubMedID ) );
         }
 
-        Set<String> developmentStage = trimArray( tokens[this.mapColumns.get( "DevelopmentalStage" )].split( ";" ) );
-        Set<String> bioSource = trimArray( tokens[this.mapColumns.get( "BioSource" )].split( ";" ) );
-        Set<String> organismPart = trimArray( tokens[this.mapColumns.get( "OrganismPart" )].split( ";" ) );
-        Set<String> experimentDesign = trimArray( tokens[this.mapColumns.get( "ExperimentDesign" )].split( ";" ) );
-        Set<String> treatment = trimArray( tokens[this.mapColumns.get( "Treatment" )].split( ";" ) );
-        Set<String> experimentOBI = trimArray( tokens[this.mapColumns.get( "Experiment" )].split( ";" ) );
+        Set<String> developmentStage = this
+                .trimArray( tokens[this.mapColumns.get( "DevelopmentalStage" )].split( ";" ) );
+        Set<String> bioSource = this.trimArray( tokens[this.mapColumns.get( "BioSource" )].split( ";" ) );
+        Set<String> organismPart = this.trimArray( tokens[this.mapColumns.get( "OrganismPart" )].split( ";" ) );
+        Set<String> experimentDesign = this.trimArray( tokens[this.mapColumns.get( "ExperimentDesign" )].split( ";" ) );
+        Set<String> treatment = this.trimArray( tokens[this.mapColumns.get( "Treatment" )].split( ";" ) );
+        Set<String> experimentOBI = this.trimArray( tokens[this.mapColumns.get( "Experiment" )].split( ";" ) );
 
         Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 
-        experimentTags.addAll( experiementTags2Ontology( developmentStage, this.DEVELOPMENTAL_STAGE,
+        experimentTags.addAll( this.experiementTags2Ontology( developmentStage, this.DEVELOPMENTAL_STAGE,
                 this.DEVELOPMENTAL_STAGE_ONTOLOGY, this.nifstdOntologyService ) );
-        experimentTags.addAll( experiementTags2Ontology( bioSource, this.BIOSOURCE_ONTOLOGY, this.BIOSOURCE_ONTOLOGY,
-                null ) );
-        experimentTags.addAll( experiementTags2Ontology( organismPart, this.ORGANISM_PART, this.ORGANISM_PART_ONTOLOGY,
-                this.fmaOntologyService ) );
-        experimentTags.addAll( experiementTags2Ontology( experimentDesign, this.EXPERIMENT_DESIGN,
+        experimentTags.addAll(
+                this.experiementTags2Ontology( bioSource, this.BIOSOURCE_ONTOLOGY, this.BIOSOURCE_ONTOLOGY, null ) );
+        experimentTags.addAll(
+                this.experiementTags2Ontology( organismPart, this.ORGANISM_PART, this.ORGANISM_PART_ONTOLOGY,
+                        this.fmaOntologyService ) );
+        experimentTags.addAll( this.experiementTags2Ontology( experimentDesign, this.EXPERIMENT_DESIGN,
                 this.EXPERIMENT_DESIGN_ONTOLOGY, this.obiService ) );
-        experimentTags.addAll( experiementTags2Ontology( treatment, this.TREATMENT, this.TREATMENT_ONTOLOGY, null ) );
-        experimentTags.addAll( experiementTags2Ontology( experimentOBI, this.EXPERIMENT, this.EXPERIMENT_ONTOLOGY,
+        experimentTags
+                .addAll( this.experiementTags2Ontology( treatment, this.TREATMENT, this.TREATMENT_ONTOLOGY, null ) );
+        experimentTags.addAll( this.experiementTags2Ontology( experimentOBI, this.EXPERIMENT, this.EXPERIMENT_ONTOLOGY,
                 this.obiService ) );
 
         evidence.setExperimentCharacteristics( experimentTags );
@@ -392,15 +352,16 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             externalDatabaseName = evidenceValueObject.getEvidenceSource().getExternalDatabase().getName();
         }
 
-        String keepCopyOfImportedFile = externalDatabaseName + "_" + getTodayDate() + ".tsv";
+        String keepCopyOfImportedFile = externalDatabaseName + "_" + this.getTodayDate() + ".tsv";
 
         // move the file
         File mvFile = new File( inputFile );
-        mvFile.renameTo( new File( WRITE_FOLDER + File.separator + keepCopyOfImportedFile ) );
+        EntityUtils.renameFile( mvFile,
+                new File( EvidenceImporterAbstractCLI.WRITE_FOLDER + File.separator + keepCopyOfImportedFile ) );
     }
 
     private Set<CharacteristicValueObject> experiementTags2Ontology( Set<String> values, String category,
-            String categoryUri, AbstractOntologyService ontologyUsed ) throws IOException {
+            String categoryUri, AbstractOntologyService ontologyUsed ) {
 
         Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 
@@ -410,7 +371,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
             if ( ontologyUsed != null ) {
                 Collection<OntologyTerm> ontologyTerms = ontologyUsed.findTerm( term );
-                OntologyTerm ot = findExactTerm( ontologyTerms, term );
+                OntologyTerm ot = this.findExactTerm( ontologyTerms, term );
 
                 if ( ot != null ) {
                     valueUri = ot.getUri();
@@ -425,12 +386,11 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     /**
      * Change the file received into an entity that can save in the database
-     *
      */
     private Collection<EvidenceValueObject> file2Objects( String evidenceType ) throws Exception {
 
         Collection<EvidenceValueObject> evidenceValueObjects = new ArrayList<>();
-        String line = "";
+        String line;
         int i = 1;
 
         // for each line of the file
@@ -438,21 +398,21 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
             String[] tokens = line.split( "\t" );
 
-            log.info( "Reading evidence: " + i++ );
+            AbstractCLI.log.info( "Reading evidence: " + i++ );
 
             try {
                 switch ( evidenceType ) {
                     case LITERATURE_EVIDENCE:
-                        evidenceValueObjects.add( convert2LiteratureOrGenereicVO( tokens ) );
+                        evidenceValueObjects.add( this.convert2LiteratureOrGenereicVO( tokens ) );
                         break;
                     case EXPERIMENTAL_EVIDENCE:
-                        evidenceValueObjects.add( convertFileLine2ExperimentalValueObjects( tokens ) );
+                        evidenceValueObjects.add( this.convertFileLine2ExperimentalValueObjects( tokens ) );
                         break;
                     default:
                         throw new Exception( "unknown type" );
                 }
             } catch ( EntityNotFoundException e ) {
-                writeWarning( e.getMessage() );
+                this.writeWarning( e.getMessage() );
             }
         }
 
@@ -490,13 +450,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         if ( genesWithTaxon.isEmpty() ) {
 
-            Integer geneNCBi = checkForSymbolChange( officialSymbol, evidenceTaxon );
+            Integer geneNCBi = this.checkForSymbolChange( officialSymbol, evidenceTaxon );
 
             if ( geneNCBi != null ) {
                 return geneNCBi;
             }
 
-            writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon );
+            this.writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon );
 
             return -1;
 
@@ -505,7 +465,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         // too many results found, to check why
         if ( genesWithTaxon.size() >= 2 ) {
 
-            Gene g = treatGemmaMultipleGeneSpeacialCases( officialSymbol, genesWithTaxon, evidenceTaxon );
+            Gene g = this.treatGemmaMultipleGeneSpeacialCases( officialSymbol, genesWithTaxon, evidenceTaxon );
 
             if ( g != null ) {
                 return g.getNcbiGeneId();
@@ -514,7 +474,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             String error = "Found more than 1 gene using Symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon;
 
             for ( Gene geneWithTaxon : genesWithTaxon ) {
-                writeError( error + "\tGene NCBI: " + geneWithTaxon.getNcbiGeneId() );
+                this.writeError( error + "\tGene NCBI: " + geneWithTaxon.getNcbiGeneId() );
             }
         }
 
@@ -528,41 +488,39 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     // value or valueUri given changed to valueUri (even if valueUri is given in file we need to check)
-    private String phenotype2Ontology( String phenotypeToSearch ) throws IOException {
+    private String phenotype2Ontology( String phenotypeToSearch ) {
 
-        OntologyTerm ot = null;
+        OntologyTerm ot;
 
         // we got an uri, search by uri
         if ( phenotypeToSearch.contains( "http://purl." ) ) {
-            log.info( "Found an URI: " + phenotypeToSearch );
+            AbstractCLI.log.info( "Found an URI: " + phenotypeToSearch );
             ot = this.diseaseOntologyService.getTerm( phenotypeToSearch );
 
             if ( ot == null ) {
                 ot = this.humanPhenotypeOntologyService.getTerm( phenotypeToSearch );
             }
             if ( ot == null ) {
-                ot = this.mammalianPhenotypeOntologyService.getTerm( phenotypeToSearch );
+                this.mammalianPhenotypeOntologyService.getTerm( phenotypeToSearch );
             }
         }
         // value found
         else {
-
             // search disease
             Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( phenotypeToSearch );
 
-            ot = findExactTerm( ontologyTerms, phenotypeToSearch );
+            ot = this.findExactTerm( ontologyTerms, phenotypeToSearch );
 
             if ( ot == null ) {
                 // search hp
                 ontologyTerms = this.humanPhenotypeOntologyService.findTerm( phenotypeToSearch );
-                ot = findExactTerm( ontologyTerms, phenotypeToSearch );
+                ot = this.findExactTerm( ontologyTerms, phenotypeToSearch );
 
             }
             if ( ot == null ) {
-
                 // search mammalian
                 ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( phenotypeToSearch );
-                ot = findExactTerm( ontologyTerms, phenotypeToSearch );
+                this.findExactTerm( ontologyTerms, phenotypeToSearch );
             }
         }
 
@@ -571,7 +529,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     /**
      * File to valueObject conversion, populate the basics
-     *
      */
     private void populateCommonFields( EvidenceValueObject evidence, String[] tokens ) throws IOException {
 
@@ -583,8 +540,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             String[] tokensPrimary = primaryReferencePubmeds.split( ";" );
 
             for ( String primary : tokensPrimary ) {
-                evidence.getPhenotypeAssPubVO().add(
-                        PhenotypeAssPubValueObject.createPrimaryPublication( primary.trim() ) );
+                evidence.getPhenotypeAssPubVO()
+                        .add( PhenotypeAssPubValueObject.createPrimaryPublication( primary.trim() ) );
             }
         }
 
@@ -597,12 +554,12 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         String evidenceCode = tokens[this.mapColumns.get( "EvidenceCode" )].trim();
 
-        checkEvidenceCodeExits( evidenceCode );
+        this.checkEvidenceCodeExits( evidenceCode );
 
         String description = tokens[this.mapColumns.get( "Comments" )].trim();
 
         if ( !StringUtil.containsValidCharacter( description ) ) {
-            writeError( description
+            this.writeError( description
                     + " Ivalid character found (if character is ok add it to StringUtil.containsValidCharacter)" );
         }
 
@@ -619,17 +576,17 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         System.out.println( "original phenotype is: " + originalPhenotype );
         String phenotypeMapping = tokens[this.mapColumns.get( "PhenotypeMapping" )].trim();
 
-        verifyMappingType( phenotypeMapping );
+        this.verifyMappingType( phenotypeMapping );
 
-        Set<String> phenotypeFromArray = trimArray( tokens[this.mapColumns.get( "Phenotypes" )].split( ";" ) );
+        Set<String> phenotypeFromArray = this.trimArray( tokens[this.mapColumns.get( "Phenotypes" )].split( ";" ) );
 
-        Gene g = verifyGeneIdExist( geneNcbiId, geneSymbol );
+        Gene g = this.verifyGeneIdExist( geneNcbiId, geneSymbol );
 
-        SortedSet<CharacteristicValueObject> phenotypes = toValuesUri( phenotypeFromArray );
+        SortedSet<CharacteristicValueObject> phenotypes = this.toValuesUri( phenotypeFromArray );
 
         evidence.setDescription( description );
         evidence.setEvidenceCode( evidenceCode );
-        evidence.setEvidenceSource( makeEvidenceSource( databaseID, externalDatabaseName ) );
+        evidence.setEvidenceSource( this.makeEvidenceSource( databaseID, externalDatabaseName ) );
         evidence.setGeneNCBI( new Integer( geneNcbiId ) );
         evidence.setPhenotypes( phenotypes );
         evidence.setIsNegativeEvidence( isNegativeEvidence );
@@ -637,10 +594,12 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         evidence.setPhenotypeMapping( phenotypeMapping );
         evidence.setRelationship( "gene-disease association" );
         if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) ) {
-            if ( description.contains( "marker/mechanism" ) ) evidence.setRelationship( "biomarker" );
-            if ( description.contains( "therapeutic" ) ) evidence.setRelationship( "therapeutic target" );
+            if ( description.contains( "marker/mechanism" ) )
+                evidence.setRelationship( "biomarker" );
+            if ( description.contains( "therapeutic" ) )
+                evidence.setRelationship( "therapeutic target" );
         }
-        
+
         if ( this.mapColumns.get( "Score" ) != null && this.mapColumns.get( "ScoreType" ) != null
                 && this.mapColumns.get( "Strength" ) != null ) {
 
@@ -659,13 +618,14 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
 
         } else if ( !externalDatabaseName.equalsIgnoreCase( "" ) ) {
-            setScoreDependingOnExternalSource( externalDatabaseName, evidence, g.getTaxon().getCommonName() );
+            this.setScoreDependingOnExternalSource( externalDatabaseName, evidence, g.getTaxon().getCommonName() );
         }
     }
 
     /**
      * hard coded rules to set scores depending on the type of the database
      */
+    @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject evidence,
             String evidenceTaxon ) {
         // OMIM got special character in description to find score
@@ -722,32 +682,29 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
         }
         // for SFARI it is set into an other program
-        // TODO move SFARIImporter to ExternalDatabaseImporter
         else if ( externalDatabaseName.equalsIgnoreCase( "SFARI" ) ) {
-            return;
-        } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" )
-                || externalDatabaseName.equalsIgnoreCase( "GWAS_Catalog" ) ) {
+        } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) || externalDatabaseName
+                .equalsIgnoreCase( "GWAS_Catalog" ) ) {
             evidence.getScoreValueObject().setStrength( 0.2 );
-        } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
-                || externalDatabaseName.equalsIgnoreCase( "BDgene" ) || externalDatabaseName.equalsIgnoreCase( "DGA" ) ) {
-            return;
+        } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" ) || externalDatabaseName
+                .equalsIgnoreCase( "BDgene" ) || externalDatabaseName.equalsIgnoreCase( "DGA" ) ) {
         }
 
         // no score set ?
         else if ( evidence.getScoreValueObject().getStrength() == null ) {
-            writeError( "no score found for a evidence using NCBI: " + evidence.getGeneNCBI() + "   and taxon: "
+            this.writeError( "no score found for a evidence using NCBI: " + evidence.getGeneNCBI() + "   and taxon: "
                     + evidenceTaxon );
         }
     }
 
     // Change a set of phenotype to a set of CharacteristicValueObject
-    private SortedSet<CharacteristicValueObject> toValuesUri( Set<String> phenotypes ) throws IOException {
+    private SortedSet<CharacteristicValueObject> toValuesUri( Set<String> phenotypes ) {
 
         SortedSet<CharacteristicValueObject> characteristicPhenotypes = new TreeSet<>();
 
         for ( String phenotype : phenotypes ) {
 
-            String valueUri = phenotype2Ontology( phenotype );
+            String valueUri = this.phenotype2Ontology( phenotype );
 
             if ( valueUri != null ) {
                 CharacteristicValueObject c = new CharacteristicValueObject( -1L, valueUri );
@@ -769,88 +726,56 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
             // HLA-DRB1 => 3123
             if ( officialSymbol.equalsIgnoreCase( "HLA-DRB1" ) ) {
-                theChosenGene = findCorrectGene( "3123", genesFound );
+                theChosenGene = this.findCorrectGene( "3123", genesFound );
             }
             // CCR2 => 729230
             else if ( officialSymbol.equalsIgnoreCase( "CCR2" ) ) {
-                theChosenGene = findCorrectGene( "729230", genesFound );
+                theChosenGene = this.findCorrectGene( "729230", genesFound );
             }
             // NPC1 => 4864
             else if ( officialSymbol.equalsIgnoreCase( "NPC1" ) ) {
-                theChosenGene = findCorrectGene( "4864", genesFound );
+                theChosenGene = this.findCorrectGene( "4864", genesFound );
             }
             // PRG4 => 10216
             else if ( officialSymbol.equalsIgnoreCase( "PRG4" ) ) {
-                theChosenGene = findCorrectGene( "10216", genesFound );
+                theChosenGene = this.findCorrectGene( "10216", genesFound );
             }
             // TTC34 => 100287898
             else if ( officialSymbol.equalsIgnoreCase( "TTC34" ) ) {
-                theChosenGene = findCorrectGene( "100287898", genesFound );
+                theChosenGene = this.findCorrectGene( "100287898", genesFound );
             }
             // DNAH12 => 201625
             else if ( officialSymbol.equalsIgnoreCase( "DNAH12" ) ) {
-                theChosenGene = findCorrectGene( "201625", genesFound );
+                theChosenGene = this.findCorrectGene( "201625", genesFound );
             }
             // PSORS1C3 => 100130889
             else if ( officialSymbol.equalsIgnoreCase( "PSORS1C3" ) ) {
-                theChosenGene = findCorrectGene( "100130889", genesFound );
+                theChosenGene = this.findCorrectGene( "100130889", genesFound );
             }
             // MICA => 100507436
             else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
-                theChosenGene = findCorrectGene( "100507436", genesFound );
+                theChosenGene = this.findCorrectGene( "100507436", genesFound );
             }
 
             // MICA => 100507436
             else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
-                theChosenGene = findCorrectGene( "100507436", genesFound );
+                theChosenGene = this.findCorrectGene( "100507436", genesFound );
             }
 
             // ADH5P2 => 343296
             else if ( officialSymbol.equalsIgnoreCase( "ADH5P2" ) ) {
-                theChosenGene = findCorrectGene( "343296", genesFound );
+                theChosenGene = this.findCorrectGene( "343296", genesFound );
             }
 
             // RPL15P3 => 653232
             else if ( officialSymbol.equalsIgnoreCase( "RPL15P3" ) ) {
-                theChosenGene = findCorrectGene( "653232", genesFound );
+                theChosenGene = this.findCorrectGene( "653232", genesFound );
             }
 
         } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
-
-            // Itga2b => 685269
-            if ( officialSymbol.equalsIgnoreCase( "Itga2b" ) ) {
-                theChosenGene = findCorrectGene( "685269", genesFound );
-            }
-            // Tcf7l2 => 679869
-            else if ( officialSymbol.equalsIgnoreCase( "Tcf7l2" ) ) {
-                theChosenGene = findCorrectGene( "679869", genesFound );
-            }
-            // Pkd2 => 498328
-            else if ( officialSymbol.equalsIgnoreCase( "Pkd2" ) ) {
-                theChosenGene = findCorrectGene( "498328", genesFound );
-            }
-            // Mthfd2 => 680308
-            else if ( officialSymbol.equalsIgnoreCase( "Mthfd2" ) ) {
-                theChosenGene = findCorrectGene( "680308", genesFound );
-            }
-            // Mthfd2 => 680308
-            else if ( officialSymbol.equalsIgnoreCase( "Mef2a" ) ) {
-                theChosenGene = findCorrectGene( "309957", genesFound );
-            }
-            // Mmp1 => 432357
-            else if ( officialSymbol.equalsIgnoreCase( "Mmp1" ) ) {
-                theChosenGene = findCorrectGene( "300339", genesFound );
-            }
-
+            theChosenGene = SymbolChangeAndLoggingAbstract.populateRatGene( officialSymbol, genesFound );
         } else if ( evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
-            // H2-Ea-ps => 100504404
-            if ( officialSymbol.equalsIgnoreCase( "H2-Ea-ps" ) ) {
-                theChosenGene = findCorrectGene( "100504404", genesFound );
-            }
-            // Ccl21b => 100504404
-            else if ( officialSymbol.equalsIgnoreCase( "Ccl21b" ) ) {
-                theChosenGene = findCorrectGene( "100042493", genesFound );
-            }
+            theChosenGene = SymbolChangeAndLoggingAbstract.populateMouseGene( officialSymbol, genesFound );
         }
 
         return theChosenGene;
@@ -858,7 +783,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     /**
      * check that all gene exists in Gemma
-     *
      */
     private Gene verifyGeneIdExist( String geneId, String geneName ) throws IOException {
 
@@ -870,14 +794,14 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         if ( g != null ) {
             if ( !g.getOfficialSymbol().equalsIgnoreCase( geneName ) ) {
 
-                writeWarning( "Different Gene name found: file=" + geneName + "      Gene name in Gemma="
-                        + g.getOfficialSymbol() );
+                this.writeWarning( "Different Gene name found: file=" + geneName + "      Gene name in Gemma=" + g
+                        .getOfficialSymbol() );
             }
 
             if ( !g.getTaxon().getCommonName().equals( "human" ) && !g.getTaxon().getCommonName().equals( "mouse" )
                     && !g.getTaxon().getCommonName().equals( "rat" ) && !g.getTaxon().getCommonName().equals( "fly" )
-                    && !g.getTaxon().getCommonName().equals( "worm" )
-                    && !g.getTaxon().getCommonName().equals( "zebrafish" ) ) {
+                    && !g.getTaxon().getCommonName().equals( "worm" ) && !g.getTaxon().getCommonName()
+                    .equals( "zebrafish" ) ) {
 
                 String speciesFound = g.getTaxon().getCommonName();
 
@@ -885,7 +809,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
 
                 if ( g != null ) {
-                    writeWarning( "We found species: " + speciesFound + " on geneId: " + geneId
+                    this.writeWarning( "We found species: " + speciesFound + " on geneId: " + geneId
                             + " and changed to it to the human symbol: " + geneName );
                 } else {
                     throw new EntityNotFoundException( "The geneId: " + geneId + " using species: " + speciesFound
@@ -898,8 +822,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
 
             if ( g != null ) {
-                writeWarning( "We didnt found the geneId: " + geneId + " and changed it to the human symbol: "
-                        + geneName );
+                this.writeWarning(
+                        "We didnt found the geneId: " + geneId + " and changed it to the human symbol: " + geneName );
             } else {
                 throw new EntityNotFoundException( "The geneId:" + geneId + " symbol: " + geneName
                         + " was not found in Gemma, this evidence wont be imported" );
@@ -911,9 +835,9 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     private void verifyMappingType( String phenotypeMapping ) {
 
         if ( !( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) || phenotypeMapping.equalsIgnoreCase( "Curated" )
-                || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" )
-                || phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) || phenotypeMapping.isEmpty() ) ) {
-            writeError( "Unsuported phenotypeMapping: " + phenotypeMapping );
+                || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" ) || phenotypeMapping
+                .equalsIgnoreCase( "Inferred Curated" ) || phenotypeMapping.isEmpty() ) ) {
+            this.writeError( "Unsuported phenotypeMapping: " + phenotypeMapping );
         }
 
     }

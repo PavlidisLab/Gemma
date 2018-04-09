@@ -30,7 +30,7 @@ public class OutlierDetails {
     /**
      * Compare outliers by first quartile Note: this comparator imposes orderings that are inconsistent with equals
      */
-    public static Comparator<OutlierDetails> FirstQuartileComparator = new Comparator<OutlierDetails>() {
+    public static final Comparator<OutlierDetails> FirstQuartileComparator = new Comparator<OutlierDetails>() {
         @Override
         public int compare( OutlierDetails o1, OutlierDetails o2 ) {
             return Double.compare( o1.getFirstQuartile(), o2.getFirstQuartile() );
@@ -40,7 +40,7 @@ public class OutlierDetails {
     /**
      * Compare outliers by median correlation Note: this comparator imposes orderings that are inconsistent with equals
      */
-    public static Comparator<OutlierDetails> MedianComparator = new Comparator<OutlierDetails>() {
+    public static final Comparator<OutlierDetails> MedianComparator = new Comparator<OutlierDetails>() {
 
         @Override
         public int compare( OutlierDetails o1, OutlierDetails o2 ) {
@@ -48,68 +48,15 @@ public class OutlierDetails {
         }
     };
 
-    /**
-     * Compare outliers by third quartile Note: this comparator imposes orderings that are inconsistent with equals
-     */
-    public static Comparator<OutlierDetails> ThirdQuartileComparator = new Comparator<OutlierDetails>() {
-        @Override
-        public int compare( OutlierDetails o1, OutlierDetails o2 ) {
-            return Double.compare( o1.getThirdQuartile(), o2.getThirdQuartile() );
-        }
-    };
-
-    final BioAssay bioAssay;
+    private final BioAssay bioAssay;
 
     private double firstQuartile = Double.MIN_VALUE;
     private double median = Double.MIN_VALUE;
-    private double score = Double.MIN_VALUE;
     private double thirdQuartile = Double.MIN_VALUE;
-    private double thresholdCorrelation = Double.MIN_VALUE;
 
     public OutlierDetails( BioAssay bioAssay ) {
         super();
         this.bioAssay = bioAssay;
-    }
-
-    /**
-     * Alternative constructor to be used when detecting outliers by median correlation value
-     *
-     * @param medianCorrelation the median correlation value
-     * @param bioAssay          the bio assay
-     */
-    public OutlierDetails( BioAssay bioAssay, double medianCorrelation ) {
-        super();
-        this.bioAssay = bioAssay;
-
-        this.median = medianCorrelation;
-    }
-
-    /**
-     * @param score                fraction of correlations this bioAssay has that are lower than the threshold
-     * @param thresholdCorrelation correlation at the quantile that was set.
-     * @param bioAssay             the bio assay
-     */
-    public OutlierDetails( BioAssay bioAssay, double score, double thresholdCorrelation ) {
-        super();
-        this.bioAssay = bioAssay;
-
-        this.score = score;
-        this.thresholdCorrelation = thresholdCorrelation;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-
-        if ( obj == null )
-            return false;
-        if ( obj == this )
-            return true;
-        if ( !( obj instanceof OutlierDetails ) )
-            return false;
-
-        OutlierDetails outlier = ( OutlierDetails ) obj;
-        return new EqualsBuilder().append( bioAssay, outlier.bioAssay ).isEquals();
-
     }
 
     public BioAssay getBioAssay() {
@@ -132,10 +79,6 @@ public class OutlierDetails {
         this.median = medianCorrelation;
     }
 
-    public double getScore() {
-        return score;
-    }
-
     public double getThirdQuartile() {
         return thirdQuartile;
     }
@@ -144,21 +87,24 @@ public class OutlierDetails {
         thirdQuartile = quartile;
     }
 
-    public double getThresholdCorrelation() {
-        return thresholdCorrelation;
-    }
-
-    public void setThresholdCorrelation( double thresholdCorrelation ) {
-        this.thresholdCorrelation = thresholdCorrelation;
-    }
-
     @Override
     public int hashCode() {
         return new HashCodeBuilder( 17, 31 ).append( bioAssay ).toHashCode();
     }
 
-    public void setOutlierScore( double score ) {
-        this.score = score;
+    @Override
+    public boolean equals( Object obj ) {
+
+        if ( obj == null )
+            return false;
+        if ( obj == this )
+            return true;
+        if ( !( obj instanceof OutlierDetails ) )
+            return false;
+
+        OutlierDetails outlier = ( OutlierDetails ) obj;
+        return new EqualsBuilder().append( bioAssay, outlier.bioAssay ).isEquals();
+
     }
 
 }

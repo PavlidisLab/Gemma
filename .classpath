@@ -125,7 +125,6 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/jsp/jsp-api/2.1/jsp-api-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>
-	<classpathentry kind="var" path="M2_REPO/xerces/xercesImpl/2.8.1/xercesImpl-2.8.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/ubc/chibi/compass-fork/compass-fork/1.0/compass-fork-1.0.jar" sourcepath="/M2_REPO/org/compass-project/compass/2.2.0/compass-2.2.0-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.compass-project.org/docs/2.2.0/api/"/>
@@ -294,7 +293,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-expression/3.0.5.RELEASE/spring-expression-3.0.5.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-expression/3.0.0.RC1/spring-expression-3.0.0.RC1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/xerces/xmlParserAPIs/2.6.2/xmlParserAPIs-2.6.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/wsdl4j/wsdl4j/1.6.1/wsdl4j-1.6.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/poi/poi/3.5-beta6/poi-3.5-beta6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mms/1.0/mms-1.0.jar"/>

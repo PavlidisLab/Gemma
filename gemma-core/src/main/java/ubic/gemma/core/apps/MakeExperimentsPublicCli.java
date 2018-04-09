@@ -27,7 +27,10 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
 
     public static void main( String[] args ) {
         MakeExperimentsPublicCli d = new MakeExperimentsPublicCli();
-        d.doWork( args );
+        Exception e = d.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -36,13 +39,10 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    public String getShortDesc() {
-        return "Make experiments public";
-    }
-
-    @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( args );
+        Exception e = super.processCommandLine( args );
+        if ( e != null )
+            return e;
 
         SecurityService securityService = this.getBean( SecurityService.class );
         for ( BioAssaySet ee : this.expressionExperiments ) {
@@ -52,5 +52,10 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
         }
 
         return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Make experiments public";
     }
 }

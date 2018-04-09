@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -117,7 +117,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     @Override
     public void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
         for ( BlatAssociation blatAssociation : col ) {
-            printResult( compositeSequence, blatAssociation );
+            this.printResult( compositeSequence, blatAssociation );
         }
     }
 
@@ -146,36 +146,37 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
 
-        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
+        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( ArrayDesignProbeMapperServiceImpl.QUEUE_SIZE );
         AtomicBoolean generatorDone = new AtomicBoolean( false );
         AtomicBoolean loaderDone = new AtomicBoolean( false );
 
-        load( persistingQueue, generatorDone, loaderDone, useDB );
+        this.load( persistingQueue, generatorDone, loaderDone, useDB );
 
         if ( useDB ) {
-            log.info( "Removing any old associations" );
+            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old associations" );
             arrayDesignService.deleteGeneProductAssociations( arrayDesign );
         }
 
         int count = 0;
         int hits = 0;
-        log.info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
+        ArrayDesignProbeMapperServiceImpl.log
+                .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
             if ( compositeSequence.getName().equals( "1431126_a_at" ) ) {
-                log.debug( "HERE" );
+                ArrayDesignProbeMapperServiceImpl.log.debug( "HERE" );
             }
 
-            Map<String, Collection<BlatAssociation>> results = processCompositeSequence( config, taxon, goldenPathDb,
-                    compositeSequence );
+            Map<String, Collection<BlatAssociation>> results = this
+                    .processCompositeSequence( config, taxon, goldenPathDb, compositeSequence );
 
             if ( results == null )
                 continue;
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( association );
+                    if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
+                        ArrayDesignProbeMapperServiceImpl.log.debug( association );
                     persistingQueue.add( new BACS( compositeSequence, association ) );
 
                 }
@@ -183,14 +184,15 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             }
 
             if ( ++count % 200 == 0 ) {
-                log.info( "Processed " + count + " composite sequences" + " with blat results; " + hits
-                        + " mappings found." );
+                ArrayDesignProbeMapperServiceImpl.log
+                        .info( "Processed " + count + " composite sequences" + " with blat results; " + hits
+                                + " mappings found." );
             }
         }
 
         generatorDone.set( true );
 
-        log.info( "Waiting for loading to complete ..." );
+        ArrayDesignProbeMapperServiceImpl.log.info( "Waiting for loading to complete ..." );
         while ( !loaderDone.get() ) {
             try {
                 Thread.sleep( 1000 );
@@ -199,17 +201,12 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             }
         }
 
-        log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
+        ArrayDesignProbeMapperServiceImpl.log
+                .info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
-        try {
-            this.deleteOldFiles( arrayDesign );
-        } catch ( IOException e ) {
-            log.error( "Failed to delete all old files associated with " + arrayDesign
-                    + ", be sure to clean them up manually or regenerate them" );
-        }
-
+        this.deleteOldFiles( arrayDesign );
     }
 
     @Override
@@ -229,7 +226,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             String line;
             int numSkipped = 0;
 
-            log.info( "Removing any old associations" );
+            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old associations" );
             arrayDesignService.deleteGeneProductAssociations( arrayDesign );
 
             while ( ( line = b.readLine() ) != null ) {
@@ -262,8 +259,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 CompositeSequence c = compositeSequenceService.findByName( arrayDesign, probeId );
 
                 if ( c == null ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( "No probe found for '" + probeId + "' on " + arrayDesign + ", skipping" );
+                    if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
+                        ArrayDesignProbeMapperServiceImpl.log
+                                .debug( "No probe found for '" + probeId + "' on " + arrayDesign + ", skipping" );
                     numSkipped++;
                     continue;
                 }
@@ -288,14 +286,16 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 if ( geneListProbe.size() == 0 ) {
-                    log.warn( "No gene(s) found for '" + geneSymbol + "' in " + taxon + ", skipping" );
+                    ArrayDesignProbeMapperServiceImpl.log
+                            .warn( "No gene(s) found for '" + geneSymbol + "' in " + taxon + ", skipping" );
                     numSkipped++;
                     continue;
                 } else if ( geneListProbe.size() > 1 ) {
                     // this is a common situation, when the geneSymbol actually has |-separated genes, so no need to
                     // make a
                     // lot of fuss.
-                    log.debug( "More than one gene found for '" + geneSymbol + "' in " + taxon );
+                    ArrayDesignProbeMapperServiceImpl.log
+                            .debug( "More than one gene found for '" + geneSymbol + "' in " + taxon );
                 }
 
                 BioSequence bs = c.getBiologicalCharacteristic();
@@ -304,8 +304,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     if ( StringUtils.isNotBlank( seqName ) ) {
                         bs = bioSequenceService.thaw( bs );
                         if ( !bs.getName().equals( seqName ) ) {
-                            log.warn( "Sequence name '" + seqName + "' given for " + probeId
-                                    + " does not match existing entry " + bs.getName() + ", skipping" );
+                            ArrayDesignProbeMapperServiceImpl.log
+                                    .warn( "Sequence name '" + seqName + "' given for " + probeId
+                                            + " does not match existing entry " + bs.getName() + ", skipping" );
                             numSkipped++;
                             continue;
                         }
@@ -315,8 +316,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 } else {
                     // create one based on the text provided.
                     if ( StringUtils.isBlank( seqName ) ) {
-                        log.warn( "You must provide sequence names for probes which are not already mapped. probeName="
-                                + probeId + " had no sequence associated and no name provided; skipping" );
+                        ArrayDesignProbeMapperServiceImpl.log
+                                .warn( "You must provide sequence names for probes which are not already mapped. probeName="
+                                        + probeId + " had no sequence associated and no name provided; skipping" );
                         numSkipped++;
                         continue;
                     }
@@ -333,7 +335,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
                     c.setBiologicalCharacteristic( bs );
 
-                    // fixme: possibly move outside the loop if that's faster.
                     compositeSequenceService.update( c );
                 }
 
@@ -342,7 +343,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 for ( Gene gene : geneListProbe ) {
                     gene = geneService.thaw( gene );
                     if ( gene.getProducts().size() == 0 ) {
-                        log.warn( "There are no gene products for " + gene
+                        ArrayDesignProbeMapperServiceImpl.log.warn( "There are no gene products for " + gene
                                 + ", it cannot be mapped to probes. Skipping" );
                         numSkipped++;
                         continue;
@@ -363,7 +364,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
             this.deleteOldFiles( arrayDesign );
 
-            log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
+            ArrayDesignProbeMapperServiceImpl.log
+                    .info( "Completed association processing for " + arrayDesign + ", " + numSkipped
+                            + " were skipped" );
         }
     }
 
@@ -394,7 +397,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         ProbeMapUtils.removeDuplicates( blatResults );
 
-        if ( blatResults == null || blatResults.isEmpty() )
+        if ( blatResults.isEmpty() )
             return null;
 
         return probeMapper.processBlatResults( db, blatResults, config );
@@ -418,17 +421,18 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
                     if ( existing == null ) {
 
-                        existing = checkForAlias( geneProduct );
+                        existing = this.checkForAlias( geneProduct );
                         if ( existing == null ) {
                             /*
                              * We have to be careful not to cruft up the gene table now that I so carefully cleaned it.
                              * But this is a problem if we aren't adding some other association to the gene at least.
                              * But generally the mRNAs that GP has that NCBI doesn't are "alternative" or "additional".
                              */
-                            if ( log.isDebugEnabled() )
-                                log.debug( "New gene product from GoldenPath is not in Gemma: " + geneProduct
-                                        + " skipping association to " + bacs.ba.getBioSequence()
-                                        + " [skipping policy in place]" );
+                            if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
+                                ArrayDesignProbeMapperServiceImpl.log
+                                        .debug( "New gene product from GoldenPath is not in Gemma: " + geneProduct
+                                                + " skipping association to " + bacs.ba.getBioSequence()
+                                                + " [skipping policy in place]" );
                             continue;
                         }
                     }
@@ -439,20 +443,22 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     persisterHelper.persist( bacs.ba );
 
                     if ( ++loadedAssociationCount % 1000 == 0 ) {
-                        log.info( "Persisted " + loadedAssociationCount + " blat associations. " + "Current queue has "
-                                + queue.size() + " items." );
+                        ArrayDesignProbeMapperServiceImpl.log
+                                .info( "Persisted " + loadedAssociationCount + " blat associations. "
+                                        + "Current queue has " + queue.size() + " items." );
                     }
                 } else {
-                    printResult( bacs.cs, bacs.ba );
+                    this.printResult( bacs.cs, bacs.ba );
                 }
 
             } catch ( Exception e ) {
-                log.error( e, e );
+                ArrayDesignProbeMapperServiceImpl.log.error( e, e );
                 loaderDone.set( true );
                 throw new RuntimeException( e );
             }
         }
-        log.info( "Load thread done: loaded " + loadedAssociationCount + " blat associations. " );
+        ArrayDesignProbeMapperServiceImpl.log
+                .info( "Load thread done: loaded " + loadedAssociationCount + " blat associations. " );
         loaderDone.set( true );
     }
 
@@ -471,9 +477,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     /*
                      * So, our gene products match, and the genes match but via an alias. That's pretty solid.
                      */
-                    log.info(
-                            "Associated gene product " + geneProduct + " has a match in Gemma through an aliased gene: "
-                                    + existing2 );
+                    ArrayDesignProbeMapperServiceImpl.log.info( "Associated gene product " + geneProduct
+                            + " has a match in Gemma through an aliased gene: " + existing2 );
                     return existing2;
                 }
             }
@@ -482,19 +487,18 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         return null;
     }
 
-    /**
-     * Delete outdated annotation and associated experiment files.
-     */
-    private void deleteOldFiles( ArrayDesign arrayDesign ) throws IOException {
+    @Override
+    public void deleteOldFiles( ArrayDesign arrayDesign ) {
         arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
         Collection<ExpressionExperiment> ees4platform = arrayDesignService.getExpressionExperiments( arrayDesign );
-        log.info( "Removing invalidated files for up to " + ees4platform.size()
+        ArrayDesignProbeMapperServiceImpl.log.info( "Removing invalidated files for up to " + ees4platform.size()
                 + " experiments associated with updated platform " + arrayDesign );
         for ( ExpressionExperiment ee : ees4platform ) {
             try {
                 expressionDataFileService.deleteAllFiles( ee );
             } catch ( Exception e ) {
-                log.error( "Error deleting files for " + ee + " " + e.getMessage(), e );
+                ArrayDesignProbeMapperServiceImpl.log
+                        .error( "Error deleting files for " + ee + " " + e.getMessage(), e );
             }
         }
 
@@ -512,7 +516,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
-                doLoad( queue, generatorDone, loaderDone, persist );
+                ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist );
             }
 
         }, "PersistBlatAssociations" );
@@ -546,6 +550,15 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         }
 
         @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ( ( ba == null ) ? 0 : ba.hashCode() );
+            result = prime * result + ( ( cs == null ) ? 0 : cs.hashCode() );
+            return result;
+        }
+
+        @Override
         public boolean equals( Object obj ) {
             if ( this == obj ) {
                 return true;
@@ -553,7 +566,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             if ( obj == null ) {
                 return false;
             }
-            if ( getClass() != obj.getClass() ) {
+            if ( this.getClass() != obj.getClass() ) {
                 return false;
             }
             BACS other = ( BACS ) obj;
@@ -565,22 +578,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 return false;
             }
             if ( cs == null ) {
-                if ( other.cs != null ) {
-                    return false;
-                }
-            } else if ( !cs.equals( other.cs ) ) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ( ( ba == null ) ? 0 : ba.hashCode() );
-            result = prime * result + ( ( cs == null ) ? 0 : cs.hashCode() );
-            return result;
+                return other.cs == null;
+            } else
+                return cs.equals( other.cs );
         }
     }
 

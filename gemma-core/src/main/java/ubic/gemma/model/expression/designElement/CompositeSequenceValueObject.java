@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import java.util.Collection;
 /**
  * @author anton
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class CompositeSequenceValueObject extends IdentifiableValueObject<CompositeSequence> implements Serializable {
 
     private static final long serialVersionUID = 4915680501039784666L;
@@ -44,21 +45,21 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     public CompositeSequenceValueObject() {
     }
 
-    public CompositeSequenceValueObject(Long id) {
-        super(id);
+    public CompositeSequenceValueObject( Long id ) {
+        super( id );
     }
 
     public CompositeSequenceValueObject( CompositeSequence cs ) {
-        this(cs.getId(), cs.getName(), cs.getDescription(), new ArrayDesignValueObject(cs.getArrayDesign()));
+        this( cs.getId(), cs.getName(), cs.getDescription(), new ArrayDesignValueObject( cs.getArrayDesign() ) );
     }
 
     public CompositeSequenceValueObject( Describable describable, ArrayDesignValueObject arrayDesignVo ) {
-        this(describable.getId(), describable.getName(), describable.getDescription(), arrayDesignVo);
+        this( describable.getId(), describable.getName(), describable.getDescription(), arrayDesignVo );
     }
 
     public CompositeSequenceValueObject( Long id, String name, String description,
             ArrayDesignValueObject arrayDesign ) {
-        super(id);
+        super( id );
         this.name = name;
         this.description = description;
         this.arrayDesign = arrayDesign;
@@ -70,15 +71,13 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         CompositeSequenceValueObject other = ( CompositeSequenceValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        return true;
+            return other.id == null;
+        } else
+            return id.equals( other.id );
     }
 
     @Override

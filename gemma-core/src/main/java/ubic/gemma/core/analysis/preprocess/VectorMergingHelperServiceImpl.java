@@ -34,10 +34,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 
 import java.util.Collection;
 
@@ -49,24 +49,22 @@ import java.util.Collection;
 @Service
 public class VectorMergingHelperServiceImpl implements VectorMergingHelperService {
 
-    private static Log log = LogFactory.getLog( VectorMergingHelperServiceImpl.class );
+    private static final Log log = LogFactory.getLog( VectorMergingHelperServiceImpl.class );
 
     @Autowired
-    protected DesignElementDataVectorService designElementDataVectorService;
+    protected RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Override
     @Transactional
-    public void persist( ExpressionExperiment expExp, QuantitationType type,
-            Collection<DesignElementDataVector> newVectors ) {
+    public void persist( ExpressionExperiment ee, QuantitationType type,
+            Collection<RawExpressionDataVector> newVectors ) {
         if ( newVectors.size() > 0 ) {
-
-            this.processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
-
-            log.info( "Creating " + newVectors.size() + " new vectors for " + type );
-            designElementDataVectorService.create( newVectors );
+            this.processedExpressionDataVectorService.removeProcessedDataVectors( ee );
+            VectorMergingHelperServiceImpl.log.info( "Creating " + newVectors.size() + " new vectors for " + type );
+            rawExpressionDataVectorService.create( newVectors );
         } else {
             throw new IllegalStateException( "Unexpectedly, no new vectors for " + type );
         }

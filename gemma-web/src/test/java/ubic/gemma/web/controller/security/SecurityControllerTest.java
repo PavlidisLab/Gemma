@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,30 +18,26 @@
  */
 package ubic.gemma.web.controller.security;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
-
-import java.util.Date;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.BaseSpringWebTest;
+
+import java.util.Date;
+
+import static org.junit.Assert.*;
 
 /**
  * @author paul
- *
  */
 public class SecurityControllerTest extends BaseSpringWebTest {
 
@@ -67,8 +63,8 @@ public class SecurityControllerTest extends BaseSpringWebTest {
         this.ee = super.getTestPersistentBasicExpressionExperiment();
         securityService.makePublic( ee );
         this.eeId = ee.getId();
-        this.userName = randomName();
-        makeUser( userName );
+        this.userName = this.randomName();
+        this.makeUser( userName );
         ed = new EntityDelegator();
         ed.setClassDelegatingFor( ee.getClass().getName() );
         ed.setId( this.eeId );
@@ -104,8 +100,8 @@ public class SecurityControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testUpdatePermissions() {
-        String groupName = randomName();
-        runAsUser( this.userName );
+        String groupName = this.randomName();
+        this.runAsUser( this.userName );
         securityService.createGroup( groupName );
         SecurityInfoValueObject securityInfo = securityController.getSecurityInfo( ed );
         securityInfo.getGroupsThatCanRead().add( groupName );
@@ -121,8 +117,8 @@ public class SecurityControllerTest extends BaseSpringWebTest {
         try {
             userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
-            userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+            userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 }

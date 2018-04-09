@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,28 +32,15 @@ public abstract class FileFormat implements java.io.Serializable {
      *
      * @author Paul
      */
+    @SuppressWarnings("WeakerAccess") // Required by Spring
     public FileFormat() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof FileFormat ) ) {
-            return false;
-        }
-        final FileFormat that = ( FileFormat ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public String getFormatIdentifier() {
         return this.formatIdentifier;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setFormatIdentifier( String formatIdentifier ) {
         this.formatIdentifier = formatIdentifier;
     }
@@ -62,6 +49,7 @@ public abstract class FileFormat implements java.io.Serializable {
         return this.id;
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }
@@ -74,6 +62,19 @@ public abstract class FileFormat implements java.io.Serializable {
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof FileFormat ) ) {
+            return false;
+        }
+        final FileFormat that = ( FileFormat ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
 
         public static ubic.gemma.model.common.description.FileFormat newInstance() {

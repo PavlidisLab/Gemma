@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@ import java.util.Collection;
  * The trail of events (create or update) that occurred in an objects lifetime. The first event added must be a "Create"
  * event, or an exception will be thrown.
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class AuditTrail implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -7450755789163303140L;
@@ -42,6 +43,14 @@ public abstract class AuditTrail implements Identifiable, Serializable {
     public abstract void addEvent( AuditEvent event );
 
     @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -53,14 +62,6 @@ public abstract class AuditTrail implements Identifiable, Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
     /**
      * @return the first event in the audit trail.
      */
@@ -70,10 +71,12 @@ public abstract class AuditTrail implements Identifiable, Serializable {
         return this.events;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setEvents( Collection<AuditEvent> events ) {
         this.events = events;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }

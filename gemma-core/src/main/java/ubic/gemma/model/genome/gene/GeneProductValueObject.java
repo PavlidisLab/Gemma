@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -19,6 +19,7 @@ import ubic.gemma.model.IdentifiableValueObject;
 /**
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct> implements java.io.Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -32,6 +33,8 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
     private String chromosome;
     private String strand;
     private Long nucleotideStart;
+
+    @Deprecated
     private Long nucleotideEnd;
 
     /**
@@ -47,6 +50,7 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
     /**
      * Populates the VO properties with values from the given entity. Checks that physicalLocation is not-null
      * before accessing its properties.
+     *
      * @param entity the GeneProduct to load the values from.
      */
     public GeneProductValueObject( GeneProduct entity ) {
@@ -59,11 +63,6 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
                 this.chromosome = entity.getPhysicalLocation().getChromosome().getName();
             }
             this.strand = entity.getPhysicalLocation().getStrand();
-//             TODO check if the numbering here is correct
-//            if ( entity.getPhysicalLocationsValueObjects().getNucleotide() != null ) {
-//                this.nucleotideStart = entity.getPhysicalLocationsValueObjects().getNucleotide();
-//                this.nucleotideEnd = entity.getPhysicalLocationsValueObjects().getNucleotide() + entity.getPhysicalLocationsValueObjects().getNucleotideLength();
-//            }
         }
     }
 
@@ -99,10 +98,12 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
         this.ncbiId = ncbiId;
     }
 
+    @Deprecated
     public Long getNucleotideEnd() {
         return this.nucleotideEnd;
     }
 
+    @Deprecated
     public void setNucleotideEnd( Long nucleotideEnd ) {
         this.nucleotideEnd = nucleotideEnd;
     }

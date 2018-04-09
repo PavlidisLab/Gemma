@@ -1,8 +1,8 @@
 /*
  * The Gemma_sec1 project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,11 +20,8 @@ package ubic.gemma.core.analysis.report;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
 
 /**
  * Methods for reading and creating reports on ExpressinExperiments. Reports are typically updated either on demand or
@@ -51,28 +48,22 @@ public interface ExpressionExperimentReportService {
     @Secured({ "GROUP_AGENT" })
     void generateSummaryObjects();
 
-    /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and
-     * dataVectors
-     */
-    Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects( Collection<Long> ids );
-
     void getAnnotationInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
-    Map<Long, Date> getEventInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
+    void populateEventInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
     /**
      * Fills in link analysis and differential expression analysis summaries, and other info from the report.
-     *
-     * @return map of when the objects were most recently updated (or created)
      */
-    Map<Long, Date> getReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
+    void populateReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
     /**
      * retrieves a collection of cached value objects containing summary information
      *
      * @return a collection of cached value objects
      */
+    @SuppressWarnings("unused")
+    // Possible external use
     Collection<ExpressionExperimentDetailsValueObject> retrieveSummaryObjects( Collection<Long> ids );
 
     /**

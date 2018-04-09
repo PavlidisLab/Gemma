@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -40,10 +40,9 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Find all phenotypes associated to a pubmedID
      *
-     * @param evidenceId optional, used if we are updating to know current annotation
      * @return BibliographicReferenceValueObject
      */
-    BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId );
+    BibliographicReferenceValueObject findBibliographicReference( String pubMedId );
 
     /**
      * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
@@ -128,12 +127,9 @@ public interface PhenotypeAssociationManagerService {
      * for a given search string look in the database and Ontology for matches
      *
      * @param givenQueryString the search query
-     * @param categoryUri      the mged category (can be null)
-     * @param taxonId          the taxon id (can be null)
      * @return the terms found
      */
-    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString, String categoryUri,
-            Long taxonId );
+    Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString );
 
     /**
      * Gets all External Databases that are used with evidence

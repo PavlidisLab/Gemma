@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,6 @@ import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.util.QuartzUtils;
-import ubic.gemma.persistence.util.CompassUtils;
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.Constants;
 
@@ -64,7 +63,7 @@ public class StartupListener extends ContextLoaderListener {
 
     @Override
     public void contextInitialized( ServletContextEvent event ) {
-        log.info( "Initializing Gemma web context ..." );
+        StartupListener.log.info( "Initializing Gemma web context ..." );
         StopWatch sw = new StopWatch();
         sw.start();
 
@@ -74,38 +73,36 @@ public class StartupListener extends ContextLoaderListener {
 
         ServletContext servletContext = event.getServletContext();
 
-        Map<String, Object> config = initializeConfiguration( servletContext );
+        Map<String, Object> config = this.initializeConfiguration( servletContext );
 
-        loadTheme( servletContext, config );
+        this.loadTheme( servletContext, config );
 
-        loadVersionInformation( config );
+        this.loadVersionInformation( config );
 
-        loadTrackerInformation( config );
+        this.loadTrackerInformation( config );
 
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
 
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
 
-        CompassUtils.deleteCompassLocks();
-
         servletContext.setAttribute( Constants.CONFIG, config );
 
-        initializeHomologene( ctx );
+        this.initializeHomologene( ctx );
 
-        configureScheduler( ctx );
+        this.configureScheduler( ctx );
 
         sw.stop();
 
         double time = sw.getTime() / 1000.00;
-        log.info( "Initialization of Gemma Spring web context in " + time + " s " );
+        StartupListener.log.info( "Initialization of Gemma Spring web context in " + time + " s " );
     }
 
     private void configureScheduler( ApplicationContext ctx ) {
         if ( !Settings.isSchedulerEnabled() ) {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
-            log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
+            StartupListener.log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
         } else {
-            log.info( "Quartz scheduling enabled.  Set quartzOn=false in Gemma.properties to disable" );
+            StartupListener.log.info( "Quartz scheduling enabled.  Set quartzOn=false in Gemma.properties to disable" );
         }
 
     }
@@ -117,7 +114,7 @@ public class StartupListener extends ContextLoaderListener {
                 .getAttribute( Constants.CONFIG );
 
         if ( config == null ) {
-            config = new HashMap<String, Object>();
+            config = new HashMap<>();
         }
 
         for ( Iterator<String> it = Settings.getKeys(); it.hasNext(); ) {
@@ -142,11 +139,11 @@ public class StartupListener extends ContextLoaderListener {
      */
     private void loadTheme( ServletContext context, Map<String, Object> config ) {
         if ( context.getInitParameter( "theme" ) != null ) {
-            log.debug( "Found theme " + context.getInitParameter( "theme" ) );
+            StartupListener.log.debug( "Found theme " + context.getInitParameter( "theme" ) );
             config.put( "theme", context.getInitParameter( "theme" ) );
         } else {
-            log.warn( "No theme found, using default=" + DEFAULT_THEME );
-            config.put( "theme", DEFAULT_THEME );
+            StartupListener.log.warn( "No theme found, using default=" + StartupListener.DEFAULT_THEME );
+            config.put( "theme", StartupListener.DEFAULT_THEME );
         }
     }
 
@@ -162,20 +159,20 @@ public class StartupListener extends ContextLoaderListener {
 
             String gaTrackerDomain = Settings.getAnalyticsDomain();
             if ( StringUtils.isNotBlank( gaTrackerDomain ) ) {
-                log.debug( "Tracker domain is " + gaTrackerDomain );
+                StartupListener.log.debug( "Tracker domain is " + gaTrackerDomain );
                 config.put( "ga.domain", gaTrackerDomain );
-                log.info(
-                        "Enabled Google analytics tracking with key " + gaTrackerKey + ", domain=" + gaTrackerDomain );
+                StartupListener.log.info( "Enabled Google analytics tracking with key " + gaTrackerKey + ", domain="
+                        + gaTrackerDomain );
 
             } else {
-                log.warn( "Google analytics will not work unless you also define the domain." );
+                StartupListener.log.warn( "Google analytics will not work unless you also define the domain." );
             }
         }
 
     }
 
     private void loadVersionInformation( Map<String, Object> config ) {
-        log.debug( "Version is " + Settings.getAppVersion() );
+        StartupListener.log.debug( "Version is " + Settings.getAppVersion() );
         config.put( "version", Settings.getAppVersion() );
     }
 }

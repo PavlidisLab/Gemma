@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
@@ -39,7 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -48,7 +49,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> implements GeeqService {
+public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObject> implements GeeqService {
     private static final int MAX_EFS_REPLICATE_CHECK = 2;
     private static final String LOG_PREFIX = "|G|E|E|Q| ";
     private static final String ERR_MSG_MISSING_VALS = "Can not calculate missing values: ";
@@ -60,49 +61,45 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                     + "The same problem will be present for batch confound as well.";
 
     private static final double P_00 = 0.0;
+    public static final double BATCH_EFF_WEAK = GeeqServiceImpl.P_00;
     private static final double P_03 = 0.3;
     private static final double P_05 = 0.5;
     private static final double P_10 = 1.0;
-    private static final double N_03 = -P_03;
-    private static final double N_05 = -P_05;
-    private static final double N_10 = -P_10;
-
-    public static final double BATCH_CONF_HAS = N_10;
-    public static final double BATCH_CONF_NO_HAS = P_10;
-    public static final double BATCH_EFF_STRONG = N_10;
-    public static final double BATCH_EFF_WEAK = P_00;
-    public static final double BATCH_EFF_NONE = P_10;
-
-    private ExpressionExperimentService expressionExperimentService;
-    private ArrayDesignService arrayDesignService;
-    private ExpressionDataMatrixService expressionDataMatrixService;
-    private OutlierDetectionService outlierDetectionService;
-    private AuditTrailService auditTrailService;
+    public static final double BATCH_CONF_NO_HAS = GeeqServiceImpl.P_10;
+    public static final double BATCH_EFF_NONE = GeeqServiceImpl.P_10;
+    private static final double N_03 = -GeeqServiceImpl.P_03;
+    private static final double N_05 = -GeeqServiceImpl.P_05;
+    private static final double N_10 = -GeeqServiceImpl.P_10;
+    public static final double BATCH_CONF_HAS = GeeqServiceImpl.N_10;
+    public static final double BATCH_EFF_STRONG = GeeqServiceImpl.N_10;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final ArrayDesignService arrayDesignService;
+    private final ExpressionDataMatrixService expressionDataMatrixService;
+    private final OutlierDetectionService outlierDetectionService;
+    private final AuditTrailService auditTrailService;
+    private final SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService,
             ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
-            OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService ) {
+            OutlierDetectionService outlierDetectionService, AuditTrailService auditTrailService,
+            SampleCoexpressionMatrixService sampleCoexpressionMatrixService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.arrayDesignService = arrayDesignService;
         this.expressionDataMatrixService = expressionDataMatrixService;
         this.outlierDetectionService = outlierDetectionService;
         this.auditTrailService = auditTrailService;
+        this.sampleCoexpressionMatrixService = sampleCoexpressionMatrixService;
     }
 
     @Override
-    public ExpressionExperiment calculateScore( Long eeId ) {
-        return this.doScoring( eeId, GeeqService.OPT_MODE_ALL );
+    public void calculateScore( Long eeId, String mode ) {
+        this.doScoring( eeId, mode );
     }
 
     @Override
-    public ExpressionExperiment calculateScore( Long eeId, String mode ) {
-        return this.doScoring( eeId, mode );
-    }
-
-    @Override
-    public ExpressionExperiment setManualOverrides( Long eeId, GeeqAdminValueObject gqVo ) {
+    public void setManualOverrides( Long eeId, GeeqAdminValueObject gqVo ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         ee = expressionExperimentService.thawLiter( ee );
         Geeq gq = ee.getGeeq();
@@ -167,7 +164,6 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
 
         this.update( gq );
         Log.info( this.getClass(), GeeqServiceImpl.LOG_PREFIX + " Updated manual override settings for ee id " + eeId );
-        return ee;
     }
 
     /**
@@ -179,13 +175,12 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
      *             Scoring batch effect and confound is fairly fast, especially compared to the 'all' mode, which goes
      *             through almost all information associated with the experiment, and can therefore be very slow,
      *             depending on the experiment.
-     * @return the updated experiment.
      */
-    private ExpressionExperiment doScoring( Long eeId, String mode ) {
+    private void doScoring( Long eeId, String mode ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
         if ( ee == null ) {
-            return null;
+            return;
         }
 
         this.ensureEeHasGeeq( ee );
@@ -251,7 +246,6 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
                 GeeqServiceImpl.LOG_PREFIX + " took " + ( ( float ) stopwatch.elapsedTime( TimeUnit.SECONDS ) / 60f )
                         + " minutes to process ee id " + eeId );
 
-        return ee;
     }
 
     private Geeq updateSuitabilityScore( Geeq gq ) {
@@ -292,7 +286,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         DoubleMatrix<BioAssay, BioAssay> cormat = this.getCormat( ee, gq );
         double[] cormatLTri = this.getLowerTriCormat( cormat );
 
-        this.scoreOutliers( ee, gq, cormat );
+        this.scoreOutliers( gq, cormat );
         this.scoreSampleMeanCorrelation( gq, cormatLTri );
         this.scoreSampleMedianCorrelation( gq, cormatLTri );
         this.scoreSampleCorrelationVariance( gq, cormatLTri );
@@ -437,7 +431,6 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         gq.setsScoreSampleSize( score );
     }
 
-
     private boolean scoreRawData( ExpressionExperiment ee, Geeq gq ) {
         double score;
 
@@ -485,7 +478,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
      * Quality scoring methods
      */
 
-    private void scoreOutliers( ExpressionExperiment ee, Geeq gq, DoubleMatrix<BioAssay, BioAssay> cormat ) {
+    private void scoreOutliers( Geeq gq, DoubleMatrix<BioAssay, BioAssay> cormat ) {
         double score;
         boolean hasCorrMat = true;
         boolean hasNaNs = false;
@@ -499,7 +492,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
             List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
             hasNaNs = list.contains( Double.NaN );
 
-            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee, cormat ).size() > 0;
+            outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( cormat ).size() > 0;
         }
 
         score = outliers ? GeeqServiceImpl.N_10 : GeeqServiceImpl.P_10; //
@@ -695,7 +688,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
-            cormat = outlierDetectionService.getCorrelationMatrix( ee, true );
+            cormat = sampleCoexpressionMatrixService.findOrCreate( ee );
         } catch ( IllegalStateException e ) {
             Log.warn( this.getClass(),
                     GeeqServiceImpl.LOG_PREFIX + GeeqServiceImpl.ERR_MSG_CORMAT_MISSING_VALS + ee.getId() );
@@ -717,7 +710,7 @@ public class GeeqServiceImpl extends VoEnabledService<Geeq, GeeqValueObject> imp
         // this is not very efficient, but the DoubleMatrix does not have a method to get an array of Doubles (not doubles)
         Double[] doubleArray = ArrayUtils.toObject( corTri );
         List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
-        //noinspection StatementWithEmptyBody // because java standard libraries suck
+        //noinspection StatementWithEmptyBody // because java standard libraries suck, we have to iterate like this to remove all NaNs, not just the first one.
         while ( list.remove( Double.NaN ) ) {}
 
         return ArrayUtils.toPrimitive( list.toArray( new Double[list.size()] ) );

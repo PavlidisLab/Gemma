@@ -1,121 +1,91 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * @author ptan
- *
  */
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
+    private static final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private MeanVarianceService meanVarianceService;
-
     @Autowired
     private GeoService geoService;
-
     @Autowired
     private DataUpdater dataUpdater;
-
     @Autowired
     private ExpressionExperimentService eeService;
-
-    private ExpressionExperiment ee;
-
-    private QuantitationType qt;
-
     @Autowired
     private ArrayDesignService arrayDesignService;
-
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
     @Autowired
     private AclTestUtils aclTestUtils;
 
-    private static ByteArrayConverter bac = new ByteArrayConverter();
+    private ExpressionExperiment ee;
+    private QuantitationType qt;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         ee = eeService.findByShortName( "GSE2982" );
         if ( ee != null ) {
             eeService.remove( ee ); // might work, but array designs might be in the way.
         }
 
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gse2982Short" ) ) );
-        } catch ( URISyntaxException e1 ) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse2982Short" ) ) );
 
-        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
+        Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, false );
 
         ee = ( ExpressionExperiment ) results.iterator().next();
+        qt = this.createOrUpdateQt( ScaleType.LINEAR );
 
-        try {
-            qt = createOrUpdateQt( ScaleType.LINEAR );
-        } catch ( Exception e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
         qt.setIsNormalized( true );
         quantitationTypeService.update( qt );
 
@@ -127,13 +97,13 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     public void after() {
         try {
             eeService.remove( ee );
-        } catch ( Exception e ) {
+        } catch ( Exception ignored ) {
 
         }
     }
 
     @Test
-    final public void testServiceLinearNormalized() throws Exception {
+    final public void testServiceLinearNormalized() {
 
         assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
 
@@ -141,8 +111,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
+        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
         Arrays.sort( means );
         Arrays.sort( variances );
 
@@ -162,9 +132,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    final public void testServiceCreateTwoColor() throws Exception {
+    final public void testServiceCreateTwoColor() {
 
-        qt = createOrUpdateQt( ScaleType.LOG2 );
+        qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
 
@@ -191,8 +161,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
+        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
         Arrays.sort( means );
         Arrays.sort( variances );
 
@@ -210,38 +180,10 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     }
 
-    private QuantitationType createOrUpdateQt( ScaleType scale ) throws Exception {
-
-        Collection<QuantitationType> qtList = eeService.getPreferredQuantitationType( ee );
-        if ( qtList.size() == 0 ) {
-            qt = QuantitationType.Factory.newInstance();
-            qt.setName( "testQt" );
-            qt.setScale( scale );
-            qt.setIsPreferred( true );
-            qt.setRepresentation( PrimitiveType.DOUBLE );
-            qt.setIsMaskedPreferred( false );
-            qt.setIsRatio( false );
-            qt.setIsNormalized( false );
-            qt.setIsBackground( false );
-            qt.setGeneralType( GeneralType.QUANTITATIVE );
-            qt.setType( StandardQuantitationType.AMOUNT );
-            qt.setIsBackgroundSubtracted( false );
-            qt.setIsBatchCorrected( false );
-            qt.setIsRecomputedFromRawData( false );
-            quantitationTypeService.create( qt );
-        } else {
-            qt = qtList.iterator().next();
-            qt.setScale( scale );
-            quantitationTypeService.update( qt );
-        }
-
-        return qt;
-    }
-
     @Test
-    final public void testServiceCreateOneColor() throws Exception {
+    final public void testServiceCreateOneColor() {
 
-        qt = createOrUpdateQt( ScaleType.LOG2 );
+        qt = this.createOrUpdateQt( ScaleType.LOG2 );
         qt.setIsNormalized( false );
         quantitationTypeService.update( qt );
 
@@ -262,8 +204,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
+        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
         Arrays.sort( means );
         Arrays.sort( variances );
 
@@ -298,7 +240,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         assertNull( eeService.findByShortName( "GSE29006" ) );
 
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
@@ -306,7 +248,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.thaw( ee );
 
-        qt = createOrUpdateQt( ScaleType.COUNT );
+        qt = this.createOrUpdateQt( ScaleType.COUNT );
 
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -315,15 +257,15 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
                 .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
-                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );) {
+                        "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" )) {
             DoubleMatrix<String, String> countMatrix = reader.read( countData );
             DoubleMatrix<String, String> rpkmMatrix = reader.read( rpkmData );
 
             List<String> probeNames = countMatrix.getRowNames();
 
             // we have to find the right generic platform to use.
-            ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
-                    taxonService.findByCommonName( "human" ) );
+            ArrayDesign targetArrayDesign = this
+                    .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
             try {
@@ -343,15 +285,21 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-        Arrays.sort( means );
-        Arrays.sort( variances );
+        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
+        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
+        if ( means != null ) {
+            Arrays.sort( means );
+        }
+        if ( variances != null ) {
+            Arrays.sort( variances );
+        }
 
         // check sizes
         int expectedMeanVarianceLength = 199;
         int expectedLowessLength = 197; // NAs removed
+        assert means != null;
         assertEquals( expectedMeanVarianceLength, means.length );
+        assert variances != null;
         assertEquals( expectedMeanVarianceLength, variances.length );
 
         int idx = 0;
@@ -364,7 +312,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    final public void testServiceCreateExistingEe() throws Exception {
+    final public void testServiceCreateExistingEe() {
 
         // no MeanVarianceRelation exists yet
         ee = eeService.load( ee.getId() );
@@ -388,5 +336,33 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         assertEquals( oldEeId, ee.getId() );
         assertTrue( oldMvr != mvr );
 
+    }
+
+    private QuantitationType createOrUpdateQt( ScaleType scale ) {
+
+        Collection<QuantitationType> qtList = eeService.getPreferredQuantitationType( ee );
+        if ( qtList.size() == 0 ) {
+            qt = QuantitationType.Factory.newInstance();
+            qt.setName( "testQt" );
+            qt.setScale( scale );
+            qt.setIsPreferred( true );
+            qt.setRepresentation( PrimitiveType.DOUBLE );
+            qt.setIsMaskedPreferred( false );
+            qt.setIsRatio( false );
+            qt.setIsNormalized( false );
+            qt.setIsBackground( false );
+            qt.setGeneralType( GeneralType.QUANTITATIVE );
+            qt.setType( StandardQuantitationType.AMOUNT );
+            qt.setIsBackgroundSubtracted( false );
+            qt.setIsBatchCorrected( false );
+            qt.setIsRecomputedFromRawData( false );
+            quantitationTypeService.create( qt );
+        } else {
+            qt = qtList.iterator().next();
+            qt.setScale( scale );
+            quantitationTypeService.update( qt );
+        }
+
+        return qt;
     }
 }

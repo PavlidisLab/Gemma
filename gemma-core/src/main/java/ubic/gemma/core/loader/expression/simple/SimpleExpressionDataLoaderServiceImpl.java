@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,20 +69,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Autowired
     private TaxonService taxonService;
 
-    /**
-     * This method establishes the way raw input sample names are converted to biomaterial names in the system. SUch
-     * names do not need to be unique.
-     *
-     * @param ee              expression experiment the sample belongs to.
-     * @param inputSampleName The sample name as identified in the input file - the column header; this is basically the
-     *                        bio assay name.
-     * @return String used to identify the biomaterial in the system.
-     */
-    public static String makeBioMaterialName( ExpressionExperiment ee, String inputSampleName ) {
-        // bug 3700. There is no need to make them unique, but should provide a description
-        return inputSampleName;
-    }
-
     @Override
     public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData,
             DoubleMatrix<String, String> matrix ) {
@@ -92,7 +78,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
 
-        Taxon taxon = convertTaxon( metaData.getTaxon() );
+        Taxon taxon = this.convertTaxon( metaData.getTaxon() );
 
         experiment.setName( metaData.getName() );
         experiment.setShortName( metaData.getShortName() );
@@ -111,38 +97,40 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             experiment.setPrimaryPublication( ref );
         }
 
-        QuantitationType quantitationType = convertQuantitationType( metaData );
+        QuantitationType quantitationType = this.convertQuantitationType( metaData );
 
         /* set the quantitation types on the experiment */
-        Collection<QuantitationType> qTypes = new HashSet<QuantitationType>();
+        Collection<QuantitationType> qTypes = new HashSet<>();
         qTypes.add( quantitationType );
         experiment.setQuantitationTypes( qTypes );
 
-        Collection<ArrayDesign> arrayDesigns = convertArrayDesigns( metaData, matrix );
+        Collection<ArrayDesign> arrayDesigns = this.convertArrayDesigns( metaData, matrix );
 
         // Divide up multiple array designs into multiple BioAssayDimensions.
-        Collection<RawExpressionDataVector> allVectors = new HashSet<RawExpressionDataVector>();
-        Collection<BioAssay> allBioAssays = new HashSet<BioAssay>();
-        Collection<Object> usedDesignElements = new HashSet<Object>();
+        Collection<RawExpressionDataVector> allVectors = new HashSet<>();
+        Collection<BioAssay> allBioAssays = new HashSet<>();
+        Collection<Object> usedDesignElements = new HashSet<>();
         for ( ArrayDesign design : arrayDesigns ) {
-            log.info( "Processing " + design );
-            DoubleMatrix<String, String> subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
+            SimpleExpressionDataLoaderServiceImpl.log.info( "Processing " + design );
+            DoubleMatrix<String, String> subMatrix = this
+                    .getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
 
             if ( subMatrix == null ) {
                 throw new IllegalStateException( "Got a null matix" );
             }
 
-            BioAssayDimension bad = convertBioAssayDimension( experiment, design, taxon, subMatrix );
-            Collection<RawExpressionDataVector> vectors = convertDesignElementDataVectors( experiment, bad, design,
-                    quantitationType, subMatrix );
+            BioAssayDimension bad = this.convertBioAssayDimension( experiment, design, taxon, subMatrix );
+            Collection<RawExpressionDataVector> vectors = this
+                    .convertDesignElementDataVectors( experiment, bad, design, quantitationType, subMatrix );
             allVectors.addAll( vectors );
             allBioAssays.addAll( bad.getBioAssays() );
         }
 
         // sanity
         if ( usedDesignElements.size() != matrix.rows() ) {
-            log.warn( "Some rows of matrix were not matched to any of the given platforms (" + matrix.rows() + " rows, "
-                    + usedDesignElements.size() + " found" );
+            SimpleExpressionDataLoaderServiceImpl.log
+                    .warn( "Some rows of matrix were not matched to any of the given platforms (" + matrix.rows()
+                            + " rows, " + usedDesignElements.size() + " found" );
         }
 
         experiment.setRawExpressionDataVectors( allVectors );
@@ -154,14 +142,13 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Override
     public DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
             Collection<Object> usedDesignElements, ArrayDesign design ) {
-        List<String> designElements = new ArrayList<String>();
-        List<String> columnNames = new ArrayList<String>();
+        List<String> designElements = new ArrayList<>();
 
-        columnNames.addAll( matrix.getColNames() );
+        List<String> columnNames = new ArrayList<>( matrix.getColNames() );
 
-        List<double[]> rows = new ArrayList<double[]>();
+        List<double[]> rows = new ArrayList<>();
 
-        Collection<Object> arrayDesignElementNames = new HashSet<Object>();
+        Collection<Object> arrayDesignElementNames = new HashSet<>();
         for ( CompositeSequence cs : design.getCompositeSequences() ) {
             arrayDesignElementNames.add( cs.getName() );
         }
@@ -182,10 +169,11 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             throw new IllegalArgumentException( "No design elements matched?" );
         }
 
-        log.info( "Found " + rows.size() + " data rows for " + design );
+        SimpleExpressionDataLoaderServiceImpl.log.info( "Found " + rows.size() + " data rows for " + design );
 
         if ( rows.size() == 0 ) {
-            log.warn( "A platform was entered ( " + design + " ) for which there are no matching rows in the data" );
+            SimpleExpressionDataLoaderServiceImpl.log.warn( "A platform was entered ( " + design
+                    + " ) for which there are no matching rows in the data" );
             return null;
         }
 
@@ -202,9 +190,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     public ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData, InputStream data )
             throws IOException {
 
-        DoubleMatrix<String, String> matrix = parse( data );
+        DoubleMatrix<String, String> matrix = this.parse( data );
 
-        return create( metaData, matrix );
+        return this.create( metaData, matrix );
     }
 
     @Override
@@ -216,9 +204,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     /**
      * For use in tests.
      */
-    protected ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData,
+    private ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData,
             DoubleMatrix<String, String> matrix ) {
-        ExpressionExperiment experiment = convert( metaData, matrix );
+        ExpressionExperiment experiment = this.convert( metaData, matrix );
 
         experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
 
@@ -227,7 +215,8 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         try {
             preprocessorService.process( experiment );
         } catch ( PreprocessingException e ) {
-            log.error( "Error during postprocessing: " + e.getMessage(), e.getCause() != null ? e.getCause() : e );
+            SimpleExpressionDataLoaderServiceImpl.log
+                    .error( "Error during postprocessing: " + e.getMessage(), e.getCause() != null ? e.getCause() : e );
         }
 
         return experiment;
@@ -237,19 +226,20 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             DoubleMatrix<String, String> matrix ) {
         Collection<ArrayDesign> arrayDesigns = metaData.getArrayDesigns();
 
-        Collection<ArrayDesign> existingDesigns = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> existingDesigns = new HashSet<>();
 
         ArrayDesign newDesign = null;
 
         for ( ArrayDesign design : arrayDesigns ) {
             ArrayDesign existing = null;
             if ( arrayDesignService != null ) {
-                // not sure why we need a thaw here, if it's not persistent...must check first anyway to avoid errors.
-                if ( design.getId() != null ) design = arrayDesignService.thawLite( design );
+                // not sure why we need a thawRawAndProcessed here, if it's not persistent...must check first anyway to avoid errors.
+                if ( design.getId() != null )
+                    design = arrayDesignService.thawLite( design );
                 existing = arrayDesignService.find( design );
             }
             if ( existing != null ) {
-                log.info( "Array Design exists" );
+                SimpleExpressionDataLoaderServiceImpl.log.info( "Array Design exists" );
                 if ( arrayDesignService != null ) {
                     existing = arrayDesignService.thaw( existing );
                 }
@@ -263,7 +253,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         }
 
         if ( newDesign != null ) {
-            newArrayDesign( matrix, newDesign, metaData.isProbeIdsAreImageClones(), metaData.getTaxon() );
+            this.newArrayDesign( matrix, newDesign, metaData.isProbeIdsAreImageClones(), metaData.getTaxon() );
             existingDesigns.add( newDesign );
         }
 
@@ -286,7 +276,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             String columnName = matrix.getColName( i );
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( makeBioMaterialName( ee, columnName ) );
+            bioMaterial.setName( columnName );
             bioMaterial.setDescription( "Generated by Gemma for: " + ee.getShortName() );
             bioMaterial.setSourceTaxon( taxon );
 
@@ -299,7 +289,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             bad.getBioAssays().add( assay );
         }
 
-        log.info( "Generated " + bad.getBioAssays().size() + " bioAssays" );
+        SimpleExpressionDataLoaderServiceImpl.log.info( "Generated " + bad.getBioAssays().size() + " bioAssays" );
 
         return bad;
     }
@@ -312,9 +302,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             QuantitationType quantitationType, DoubleMatrix<String, String> matrix ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
-        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
-        Map<String, CompositeSequence> csMap = new HashMap<String, CompositeSequence>();
+        Map<String, CompositeSequence> csMap = new HashMap<>();
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             csMap.put( cs.getName(), cs );
         }
@@ -337,7 +327,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             vectors.add( vector );
 
         }
-        log.info( "Created " + vectors.size() + " data vectors" );
+        SimpleExpressionDataLoaderServiceImpl.log.info( "Created " + vectors.size() + " data vectors" );
         return vectors;
     }
 
@@ -360,7 +350,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         result.setScale( metaData.getScale() == null ? ScaleType.LINEAR : metaData.getScale() );
         result.setIsRatio( metaData.getIsRatio() );
 
-        result.setIsBatchCorrected( false ); // FIXME perhaps let user enter this value.
+        result.setIsBatchCorrected( false );
         result.setIsRecomputedFromRawData( false );
 
         return result;
@@ -378,7 +368,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
     private void newArrayDesign( DoubleMatrix<String, String> matrix, ArrayDesign newDesign,
             boolean probeNamesAreImageClones, Taxon taxon ) {
-        log.info( "Creating new platform " + newDesign );
+        SimpleExpressionDataLoaderServiceImpl.log.info( "Creating new platform " + newDesign );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
@@ -386,20 +376,18 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             cs.setArrayDesign( newDesign );
 
             if ( probeNamesAreImageClones ) {
-                provideImageClone( cs, taxon );
+                this.provideImageClone( cs, taxon );
             }
 
             newDesign.getCompositeSequences().add( cs );
         }
-        log.info( "New platform has " + newDesign.getCompositeSequences().size() + " elements" );
+        SimpleExpressionDataLoaderServiceImpl.log
+                .info( "New platform has " + newDesign.getCompositeSequences().size() + " elements" );
     }
 
     /**
      * This will eventually go - no special IMAGE clone support.
-     *
-     * @deprecated
      */
-    @Deprecated
     private void provideImageClone( CompositeSequence cs, Taxon taxon ) {
         BioSequence bs = BioSequence.Factory.newInstance();
         bs.setTaxon( taxon );

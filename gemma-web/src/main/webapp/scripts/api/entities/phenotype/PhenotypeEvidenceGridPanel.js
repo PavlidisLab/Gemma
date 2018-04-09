@@ -508,7 +508,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
 
                                               var expChar = record.experimentCharacteristics;
                                               if ( expChar != null && expChar.length > 0 ) {
-                                                 var expCharMap = new Object();
+                                                 var expCharMap = {};
                                                  for (var i = 0; i < expChar.length; i++) {
                                                     if ( expCharMap[expChar[i].category] == null ) {
                                                        expCharMap[expChar[i].category] = expChar[i].value;
@@ -650,7 +650,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                     return this.star2;
                                  } else if ( value == '0.6' ) {
                                     return this.star3;
-                                    ;
                                  } else if ( value == '0.8' ) {
                                     return this.star4;
                                  } else if ( value == '1.0' ) {

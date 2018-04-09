@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,14 +43,14 @@ public class StringProteinLinksDetailedParserTest {
     private StringProteinProteinInteractionFileParser parser = null;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         // set up an array of taxon to process
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setNcbiId( 882 );
         Taxon taxon2 = Taxon.Factory.newInstance();
         taxon2.setNcbiId( 10090 );
 
-        ArrayList<Taxon> taxa = new ArrayList<Taxon>();
+        ArrayList<Taxon> taxa = new ArrayList<>();
         taxa.add( taxon );
         taxa.add( taxon2 );
         parser = new StringProteinProteinInteractionFileParser();
@@ -75,9 +75,7 @@ public class StringProteinLinksDetailedParserTest {
                 assertTrue( item.getProtein1().startsWith( "10090.ENSMUSP" ) );
                 assertTrue( item.getProtein2().startsWith( "10090.ENSMUSP" ) );
             }
-        } catch ( RuntimeException e ) {
-            fail();
-        } catch ( IOException e ) {
+        } catch ( RuntimeException | IOException e ) {
             fail();
         }
     }
@@ -176,12 +174,12 @@ public class StringProteinLinksDetailedParserTest {
     /*
      * Code for debugging if needed public void testMultiTaxonStringFile(){ long timestart
      * =System.currentTimeMillis()/1000; Taxon taxon = Taxon.Factory.newInstance(); taxon.setNcbiId( 10090 );
-     * 
+     *
      * ArrayList<Taxon> taxa = new ArrayList<Taxon>(); taxa.add(taxon);
-     * 
+     *
      * parser.setTaxa( taxa); String fileName =
      * "~/gemmaData/string.embl.de/newstring_download_protein.links.detailed.v8.2.txt.gz";
-     * 
+     *
      * try { parser.parse(new File(fileName)); Collection<StringProteinProteinInteraction> items = parser.getResults();
      * long timeend =System.currentTimeMillis()/1000; System.out.println("Total time is : " + (timeend- timestart));
      * System.out.println("There were : " + items.size() + " found"); } catch ( RuntimeException e ) { fail(); } catch (

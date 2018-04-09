@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,29 +18,28 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.io.FileNotFoundException;
-import java.util.Collection;
-
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.io.FileNotFoundException;
+import java.util.Collection;
 
 /**
  * Base test for tests that need persistent array design with sequences.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest {
 
+    private final static String ACCESSION = "GPL140";
     ArrayDesign ad;
 
     @Autowired
@@ -49,20 +48,13 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
     @Autowired
     private GeneService geneService;
 
-    final static String ACCESSION = "GPL140";
-
     public ArrayDesign getAd() {
         return ad;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.testing.BaseSpringContextTest#onSetUp()
-     */
     @Before
-    public void setupArrayDesign() throws Exception {
-        ad = arrayDesignService.findByShortName( ACCESSION );
+    public void setupArrayDesign() {
+        ad = arrayDesignService.findByShortName( AbstractArrayDesignProcessingTest.ACCESSION );
 
         if ( ad == null ) {
 
@@ -71,9 +63,8 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             try {
-                @SuppressWarnings("unchecked")
-                final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION,
-                        true, true, false, false, true, true );
+                @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
+                        .fetchAndLoad( AbstractArrayDesignProcessingTest.ACCESSION, true, true, false, true, true );
 
                 ad = ads.iterator().next();
 
@@ -96,16 +87,15 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         for ( Gene gene : genes ) {
             try {
                 geneService.remove( gene );
-            } catch ( Exception e ) {
-
+            } catch ( Exception ignored ) {
             }
         }
 
-        if ( ad != null ) try {
-            arrayDesignService.remove( ad );
-        } catch ( Exception e ) {
-
-        }
+        if ( ad != null )
+            try {
+                arrayDesignService.remove( ad );
+            } catch ( Exception ignored ) {
+            }
     }
 
 }

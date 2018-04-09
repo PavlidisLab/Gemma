@@ -47,6 +47,7 @@ public interface MeanVarianceService {
      * @param ee the experiment to retrieve or create the relation for
      * @return MeanVarianceRelation
      */
+    @SuppressWarnings("UnusedReturnValue") // Possible external use
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     MeanVarianceRelation findOrCreate( ExpressionExperiment ee );
 

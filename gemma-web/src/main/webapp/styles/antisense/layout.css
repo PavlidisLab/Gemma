@@ -381,6 +381,7 @@ hr.normal {
     padding: 10px;
     margin: 20px 0 !important;
     width: 90% !important;
+    box-shadow: 0 0 3px #b9b9b9;
 }
 
 .gq-btn-recalc-all * {
@@ -560,6 +561,10 @@ i[class*=qtp] {
     color: #8793b9;
 }
 
+i[class*=icon] {
+    font-size: large;
+}
+
 .pre-wrap {
     white-space: pre-wrap; /* Since CSS 2.1 */
     white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
@@ -711,7 +716,15 @@ i[class*=qtp] {
 }
 
 .ee-status-badge.outline {
-    border: 1px solid #3b5a82;
+    box-shadow: 0 0 2px 0 darkblue;
+}
+
+.ee-status-badge.geeq-badge {
+    padding-right: 10px;
+    padding-left: 10px;
+    color: black;
+    font-weight: bolder;
+    box-shadow: 0 0 2px 0 black;
 }
 
 .status-bcls {

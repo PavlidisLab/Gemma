@@ -27,7 +27,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,7 +44,7 @@ import java.util.LinkedHashSet;
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
 @Repository
-public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, BioAssayDimensionValueObject>
+public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimension, BioAssayDimensionValueObject>
         implements BioAssayDimensionDao {
 
     @Autowired
@@ -52,7 +53,24 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
     }
 
     @Override
+    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
+            throw new IllegalArgumentException();
+        BioAssayDimension existingBioAssayDimension = this.find( bioAssayDimension );
+        if ( existingBioAssayDimension != null ) {
+            return existingBioAssayDimension;
+        }
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Creating new " + bioAssayDimension );
+        return this.create( bioAssayDimension );
+    }
+
+    @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
+
+        if ( bioAssayDimension.getBioAssays().isEmpty() ) {
+            throw new IllegalArgumentException( "BioAssayDimension had no BioAssays" );
+        }
 
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioAssayDimension.class );
         queryObject.setReadOnly( true );
@@ -69,7 +87,6 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
         queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
         Collection<String> names = new HashSet<>();
-        assert bioAssayDimension.getBioAssays().size() > 0;
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             names.add( bioAssay.getName() );
         }
@@ -101,16 +118,22 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
     }
 
     @Override
-    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
-            throw new IllegalArgumentException();
-        BioAssayDimension existingBioAssayDimension = find( bioAssayDimension );
-        if ( existingBioAssayDimension != null ) {
-            return existingBioAssayDimension;
-        }
-        if ( log.isDebugEnabled() )
-            log.debug( "Creating new " + bioAssayDimension );
-        return create( bioAssayDimension );
+    public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null )
+            return null;
+        if ( bioAssayDimension.getId() == null )
+            return bioAssayDimension;
+
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
+                Hibernate.initialize( bioAssayDimension );
+                Hibernate.initialize( bioAssayDimension.getBioAssays() );
+                return null;
+            }
+        } );
+        return bioAssayDimension;
     }
 
     @Override
@@ -148,25 +171,6 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
     }
 
     @Override
-    public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null )
-            return null;
-        if ( bioAssayDimension.getId() == null )
-            return bioAssayDimension;
-
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension.getBioAssays() );
-                return null;
-            }
-        } );
-        return bioAssayDimension;
-    }
-
-    @Override
     public BioAssayDimensionValueObject loadValueObject( BioAssayDimension entity ) {
         return new BioAssayDimensionValueObject( entity );
     }
@@ -175,7 +179,7 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
     public Collection<BioAssayDimensionValueObject> loadValueObjects( Collection<BioAssayDimension> entities ) {
         Collection<BioAssayDimensionValueObject> vos = new LinkedHashSet<>();
         for ( BioAssayDimension e : entities ) {
-            vos.add( loadValueObject( e ) );
+            vos.add( this.loadValueObject( e ) );
         }
         return vos;
     }

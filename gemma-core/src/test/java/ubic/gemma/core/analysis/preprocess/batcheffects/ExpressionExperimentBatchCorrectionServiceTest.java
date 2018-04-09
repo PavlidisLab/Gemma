@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,26 +19,25 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author paul
@@ -58,26 +57,26 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     private GeoService geoService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Before
     public void setup() {
-        cleanup();
+        this.cleanup();
     }
 
     @After
     public void teardown() {
-        cleanup();
+        this.cleanup();
     }
 
     @Test
     public void testComBatOnEE() throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                getTestFileBasePath( "gse18162Short" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse18162Short" ) ) );
         ExpressionExperiment newee;
         try {
-            Collection<?> results = geoService.fetchAndLoad( "GSE18162", false, true, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE18162", false, true, false );
             newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -86,9 +85,9 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
 
         assertNotNull( newee );
         newee = expressionExperimentService.thawLite( newee );
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( newee );
-        try (InputStream deis = this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse18162Short/design.txt" );) {
+        processedExpressionDataVectorService.computeProcessedExpressionData( newee );
+        try (InputStream deis = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/gse18162Short/design.txt" )) {
             experimentalDesignImporter.importDesign( newee, deis );
         }
         ExpressionDataDoubleMatrix comBat = correctionService.comBat( newee );

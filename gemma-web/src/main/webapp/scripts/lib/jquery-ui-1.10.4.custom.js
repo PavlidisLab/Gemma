@@ -302,7 +302,6 @@ $.extend( $.ui, {
 			return true;
 		}
 
-		// TODO: determine which cases actually cause this to happen
 		// if the element doesn't have the scroll set, see if it's possible to
 		// set the scroll
 		el[ scroll ] = 1;
@@ -408,7 +407,6 @@ $.widget = function( name, base, prototype ) {
 		})();
 	});
 	constructor.prototype = $.widget.extend( basePrototype, {
-		// TODO: remove support for widgetEventPrefix
 		// always use the name + a colon as the prefix, e.g., draggable:start
 		// don't prefix for widgets that aren't DOM-based
 		widgetEventPrefix: existingConstructor ? (basePrototype.widgetEventPrefix || name) : name
@@ -573,7 +571,6 @@ $.Widget.prototype = {
 		this.element
 			.unbind( this.eventNamespace )
 			// 1.9 BC for #7810
-			// TODO remove dual storage
 			.removeData( this.widgetName )
 			.removeData( this.widgetFullName )
 			// support: jquery <1.6.3
@@ -856,8 +853,7 @@ $.widget("ui.mouse", {
 		this.started = false;
 	},
 
-	// TODO: make sure destroying one instance of mouse doesn't mess with
-	// other instances of mouse
+
 	_mouseDestroy: function() {
 		this.element.unbind("."+this.widgetName);
 		if ( this._mouseMoveDelegate ) {

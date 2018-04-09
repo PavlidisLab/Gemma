@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,8 +35,8 @@ import java.util.TreeMap;
  */
 public class GeneCoexpressionNodeDegreeValueObject {
 
-    private static ByteArrayConverter bac = new ByteArrayConverter();
-    private Long geneId;
+    private static final ByteArrayConverter bac = new ByteArrayConverter();
+    private final Long geneId;
     private TreeMap<Integer, Integer> nodeDegreesNeg = new TreeMap<>();
     private TreeMap<Integer, Integer> nodeDegreesPos = new TreeMap<>();
     private TreeMap<Integer, Double> relDegreesNeg = new TreeMap<>();
@@ -44,18 +44,18 @@ public class GeneCoexpressionNodeDegreeValueObject {
 
     public GeneCoexpressionNodeDegreeValueObject( GeneCoexpressionNodeDegree entity ) {
         this.geneId = entity.getGeneId();
-        initLinkCounts( entity.getLinkCountsPositive(), true );
-        initLinkCounts( entity.getLinkCountsNegative(), false );
-        initRelRanks( entity.getRelativeLinkRanksPositive(), true );
-        initRelRanks( entity.getRelativeLinkRanksNegative(), false );
+        this.initLinkCounts( entity.getLinkCountsPositive(), true );
+        this.initLinkCounts( entity.getLinkCountsNegative(), false );
+        this.initRelRanks( entity.getRelativeLinkRanksPositive(), true );
+        this.initRelRanks( entity.getRelativeLinkRanksNegative(), false );
     }
 
     public double[] asDoubleArrayNegRanks() {
-        return asDoubleArray( relDegreesNeg );
+        return this.asDoubleArray( relDegreesNeg );
     }
 
     public double[] asDoubleArrayPosRanks() {
-        return asDoubleArray( relDegreesPos );
+        return this.asDoubleArray( relDegreesPos );
     }
 
     /**
@@ -70,23 +70,6 @@ public class GeneCoexpressionNodeDegreeValueObject {
      */
     public int[] asIntArrayPos() {
         return this.asIntArray( nodeDegreesPos );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        GeneCoexpressionNodeDegreeValueObject other = ( GeneCoexpressionNodeDegreeValueObject ) obj;
-        if ( geneId == null ) {
-            if ( other.geneId != null )
-                return false;
-        } else if ( !geneId.equals( other.geneId ) )
-            return false;
-        return true;
     }
 
     public Long getGeneId() {
@@ -125,12 +108,12 @@ public class GeneCoexpressionNodeDegreeValueObject {
         int sum = 0;
 
         if ( positive ) {
-            int maxSupportPos = getMaxSupportPos();
+            int maxSupportPos = this.getMaxSupportPos();
             for ( Integer i = support; i <= maxSupportPos; i++ ) {
                 sum += nodeDegreesPos.containsKey( i ) ? nodeDegreesPos.get( i ) : 0;
             }
         } else {
-            int maxSupportNeg = getMaxSupportNeg();
+            int maxSupportNeg = this.getMaxSupportNeg();
             for ( Integer i = support; i <= maxSupportNeg; i++ ) {
                 sum += nodeDegreesNeg.containsKey( i ) ? nodeDegreesNeg.get( i ) : 0;
             }
@@ -146,6 +129,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
     /**
      * @return the largest value for support for this gene
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public int getMaxSupportPos() {
         return this.nodeDegreesPos.isEmpty() ? 0 : this.nodeDegreesPos.lastKey();
     }
@@ -168,6 +152,27 @@ public class GeneCoexpressionNodeDegreeValueObject {
         return result;
     }
 
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        GeneCoexpressionNodeDegreeValueObject other = ( GeneCoexpressionNodeDegreeValueObject ) obj;
+        if ( geneId == null ) {
+            return other.geneId == null;
+        } else
+            return geneId.equals( other.geneId );
+    }
+
+    @Override
+    public String toString() {
+        return "NodeDegree [geneId=" + geneId + ", nodeDegreesPos=" + StringUtils.join( nodeDegreesPos.values(), " " )
+                + ", nodeDegreesNeg=" + StringUtils.join( nodeDegreesNeg.values(), " " ) + "]";
+    }
+
     public synchronized void increment( Integer support, boolean positive ) {
         if ( positive ) {
             if ( !nodeDegreesPos.containsKey( support ) ) {
@@ -183,12 +188,6 @@ public class GeneCoexpressionNodeDegreeValueObject {
             }
         }
 
-    }
-
-    @Override
-    public String toString() {
-        return "NodeDegree [geneId=" + geneId + ", nodeDegreesPos=" + StringUtils.join( nodeDegreesPos.values(), " " )
-                + ", nodeDegreesNeg=" + StringUtils.join( nodeDegreesNeg.values(), " " ) + "]";
     }
 
     /**
@@ -213,17 +212,19 @@ public class GeneCoexpressionNodeDegreeValueObject {
         GeneCoexpressionNodeDegree r = new GeneCoexpressionNodeDegree();
         r.setGeneId( this.geneId );
 
-        r.setRelativeLinkRanksPositive( bac.doubleArrayToBytes( asDoubleArrayPosRanks() ) );
-        r.setRelativeLinkRanksNegative( bac.doubleArrayToBytes( asDoubleArrayNegRanks() ) );
+        r.setRelativeLinkRanksPositive(
+                GeneCoexpressionNodeDegreeValueObject.bac.doubleArrayToBytes( this.asDoubleArrayPosRanks() ) );
+        r.setRelativeLinkRanksNegative(
+                GeneCoexpressionNodeDegreeValueObject.bac.doubleArrayToBytes( this.asDoubleArrayNegRanks() ) );
 
-        r.setLinkCountsPositive( bac.intArrayToBytes( asIntArrayPos() ) );
-        r.setLinkCountsNegative( bac.intArrayToBytes( asIntArrayNeg() ) );
+        r.setLinkCountsPositive( GeneCoexpressionNodeDegreeValueObject.bac.intArrayToBytes( this.asIntArrayPos() ) );
+        r.setLinkCountsNegative( GeneCoexpressionNodeDegreeValueObject.bac.intArrayToBytes( this.asIntArrayNeg() ) );
 
         return r;
     }
 
     private void initLinkCounts( byte[] linkCountBytes, boolean isPositive ) {
-        int[] byteArrayToInts = bac.byteArrayToInts( linkCountBytes );
+        int[] byteArrayToInts = GeneCoexpressionNodeDegreeValueObject.bac.byteArrayToInts( linkCountBytes );
 
         if ( byteArrayToInts.length < 2 ) {
             return;
@@ -245,7 +246,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
     }
 
     private void initRelRanks( byte[] relativeLinkRanks, boolean isPositive ) {
-        double[] ranks = bac.byteArrayToDoubles( relativeLinkRanks );
+        double[] ranks = GeneCoexpressionNodeDegreeValueObject.bac.byteArrayToDoubles( relativeLinkRanks );
 
         if ( ranks.length < 2 ) {
             return;
@@ -279,19 +280,19 @@ public class GeneCoexpressionNodeDegreeValueObject {
     private double[] asDoubleArray( TreeMap<Integer, Double> map ) {
         DoubleArrayList list = new DoubleArrayList();
         if ( map.isEmpty() )
-            return toPrimitive( list );
+            return this.toPrimitive( list );
         list.setSize( Math.max( list.size(), map.lastKey() + 1 ) );
         for ( Integer s : map.keySet() ) {
             list.set( s, map.get( s ) );
         }
 
-        return toPrimitive( list );
+        return this.toPrimitive( list );
     }
 
     private int[] asIntArray( TreeMap<Integer, Integer> nodeDegreesNeg ) {
         IntArrayList list = new IntArrayList();
         if ( nodeDegreesNeg.isEmpty() )
-            return toPrimitive( list );
+            return this.toPrimitive( list );
         Integer maxSupport = nodeDegreesNeg.lastKey();
         list.setSize( maxSupport + 1 );
         for ( Integer s = 0; s <= maxSupport; s++ ) {
@@ -301,7 +302,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
                 list.set( s, 0 );
             }
         }
-        return toPrimitive( list );
+        return this.toPrimitive( list );
     }
 
 }

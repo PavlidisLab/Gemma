@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@ import java.util.Set;
 /**
  * @author kelsey
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GeneEvidenceValueObject extends GeneValueObject {
 
     private static final long serialVersionUID = -3484291071757959936L;

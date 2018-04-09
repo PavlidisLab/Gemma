@@ -47,6 +47,8 @@ public interface LinkAnalysisService {
      * @param t                  taxon
      * @return analysis
      */
+    @SuppressWarnings("UnusedReturnValue")
+    // Possible external use
     LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig );
 

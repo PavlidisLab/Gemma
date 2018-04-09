@@ -21,9 +21,7 @@ package ubic.gemma.persistence.service.association.phenotype;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
-import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 
 @Repository

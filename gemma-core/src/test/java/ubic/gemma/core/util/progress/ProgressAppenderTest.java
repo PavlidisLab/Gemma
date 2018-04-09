@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,12 +18,6 @@
  */
 package ubic.gemma.core.util.progress;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-
-import java.util.Deque;
-import java.util.concurrent.LinkedBlockingDeque;
-
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -31,32 +25,30 @@ import org.apache.log4j.MDC;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import ubic.gemma.core.job.executor.common.LogBasedProgressAppender;
 import ubic.gemma.core.job.executor.common.ProgressUpdateCallback;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+
 /**
  * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
  * programatically.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class ProgressAppenderTest extends BaseSpringContextTest {
 
-    LogBasedProgressAppender progressAppender;
-
+    private final Deque<String> updates = new LinkedBlockingDeque<>();
+    private LogBasedProgressAppender progressAppender;
     // Used to put things back as they were after the test.
-    Level oldLevel;
+    private Level oldLevel;
+    private Logger log4jLogger;
 
-    Logger log4jLogger;
-
-    Deque<String> updates = new LinkedBlockingDeque<String>();
-
-    /*
-     * @see ubic.gemma.core.testing.BaseSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() {
 
@@ -76,9 +68,6 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
         log4jLogger.setLevel( Level.INFO );
     }
 
-    /*
-     * @see ubic.gemma.core.testing.BaseSpringContextTest#onTearDownInTransaction()
-     */
     @After
     public void teardown() {
         log4jLogger.setLevel( oldLevel );

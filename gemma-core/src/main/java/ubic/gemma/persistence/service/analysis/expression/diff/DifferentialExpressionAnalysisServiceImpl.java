@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.apache.commons.lang3.time.StopWatch;
+import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -34,7 +37,10 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author paul
@@ -50,12 +56,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.expressionAnalysisResultSetDao.canDelete( differentialExpressionAnalysis );
-    }
+    @Autowired
+    private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
 
     @Override
     @Transactional(readOnly = true)
@@ -84,12 +86,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     }
 
     @Override
-    @Transactional
-    public void delete( DifferentialExpressionAnalysis toDelete ) {
-        this.differentialExpressionAnalysisDao.remove( toDelete );
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
             double threshold ) {
@@ -104,55 +100,15 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByInvestigation( Investigation investigation ) {
-        return this.differentialExpressionAnalysisDao.findByInvestigation( investigation );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
             Collection<Long> investigationIds ) {
         return this.differentialExpressionAnalysisDao.findByInvestigationIds( investigationIds );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Investigation, Collection<DifferentialExpressionAnalysis>> findByInvestigations(
-            Collection<? extends Investigation> investigations ) {
-        return this.differentialExpressionAnalysisDao
-                .findByInvestigations( ( Collection<Investigation> ) investigations );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
-        return this.differentialExpressionAnalysisDao.findByName( name );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon ) {
-        return this.differentialExpressionAnalysisDao.findByParentTaxon( taxon );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon ) {
         return this.differentialExpressionAnalysisDao.findByTaxon( taxon );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis findByUniqueInvestigations(
-            Collection<? extends Investigation> investigations ) {
-        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
-            return null;
-        }
-        Collection<DifferentialExpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
-        if ( found.isEmpty() )
-            return null;
-        return found.iterator().next();
     }
 
     @Override
@@ -172,44 +128,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments ) {
         return this.differentialExpressionAnalysisDao.getAnalyses( expressionExperiments );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( idsToFilter );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
-        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( taxon );
-
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis load( java.lang.Long id ) {
-        return this.differentialExpressionAnalysisDao.load( id );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> loadAll() {
-        return this.differentialExpressionAnalysisDao.loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
-        return this.loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
-        return this.loadAll();
     }
 
     @Override
@@ -246,6 +164,19 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
+    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        return this.expressionAnalysisResultSetDao.canDelete( differentialExpressionAnalysis );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids ) {
+        return this.getAnalysesByExperiment( ids, 0, -1 );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids, int offset, int limit ) {
         Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
@@ -265,9 +196,105 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     }
 
     @Override
+    @Transactional
+    public void remove( DifferentialExpressionAnalysis toDelete ) {
+        // Thaw
+        toDelete = this.expressionAnalysisResultSetDao.thawFully( toDelete );
+
+        // Remove meta analyses that use the analyzed experiment
+        Log.info( this.getClass(), "Removing meta analyses with this experiment..." );
+        Collection<GeneDifferentialExpressionMetaAnalysis> metas = this.geneDiffExMetaAnalysisDao
+                .findByInvestigation( toDelete.getExperimentAnalyzed() );
+        geneDiffExMetaAnalysisDao.remove( metas );
+
+        // Remove result sets
+        this.removeResultSets( toDelete );
+
+        // Remove the DEA
+        this.differentialExpressionAnalysisDao.remove( toDelete );
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment( Collection<Long> ids ) {
-        return this.getAnalysesByExperiment( ids, 0, -1 );
+    public Collection<DifferentialExpressionAnalysis> findByInvestigation( Investigation investigation ) {
+        return this.differentialExpressionAnalysisDao.findByInvestigation( investigation );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Investigation, Collection<DifferentialExpressionAnalysis>> findByInvestigations(
+            Collection<? extends Investigation> investigations ) {
+        return this.differentialExpressionAnalysisDao
+                .findByInvestigations( ( Collection<Investigation> ) investigations );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
+        return this.differentialExpressionAnalysisDao.findByName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DifferentialExpressionAnalysis findByUniqueInvestigations(
+            Collection<? extends Investigation> investigations ) {
+        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
+            return null;
+        }
+        Collection<DifferentialExpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
+        if ( found.isEmpty() )
+            return null;
+        return found.iterator().next();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
+        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( idsToFilter );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
+        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( taxon );
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DifferentialExpressionAnalysis load( java.lang.Long id ) {
+        return this.differentialExpressionAnalysisDao.load( id );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<DifferentialExpressionAnalysis> loadAll() {
+        return this.differentialExpressionAnalysisDao.loadAll();
+    }
+
+    private void removeResultSets( DifferentialExpressionAnalysis toDelete ) {
+        Collection<ExpressionAnalysisResultSet> rss = toDelete.getResultSets();
+
+        // Wipe references
+        toDelete.setResultSets( new HashSet<ExpressionAnalysisResultSet>() );
+        this.update( toDelete );
+
+        StopWatch sw = new StopWatch();
+        sw.start();
+        int rsCnt = 0;
+        int rCnt = 0;
+
+        // remove from database
+        for ( ExpressionAnalysisResultSet rs : rss ) {
+            rCnt = rs.getResults().size();
+            this.expressionAnalysisResultSetDao.remove( rs );
+            rsCnt++;
+        }
+
+        sw.stop();
+        Log.info( this.getClass(), "Removed " + rCnt + " results in " + rsCnt + " result sets." );
     }
 
 }

@@ -36,7 +36,7 @@ import java.util.List;
 /**
  * @author keshav
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class ExpressionDataWriterUtils {
 
     public static final String DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS = "___";
@@ -55,7 +55,8 @@ public class ExpressionDataWriterUtils {
         if ( experiment != null ) {
             buf.append( "# shortName=" ).append( experiment.getShortName() ).append( "\n" );
             buf.append( "# name=" ).append( experiment.getName() ).append( "\n" );
-            buf.append( "# Experiment details: " + Settings.getBaseUrl() + "expressionExperiment/showExpressionExperiment.html?id=" )
+            buf.append( "# Experiment details: " ).append( Settings.getBaseUrl() )
+                    .append( "expressionExperiment/showExpressionExperiment.html?id=" )
                     .append( experiment.getId() ).append( "\n" );
         }
 

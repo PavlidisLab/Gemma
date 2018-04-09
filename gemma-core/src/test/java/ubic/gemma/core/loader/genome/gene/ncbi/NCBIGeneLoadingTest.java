@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,6 +49,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     private GeneService geneService;
     @Autowired
     private GeneSetService geneSetService;
+    @Autowired
+    private GeneProductService geneProductService;
 
     @Before
     public void setup() {
@@ -98,8 +101,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         g = geneService.thaw( g );
 
         Collection<GeneProduct> products = g.getProducts();
-        Collection<String> expectedAccessions = new ArrayList<String>();
-        Collection<String> hasAccessions = new ArrayList<String>();
+        Collection<String> expectedAccessions = new ArrayList<>();
+        Collection<String> hasAccessions = new ArrayList<>();
         expectedAccessions.add( "AB209614.2" );
         expectedAccessions.add( "AK307832.1" );
 
@@ -141,6 +144,9 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         g = geneService.findByNCBIId( 1 );
         assertEquals( "ENSG00000121410", g.getEnsemblId() );
+        
+        // test remove...
+        geneProductService.remove( products );
 
     }
 

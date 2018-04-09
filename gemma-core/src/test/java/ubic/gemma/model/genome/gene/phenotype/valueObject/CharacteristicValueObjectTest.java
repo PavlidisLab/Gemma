@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2017 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,48 +19,46 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import com.google.common.collect.Lists;
+import junit.framework.TestCase;
+
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
-import junit.framework.TestCase;
-
 /**
- * 
  * @author mjacobson
  */
 public class CharacteristicValueObjectTest extends TestCase {
 
-    CharacteristicValueObject a;
-    CharacteristicValueObject b;
+    private CharacteristicValueObject a;
+    private CharacteristicValueObject b;
 
     public void testEqualsA() {
-        assertTrue( a.equals( b ) );
+        TestCase.assertTrue( a.equals( b ) );
     }
 
     public void testEqualsB() {
         a.setValueUri( "foo" );
         b.setValueUri( "bar" );
-        assertFalse( a.equals( b ) );
+        TestCase.assertFalse( a.equals( b ) );
     }
 
     public void testEqualsC() {
         a.setValueUri( "foo" );
         b.setValueUri( "foo" );
-        assertTrue( a.equals( b ) );
+        TestCase.assertTrue( a.equals( b ) );
     }
 
     public void testEqualsD() {
         a.setValue( "foo" );
         b.setValue( "bar" );
-        assertFalse( a.equals( b ) );
+        TestCase.assertFalse( a.equals( b ) );
     }
 
     public void testEqualsE() {
         a.setValue( "foo" );
         b.setValue( "foo" );
-        assertTrue( a.equals( b ) );
+        TestCase.assertTrue( a.equals( b ) );
     }
 
     public void testEqualsF() {
@@ -68,7 +66,7 @@ public class CharacteristicValueObjectTest extends TestCase {
         b.setValueUri( "bar" );
         a.setValue( "foo" );
         b.setValue( "foo" );
-        assertFalse( a.equals( b ) );
+        TestCase.assertFalse( a.equals( b ) );
     }
 
     public void testEqualsG() {
@@ -76,72 +74,72 @@ public class CharacteristicValueObjectTest extends TestCase {
         b.setValueUri( "foo" );
         a.setValue( "foo" );
         b.setValue( "bar" );
-        assertTrue( a.equals( b ) );
+        TestCase.assertTrue( a.equals( b ) );
     }
 
     public void testCompareToNull() {
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertEquals( 0, a.compareTo( b ) );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertEquals( 0, a.compareTo( b ) );
     }
 
     public void testCompareToCategory() {
         a.setCategory( "aaa" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) > 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) > 0 );
 
         b.setCategory( "aaa" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertEquals( 0, a.compareTo( b ) );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertEquals( 0, a.compareTo( b ) );
 
         b.setCategory( "zzz" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) < 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) < 0 );
     }
 
     public void testCompareToTaxon() {
         a.setTaxon( "aaa" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) > 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) > 0 );
 
         b.setTaxon( "aaa" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertEquals( 0, a.compareTo( b ) );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertEquals( 0, a.compareTo( b ) );
 
         b.setTaxon( "zzz" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) < 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) < 0 );
     }
 
     public void testCompareToValue() {
         a.setValue( "aaa" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) > 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) > 0 );
 
         b.setValue( "aaa" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertEquals( 0, a.compareTo( b ) );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertEquals( 0, a.compareTo( b ) );
 
         b.setValue( "zzz" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) < 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) < 0 );
     }
 
     public void testCompareToValueUri() {
         a.setValueUri( "aaa" );
         b.setValueUri( "aaa" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertEquals( 0, a.compareTo( b ) );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertEquals( 0, a.compareTo( b ) );
 
         b.setValueUri( "zzz" );
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) < 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) < 0 );
     }
 
     public void testCompareToOrdering() {
         // Order is category, taxon, value, valueUri
-        CharacteristicValueObject c = new CharacteristicValueObject(3L);
-        CharacteristicValueObject d = new CharacteristicValueObject(4L);
-        CharacteristicValueObject e = new CharacteristicValueObject(5L);
+        CharacteristicValueObject c = new CharacteristicValueObject( 3L );
+        CharacteristicValueObject d = new CharacteristicValueObject( 4L );
+        CharacteristicValueObject e = new CharacteristicValueObject( 5L );
 
         a.setCategory( "aaa" );
         b.setCategory( "zzz" );
@@ -162,17 +160,17 @@ public class CharacteristicValueObjectTest extends TestCase {
         e.setValueUri( "zzz" );
 
         // order should be a, b, c, d, e
-        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        assertTrue( a.compareTo( b ) < 0 );
+        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        TestCase.assertTrue( a.compareTo( b ) < 0 );
 
-        assertEquals( b.compareTo( c ), -c.compareTo( b ) );
-        assertTrue( b.compareTo( c ) < 0 );
+        TestCase.assertEquals( b.compareTo( c ), -c.compareTo( b ) );
+        TestCase.assertTrue( b.compareTo( c ) < 0 );
 
-        assertEquals( d.compareTo( c ), -c.compareTo( d ) );
-        assertTrue( c.compareTo( d ) < 0 );
+        TestCase.assertEquals( d.compareTo( c ), -c.compareTo( d ) );
+        TestCase.assertTrue( c.compareTo( d ) < 0 );
 
-        assertEquals( d.compareTo( e ), -e.compareTo( d ) );
-        assertTrue( d.compareTo( e ) < 0 );
+        TestCase.assertEquals( d.compareTo( e ), -e.compareTo( d ) );
+        TestCase.assertTrue( d.compareTo( e ) < 0 );
 
         // sorting
         List<CharacteristicValueObject> toSort = Lists.newArrayList( e, d, c, b, a );
@@ -180,7 +178,7 @@ public class CharacteristicValueObjectTest extends TestCase {
 
         Long i = 1L;
         for ( CharacteristicValueObject cvo : toSort ) {
-            assertEquals( i, cvo.getId() );
+            TestCase.assertEquals( i, cvo.getId() );
             i++;
         }
     }
@@ -188,7 +186,7 @@ public class CharacteristicValueObjectTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        a = new CharacteristicValueObject(1L);
-        b = new CharacteristicValueObject(2L);
+        a = new CharacteristicValueObject( 1L );
+        b = new CharacteristicValueObject( 2L );
     }
 }

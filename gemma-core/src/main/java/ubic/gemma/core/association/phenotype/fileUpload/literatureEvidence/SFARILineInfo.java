@@ -3,25 +3,27 @@ package ubic.gemma.core.association.phenotype.fileUpload.literatureEvidence;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class SFARILineInfo {
 
-    // DEFNIFE COLUMNS NAMES AS THEY APPEAR IN FILE
-    private static String geneSymbolHeader = "Gene Symbol";
-    private static String entrezGeneIDHeader = "Entrez GeneID";
-    private static String supportForAutismHeader = "Support for Autism";
-    private static String evidenceOfSupportHeader = "Evidence of Support";
-    private static String positiveReferenceHeader = "Positive Reference";
-    private static String negativeReferenceHeader = "Negative Reference";
-    // there is a mistake here but the mistake in in the file Primay should be Primary
-    private static String primaryReferenceHeader = "Primay Reference";
-    private static String mostCitedHeader = "Most cited";
-    private static String mostRecentHeader = "Most Recent";
-    private static String supportingHeader = "Supporting";
+    // Column names as they appear in the file
+    private static final String GENE_SYMBOL_HEADER = "Gene Symbol";
+    private static final String ENTREZ_GENE_ID_HEADER = "Entrez GeneID";
+    private static final String SUPPORT_FOR_AUTISM_HEADER = "Support for Autism";
+    private static final String EVIDENCE_OF_SUPPORT_HEADER = "Evidence of Support";
+    private static final String POSITIVE_REFERENCE_HEADER = "Positive Reference";
+    private static final String NEGATIVE_REFERENCE_HEADER = "Negative Reference";
+    // there is a mistake here but the mistake is in the file! Primay should be Primary
+    private static final String PRIMARY_REFERENCE_HEADER = "Primay Reference";
+    private static final String MOST_CITED_HEADER = "Most cited";
+    private static final String MOST_RECENT_HEADER = "Most Recent";
+    private static final String SUPPORTING_HEADER = "Supporting";
 
-    // INDEX OF EACH COLUMN, TO B DERTERMINE ON READING FILE
+    // INDEX OF EACH COLUMN, TO B DETERMINE ON READING FILE
     private static Integer geneSymbolIndex = -1;
     private static Integer entrezGeneIDIndex = -1;
     private static Integer supportForAutismIndex = -1;
@@ -33,57 +35,60 @@ public class SFARILineInfo {
     private static Integer mostRecentIndex = -1;
     private static Integer supportingIndex = -1;
 
-    private String geneSymbol = "";
-    private String nbciID = "";
-    private String description = "";
+    private final String geneSymbol;
+    private final String nbciID;
+    private final String description;
 
-    private Set<String> literaturePubMed = new HashSet<String>();
-    private Set<String> literaturePubMedNegative = new HashSet<String>();
+    private final Set<String> literaturePubMed = new HashSet<>();
+    private final Set<String> literaturePubMedNegative = new HashSet<>();
+
+    public SFARILineInfo( String line ) {
+
+        String[] lineTokens = line.split( "\t" );
+        this.geneSymbol = lineTokens[SFARILineInfo.geneSymbolIndex];
+        this.nbciID = lineTokens[SFARILineInfo.entrezGeneIDIndex];
+        this.description = lineTokens[SFARILineInfo.supportForAutismIndex] + " ; "
+                + lineTokens[SFARILineInfo.evidenceOfSupportIndex];
+
+        this.addAllPubmed( lineTokens[SFARILineInfo.positiveReferenceIndex], this.literaturePubMed );
+        this.addAllPubmed( lineTokens[SFARILineInfo.primaryReferenceIndex], this.literaturePubMed );
+        this.addAllPubmed( lineTokens[SFARILineInfo.mostCitedIndex], this.literaturePubMed );
+        this.addAllPubmed( lineTokens[SFARILineInfo.mostRecentIndex], this.literaturePubMed );
+        this.addAllPubmed( lineTokens[SFARILineInfo.supportingIndex], this.literaturePubMed );
+
+        this.addAllPubmed( lineTokens[SFARILineInfo.negativeReferenceIndex], this.literaturePubMedNegative );
+    }
 
     public static void setIndex( String headers ) throws Exception {
 
         String[] headersTokens = headers.split( "\t" );
 
-        ArrayList<String> headersSet = new ArrayList<String>();
+        ArrayList<String> headersSet = new ArrayList<>();
 
-        for ( String token : headersTokens ) {
-            headersSet.add( token );
-        }
+        Collections.addAll( headersSet, headersTokens );
 
-        if ( !headersSet.contains( geneSymbolHeader ) || !headersSet.contains( entrezGeneIDHeader )
-                || !headersSet.contains( supportForAutismHeader ) || !headersSet.contains( evidenceOfSupportHeader )
-                || !headersSet.contains( positiveReferenceHeader ) || !headersSet.contains( negativeReferenceHeader )
-                || !headersSet.contains( primaryReferenceHeader ) || !headersSet.contains( mostCitedHeader )
-                || !headersSet.contains( mostRecentHeader ) || !headersSet.contains( supportingHeader ) ) {
+        if ( !headersSet.contains( SFARILineInfo.GENE_SYMBOL_HEADER ) || !headersSet
+                .contains( SFARILineInfo.ENTREZ_GENE_ID_HEADER ) || !headersSet
+                .contains( SFARILineInfo.SUPPORT_FOR_AUTISM_HEADER ) || !headersSet
+                .contains( SFARILineInfo.EVIDENCE_OF_SUPPORT_HEADER ) || !headersSet
+                .contains( SFARILineInfo.POSITIVE_REFERENCE_HEADER ) || !headersSet
+                .contains( SFARILineInfo.NEGATIVE_REFERENCE_HEADER ) || !headersSet
+                .contains( SFARILineInfo.PRIMARY_REFERENCE_HEADER ) || !headersSet
+                .contains( SFARILineInfo.MOST_CITED_HEADER ) || !headersSet.contains( SFARILineInfo.MOST_RECENT_HEADER )
+                || !headersSet.contains( SFARILineInfo.SUPPORTING_HEADER ) ) {
             throw new Exception( "Some headers not find" );
         }
 
-        geneSymbolIndex = headersSet.indexOf( geneSymbolHeader );
-        entrezGeneIDIndex = headersSet.indexOf( entrezGeneIDHeader );
-        supportForAutismIndex = headersSet.indexOf( supportForAutismHeader );
-        evidenceOfSupportIndex = headersSet.indexOf( evidenceOfSupportHeader );
-        positiveReferenceIndex = headersSet.indexOf( positiveReferenceHeader );
-        negativeReferenceIndex = headersSet.indexOf( negativeReferenceHeader );
-        primaryReferenceIndex = headersSet.indexOf( primaryReferenceHeader );
-        mostCitedIndex = headersSet.indexOf( mostCitedHeader );
-        mostRecentIndex = headersSet.indexOf( mostRecentHeader );
-        supportingIndex = headersSet.indexOf( supportingHeader );
-    }
-
-    public SFARILineInfo( String line ) {
-
-        String[] lineTokens = line.split( "\t" );
-        this.geneSymbol = lineTokens[geneSymbolIndex];
-        this.nbciID = lineTokens[entrezGeneIDIndex];
-        this.description = lineTokens[supportForAutismIndex] + " ; " + lineTokens[evidenceOfSupportIndex];
-
-        addAllPubmed( lineTokens[positiveReferenceIndex], this.literaturePubMed );
-        addAllPubmed( lineTokens[primaryReferenceIndex], this.literaturePubMed );
-        addAllPubmed( lineTokens[mostCitedIndex], this.literaturePubMed );
-        addAllPubmed( lineTokens[mostRecentIndex], this.literaturePubMed );
-        addAllPubmed( lineTokens[supportingIndex], this.literaturePubMed );
-
-        addAllPubmed( lineTokens[negativeReferenceIndex], this.literaturePubMedNegative );
+        SFARILineInfo.geneSymbolIndex = headersSet.indexOf( SFARILineInfo.GENE_SYMBOL_HEADER );
+        SFARILineInfo.entrezGeneIDIndex = headersSet.indexOf( SFARILineInfo.ENTREZ_GENE_ID_HEADER );
+        SFARILineInfo.supportForAutismIndex = headersSet.indexOf( SFARILineInfo.SUPPORT_FOR_AUTISM_HEADER );
+        SFARILineInfo.evidenceOfSupportIndex = headersSet.indexOf( SFARILineInfo.EVIDENCE_OF_SUPPORT_HEADER );
+        SFARILineInfo.positiveReferenceIndex = headersSet.indexOf( SFARILineInfo.POSITIVE_REFERENCE_HEADER );
+        SFARILineInfo.negativeReferenceIndex = headersSet.indexOf( SFARILineInfo.NEGATIVE_REFERENCE_HEADER );
+        SFARILineInfo.primaryReferenceIndex = headersSet.indexOf( SFARILineInfo.PRIMARY_REFERENCE_HEADER );
+        SFARILineInfo.mostCitedIndex = headersSet.indexOf( SFARILineInfo.MOST_CITED_HEADER );
+        SFARILineInfo.mostRecentIndex = headersSet.indexOf( SFARILineInfo.MOST_RECENT_HEADER );
+        SFARILineInfo.supportingIndex = headersSet.indexOf( SFARILineInfo.SUPPORTING_HEADER );
     }
 
     public static void writeFinalHeader( BufferedWriter outputSFARI ) throws IOException {
@@ -135,14 +140,14 @@ public class SFARILineInfo {
 
         String[] pubmedIds = linePubmedIds.split( "," );
 
-        for ( int i = 0; i < pubmedIds.length; i++ ) {
-            if ( !pubmedIds[i].trim().equalsIgnoreCase( "" ) ) {
+        for ( String pubmedId : pubmedIds ) {
+            if ( !pubmedId.trim().equalsIgnoreCase( "" ) ) {
 
-                if ( mySet.contains( pubmedIds[i].trim() ) ) {
-                    System.err.println( "SAME FOUND ***" + pubmedIds[i].trim() );
+                if ( mySet.contains( pubmedId.trim() ) ) {
+                    System.err.println( "SAME FOUND ***" + pubmedId.trim() );
                 }
 
-                mySet.add( pubmedIds[i].trim() );
+                mySet.add( pubmedId.trim() );
             }
         }
     }

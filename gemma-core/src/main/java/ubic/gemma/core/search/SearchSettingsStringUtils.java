@@ -10,23 +10,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class SearchSettingsStringUtils {
+class SearchSettingsStringUtils {
 
     /**
      * Add anything that should be removed from the search string here. Lowercase.
      */
-    protected static String[] STRINGS_TO_REMOVE = new String[] { "all", "results", "for" };
+    private static final String[] STRINGS_TO_REMOVE = new String[] { "all", "results", "for" };
 
     public static String stripShortTerms( String query ) {
         String[] searchTerms = query.split( "\\s+" );
 
         if ( searchTerms.length > 0 ) {
-            query = "";
+            StringBuilder queryBuilder = new StringBuilder();
             for ( String sTerm : searchTerms ) {
                 if ( sTerm.length() > 1 ) {
-                    query = query + " " + sTerm;
+                    queryBuilder.append( " " ).append( sTerm );
                 }
             }
+            query = queryBuilder.toString();
             query = query.trim();
         }
         return query;
@@ -43,7 +44,7 @@ public class SearchSettingsStringUtils {
 
         if ( settings != null && settings.getTaxon() == null ) {
 
-            settings = processSearchString( settings );
+            settings = SearchSettingsStringUtils.processSearchString( settings );
             String searchString = settings.getQuery();
 
             // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
@@ -91,18 +92,18 @@ public class SearchSettingsStringUtils {
     private static SearchSettings processSearchString( SearchSettings settings ) {
         String searchString = QueryParser.escape( settings.getQuery().toLowerCase() );
 
-        for ( String s : STRINGS_TO_REMOVE ) {
+        for ( String s : SearchSettingsStringUtils.STRINGS_TO_REMOVE ) {
             searchString = searchString.replace( s, "" );
         }
 
-        String newString = "";
+        StringBuilder newString = new StringBuilder();
         String[] searchTerms = searchString.split( "\\s+" );
 
         for ( String term : searchTerms ) {
-            newString += term.replaceAll( "\'|\"", "" ) + " ";
+            newString.append( term.replaceAll( "['\"]", "" ) ).append( " " );
         }
 
-        settings.setQuery( StringUtils.strip( newString ) );
+        settings.setQuery( StringUtils.strip( newString.toString() ) );
 
         return settings;
     }

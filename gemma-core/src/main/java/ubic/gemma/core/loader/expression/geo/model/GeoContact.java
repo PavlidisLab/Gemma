@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,8 +22,8 @@ import java.io.Serializable;
 
 /**
  * @author pavlidis
- *
  */
+@SuppressWarnings("unused") // Possible external use
 public class GeoContact implements Serializable {
 
     private static final long serialVersionUID = -2042747972349661568L;
@@ -61,73 +61,17 @@ public class GeoContact implements Serializable {
     }
 
     /**
-     * @return Returns the department.
-     */
-    public String getDepartment() {
-        return this.department;
-    }
-
-    /**
-     * @return Returns the email.
-     */
-    public String getEmail() {
-        return this.email;
-    }
-
-    /**
-     * @return Returns the fax.
-     */
-    public String getFax() {
-        return this.fax;
-    }
-
-    /**
-     * @return Returns the institute.
-     */
-    public String getInstitute() {
-        return this.institute;
-    }
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * @return Returns the phone.
-     */
-    public String getPhone() {
-        return this.phone;
-    }
-
-    /**
-     * @return Returns the postCode.
-     */
-    public String getPostCode() {
-        return this.postCode;
-    }
-
-    /**
-     * @return Returns the state.
-     */
-    public String getState() {
-        return this.state;
-    }
-
-    /**
-     * @return Returns the webLink.
-     */
-    public String getWebLink() {
-        return this.webLink;
-    }
-
-    /**
      * @param city The city to set.
      */
     public void setCity( String city ) {
         this.city = city;
+    }
+
+    /**
+     * @return Returns the department.
+     */
+    public String getDepartment() {
+        return this.department;
     }
 
     /**
@@ -138,10 +82,24 @@ public class GeoContact implements Serializable {
     }
 
     /**
+     * @return Returns the email.
+     */
+    public String getEmail() {
+        return this.email;
+    }
+
+    /**
      * @param email The email to set.
      */
     public void setEmail( String email ) {
         this.email = email;
+    }
+
+    /**
+     * @return Returns the fax.
+     */
+    public String getFax() {
+        return this.fax;
     }
 
     /**
@@ -152,10 +110,24 @@ public class GeoContact implements Serializable {
     }
 
     /**
+     * @return Returns the institute.
+     */
+    public String getInstitute() {
+        return this.institute;
+    }
+
+    /**
      * @param institute The institute to set.
      */
     public void setInstitute( String institute ) {
         this.institute = institute;
+    }
+
+    /**
+     * @return Returns the name.
+     */
+    public String getName() {
+        return this.name;
     }
 
     /**
@@ -166,10 +138,24 @@ public class GeoContact implements Serializable {
     }
 
     /**
+     * @return Returns the phone.
+     */
+    public String getPhone() {
+        return this.phone;
+    }
+
+    /**
      * @param phone The phone to set.
      */
     public void setPhone( String phone ) {
         this.phone = phone;
+    }
+
+    /**
+     * @return Returns the postCode.
+     */
+    public String getPostCode() {
+        return this.postCode;
     }
 
     /**
@@ -180,10 +166,24 @@ public class GeoContact implements Serializable {
     }
 
     /**
+     * @return Returns the state.
+     */
+    public String getState() {
+        return this.state;
+    }
+
+    /**
      * @param state The state to set.
      */
     public void setState( String state ) {
         this.state = state;
+    }
+
+    /**
+     * @return Returns the webLink.
+     */
+    public String getWebLink() {
+        return this.webLink;
     }
 
     /**
@@ -193,10 +193,6 @@ public class GeoContact implements Serializable {
         this.webLink = webLink;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -206,23 +202,24 @@ public class GeoContact implements Serializable {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
         final GeoContact other = ( GeoContact ) obj;
         if ( email == null ) {
-            if ( other.email != null ) return false;
-        } else if ( !email.equals( other.email ) ) return false;
+            if ( other.email != null )
+                return false;
+        } else if ( !email.equals( other.email ) )
+            return false;
         if ( name == null ) {
-            if ( other.name != null ) return false;
-        } else if ( !name.equals( other.name ) ) return false;
-        return true;
+            return other.name == null;
+        } else
+            return name.equals( other.name );
     }
 
 }

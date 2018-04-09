@@ -1,44 +1,66 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.Set;
-
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- * Retrieve information used for classifying Phenocarta evidence quality. FIXME this doesn't do anything right now.
- * 
- * @author nicolas
+ * Retrieve information used for classifying Phenocarta evidence quality.
  *
+ * @author nicolas
  */
 public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
+
+    // a monthly dump of all evidence, takes too long to all, use files auto-generated
+    private final String evidenceDumpPath =
+            File.separator + "neurocarta" + File.separator + "classifier" + File.separator
+                    + "AllPhenocartaAnnotations.tsv";
+    // comes from the excluded set
+    private final Set<String> excludedPubmed = new HashSet<>();
+    // these are all evidence that were used in the training set, exclude those ones to not give false results
+    private final String trainingSetPath =
+            File.separator + "neurocarta" + File.separator + "classifier" + File.separator + "trainingSet.tsv";
+    // the services that will be needed
+    private BibliographicReferenceService bibliographicReferenceService = null;
+    private BufferedWriter writer;
+
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    public LoadEvidenceForClassifier( String[] args ) throws Exception {
+
+        this.loadServices( args );
+
+        // place to put the files results
+        String writeFolder = this.createWriteFolderIfNotExists();
+
+        writer = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
+
+        this.loadTrainingSetUsed();
+
+        this.findEvidence();
+    }
 
     public static void main( String[] args ) throws Exception {
 
@@ -46,45 +68,11 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
     }
 
-    // the services that will be needed
-    BibliographicReferenceService bibliographicReferenceService = null;
-    // a monthly dump of all evidence, takes too long to all, use files auto-generated
-    private String evidenceDumpPath = File.separator + "neurocarta" + File.separator + "classifier" + File.separator
-            + "AllPhenocartaAnnotations.tsv";
-
-    // comes from the excluded set
-    private Set<String> excludedPubmed = new HashSet<>();
-
-    // these are all evidence that were used in the training set, exclude those ones to not give false results
-    private String trainingSetPath = File.separator + "neurocarta" + File.separator + "classifier" + File.separator
-            + "trainingSet.tsv";
-
-    private BufferedWriter writer = null;
-
-    public LoadEvidenceForClassifier( String[] args ) throws Exception {
-
-        loadServices( args );
-
-        // place to put the files results
-        String writeFolder = createWriteFolderIfDoesntExist( "CLASSIFIER" );
-
-        writer = new BufferedWriter( new FileWriter( writeFolder + "/mappingFound.tsv" ) );
-
-        loadTrainingSetUsed();
-
-        findEvidence();
-    }
-
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.ANALYSIS;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "loadEvidenceForClassifier";
@@ -94,40 +82,41 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     protected void buildOptions() {
     }
 
+    @Override
+    protected Exception doWork( String[] args ) {
+        return null;
+    }
+
     // creates the folder where the output files will be put, use this one if file is too big
-    protected String createWriteFolderIfDoesntExist( String name ) throws Exception {
+    private String createWriteFolderIfNotExists() throws Exception {
 
         // where to put the final results
-        String writeFolder = Settings.getString( "gemma.appdata.home" ) + File.separator + name;
+        String writeFolder = Settings.getString( "gemma.appdata.home" ) + File.separator + "CLASSIFIER";
 
         File folder = new File( writeFolder );
-        folder.mkdir();
 
-        if ( !folder.exists() ) {
+        if ( !folder.mkdir() && !folder.exists() ) {
             throw new Exception( "having trouble to create a folder" );
         }
 
         return writeFolder;
     }
 
-    @Override
-    protected Exception doWork( String[] args ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     // load all needed services
-    protected synchronized void loadServices( String[] args ) throws Exception {
+    private synchronized void loadServices( String[] args ) {
 
         // this gets the context, so we can access beans
-        processCommandLine( args );
+        Exception exception = this.processCommandLine( args );
+        if ( exception != null ) {
+            AbstractCLI.log.error( exception );
+            exception.printStackTrace();
+        }
 
         // add services if needed later
         this.bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
-
     }
 
-    private void findEvidence() throws FileNotFoundException, IOException {
+    private void findEvidence() throws IOException {
 
         BufferedReader br = new BufferedReader(
                 new InputStreamReader( LoadEvidenceForClassifier.class.getResourceAsStream( evidenceDumpPath ) ) );
@@ -136,7 +125,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
         String firstLine = br.readLine();
         writer.write( firstLine + "\t" + "Mesh Terms" + "\n" );
 
-        String line = "";
+        String line;
 
         while ( ( line = br.readLine() ) != null ) {
 
@@ -148,13 +137,13 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
                 if ( !excludedPubmed.contains( pubmed ) ) {
 
                     // must have 1 pubmed
-                    if ( pubmed.indexOf( ";" ) == -1 ) {
+                    if ( !pubmed.contains( ";" ) ) {
 
                         // cannot be human taxon, this can be changed
                         if ( !taxon.equalsIgnoreCase( "human" ) ) {
 
                             // find the MeshTerms
-                            String meshTerms = findMeshTerms( pubmed );
+                            String meshTerms = this.findMeshTerms( pubmed );
 
                             // must have mesh terms associtaed with it
                             if ( !meshTerms.isEmpty() ) {
@@ -173,7 +162,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     // return mesh term of a pubmed format : meshTerm1;meshTerm2;meshTerms3.... etc
     private String findMeshTerms( String pubmed ) {
 
-        String result = "";
+        StringBuilder result = new StringBuilder();
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         de.setAccession( pubmed );
@@ -185,25 +174,19 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
         BibliographicReference b = this.bibliographicReferenceService.find( bi );
 
         for ( MedicalSubjectHeading m : b.getMeshTerms() ) {
-
-            // boolean isMajor = m.getIsMajorTopic();
-            // for ( MedicalSubjectHeading q : m.getQualifiers() ) {
-            // // ...
-            // }
-
-            result = result + m.getTerm() + ";";
+            result.append( m.getTerm() ).append( ";" );
         }
 
-        return result;
+        return result.toString();
 
     }
 
-    private void loadTrainingSetUsed() throws FileNotFoundException, IOException {
+    private void loadTrainingSetUsed() throws IOException {
 
         BufferedReader br = new BufferedReader(
                 new InputStreamReader( LoadEvidenceForClassifier.class.getResourceAsStream( trainingSetPath ) ) );
 
-        String line = "";
+        String line;
 
         while ( ( line = br.readLine() ) != null ) {
             excludedPubmed.add( line.split( "\t" )[0] );

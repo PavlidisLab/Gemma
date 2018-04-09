@@ -19,13 +19,12 @@
 
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
-
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.genome.Gene;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Paul

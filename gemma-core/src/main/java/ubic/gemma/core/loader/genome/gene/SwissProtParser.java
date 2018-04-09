@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,30 +18,24 @@
  */
 package ubic.gemma.core.loader.genome.gene;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.util.parser.RecordParser;
+
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.core.loader.util.parser.RecordParser;
-
 /**
  * This does a very minimal parse of Swissprot records, just to get mRNAs associated with a single protein.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class SwissProtParser extends RecordParser<Object> {
 
-    Collection<Object> results = new HashSet<Object>();
+    private final Collection<Object> results = new HashSet<>();
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public SwissProtParser() {
         this.setRecordSeparator( "//" );
-    }
-
-    @Override
-    protected void addResult( Object obj ) {
-        results.add( obj );
     }
 
     @Override
@@ -51,7 +45,8 @@ public class SwissProtParser extends RecordParser<Object> {
 
     @Override
     public Object parseOneRecord( String record ) {
-        if ( StringUtils.isBlank( record ) ) return null;
+        if ( StringUtils.isBlank( record ) )
+            return null;
 
         String[] rows = StringUtils.split( record, "\n" );
 
@@ -64,90 +59,112 @@ public class SwissProtParser extends RecordParser<Object> {
             String tag = fields[0];
             String value = fields[1];
 
-            if ( tag.equals( "ID" ) ) {
-                String id = StringUtils.split( value, null, 2 )[0];
-                log.debug( id );
-            } else if ( tag.equals( "AC" ) ) {
-                // swissprot accessions
-                String[] accessions = StringUtils.split( value, " ;" );
-                log.debug( StringUtils.join( accessions, " " ) );
-            } else if ( tag.equals( "OX" ) ) {
-                // taxon
-                String[] nf = StringUtils.split( value, "=", 2 );
-                String taxid = nf[1];
-                taxid = taxid.replaceFirst( ";.*$", "" );
-            } else if ( tag.equals( "GN" ) ) {
-                // gene
-                // Name=YWHAB;
-                String[] nf = StringUtils.split( value, "=", 2 );
-                String name = nf[1];
-                name = name.replaceFirst( ";.*$", "" );
-                log.debug( name );
-            } else if ( tag.equals( "CC" ) ) {
+            switch ( tag ) {
+                case "ID":
+                    String id = StringUtils.split( value, null, 2 )[0];
+                    RecordParser.log.debug( id );
+                    break;
+                case "AC":
+                    // swissprot accessions
+                    String[] accessions = StringUtils.split( value, " ;" );
+                    RecordParser.log.debug( StringUtils.join( accessions, " " ) );
+                    break;
+                case "OX": {
+                    break;
+                }
+                case "GN": {
+                    // gene
+                    // Name=YWHAB;
+                    String[] nf = StringUtils.split( value, "=", 2 );
+                    String name = nf[1];
+                    name = name.replaceFirst( ";.*$", "" );
+                    RecordParser.log.debug( name );
+                    break;
+                }
+                case "CC":
+                    break;
+                case "DE":
+                    break;
+                case "DR":
+                    // these are our cross-references
 
-            } else if ( tag.equals( "DE" ) ) {
+                    String[] subfields = StringUtils.split( value, " ;" );
 
-            } else if ( tag.equals( "DR" ) ) {
-                // these are our cross-references
+                    String db = subfields[0];
 
-                String[] subfields = StringUtils.split( value, " ;" );
+                    // go on to break it up futher.
 
-                String db = subfields[0];
+                    if ( db.equals( "EMBL" ) ) {
 
-                // go on to break it up futher.
+                        String nucleotide = subfields[1].replaceFirst( "\\..+", "" );
 
-                if ( db.equals( "EMBL" ) ) {
+                        String protein = subfields[2].replaceFirst( "\\..+", "" );
+                        if ( protein.equals( "-" ) ) {
+                            protein = null;
+                        }
 
-                    String nucleotide = subfields[1].replaceFirst( "\\..+", "" );
+                        RecordParser.log.debug( nucleotide + " --> " + protein );
 
-                    String protein = subfields[2].replaceFirst( "\\..+", "" );
-                    if ( protein.equals( "-" ) ) {
-                        protein = null;
                     }
 
-                    log.debug( nucleotide + " --> " + protein );
+                    break;
+                case "DT":
 
-                } else {
-                    continue;
-                }
+                    break;
+                case "FT":
 
-            } else if ( tag.equals( "DT" ) ) {
+                    break;
+                case "KW":
 
-            } else if ( tag.equals( "FT" ) ) {
+                    break;
+                case "OC":
 
-            } else if ( tag.equals( "KW" ) ) {
+                    break;
+                case "OG":
 
-            } else if ( tag.equals( "OC" ) ) {
+                    break;
+                case "OS":
 
-            } else if ( tag.equals( "OG" ) ) {
+                    break;
+                case "RA":
 
-            } else if ( tag.equals( "OS" ) ) {
+                    break;
+                case "RC":
 
-            } else if ( tag.equals( "RA" ) ) {
+                    break;
+                case "RG":
 
-            } else if ( tag.equals( "RC" ) ) {
+                    break;
+                case "RL":
 
-            } else if ( tag.equals( "RG" ) ) {
+                    break;
+                case "RN":
 
-            } else if ( tag.equals( "RL" ) ) {
+                    break;
+                case "RP":
 
-            } else if ( tag.equals( "RN" ) ) {
+                    break;
+                case "RT":
 
-            } else if ( tag.equals( "RP" ) ) {
+                    break;
+                case "RX":
 
-            } else if ( tag.equals( "RT" ) ) {
+                    break;
+                case "SQ":
 
-            } else if ( tag.equals( "RX" ) ) {
-
-            } else if ( tag.equals( "SQ" ) ) {
-
-            } else {
-                // sequence data.
-                continue;
+                    break;
+                default:
+                    // sequence data.
+                    break;
             }
 
         }
 
         return null;
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( obj );
     }
 }

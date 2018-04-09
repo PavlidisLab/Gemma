@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,12 +22,12 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;

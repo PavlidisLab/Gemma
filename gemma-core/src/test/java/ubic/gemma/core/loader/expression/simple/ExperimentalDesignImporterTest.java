@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,10 +51,8 @@ import static org.junit.Assert.*;
  */
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
+    private final String adName = RandomStringUtils.randomAlphabetic( 10 );
     private ExpressionExperiment ee;
-
-    private String adName = RandomStringUtils.randomAlphabetic( 10 );
-
     @Autowired
     private ExpressionExperimentService eeService;
 
@@ -66,6 +64,16 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     @Autowired
     private AclTestUtils aclTestUtils;
+
+    static void assertFv( FactorValue fv ) {
+        if ( fv.getCharacteristics().size() > 0 ) {
+            VocabCharacteristic c = ( VocabCharacteristic ) fv.getCharacteristics().iterator().next();
+            assertNotNull( c.getValue() );
+            assertNotNull( c.getCategoryUri() );
+        } else {
+            assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv.getMeasurement() );
+        }
+    }
 
     @After
     public void tearDown() {
@@ -98,7 +106,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         metaData.getArrayDesigns().add( ad );
         try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestData.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestData.txt" )) {
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
         }
@@ -110,7 +118,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" )) {
 
-            experimentalDesignImporter.importDesign( ee, is, false );
+            experimentalDesignImporter.importDesign( ee, is );
         }
         ee = this.eeService.thawLite( ee );
         Collection<BioMaterial> bms = new HashSet<>();
@@ -118,7 +126,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             BioMaterial bm = ba.getSampleUsed();
             bms.add( bm );
         }
-        checkResults( bms );
+        this.checkResults( bms );
         this.aclTestUtils.checkEEAcls( ee );
     }
 
@@ -126,9 +134,9 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParseDryRun() throws Exception {
 
         try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" )) {
 
-            experimentalDesignImporter.importDesign( ee, is, true );
+            experimentalDesignImporter.importDesign( ee, is );
         }
 
         ee = this.eeService.thawLite( ee );
@@ -140,9 +148,9 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParseFailedDryRun() throws Exception {
 
         try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" )) {
 
-            experimentalDesignImporter.importDesign( ee, is, true );
+            experimentalDesignImporter.importDesign( ee, is );
             fail( "Should have gotten an Exception" );
 
         }
@@ -156,9 +164,9 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParseWhereExtraValue() throws Exception {
 
         try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" )) {
 
-            experimentalDesignImporter.importDesign( ee, is, false );
+            experimentalDesignImporter.importDesign( ee, is );
         }
 
         ee = this.eeService.thawLite( ee );
@@ -170,7 +178,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         }
         this.aclTestUtils.checkEEAcls( ee );
 
-        checkResults( bms );
+        this.checkResults( bms );
     }
 
     private void checkResults( Collection<BioMaterial> bms ) {
@@ -190,14 +198,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             }
 
             for ( FactorValue fv : ef.getFactorValues() ) {
-                if ( fv.getCharacteristics().size() > 0 ) {
-                    VocabCharacteristic c = ( VocabCharacteristic ) fv.getCharacteristics().iterator().next();
-                    assertNotNull( c.getValue() );
-                    assertNotNull( c.getCategoryUri() );
-                } else {
-                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic",
-                            fv.getMeasurement() );
-                }
+                ExperimentalDesignImporterTest.assertFv( fv );
 
                 if ( fv.getExperimentalFactor().getName().equals( "PMI (h)" ) ) {
                     foundpmi = true;

@@ -18,14 +18,13 @@
  */
 package ubic.gemma.model.common.description;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
-import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author pavlidis

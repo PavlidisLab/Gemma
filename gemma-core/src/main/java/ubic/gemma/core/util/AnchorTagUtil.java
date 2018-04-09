@@ -8,23 +8,27 @@ import ubic.gemma.persistence.util.Settings;
  *
  * @author luke
  */
-@SuppressWarnings("WeakerAccess") // Possibly used in front end
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Possibly used in front end
 public class AnchorTagUtil {
 
     public static String getArrayDesignLink( Long adId, String link ) {
-        return getArrayDesignLink( adId, link, null );
+        return AnchorTagUtil.getArrayDesignLink( adId, link, null );
     }
 
     public static String getArrayDesignLink( Long adId, String link, String hover ) {
-        return getLink( String.format( Settings.getRootContext() + "/arrays/showArrayDesign.html?id=%d", adId ), link, hover );
+        return AnchorTagUtil
+                .getLink( String.format( Settings.getRootContext() + "/arrays/showArrayDesign.html?id=%d", adId ), link,
+                        hover );
     }
 
     public static String getBioMaterialLink( Long bmId, String link ) {
-        return getBioMaterialLink( bmId, link, null );
+        return AnchorTagUtil.getBioMaterialLink( bmId, link, null );
     }
 
     public static String getBioMaterialLink( Long bmId, String link, String hover ) {
-        return getLink( String.format( Settings.getRootContext() + "/bioMaterial/showBioMaterial.html?id=%d", bmId ), link, hover );
+        return AnchorTagUtil
+                .getLink( String.format( Settings.getRootContext() + "/bioMaterial/showBioMaterial.html?id=%d", bmId ),
+                        link, hover );
     }
 
     /**
@@ -33,7 +37,7 @@ public class AnchorTagUtil {
      * @return experimental design link html
      */
     public static String getExperimentalDesignLink( Long eeId, String link ) {
-        return getExperimentalDesignLink( eeId, link, null );
+        return AnchorTagUtil.getExperimentalDesignLink( eeId, link, null );
     }
 
     /**
@@ -43,20 +47,22 @@ public class AnchorTagUtil {
      * @return experimental design link html
      */
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
-        return getLink( String.format( Settings.getRootContext() + "/experimentalDesign/showExperimentalDesign.html?edid=%d", edId ),
-                ( StringUtils.isBlank( link ) ? "Experimental Design" : link ), hover );
+        return AnchorTagUtil.getLink(
+                String.format( Settings.getRootContext() + "/experimentalDesign/showExperimentalDesign.html?edid=%d",
+                        edId ), ( StringUtils.isBlank( link ) ? "Experimental Design" : link ), hover );
     }
 
     public static String getExpressionExperimentLink( Long eeId, String link ) {
-        return getExpressionExperimentLink( eeId, link, null );
+        return AnchorTagUtil.getExpressionExperimentLink( eeId, link, null );
     }
 
     public static String getExpressionExperimentLink( Long eeId, String link, String hover ) {
-        return getLink( getExpressionExperimentUrl( eeId ), link, hover );
+        return AnchorTagUtil.getLink( AnchorTagUtil.getExpressionExperimentUrl( eeId ), link, hover );
     }
 
     public static String getExpressionExperimentUrl( long eeId ) {
-        return String.format( Settings.getRootContext() + "/expressionExperiment/showExpressionExperiment.html?id=%d", eeId );
+        return String.format( Settings.getRootContext() + "/expressionExperiment/showExpressionExperiment.html?id=%d",
+                eeId );
     }
 
     public static String getLink( String url, String link, String hover ) {

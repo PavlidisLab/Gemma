@@ -3,8 +3,8 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.experiment.ExperimentalDesign" table="EXPERIMENTAL_DESIGN" dynamic-insert="false" dynamic-update="false">
+<hibernate-mapping>
+   <class name="ubic.gemma.model.expression.experiment.ExperimentalDesign" table="EXPERIMENTAL_DESIGN">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -36,7 +36,7 @@
          </key>
          <one-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactor"/>
       </set>
-      <set name="types"  lazy="false" fetch="select" inverse="false" cascade="all">
+      <set name="types" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="CHARACTERISTIC_EXPERIMENTAL_DESIGN_FKC">
             <column name="EXPERIMENTAL_DESIGN_FK" sql-type="BIGINT"/>

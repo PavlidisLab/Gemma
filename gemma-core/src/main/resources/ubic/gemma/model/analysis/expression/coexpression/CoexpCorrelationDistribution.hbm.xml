@@ -1,21 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?> 
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-	<class name="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistributionImpl" table="COEXP_CORRELATION_DISTRIBUTION"
-		dynamic-insert="false" dynamic-update="false">
-		<cache usage="read-write" />
-		<id name="id" type="java.lang.Long" unsaved-value="null">
-			<column name="ID" sql-type="BIGINT" />
-			<generator class="native">
-			</generator>
-		</id>
-		<property name="numBins" type="java.lang.Integer">
-			<column name="NUM_BINS" not-null="true" unique="false" sql-type="INTEGER" />
-		</property>
-		<property name="binCounts" type="byte[]">
-			<column name="BIN_COUNTS" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
-		</property>
-	</class>
+<hibernate-mapping>
+    <class name="ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution"
+           table="COEXP_CORRELATION_DISTRIBUTION"
+    >
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <property name="numBins" type="java.lang.Integer">
+            <column name="NUM_BINS" not-null="true" unique="false" sql-type="INTEGER"/>
+        </property>
+        <property name="binCounts" type="byte[]">
+            <column name="BIN_COUNTS" not-null="true" unique="false" sql-type="MEDIUMBLOB"/>
+        </property>
+    </class>
 </hibernate-mapping>

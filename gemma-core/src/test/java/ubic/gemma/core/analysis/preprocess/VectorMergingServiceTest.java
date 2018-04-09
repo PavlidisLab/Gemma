@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -116,16 +116,16 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         /*
          * The experiment uses the following GPLs
-         * 
+         *
          * GPL2868, GPL2933, GPL2934, GPL2935, GPL2936, GPL2937, GPL2938
-         * 
+         *
          * Example of a sequence appearing on more than one platform: N57553
          */
 
         geoService.setGeoDomainObjectGenerator(
-                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse3443merge" ) ) );
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse3443merge" ) ) );
 
-        Collection<?> results = geoService.fetchAndLoad( "GSE3443", false, false, true, false );
+        Collection<?> results = geoService.fetchAndLoad( "GSE3443", false, false, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
 
         ee = this.eeService.thawLite( ee );
@@ -169,7 +169,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 72, mergedAA.getCompositeSequences().size() );
 
-        Set<BioSequence> seenBs = new HashSet<BioSequence>();
+        Set<BioSequence> seenBs = new HashSet<>();
         for ( CompositeSequence cs : mergedAA.getCompositeSequences() ) {
             seenBs.add( cs.getBiologicalCharacteristic() );
         }

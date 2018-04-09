@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
-import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
@@ -42,6 +41,7 @@ import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionCache;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -83,7 +83,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     private LinkAnalysisService linkAnalysisService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -118,7 +118,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK IN (?) AND SUPPORT > 0",
                 new Object[] { checkme.toArray() }, new RowCallbackHandler() {
                     @Override
-                    public void processRow( ResultSet rs ) throws SQLException {
+                    public void processRow( ResultSet rs ) {
                         fail( "Should not have had any rows" );
                     }
                 } );
@@ -139,7 +139,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     @Test
     public void testLoadAnalyzeSaveAndCoexpSearch() {
         ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
 
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
@@ -157,7 +157,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         // test remove is clean; to check this properly requires checking the db.
         linkAnalysisPersisterService.deleteAnalyses( ee );
 
-        checkUnsupportedLinksHaveNoSupport();
+        this.checkUnsupportedLinksHaveNoSupport();
         assertEquals( 0, geneCoexpressionService.getCoexpression( ee, true ).size() );
 
         la = linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
@@ -171,17 +171,17 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         Collection<BioAssaySet> ees = new HashSet<>();
         ees.add( ee );
 
-        updateNodeDegree();
-        int totalLinksFirstPass = checkResults( ees, 1 );
+        this.updateNodeDegree();
+        int totalLinksFirstPass = this.checkResults( ees, 1 );
 
         // should be ~1140.
         assertTrue( totalLinksFirstPass > 1000 );
 
         // test redo
         linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
-        updateNodeDegree();
+        this.updateNodeDegree();
 
-        int totalLinksRedo = checkResults( ees, 1 );
+        int totalLinksRedo = this.checkResults( ees, 1 );
         assertEquals( totalLinksFirstPass, totalLinksRedo );
 
         // now add another experiment that has overlapping links (same data...
@@ -192,7 +192,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         }
 
         ExpressionExperiment ee2 = this.getTestPersistentCompleteExpressionExperimentWithSequences( ee );
-        //eeService.thaw( ee2 );
+        //eeService.thawRawAndProcessed( ee2 );
         for ( RawExpressionDataVector v : ee2.getRawExpressionDataVectors() ) {
             assert dataMap.get( v.getDesignElement() ) != null;
             v.setData( dataMap.get( v.getDesignElement() ) );
@@ -200,14 +200,14 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         eeService.update( ee2 );
 
-        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee2 );
+        processedExpressionDataVectorService.computeProcessedExpressionData( ee2 );
         linkAnalysisService.process( ee2, filterConfig, linkAnalysisConfig );
 
-        updateNodeDegree();
+        this.updateNodeDegree();
 
         // expect to get at least one links with support >1
         ees.add( ee2 );
-        checkResults( ees, 2 );
+        this.checkResults( ees, 2 );
 
     }
 
@@ -248,7 +248,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         Collection<CoexpressionValueObject> eeResults = geneCoexpressionService.getCoexpression( ee, false );
         assertTrue( !eeResults.isEmpty() );
         for ( CoexpressionValueObject coex : eeResults ) {
-            checkResult( coex );
+            this.checkResult( coex );
         }
 
         Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = geneCoexpressionService
@@ -263,7 +263,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         for ( Long g : allLinks.keySet() ) {
             for ( CoexpressionValueObject coex : allLinks.get( g ) ) {
-                checkResult( coex );
+                this.checkResult( coex );
             }
         }
 
@@ -276,9 +276,9 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                 continue;
             }
 
-            assertEquals(
-                    geneCoexpressionService.findCoexpressionRelationships( gene, Collections.singleton( ee.getId()), 0, false )
-                            .size(), geneCoexpressionService.countLinks( ee, gene ).intValue() );
+            assertEquals( geneCoexpressionService
+                            .findCoexpressionRelationships( gene, Collections.singleton( ee.getId() ), 0, false ).size(),
+                    geneCoexpressionService.countLinks( ee, gene ).intValue() );
 
             GeneCoexpressionNodeDegreeValueObject nodeDegree = geneCoexpressionService.getNodeDegree( gene );
 
@@ -293,7 +293,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             totalLinks += links.size();
             log.debug( links.size() + " hits for " + gene );
             for ( CoexpressionValueObject coex : links ) {
-                checkResult( coex );
+                this.checkResult( coex );
                 if ( coex.getNumDatasetsSupporting() > maxSupport ) {
                     maxSupport = coex.getNumDatasetsSupporting();
                 }
@@ -307,14 +307,14 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                         .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
                                 EntityUtils.getIds( ees ), 100, false );
 
-                // these strange structures are to help with debugger.
                 if ( multiGeneResults.isEmpty() ) {
+                    //noinspection ConstantConditions // these strange structures are to help with debugger.
                     assertTrue( !multiGeneResults.isEmpty() );
                 }
 
                 for ( Long id : multiGeneResults.keySet() ) {
                     for ( CoexpressionValueObject coex : multiGeneResults.get( id ) ) {
-                        checkResult( coex );
+                        this.checkResult( coex );
                     }
                 }
 
@@ -328,7 +328,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
                 for ( Long id : multiGeneResults2.keySet() ) {
                     for ( CoexpressionValueObject coex : multiGeneResults2.get( id ) ) {
-                        checkResult( coex );
+                        this.checkResult( coex );
                     }
                 }
             }
@@ -341,11 +341,12 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                 .findInterCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
                         EntityUtils.getIds( ees ), 1, false );
         if ( mygeneresults.isEmpty() ) {
+            //noinspection ConstantConditions // these strange structures are to help with debugger.
             assertTrue( !mygeneresults.isEmpty() );
         }
         for ( Long id : mygeneresults.keySet() ) {
             for ( CoexpressionValueObject coex : mygeneresults.get( id ) ) {
-                checkResult( coex );
+                this.checkResult( coex );
             }
         }
 

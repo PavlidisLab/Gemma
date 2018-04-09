@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,7 +49,7 @@ import java.util.Map;
 @Component
 public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifunctionalityPopulationService {
 
-    private static Log log = LogFactory.getLog( GeneMultifunctionalityPopulationServiceImpl.class );
+    private static final Log log = LogFactory.getLog( GeneMultifunctionalityPopulationServiceImpl.class );
 
     @Autowired
     private Gene2GOAssociationService gene2GOService;
@@ -69,8 +69,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     @Override
     public void updateMultifunctionality() {
         for ( Taxon t : taxonService.loadAll() ) {
-            log.info( "Processing multifunctionality for " + t );
-            updateMultifunctionality( t );
+            GeneMultifunctionalityPopulationServiceImpl.log.info( "Processing multifunctionality for " + t );
+            this.updateMultifunctionality( t );
         }
     }
 
@@ -79,15 +79,16 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         Collection<Gene> genes = geneService.loadAll( taxon );
 
         if ( genes.isEmpty() ) {
-            log.warn( "No genes found for " + taxon );
+            GeneMultifunctionalityPopulationServiceImpl.log.warn( "No genes found for " + taxon );
             return;
         }
 
-        Map<Gene, Collection<String>> gomap = fetchGoAnnotations( genes );
+        Map<Gene, Collection<String>> gomap = this.fetchGoAnnotations( genes );
 
-        Map<Gene, Multifunctionality> mfs = computeMultifunctionality( gomap );
+        Map<Gene, Multifunctionality> mfs = this.computeMultifunctionality( gomap );
 
-        log.info( "Saving multifunctionality for " + genes.size() + " genes" );
+        GeneMultifunctionalityPopulationServiceImpl.log
+                .info( "Saving multifunctionality for " + genes.size() + " genes" );
 
         Collection<Gene> batch = new HashSet<>();
 
@@ -97,20 +98,20 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             batch.add( g );
 
             if ( batch.size() == batchSize ) {
-                saveBatch( batch, mfs );
+                this.saveBatch( batch, mfs );
                 batch.clear();
             }
 
             if ( ++i % 1000 == 0 ) {
-                log.info( "Updated " + i + " genes/" + genes.size() );
+                GeneMultifunctionalityPopulationServiceImpl.log.info( "Updated " + i + " genes/" + genes.size() );
             }
         }
 
         if ( !batch.isEmpty() ) {
-            saveBatch( batch, mfs );
+            this.saveBatch( batch, mfs );
         }
 
-        log.info( "Done" );
+        GeneMultifunctionalityPopulationServiceImpl.log.info( "Done" );
     }
 
     /**
@@ -138,7 +139,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             }
         }
 
-        log.info( "Computed GO group sizes" );
+        GeneMultifunctionalityPopulationServiceImpl.log.info( "Computed GO group sizes" );
 
         Map<Gene, Double> geneMultifunctionalityScore = new HashMap<>();
         Map<Gene, Multifunctionality> geneMultifunctionality = new HashMap<>();
@@ -184,7 +185,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             geneMultifunctionality.get( gene ).setRank( Math.max( 0.0, 1.0 - relRank ) );
         }
 
-        log.info( "Computed multifunctionality" );
+        GeneMultifunctionalityPopulationServiceImpl.log.info( "Computed multifunctionality" );
 
         return geneMultifunctionality;
     }
@@ -201,7 +202,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             } catch ( InterruptedException e ) {
                 //
             }
-            log.info( "Waiting for GO to load" );
+            GeneMultifunctionalityPopulationServiceImpl.log.info( "Waiting for GO to load" );
         }
 
         /*
@@ -214,8 +215,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
             Collection<String> termsForGene = new HashSet<>();
 
+            //noinspection StatementWithEmptyBody // TODO we just count it as a gene with lowest multifunctionality
             if ( annots.isEmpty() ) {
-                // we just count it as a gene with lowest multifunctionality.
                 // continue;
             }
 
@@ -226,7 +227,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             for ( VocabCharacteristic t : annots ) {
 
                 if ( ontologyService.isObsolete( t.getValueUri() ) ) {
-                    log.warn( "Obsolete term annotated to " + gene + " : " + t );
+                    GeneMultifunctionalityPopulationServiceImpl.log
+                            .warn( "Obsolete term annotated to " + gene + " : " + t );
                     continue;
                 }
 
@@ -236,19 +238,21 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
                         .getAllParents( GeneOntologyServiceImpl.getTermForURI( t.getValueUri() ) );
 
                 for ( OntologyTerm p : parents ) {
+                    if ( p == null ) continue;
                     termsForGene.add( p.getTerm() );
                 }
             }
 
+            //noinspection StatementWithEmptyBody // TODO we just count it as a gene with lowest multifunctionality
             if ( termsForGene.isEmpty() ) {
-                // we just count it as a gene with lowest multifunctionality.
                 // continue;
             }
 
             gomap.put( gene, termsForGene );
 
             if ( ++count % 1000 == 0 ) {
-                log.info( "Fetched GO annotations for: " + count + "/" + genes.size() + " genes" );
+                GeneMultifunctionalityPopulationServiceImpl.log
+                        .info( "Fetched GO annotations for: " + count + "/" + genes.size() + " genes" );
             }
 
         }

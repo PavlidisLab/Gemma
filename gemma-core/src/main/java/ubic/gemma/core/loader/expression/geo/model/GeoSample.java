@@ -48,7 +48,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private boolean isGenePix = false;
     private String lastUpdateDate = "";
     private boolean mightNotHaveDataInFile = false;
-    private Collection<GeoPlatform> platforms = null;
+    private Collection<GeoPlatform> platforms;
     private String scanProtocol = "";
     private Collection<String> seriesAppearsIn = new HashSet<>();
     private String supplementaryFile = "";
@@ -78,11 +78,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     public void addPlatform( GeoPlatform platform ) {
-        if ( log.isDebugEnabled() )
-            log.debug( this + " is on " + platform );
+        if ( GeoSample.log.isDebugEnabled() )
+            GeoSample.log.debug( this + " is on " + platform );
 
         if ( this.platforms.size() > 0 && !this.platforms.contains( platform ) ) {
-            log.warn( "Multi-platform sample: " + this );
+            GeoSample.log.warn( "Multi-platform sample: " + this );
         }
 
         // special case that indicates might be MPSS.
@@ -105,8 +105,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     public void addSeriesAppearsIn( String value ) {
         this.getSeriesAppearsIn().add( value );
         if ( this.getSeriesAppearsIn().size() > 1 ) {
-            if ( log.isDebugEnabled() )
-                log.debug( this.getGeoAccession() + " appears in more than one series" );
+            if ( GeoSample.log.isDebugEnabled() )
+                GeoSample.log.debug( this.getGeoAccession() + " appears in more than one series" );
         }
     }
 
@@ -119,7 +119,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.isGenePix = description.contains( "GenePix" );
 
         if ( isGenePix && !this.warnedAboutGenePix ) {
-            log.warn( "GenePix data detected in " + this + ": Some unused quantitation types may be skipped" );
+            GeoSample.log
+                    .warn( "GenePix data detected in " + this + ": Some unused quantitation types may be skipped" );
             warnedAboutGenePix = true;
         }
 
@@ -222,8 +223,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.description = description;
         this.isGenePix = description.contains( "GenePix" );
         if ( isGenePix && !this.warnedAboutGenePix ) {
-            log.warn(
-                    "GenePix data detected: Some unused quantitation types may be skipped (further warnings skipped)" );
+            GeoSample.log
+                    .warn( "GenePix data detected: Some unused quantitation types may be skipped (further warnings skipped)" );
             warnedAboutGenePix = true;
         }
     }
@@ -261,11 +262,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      * @return column name.
      */
     public String getNthQuantitationType( int n ) {
-        if ( n < 0 || n > getColumnNames().size() - 1 ) {
+        if ( n < 0 || n > this.getColumnNames().size() - 1 ) {
             return null; // This can happen if not every sample has the same quantitation types (happens in rare
             // cases)
         }
-        return getColumnNames().get( n );
+        return this.getColumnNames().get( n );
     }
 
     /**
@@ -274,7 +275,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      */
     public String getOrganism() {
         String org = null;
-        for ( GeoChannel c : getChannels() ) {
+        for ( GeoChannel c : this.getChannels() ) {
             String o = c.getOrganism();
             if ( org != null && o != null && !org.equals( o ) ) {
                 throw new IllegalArgumentException(

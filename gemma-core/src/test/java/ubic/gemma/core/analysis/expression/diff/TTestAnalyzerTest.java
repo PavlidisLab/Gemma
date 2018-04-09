@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,21 +18,9 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.HitListSize;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -40,20 +28,23 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * See test/data/stat-tests/README.txt for R code.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
     private DiffExAnalyzer analyzer;
 
-    /*
-     * 
-     */
     @Test
     public void testOneSampleTtest() throws Exception {
 
@@ -62,11 +53,11 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             return;
         }
 
-        configureVectors( super.biomaterials, "/data/stat-tests/onesample-ttest-data.txt" );
+        this.configureVectors( super.biomaterials, "/data/stat-tests/onesample-ttest-data.txt" );
 
-        configureMocks();
+        this.configureMocks();
 
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( super.experimentalFactorA_Area );
 
         /*
@@ -95,30 +86,35 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         int numResults = resultSet.getResults().size();
 
-        assertEquals( NUM_DESIGN_ELEMENTS - 4, numResults );
+        assertEquals( BaseAnalyzerConfigurationTest.NUM_DESIGN_ELEMENTS - 4, numResults );
 
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-            CompositeSequence probe = probeAnalysisResult.getProbe();
-            Double pvalue = probeAnalysisResult.getPvalue();
+            CompositeSequence probe = r.getProbe();
+            Double pvalue = r.getPvalue();
             // Double stat = probeAnalysisResult.getEffectSize();
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
             assertNotNull( pvalue );
 
-            if ( probe.getName().equals( "probe_0" ) ) {
-                assertEquals( 0.03505, pvalue, 0.00001 );
-            } else if ( probe.getName().equals( "probe_16" ) ) {
-                assertEquals( 0.03476, pvalue, 0.0001 );
-            } else if ( probe.getName().equals( "probe_17" ) ) {
-                assertEquals( 0.03578, pvalue, 0.0001 );
-            } else if ( probe.getName().equals( "probe_75" ) ) {
-                assertEquals( 0.8897, pvalue, 0.0001 );
-                // assertEquals( -0.1507, stat, 0.0001 );
-            } else if ( probe.getName().equals( "probe_94" ) ) {
-                assertEquals( 0.002717, pvalue, 0.0001 );
-                // assertEquals( 6.6087, stat, 0.001 );
+            switch ( probe.getName() ) {
+                case "probe_0":
+                    assertEquals( 0.03505, pvalue, 0.00001 );
+                    break;
+                case "probe_16":
+                    assertEquals( 0.03476, pvalue, 0.0001 );
+                    break;
+                case "probe_17":
+                    assertEquals( 0.03578, pvalue, 0.0001 );
+                    break;
+                case "probe_75":
+                    assertEquals( 0.8897, pvalue, 0.0001 );
+                    // assertEquals( -0.1507, stat, 0.0001 );
+                    break;
+                case "probe_94":
+                    assertEquals( 0.002717, pvalue, 0.0001 );
+                    // assertEquals( 6.6087, stat, 0.001 );
+                    break;
             }
         }
     }
@@ -127,14 +123,14 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * Tests the t-test with an {@link ExpressionExperiment}.
      */
     @Test
-    public void testTTestWithExpressionExperiment() throws Exception {
+    public void testTTestWithExpressionExperiment() {
 
         if ( !connected ) {
             log.warn( "Could not establish R connection.  Skipping test ..." );
             return;
         }
 
-        configureMocks();
+        this.configureMocks();
 
         Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( super.experimentalFactorA_Area );
@@ -147,7 +143,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         int numResults = resultSet.getResults().size();
 
-        assertEquals( numResults, NUM_DESIGN_ELEMENTS );
+        assertEquals( numResults, BaseAnalyzerConfigurationTest.NUM_DESIGN_ELEMENTS );
 
         assertEquals( factorValueA2, resultSet.getBaselineGroup() );
 
@@ -162,15 +158,14 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-            CompositeSequence probe = probeAnalysisResult.getProbe();
+            CompositeSequence probe = r.getProbe();
 
-            Double pvalue = probeAnalysisResult.getPvalue();
+            Double pvalue = r.getPvalue();
 
             assertNotNull( pvalue );
 
-            Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-            Double stat = null;
+            Collection<ContrastResult> contrasts = r.getContrasts();
+            Double stat;
             if ( contrasts.isEmpty() ) {
                 continue;
             }
@@ -179,29 +174,28 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
-            if ( probe.getName().equals( "probe_0" ) ) {
-                assertEquals( 1.48e-13, pvalue, 1e-15 );
-                assertNotNull( stat );
-                assertEquals( -277.4, stat, 0.1 );
-            } else if ( probe.getName().equals( "probe_4" ) ) {
-                assertEquals( 0.0001523, pvalue, 0.000001 );
-            } else if ( probe.getName().equals( "probe_17" ) ) {
-                assertEquals( 8.832e-12, pvalue, 1e-15 );
-            } else if ( probe.getName().equals( "probe_75" ) ) {
-                assertEquals( 0.2483, pvalue, 0.001 );
+            switch ( probe.getName() ) {
+                case "probe_0":
+                    assertEquals( 1.48e-13, pvalue, 1e-15 );
+                    assertNotNull( stat );
+                    assertEquals( -277.4, stat, 0.1 );
+                    break;
+                case "probe_4":
+                    assertEquals( 0.0001523, pvalue, 0.000001 );
+                    break;
+                case "probe_17":
+                    assertEquals( 8.832e-12, pvalue, 1e-15 );
+                    break;
+                case "probe_75":
+                    assertEquals( 0.2483, pvalue, 0.001 );
+                    break;
             }
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
-    @Override
-    protected void configureMocks() throws Exception {
+    private void configureMocks() {
 
-        configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper( 1 );
 
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 

@@ -35,15 +35,23 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstract<T> {
 
-    private TaskPostProcessing taskPostProcessing;
-
+    private final TaskPostProcessing taskPostProcessing;
+    private final Deque<String> progressUpdates = new LinkedBlockingDeque<>();
     private ListenableFuture<T> future;
-
-    private Deque<String> progressUpdates = new LinkedBlockingDeque<String>();
 
     public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing ) {
         super( taskCommand );
         this.taskPostProcessing = taskPostProcessing;
+    }
+
+    @Override
+    public synchronized Queue<String> getProgressUpdates() {
+        return this.progressUpdates;
+    }
+
+    @Override
+    public String getLastProgressUpdates() {
+        return this.progressUpdates.peekLast();
     }
 
     @Override
@@ -62,13 +70,8 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
     }
 
     @Override
-    public synchronized Queue<String> getProgressUpdates() {
-        return this.progressUpdates;
-    }
-
-    @Override
-    public String getLastProgressUpdates() {
-        return this.progressUpdates.peekLast();
+    public synchronized Status getStatus() {
+        return status;
     }
 
     @Override
@@ -85,9 +88,21 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public synchronized Status getStatus() {
-        return status;
+    public synchronized void addEmailAlert() {
+        if ( emailAlert )
+            return;
+        emailAlert = true;
+        assert taskPostProcessing != null : "Task postprocessing was null";
+        taskPostProcessing.addEmailNotification( ( ListenableFuture<TaskResult> ) future,
+                new EmailNotificationContext( taskCommand.getTaskId(), taskCommand.getSubmitter(),
+                        taskCommand.getTaskClass().getSimpleName() ) );
+    }
+
+    @Override
+    public synchronized boolean isEmailAlert() {
+        return this.emailAlert;
     }
 
     /**
@@ -99,23 +114,13 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
     }
 
     @Override
-    public synchronized boolean isEmailAlert() {
-        return this.emailAlert;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public synchronized void addEmailAlert() {
-        if ( emailAlert ) return;
-        emailAlert = true;
-        assert taskPostProcessing != null : "Task postprocessing was null";
-        taskPostProcessing.addEmailNotification( ( ListenableFuture<TaskResult> ) future, new EmailNotificationContext(
-                taskCommand.getTaskId(), taskCommand.getSubmitter(), taskCommand.getTaskClass().getSimpleName() ) );
-    }
-
-    @Override
     public synchronized boolean isDone() {
         return super.isDone();
+    }
+
+    @SuppressWarnings("unused") // Possible external use
+    ListenableFuture<T> getFuture() {
+        return future;
     }
 
     /*
@@ -125,11 +130,7 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
         this.future = future;
     }
 
-    ListenableFuture<T> getFuture() {
-        return future;
-    }
-
     synchronized void updateStatus( Status s, Date timeStamp ) {
-        setTimeStampAndStatus( s, timeStamp );
+        this.setTimeStampAndStatus( s, timeStamp );
     }
 }

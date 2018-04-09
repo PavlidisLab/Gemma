@@ -1,8 +1,8 @@
 /*
  * The linkAnalysis project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,7 +36,7 @@ import java.util.Set;
  *
  * @author paul
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class SpearmanMetrics extends PearsonMetrics {
 
     double[][] rankTransformedData = null;
@@ -96,7 +96,7 @@ public class SpearmanMetrics extends PearsonMetrics {
             // Temporarily copy the data in this matrix, for performance, and rank transform.
             usedB = new boolean[numrows][numcols];
 
-            getRankTransformedData( usedB );
+            this.getRankTransformedData( usedB );
         }
 
         /* for each vector, compare it to all other vectors */
@@ -126,7 +126,7 @@ public class SpearmanMetrics extends PearsonMetrics {
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
                 if ( !doCalcs || results.get( i, j ) != 0.0 ) {
-                    keepCorrel( i, j, results.get( i, j ), numcols );
+                    this.keepCorrellation( i, j, results.get( i, j ), numcols );
                     continue;
                 }
 
@@ -134,11 +134,11 @@ public class SpearmanMetrics extends PearsonMetrics {
 
                 /* if there are no missing values, use the faster method of calculation */
                 if ( !thisRowHasMissing && !hasMissing[j] ) {
-                    setCorrel( i, j, this.correlFast( vectorA, vectorB, i, j ), numcols );
+                    this.setCorrel( i, j, this.correlFast( vectorA, vectorB, i, j ), numcols );
                     continue;
                 }
 
-                spearman( vectorA, vectorB, usedB[i], usedB[j], i, j );
+                this.spearman( vectorA, vectorB, usedB[i], usedB[j], i, j );
 
                 ++numComputed;
 
@@ -147,44 +147,14 @@ public class SpearmanMetrics extends PearsonMetrics {
             ++numComputed;
 
             if ( ( i + 1 ) % 2000 == 0 ) {
-                log.info(
-                        ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
-                                + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+                AbstractMatrixRowPairAnalysis.log
+                        .info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was "
+                                + itemA + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        log.info( skipped + " rows skipped, due to no BLAT association" );
-        finishMetrics();
+        AbstractMatrixRowPairAnalysis.log.info( skipped + " rows skipped, due to no BLAT association" );
+        this.finishMetrics();
 
-    }
-
-    @Override
-    public double correctedPvalue( int i, int j, double correl, int numused ) {
-        double p = CorrelationStats.spearmanPvalue( correl, numused );
-        double k = 1, m = 1;
-        Set<Gene> clusters = getGenesForRow( i );
-
-        if ( clusters != null ) {
-
-            for ( Gene geneId : clusters ) {
-                int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
-                if ( k < tmpK )
-                    k = tmpK;
-                break;
-            }
-        }
-
-        clusters = getGenesForRow( j );
-        if ( clusters != null ) {
-            for ( Gene geneId : clusters ) {
-                int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
-                if ( m < tmpM )
-                    m = tmpM;
-                break;
-            }
-
-        }
-
-        return p * k * m;
     }
 
     @Override
@@ -228,6 +198,37 @@ public class SpearmanMetrics extends PearsonMetrics {
         }
     }
 
+    @SuppressWarnings("LoopStatementThatDoesntLoop") // Simplifying can have side effects
+    @Override
+    public double correctedPvalue( int i, int j, double correl, int numused ) {
+        double p = CorrelationStats.spearmanPvalue( correl, numused );
+        double k = 1, m = 1;
+        Set<Gene> clusters = this.getGenesForRow( i );
+
+        if ( clusters != null ) {
+
+            for ( Gene geneId : clusters ) {
+                int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
+                if ( k < tmpK )
+                    k = tmpK;
+                break;
+            }
+        }
+
+        clusters = this.getGenesForRow( j );
+        if ( clusters != null ) {
+            for ( Gene geneId : clusters ) {
+                int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
+                if ( m < tmpM )
+                    m = tmpM;
+                break;
+            }
+
+        }
+
+        return p * k * m;
+    }
+
     protected double spearman( double[] vectorA, double[] vectorB, boolean[] usedA, boolean[] usedB, int i, int j ) {
 
         /* because we assume there might be ties, we compute the correlation of the ranks. */
@@ -246,7 +247,7 @@ public class SpearmanMetrics extends PearsonMetrics {
         }
 
         if ( numused < minNumUsed ) {
-            setCorrel( i, j, Double.NaN, 0 );
+            this.setCorrel( i, j, Double.NaN, 0 );
             return Double.NaN;
         }
 
@@ -293,9 +294,9 @@ public class SpearmanMetrics extends PearsonMetrics {
             numused++;
         }
 
-        double denom = correlationNorm( numused, sxx, sx, syy, sy );
+        double denom = this.correlationNorm( numused, sxx, sx, syy, sy );
         if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
-            setCorrel( i, j, 0.0, numused );
+            this.setCorrel( i, j, 0.0, numused );
             return 0.0;
         }
 
@@ -310,7 +311,7 @@ public class SpearmanMetrics extends PearsonMetrics {
         else if ( correl > 1.0 )
             correl = 1.0;
 
-        setCorrel( i, j, correl, numused );
+        this.setCorrel( i, j, correl, numused );
 
         return correl;
     }
@@ -324,7 +325,7 @@ public class SpearmanMetrics extends PearsonMetrics {
         boolean docalcs = this.needToCalculateMetrics();
 
         if ( docalcs ) {
-            getRankTransformedData( null );
+            this.getRankTransformedData( null );
         }
 
         /*
@@ -335,9 +336,9 @@ public class SpearmanMetrics extends PearsonMetrics {
         timer.start();
         int skipped = 0;
         int numComputed = 0;
-        skipped = computeMetrics( numrows, numcols, docalcs, timer, skipped, numComputed, rankTransformedData );
-        log.info( skipped + " rows skipped, due to no BLAT association" );
-        finishMetrics();
+        skipped = this.computeMetrics( numrows, numcols, docalcs, timer, skipped, numComputed, rankTransformedData );
+        AbstractMatrixRowPairAnalysis.log.info( skipped + " rows skipped, due to no BLAT association" );
+        this.finishMetrics();
     }
 
     /**
@@ -376,6 +377,6 @@ public class SpearmanMetrics extends PearsonMetrics {
             }
         }
 
-        rowStatistics();
+        this.rowStatistics();
     }
 }

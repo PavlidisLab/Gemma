@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,16 +55,6 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
     }
 
     @Override
-    public Collection<BlatAssociation> find( Collection<GeneProduct> gps ) {
-        //noinspection unchecked
-        return gps.isEmpty() ?
-                Collections.emptySet() :
-                this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select b from BlatAssociation b join b.geneProduct gp where gp in (:gps)" )
-                        .setParameter( "gps", gps ).list();
-    }
-
-    @Override
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
@@ -80,13 +70,14 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
             throw new IllegalArgumentException( "Gene has no products" );
         }
 
-        Collection<BlatAssociation> result = new HashSet<BlatAssociation>();
+        Collection<BlatAssociation> result = new HashSet<>();
 
         for ( GeneProduct geneProduct : gene.getProducts() ) {
 
             BusinessKey.checkValidKey( geneProduct );
 
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession()
+                    .createCriteria( BlatAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
                 innerQuery.add( Restrictions.eq( "ncbiGi", geneProduct.getNcbiGi() ) );
@@ -104,22 +95,6 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
     }
 
     @Override
-    public void thaw( final BlatAssociation blatAssociation ) {
-        if ( blatAssociation == null )
-            return;
-        if ( blatAssociation.getId() == null )
-            return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                thawBlatAssociation( session, blatAssociation );
-                return null;
-            }
-        } );
-    }
-
-    @Override
     public void thaw( final Collection<BlatAssociation> blatAssociations ) {
         if ( blatAssociations == null )
             return;
@@ -131,13 +106,39 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
                     BlatAssociation blatAssociation = ( BlatAssociation ) object;
                     if ( ( blatAssociation ).getId() == null )
                         continue;
-                    thawBlatAssociation( session, blatAssociation );
+                    BlatAssociationDaoImpl.this.thawBlatAssociation( session, blatAssociation );
                     session.evict( blatAssociation );
                 }
                 return null;
             }
 
         } );
+    }
+
+    @Override
+    public void thaw( final BlatAssociation blatAssociation ) {
+        if ( blatAssociation == null )
+            return;
+        if ( blatAssociation.getId() == null )
+            return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            @Override
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                BlatAssociationDaoImpl.this.thawBlatAssociation( session, blatAssociation );
+                return null;
+            }
+        } );
+    }
+
+    @Override
+    public Collection<BlatAssociation> find( Collection<GeneProduct> gps ) {
+        //noinspection unchecked
+        return gps.isEmpty() ?
+                Collections.emptySet() :
+                this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select b from BlatAssociation b join b.geneProduct gp where gp in (:gps)" )
+                        .setParameterList( "gps", gps ).list();
     }
 
     private void thawBlatAssociation( org.hibernate.Session session, BlatAssociation blatAssociation ) {

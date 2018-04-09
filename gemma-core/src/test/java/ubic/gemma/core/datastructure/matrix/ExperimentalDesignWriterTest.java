@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,15 +40,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
+    private final String shortName = "GSE1611";
     private ExpressionExperiment ee = null;
-
     @Autowired
     private ExpressionExperimentService eeService = null;
-
     @Autowired
     private GeoService geoService;
-
-    private String shortName = "GSE1611";
 
     @Before
     public void setup() throws Exception {
@@ -56,15 +53,15 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
         if ( ee == null ) {
             geoService.setGeoDomainObjectGenerator(
-                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gds994Medium" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false, false );
+                    new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Medium" ) ) );
+            Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         }
         ee = eeService.thaw( ee );
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         if ( ee != null ) {
             this.eeService.remove( ee );
         }
@@ -80,15 +77,16 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
         File f = File.createTempFile( "test_writer_" + shortName + ".", ".txt" );
-        try (PrintWriter writer = new PrintWriter( f );) {
+        try (PrintWriter writer = new PrintWriter( f )) {
 
-            edWriter.write( writer, ee, true, true );
+            edWriter.write( writer, ee, true );
         }
 
         log.info( f );
-        try (FileReader fr = new FileReader( f );) {
+        try (FileReader fr = new FileReader( f )) {
 
             char[] b = new char[( int ) f.length()];
+            //noinspection ResultOfMethodCallIgnored // We are using the buffer char array
             fr.read( b );
             String in = new String( b );
 

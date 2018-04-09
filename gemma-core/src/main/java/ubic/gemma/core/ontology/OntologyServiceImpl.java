@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -50,7 +50,6 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.*;
 
@@ -92,8 +91,6 @@ public class OntologyServiceImpl implements OntologyService {
     private SearchService searchService;
     private GeneOntologyService geneOntologyService;
 
-
-
     @Autowired
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
         this.bioMaterialService = bioMaterialService;
@@ -113,8 +110,6 @@ public class OntologyServiceImpl implements OntologyService {
     public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
         this.geneOntologyService = geneOntologyService;
     }
-
-
 
     @Override
     public void afterPropertiesSet() {
@@ -142,6 +137,7 @@ public class OntologyServiceImpl implements OntologyService {
 
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void countOccurrences( Collection<CharacteristicValueObject> searchResults,
             Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
         StopWatch watch = new StopWatch();
@@ -154,13 +150,13 @@ public class OntologyServiceImpl implements OntologyService {
         Collection<Characteristic> existingCharacteristicsUsingTheseTerms = characteristicService.findByUri( uris );
         for ( Characteristic c : existingCharacteristicsUsingTheseTerms ) {
             // count up number of usages; see bug 3897
-            String key = foundValueKey( c );
+            String key = this.foundValueKey( c );
             if ( previouslyUsedInSystem.containsKey( key ) ) {
                 previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
                 continue;
             }
-            if ( log.isDebugEnabled() )
-                log.debug( "saw " + key + " (" + key + ")" );
+            if ( OntologyServiceImpl.log.isDebugEnabled() )
+                OntologyServiceImpl.log.debug( "saw " + key + " (" + key + ")" );
             CharacteristicValueObject vo = new CharacteristicValueObject( c );
             vo.setCategory( null );
             vo.setCategoryUri( null ); // to avoid us counting separately by category.
@@ -169,10 +165,11 @@ public class OntologyServiceImpl implements OntologyService {
             previouslyUsedInSystem.put( key, vo );
         }
 
-        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
-            log.info(
-                    "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database" + " in "
-                            + watch.getTime() + " ms " + " Filtered from initial set of "
+        if ( OntologyServiceImpl.log.isDebugEnabled() || ( watch.getTime() > 100
+                && previouslyUsedInSystem.size() > 0 ) )
+            OntologyServiceImpl.log
+                    .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+                            + " in " + watch.getTime() + " ms " + " Filtered from initial set of "
                             + existingCharacteristicsUsingTheseTerms.size() );
     }
 
@@ -186,7 +183,7 @@ public class OntologyServiceImpl implements OntologyService {
 
         String searchQuery = OntologySearch.stripInvalidCharacters( searchQueryString );
 
-        if ( searchQuery == null || searchQuery.length() < 3 ) {
+        if ( searchQuery.length() < 3 ) {
             return new HashSet<>();
         }
 
@@ -213,8 +210,9 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         // search the ontology for the given searchTerm, but if already found in the database dont add it again
-        Collection<CharacteristicValueObject> characteristicsFromOntology = findCharacteristicsFromOntology(
-                searchQuery, useNeuroCartaOntology, characteristicFromDatabaseWithValueUri );
+        Collection<CharacteristicValueObject> characteristicsFromOntology = this
+                .findCharacteristicsFromOntology( searchQuery, useNeuroCartaOntology,
+                        characteristicFromDatabaseWithValueUri );
 
         // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
         // order to show values for each List : 1-From database with Uri, 2- from Ontology, 3- from from database with
@@ -225,14 +223,15 @@ public class OntologyServiceImpl implements OntologyService {
         Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<>();
 
         // from the database with a uri
-        putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
+        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
         // from the ontology
-        putCharacteristicsIntoSpecificList( searchQuery, characteristicsFromOntology, characteristicsWithExactMatch,
-                characteristicsStartWithQuery, characteristicsSubstring, characteristicsNoRuleFound );
+        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicsFromOntology,
+                characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
+                characteristicsNoRuleFound );
         // from the database with no uri
-        putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseFreeText,
+        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseFreeText,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
 
@@ -278,7 +277,7 @@ public class OntologyServiceImpl implements OntologyService {
         for ( AbstractOntologyService ontology : ontologyServices ) {
             Collection<OntologyTerm> found = ontology.findTerm( query );
             if ( found != null )
-                results.addAll( convert( new HashSet<OntologyResource>( found ) ) );
+                results.addAll( this.convert( new HashSet<OntologyResource>( found ) ) );
         }
 
         return results;
@@ -320,12 +319,13 @@ public class OntologyServiceImpl implements OntologyService {
 
         String queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
         if ( StringUtils.isBlank( queryString ) ) {
-            log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
+            OntologyServiceImpl.log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
             return new HashSet<>();
         }
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
+        if ( OntologyServiceImpl.log.isDebugEnabled() ) {
+            OntologyServiceImpl.log
+                    .debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
         }
 
         Collection<? extends OntologyResource> results;
@@ -333,11 +333,8 @@ public class OntologyServiceImpl implements OntologyService {
 
         Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
 
-        countOccurrences( queryString, previouslyUsedInSystem );
-
-        // FIXME these are not going in the right order. But that's usually okay because if we are returning genes,
-        // that's probably all we are returning (?)
-        searchForGenes( queryString, taxon, searchResults );
+        this.countOccurrences( queryString, previouslyUsedInSystem );
+        this.searchForGenes( queryString, taxon, searchResults );
 
         for ( AbstractOntologyService service : this.ontologyServices ) {
             if ( !service.isOntologyLoaded() )
@@ -346,31 +343,33 @@ public class OntologyServiceImpl implements OntologyService {
 
             if ( results.isEmpty() )
                 continue;
-            if ( log.isDebugEnabled() )
-                log.debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in " + watch
-                        .getTime() + " ms" );
-            searchResults.addAll(
-                    CharacteristicValueObject.characteristic2CharacteristicVO( termsToCharacteristics( results ) ) );
+            if ( OntologyServiceImpl.log.isDebugEnabled() )
+                OntologyServiceImpl.log
+                        .debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in "
+                                + watch.getTime() + " ms" );
+            searchResults.addAll( CharacteristicValueObject
+                    .characteristic2CharacteristicVO( this.termsToCharacteristics( results ) ) );
 
-            if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
+            if ( searchResults.size() > OntologyServiceImpl.MAX_TERMS_TO_FETCH ) {
                 break;
             }
         }
 
-        countOccurrences( searchResults, previouslyUsedInSystem );
+        this.countOccurrences( searchResults, previouslyUsedInSystem );
 
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
-        if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
+        if ( searchResults.size() < OntologyServiceImpl.MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
             searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
-                    termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
+                    this.termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
         }
 
         // Sort the results rather elaborately.
-        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults,
-                queryString );
+        Collection<CharacteristicValueObject> sortedResults = this
+                .sort( previouslyUsedInSystem, searchResults, queryString );
 
         if ( watch.getTime() > 1000 ) {
-            log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
+            OntologyServiceImpl.log
+                    .info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
         }
 
         return sortedResults;
@@ -381,19 +380,19 @@ public class OntologyServiceImpl implements OntologyService {
     public Collection<OntologyTerm> getCategoryTerms() {
 
         if ( !experimentalFactorOntologyService.isOntologyLoaded() ) {
-            log.warn( "EFO is not loaded" );
+            OntologyServiceImpl.log.warn( "EFO is not loaded" );
         }
 
         /*
          * Requires EFO, OBI and SO. If one of them isn't loaded, the terms are filled in with placeholders.
          */
 
-        if ( categoryTerms == null || categoryTerms.isEmpty() ) {
+        if ( OntologyServiceImpl.categoryTerms == null || OntologyServiceImpl.categoryTerms.isEmpty() ) {
 
-            initializeCategoryTerms();
+            this.initializeCategoryTerms();
 
         }
-        return categoryTerms;
+        return OntologyServiceImpl.categoryTerms;
 
     }
 
@@ -483,15 +482,15 @@ public class OntologyServiceImpl implements OntologyService {
     public void reindexAllOntologies() {
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             if ( serv.isOntologyLoaded() ) {
-                log.info( "Reindexing: " + serv );
+                OntologyServiceImpl.log.info( "Reindexing: " + serv );
                 try {
                     serv.index( true );
                 } catch ( Exception e ) {
-                    log.error( "Failed to index " + serv + ": " + e.getMessage(), e );
+                    OntologyServiceImpl.log.error( "Failed to index " + serv + ": " + e.getMessage(), e );
                 }
             } else {
                 if ( serv.isEnabled() )
-                    log.info( "Not available for reindexing: " + serv );
+                    OntologyServiceImpl.log.info( "Not available for reindexing: " + serv );
             }
         }
     }
@@ -515,7 +514,7 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public void saveBioMaterialStatement( Characteristic vc, BioMaterial bm ) {
 
-        log.debug( "Vocab Characteristic: " + vc );
+        OntologyServiceImpl.log.debug( "Vocab Characteristic: " + vc );
 
         vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
         Set<Characteristic> chars = new HashSet<>();
@@ -528,7 +527,7 @@ public class OntologyServiceImpl implements OntologyService {
             current.addAll( chars );
 
         for ( Characteristic characteristic : chars ) {
-            log.info( "Adding characteristic to " + bm + " : " + characteristic );
+            OntologyServiceImpl.log.info( "Adding characteristic to " + bm + " : " + characteristic );
         }
 
         bm.setCharacteristics( current );
@@ -554,17 +553,17 @@ public class OntologyServiceImpl implements OntologyService {
             // characteristic
         }
 
-        if ( vc instanceof VocabCharacteristic && isObsolete( ( ( VocabCharacteristic ) vc ).getValueUri() ) ) {
-            log.info( vc + " is obsolete, not saving" );
+        if ( vc instanceof VocabCharacteristic && this.isObsolete( vc.getValueUri() ) ) {
+            OntologyServiceImpl.log.info( vc + " is obsolete, not saving" );
             return;
         }
 
         if ( ee == null )
             throw new IllegalArgumentException( "Experiment cannot be null" );
 
-        log.info(
-                "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId() + ") : "
-                        + vc );
+        OntologyServiceImpl.log
+                .info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
+                        + ") : " + vc );
 
         ee.getCharacteristics().add( vc );
     }
@@ -572,6 +571,49 @@ public class OntologyServiceImpl implements OntologyService {
     @Override
     public void sort( List<CharacteristicValueObject> characteristics ) {
         Collections.sort( characteristics, new CharacteristicComparator() );
+    }
+
+    /**
+     * Convert raw ontology resources into VocabCharacteristics.
+     */
+    @Override
+    public Collection<VocabCharacteristic> termsToCharacteristics(
+            final Collection<? extends OntologyResource> terms ) {
+
+        Collection<VocabCharacteristic> results = new HashSet<>();
+
+        if ( ( terms == null ) || ( terms.isEmpty() ) )
+            return results;
+
+        for ( OntologyResource res : terms ) {
+
+            if ( res == null )
+                continue;
+
+            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            if ( res instanceof OntologyTerm ) {
+                OntologyTerm term = ( OntologyTerm ) res;
+                vc.setValue( term.getTerm() );
+                vc.setValueUri( term.getUri() );
+                vc.setDescription( term.getComment() );
+            } else if ( res instanceof OntologyIndividual ) {
+                OntologyIndividual indi = ( OntologyIndividual ) res;
+                vc.setValue( indi.getLabel() );
+                vc.setValueUri( indi.getUri() );
+                vc.setDescription( "Individual" );
+            } else {
+                OntologyServiceImpl.log.warn( "What is it? " + res );
+                continue;
+            }
+
+            if ( vc.getValue() == null )
+                continue;
+            results.add( vc );
+
+        }
+        OntologyServiceImpl.log.debug( "returning " + results.size() + " terms after filter" );
+
+        return results;
     }
 
     /**
@@ -622,13 +664,13 @@ public class OntologyServiceImpl implements OntologyService {
          */
         for ( Characteristic characteristic : foundChars ) {
             // count up number of usages; see bug 3897
-            String key = foundValueKey( characteristic );
+            String key = this.foundValueKey( characteristic );
             if ( previouslyUsedInSystem.containsKey( key ) ) {
                 previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
                 continue;
             }
-            if ( log.isDebugEnabled() )
-                log.debug( "saw " + key + " (" + key + ") for " + characteristic );
+            if ( OntologyServiceImpl.log.isDebugEnabled() )
+                OntologyServiceImpl.log.debug( "saw " + key + " (" + key + ") for " + characteristic );
             CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
             vo.setCategory( null );
             vo.setCategoryUri( null ); // to avoid us counting separately by category.
@@ -637,10 +679,12 @@ public class OntologyServiceImpl implements OntologyService {
             previouslyUsedInSystem.put( key, vo );
         }
 
-        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
-            log.info(
-                    "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database" + " in "
-                            + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars.size() );
+        if ( OntologyServiceImpl.log.isDebugEnabled() || ( watch.getTime() > 100
+                && previouslyUsedInSystem.size() > 0 ) )
+            OntologyServiceImpl.log
+                    .info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+                            + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars
+                            .size() );
 
     }
 
@@ -687,9 +731,8 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     private String foundValueKey( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic && ( StringUtils
-                .isNotBlank( ( ( VocabCharacteristic ) c ).getValueUri() ) ) ) {
-            return ( ( VocabCharacteristic ) c ).getValueUri().toLowerCase();
+        if ( c instanceof VocabCharacteristic && ( StringUtils.isNotBlank( c.getValueUri() ) ) ) {
+            return c.getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
     }
@@ -720,7 +763,7 @@ public class OntologyServiceImpl implements OntologyService {
     private synchronized void initializeCategoryTerms() {
 
         URL termUrl = OntologyServiceImpl.class.getResource( "/ubic/gemma/core/ontology/EFO.factor.categories.txt" );
-        categoryTerms = new ConcurrentHashSet<>();
+        OntologyServiceImpl.categoryTerms = new ConcurrentHashSet<>();
         try (BufferedReader reader = new BufferedReader( new InputStreamReader( termUrl.openStream() ) )) {
             String line;
             boolean warned = false;
@@ -731,29 +774,31 @@ public class OntologyServiceImpl implements OntologyService {
                 if ( f.length < 2 ) {
                     continue;
                 }
-                OntologyTerm t = getTerm( f[0] );
+                OntologyTerm t = this.getTerm( f[0] );
                 if ( t == null ) {
                     // this is not great. We might want to let it expire and redo it later if the ontology
                     // becomes
                     // available. Inference will not be available.
                     if ( !warned ) {
-                        log.info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0]
-                                + " (further warnings hidden)" );
+                        OntologyServiceImpl.log
+                                .info( "Ontology needed is not loaded? Using light-weight placeholder for " + f[0]
+                                        + " (further warnings hidden)" );
 
                         warned = true;
                     }
                     t = new OntologyTermSimple( f[0], f[1] );
                 }
 
-                categoryTerms.add( t );
+                OntologyServiceImpl.categoryTerms.add( t );
             }
 
         } catch ( IOException ioe ) {
-            log.error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
-            categoryTerms = null;
+            OntologyServiceImpl.log
+                    .error( "Error reading from term list '" + termUrl + "'; returning general term list", ioe );
+            OntologyServiceImpl.categoryTerms = null;
         }
 
-        categoryTerms = Collections.unmodifiableCollection( categoryTerms );
+        OntologyServiceImpl.categoryTerms = Collections.unmodifiableCollection( OntologyServiceImpl.categoryTerms );
     }
 
     /**
@@ -803,9 +848,9 @@ public class OntologyServiceImpl implements OntologyService {
         if ( geneResults.containsKey( Gene.class ) ) {
             for ( SearchResult sr : geneResults.get( Gene.class ) ) {
                 Gene g = ( Gene ) sr.getResultObject();
-                if ( log.isDebugEnabled() )
-                    log.debug( "Search for " + queryString + " returned: " + g );
-                searchResults.add( new CharacteristicValueObject( gene2Characteristic( g ) ) );
+                if ( OntologyServiceImpl.log.isDebugEnabled() )
+                    OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
+                searchResults.add( new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
             }
         }
     }
@@ -837,23 +882,25 @@ public class OntologyServiceImpl implements OntologyService {
                 continue;
             }
 
-            addToAppropriateList( searchTerm, sortedResultsExact, sortedResultsStartsWith, sortedResultsBottom, c );
+            this.addToAppropriateList( searchTerm, sortedResultsExact, sortedResultsStartsWith, sortedResultsBottom,
+                    c );
         }
 
         for ( CharacteristicValueObject c : otherResults ) {
             assert c.getValueUri() != null;
-            String key = foundValueKey( c );
+            String key = this.foundValueKey( c );
             if ( foundValues.contains( key ) )
                 continue;
 
             foundValues.add( key );
 
-            addToAppropriateList( searchTerm, sortedResultsExact, sortedResultsStartsWith, sortedResultsBottom, c );
+            this.addToAppropriateList( searchTerm, sortedResultsExact, sortedResultsStartsWith, sortedResultsBottom,
+                    c );
         }
 
-        sort( sortedResultsExact );
-        sort( sortedResultsStartsWith );
-        sort( sortedResultsBottom );
+        this.sort( sortedResultsExact );
+        this.sort( sortedResultsStartsWith );
+        this.sort( sortedResultsBottom );
 
         List<CharacteristicValueObject> sortedTerms = new ArrayList<>( foundValues.size() );
         sortedTerms.addAll( sortedResultsExact );
@@ -872,89 +919,6 @@ public class OntologyServiceImpl implements OntologyService {
             sortedResultsStartsWith.add( c );
         } else {
             sortedResultsBottom.add( c );
-        }
-    }
-
-    /**
-     * Convert raw ontology resources into VocabCharacteristics.
-     */
-    @Override
-    public Collection<VocabCharacteristic> termsToCharacteristics(
-            final Collection<? extends OntologyResource> terms ) {
-
-        Collection<VocabCharacteristic> results = new HashSet<>();
-
-        if ( ( terms == null ) || ( terms.isEmpty() ) )
-            return results;
-
-        for ( OntologyResource res : terms ) {
-
-            if ( res == null )
-                continue;
-
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-            if ( res instanceof OntologyTerm ) {
-                OntologyTerm term = ( OntologyTerm ) res;
-                vc.setValue( term.getTerm() );
-                vc.setValueUri( term.getUri() );
-                vc.setDescription( term.getComment() );
-            } else if ( res instanceof OntologyIndividual ) {
-                OntologyIndividual indi = ( OntologyIndividual ) res;
-                vc.setValue( indi.getLabel() );
-                vc.setValueUri( indi.getUri() );
-                vc.setDescription( "Individual" );
-            } else {
-                log.warn( "What is it? " + res );
-                continue;
-            }
-
-            if ( vc.getValue() == null )
-                continue;
-            results.add( vc );
-
-        }
-        log.debug( "returning " + results.size() + " terms after filter" );
-
-        return results;
-    }
-
-    /**
-     * Private class for sorting Characteristics
-     */
-    static class TermComparator implements Comparator<Characteristic>, Serializable {
-
-        private static final long serialVersionUID = 1L;
-        final String comparator;
-
-        public TermComparator( String comparator ) {
-            super();
-            this.comparator = comparator;
-        }
-
-        @Override
-        public int compare( Characteristic o1, Characteristic o2 ) {
-            String term1 = o1.getValue();
-            String term2 = o2.getValue();
-
-            if ( term1.equals( term2 ) )
-                return 0;
-
-            if ( term1.equals( comparator ) )
-                return 1;
-
-            if ( term2.equals( comparator ) )
-                return -1;
-
-            if ( term1.startsWith( comparator ) ) {
-                if ( term2.startsWith( comparator ) )
-                    return 0;
-                return 1;
-            } else if ( term2.startsWith( comparator ) ) {
-                return -1;
-            }
-
-            return 0;
-
         }
     }
 

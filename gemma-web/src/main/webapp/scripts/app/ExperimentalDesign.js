@@ -91,10 +91,6 @@ Ext.onReady( function() {
    var edId = Ext.get( "experimentalDesignID" ).getValue();
    var editable = Ext.get( 'currentUserCanEdit' ).getValue() === 'true';
    var taxonId = Ext.get( 'taxonId' ).getValue();
-   /*
-    * TODO: load up the Category terms, experimental design and factor values ahead of time. We end up doing it about 4
-    * times each. Create the panel in the callback.
-    */
 
    /*
     * If we init before the tab is rendered, then the scroll bars don't show up.

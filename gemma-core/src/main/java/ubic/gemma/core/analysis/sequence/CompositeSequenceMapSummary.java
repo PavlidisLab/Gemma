@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,21 +34,19 @@ import java.util.HashSet;
 @SuppressWarnings("unused") // Possibly used in front end
 public class CompositeSequenceMapSummary {
 
+    public static final String HEADER = "CompSeq\tBioSeq\t#BlatRes\tGeneProds\tGenes";
     private final CompositeSequence compositeSequence;
     private Collection<BlatResult> blatResults;
     private Collection<GeneProduct> geneProducts;
     private Collection<Gene> genes;
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public CompositeSequenceMapSummary( CompositeSequence compositeSequence ) {
         super();
         this.compositeSequence = compositeSequence;
         this.blatResults = new HashSet<>();
         this.geneProducts = new HashSet<>();
         this.genes = new HashSet<>();
-    }
-
-    public static String header() {
-        return "CompSeq\tBioSeq\t#BlatRes\tGeneProds\tGenes";
     }
 
     public Collection<BlatResult> getBlatResults() {

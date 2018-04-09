@@ -1,12 +1,11 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;

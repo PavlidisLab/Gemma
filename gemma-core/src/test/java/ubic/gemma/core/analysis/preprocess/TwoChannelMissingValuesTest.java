@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,8 +56,8 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     private ExpressionExperimentService eeService;
 
     @Before
-    public void setUp() throws Exception {
-        executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+    public void setUp() {
+        this.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
     }
 
     @Test
@@ -65,8 +65,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         ExpressionExperiment old = eeService.findByShortName( "GSE2221" );
         if ( old != null )
             eeService.remove( old );
-        // FIXME: Getthis test passingin release process (mvn release:perform fails) could not get release process to
-        // pass with these tests (failed on final release couldn't reproduce)
 
         InputStream is = new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
@@ -120,38 +118,11 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * Debug code.
-     */
-    @SuppressWarnings("unused")
-    private void print( Collection<RawExpressionDataVector> calls ) {
-        ByteArrayConverter bac = new ByteArrayConverter();
-        BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
-
-        System.err.print( "\n" );
-        for ( BioAssay bas : dim.getBioAssays() ) {
-            System.err.print( "\t" + bas );
-        }
-        System.err.print( "\n" );
-        for ( DesignElementDataVector vector : calls ) {
-            System.err.print( vector.getDesignElement() );
-            byte[] dat = vector.getData();
-            boolean[] row = bac.byteArrayToBooleans( dat );
-            for ( boolean b : row ) {
-                System.err.print( "\t" + b );
-            }
-            System.err.print( "\n" );
-
-        }
-    }
-
     @Test
     final public void testMissingValueGSE523() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE523" );
         if ( old != null )
             eeService.remove( old );
-        // FIXME: Getthis test passingin release process (mvn release:perform fails) could not get release process to
-        // pass with these tests (failed on final release couldn't reproduce)
 
         InputStream is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE523_family.soft.gz" ) );
@@ -216,7 +187,8 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( calls );
 
         ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
-        missingValues.getQuantitationTypes().iterator().next().getDescription().contains( "signal threshold" );
+        assertTrue( missingValues.getQuantitationTypes().iterator().next().getDescription()
+                .contains( "signal threshold" ) );
         Boolean[][] mm = missingValues.getRawMatrix();
         boolean hasPresent = false;
         for ( Boolean[] aMm : mm ) {
@@ -239,8 +211,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         ExpressionExperiment old = eeService.findByShortName( "GSE56" );
         if ( old != null )
             eeService.remove( old );
-        // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
-        // to pass with these tests (failed on final release couldn't reproduce)
 
         InputStream is = new GZIPInputStream(
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
@@ -270,8 +240,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         ExpressionExperiment old = eeService.findByShortName( "GSE5091" );
         if ( old != null )
             eeService.remove( old );
-        // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
-        // to pass with these tests (failed on final release couldn't reproduce)
 
         InputStream is = new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
@@ -293,5 +261,30 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );
+    }
+
+    /**
+     * Debug code.
+     */
+    @SuppressWarnings("unused")
+    private void print( Collection<RawExpressionDataVector> calls ) {
+        ByteArrayConverter bac = new ByteArrayConverter();
+        BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
+
+        System.err.print( "\n" );
+        for ( BioAssay bas : dim.getBioAssays() ) {
+            System.err.print( "\t" + bas );
+        }
+        System.err.print( "\n" );
+        for ( DesignElementDataVector vector : calls ) {
+            System.err.print( vector.getDesignElement() );
+            byte[] dat = vector.getData();
+            boolean[] row = bac.byteArrayToBooleans( dat );
+            for ( boolean b : row ) {
+                System.err.print( "\t" + b );
+            }
+            System.err.print( "\n" );
+
+        }
     }
 }

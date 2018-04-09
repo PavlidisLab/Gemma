@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,14 +18,16 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import gemma.gsec.model.Securable;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
+
 import java.util.Collection;
 import java.util.HashSet;
 
 /**
  * Represents an analysis that combines the results of other analyses of differential expression.
  */
-public class GeneDifferentialExpressionMetaAnalysis extends ubic.gemma.model.analysis.expression.ExpressionAnalysis
-        implements gemma.gsec.model.Securable {
+public class GeneDifferentialExpressionMetaAnalysis extends ExpressionAnalysis implements Securable {
 
     private static final long serialVersionUID = -2588180973962410595L;
     private Integer numGenesAnalyzed;

@@ -3,8 +3,8 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.common.description.LocalFile" table="LOCAL_FILE" dynamic-insert="false" dynamic-update="false">
+<hibernate-mapping>
+   <class name="ubic.gemma.model.common.description.LocalFile" table="LOCAL_FILE">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -26,7 +26,7 @@
       <many-to-one name="format" class="ubic.gemma.model.common.description.FileFormatImpl"  lazy="proxy" fetch="select">
          <column name="FORMAT_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="sourceFiles" table="SOURCE_FILES" lazy="true" fetch="select" inverse="false">
+      <set name="sourceFiles" table="SOURCE_FILES" lazy="true" fetch="select">
          <key foreign-key="LOCAL_FILE_LOCAL_FILES_FKC">
             <column name="LOCAL_FILES_FK" sql-type="BIGINT"/>
          </key>

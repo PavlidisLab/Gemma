@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,34 +18,32 @@
  */
 package ubic.gemma.persistence.util;
 
-import java.util.Comparator;
-
 import ubic.gemma.model.common.Describable;
+
+import java.util.Comparator;
 
 /**
  * @author luke
  */
 public class DescribableComparator implements Comparator<Describable> {
-    private static DescribableComparator _instance = new DescribableComparator();
+    private static final DescribableComparator _instance = new DescribableComparator();
 
     public static DescribableComparator getInstance() {
-        return _instance;
+        return DescribableComparator._instance;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-     */
     @Override
     public int compare( Describable d1, Describable d2 ) {
         String s1 = d1.getName();
         String s2 = d2.getName();
         if ( s1 != null ) {
-            if ( s2 != null ) return s1.compareTo( s2 );
+            if ( s2 != null )
+                return s1.compareTo( s2 );
 
             return 1;
         }
-        if ( s2 != null ) return -1;
+        if ( s2 != null )
+            return -1;
 
         return 0;
 

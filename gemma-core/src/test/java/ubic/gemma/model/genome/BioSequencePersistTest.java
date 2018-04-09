@@ -18,18 +18,17 @@
  */
 package ubic.gemma.model.genome;
 
-import static org.junit.Assert.assertNotNull;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author pavlidis
@@ -37,7 +36,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
  */
 public class BioSequencePersistTest extends BaseSpringContextTest {
 
-    BioSequence bs;
+    private BioSequence bs;
 
     @Before
     public void onSetUpInTransaction() {

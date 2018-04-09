@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,40 +18,34 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Parse the "old" array description format. This has three columns, with probe id, a genbank id, and a description.
- * <p>
  * Note that this does not set the ArrayDesign for the CompositeSequences, this must be set by the caller.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> {
 
-    private Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
-
-    private Taxon taxon;
-
-    @Override
-    protected void addResult( CompositeSequence obj ) {
-        results.add( obj );
-    }
+    private final Collection<CompositeSequence> results = new HashSet<>();
 
     @Override
     public Collection<CompositeSequence> getResults() {
         return results;
+    }
+
+    @Override
+    protected void addResult( CompositeSequence obj ) {
+        results.add( obj );
     }
 
     @Override
@@ -74,7 +68,6 @@ public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> 
 
         BioSequence biologicalCharacteristic = BioSequence.Factory.newInstance();
         biologicalCharacteristic.setName( genbankAcc ); // this will be changed later, typically.
-        biologicalCharacteristic.setTaxon( taxon );
 
         // this will be changed later, typically.
         biologicalCharacteristic.setDescription( description + " (From platform source)" );
@@ -85,14 +78,6 @@ public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> 
 
         return result;
 
-    }
-
-    public Taxon getTaxon() {
-        return taxon;
-    }
-
-    public void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
     }
 
 }

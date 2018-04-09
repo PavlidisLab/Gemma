@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,8 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -42,7 +43,7 @@ import java.util.*;
  */
 @Repository
 public class ExpressionExperimentSetDaoImpl
-        extends VoEnabledDao<ExpressionExperimentSet, ExpressionExperimentSetValueObject>
+        extends AbstractVoEnabledDao<ExpressionExperimentSet, ExpressionExperimentSetValueObject>
         implements ExpressionExperimentSetDao {
 
     private final ExpressionExperimentDao expressionExperimentDao;
@@ -76,25 +77,10 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
-        //noinspection unchecked
-        return expressionExperimentDao.loadValueObjects( this.getSessionFactory().getCurrentSession().createQuery(
-                "select i.id from ExpressionExperimentSet eset join eset.experiments i where eset.id = :id" )
-                .setParameter( "id", id ).list(), false );
-    }
-
-    @Override
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperimentSet.class )
                 .add( Restrictions.isNotNull( "taxon" ) ).list();
-    }
-
-    @Override
-    public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperimentSet.class )
-                .add( Restrictions.sizeGt( "experiments", 1 ) ).list();
     }
 
     @Override
@@ -107,13 +93,22 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public ExpressionExperimentSetValueObject loadValueObject( ExpressionExperimentSet entity ) {
-        return this.loadValueObject( entity.getId(), false );
+    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects( boolean loadEEIds ) {
+        return this.fetchValueObjects( null, loadEEIds );
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects( boolean loadEEIds ) {
-        return fetchValueObjects( null, loadEEIds );
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
+            boolean loadEEIds ) {
+        return this.fetchValueObjects( eeSetIds, loadEEIds );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
+        //noinspection unchecked
+        return expressionExperimentDao.loadValueObjects( this.getSessionFactory().getCurrentSession().createQuery(
+                "select i.id from ExpressionExperimentSet eset join eset.experiments i where eset.id = :id" )
+                .setParameter( "id", id ).list(), false );
     }
 
     @Override
@@ -127,9 +122,8 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
-            boolean loadEEIds ) {
-        return fetchValueObjects( eeSetIds, loadEEIds );
+    public ExpressionExperimentSetValueObject loadValueObject( ExpressionExperimentSet entity ) {
+        return this.loadValueObject( entity.getId(), false );
     }
 
     /**
@@ -191,18 +185,16 @@ public class ExpressionExperimentSetDaoImpl
         }
 
         if ( timer.getTime() > 200 ) {
-            log.info( "Fetch analysis counts for " + vo.size() + " ee sets: " + timer.getTime() + "ms" );
+            AbstractDao.log.info( "Fetch analysis counts for " + vo.size() + " ee sets: " + timer.getTime() + "ms" );
         }
     }
 
     private Query getLoadValueObjectsQueryString( Collection<Long> ids ) {
 
-        String idClause = "";
         if ( ids != null ) {
             if ( ids.isEmpty() ) {
                 throw new IllegalArgumentException( "If provided ids cannot be empty" );
             }
-            idClause = " where eeset.id in (:ids)";
         }
 
         String queryString = "select eeset.id , " // 0
@@ -210,9 +202,9 @@ public class ExpressionExperimentSetDaoImpl
                 + "eeset.description, " // 2
                 + "taxon.commonName," // 3
                 + "taxon.id," // 4
-                + " count(ees) " // 5
-                + " from ExpressionExperimentSet as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
-                + idClause + " group by eeset.id ";
+                + "count(ees) " // 5
+                + "from ExpressionExperimentSet as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
+                + ( ids != null ? "where eeset.id in (:ids) " : "" ) + "group by eeset.id ";
 
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         if ( ids != null )
@@ -268,7 +260,7 @@ public class ExpressionExperimentSetDaoImpl
         }
 
         Collection<ExpressionExperimentSetValueObject> result = vo.values();
-        populateAnalysisInformation( result );
+        this.populateAnalysisInformation( result );
         return result;
     }
 }

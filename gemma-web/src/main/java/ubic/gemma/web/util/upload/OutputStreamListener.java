@@ -32,16 +32,16 @@ public interface OutputStreamListener {
     /**
      * @param bytesRead
      */
-    public void bytesRead( int bytesRead );
+    void bytesRead( int bytesRead );
 
-    public void done();
+    void done();
 
     /**
      * @param message
      */
-    public void error( String message );
+    void error( String message );
 
     /** 
      */
-    public void start();
+    void start();
 }

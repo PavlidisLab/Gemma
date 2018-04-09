@@ -1,7 +1,7 @@
 /* The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,7 @@ import java.util.Objects;
  *
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     private static final long serialVersionUID = 2063274043081170625L;
@@ -72,24 +73,6 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
 
     public void setBioAssaySetAnalyzedId( Long id ) {
         this.bioAssaySetAnalyzedId = id;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) {
-            return true;
-        }
-        if ( obj == null ) {
-            return false;
-        }
-        if ( getClass() != obj.getClass() ) {
-            return false;
-        }
-        DiffExResultSetSummaryValueObject other = ( DiffExResultSetSummaryValueObject ) obj;
-        if ( !Objects.equals( resultSetId, other.resultSetId ) ) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -210,6 +193,21 @@ public class DiffExResultSetSummaryValueObject implements java.io.Serializable {
         int result = 1;
         result = prime * result + ( int ) ( resultSetId ^ ( resultSetId >>> 32 ) );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
+            return true;
+        }
+        if ( obj == null ) {
+            return false;
+        }
+        if ( this.getClass() != obj.getClass() ) {
+            return false;
+        }
+        DiffExResultSetSummaryValueObject other = ( DiffExResultSetSummaryValueObject ) obj;
+        return Objects.equals( resultSetId, other.resultSetId );
     }
 
     public void setExperimentalFactorsByValueObject( Collection<ExperimentalFactorValueObject> experimentalFactors ) {

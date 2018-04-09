@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import java.io.Serializable;
 /**
  * @author thea
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class QuantitationTypeValueObject extends IdentifiableValueObject<QuantitationType> implements Serializable {
 
     private static final long serialVersionUID = 7537853492100102404L;

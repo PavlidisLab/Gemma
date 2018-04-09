@@ -1,26 +1,26 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,7 @@ import java.util.Collection;
 /**
  * @author tvrossum
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class FreeTextExpressionExperimentResultsValueObject extends SessionBoundExpressionExperimentSetValueObject {
 
     private static final long serialVersionUID = 3557304710219740029L;
@@ -66,7 +67,7 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
      */
     public FreeTextExpressionExperimentResultsValueObject( String name, String description, Long taxonId,
             String taxonName, Collection<Long> memberIds, String queryString ) {
-        super( -1l );
+        super( -1L );
         this.setName( name );
         this.setDescription( description );
         this.setSize( memberIds.size() );

@@ -32,6 +32,7 @@ import java.util.Map;
 /**
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface DiffExAnalyzer {
 
     ExperimentalFactor determineInterceptFactor( Collection<ExperimentalFactor> factors,

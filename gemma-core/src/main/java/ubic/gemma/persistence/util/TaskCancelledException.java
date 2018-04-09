@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,16 +23,10 @@ package ubic.gemma.persistence.util;
  * date: 27/03/13
  */
 public class TaskCancelledException extends RuntimeException {
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 7343146551545342910L;
 
-    public TaskCancelledException() {
-        super();
-    }
-
-    public TaskCancelledException(String message) {
-        super(message);
+    public TaskCancelledException( String message ) {
+        super( message );
     }
 }

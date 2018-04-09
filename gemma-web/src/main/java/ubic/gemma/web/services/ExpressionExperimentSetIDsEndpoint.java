@@ -65,7 +65,7 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+    protected Element invokeInternal( Element requestElement, Document document ) {
         authenticate();
         StopWatch watch = new StopWatch();
         watch.start();

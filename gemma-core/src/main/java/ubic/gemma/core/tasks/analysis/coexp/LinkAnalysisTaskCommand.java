@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,10 +35,9 @@ import ubic.gemma.persistence.util.Settings;
 public class LinkAnalysisTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
-
+    private final FilterConfig filterConfig;
+    private final LinkAnalysisConfig linkAnalysisConfig;
     private ExpressionExperiment expressionExperiment;
-    private FilterConfig filterConfig;
-    private LinkAnalysisConfig linkAnalysisConfig;
 
     public LinkAnalysisTaskCommand( ExpressionExperiment ee, LinkAnalysisConfig lac, FilterConfig fg ) {
         super();
@@ -52,6 +51,7 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
         return this.expressionExperiment;
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
     }

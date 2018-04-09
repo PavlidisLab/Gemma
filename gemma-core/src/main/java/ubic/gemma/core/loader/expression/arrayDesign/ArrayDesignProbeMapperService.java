@@ -37,7 +37,7 @@ public interface ArrayDesignProbeMapperService {
      * Print results to STDOUT
      *
      * @param compositeSequence composite sequence
-     * @param col               blat associations
+     * @param col blat associations
      */
     void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col );
 
@@ -50,8 +50,8 @@ public interface ArrayDesignProbeMapperService {
 
     /**
      * @param arrayDesign AD
-     * @param config      config
-     * @param useDB       if false, the results will not be written to the database, but printed to stdout instead.
+     * @param config config
+     * @param useDB if false, the results will not be written to the database, but printed to stdout instead.
      */
     void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB );
 
@@ -74,10 +74,10 @@ public interface ArrayDesignProbeMapperService {
      * assume all gene products are relevant.
      *
      * @param arrayDesign AD
-     * @param taxon       We require this to ensure correct association of the sequences with the genes.
-     * @param source      source
-     * @param sourceDB    describes where the annotations came from. Can be null if you really don't know.
-     * @param ncbiIds     true if the values provided are ncbi ids, not gene symbols (ncbi ids are more reliable)
+     * @param taxon We require this to ensure correct association of the sequences with the genes.
+     * @param source source
+     * @param sourceDB describes where the annotations came from. Can be null if you really don't know.
+     * @param ncbiIds true if the values provided are ncbi ids, not gene symbols (ncbi ids are more reliable)
      * @throws IllegalStateException if the input file doesn't match the array design.
      */
     void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB,
@@ -86,5 +86,12 @@ public interface ArrayDesignProbeMapperService {
     @Transactional
     Map<String, Collection<BlatAssociation>> processCompositeSequence( ProbeMapperConfig config, Taxon taxon,
             GoldenPathSequenceAnalysis goldenPathDb, CompositeSequence compositeSequence );
+
+    /**
+     * Delete outdated annotation and associated experiment files.
+     * 
+     * @param arrayDesign
+     */
+    public void deleteOldFiles( ArrayDesign arrayDesign );
 
 }

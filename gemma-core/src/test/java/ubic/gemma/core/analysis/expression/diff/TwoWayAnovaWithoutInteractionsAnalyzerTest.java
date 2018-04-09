@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,17 +18,8 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -36,11 +27,16 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 /**
  * Tests the two way anova analyzer. See test/data/stat-tests/README.txt for R code.
- * 
- * @author keshav
  *
+ * @author keshav
  */
 public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
@@ -51,7 +47,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
      * Tests the TwoWayAnova method.
      */
     @Test
-    public void testTwoWayAnova() throws Exception {
+    public void testTwoWayAnova() {
 
         log.debug( "Testing getPValues method in " + DiffExAnalyzer.class.getName() );
 
@@ -60,10 +56,9 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
             return;
         }
 
-        configureMocks();
+        this.configureMocks();
 
-        List<ExperimentalFactor> factors = Arrays.asList( new ExperimentalFactor[] { experimentalFactorA_Area,
-                experimentalFactorB } );
+        List<ExperimentalFactor> factors = Arrays.asList( experimentalFactorA_Area, experimentalFactorB );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factors );
 
@@ -74,26 +69,20 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         assertEquals( 2, resultSets.size() );
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            checkResults( resultSet );
+            this.checkResults( resultSet );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
-    @Override
-    protected void configureMocks() throws Exception {
+    private void configureMocks() {
 
-        configureMockAnalysisServiceHelper( 1 );
+        this.configureMockAnalysisServiceHelper( 1 );
 
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
 
     }
 
     /**
-     * @param resultSet
+     * @param resultSet the result set to check
      */
     private void checkResults( ExpressionAnalysisResultSet resultSet ) {
 
@@ -105,15 +94,14 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         boolean found = false;
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
-            DifferentialExpressionAnalysisResult probeAnalysisResult = r;
-            CompositeSequence probe = probeAnalysisResult.getProbe();
-            Double pvalue = probeAnalysisResult.getPvalue();
+            CompositeSequence probe = r.getProbe();
+            Double pvalue = r.getPvalue();
             if ( f.equals( super.experimentalFactorB ) && probe.getName().equals( "probe_1" ) ) {
                 assertEquals( 0.501040, pvalue, 0.001 );
                 found = true;
             }
-            Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-            Double stat = null;
+            Collection<ContrastResult> contrasts = r.getContrasts();
+            Double stat;
             if ( contrasts.isEmpty() ) {
                 continue;
             }
@@ -122,23 +110,25 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
             assertNotNull( probe );
 
-            // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
-
             if ( f.equals( super.experimentalFactorA_Area ) ) {
 
                 assertEquals( factorValueA2, resultSet.getBaselineGroup() );
 
-                if ( probe.getName().equals( "probe_1" ) ) { // id=1001
-                    assertEquals( 0.001814, pvalue, 0.00001 );
-                    assertNotNull( stat );
-                    assertEquals( -287.061, stat, 0.001 );
-                    found = true;
-                } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
-                    assertEquals( 0.3546, pvalue, 0.001 );
-                } else if ( probe.getName().equals( "probe_0" ) ) {
-                    assertEquals( 1.36e-12, pvalue, 1e-10 );
-                    assertNotNull( stat );
-                    assertEquals( -425.3, stat, 0.1 );
+                switch ( probe.getName() ) {
+                    case "probe_1":  // id=1001
+                        assertEquals( 0.001814, pvalue, 0.00001 );
+                        assertNotNull( stat );
+                        assertEquals( -287.061, stat, 0.001 );
+                        found = true;
+                        break;
+                    case "probe_97":  // id 1097
+                        assertEquals( 0.3546, pvalue, 0.001 );
+                        break;
+                    case "probe_0":
+                        assertEquals( 1.36e-12, pvalue, 1e-10 );
+                        assertNotNull( stat );
+                        assertEquals( -425.3, stat, 0.1 );
+                        break;
                 }
 
             } else {

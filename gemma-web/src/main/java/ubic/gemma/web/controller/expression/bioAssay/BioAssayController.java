@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,13 +29,13 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.analysis.expression.BioAssayOutlierProcessingTaskCommand;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.tasks.analysis.expression.BioAssayOutlierProcessingTaskCommand;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -83,12 +83,12 @@ public class BioAssayController {
 
         // this used to be in a separate method.
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliersByMedianCorrelation( ee );
         Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedIdMap( outliers, "bioAssay", "getId" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
 
-            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
+            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay, false );
 
             if ( outlierMap.containsKey( assay.getId() ) ) {
                 bioAssayValueObject.setPredictedOutlier( true );
@@ -97,7 +97,7 @@ public class BioAssayController {
             result.add( bioAssayValueObject );
         }
 
-        log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
+        BioAssayController.log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
 
         return result;
     }
@@ -115,14 +115,15 @@ public class BioAssayController {
     @RequestMapping(value = { "/showBioAssay.html", "/" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
-        log.debug( request.getParameter( "id" ) );
+        BioAssayController.log.debug( request.getParameter( "id" ) );
 
         Long id;
 
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
-            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", identifierNotFound );
+            return new ModelAndView( WebConstants.HOME_PAGE )
+                    .addObject( "message", BioAssayController.identifierNotFound );
         }
 
         BioAssay bioAssay = bioAssayService.load( id );
@@ -133,7 +134,8 @@ public class BioAssayController {
         bioAssayService.thaw( bioAssay );
 
         request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", new BioAssayValueObject( bioAssay ) );
+        return new ModelAndView( "bioAssay.detail" )
+                .addObject( "bioAssay", new BioAssayValueObject( bioAssay, false ) );
     }
 
     @RequestMapping("/showAllBioAssays.html")

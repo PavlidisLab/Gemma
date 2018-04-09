@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -21,6 +21,7 @@ import java.io.Serializable;
 /**
  * ValueObject for database entry
  */
+@SuppressWarnings("WeakerAccess") // Used in frontend
 public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Serializable {
 
     private static final long serialVersionUID = -527323410580090L;
@@ -59,7 +60,7 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         DatabaseEntryValueObject other = ( DatabaseEntryValueObject ) obj;
         if ( this.accession == null ) {
@@ -68,11 +69,9 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
         } else if ( !this.accession.equals( other.accession ) )
             return false;
         if ( this.externalDatabase == null ) {
-            if ( other.externalDatabase != null )
-                return false;
-        } else if ( !this.externalDatabase.equals( other.externalDatabase ) )
-            return false;
-        return true;
+            return other.externalDatabase == null;
+        } else
+            return this.externalDatabase.equals( other.externalDatabase );
     }
 
     public String getAccession() {

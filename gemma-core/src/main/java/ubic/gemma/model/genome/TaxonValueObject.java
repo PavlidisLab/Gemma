@@ -1,13 +1,13 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -20,6 +20,7 @@ import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 /**
  * @author Paul
  */
+@SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
 public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     private String scientificName;
@@ -33,17 +34,18 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     public TaxonValueObject( Taxon taxon ) {
         super( taxon.getId() );
-        setScientificName( taxon.getScientificName() );
-        setCommonName( taxon.getCommonName() );
-        setAbbreviation( taxon.getAbbreviation() );
+        this.setScientificName( taxon.getScientificName() );
+        this.setCommonName( taxon.getCommonName() );
+        this.setAbbreviation( taxon.getAbbreviation() );
 
-        setNcbiId( taxon.getNcbiId() );
-        setIsGenesUsable( taxon.getIsGenesUsable() );
-        setIsSpecies( taxon.getIsSpecies() );
-        setParentTaxon( taxon.getParentTaxon() != null ? TaxonValueObject.fromEntity( taxon.getParentTaxon() ) : null );
+        this.setNcbiId( taxon.getNcbiId() );
+        this.setIsGenesUsable( taxon.getIsGenesUsable() );
+        this.setIsSpecies( taxon.getIsSpecies() );
+        this.setParentTaxon(
+                taxon.getParentTaxon() != null ? TaxonValueObject.fromEntity( taxon.getParentTaxon() ) : null );
 
         if ( taxon.getExternalDatabase() != null ) {
-            setExternalDatabase( new ExternalDatabaseValueObject( taxon.getExternalDatabase() ) );
+            this.setExternalDatabase( new ExternalDatabaseValueObject( taxon.getExternalDatabase() ) );
         }
     }
 

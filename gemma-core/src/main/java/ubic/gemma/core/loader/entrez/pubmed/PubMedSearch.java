@@ -37,7 +37,7 @@ import java.util.HashSet;
  *
  * @author pavlidis
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class PubMedSearch {
     private static final Log log = LogFactory.getLog( PubMedSearch.class );
     private static final int CHUNK_SIZE = 10; // don't retrive too many at once, it isn't nice.

@@ -332,7 +332,6 @@ Gemma.PlatformElementGrid = Ext
             } );
          },
 
-         // FIXME
          handleLoadError : function( scope, b, message, exception ) {
             Ext.DomHelper.overwrite( "messages", {
                tag : 'img',

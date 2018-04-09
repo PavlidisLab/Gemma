@@ -220,11 +220,7 @@ public class AssayViewTag extends TagSupport {
     }
 
     public void setEdit( String edit ) {
-        if ( edit.equalsIgnoreCase( "true" ) ) {
-            this.edit = true;
-        } else {
-            this.edit = false;
-        }
+        this.edit = edit.equalsIgnoreCase( "true" );
     }
 
     public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {

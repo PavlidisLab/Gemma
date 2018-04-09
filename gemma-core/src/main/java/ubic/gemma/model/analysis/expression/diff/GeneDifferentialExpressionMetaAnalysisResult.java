@@ -24,9 +24,12 @@ import java.util.Collection;
 import java.util.HashSet;
 
 @SuppressWarnings("unused") // Possible external usage
-public abstract class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Serializable {
+public class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Serializable {
 
-    private static final long serialVersionUID = 4971245573216792849L;
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -6553250926957951550L;
     private Double metaPvalue;
     private Double metaQvalue;
     private Double meanLogFoldChange;
@@ -35,25 +38,6 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
     private Long id;
     private Gene gene;
     private Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
-
-    /**
-     * Returns <code>true</code> if the argument is an GeneDifferentialExpressionMetaAnalysisResult instance and all
-     * identifiers for this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof GeneDifferentialExpressionMetaAnalysisResult ) ) {
-            return false;
-        }
-        final GeneDifferentialExpressionMetaAnalysisResult that = ( GeneDifferentialExpressionMetaAnalysisResult ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
 
     public Gene getGene() {
         return this.gene;
@@ -144,9 +128,25 @@ public abstract class GeneDifferentialExpressionMetaAnalysisResult implements ja
         return hashCode;
     }
 
+    /**
+     * Returns <code>true</code> if the argument is an GeneDifferentialExpressionMetaAnalysisResult instance and all
+     * identifiers for this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof GeneDifferentialExpressionMetaAnalysisResult ) ) {
+            return false;
+        }
+        final GeneDifferentialExpressionMetaAnalysisResult that = ( GeneDifferentialExpressionMetaAnalysisResult ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
         public static GeneDifferentialExpressionMetaAnalysisResult newInstance() {
-            return new GeneDifferentialExpressionMetaAnalysisResultImpl();
+            return new GeneDifferentialExpressionMetaAnalysisResult();
         }
 
     }

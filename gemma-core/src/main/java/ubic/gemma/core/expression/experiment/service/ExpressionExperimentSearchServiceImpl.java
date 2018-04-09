@@ -1,20 +1,20 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  */
 package ubic.gemma.core.expression.experiment.service;
 
@@ -54,6 +54,7 @@ import java.util.*;
 public class ExpressionExperimentSearchServiceImpl implements ExpressionExperimentSearchService {
 
     private static final Log log = LogFactory.getLog( ExpressionExperimentSearchServiceImpl.class );
+    private static final String MASTER_SET_PREFIX = "Master set for";
 
     private final ExpressionExperimentSetService expressionExperimentSetService;
     private final CoexpressionAnalysisService coexpressionAnalysisService;
@@ -79,36 +80,49 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     }
 
     @Override
-    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
 
-        List<SearchResultDisplayObject> setResults = new LinkedList<SearchResultDisplayObject>();
+        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
+        List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
 
-        Taxon taxon = taxonService.load( taxonId );
-
-        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService
-                .findByName( "Master set for " + taxon.getCommonName().toLowerCase() );
-        SearchResultDisplayObject newSRDO;
-        for ( ExpressionExperimentSet set : sets ) {
-            expressionExperimentSetService.thaw( set );
-            if ( set.getTaxon().getId().equals( taxonId ) ) {
-                ExpressionExperimentSetValueObject eevo = expressionExperimentSetService.loadValueObject( set );
-                newSRDO = new SearchResultDisplayObject( eevo );
-                newSRDO.setUserOwned( securityService.isPrivate( set ) );
-                ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
-                        .setIsPublic( securityService.isPublic( set ) );
-                setResults.add( newSRDO );
-            }
+        if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
+            ExpressionExperimentSearchServiceImpl.log.info( "No experiments for search: " + query );
+            return new HashSet<>();
         }
 
-        Collections.sort( setResults );
+        ExpressionExperimentSearchServiceImpl.log
+                .info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
+        Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
+                .loadValueObjects( EntityUtils.getIds( experimentSearchResults ), true );
+        ExpressionExperimentSearchServiceImpl.log
+                .info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
+        return experimentValueObjects;
+    }
 
-        return setResults;
+    @Override
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> query ) {
+
+        Set<ExpressionExperimentValueObject> all = new HashSet<>();
+        Set<ExpressionExperimentValueObject> prev = null;
+        Set<ExpressionExperimentValueObject> current;
+        for ( String s : query ) {
+            s = StringUtils.strip( s );
+            if ( prev == null ) {
+                prev = new HashSet<>( this.searchExpressionExperiments( s ) );
+                all = new HashSet<>( prev );
+                continue;
+            }
+            current = new HashSet<>( this.searchExpressionExperiments( s ) );
+
+            all = Sets.intersection( all, current );
+        }
+        return all;
     }
 
     @Override
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<>();
 
         // if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent
         // session-bound sets (not autogen sets until handling of large searches is fixed)
@@ -116,10 +130,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             return this.searchExperimentsAndExperimentGroupBlankQuery( taxonId );
         }
 
-        Map<Class<?>, List<SearchResult>> results = initialSearch( query, taxonId );
+        Map<Class<?>, List<SearchResult>> results = this.initialSearch( query, taxonId );
 
-        List<SearchResultDisplayObject> experimentSets = getExpressionExperimentSetResults( results );
-        List<SearchResultDisplayObject> experiments = getExpressionExperimentResults( results );
+        List<SearchResultDisplayObject> experimentSets = this.getExpressionExperimentSetResults( results );
+        List<SearchResultDisplayObject> experiments = this.getExpressionExperimentResults( results );
 
         if ( experimentSets.isEmpty() && experiments.isEmpty() ) {
             return displayResults;
@@ -131,7 +145,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // if >1 result, add a group whose members are all experiments returned from search
 
-        Map<Long, Set<Long>> eeIdsByTaxonId = new HashMap<Long, Set<Long>>();
+        Map<Long, Set<Long>> eeIdsByTaxonId = new HashMap<>();
 
         // add every individual experiment to the set, grouped by taxon and also altogether.
         for ( SearchResultDisplayObject srdo : experiments ) {
@@ -204,52 +218,42 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         displayResults.addAll( experiments );
 
         if ( displayResults.isEmpty() ) {
-            log.info( "No results for search: " + query );
+            ExpressionExperimentSearchServiceImpl.log.info( "No results for search: " + query );
         } else {
-            log.info( "Results for search: " + query + " size=" + displayResults.size() + " entry0: "
-                    + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getName() + " valueObject:"
-                    + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getResultValueObject()
-                    .toString() );
+            ExpressionExperimentSearchServiceImpl.log
+                    .info( "Results for search: " + query + " size=" + displayResults.size() + " entry0: "
+                            + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getName()
+                            + " valueObject:" + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] )
+                            .getResultValueObject().toString() );
         }
         return displayResults;
     }
 
     @Override
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( List<String> query ) {
+    public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
 
-        Set<ExpressionExperimentValueObject> all = new HashSet<>();
-        Set<ExpressionExperimentValueObject> prev = null;
-        Set<ExpressionExperimentValueObject> current;
-        for ( String s : query ) {
-            s = StringUtils.strip( s );
-            if ( prev == null ) {
-                prev = new HashSet<>( searchExpressionExperiments( s ) );
-                all = new HashSet<>( prev );
-                continue;
+        List<SearchResultDisplayObject> setResults = new LinkedList<>();
+
+        Taxon taxon = taxonService.load( taxonId );
+
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService
+                .findByName( "Master set for " + taxon.getCommonName().toLowerCase() );
+        SearchResultDisplayObject newSRDO;
+        for ( ExpressionExperimentSet set : sets ) {
+            expressionExperimentSetService.thaw( set );
+            if ( set.getTaxon().getId().equals( taxonId ) ) {
+                ExpressionExperimentSetValueObject eevo = expressionExperimentSetService.loadValueObject( set );
+                newSRDO = new SearchResultDisplayObject( eevo );
+                newSRDO.setUserOwned( securityService.isPrivate( set ) );
+                ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
+                        .setIsPublic( securityService.isPublic( set ) );
+                setResults.add( newSRDO );
             }
-            current = new HashSet<>( searchExpressionExperiments( s ) );
-
-            all = Sets.intersection( all, current );
-        }
-        return all;
-    }
-
-    @Override
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
-
-        SearchSettings settings = SearchSettingsImpl.expressionExperimentSearch( query );
-        List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
-
-        if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
-            log.info( "No experiments for search: " + query );
-            return new HashSet<ExpressionExperimentValueObject>();
         }
 
-        log.info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
-        Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
-                .loadValueObjects( EntityUtils.getIds( experimentSearchResults ), true );
-        log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
-        return experimentValueObjects;
+        Collections.sort( setResults );
+
+        return setResults;
     }
 
     private List<SearchResultDisplayObject> getExpressionExperimentResults(
@@ -257,16 +261,16 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         // get all expressionExperiment results and convert result object into a value object
         List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
         if ( srEEs == null ) {
-            srEEs = new ArrayList<SearchResult>();
+            srEEs = new ArrayList<>();
         }
 
-        List<Long> eeIds = new ArrayList<Long>();
+        List<Long> eeIds = new ArrayList<>();
         for ( SearchResult sr : srEEs ) {
             eeIds.add( sr.getId() );
         }
 
         Collection<ExpressionExperimentValueObject> eevos = expressionExperimentService.loadValueObjects( eeIds, true );
-        List<SearchResultDisplayObject> experiments = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> experiments = new ArrayList<>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             experiments.add( new SearchResultDisplayObject( eevo ) );
         }
@@ -275,10 +279,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     private List<SearchResultDisplayObject> getExpressionExperimentSetResults(
             Map<Class<?>, List<SearchResult>> results ) {
-        List<SearchResultDisplayObject> experimentSets = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
         if ( results.get( ExpressionExperimentSet.class ) != null ) {
-            List<Long> eeSetIds = new ArrayList<Long>();
+            List<Long> eeSetIds = new ArrayList<>();
             for ( SearchResult sr : results.get( ExpressionExperimentSet.class ) ) {
                 eeSetIds.add( ( ( ExpressionExperimentSet ) sr.getResultObject() ).getId() );
             }
@@ -313,11 +317,11 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
         boolean taxonLimited = taxonId != null;
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<>();
 
         // These are widely considered to be the most important results and
         // therefore need to be at the top
-        List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> masterResults = new LinkedList<>();
 
         Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
                 .loadAllExperimentSetValueObjects( true );
@@ -328,17 +332,8 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                 continue;
             }
 
-            // if ( !SecurityUtil.isUserAdmin() ) {
-            // // have to security filter the experiments in the set to get the accurate size. This is a performance
-            // // hit so we are not doing it here.
-            // evo.setSize( expressionExperimentSetService.getExperimentValueObjectsInSet( evo.getId() ).size() );
-            // }
-
             SearchResultDisplayObject srdvo = new SearchResultDisplayObject( evo );
-
-            // FIXME: could be spoofed by other users 'Master sets'
-            String arbitraryMasterSetPrefix = "Master set for";
-            if ( evo.getName().startsWith( arbitraryMasterSetPrefix ) ) {
+            if ( evo.getName().startsWith( ExpressionExperimentSearchServiceImpl.MASTER_SET_PREFIX ) ) {
                 masterResults.add( srdvo );
             } else {
                 displayResults.add( srdvo );

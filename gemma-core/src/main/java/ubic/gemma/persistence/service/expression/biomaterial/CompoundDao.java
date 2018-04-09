@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import ubic.gemma.model.expression.biomaterial.Compound;
-import ubic.gemma.model.expression.biomaterial.CompoundImpl;
 import ubic.gemma.persistence.service.BaseDao;
 
 /**

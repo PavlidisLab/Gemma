@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,24 +27,24 @@ import java.util.Map;
  * This simply holds the results obtained from parsing.
  */
 public class GeoParseResult {
-    private Map<String, GeoDataset> datasetMap;
+    private final Map<String, GeoDataset> datasetMap;
 
-    private Map<String, GeoPlatform> platformMap;
+    private final Map<String, GeoPlatform> platformMap;
 
-    private Map<String, GeoSample> sampleMap;
+    private final Map<String, GeoSample> sampleMap;
 
-    private Map<String, GeoSeries> seriesMap;
+    private final Map<String, GeoSeries> seriesMap;
 
-    private Map<String, GeoSubset> subsetMap;
+    private final Map<String, GeoSubset> subsetMap;
 
     public GeoParseResult() {
-        sampleMap = new HashMap<String, GeoSample>();
-        platformMap = new HashMap<String, GeoPlatform>();
-        seriesMap = new HashMap<String, GeoSeries>();
+        sampleMap = new HashMap<>();
+        platformMap = new HashMap<>();
+        seriesMap = new HashMap<>();
 
-        subsetMap = new HashMap<String, GeoSubset>();
+        subsetMap = new HashMap<>();
 
-        datasetMap = new HashMap<String, GeoDataset>();
+        datasetMap = new HashMap<>();
     }
 
     /**

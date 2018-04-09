@@ -48,9 +48,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  *
  */
 public class ImageValueObject implements java.io.Serializable {
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = -4487372931236671216L;
 
     public static Collection<ImageValueObject> convert2ValueObjects( Collection<Image> images, String abaGeneURL,

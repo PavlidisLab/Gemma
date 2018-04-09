@@ -719,7 +719,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             cls: "gq-override-value-wrap",
             html:
             "<input id='gq-qual-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' " +
-            "   style='background-color: " + self.scoreToColor(Number(qval)) + "'" +
+            "   style='background-color: " + scoreToColor(Number(qval)) + "'" +
             "   readonly " + (!ee.geeq.manualQualityOverride ? "disabled" : "") +
             "   value='" + qval +
             "'/> "
@@ -740,7 +740,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 change: function (el, val) {
                     var nr = document.getElementById('gq-qual-override-value');
                     nr.value = (Math.round(val) / 10 - 1).toFixed(1);
-                    nr.style.background = self.scoreToColor(Number(nr.value));
+                    nr.style.background = scoreToColor(Number(nr.value));
                     ee.geeq.manualQualityScore = nr.value;
                 }
             }
@@ -827,7 +827,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             cls: "gq-override-value-wrap",
             html:
             "<input id='gq-suit-override-value' class='gq-override-value' type='number' step='0.1' min='-1' max='1' " +
-            "   style='background-color: " + self.scoreToColor(Number(sval)) + "'" +
+            "   style='background-color: " + scoreToColor(Number(sval)) + "'" +
             "   readonly " + (!ee.geeq.manualSuitabilityOverride ? "disabled" : "") +
             "   value='" + sval +
             "'/> "
@@ -848,7 +848,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 change: function (el, val) {
                     var nr = document.getElementById('gq-suit-override-value');
                     nr.value = (Math.round(val) / 10 - 1).toFixed(1);
-                    nr.style.background = self.scoreToColor(Number(nr.value));
+                    nr.style.background = scoreToColor(Number(nr.value));
                     ee.geeq.manualSuitabilityScore = nr.value;
                 }
             }
@@ -898,8 +898,8 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
     geeqRowRenderer: function (label, value, labelDesc, valueDesc, valDecimals, warning, extra) {
         if (valDecimals === undefined) valDecimals = 1;
-        var valColor = this.scoreToColor(Number(value));
-        var valNumber = (Math.round(Number(value) * (Math.pow(10, valDecimals))) / Math.pow(10, valDecimals)).toFixed(valDecimals);
+        var valColor = scoreToColor(Number(value));
+        var valNumber = roundScore(value, valDecimals);
         var cls = valNumber < 0 ? "negative" : "positive";
         var html =
             '<div class="gq-row ' + (extra ? 'has-extra' : '') + ' " style="background-color: ' + valColor + '">' +
@@ -919,15 +919,6 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
         return {
             html: html
         };
-    },
-
-    scoreToColor: function (i) {
-        // normalize from [-1,1] to [0,1]
-        i = i + 1;
-        i = i / 2;
-        // hsl red = 0° and green = 120°
-        var hue = i * 120;
-        return 'hsl(' + hue + ', 100%, 70%)';
     },
 
     showPanel: function (panel, show) {

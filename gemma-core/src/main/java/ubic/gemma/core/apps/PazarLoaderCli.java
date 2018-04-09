@@ -1,63 +1,49 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.apps;
 
-import java.io.File;
-
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.pazar.PazarLoader;
-import ubic.gemma.persistence.service.association.TfGeneAssociationService;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.association.TfGeneAssociationService;
+
+import java.io.File;
 
 /**
  * @author paul
- *
  */
 public class PazarLoaderCli extends AbstractCLIContextCLI {
+
+    private File file = null;
 
     public static void main( String[] args ) {
         PazarLoaderCli c = new PazarLoaderCli();
         Exception e = c.doWork( args );
         if ( e != null ) {
-            log.fatal( e );
+            AbstractCLI.log.fatal( e );
         }
     }
 
-    private File file = null;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "loadPazar";
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Loads Pazar records into the database";
-    }
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.MISC;
-    }
     @Override
     protected void buildOptions() {
         OptionBuilder.isRequired();
@@ -68,7 +54,9 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( args );
+        Exception e = super.processCommandLine( args );
+        if ( e != null )
+            return e;
 
         TfGeneAssociationService tfs = this.getBean( TfGeneAssociationService.class );
         tfs.removeAll();
@@ -77,11 +65,16 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
 
         try {
             l.load( file );
-        } catch ( Exception e ) {
-            return e;
+        } catch ( Exception exception ) {
+            return exception;
         }
 
         return null;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Loads Pazar records into the database";
     }
 
     @Override
@@ -97,6 +90,11 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
                 throw new IllegalArgumentException( "Cannot read from " + file );
             }
         }
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
     }
 
 }

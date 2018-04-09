@@ -1,85 +1,119 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.loader.association.phenotype;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 
-/**
- * TODO Document Me
- *
- *
- */
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+
 public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
-    public static final String CTD = "CTD";
+    private static final String CTD = "CTD";
     // name of the CTD file
-    public static final String CTD_FILE = "CTD_genes_diseases.tsv.gz";
+    private static final String CTD_FILE = "CTD_genes_diseases.tsv.gz";
     // path of file to download
-    public static final String CTD_URL_PATH = "http://ctdbase.org/reports/";
-
-    public static void main( String[] args ) throws Exception {
-
-        CtdDatabaseImporter importEvidence = new CtdDatabaseImporter( args );
-        importEvidence.doWork( args );
-    }
-
+    private static final String CTD_URL_PATH = "http://ctdbase.org/reports/";
     // location of the ctd file
     private String ctdFile = "";
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public CtdDatabaseImporter( String[] args ) throws Exception {
         super( args );
-        doWork( args );
+        Exception e = this.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
+    public static void main( String[] args ) throws Exception {
+        CtdDatabaseImporter importEvidence = new CtdDatabaseImporter( args );
+        Exception e = importEvidence.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String getCommandName() {
         return "ctdImport";
     }
 
+    @Override
+    public String getShortDesc() {
+        return "Creates a .tsv file of lines of evidence from CTD, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return null;
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        // create a folder named CTD
+        try {
+            writeFolder = this.createWriteFolderIfDoesntExist( CtdDatabaseImporter.CTD );
+            // download the CTD file if we dont already have it
+            this.downloadCTDFileIfDoesntExist();
+            // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
+            this.findOmimAndMeshMappingUsingOntologyFile();
+            this.processCTDFile();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            return e;
+        }
+
+        return null;
+    }
+
     private void downloadCTDFileIfDoesntExist() {
 
         // checks for the ctd file
-        ctdFile = writeFolder + "/" + CTD_FILE;
+        ctdFile = writeFolder + "/" + CtdDatabaseImporter.CTD_FILE;
 
         File fileCTD = new File( ctdFile );
 
         // super big file 700MB, only download if we dont already have
         if ( !fileCTD.exists() ) {
             // download the CTD file
-            downloadFileFromWeb( CTD_URL_PATH, CTD_FILE );
+            this.downloadFileFromWeb( CtdDatabaseImporter.CTD_URL_PATH, CtdDatabaseImporter.CTD_FILE );
         }
     }
 
     private void processCTDFile() throws Exception {
 
         // read the ctd file
-        BufferedReader br = new BufferedReader( new InputStreamReader(
-                FileTools.getInputStreamFromPlainOrCompressedFile( ctdFile ) ) );
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader( FileTools.getInputStreamFromPlainOrCompressedFile( ctdFile ) ) );
 
-        String line = "";
+        String line;
 
         // for each line of the file treat it
         while ( ( line = br.readLine() ) != null ) {
@@ -98,7 +132,7 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                 String diseaseName = tokens[2].trim();
                 String diseaseId = tokens[3].trim();
                 String directEvidence = tokens[4].trim();
-                String pubmedIds = "";
+                String pubmedIds;
 
                 pubmedIds = tokens[8].trim();
 
@@ -110,6 +144,7 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
                     for ( String pubmed : tokensPubmed ) {
 
+                        //noinspection ResultOfMethodCallIgnored // Checking for exceptions
                         Integer.parseInt( pubmed );
 
                         Gene gene = this.geneService.findByNCBIId( new Integer( geneId ) );
@@ -121,8 +156,9 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                                         + "Gemma: " + gene.getOfficialSymbol() + " File: " + geneSymbol );
                             }
 
-                            findMapping( diseaseId, gene, pubmed, "TAS", "DiseaseName: " + diseaseName + " ("
-                                    + diseaseId + "); DirectEvidence: " + directEvidence, diseaseName, CTD,
+                            this.findMapping( diseaseId, gene, pubmed, "TAS",
+                                    "DiseaseName: " + diseaseName + " (" + diseaseId + "); DirectEvidence: "
+                                            + directEvidence, diseaseName, CtdDatabaseImporter.CTD,
                                     "/detail.go?type=relationship&geneAcc=" + geneId + "&diseaseAcc=" + diseaseId
                                             + "&view=reference" );
                         }
@@ -131,44 +167,6 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             }
         }
 
-        writeBuffersAndCloseFiles();
-    }
-
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Creates a .tsv file of lines of evidence from CTD, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-        // create a folder named CTD
-        try {
-            writeFolder = createWriteFolderIfDoesntExist( CTD );
-            // download the CTD file if we dont already have it
-            downloadCTDFileIfDoesntExist();
-            // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
-            findOmimAndMeshMappingUsingOntologyFile();
-            processCTDFile();
-        } catch ( Exception e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return null;
+        this.writeBuffersAndCloseFiles();
     }
 }

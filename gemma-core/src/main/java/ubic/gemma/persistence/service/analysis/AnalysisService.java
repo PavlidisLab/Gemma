@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.analysis;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.userdetails.User;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.genome.Taxon;
@@ -32,13 +31,14 @@ import java.util.Map;
  *
  * @author Gemma
  */
+@SuppressWarnings("unused") // Possible external use
 public interface AnalysisService<T extends Analysis> {
 
     /**
      * @param toDelete deletes the given analysis from the system
      */
     @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
-    void delete( T toDelete );
+    void remove( T toDelete );
 
     /**
      * @param investigation investigation
@@ -58,9 +58,6 @@ public interface AnalysisService<T extends Analysis> {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<T> findByName( String name );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<T> findByParentTaxon( Taxon taxon );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<T> findByTaxon( Taxon taxon );
@@ -102,23 +99,4 @@ public interface AnalysisService<T extends Analysis> {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<T> loadAll();
 
-    /**
-     * @return the {@link Analysis}s for the currently logged in {@link User} - i.e, ones for which the current user has
-     * specific write permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
-     * method will return all analyses if security is not enabled.
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
-    Collection<T> loadMyAnalyses();
-
-    /**
-     * @return the {@link Analysis}s for the currently logged in {@link User} - i.e, ones for which the current user has
-     * specific read permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
-     * method will return all analyses if security is not enabled.
-     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyPrivateData for
-     * processConfigAttribute.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_SHARED_DATA" })
-    Collection<T> loadMySharedAnalyses();
 }

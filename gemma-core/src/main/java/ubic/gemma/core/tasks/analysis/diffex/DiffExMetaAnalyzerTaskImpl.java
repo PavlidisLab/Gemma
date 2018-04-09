@@ -3,13 +3,12 @@ package ubic.gemma.core.tasks.analysis.diffex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.expression.diff.DiffExMetaAnalyzerService;
 import ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
-import ubic.gemma.core.tasks.AbstractTask;
 
 /**
  * A differential expression meta-analysis space task

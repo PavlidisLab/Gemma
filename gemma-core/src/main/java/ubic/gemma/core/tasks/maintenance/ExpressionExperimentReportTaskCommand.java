@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,22 +20,16 @@ package ubic.gemma.core.tasks.maintenance;
 
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.Task;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
- *
  */
+@SuppressWarnings("unused") // Possible external use
 public class ExpressionExperimentReportTaskCommand extends TaskCommand {
 
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
-        return ExpressionExperimentReportTask.class;
-    }
-
     private static final long serialVersionUID = 1L;
-
     private ExpressionExperiment expressionExperiment = null;
     private boolean all = false;
 
@@ -51,6 +45,11 @@ public class ExpressionExperimentReportTaskCommand extends TaskCommand {
         this.expressionExperiment = expressionExperiment;
     }
 
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return ExpressionExperimentReportTask.class;
+    }
+
     public boolean doAll() {
         return all;
     }
@@ -59,12 +58,12 @@ public class ExpressionExperimentReportTaskCommand extends TaskCommand {
         return expressionExperiment;
     }
 
-    public void setAll( Boolean all ) {
-        this.all = all;
-    }
-
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+    }
+
+    public void setAll( Boolean all ) {
+        this.all = all;
     }
 
 }

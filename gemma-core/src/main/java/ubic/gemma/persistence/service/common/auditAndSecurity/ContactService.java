@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,35 +20,27 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.persistence.service.BaseService;
 
 /**
  * @author kelsey
- *
  */
-public interface ContactService {
+public interface ContactService extends BaseService<Contact> {
 
-    /**
-     * 
-     */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    public Contact find( Contact contact );
+    Contact find( Contact contact );
 
-    /**
-     * 
-     */
+    @Override
     @Secured({ "GROUP_USER" })
-    public Contact findOrCreate( Contact contact );
+    Contact findOrCreate( Contact contact );
 
-    /**
-     * 
-     */
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void remove( Contact contact );
+    void remove( Contact contact );
 
-    /**
-     * 
-     */
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( Contact contact );
+    void update( Contact contact );
 
 }

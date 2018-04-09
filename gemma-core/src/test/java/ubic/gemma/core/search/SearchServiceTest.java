@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -76,9 +76,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     private ExpressionExperiment ee;
     private Gene gene;
-    private VocabCharacteristic eeCharSpinalCord;
-    private VocabCharacteristic eeCharGeneURI;
-    private VocabCharacteristic eeCharCortexURI;
 
     private UserQuery thePastUserQuery;
 
@@ -86,37 +83,36 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     private String geneNcbiId;
 
-
     public void setup() throws Exception {
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );) {
+        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" )) {
             assert is != null;
 
             ontologyService.getFmaOntologyService().loadTermsInNameSpace( is );
         }
         ee = this.getTestPersistentBasicExpressionExperiment();
 
-        eeCharSpinalCord = VocabCharacteristic.Factory.newInstance();
-        eeCharSpinalCord.setCategory( SPINAL_CORD );
-        eeCharSpinalCord.setCategoryUri( SPINAL_CORD );
-        eeCharSpinalCord.setValue( SPINAL_CORD );
-        eeCharSpinalCord.setValueUri( SPINAL_CORD );
+        VocabCharacteristic eeCharSpinalCord = VocabCharacteristic.Factory.newInstance();
+        eeCharSpinalCord.setCategory( SearchServiceTest.SPINAL_CORD );
+        eeCharSpinalCord.setCategoryUri( SearchServiceTest.SPINAL_CORD );
+        eeCharSpinalCord.setValue( SearchServiceTest.SPINAL_CORD );
+        eeCharSpinalCord.setValueUri( SearchServiceTest.SPINAL_CORD );
         characteristicService.create( eeCharSpinalCord );
 
-        eeCharGeneURI = VocabCharacteristic.Factory.newInstance();
-        eeCharGeneURI.setCategory( GENE_URI );
-        eeCharGeneURI.setCategoryUri( GENE_URI );
-        eeCharGeneURI.setValue( GENE_URI );
-        eeCharGeneURI.setValueUri( GENE_URI );
+        VocabCharacteristic eeCharGeneURI = VocabCharacteristic.Factory.newInstance();
+        eeCharGeneURI.setCategory( SearchServiceTest.GENE_URI );
+        eeCharGeneURI.setCategoryUri( SearchServiceTest.GENE_URI );
+        eeCharGeneURI.setValue( SearchServiceTest.GENE_URI );
+        eeCharGeneURI.setValueUri( SearchServiceTest.GENE_URI );
         characteristicService.create( eeCharGeneURI );
 
-        eeCharCortexURI = VocabCharacteristic.Factory.newInstance();
-        eeCharCortexURI.setCategory( BRAIN_CAVITY );
-        eeCharCortexURI.setCategoryUri( BRAIN_CAVITY );
-        eeCharCortexURI.setValue( BRAIN_CAVITY );
-        eeCharCortexURI.setValueUri( BRAIN_CAVITY );
+        VocabCharacteristic eeCharCortexURI = VocabCharacteristic.Factory.newInstance();
+        eeCharCortexURI.setCategory( SearchServiceTest.BRAIN_CAVITY );
+        eeCharCortexURI.setCategoryUri( SearchServiceTest.BRAIN_CAVITY );
+        eeCharCortexURI.setValue( SearchServiceTest.BRAIN_CAVITY );
+        eeCharCortexURI.setValueUri( SearchServiceTest.BRAIN_CAVITY );
         characteristicService.create( eeCharCortexURI );
 
-        Collection<Characteristic> chars = new HashSet<Characteristic>();
+        Collection<Characteristic> chars = new HashSet<>();
         chars.add( eeCharSpinalCord );
         chars.add( eeCharGeneURI );
         chars.add( eeCharCortexURI );
@@ -126,7 +122,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
         gene = this.getTestPersistentGene();
 
         this.geneNcbiId = RandomStringUtils.randomNumeric( 8 );
-        gene.setNcbiId( geneNcbiId );
         gene.setNcbiGeneId( new Integer( geneNcbiId ) );
         geneService.update( gene );
 
@@ -173,7 +168,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     }
 
-
     public void tearDown() {
         if ( gene != null )
             geneService.remove( gene );
@@ -206,12 +200,12 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
 
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -226,19 +220,19 @@ public class SearchServiceTest extends BaseSpringContextTest {
             e.printStackTrace();
         }
         SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.setQuery( GENE_URI + this.geneNcbiId );
+        settings.setQuery( SearchServiceTest.GENE_URI + this.geneNcbiId );
         settings.setSearchGenes( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
         for ( SearchResult sr : found.get( Gene.class ) ) {
             if ( sr.getResultObject().equals( gene ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
 
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
 
     }
@@ -271,11 +265,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
             if ( sr.getResultObject().equals( bibref ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -307,12 +301,12 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
             if ( sr.getResultObject().equals( bibref ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
 
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -352,12 +346,12 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
 
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -378,12 +372,12 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
 
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -400,7 +394,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
         Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
         assertTrue( found.isEmpty() );
 
-        tearDown();
+        this.tearDown();
     }
 
     /**
@@ -422,11 +416,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -441,7 +435,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
             e.printStackTrace();
         }
         SearchSettings settings = SearchSettings.Factory.newInstance();
-        settings.setQuery( SPINAL_CORD );
+        settings.setQuery( SearchServiceTest.SPINAL_CORD );
         settings.setSearchExperiments( true );
         settings.setUseDatabase( false );
         settings.setUseIndices( false );
@@ -451,11 +445,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                tearDown();
+                this.tearDown();
                 return;
             }
         }
-        tearDown();
+        this.tearDown();
         fail( "Didn't get expected result from search" );
     }
 

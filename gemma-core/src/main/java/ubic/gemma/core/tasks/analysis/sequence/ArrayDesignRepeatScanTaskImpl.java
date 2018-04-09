@@ -1,31 +1,29 @@
 package ubic.gemma.core.tasks.analysis.sequence;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.util.Collection;
 
 /**
  * An array design repeat scan spaces task
- * 
- * @author keshav
  *
+ * @author keshav
  */
 @Component
 @Scope("prototype")
-public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<TaskResult, ArrayDesignRepeatScanTaskCommand> implements
-        ArrayDesignRepeatScanTask {
+public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<TaskResult, ArrayDesignRepeatScanTaskCommand>
+        implements ArrayDesignRepeatScanTask {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -41,9 +39,7 @@ public class ArrayDesignRepeatScanTaskImpl extends AbstractTask<TaskResult, Arra
         RepeatScan scanner = new RepeatScan();
         scanner.repeatScan( sequences );
 
-        TaskResult result = new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/", true ) ) );
-
-        return result;
+        return new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/", true ) ) );
     }
 
 }

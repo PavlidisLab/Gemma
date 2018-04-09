@@ -10,7 +10,6 @@ import java.util.Collection;
  * Provides necessary information to filter a database query by a value of a specific object property.
  */
 public class ObjectFilter {
-    // FIXME these might be better placed in their respective DAOs, since they are used mostly there.
     public static final String DAO_EE_ALIAS = "ee";
     public static final String DAO_AD_ALIAS = "ad";
     public static final String DAO_TAXON_ALIAS = "taxon";
@@ -90,6 +89,24 @@ public class ObjectFilter {
         return filters;
     }
 
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public Object getRequiredValue() {
+        if ( this.operator.equals( ObjectFilter.like ) )
+            return "%" + requiredValue + "%";
+        return requiredValue;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public String getObjectAlias() {
+        return objectAlias;
+    }
+
     /**
      * Converts the given value to be of the given property type. For primitive number types, the wrapper class is used.
      *
@@ -160,28 +177,6 @@ public class ObjectFilter {
             throw new IllegalArgumentException(
                     "requiredValue for operator " + operator + " has to be a non null String." );
         }
-    }
-
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    public Object getRequiredValue() {
-        if ( this.operator.equals( ObjectFilter.like ) )
-            return "%" + requiredValue + "%";
-        return requiredValue;
-    }
-
-    public String getOperator() {
-        return operator;
-    }
-
-    public String getObjectAlias() {
-        return objectAlias;
-    }
-
-    public Class getPropertyType() {
-        return propertyType;
     }
 
     /**

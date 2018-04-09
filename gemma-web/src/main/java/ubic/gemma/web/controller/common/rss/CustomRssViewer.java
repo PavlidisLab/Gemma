@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,27 +18,20 @@
  */
 package ubic.gemma.web.controller.common.rss;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.sun.syndication.feed.rss.Channel;
+import com.sun.syndication.feed.rss.Content;
+import com.sun.syndication.feed.rss.Item;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.feed.AbstractRssFeedView;
-
-import com.sun.syndication.feed.rss.Channel;
-import com.sun.syndication.feed.rss.Content;
-import com.sun.syndication.feed.rss.Item;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 /**
  * @author sshao
@@ -51,10 +44,9 @@ public class CustomRssViewer extends AbstractRssFeedView {
 
     @Override
     protected List<Item> buildFeedItems( Map<String, Object> model, HttpServletRequest request,
-            HttpServletResponse response ) throws Exception {
+            HttpServletResponse response ) {
 
-        @SuppressWarnings("unchecked")
-        Map<ExpressionExperiment, String> experiments = ( Map<ExpressionExperiment, String> ) model
+        @SuppressWarnings("unchecked") Map<ExpressionExperiment, String> experiments = ( Map<ExpressionExperiment, String> ) model
                 .get( "feedContent" );
         List<Item> items = new ArrayList<>( experiments.size() );
 
@@ -63,7 +55,8 @@ public class CustomRssViewer extends AbstractRssFeedView {
             ExpressionExperiment e = entry.getKey();
 
             String title = e.getShortName() + " (" + entry.getValue() + "): " + e.getName();
-            String link = Settings.getBaseUrl() + "expressionExperiment/showExpressionExperiment.html?id=" + e.getId().toString();
+            String link = Settings.getBaseUrl() + "expressionExperiment/showExpressionExperiment.html?id=" + e.getId()
+                    .toString();
 
             int maxLength = 500;
             if ( e.getDescription().length() < 500 ) {

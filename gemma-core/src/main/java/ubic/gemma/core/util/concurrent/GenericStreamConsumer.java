@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,27 +25,38 @@ import java.io.InputStreamReader;
 
 /**
  * See http://www.javaworld.com/javaworld/jw-12-2000/jw-1229-traps.html
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class GenericStreamConsumer extends Thread {
-    InputStream is;
+    private final InputStream is;
+    private final boolean printToSderr;
 
     public GenericStreamConsumer( InputStream is ) {
         this.is = is;
+        this.printToSderr = false;
+    }
+
+    /**
+     * 
+     * @param is
+     * @param printToSderr (default=false)
+     */
+    public GenericStreamConsumer( InputStream is, boolean printToSderr ) {
+        this.is = is;
+        this.printToSderr = printToSderr;
     }
 
     @Override
-    @SuppressWarnings("unused")
     public void run() {
         try {
             InputStreamReader isr = new InputStreamReader( is );
             BufferedReader br = new BufferedReader( isr );
-
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
-                // don't do anything...just consume it.
+                if ( printToSderr ) {
+                    System.err.println( line );
+                }
             }
         } catch ( IOException ioe ) {
             ioe.printStackTrace();

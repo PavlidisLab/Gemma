@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,46 +19,30 @@
 package ubic.gemma.core.apps;
 
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * For experiments that used multiple array designs, merge the expression profiles
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
-    /**
-     * @param args
-     */
+    private VectorMergingService mergingService;
+
     public static void main( String[] args ) {
         VectorMergingCli v = new VectorMergingCli();
         Exception e = v.doWork( args );
         if ( e != null ) {
-            log.fatal( e );
+            AbstractCLI.log.fatal( e );
         }
     }
 
-    private VectorMergingService mergingService;
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
         return GemmaCLI.CommandGroup.EXPERIMENT;
-    }
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
-    @Override
-    public String getCommandName() {
-        return "vectorMerge";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "For experiments that used multiple array designs, merge the expression profiles";
     }
 
     @Override
@@ -68,8 +52,13 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
+    public String getCommandName() {
+        return "vectorMerge";
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
-        Exception e = processCommandLine( args );
+        Exception e = this.processCommandLine( args );
         if ( e != null ) {
             return e;
         }
@@ -78,18 +67,22 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
-                processExperiment( ( ExpressionExperiment ) ee );
+                this.processExperiment( ( ExpressionExperiment ) ee );
             } else {
                 throw new UnsupportedOperationException(
                         "Can't do vector merging on non-expressionExperiment bioassaysets" );
             }
         }
 
-        summarizeProcessing();
+        this.summarizeProcessing();
         return null;
 
     }
 
+    @Override
+    public String getShortDesc() {
+        return "For experiments that used multiple array designs, merge the expression profiles";
+    }
 
     private void processExperiment( ExpressionExperiment expressionExperiment ) {
         try {
@@ -99,10 +92,10 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
             super.successObjects.add( expressionExperiment.toString() );
         } catch ( Exception e ) {
-            log.error( e, e );
+            AbstractCLI.log.error( e, e );
             super.errorObjects.add( expressionExperiment + ": " + e.getMessage() );
 
         }
-        log.info( "Finished processing " + expressionExperiment );
+        AbstractCLI.log.info( "Finished processing " + expressionExperiment );
     }
 }

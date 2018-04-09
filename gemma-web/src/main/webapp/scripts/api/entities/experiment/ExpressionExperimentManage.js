@@ -189,7 +189,6 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel,
             var taxonid = (this.taxonid) ? this.taxonid : null;
             var filterMode = (this.filterMode) ? this.filterMode : null;
             var showPublic = (this.showPublic) ? this.showPublic : false;
-
             var store = new Gemma.PagingDataStore({
                 autoLoad: true,
                 proxy: new Ext.data.DWRProxy({
@@ -422,7 +421,7 @@ Gemma.EEReportGridColumnRenderers = {
 
         if (record.get("userCanWrite")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
-                + id+ ', ' + false + ')">' +
+                + id + ', ' + false + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
         }
 
@@ -441,7 +440,7 @@ Gemma.EEReportGridColumnRenderers = {
             }
             // pass in parameter indicating we already have the pca.
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
-                + id+ ', ' + true + ')">' +
+                + id + ', ' + true + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
 
             return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
@@ -456,7 +455,7 @@ Gemma.EEReportGridColumnRenderers = {
         var dataSource = record.get('externalDatabase');
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch('+ id + ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run batch info fetch"></i></span>';
         }
 
@@ -502,7 +501,7 @@ Gemma.EEReportGridColumnRenderers = {
 
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('+ id+ ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run missing value analysis"></i></span>';
         }
 
@@ -534,7 +533,7 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('+ id + ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run processed vector generation"></i></span>';
         }
 
@@ -565,13 +564,11 @@ Gemma.EEReportGridColumnRenderers = {
 
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential('+ id+ ')">' +
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential(' + id + ')">' +
                 '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run differential expression analysis"></i></span>';
         }
 
         if (diffIsPossible(record)) {
-
-            console.log(record);
             if (record.get('dateDifferentialAnalysis')) {
                 var type = record.get('differentialAnalysisEventType');
 
@@ -586,8 +583,6 @@ Gemma.EEReportGridColumnRenderers = {
                     // we ran it, but the analyses were apparently deleted.
                     return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
                 }
-
-                // TODO: add tooltip describing the analysis.
                 return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
                     + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
             } else {
@@ -651,6 +646,20 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         renderer: Gemma.Renderers.curationNoteStubRenderer,
         tooltip: 'Shows first 50 characters of the curation note for experiments that are marked for curators attention.',
         width: 100
+    }, {
+        header: 'Quality',
+        dataIndex: 'quality',
+        sortable: true,
+        renderer: Gemma.Renderers.qualityRenderer,
+        tooltip: 'Shows the quality score of curated experiments.<br/><br/>Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data.',
+        width: 15
+    }, {
+        header: 'Suitability',
+        dataIndex: 'suitability',
+        sortable: true,
+        renderer: Gemma.Renderers.suitabilityRenderer,
+        tooltip: 'Shows the suitability score of curated experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.',
+        width: 15
     }, {
         header: '#ADs',
         sortable: true,

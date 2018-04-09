@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,13 +33,21 @@ import java.util.Date;
 public class AuditEvent implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -1212093157703833905L;
-    private AuditAction action = null;
-    private Date date = null;
-    private String detail = null;
-    private AuditEventType eventType = null;
-    private Long id = null;
-    private String note = null;
-    private User performer = null;
+    private final AuditAction action = null;
+    private final Date date = null;
+    private final String detail = null;
+    private final AuditEventType eventType = null;
+    private final Long id = null;
+    private final String note = null;
+    private final User performer = null;
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        //noinspection ConstantConditions // Hibernate populates id through reflection
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+        return hashCode;
+    }
 
     @Override
     public boolean equals( Object object ) {
@@ -51,15 +59,8 @@ public class AuditEvent implements Identifiable, Serializable {
         }
         final AuditEvent that = ( AuditEvent ) object;
 
+        //noinspection ConstantConditions // Hibernate populates id through reflection
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
     }
 
     public AuditAction getAction() {
@@ -78,6 +79,7 @@ public class AuditEvent implements Identifiable, Serializable {
         return this.eventType;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
@@ -90,6 +92,7 @@ public class AuditEvent implements Identifiable, Serializable {
         return this.performer;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
 
         public static AuditEvent newInstance() {

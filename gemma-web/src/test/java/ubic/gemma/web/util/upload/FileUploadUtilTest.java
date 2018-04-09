@@ -1,8 +1,8 @@
 /*
  * The gemma-web project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,22 +19,16 @@
 
 package ubic.gemma.web.util.upload;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockMultipartHttpServletRequest;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.junit.Test;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.mock.web.MockMultipartHttpServletRequest;
+import static org.junit.Assert.assertEquals;
 
-/**
- * TODO Document Me
- * 
- * @author ptan
- *
- */
 public class FileUploadUtilTest {
 
     @Test

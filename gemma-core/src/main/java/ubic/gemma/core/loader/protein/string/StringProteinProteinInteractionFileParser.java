@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,7 @@ import java.util.HashSet;
  *
  * @author ldonnison
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class StringProteinProteinInteractionFileParser extends BasicLineParser<StringProteinProteinInteraction> {
 
     /**
@@ -55,7 +55,7 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
      * The Collection of StringProteinProteinInteraction of taxon that are of interest note
      * StringProteinProteinInteraction has hashCode method overridden as HashSet uses this method to test for equality
      */
-    Collection<StringProteinProteinInteraction> proteinProteinInteractions = new HashSet<>();
+    final Collection<StringProteinProteinInteraction> proteinProteinInteractions = new HashSet<>();
     /**
      * Taxon of interest in the string file
      */
@@ -94,7 +94,7 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
                     "Protein 1 " + fields[0] + " protein 2  " + fields[1] + " do not contain matching taxons" );
         }
         // taxon not supported skip it
-        if ( !( getNcbiValidTaxon() ).contains( taxonIdProtein1 ) ) {
+        if ( !( this.getNcbiValidTaxon() ).contains( taxonIdProtein1 ) ) {
             return null;
         }
 
@@ -148,10 +148,21 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
     }
 
     /**
+     * Method to add a StringProteinProteinInteraction the map objects.
+     *
+     * @param obj value object representing parsed line
+     */
+    @Override
+    protected void addResult( StringProteinProteinInteraction obj ) {
+        proteinProteinInteractions.add( obj );
+    }
+
+    /**
      * Getter for taxon that are to be selected for in the string file
      *
      * @return taxon to be parsed
      */
+    @SuppressWarnings("unused") // Possible external use
     public Collection<Taxon> getTaxa() {
         return taxa;
     }
@@ -180,32 +191,24 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
             return null;
         }
 
-        String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIMITER );
+        String[] fields = StringUtils
+                .splitPreserveAllTokens( line, StringProteinProteinInteractionFileParser.FIELD_DELIMITER );
 
-        if ( fields.length != STRING_PROTEIN_PROTEIN_INTERACTION_FIELDS_PER_ROW ) {
+        if ( fields.length
+                != StringProteinProteinInteractionFileParser.STRING_PROTEIN_PROTEIN_INTERACTION_FIELDS_PER_ROW ) {
             log.info( "check file format" );
             throw new FileFormatException(
                     "Line + " + line + " is not in the right format: has " + fields.length + " fields, expected "
-                            + STRING_PROTEIN_PROTEIN_INTERACTION_FIELDS_PER_ROW );
+                            + StringProteinProteinInteractionFileParser.STRING_PROTEIN_PROTEIN_INTERACTION_FIELDS_PER_ROW );
         }
 
         try {
-            return createStringProteinProteinInteraction( fields );
+            return this.createStringProteinProteinInteraction( fields );
 
         } catch ( NumberFormatException | FileFormatException e ) {
             throw new RuntimeException( e );
         }
 
-    }
-
-    /**
-     * Method to add a StringProteinProteinInteraction the map objects.
-     *
-     * @param obj value object representing parsed line
-     */
-    @Override
-    protected void addResult( StringProteinProteinInteraction obj ) {
-        proteinProteinInteractions.add( obj );
     }
 
     /**

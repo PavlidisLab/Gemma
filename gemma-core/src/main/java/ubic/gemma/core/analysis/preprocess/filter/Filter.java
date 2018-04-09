@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,8 +23,8 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 /**
  * @author pavlidis
  */
-public interface Filter<T extends ExpressionDataMatrix<Double>> {
-
+interface Filter<T extends ExpressionDataMatrix<Double>> {
+    
+    @SuppressWarnings("unused") // Ensures consistency
     T filter( T dataMatrix );
-
 }

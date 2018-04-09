@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,28 +32,15 @@ public abstract class AlternateName implements java.io.Serializable {
      *
      * @author Paul
      */
+    @SuppressWarnings("WeakerAccess") // Required by Spring
     public AlternateName() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof AlternateName ) ) {
-            return false;
-        }
-        final AlternateName that = ( AlternateName ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public Long getId() {
         return this.id;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }
@@ -62,6 +49,7 @@ public abstract class AlternateName implements java.io.Serializable {
         return this.name;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setName( String name ) {
         this.name = name;
     }
@@ -74,8 +62,21 @@ public abstract class AlternateName implements java.io.Serializable {
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof AlternateName ) ) {
+            return false;
+        }
+        final AlternateName that = ( AlternateName ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
 
+        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static ubic.gemma.model.expression.arrayDesign.AlternateName newInstance() {
             return new ubic.gemma.model.expression.arrayDesign.AlternateNameImpl();
         }

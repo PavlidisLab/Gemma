@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,18 +18,17 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.io.InputStream;
-import java.util.Collection;
-
 import junit.framework.TestCase;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import java.io.InputStream;
+import java.util.Collection;
+
 /**
  * @author pavlidis
- *
  */
 public class CompositeSequenceParserTest extends TestCase {
-    InputStream designElementStream;
+    private InputStream designElementStream;
 
     public void testParseInputStream() throws Exception {
         CompositeSequenceParser csp = new CompositeSequenceParser();
@@ -38,9 +37,9 @@ public class CompositeSequenceParserTest extends TestCase {
 
         Collection<CompositeSequence> results = csp.getResults();
 
-        assertTrue( results.size() == 33 );
-        assertTrue( results.iterator().next().getName().endsWith( "_at" ) );
-        assertTrue( results.iterator().next().getDescription().startsWith( "\"" ) );
+        TestCase.assertTrue( results.size() == 33 );
+        TestCase.assertTrue( results.iterator().next().getName().endsWith( "_at" ) );
+        TestCase.assertTrue( results.iterator().next().getDescription().startsWith( "\"" ) );
     }
 
     @Override

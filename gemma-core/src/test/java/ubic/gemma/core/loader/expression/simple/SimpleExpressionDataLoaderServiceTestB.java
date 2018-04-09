@@ -1,13 +1,13 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -55,7 +55,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
     private ExpressionExperiment ee;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
     }
 
@@ -63,7 +63,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
     public void tearDown() {
         if ( ee != null ) {
             ee = eeService.load( ee.getId() );
-            System.out.println("removing ee w/ id"+ee.getId());
+            System.out.println( "removing ee w/ id" + ee.getId() );
             eeService.remove( ee );
         }
     }
@@ -87,18 +87,18 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
         /*
          * Load the array design (platform).
          */
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
-        geoService.fetchAndLoad( "GPL2716", true, true, false, false );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
+        geoService.fetchAndLoad( "GPL2716", true, true, false );
         ArrayDesign ad = arrayDesignService.findByShortName( "GPL2716" );
 
         assertNotNull( ad );
 
         try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/flatfileload/gill2006hormone.head.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/flatfileload/gill2006hormone.head.txt" )) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-            makeMetaData( salmon, ad, metaData );
+            this.makeMetaData( salmon, ad, metaData );
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
         }
@@ -107,13 +107,13 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
          * Do second one that has overlapping bioassay names.
          */
         try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/flatfileload/gill2006oceanfate.head.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/flatfileload/gill2006oceanfate.head.txt" )) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
             assertNotNull( salmon );
 
-            makeMetaData( salmon, ad, metaData );
+            this.makeMetaData( salmon, ad, metaData );
 
             ExpressionExperiment a = simpleExpressionDataLoaderService.create( metaData, data );
 

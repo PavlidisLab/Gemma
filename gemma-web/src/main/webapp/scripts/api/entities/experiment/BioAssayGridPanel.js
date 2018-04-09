@@ -49,7 +49,6 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     id: 'bioassay-outlier-save-button',
                     handler: function (b, e) {
                         console.log("Saving");
-                        // FIXME set this up so we can revert outliers as well.
                         var outliers = [];
                         var nonOutliers = [];
                         this.store.each(function (record, id) {
@@ -62,7 +61,7 @@ Gemma.BioAssayGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
                         if (outliers.length > 0) {
                             Ext.getCmp('eemanager').markOutlierBioAssays(outliers);
-                        }else if (nonOutliers.length > 0) {
+                        } else if (nonOutliers.length > 0) {
                             Ext.getCmp('eemanager').unMarkOutlierBioAssays(nonOutliers);
                         }
                     }.createDelegate(this)

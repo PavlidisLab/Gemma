@@ -18,15 +18,21 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.*;
 
 /**
  * Bean describing a microarray platform in GEO
@@ -39,25 +45,32 @@ public class GeoPlatform extends GeoData {
     private static final String DISTRIBUTION_VIRTUAL = "virtual";
 
     /**
-     * detect more exon arrays.
+     * detect more exon arrays; values are the platform we will actually used
      */
-    private static final Set<String> exonPlatformGeoIds = new HashSet<>();
+    private static final Map<String, String> exonPlatformGeoIds = new HashMap<>();
     private static final long serialVersionUID = 1L;
     private static final Log log = LogFactory.getLog( GeoPlatform.class.getName() );
 
     static {
-        assert exonPlatformGeoIds != null;
         try (BufferedReader in = new BufferedReader( new InputStreamReader(
                 GeoPlatform.class.getResourceAsStream( "/ubic/gemma/core/affy.exonarrays.txt" ) ) )) {
             while ( in.ready() ) {
                 String geoId = in.readLine().trim();
-                if ( geoId.startsWith( "#" ) ) {
+
+                if ( geoId.startsWith( "#" ) || geoId.isEmpty() ) {
                     continue;
                 }
-                exonPlatformGeoIds.add( geoId );
+
+                String[] f = geoId.split( "=" );
+
+                if ( f.length < 2 ) {
+                    continue;
+                }
+
+                GeoPlatform.exonPlatformGeoIds.put( f[0], f[1] );
             }
         } catch ( Exception e ) {
-            log.warn( "List of exon array IDs could not be loaded: " + e.getMessage() );
+            GeoPlatform.log.warn( "List of exon array IDs could not be loaded: " + e.getMessage() );
         }
     }
 
@@ -94,20 +107,35 @@ public class GeoPlatform extends GeoData {
     private boolean useDataFromGEO = true;
     private Collection<String> webLinks = new HashSet<>();
 
+    /**
+     * Refers to a list of platforms for which the data from GEO is usually not useable and/or which we always reanalyze
+     * from CEL files - exon arrays and newer gene arrays
+     * 
+     * @param geoPlatformId (GPL)
+     * @return
+     */
     public static boolean isAffymetrixExonArray( String geoPlatformId ) {
-        return exonPlatformGeoIds.contains( geoPlatformId );
+        return GeoPlatform.exonPlatformGeoIds.containsKey( geoPlatformId );
+    }
+
+    /**
+     * @param geoPlatformId (GPL)
+     * @return short name (GPLXXXX) of platform we would actually use, or null if not found
+     */
+    public static String exonArrayToGeneLevelArray( String geoPlatformId ) {
+        return GeoPlatform.exonPlatformGeoIds.get( geoPlatformId );
     }
 
     /**
      * Add a value to a column. A special case is when the column is of the probe ids (design element name).
      *
      * @param columnName column name
-     * @param value      value
+     * @param value value
      */
     public void addToColumnData( String columnName, String value ) {
         if ( !platformInformation.containsKey( columnName ) ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
+            if ( GeoPlatform.log.isDebugEnabled() )
+                GeoPlatform.log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
             platformInformation.put( columnName, new ArrayList<String>() );
         }
 
@@ -129,7 +157,7 @@ public class GeoPlatform extends GeoData {
             designElements.add( value );
         }
 
-        List<String> columnData = getColumnData( columnName );
+        List<String> columnData = this.getColumnData( columnName );
         if ( columnData == null ) {
             return;
         }
@@ -195,7 +223,7 @@ public class GeoPlatform extends GeoData {
 
     public List<String> getColumnData( String columnName ) {
         if ( !platformInformation.containsKey( columnName ) ) {
-            log.warn( "No platform information for column=" + columnName );
+            GeoPlatform.log.warn( "No platform information for column=" + columnName );
             return null;
         }
         // assert platformInformation.size() != 0 : this + " has no platformInformation at all!";
@@ -266,7 +294,7 @@ public class GeoPlatform extends GeoData {
         int index = 0;
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyId( string ) ) {
-                log.debug( string + " appears to indicate the array element identifier in column " + index
+                GeoPlatform.log.debug( string + " appears to indicate the array element identifier in column " + index
                         + " for platform " + this );
                 return string;
             }
@@ -433,7 +461,7 @@ public class GeoPlatform extends GeoData {
 
     /**
      * @return true if the data uses a platform that, generally, we can use the data from, if available. Will be false
-     * for MPSS, SAGE and transcript- or exon- level exon array data.
+     *         for MPSS, SAGE and transcript- or exon- level exon array data.
      */
     public boolean useDataFromGeo() {
 
@@ -444,14 +472,15 @@ public class GeoPlatform extends GeoData {
             throw new IllegalStateException( "Don't call until the technology type is filled in" );
         }
 
-        if ( DISTRIBUTION_VIRTUAL.equals( this.distribution ) || technology.equals( PlatformType.MPSS ) || technology
-                .equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
-                .equals( PlatformType.SAGERsaI ) || technology.equals( PlatformType.SAGESau3A ) || technology
-                .equals( PlatformType.other ) ) {
+        if ( GeoPlatform.DISTRIBUTION_VIRTUAL.equals( this.distribution ) || technology.equals( PlatformType.MPSS )
+                || technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
+                        .equals( PlatformType.SAGERsaI )
+                || technology.equals( PlatformType.SAGESau3A ) || technology
+                        .equals( PlatformType.other ) ) {
             return false;
         }
 
-        if ( StringUtils.isBlank( getTitle() ) ) {
+        if ( StringUtils.isBlank( this.getTitle() ) ) {
             throw new IllegalStateException(
                     "Can't figure out suitability of data until platform title is filled in." );
         }
@@ -459,9 +488,12 @@ public class GeoPlatform extends GeoData {
         // these are the three gene-level representations of affy exon platforms. We can use these data, even if we replace it, eventually. However, the data aren't always there.
         // See also DataUpdater.prepareTargetPlatformForExonArrays
         // Sometimes the data are there, sometimes it isn't.
-        return !technology.equals( PlatformType.inSituOligonucleotide ) || ( !isAffymetrixExonArray( getGeoAccession() )
-                && !getTitle().toLowerCase().contains( "exon" ) ) || getGeoAccession().equals( "GPL6096" )
-                || getGeoAccession().equals( "GPL6244" ) || getGeoAccession().equals( "GPL6247" );
+        return !technology.equals( PlatformType.inSituOligonucleotide )
+                || ( !GeoPlatform.isAffymetrixExonArray( this.getGeoAccession() ) && !this.getTitle().toLowerCase()
+                        .contains( "exon" ) )
+                || this.getGeoAccession().equals( "GPL6096" ) || this.getGeoAccession()
+                        .equals( "GPL6244" )
+                || this.getGeoAccession().equals( "GPL6247" );
 
     }
 }

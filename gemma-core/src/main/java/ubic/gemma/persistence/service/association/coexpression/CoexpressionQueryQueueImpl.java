@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,10 +19,6 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,125 +29,81 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
+import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
 /**
  * @author Paul
- *
  */
 @Repository
 @Lazy
-public class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements CoexpressionQueryQueue {
+class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements CoexpressionQueryQueue {
 
-    private static Logger log = LoggerFactory.getLogger( CoexpressionQueryQueueImpl.class );
     private static final int QUEUE_SIZE = 1000;
-
+    private static final Logger log = LoggerFactory.getLogger( CoexpressionQueryQueueImpl.class );
+    private final BlockingQueue<QueuedGene> geneQueue = new ArrayBlockingQueue<>(
+            CoexpressionQueryQueueImpl.QUEUE_SIZE );
     @Autowired
     private CoexpressionDao coexpressionDao;
-
     @Autowired
     private GeneDao geneDao;
-
-    private final BlockingQueue<QueuedGene> geneQueue = new ArrayBlockingQueue<QueuedGene>( QUEUE_SIZE );
 
     @Autowired
     public CoexpressionQueryQueueImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CoexpressionQueryQueue#addToFullQueryQueue(java.util.Collection,
-     * java.lang.String)
-     */
     @Override
-    public synchronized void addToFullQueryQueue( Collection<Long> geneIds, String className ) {
+    public synchronized void addToFullQueryQueue( Collection<Long> geneIds ) {
         if ( this.geneQueue.remainingCapacity() == 0 ) {
-            log.debug( "Queue is full, cannot add genes for cache warm." );
+            CoexpressionQueryQueueImpl.log.debug( "Queue is full, cannot add genes for cache warm." );
             return;
         }
 
         for ( Long id : geneIds ) {
-            addToFullQueryQueue( id, className );
+            this.addToFullQueryQueue( id );
         }
     }
 
     @Override
-    public synchronized void removeFromQueue( Collection<Long> geneIds, String className ) {
+    public synchronized void addToFullQueryQueue( Gene gene ) {
+        this.addToFullQueryQueue( gene.getId() );
+    }
+
+    @Override
+    public synchronized void removeFromQueue( Collection<Long> geneIds ) {
         int count = 0;
         for ( Long id : geneIds ) {
-            if ( geneQueue.remove( new QueuedGene( id, className ) ) ) count++;
+            if ( geneQueue.remove( new QueuedGene( id ) ) )
+                count++;
         }
 
         if ( count > 0 ) {
-            log.info( count + " genes removed from the query queue" );
+            CoexpressionQueryQueueImpl.log.info( count + " genes removed from the query queue" );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CoexpressionQueryQueue#addToFullQueryQueue(ubic.gemma.model.genome.
-     * Gene)
-     */
-    @Override
-    public synchronized void addToFullQueryQueue( Gene gene ) {
-        addToFullQueryQueue( gene.getId(), CoexpressionQueryUtils.getGeneLinkClassName( gene ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CoexpressionQueryQueue#addToFullQueryQueue(java.lang.Long,
-     * java.lang.String)
-     */
-    @Override
-    public synchronized void addToFullQueryQueue( Long id, String className ) {
-        if ( this.geneQueue.remainingCapacity() == 0 ) {
-            log.debug( "Queue is full, cannot add genes for cache warm." );
-            return;
-        }
-
-        try {
-            log.debug( "Queuing gene=" + id + " for cache warm" );
-            this.geneQueue.add( new QueuedGene( id, className ) );
-        } catch ( Exception e ) {
-            // if JVM is finished (e.g. test) this will happen.
-            log.error( "Could not add to queue: " + e.getMessage() );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see CoexpressionQueryQueue#queryForCache(ubic.gemma.model.association.
-     * coexpression.QueuedGeneBatch)
-     */
-    @Override
     @Transactional(readOnly = true)
     public void queryForCache( QueuedGene gene ) {
 
         int numCached = coexpressionDao.queryAndCache( geneDao.load( gene.getId() ) );
+        //noinspection StatementWithEmptyBody // Better readability
         if ( numCached < 0 ) {
             // it was already in the cache
         } else if ( numCached > 0 ) {
-            log.debug( "Cached " + numCached + " coexpression links at stringency="
+            CoexpressionQueryQueueImpl.log.debug( "Cached " + numCached + " coexpression links at stringency="
                     + CoexpressionCache.CACHE_QUERY_STRINGENCY + " for " + gene.getId() );
         } else {
-            log.debug( "No coexpression links to cache at stringency=" + CoexpressionCache.CACHE_QUERY_STRINGENCY
-                    + " for " + gene.getId() );
+            CoexpressionQueryQueueImpl.log
+                    .debug( "No coexpression links to cache at stringency=" + CoexpressionCache.CACHE_QUERY_STRINGENCY
+                            + " for " + gene.getId() );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.dao.support.DaoSupport#initDao()
-     */
     @Override
     protected void initDao() throws Exception {
         super.initDao();
@@ -159,16 +111,16 @@ public class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements C
 
         Thread loadThread = new Thread( new Runnable() {
 
-            private static final int MAX_WARNINGS = 5;
+            private final int MAX_WARNINGS = 5;
 
             @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
-                // TODO might need to manage this.
 
                 int numWarnings = 0;
+                //noinspection InfiniteLoopStatement // Expected
                 while ( true ) {
-                    QueuedGene gene = null;
+                    QueuedGene gene;
                     try {
 
                         synchronized ( geneQueue ) {
@@ -180,16 +132,17 @@ public class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements C
                             continue;
                         }
 
-                        queryForCache( gene );
+                        CoexpressionQueryQueueImpl.this.queryForCache( gene );
 
                         Thread.sleep( 500 );
 
                     } catch ( Exception e ) {
                         // can happen during tests
                         if ( numWarnings < MAX_WARNINGS ) {
-                            log.error( "Error while caching coexpression: " + e.getMessage() );
+                            CoexpressionQueryQueueImpl.log
+                                    .error( "Error while caching coexpression: " + e.getMessage() );
                         } else if ( numWarnings == MAX_WARNINGS ) {
-                            log.error( "Further warnings suppressed" );
+                            CoexpressionQueryQueueImpl.log.error( "Further warnings suppressed" );
                         }
                         numWarnings++;
                     }
@@ -200,34 +153,30 @@ public class CoexpressionQueryQueueImpl extends HibernateDaoSupport implements C
         loadThread.setDaemon( true );
         loadThread.start();
     }
+
+    private synchronized void addToFullQueryQueue( Long id ) {
+        if ( this.geneQueue.remainingCapacity() == 0 ) {
+            CoexpressionQueryQueueImpl.log.debug( "Queue is full, cannot add genes for cache warm." );
+            return;
+        }
+
+        try {
+            CoexpressionQueryQueueImpl.log.debug( "Queuing gene=" + id + " for cache warm" );
+            this.geneQueue.add( new QueuedGene( id ) );
+        } catch ( Exception e ) {
+            // if JVM is finished (e.g. test) this will happen.
+            CoexpressionQueryQueueImpl.log.error( "Could not add to queue: " + e.getMessage() );
+        }
+    }
 }
 
 class QueuedGene {
 
-    private String className;
+    private final Long id;
 
-    private Long id;
-
-    public QueuedGene( Long id, String className ) {
+    QueuedGene( Long id ) {
         super();
         this.id = id;
-        this.className = className;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        QueuedGene other = ( QueuedGene ) obj;
-        if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
-        return true;
-    }
-
-    public String getClassName() {
-        return className;
     }
 
     public Long getId() {
@@ -240,6 +189,21 @@ class QueuedGene {
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        QueuedGene other = ( QueuedGene ) obj;
+        if ( id == null ) {
+            return other.id == null;
+        } else
+            return id.equals( other.id );
     }
 
 }

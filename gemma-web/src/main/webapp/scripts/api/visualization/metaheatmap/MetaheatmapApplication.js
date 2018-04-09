@@ -43,13 +43,6 @@ Ext.namespace( 'Gemma.Metaheatmap' );
  * limitation.
  */
 
-/*
- * TODO + getApplicationState() -- not tested + setApplicationState() -- not implemented + loadApplicationState() -- not
- * implemented + saveApplicationState() -- not implemented + getBookmarkableLink() -- replace with
- * saveApplicationState() + showBookmarkableLinkWindow() -- not tested + getDownloadLink() -- remove
- * 
- */
-
 var makeSortFunction = function( property, direction ) {
    if ( direction === 'DESC' ) {
       return function( a, b ) {
@@ -171,7 +164,7 @@ Gemma.Metaheatmap.Application = Ext
             this.cells = {};
             this.cells.cellData = this.visualizationData.cellData;
 
-            // Add convenience cell retrieval function to cellData object. TODO: refactor out?
+            // Add convenience cell retrieval function to cellData object.
             this.cells.getCell = function( gene, condition ) {
                if ( !gene || !condition ) {
                   return null;
@@ -476,7 +469,7 @@ Gemma.Metaheatmap.Application = Ext
 
             // Experiment sort state.
             state.eeSort = this.toolPanel_._sortPanel._experimentSort.getValue();
-            if ( state.eeSort === '--' ) {// TODO make this less fragile
+            if ( state.eeSort === '--' ) {
                state.eeSort = null;
             }
 
@@ -494,9 +487,8 @@ Gemma.Metaheatmap.Application = Ext
          },
 
          /**
-          * TODO Create a URL that can be used to query the system.
           * 
-          * @param state
+          * this.getSApplicationState
           *           should have format: state.geneIds = array of gene ids that occur singly (not in a group): [7,8,9]
           *           state.geneGroupIds = array of db-backed gene group ids: [10,11,12] ^same for experiments^
           *           state.geneSort state.eeSort state.filters = list of filters applied, values listed should be
@@ -509,9 +501,8 @@ Gemma.Metaheatmap.Application = Ext
             return Gemma.Metaheatmap.Utils.getBookmarkableLink( state );
          },
 
-         // TODO
          showBookmarkableLinkWindow : function() {
-            url = this.getBookmarkableLink();
+            var url = this.getBookmarkableLink();
 
             var warning = (this.selectionsModified) ? "Please note: you have unsaved modifications in one or more of your"
                + " experiment and/or gene groups. <b>These changes will not be saved in this link.</b>"
@@ -531,33 +522,6 @@ Gemma.Metaheatmap.Application = Ext
             } );
             win.show();
          },
-
-         // TODO
-         getDownloadLink : function() {
-            // TODO: Refactor!
-            // That was a quick way to reuse bookmarkable link logic. We should take shared code out into a separate
-            // function.
-            var url = this.getBookmarkableLink();
-            if ( url !== null ) {
-               url = url.replace( 'metaheatmap.html', 'downloadText/downloadMetaheatmapData.html' );
-            }
-            return url;
-         },
-
-         // TODO
-         getApplicationStateFromURL : function( url ) {
-         },
-
-         // TODO
-         // var visualizerState = {
-         // filterSorter : { genes : null,
-         // conditions : null},
-         // zoom : { genes : null,
-         // conditions : null}
-         // };
-         // if ( savedState ) {
-         // visualizerState = savedState;
-         // }
 
          showHelpConditionally : function() {
 

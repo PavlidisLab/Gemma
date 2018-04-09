@@ -34,6 +34,7 @@ public interface BaseService<O extends Identifiable> {
      * @param entities the entities to be created.
      * @return collection of objects referencing the persistent instances of given entities.
      */
+    @SuppressWarnings("unused") // Consistency
     Collection<O> create( Collection<O> entities );
 
     /**

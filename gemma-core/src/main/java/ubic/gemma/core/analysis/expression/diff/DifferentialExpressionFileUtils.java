@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,17 +31,20 @@ public class DifferentialExpressionFileUtils {
 
     public static final String PVALUE_DIST_SUFFIX = ".dist.txt";
     private static final String PVALUE_DIST = "diff" + File.separatorChar + "diffExStatDistributions";
-    private static Log log = LogFactory.getLog( DifferentialExpressionFileUtils.class );
-    private static String analysisStoragePath = Settings.getAnalysisStoragePath();
+    private static final Log log = LogFactory.getLog( DifferentialExpressionFileUtils.class );
+    private static final String analysisStoragePath = Settings.getAnalysisStoragePath();
 
     public static File getBaseDifferentialDirectory( String shortName ) {
-        File f = null;
+        File f;
         if ( shortName == null ) {
-            f = new File( analysisStoragePath + File.separatorChar + PVALUE_DIST + File.separatorChar );
-            log.debug( "No experiment name provided ... returning directory: " + f.toString() );
+            f = new File( DifferentialExpressionFileUtils.analysisStoragePath + File.separatorChar
+                    + DifferentialExpressionFileUtils.PVALUE_DIST + File.separatorChar );
+            DifferentialExpressionFileUtils.log
+                    .debug( "No experiment name provided ... returning directory: " + f.toString() );
         } else {
-            f = new File( analysisStoragePath + File.separatorChar + PVALUE_DIST + File.separatorChar + shortName );
-            log.debug( "Returning directory: " + f.toString() );
+            f = new File( DifferentialExpressionFileUtils.analysisStoragePath + File.separatorChar
+                    + DifferentialExpressionFileUtils.PVALUE_DIST + File.separatorChar + shortName );
+            DifferentialExpressionFileUtils.log.debug( "Returning directory: " + f.toString() );
         }
 
         return f;

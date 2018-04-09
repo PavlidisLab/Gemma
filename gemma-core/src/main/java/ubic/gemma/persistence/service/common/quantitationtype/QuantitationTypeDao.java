@@ -18,12 +18,11 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
-import java.util.List;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.List;
 
 /**
  * @see QuantitationType

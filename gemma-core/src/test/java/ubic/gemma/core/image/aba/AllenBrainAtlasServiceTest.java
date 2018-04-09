@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,7 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testGetGene() throws Exception {
-        AbaGene grin1 = null;
+        AbaGene grin1;
 
         try {
             grin1 = abaService.getGene( "Grin1" );
@@ -52,15 +52,15 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
             throw e;
         }
 
-        Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
+        Collection<ImageSeries> representativeSaggitalImages = new HashSet<>();
 
         for ( ImageSeries is : grin1.getImageSeries() ) {
             if ( is == null )
                 continue;
             if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
 
-                Collection<Image> images = abaService.getImageseries( is.getImageSeriesId() );
-                Collection<Image> representativeImages = new HashSet<Image>();
+                Collection<Image> images = abaService.getImageSeries( is.getImageSeriesId() );
+                Collection<Image> representativeImages = new HashSet<>();
 
                 for ( Image img : images ) {
                     if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
@@ -85,7 +85,7 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
      * Not all ABA genes have the only the first letter capitalized
      */
     @Test
-    public void testGetGeneCapitals() throws Exception {
+    public void testGetGeneCapitals() {
         AbaGene gene = null;
 
         try {

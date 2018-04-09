@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,8 +71,8 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
 
         ExpressionExperiment ee;
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
-            Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false, false );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE12135", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
@@ -83,7 +83,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
          */
         dataUpdater.addAffyExonArrayData( ee );
 
-        ee = experimentService.load( ee.getId() );
+        experimentService.load( ee.getId() );
     }
 
     @Test
@@ -95,13 +95,13 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         ExpressionExperiment ee; // GSE22498
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            Collection<?> results = geoService.fetchAndLoad( "GSE22498", false, false, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE22498", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
         }
         dataUpdater.addAffyExonArrayData( ee );
-        ee = experimentService.load( ee.getId() );
+        experimentService.load( ee.getId() );
     }
 
     @Test
@@ -113,13 +113,13 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         ExpressionExperiment ee; // GSE33597
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-            Collection<?> results = geoService.fetchAndLoad( "GSE33597", false, false, false, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE33597", false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
         }
         dataUpdater.addAffyExonArrayData( ee );
-        ee = experimentService.load( ee.getId() );
+        experimentService.load( ee.getId() );
 
     }
 

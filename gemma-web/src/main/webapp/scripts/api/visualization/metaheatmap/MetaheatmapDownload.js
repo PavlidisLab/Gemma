@@ -171,7 +171,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend( Ext.Window, {
          if ( cell === null || cell.isProbeMissing ) {
             row.push( "NA" );
          } else {
-            row.push( cell.correctedPValue ); // FIXME is this right?
+            row.push( cell.correctedPValue );
          }
       }
       return row.join( '\t' ) + "\n";

@@ -58,11 +58,9 @@ public class CompositeSequence extends ubic.gemma.model.common.Describable {
         } else if ( !getId().equals( other.getId() ) )
             return false;
         if ( getName() == null ) {
-            if ( other.getName() != null )
-                return false;
-        } else if ( !getName().equals( other.getName() ) )
-            return false;
-        return true;
+            return other.getName() == null;
+        } else
+            return getName().equals( other.getName() );
     }
 
     @Override

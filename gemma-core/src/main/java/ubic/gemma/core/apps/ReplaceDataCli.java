@@ -1,29 +1,30 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.apps;
 
-import java.io.IOException;
-import java.util.Collection;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Replace data in an existing data set. This is only to be used in special cases where AffyDataFromCelCli or
@@ -32,41 +33,25 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * weird way, and we can get better data from either the supplementary files in GEO or from an external source (e.g. the
  * authors). It is assumed that the quantitation type is the same (you can edit the QT details through the web
  * interface).
- * <p>
  * Again, don't use this this except as a last resort.
- * 
+ *
  * @author Paul
  */
 public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
-    /**
-     * @param args
-     */
+    private String file = null;
+
     public static void main( String[] args ) {
         ReplaceDataCli c = new ReplaceDataCli();
-        c.doWork( args );
+        Exception e = c.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
+        }
     }
-
-    private String file = null;
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
-    @Override
-    public String getCommandName() {
-        return "replaceData";
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Replace expression data for non-Affymetrix and non-RNA-seq data sets";
     }
 
     @Override
@@ -78,17 +63,30 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        this.file = this.getOptionValue( "file" );
+        if ( file == null )
+            throw new IllegalArgumentException( "File is required" );
+    }
+
+    @Override
+    public String getCommandName() {
+        return "replaceData";
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( args );
-
-        DataUpdater serv = getBean( DataUpdater.class );
-
-        if ( this.expressionExperiments.size() > 1 ) {
-            throw new IllegalArgumentException( "Sorry, can only process one experiment with this tool." );
+        Exception exception = super.processCommandLine( args );
+        if ( exception != null ) {
+            return exception;
         }
 
+        DataUpdater dataUpdater = this.getBean( DataUpdater.class );
+
         if ( this.expressionExperiments.size() > 1 ) {
-            log.warn( "This CLI can only deal with one experiment at a time; only the first one will be processed" );
+            throw new IllegalArgumentException( "Sorry, This CLI can only deal with one experiment at a time." );
         }
 
         ExpressionExperiment ee = ( ExpressionExperiment ) this.expressionExperiments.iterator().next();
@@ -104,12 +102,14 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
         Collection<QuantitationType> qts = eeService.getPreferredQuantitationType( ee );
 
         if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( "Experiment must have just one preferred quantitation type to replace data for" );
+            throw new IllegalArgumentException(
+                    "Experiment must have just one preferred quantitation type to replace data for" );
         }
 
         QuantitationType qt = qts.iterator().next();
         if ( qt == null ) {
-            throw new IllegalArgumentException( "Experiment must have a preferred quantitation type to replace data for" );
+            throw new IllegalArgumentException(
+                    "Experiment must have a preferred quantitation type to replace data for" );
         }
 
         try {
@@ -117,21 +117,18 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
             DoubleMatrix<String, String> data = reader.read( file );
 
-            serv.replaceData( ee, targetArrayDesign, qt, data );
+            dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
 
         } catch ( IOException e ) {
-            log.error( "Failed while processing " + ee, e );
+            AbstractCLI.log.error( "Failed while processing " + ee, e );
             return e;
         }
         return null;
     }
 
     @Override
-    protected void processOptions() {
-        super.processOptions();
-
-        this.file = getOptionValue( "file" );
-        if ( file == null ) throw new IllegalArgumentException( "File is required" );
+    public String getShortDesc() {
+        return "Replace expression data for non-Affymetrix and non-RNA-seq data sets";
     }
 
 }

@@ -18,16 +18,15 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author pavlidis

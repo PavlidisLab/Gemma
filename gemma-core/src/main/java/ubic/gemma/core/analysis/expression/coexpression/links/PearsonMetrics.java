@@ -1,8 +1,8 @@
 /*
  * The linkAnalysis project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,7 +38,7 @@ import ubic.gemma.model.common.quantitationtype.*;
  *
  * @author Paul Pavlidis
  */
-@SuppressWarnings("WeakerAccess") // Possible external use
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
     double[] rowMeans = null;
@@ -81,7 +81,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
     public void calculateMetrics() {
 
         if ( this.numMissing == 0 ) {
-            calculateMetricsFast();
+            this.calculateMetricsFast();
             return;
         }
 
@@ -111,7 +111,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
                 }
             }
 
-            rowStatistics();
+            this.rowStatistics();
         }
 
         /* for each vector, compare it to all other vectors */
@@ -141,7 +141,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
                 if ( !docalcs || results.get( i, j ) != 0.0 ) {
-                    keepCorrel( i, j, results.get( i, j ), numcols );
+                    this.keepCorrellation( i, j, results.get( i, j ), numcols );
                     continue;
                 }
 
@@ -149,7 +149,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
                 /* if there are no missing values, use the faster method of calculation */
                 if ( !thisRowHasMissing && !hasMissing[j] ) {
-                    setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
+                    this.setCorrel( i, j, this.correlFast( vectorA, vectorB, i, j ), numcols );
                     continue;
                 }
 
@@ -176,24 +176,24 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
                 // avoid -1 correlations or extremely noisy values (minNumUsed should be set high enough so that degrees
                 // of freedom isn't too low.
                 if ( numused < this.minNumUsed )
-                    setCorrel( i, j, Double.NaN, 0 );
+                    this.setCorrel( i, j, Double.NaN, 0 );
                 else {
-                    double denom = correlationNorm( numused, sxx, sx, syy, sy );
+                    double denom = this.correlationNorm( numused, sxx, sx, syy, sy );
                     if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
-                        setCorrel( i, j, 0.0, numused );
+                        this.setCorrel( i, j, 0.0, numused );
                     } else {
                         double correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
 
-                        setCorrel( i, j, correl, numused );
+                        this.setCorrel( i, j, correl, numused );
                     }
                 }
                 ++numComputed;
 
             }
-            computeRow( timer, itemA, numComputed, i );
+            this.computeRow( timer, itemA, numComputed, i );
         }
-        log.info( skipped + " rows skipped, where probe lacks a gene annotation" );
-        finishMetrics();
+        AbstractMatrixRowPairAnalysis.log.info( skipped + " rows skipped, where probe lacks a gene annotation" );
+        this.finishMetrics();
     }
 
     @Override
@@ -212,6 +212,40 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
         m.setScale( ScaleType.LINEAR );
         return m;
 
+    }
+
+    /**
+     * Calculate mean and sumsqsqrt for each row
+     */
+    @Override
+    protected void rowStatistics() {
+        int numrows = dataMatrix.rows();
+        this.rowMeans = new double[numrows];
+        this.rowSumSquaresSqrt = new double[numrows];
+        for ( int i = 0, numcols = dataMatrix.columns(); i < numrows; i++ ) {
+            double ax = 0.0;
+            double sxx = 0.0;
+            for ( int j = 0; j < numcols; j++ ) {
+                ax += this.dataMatrix.get( i, j );
+            }
+            rowMeans[i] = ( ax / numcols );
+
+            for ( int j = 0; j < numcols; j++ ) {
+                double xt = this.dataMatrix.get( i, j ) - rowMeans[i]; /* deviation from mean */
+                sxx += xt * xt; /* sum of squared error */
+            }
+            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
+        }
+    }
+
+    @Override
+    protected double correlFast( double[] ival, double[] jval, int i, int j ) {
+        double ssi = rowSumSquaresSqrt[i];
+        double ssj = rowSumSquaresSqrt[j];
+        double mi = rowMeans[i];
+        double mj = rowMeans[j];
+
+        return this.correlFast( ival, jval, ssi, ssj, mi, mj );
     }
 
     double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
@@ -250,40 +284,6 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
         return c;
     }
 
-    @Override
-    protected double correlFast( double[] ival, double[] jval, int i, int j ) {
-        double ssi = rowSumSquaresSqrt[i];
-        double ssj = rowSumSquaresSqrt[j];
-        double mi = rowMeans[i];
-        double mj = rowMeans[j];
-
-        return correlFast( ival, jval, ssi, ssj, mi, mj );
-    }
-
-    /**
-     * Calculate mean and sumsqsqrt for each row
-     */
-    @Override
-    protected void rowStatistics() {
-        int numrows = dataMatrix.rows();
-        this.rowMeans = new double[numrows];
-        this.rowSumSquaresSqrt = new double[numrows];
-        for ( int i = 0, numcols = dataMatrix.columns(); i < numrows; i++ ) {
-            double ax = 0.0;
-            double sxx = 0.0;
-            for ( int j = 0; j < numcols; j++ ) {
-                ax += this.dataMatrix.get( i, j );
-            }
-            rowMeans[i] = ( ax / numcols );
-
-            for ( int j = 0; j < numcols; j++ ) {
-                double xt = this.dataMatrix.get( i, j ) - rowMeans[i]; /* deviation from mean */
-                sxx += xt * xt; /* sum of squared error */
-            }
-            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
-        }
-    }
-
     /**
      * Calculate a linear correlation matrix for a matrix. Use this if you know there are no missing values, or don't
      * care about NaNs. Rows that are not mapped to genes are skipped.
@@ -295,7 +295,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
 
         double[][] data = new double[][] {};
         if ( docalcs ) {
-            rowStatistics();
+            this.rowStatistics();
 
             // Temporarily put the data in this matrix (performance)
             data = new double[numrows][numcols];
@@ -314,9 +314,9 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
         timer.start();
         int skipped = 0;
         int numComputed = 0;
-        skipped = computeMetrics( numrows, numcols, docalcs, timer, skipped, numComputed, data );
-        log.info( skipped + " rows skipped, due to no gene association" );
-        finishMetrics();
+        skipped = this.computeMetrics( numrows, numcols, docalcs, timer, skipped, numComputed, data );
+        AbstractMatrixRowPairAnalysis.log.info( skipped + " rows skipped, due to no gene association" );
+        this.finishMetrics();
     }
 
 }

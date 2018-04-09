@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -26,7 +26,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -38,15 +37,15 @@ import java.util.regex.Pattern;
  *
  * @author paul
  */
-public class BatchInfoParser {
+class BatchInfoParser {
 
-    private static Log log = LogFactory.getLog( BatchInfoParser.class );
+    private static final Log log = LogFactory.getLog( BatchInfoParser.class );
 
     private ScanDateExtractor scanDateExtractor = null;
 
     public Map<BioMaterial, Date> getBatchInfo( ExpressionExperiment ee, Collection<LocalFile> files ) {
 
-        Map<String, BioAssay> assayAccessions = getAccessionToBioAssayMap( ee );
+        Map<String, BioAssay> assayAccessions = this.getAccessionToBioAssayMap( ee );
 
         if ( assayAccessions.isEmpty() ) {
             throw new UnsupportedOperationException(
@@ -54,7 +53,7 @@ public class BatchInfoParser {
                             + ee.getShortName() );
         }
 
-        Map<BioAssay, File> bioAssays2Files = matchBioAssaysToRawDataFiles( files, assayAccessions );
+        Map<BioAssay, File> bioAssays2Files = this.matchBioAssaysToRawDataFiles( files, assayAccessions );
 
         /*
          * Check if we should go on
@@ -67,7 +66,7 @@ public class BatchInfoParser {
                  */
                 for ( BioAssay ba : bioAssays2Files.keySet() ) {
                     if ( !assayAccessions.containsKey( ba.getAccession().getAccession() ) ) {
-                        log.warn( "Missing raw data file for " + ba + " on " + ee.getShortName() );
+                        BatchInfoParser.log.warn( "Missing raw data file for " + ba + " on " + ee.getShortName() );
                     }
                 }
             }
@@ -77,9 +76,7 @@ public class BatchInfoParser {
                             .size() + " while processing " + ee.getShortName() );
         }
 
-        Map<BioMaterial, Date> result = getBatchInformationFromFiles( bioAssays2Files );
-
-        return result;
+        return this.getBatchInformationFromFiles( bioAssays2Files );
     }
 
     /**
@@ -91,7 +88,7 @@ public class BatchInfoParser {
     }
 
     private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
-        Map<String, BioAssay> assayAccessions = new HashMap<String, BioAssay>();
+        Map<String, BioAssay> assayAccessions = new HashMap<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             DatabaseEntry accession = ba.getAccession();
             // ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
@@ -120,16 +117,16 @@ public class BatchInfoParser {
      */
     private Map<BioMaterial, Date> getBatchInformationFromFiles( Map<BioAssay, File> bioAssays2Files ) {
 
-        Map<BioMaterial, Date> result = new HashMap<BioMaterial, Date>();
-        Collection<File> missingDate = new HashSet<File>();
+        Map<BioMaterial, Date> result = new HashMap<>();
+        Collection<File> missingDate = new HashSet<>();
         for ( BioAssay ba : bioAssays2Files.keySet() ) {
             File f = bioAssays2Files.get( ba );
 
             ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
 
-            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );) {
+            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
 
-                locateExtractor( arrayDesignUsed, ba, f );
+                this.locateExtractor( arrayDesignUsed, ba, f );
 
                 Date d = scanDateExtractor.extract( is );
 
@@ -142,14 +139,8 @@ public class BatchInfoParser {
                 BioMaterial bm = ba.getSampleUsed();
                 result.put( bm, d );
 
-            } catch ( FileNotFoundException e ) {
-                log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
-                missingDate.add( f );
-            } catch ( IOException e ) {
-                log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
-                missingDate.add( f );
-            } catch ( RuntimeException e ) {
-                log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
+            } catch ( RuntimeException | IOException e ) {
+                BatchInfoParser.log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
                 missingDate.add( f );
             }
 
@@ -160,9 +151,9 @@ public class BatchInfoParser {
         }
 
         if ( missingDate.size() > 0 ) {
-            log.warn( "Dates were not obtained for " + missingDate + " files: " );
+            BatchInfoParser.log.warn( "Dates were not obtained for " + missingDate + " files: " );
             for ( File f : missingDate ) {
-                log.info( "Missing date for: " + f.getName() );
+                BatchInfoParser.log.info( "Missing date for: " + f.getName() );
             }
         }
 
@@ -188,7 +179,7 @@ public class BatchInfoParser {
                 /*
                  * We'll give it a try.
                  */
-                log.info( "Looks like an Illumina spotted array with GPR formatted scan file: " + f );
+                BatchInfoParser.log.info( "Looks like an Illumina spotted array with GPR formatted scan file: " + f );
                 scanDateExtractor = new GenericScanFileDateExtractor();
             } else {
                 /*
@@ -200,7 +191,7 @@ public class BatchInfoParser {
                                 + "(Illumina files do not contain dates)" );
             }
         } else {
-            log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
+            BatchInfoParser.log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
             scanDateExtractor = new GenericScanFileDateExtractor();
         }
     }
@@ -213,12 +204,13 @@ public class BatchInfoParser {
      * @param assayAccessions accessions
      * @return map
      */
+    @SuppressWarnings("StatementWithEmptyBody") // Better readability
     private Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files,
             Map<String, BioAssay> assayAccessions ) {
 
         Pattern regex = Pattern.compile( "(GSM[0-9]+).+" );
 
-        Map<BioAssay, File> bioAssays2Files = new HashMap<BioAssay, File>();
+        Map<BioAssay, File> bioAssays2Files = new HashMap<>();
         for ( LocalFile file : files ) {
             File f = file.asFile();
 
@@ -261,13 +253,13 @@ public class BatchInfoParser {
                  * .txt files can be either good or bad. (We could do this check earlier)
                  */
                 if ( bioAssays2Files.get( ba ).getName().toUpperCase().contains( ".CEL" ) ) {
-                    log.debug( "Retaining CEL file, ignoring " + f.getName() );
+                    BatchInfoParser.log.debug( "Retaining CEL file, ignoring " + f.getName() );
                     continue;
                 } else if ( f.getName().toUpperCase().contains( ".CEL" ) ) {
                     // we displace the old file with this CEL file, but there is no need to warn.
                 } else {
-                    log.warn( "Multiple files matching " + ba + ": " + bioAssays2Files.get( ba ) + "; using new file: "
-                            + f );
+                    BatchInfoParser.log.warn( "Multiple files matching " + ba + ": " + bioAssays2Files.get( ba )
+                            + "; using new file: " + f );
                 }
             }
             bioAssays2Files.put( ba, f );

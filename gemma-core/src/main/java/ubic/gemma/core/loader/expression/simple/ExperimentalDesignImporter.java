@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,9 +55,6 @@ import java.io.InputStream;
  */
 public interface ExperimentalDesignImporter {
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException;
-
     /**
      * This is the main builder director method of the application: It processes the input file containing information
      * about the experimental design for a given expression experiment. There are 3 main steps in the workflow:
@@ -82,11 +79,10 @@ public interface ExperimentalDesignImporter {
      *
      * @param experiment the one to add the experimental design
      * @param is         File to process
-     * @param dryRun     boolean a bit redundant dry run
      * @see ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter
      * #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException;
+    void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException;
 
 }

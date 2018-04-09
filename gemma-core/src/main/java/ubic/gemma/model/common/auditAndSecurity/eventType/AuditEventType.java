@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,21 +36,7 @@ public abstract class AuditEventType implements Serializable {
     public AuditEventType() {
     }
 
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof AuditEventType ) ) {
-            return false;
-        }
-        final AuditEventType that = ( AuditEventType ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public Long getId() {
         return this.id;
     }
@@ -67,8 +53,22 @@ public abstract class AuditEventType implements Serializable {
     @Override
     public int hashCode() {
         int hashCode = 0;
+        //noinspection ConstantConditions // Hibernate populates id through reflection
         hashCode = 29 * ( hashCode + ( id == null ? 0 : id.hashCode() ) );
         return hashCode;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof AuditEventType ) ) {
+            return false;
+        }
+        final AuditEventType that = ( AuditEventType ) object;
+        //noinspection ConstantConditions // Hibernate populates id through reflection
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
 }

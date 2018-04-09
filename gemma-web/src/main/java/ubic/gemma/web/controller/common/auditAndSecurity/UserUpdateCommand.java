@@ -59,11 +59,9 @@ public class UserUpdateCommand {
             return false;
         UserUpdateCommand other = ( UserUpdateCommand ) obj;
         if ( user == null ) {
-            if ( other.user != null )
-                return false;
-        } else if ( !user.equals( other.user ) )
-            return false;
-        return true;
+            return other.user == null;
+        } else
+            return user.equals( other.user );
     }
 
     public Boolean getAdminUser() {

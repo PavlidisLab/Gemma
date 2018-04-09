@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,13 +38,44 @@ import java.util.Map;
  */
 @Component
 public class MailEngineImpl implements MailEngine {
-    protected static final Log log = LogFactory.getLog( MailEngineImpl.class );
+    private static final Log log = LogFactory.getLog( MailEngineImpl.class );
 
     @Autowired
     private MailSender mailSender;
 
     @Autowired
     private VelocityEngine velocityEngine;
+
+    /**
+     * Sends a message to the gemma administrator as defined in the Gemma.properties file
+     */
+    @Override
+    public void sendAdminMessage( String bodyText, String subject ) {
+
+        if ( ( bodyText == null ) && ( subject == null ) ) {
+            MailEngineImpl.log.warn( "Not sending empty email, both subject and body are null" );
+            return;
+        }
+
+        MailEngineImpl.log.info( "Sending email notification to administrator regarding: " + subject );
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo( Settings.getAdminEmailAddress() );
+        msg.setFrom( Settings.getAdminEmailAddress() );
+        msg.setSubject( subject );
+        msg.setText( bodyText );
+        this.send( msg );
+    }
+
+    @Override
+    public void send( SimpleMailMessage msg ) {
+        try {
+            mailSender.send( msg );
+        } catch ( MailException ex ) {
+            // log it and go on
+            MailEngineImpl.log.error( ex.getMessage(), ex );
+            MailEngineImpl.log.debug( ex, ex );
+        }
+    }
 
     @Override
     public void sendMessage( SimpleMailMessage msg, String templateName, Map<String, Object> model ) {
@@ -58,37 +89,6 @@ public class MailEngineImpl implements MailEngine {
         }
 
         msg.setText( result );
-        send( msg );
-    }
-
-    @Override
-    public void send( SimpleMailMessage msg ) {
-        try {
-            mailSender.send( msg );
-        } catch ( MailException ex ) {
-            // log it and go on
-            log.error( ex.getMessage(), ex );
-            log.debug( ex, ex );
-        }
-    }
-
-    /**
-     * Sends a message to the gemma administrator as defined in the Gemma.properties file
-     */
-    @Override
-    public void sendAdminMessage( String bodyText, String subject ) {
-
-        if ( ( bodyText == null ) && ( subject == null ) ) {
-            log.warn( "Not sending empty email, both subject and body are null" );
-            return;
-        }
-
-        log.info( "Sending email notification to administrator regarding: " + subject );
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo( Settings.getAdminEmailAddress() );
-        msg.setFrom( Settings.getAdminEmailAddress() );
-        msg.setSubject( subject );
-        msg.setText( bodyText );
         this.send( msg );
     }
 }

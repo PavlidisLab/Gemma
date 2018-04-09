@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,13 +18,8 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.basecode.dataStructure.matrix.StringMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -34,22 +29,23 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * @author pavlidis
- *
  */
 public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String> {
 
-    private static Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
-
     private static final long serialVersionUID = 1L;
-
+    private static final Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
     private StringMatrix<Integer, Integer> matrix;
 
     public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        init();
-        selectVectors( vectors );
-        vectorsToMatrix( vectors );
+        this.init();
+        this.selectVectors( vectors );
+        this.vectorsToMatrix( vectors );
     }
 
     @SuppressWarnings("unused")
@@ -86,44 +82,22 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         return matrix.get( row, column );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
-     */
     @Override
     public String[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.
-     * BioAssay)
-     */
     @Override
     public String[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
         return this.getColumn( index );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
-     */
     @Override
     public String[] getColumn( Integer index ) {
         return this.matrix.getColumn( index );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
-     */
     @Override
     public String[][] getColumns( List<BioAssay> bioAssays ) {
         String[][] res = new String[bioAssays.size()][];
@@ -133,28 +107,15 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         return res;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getMatrix()
-     */
     @Override
     public String[][] getRawMatrix() {
-        String[][] res = new String[rows()][];
-        for ( int i = 0; i < rows(); i++ ) {
+        String[][] res = new String[this.rows()][];
+        for ( int i = 0; i < this.rows(); i++ ) {
             res[i] = this.matrix.getRow( i );
         }
         return res;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.
-     * DesignElement
-     * )
-     */
     @Override
     public String[] getRow( CompositeSequence designElement ) {
         return this.matrix.getRow( this.getRowIndex( designElement ) );
@@ -165,31 +126,22 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         return matrix.getRow( index );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
-     */
     @Override
     public String[][] getRows( List<CompositeSequence> designElements ) {
-        String[][] res = new String[rows()][];
+        String[][] res = new String[this.rows()][];
         for ( int i = 0; i < designElements.size(); i++ ) {
             res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
         }
         return res;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
-     */
     @Override
     public boolean hasMissingValues() {
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
                 // Note that blank strings don't count as missing.
-                if ( matrix.get( i, j ) == null ) return true;
+                if ( matrix.get( i, j ) == null )
+                    return true;
             }
         }
         return false;
@@ -211,9 +163,9 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
             throw new IllegalArgumentException( "No vectors!" );
         }
 
-        int maxSize = setUpColumnElements();
+        int maxSize = this.setUpColumnElements();
 
-        this.matrix = createMatrix( vectors, maxSize );
+        this.matrix = this.createMatrix( vectors, maxSize );
     }
 
     private StringMatrix<Integer, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
@@ -266,7 +218,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
         }
 
-        log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
+        ExpressionDataStringMatrix.log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
     }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,17 +43,11 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
     @Autowired
     ArrayDesignService arrayDesignService;
-
-    Auditable auditable;
-    AuditTrail auditTrail;
-    AuditEvent auditEvent0;
-    AuditEvent auditEvent1;
-    AuditEvent auditEvent2;
-    AuditEvent auditEvent3;
-    AuditEvent auditEvent4;
+    private Auditable auditable;
+    private AuditTrail auditTrail;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "test_" + RandomStringUtils.randomAlphabetic( 10 ) );
@@ -64,13 +58,17 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
         auditTrail = AuditTrail.Factory.newInstance();
 
-        auditEvent0 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "ccccc", null, null, null );
+        AuditEvent auditEvent0 = AuditEvent.Factory
+                .newInstance( new Date(), AuditAction.CREATE, "ccccc", null, null, null );
 
-        auditEvent1 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "ddddd", null, null, null );
+        AuditEvent auditEvent1 = AuditEvent.Factory
+                .newInstance( new Date(), AuditAction.CREATE, "ddddd", null, null, null );
 
-        auditEvent2 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "aaaaa", null, null, null );
+        AuditEvent auditEvent2 = AuditEvent.Factory
+                .newInstance( new Date(), AuditAction.CREATE, "aaaaa", null, null, null );
 
-        auditEvent3 = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, "bbbbb", null, null, null );
+        AuditEvent auditEvent3 = AuditEvent.Factory
+                .newInstance( new Date(), AuditAction.CREATE, "bbbbb", null, null, null );
 
         auditTrail.addEvent( auditEvent0 );
         auditTrail.addEvent( auditEvent1 );

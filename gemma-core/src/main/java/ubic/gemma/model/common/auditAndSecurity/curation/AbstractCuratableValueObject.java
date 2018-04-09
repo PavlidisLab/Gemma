@@ -14,7 +14,7 @@ import java.util.Date;
  * Abstract curatable value object that provides variables and methods for data stored in CurationDetails objects on
  * curatable objects.
  */
-@SuppressWarnings("WeakerAccess") // Used in front end
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C>
         implements Comparable<AbstractCuratableValueObject<C>> {
 
@@ -156,7 +156,7 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
     }
 
     public String getTroubleDetails( boolean htmlEscape ) {
-        String details = TROUBLE_DETAILS_NONE;
+        String details = AbstractCuratableValueObject.TROUBLE_DETAILS_NONE;
         if ( this.getTroubled() ) {
             if ( this.getLastTroubledEvent() == null ) {
                 Log.warn( this, "Curatable object is troubled, but has no trouble event! Id: " + this.getId() );

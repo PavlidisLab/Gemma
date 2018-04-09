@@ -10,7 +10,7 @@ public class GeneOntologyTermValueObject {
     private String comment;
     private String localName;
     private String term;
-    private boolean isObsolete = false;
+    private boolean isObsolete;
 
     public GeneOntologyTermValueObject( String goId, OntologyTerm term ) {
         this.goId = goId;

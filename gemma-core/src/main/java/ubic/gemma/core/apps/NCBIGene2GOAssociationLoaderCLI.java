@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Taxon;
@@ -48,10 +49,9 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         NCBIGene2GOAssociationLoaderCLI p = new NCBIGene2GOAssociationLoaderCLI();
-        try {
-            p.doWork( args );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+        Exception e = p.doWork( args );
+        if ( e != null ) {
+            e.printStackTrace();
         }
     }
 
@@ -60,30 +60,20 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
         return "updateGOAnnots";
     }
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.SYSTEM;
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Update GO annotations";
-    }
-
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" )
                 .withDescription( "Optional location of the gene2go.gz file" ).withLongOpt( "file" ).create( 'f' );
 
-        addOption( pathOption );
+        this.addOption( pathOption );
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception e = processCommandLine( args );
+        Exception e = this.processCommandLine( args );
         if ( e != null ) {
-            log.error( e );
+            AbstractCLI.log.error( e );
             return e;
         }
 
@@ -99,13 +89,13 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
 
         HttpFetcher fetcher = new HttpFetcher();
 
-        Collection<LocalFile> files = null;
+        Collection<LocalFile> files;
         if ( filePath != null ) {
             File f = new File( filePath );
             if ( !f.canRead() ) {
                 return new IOException( "Cannot read from " + filePath );
             }
-            files = new HashSet<LocalFile>();
+            files = new HashSet<>();
             LocalFile lf = LocalFile.Factory.newInstance();
             try {
                 lf.setLocalURL( f.toURI().toURL() );
@@ -114,27 +104,37 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
             }
             files.add( lf );
         } else {
-            files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/" + GENE2GO_FILE );
+            files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/" + NCBIGene2GOAssociationLoaderCLI.GENE2GO_FILE );
         }
         assert files.size() == 1;
         LocalFile gene2Gofile = files.iterator().next();
         Gene2GOAssociationService ggoserv = this.getBean( Gene2GOAssociationService.class );
-        log.info( "Removing all old GO associations" );
+        AbstractCLI.log.info( "Removing all old GO associations" );
         ggoserv.removeAll();
 
-        log.info( "Done, loading new ones" );
+        AbstractCLI.log.info( "Done, loading new ones" );
         gene2GOAssLoader.load( gene2Gofile );
 
-        log.info( "Don't forget to update the annotation files for platforms." );
+        AbstractCLI.log.info( "Don't forget to update the annotation files for platforms." );
 
         return null;
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Update GO annotations";
+    }
+
+    @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'f' ) ) {
-            filePath = getOptionValue( 'f' );
+        if ( this.hasOption( 'f' ) ) {
+            filePath = this.getOptionValue( 'f' );
         }
     }
 }

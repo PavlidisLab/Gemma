@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -82,10 +82,10 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
             vo = new BibliographicReferenceValueObject( ( BibliographicReference ) persisterHelper.persist( bibRef ) );
-            saveMessage( request, "Added " + pubMedId + " to the system." );
+            this.saveMessage( request, "Added " + pubMedId + " to the system." );
         } else if ( StringUtils.isNotBlank( request.getParameter( "refresh" ) ) ) {
             vo = this.update( pubMedId );
-            saveMessage( request, "Updated record for pubmed id " + pubMedId );
+            this.saveMessage( request, "Updated record for pubmed id " + pubMedId );
         } else {
             throw new IllegalArgumentException( "Action not understood" );
         }
@@ -98,7 +98,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
     public JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch ) {
 
         Integer count = this.bibliographicReferenceService.countAll();
-        List<BibliographicReference> records = getBatch( batch );
+        List<BibliographicReference> records = this.getBatch( batch );
         Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
                 .getRelatedExperiments( records );
 
@@ -110,7 +110,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( ref );
 
             if ( relatedExperiments.containsKey( ref ) ) {
-                vo.setExperiments(expressionExperimentService.loadValueObjects( relatedExperiments.get( ref ) ) );
+                vo.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments.get( ref ) ) );
             }
             valueObjects.add( vo );
 
@@ -140,11 +140,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
             String message = "There is no reference with accession=" + pubMedId + " in the system any more.";
-            saveMessage( request, message );
+            this.saveMessage( request, message );
             return new ModelAndView( "bibRefView" ).addObject( "errors", message );
         }
 
-        return doDelete( request, bibRef );
+        return this.doDelete( request, bibRef );
     }
 
     @Override
@@ -168,8 +168,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 .getAllExperimentLinkedReferences();
         Collection<BibliographicReference> bibRefs = eeToBibRefs.values();
 
-        return BibliographicReferenceValueObject
-                .convert2ValueObjects( bibRefs );
+        return BibliographicReferenceValueObject.convert2ValueObjects( bibRefs );
     }
 
     @Override
@@ -199,17 +198,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return new ModelAndView( "bibRefList" );
     }
 
-    /**
-     * @param bibliographicReferenceService The bibliographicReferenceService to set.
-     */
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
     @Override
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" );
@@ -234,11 +222,11 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             }
         }
 
-        // bibRef = bibliographicReferenceService.thaw( bibRef );
+        // bibRef = bibliographicReferenceService.thawRawAndProcessed( bibRef );
         // BibliographicReferenceValueObject bibRefVO = new BibliographicReferenceValueObject( bibRef );
 
         boolean isIncomplete = bibRef.getPublicationDate() == null;
-        addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
+        this.addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
         return new ModelAndView( "bibRefView" ).addObject( "bibliographicReferenceId", bibRef.getId() )
                 .addObject( "existsInSystem", Boolean.TRUE ).addObject( "incompleteEntry", isIncomplete )
                 .addObject( "byAccession", Boolean.TRUE ).addObject( "accession", pubMedId );
@@ -280,10 +268,21 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return new BibliographicReferenceValueObject( this.bibliographicReferenceService.refresh( pubMedId ) );
     }
 
+    /**
+     * @param bibliographicReferenceService The bibliographicReferenceService to set.
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    public void setPersisterHelper( Persister persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
         bibliographicReferenceService.remove( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-        addMessage( request, "object.deleted",
+        this.addMessage( request, "object.deleted",
                 new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
         return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
     }

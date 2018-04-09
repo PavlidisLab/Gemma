@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,8 +60,8 @@ public class PrincipalTest extends BaseSpringContextTest {
     @Before
     public void before() {
 
-        pwd = randomName();
-        username = randomName();
+        pwd = this.randomName();
+        username = this.randomName();
         email = username + "@foo.foo";
         if ( !userManager.userExists( username ) ) {
 
@@ -72,8 +72,8 @@ public class PrincipalTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testChangePassword() throws Exception {
-        String newpwd = randomName();
+    public final void testChangePassword() {
+        String newpwd = this.randomName();
         String encodedPassword = passwordEncoder.encodePassword( newpwd, username );
 
         String token = userManager.changePasswordForUser( email, username, encodedPassword );
@@ -93,7 +93,7 @@ public class PrincipalTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testLogin() throws Exception {
+    public final void testLogin() {
         Authentication auth = new UsernamePasswordAuthenticationToken( username, pwd );
 
         Authentication authentication = ( authenticationManager ).authenticate( auth );
@@ -101,7 +101,7 @@ public class PrincipalTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testLoginNonexistentUser() throws Exception {
+    public final void testLoginNonexistentUser() {
         Authentication auth = new UsernamePasswordAuthenticationToken( "bad user", "wrong password" );
 
         try {
@@ -113,7 +113,7 @@ public class PrincipalTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testLoginWrongPassword() throws Exception {
+    public final void testLoginWrongPassword() {
         Authentication auth = new UsernamePasswordAuthenticationToken( username, "wrong password" );
 
         try {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,15 +34,17 @@ public abstract class BioAssaySet extends Investigation {
 
     private static final long serialVersionUID = 2368063046639481521L;
 
-    protected Collection<BioAssay> bioAssays = new HashSet<>();
+    Collection<BioAssay> bioAssays = new HashSet<>();
 
-    public Collection<BioAssay> getBioAssays() {
-        return bioAssays;
-    }
+    @SuppressWarnings("JpaAttributeTypeInspection") // Inspector is not handling this correctly
+    public abstract Collection<BioAssay> getBioAssays();
 
-    public void setBioAssays( Collection<BioAssay> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
+    public abstract void setBioAssays( Collection<BioAssay> bioAssays );
 
+    /**
+     * @return an expression experiment value object
+     * @deprecated use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.
+     */
+    @Deprecated
     public abstract ExpressionExperimentValueObject createValueObject();
 }

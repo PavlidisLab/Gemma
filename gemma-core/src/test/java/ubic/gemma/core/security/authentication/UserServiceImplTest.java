@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,42 +18,33 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
+import org.junit.Before;
+import org.junit.Test;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
+import static org.easymock.EasyMock.*;
 
 /**
  * @author pavlidis
- *
  */
 public class UserServiceImplTest {
-    private UserServiceImpl userService = new UserServiceImpl();
+    private final UserServiceImpl userService = new UserServiceImpl();
+    private final User testUser = User.Factory.newInstance();
     private UserDao userDaoMock;
-    private User testUser = User.Factory.newInstance();
     private Collection<UserGroup> userGroups;
 
-    /*
-     * @see TestCase#setUp()
-     */
     @Before
     public void setUp() {
         userDaoMock = createMock( UserDao.class );
         userService.userDao = userDaoMock;
 
-        UserGroupDao userGroupDaoMock = createMock( UserGroupDao.class );
-        userService.userGroupDao = userGroupDaoMock;
+        userService.userGroupDao = createMock( UserGroupDao.class );
         testUser.setEmail( "foo@bar" );
         testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );
@@ -64,7 +55,7 @@ public class UserServiceImplTest {
         UserGroup group = UserGroup.Factory.newInstance();
         group.setName( "users" );
         group.getGroupMembers().add( testUser );
-        userGroups = new HashSet<UserGroup>();
+        userGroups = new HashSet<>();
         userGroups.add( group );
 
     }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,8 +27,6 @@ import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractDao;
 
-import java.util.List;
-
 /**
  * @author paul
  */
@@ -39,15 +37,6 @@ public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionN
     @Autowired
     public CoexpressionNodeDegreeDaoImpl( SessionFactory sessionFactory ) {
         super( GeneCoexpressionNodeDegree.class, sessionFactory );
-    }
-
-    @Override
-    public void deleteFor( Gene gene ) {
-        //noinspection unchecked
-        List<GeneCoexpressionNodeDegree> existing = this.findByProperty( "gene", gene );
-        if ( existing.isEmpty() )
-            return;
-        this.remove( existing );
     }
 
     @Override

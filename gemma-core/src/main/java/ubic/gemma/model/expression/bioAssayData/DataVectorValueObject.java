@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,6 @@ import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.io.Serializable;
@@ -33,6 +32,7 @@ import java.util.List;
 /**
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> implements Serializable {
 
     private static final long serialVersionUID = 4291090102921066018L;
@@ -40,13 +40,12 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
     static ByteArrayConverter byteArrayConverter;
 
     static {
-        byteArrayConverter = new ByteArrayConverter();
+        DataVectorValueObject.byteArrayConverter = new ByteArrayConverter();
     }
 
-    protected CompositeSequenceValueObject designElement;
-    protected QuantitationTypeValueObject quantitationType;
-    protected ExpressionExperimentValueObject expressionExperiment;
-
+    ExpressionExperimentValueObject expressionExperiment;
+    private CompositeSequenceValueObject designElement;
+    private QuantitationTypeValueObject quantitationType;
     private Collection<Long> genes;
     private BioAssayDimensionValueObject bioAssayDimension;
 
@@ -86,14 +85,19 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         final DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
+        //noinspection SimplifiableIfStatement // Better readability
         if ( id == null ) {
             return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        return true;
+        } else
+            return id.equals( other.id );
+    }
+
+    @Override
+    public String toString() {
+        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
     }
 
     @Override
@@ -102,11 +106,6 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
     }
 
     /**

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,44 +87,45 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+    protected Element invokeInternal( Element requestElement, Document document ) {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        setLocalName( LOCAL_NAME );
+        this.setLocalName( DEDVRankEndpoint.LOCAL_NAME );
         // get ee id's from request
-        Collection<String> eeIdInput = getArrayValues( requestElement, "ee_ids" );
-        Collection<Long> eeIDLong = new HashSet<Long>();
+        Collection<String> eeIdInput = this.getArrayValues( requestElement, "ee_ids" );
+        Collection<Long> eeIDLong = new HashSet<>();
         for ( String id : eeIdInput )
             eeIDLong.add( Long.parseLong( id ) );
 
-        // Need to get and thaw the experiments.
+        // Need to get and thawRawAndProcessed the experiments.
         Collection<ExpressionExperiment> eeInput = expressionExperimentService.load( eeIDLong );
 
         if ( eeInput == null || eeInput.isEmpty() )
-            return buildBadResponse( document, "Expression experiment(s) cannot be found or incorrect input" );
+            return this.buildBadResponse( document, "Expression experiment(s) cannot be found or incorrect input" );
 
         // get gene id's from request
-        Collection<String> geneIdInput = getArrayValues( requestElement, "gene_ids" );
-        Collection<Long> geneIDLong = new HashSet<Long>();
+        Collection<String> geneIdInput = this.getArrayValues( requestElement, "gene_ids" );
+        Collection<Long> geneIDLong = new HashSet<>();
         for ( String id : geneIdInput )
             geneIDLong.add( Long.parseLong( id ) );
         Collection<Gene> geneInput = geneService.load( geneIDLong );
         if ( geneInput == null || geneInput.isEmpty() )
-            return buildBadResponse( document, "Gene(s) cannot be found or incorrect input" );
+            return this.buildBadResponse( document, "Gene(s) cannot be found or incorrect input" );
 
         // get method - max or mean.
-        Collection<String> methodIn = getSingleNodeValue( requestElement, "method" );
+        Collection<String> methodIn = this.getSingleNodeValue( requestElement, "method" );
         // expect one value only
         String methodString = "";
         for ( String type : methodIn )
             methodString = type;
-        RankMethod method = getMethod( methodString );
+        RankMethod method = this.getMethod( methodString );
         if ( method == null )
-            return buildBadResponse( document, "Incorrect method input" );
+            return this.buildBadResponse( document, "Incorrect method input" );
 
-        log.info( "XML input read: " + eeInput.size() + " experiment ids & " + geneInput.size() + " gene ids"
-                + " and method: " + methodString );
+        DEDVRankEndpoint.log
+                .info( "XML input read: " + eeInput.size() + " experiment ids & " + geneInput.size() + " gene ids"
+                        + " and method: " + methodString );
 
         // main call to expressionDataMatrixService to obtain rank results
         DoubleMatrix<Gene, ExpressionExperiment> rankMatrix = expressionDataMatrixService
@@ -132,15 +133,17 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
-        Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
-        Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
+        Element responseWrapper = document
+                .createElementNS( AbstractGemmaEndpoint.NAMESPACE_URI, DEDVRankEndpoint.LOCAL_NAME );
+        Element responseElement = document.createElementNS( AbstractGemmaEndpoint.NAMESPACE_URI,
+                DEDVRankEndpoint.LOCAL_NAME + AbstractGemmaEndpoint.RESPONSE );
         responseWrapper.appendChild( responseElement );
 
         if ( rankMatrix == null )
-            return buildBadResponse( document, "No ranking result" );
+            return this.buildBadResponse( document, "No ranking result" );
 
         // -build single-row Collections to use for ExpressionDataMatrixBuilder
-        // -need to do this so that we can use the .getPrefferedData()
+        // -need to do this so that we can use the .getPreferredData()
         // also necessary to do each data vector at a time because we
         // already have a mapping to the genes
         // of the design elements
@@ -153,7 +156,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
             responseElement.appendChild( e1 );
             double[] rowData = rankMatrix.getRowByName( geneRow );
             Element e2 = document.createElement( "ranks" );
-            e2.appendChild( document.createTextNode( encode( rowData ) ) );
+            e2.appendChild( document.createTextNode( this.encode( rowData ) ) );
             responseElement.appendChild( e2 );
         }
         for ( ExpressionExperiment ee : colNames ) {
@@ -165,7 +168,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         watch.stop();
         Long time = watch.getTime();
 
-        log.debug( "XML response for dedv rank results built in " + time + "ms." );
+        DEDVRankEndpoint.log.debug( "XML response for dedv rank results built in " + time + "ms." );
 
         return responseWrapper;
 
@@ -183,7 +186,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
             if ( i == 0 )
                 result.append( data[i] );
             else
-                result.append( DELIMITER + data[i] );
+                result.append( AbstractGemmaEndpoint.DELIMITER + data[i] );
         }
 
         return result.toString();

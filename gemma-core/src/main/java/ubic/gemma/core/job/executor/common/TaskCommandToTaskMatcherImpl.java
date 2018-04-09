@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,8 +38,6 @@ public class TaskCommandToTaskMatcherImpl implements TaskCommandToTaskMatcher {
         Class<?> taskClass = taskCommand.getTaskClass();
         if ( taskClass == null )
             throw new IllegalArgumentException( "Task is not set for " + taskCommand.getClass().getSimpleName() );
-
-        // TODO: Try using @Configurable and new operator in the future; could use "new" to get autowiring
 
         /*
          * Get instance of the bean that allows running the task. For remote tasks this is run on the worker, for local

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,11 +22,9 @@ package ubic.gemma.model;
 import java.io.Serializable;
 
 /**
- * FIXME only used once, probably should move? Mimics SecuredValueObject.
- * 
  * @author frances
- *
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class BaseValueObject implements Serializable {
 
     /**
@@ -46,39 +44,39 @@ public class BaseValueObject implements Serializable {
         return this.valueObject;
     }
 
+    public void setValueObject( Object valueObject ) {
+        this.valueObject = valueObject;
+    }
+
     public boolean isAccessDenied() {
         return this.accessDenied;
-    }
-
-    public boolean isErrorFound() {
-        return this.errorFound;
-    }
-
-    public boolean isObjectAlreadyRemoved() {
-        return this.objectAlreadyRemoved;
-    }
-
-    public boolean isUserNotLoggedIn() {
-        return this.userNotLoggedIn;
     }
 
     public void setAccessDenied( boolean accessDenied ) {
         this.accessDenied = accessDenied;
     }
 
+    public boolean isErrorFound() {
+        return this.errorFound;
+    }
+
     public void setErrorFound( boolean errorFound ) {
         this.errorFound = errorFound;
+    }
+
+    public boolean isObjectAlreadyRemoved() {
+        return this.objectAlreadyRemoved;
     }
 
     public void setObjectAlreadyRemoved( boolean objectAlreadyRemoved ) {
         this.objectAlreadyRemoved = objectAlreadyRemoved;
     }
 
-    public void setUserNotLoggedIn( boolean userNotLoggedIn ) {
-        this.userNotLoggedIn = userNotLoggedIn;
+    public boolean isUserNotLoggedIn() {
+        return this.userNotLoggedIn;
     }
 
-    public void setValueObject( Object valueObject ) {
-        this.valueObject = valueObject;
+    public void setUserNotLoggedIn( boolean userNotLoggedIn ) {
+        this.userNotLoggedIn = userNotLoggedIn;
     }
 }

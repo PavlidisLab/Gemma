@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,7 @@ import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixServiceImpl;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -42,11 +43,10 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.util.Settings;
 
 import java.util.ArrayList;
@@ -62,59 +62,50 @@ import java.util.List;
  */
 public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
-    protected static final int NUM_DESIGN_ELEMENTS = 100;
-    protected final int NUM_TWA_RESULT_SETS = 3;
+    static final int NUM_DESIGN_ELEMENTS = 100;
+    static final int NUM_TWA_RESULT_SETS = 3;
     private final ByteArrayConverter bac = new ByteArrayConverter();
-    protected List<BioMaterial> biomaterials = null;
 
-    protected boolean connected = false;
-    protected ExperimentalFactor experimentalFactorA_Area = null;
-    protected ExperimentalFactor experimentalFactorB = null;
-    protected List<ExperimentalFactor> experimentalFactors = null;
     @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
-    protected ExpressionExperiment expressionExperiment = null;
+
     @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
-    protected QuantitationType quantitationType = null;
-    protected FactorValue factorValueA1;
-    protected FactorValue factorValueA2;
-    protected FactorValue factorValueB2;
+
+    List<BioMaterial> biomaterials = null;
+    boolean connected = false;
+    ExpressionExperiment expressionExperiment = null;
+
+    ExperimentalFactor experimentalFactorA_Area = null;
+    ExperimentalFactor experimentalFactorB = null;
+    List<ExperimentalFactor> experimentalFactors = null;
+    QuantitationType quantitationType = null;
+    FactorValue factorValueA1;
+    FactorValue factorValueA2;
+    FactorValue factorValueB2;
+
     private ArrayDesign arrayDesign = null;
     private BioAssayDimension bioAssayDimension = null;
     private ExperimentalDesign experimentalDesign = null;
+    @SuppressWarnings("FieldCanBeLocal")
     private BioAssay bioAssay0a = null;
     private BioAssay bioAssay0b = null;
+    @SuppressWarnings("FieldCanBeLocal")
     private BioAssay bioAssay1a = null;
     private BioAssay bioAssay1b = null;
+    @SuppressWarnings("FieldCanBeLocal")
     private BioAssay bioAssay2a = null;
     private BioAssay bioAssay2b = null;
+    @SuppressWarnings("FieldCanBeLocal")
     private BioAssay bioAssay3a = null;
     private BioAssay bioAssay3b = null;
 
     private List<BioAssay> bioAssays = null;
 
-    private BioMaterial biomaterial0a = null;
-    private BioMaterial biomaterial0b = null;
-    private BioMaterial biomaterial1a = null;
-    private BioMaterial biomaterial1b = null;
-    private BioMaterial biomaterial2a = null;
-    private BioMaterial biomaterial2b = null;
-    private BioMaterial biomaterial3a = null;
-    private BioMaterial biomaterial3b = null;
-
-    private Collection<FactorValue> factorValuesA = null;
-    private Collection<FactorValue> factorValuesB = null;
-
     private RClient rc = null;
 
     private Collection<ProcessedExpressionDataVector> vectors = null;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.testing.BaseSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() throws Exception {
 
@@ -143,7 +134,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         arrayDesign.setId( 1L );
         arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
-        arrayDesign.setPrimaryTaxon( getTaxon( "mouse" ) );
+        arrayDesign.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );
@@ -155,7 +146,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         experimentalFactorA_Area.setName( "area" );
         experimentalFactorA_Area.setType( FactorType.CATEGORICAL );
         experimentalFactorA_Area.setId( 5001L );
-        factorValuesA = new HashSet<>();
+        Collection<FactorValue> factorValuesA = new HashSet<>();
 
         factorValueA1 = FactorValue.Factory.newInstance();
         factorValueA1.setId( 1001L );
@@ -188,7 +179,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         experimentalFactorB.setId( 5002L );
         experimentalFactorB.setType( FactorType.CATEGORICAL );
 
-        factorValuesB = new HashSet<>();
+        Collection<FactorValue> factorValuesB = new HashSet<>();
 
         FactorValue factorValueB1 = FactorValue.Factory.newInstance();
         factorValueB1.setValue( "pcp" );
@@ -219,50 +210,50 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         biomaterials = new ArrayList<>();
 
         // 2 replicates
-        biomaterial0a = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial0a = BioMaterial.Factory.newInstance();
         biomaterial0a.setName( "0a" );
         Collection<FactorValue> factorValuesForBioMaterial0 = new HashSet<>();
         factorValuesForBioMaterial0.add( factorValueA1 );
         factorValuesForBioMaterial0.add( factorValueB1 );
         biomaterial0a.getFactorValues().addAll( factorValuesForBioMaterial0 );
 
-        biomaterial0b = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial0b = BioMaterial.Factory.newInstance();
         biomaterial0b.setName( "0b" );
         biomaterial0b.getFactorValues().addAll( factorValuesForBioMaterial0 );
 
         // 2 replicates
-        biomaterial1a = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial1a = BioMaterial.Factory.newInstance();
         biomaterial1a.setName( "1a" );
         Collection<FactorValue> factorValuesForBioMaterial1 = new HashSet<>();
         factorValuesForBioMaterial1.add( factorValueA1 );
         factorValuesForBioMaterial1.add( factorValueB2 );
         biomaterial1a.getFactorValues().addAll( factorValuesForBioMaterial1 );
 
-        biomaterial1b = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial1b = BioMaterial.Factory.newInstance();
         biomaterial1b.setName( "1b" );
         biomaterial1b.getFactorValues().addAll( factorValuesForBioMaterial1 );
 
         // 2 replicates
-        biomaterial2a = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial2a = BioMaterial.Factory.newInstance();
         biomaterial2a.setName( "2a" );
         Collection<FactorValue> factorValuesForBioMaterial2 = new HashSet<>();
         factorValuesForBioMaterial2.add( factorValueA2 );
         factorValuesForBioMaterial2.add( factorValueB1 );
         biomaterial2a.getFactorValues().addAll( factorValuesForBioMaterial2 );
 
-        biomaterial2b = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial2b = BioMaterial.Factory.newInstance();
         biomaterial2b.setName( "2b" );
         biomaterial2b.getFactorValues().addAll( factorValuesForBioMaterial2 );
 
         // 2 replicates
-        biomaterial3a = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial3a = BioMaterial.Factory.newInstance();
         biomaterial3a.setName( "3a" );
         Collection<FactorValue> factorValuesForBioMaterial3 = new HashSet<>();
         factorValuesForBioMaterial3.add( factorValueA2 );
         factorValuesForBioMaterial3.add( factorValueB2 );
         biomaterial3a.getFactorValues().addAll( factorValuesForBioMaterial3 );
 
-        biomaterial3b = BioMaterial.Factory.newInstance();
+        BioMaterial biomaterial3b = BioMaterial.Factory.newInstance();
         biomaterial3b.setName( "3b" );
         biomaterial3b.getFactorValues().addAll( factorValuesForBioMaterial3 );
 
@@ -377,7 +368,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssayDimension.setName( "test bioassay dimension" );
         bioAssayDimension.setBioAssays( bioAssays );
 
-        configureVectors( biomaterials, null );
+        this.configureVectors( biomaterials, null );
     }
 
     @After
@@ -387,29 +378,21 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     /**
-     * Mocks the method getVectors in the {@link ExpressionDataMatrixServiceImpl}.
+     * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
      *
      * @param numMethodCalls The number of times the mocked method will be called.
      */
-    protected void configureMockAnalysisServiceHelper( int numMethodCalls ) {
-        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixServiceImpl.class );
-
-        org.easymock.EasyMock
-                .expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
+    void configureMockAnalysisServiceHelper( int numMethodCalls ) {
+        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
+        EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
                 .andReturn( new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
-        org.easymock.EasyMock
-                .expect( expressionDataMatrixService.getProcessedExpressionDataVectors( expressionExperiment ) )
-                .andReturn( this.vectors ).times( numMethodCalls );
         EasyMock.replay( expressionDataMatrixService );
     }
-
-
-    protected abstract void configureMocks() throws Exception;
 
     /**
      * Configure the test data for one way anova.
      */
-    protected void configureTestDataForOneWayAnova() throws Exception {
+    void configureTestDataForOneWayAnova() throws Exception {
 
         /*
          * This really configures it for a t-test, which is just a one way anova if there are only 2 factor values
@@ -433,7 +416,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         biomaterials = updatedBiomaterials;
 
-        configureVectors( biomaterials, null );
+        this.configureVectors( biomaterials, null );
 
         experimentalFactors.remove( experimentalFactorA_Area );
         experimentalDesign.setExperimentalFactors( experimentalFactors );
@@ -444,7 +427,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * Configure the test data for two way anova without interactions that isn't valid for a two-way. F
      * Removes the replicates.
      */
-    protected void configureTestDataForTwoWayAnovaWithoutInteractions() throws Exception {
+    void configureTestDataForTwoWayAnovaWithoutInteractions() throws Exception {
 
         log.info( "Configuring test data for two way anova without interactions." );
 
@@ -464,12 +447,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             biomaterials.add( b.getSampleUsed() );
         }
 
-        configureVectors( biomaterials, null );
+        this.configureVectors( biomaterials, null );
 
     }
 
-
-    protected void configureVectors( List<BioMaterial> bioMaterials, String resourcePath ) throws Exception {
+    void configureVectors( List<BioMaterial> bioMaterials, String resourcePath ) throws Exception {
         this.vectors = new HashSet<>();
 
         DoubleMatrixReader r = new DoubleMatrixReader();
@@ -485,7 +467,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         // RandomData randomData = new RandomDataImpl( new MersenneTwister( 0 ) ); // fixed seed - important!
 
         Collection<CompositeSequence> compositeSequences = new HashSet<>();
-        for ( int i = 0; i < NUM_DESIGN_ELEMENTS; i++ ) {
+        for ( int i = 0; i < BaseAnalyzerConfigurationTest.NUM_DESIGN_ELEMENTS; i++ ) {
             ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
             vector.setBioAssayDimension( bioAssayDimension );
             vector.setQuantitationType( quantitationType );

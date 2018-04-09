@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,15 +46,12 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
      */
     private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 13;
 
-    Collection<NCBIGene2Accession> results = new HashSet<NCBIGene2Accession>();
-
-    BlockingQueue<NcbiGeneData> queue = null;
-
-    String lastGeneId = null;
-    // a grouping of Gene2Accessions with the same gene Id
-    NcbiGeneData geneData = new NcbiGeneData();
+    private final Collection<NCBIGene2Accession> results = new HashSet<>();
     Map<String, NCBIGeneInfo> geneInfo = null;
-
+    private BlockingQueue<NcbiGeneData> queue = null;
+    private String lastGeneId = null;
+    // a grouping of Gene2Accessions with the same gene Id
+    private NcbiGeneData geneData = new NcbiGeneData();
     private int count = 0;
 
     private Integer startingNcbiId = null;
@@ -84,19 +81,19 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
     public NCBIGene2Accession parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
-        if ( fields.length < NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
+        if ( fields.length < NcbiGene2AccessionParser.NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
             throw new IllegalArgumentException(
                     "Line is not in the right format: has " + fields.length + " fields, expected "
-                            + NCBI_GENE2ACCESSION_FIELDS_PER_ROW );
+                            + NcbiGene2AccessionParser.NCBI_GENE2ACCESSION_FIELDS_PER_ROW );
         }
 
-        NCBIGene2Accession currentAccession = processFields( fields );
+        NCBIGene2Accession currentAccession = this.processFields( fields );
 
         if ( currentAccession == null ) {
             return null;
         }
 
-        addResult( currentAccession ); // really doesn't serve much of a purpose
+        this.addResult( currentAccession ); // really doesn't serve much of a purpose
 
         /*
          * Only some genes are relevant - for example, we might have filtered them by taxon.
@@ -129,6 +126,60 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
 
         // this will be a trailing accession.?
         return currentAccession;
+    }
+
+    @Override
+    public Collection<NCBIGene2Accession> getResults() {
+        return results;
+    }
+
+    /*
+     * This has been overridden to add postprocessing to the gene2accession file. This involves adding the
+     * last gene that had accessions (if available) and adding the remaining genes without accessions
+     *
+     */
+    @Override
+    public void parse( InputStream is ) throws IOException {
+        if ( startingNcbiId == null )
+            hasStarted = true;
+        super.parse( is );
+
+        // add last gene with an accession
+        if ( geneData.getGeneInfo() != null ) {
+            try {
+                queue.put( geneData );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
+            }
+            geneInfo.remove( lastGeneId );
+        }
+        // add remaining genes
+        // push in remaining genes that did not have accessions
+        Collection<NCBIGeneInfo> remainingGenes = geneInfo.values();
+        for ( NCBIGeneInfo o : remainingGenes ) {
+            NcbiGeneData geneCollection = new NcbiGeneData();
+            geneCollection.setGeneInfo( o );
+            try {
+                queue.put( geneCollection );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException();
+            }
+        }
+    }
+
+    @Override
+    protected void addResult( NCBIGene2Accession obj ) {
+        count++;
+        // results.add( ( NCBIGene2Accession ) obj );
+        // no-op - save memory as we use a queue instead.
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setStartingNbiId( Integer startingNcbiId ) {
+        this.startingNcbiId = startingNcbiId;
     }
 
     private NCBIGene2Accession processFields( String[] fields ) {
@@ -191,14 +242,17 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             String rnaAccession = newGene.getRnaNucleotideAccession();
             if ( StringUtils.isNotBlank( rnaAccession ) ) {
                 String[] tokens = StringUtils.splitPreserveAllTokens( rnaAccession, '.' );
-                if ( tokens.length == 1 ) {
-                    newGene.setRnaNucleotideAccession( tokens[0] );
-                    newGene.setRnaNucleotideAccessionVersion( null );
-                } else if ( tokens.length == 2 ) {
-                    newGene.setRnaNucleotideAccession( tokens[0] );
-                    newGene.setRnaNucleotideAccessionVersion( tokens[1] );
-                } else {
-                    throw new UnsupportedOperationException( "Don't know how to deal with " + rnaAccession );
+                switch ( tokens.length ) {
+                    case 1:
+                        newGene.setRnaNucleotideAccession( tokens[0] );
+                        newGene.setRnaNucleotideAccessionVersion( null );
+                        break;
+                    case 2:
+                        newGene.setRnaNucleotideAccession( tokens[0] );
+                        newGene.setRnaNucleotideAccessionVersion( tokens[1] );
+                        break;
+                    default:
+                        throw new UnsupportedOperationException( "Don't know how to deal with " + rnaAccession );
                 }
             } else {
                 newGene.setRnaNucleotideAccessionVersion( null );
@@ -209,14 +263,17 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             String proteinAccession = newGene.getProteinAccession();
             if ( StringUtils.isNotBlank( proteinAccession ) ) {
                 String[] tokens = StringUtils.splitPreserveAllTokens( proteinAccession, '.' );
-                if ( tokens.length == 1 ) {
-                    newGene.setProteinAccession( tokens[0] );
-                    newGene.setProteinAccessionVersion( null );
-                } else if ( tokens.length == 2 ) {
-                    newGene.setProteinAccession( tokens[0] );
-                    newGene.setProteinAccessionVersion( tokens[1] );
-                } else {
-                    throw new UnsupportedOperationException( "Don't know how to deal with " + proteinAccession );
+                switch ( tokens.length ) {
+                    case 1:
+                        newGene.setProteinAccession( tokens[0] );
+                        newGene.setProteinAccessionVersion( null );
+                        break;
+                    case 2:
+                        newGene.setProteinAccession( tokens[0] );
+                        newGene.setProteinAccessionVersion( tokens[1] );
+                        break;
+                    default:
+                        throw new UnsupportedOperationException( "Don't know how to deal with " + proteinAccession );
                 }
             } else {
                 newGene.setProteinAccessionVersion( null );
@@ -227,14 +284,17 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             String genomicAccession = newGene.getGenomicNucleotideAccession();
             if ( StringUtils.isNotBlank( genomicAccession ) ) {
                 String[] tokens = StringUtils.splitPreserveAllTokens( genomicAccession, '.' );
-                if ( tokens.length == 1 ) {
-                    newGene.setGenomicNucleotideAccession( tokens[0] );
-                    newGene.setGenomicNucleotideAccessionVersion( null );
-                } else if ( tokens.length == 2 ) {
-                    newGene.setGenomicNucleotideAccession( tokens[0] );
-                    newGene.setGenomicNucleotideAccessionVersion( tokens[1] );
-                } else {
-                    throw new UnsupportedOperationException( "Don't know how to deal with " + genomicAccession );
+                switch ( tokens.length ) {
+                    case 1:
+                        newGene.setGenomicNucleotideAccession( tokens[0] );
+                        newGene.setGenomicNucleotideAccessionVersion( null );
+                        break;
+                    case 2:
+                        newGene.setGenomicNucleotideAccession( tokens[0] );
+                        newGene.setGenomicNucleotideAccessionVersion( tokens[1] );
+                        break;
+                    default:
+                        throw new UnsupportedOperationException( "Don't know how to deal with " + genomicAccession );
                 }
             } else {
                 newGene.setGenomicNucleotideAccessionVersion( null );
@@ -245,61 +305,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             throw new RuntimeException( e );
         }
         return newGene;
-    }
-
-    /*
-     * (non-Javadoc) This has been overriden to add postprocessing to the gene2accession file. This involves adding the
-     * last gene that had accessions (if available) and adding the remaining genes without accessions
-     * 
-     * @see ubic.gemma.core.loader.util.parser.BasicLineParser#parse(java.io.InputStream)
-     */
-    @Override
-    public void parse( InputStream is ) throws IOException {
-        if ( startingNcbiId == null )
-            hasStarted = true;
-        super.parse( is );
-
-        // add last gene with an accession
-        if ( geneData.getGeneInfo() != null ) {
-            try {
-                queue.put( geneData );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( e );
-            }
-            geneInfo.remove( lastGeneId );
-        }
-        // add remaining genes
-        // push in remaining genes that did not have accessions
-        Collection<NCBIGeneInfo> remainingGenes = geneInfo.values();
-        for ( NCBIGeneInfo o : remainingGenes ) {
-            NcbiGeneData geneCollection = new NcbiGeneData();
-            geneCollection.setGeneInfo( o );
-            try {
-                queue.put( geneCollection );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException();
-            }
-        }
-    }
-
-    @Override
-    protected void addResult( NCBIGene2Accession obj ) {
-        count++;
-        // results.add( ( NCBIGene2Accession ) obj );
-        // no-op - save memory as we use a queue instead.
-    }
-
-    @Override
-    public Collection<NCBIGene2Accession> getResults() {
-        return results;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setStartingNbiId( Integer startingNcbiId ) {
-        this.startingNcbiId = startingNcbiId;
     }
 
 }

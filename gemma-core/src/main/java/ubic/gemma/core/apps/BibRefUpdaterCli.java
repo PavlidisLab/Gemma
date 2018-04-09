@@ -19,16 +19,15 @@
 
 package ubic.gemma.core.apps;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.model.common.description.BibliographicReference;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Refreshes the information in all the bibliographic references in the system.
@@ -75,7 +74,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
         BibliographicReferenceService bibliographicReferenceService = this
                 .getBean( BibliographicReferenceService.class );
 
-        Collection<Long> bibrefIds = new ArrayList<Long>();
+        Collection<Long> bibrefIds = new ArrayList<>();
         if ( this.hasOption( "pmids" ) ) {
             for ( String s : StringUtils.split( this.getOptionValue( "pmids" ), "," ) ) {
 

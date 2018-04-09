@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @author Gemma  -->
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:s="http://www.springframework.org/schema/security"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+<beans xmlns:s="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
        xmlns:aop="http://www.springframework.org/schema/aop"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
-   http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
-   http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd  
-   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd ">
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+            http://www.springframework.org/schema/security
+            http://www.springframework.org/schema/security/spring-security-3.1.xsd
+            http://www.springframework.org/schema/util
+            http://www.springframework.org/schema/util/spring-util-3.2.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
 
     <bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener"/>
 
@@ -35,7 +42,7 @@
         <s:form-login login-page="/login.jsp" default-target-url="/"
                       authentication-success-handler-ref="ajaxAuthenticationSuccessHandler"
                       authentication-failure-handler-ref="ajaxAuthenticationFailureHandler"/>
-        <s:remember-me key="gemma_rm"/>
+        <s:remember-me key="gemma_rm" user-service-ref="userManager"/>
 
         <!-- See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get exceptions
             galore. -->
@@ -47,29 +54,30 @@
     </s:http>
 
     <bean id="ajaxAuthenticationSuccessHandler" class="gemma.gsec.authentication.AjaxAuthenticationSuccessHandler">
-        <property name="alwaysUseDefaultTargetUrl" value="false"></property>
+        <property name="alwaysUseDefaultTargetUrl" value="false"/>
     </bean>
 
     <bean id="ajaxAuthenticationFailureHandler" class="gemma.gsec.authentication.AjaxAuthenticationFailureHandler">
-        <property name="defaultFailureUrl" value="/login.jsp"></property>
+        <property name="defaultFailureUrl" value="/login.jsp"/>
     </bean>
 
     <!-- For use with access tags -->
     <bean id="defaultWebSecurityExpressionHandler"
-          class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
+          class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"/>
 
     <!-- works with the HttpSessionEventPublisher configured in web.xml -->
     <bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl"/>
 
+
     <bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
         <property name="allowIfAllAbstainDecisions" value="true"/>
-        <property name="decisionVoters">
+        <constructor-arg>
             <list>
                 <bean class="org.springframework.security.web.access.expression.WebExpressionVoter"/>
                 <ref bean="roleHierarchyVoter"/>
                 <bean class="org.springframework.security.access.vote.AuthenticatedVoter"/> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
             </list>
-        </property>
+        </constructor-arg>
     </bean>
 
     <s:authentication-manager alias="authenticationManager">
@@ -92,7 +100,7 @@
     </bean>
 
     <!-- declared separately so we can use it directly. -->
-    <bean id="passwordEncoder" class=" org.springframework.security.authentication.encoding.ShaPasswordEncoder"/>
+    <bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder"/>
 
 
     <!--- global method security configuration -->
@@ -163,5 +171,7 @@
         </constructor-arg>
         <property name="sidRetrievalStrategy" ref="sidRetrievalStrategy"/>
     </bean>
+
+    <bean id="userManager" class="ubic.gemma.core.security.authentication.UserManagerImpl"/>
 
 </beans>

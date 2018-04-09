@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ package ubic.gemma.model.analysis.expression.diff;
  * The number of probes meeting a given q-value threshold in the result set.
  * </p>
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class HitListSize implements java.io.Serializable {
 
     /**
@@ -41,26 +42,6 @@ public abstract class HitListSize implements java.io.Serializable {
      * @author Paul
      */
     public HitListSize() {
-    }
-
-    /**
-     * @param object the object to compare with
-     * @return <code>true</code> if the argument is an HitListSize instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof HitListSize ) ) {
-            return false;
-        }
-        final HitListSize that = ( HitListSize ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public Direction getDirection() {
@@ -115,6 +96,23 @@ public abstract class HitListSize implements java.io.Serializable {
         hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
 
         return hashCode;
+    }
+
+    /**
+     * @param object the object to compare with
+     * @return <code>true</code> if the argument is an HitListSize instance and all identifiers for this entity equal
+     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof HitListSize ) ) {
+            return false;
+        }
+        final HitListSize that = ( HitListSize ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
     public static final class Factory {

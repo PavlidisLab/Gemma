@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,11 +19,6 @@
 
 package ubic.gemma.core.datastructure.matrix;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderServiceImpl;
@@ -36,22 +31,23 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Creates a sample small test matrix, not persistent. Useful for testing algorithms. (This is not a test!)
- * 
- * @author paul
  *
+ * @author paul
  */
 public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     public ExpressionDataTestMatrix() throws IOException {
         super();
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
         SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
@@ -76,15 +72,14 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
             DoubleMatrix<String, String> matrix = service.parse( data );
             ExpressionExperiment ee = service.convert( metaData, matrix );
             super.init();
-            Collection<DesignElementDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes()
-                    .iterator().next() );
-            vectorsToMatrix( selectedVectors );
-
+            Collection<DesignElementDataVector> selectedVectors = super
+                    .selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
+            this.vectorsToMatrix( selectedVectors );
         }
 
     }

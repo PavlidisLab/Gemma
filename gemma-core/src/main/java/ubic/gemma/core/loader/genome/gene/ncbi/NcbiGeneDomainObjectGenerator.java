@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,6 @@ package ubic.gemma.core.loader.genome.gene.ncbi;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.model.common.description.LocalFile;
@@ -66,7 +65,8 @@ public class NcbiGeneDomainObjectGenerator {
             this.supportedTaxa = new HashMap<>();
             for ( Taxon t : taxa ) {
                 if ( t.getNcbiId() == null ) {
-                    log.warn( "Can't support NCBI genes for " + t + ", it lacks an NCBI id" );
+                    NcbiGeneDomainObjectGenerator.log
+                            .warn( "Can't support NCBI genes for " + t + ", it lacks an NCBI id" );
                     continue;
                 }
                 this.supportedTaxa.put( t.getNcbiId(), t );
@@ -89,23 +89,23 @@ public class NcbiGeneDomainObjectGenerator {
 
     /**
      * @param queue queue
-     * @return a collection of NCBIGene2Accession
      */
-    public Collection<NCBIGene2Accession> generate( final BlockingQueue<NcbiGeneData> queue ) {
+    public void generate( final BlockingQueue<NcbiGeneData> queue ) {
 
-        log.info( "Fetching..." );
+        NcbiGeneDomainObjectGenerator.log.info( "Fetching..." );
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
         fetcher.setDoDownload( this.doDownload );
-        LocalFile geneInfoFile = fetcher.fetch( GENEINFO_FILE ).iterator().next();
-        LocalFile gene2AccessionFile = fetcher.fetch( GENE2ACCESSION_FILE ).iterator().next();
-        LocalFile geneHistoryFile = fetcher.fetch( GENEHISTORY_FILE ).iterator().next();
-        LocalFile geneEnsemblFile = fetcher.fetch( GENEENSEMBL_FILE ).iterator().next();
+        LocalFile geneInfoFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENEINFO_FILE ).iterator().next();
+        LocalFile gene2AccessionFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENE2ACCESSION_FILE ).iterator()
+                .next();
+        LocalFile geneHistoryFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENEHISTORY_FILE ).iterator().next();
+        LocalFile geneEnsemblFile = fetcher.fetch( NcbiGeneDomainObjectGenerator.GENEENSEMBL_FILE ).iterator().next();
 
-        return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
+        this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
     }
 
-    public Collection<NCBIGene2Accession> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath,
-            String geneHistoryFilePath, String geneEnsemblFilePath, BlockingQueue<NcbiGeneData> queue ) {
+    public void generateLocal( String geneInfoFilePath, String gene2AccesionFilePath, String geneHistoryFilePath,
+            String geneEnsemblFilePath, BlockingQueue<NcbiGeneData> queue ) {
 
         assert gene2AccesionFilePath != null;
 
@@ -133,7 +133,7 @@ public class NcbiGeneDomainObjectGenerator {
                 geneEnsemblFile.setLocalURL( geneEnsemblUrl );
             }
 
-            return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
+            this.processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -148,9 +148,21 @@ public class NcbiGeneDomainObjectGenerator {
         this.producerDone = flag;
     }
 
-    private Collection<NCBIGene2Accession> processLocalFiles( final LocalFile geneInfoFile,
-            final LocalFile gene2AccessionFile, LocalFile geneHistoryFile, LocalFile geneEnsemblFile,
-            final BlockingQueue<NcbiGeneData> geneDataQueue ) {
+    /**
+     * Those taxa that are supported by GEMMA and have genes in NCBI.
+     *
+     * @return Collection of taxa that are supported by the GEMMA and have genes held by NCBI.
+     */
+    public Collection<Taxon> getSupportedTaxaWithNCBIGenes() {
+        return supportedTaxaWithNCBIGenes;
+    }
+
+    public void setStartingNcbiId( Integer startingNcbiId ) {
+        this.startingNcbiId = startingNcbiId;
+    }
+
+    private void processLocalFiles( final LocalFile geneInfoFile, final LocalFile gene2AccessionFile,
+            LocalFile geneHistoryFile, LocalFile geneEnsemblFile, final BlockingQueue<NcbiGeneData> geneDataQueue ) {
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
         infoParser.setFilter( this.filter );
@@ -169,16 +181,16 @@ public class NcbiGeneDomainObjectGenerator {
         final NcbiGeneHistoryParser historyParser = new NcbiGeneHistoryParser();
 
         try {
-            log.debug( "Parsing gene history" );
+            NcbiGeneDomainObjectGenerator.log.debug( "Parsing gene history" );
             historyParser.parse( geneHistoryFile.asFile() );
 
             if ( geneEnsemblFile != null ) {
-                log.debug( "Parsing ensembl" );
+                NcbiGeneDomainObjectGenerator.log.debug( "Parsing ensembl" );
                 ensemblParser.parse( geneEnsemblFile.asFile() );
             }
 
             //
-            log.debug( "Parsing GeneInfo =" + geneInfoFile.asFile().getAbsolutePath() );
+            NcbiGeneDomainObjectGenerator.log.debug( "Parsing GeneInfo =" + geneInfoFile.asFile().getAbsolutePath() );
             try (InputStream is = FileTools
                     .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() )) {
                 infoParser.parse( is );
@@ -222,7 +234,8 @@ public class NcbiGeneDomainObjectGenerator {
             for ( Integer taxId : taxaCount.keySet() ) {
 
                 if ( taxaCount.get( taxId ) > 0 ) {
-                    log.debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
+                    NcbiGeneDomainObjectGenerator.log
+                            .debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
                     Taxon t = supportedTaxa.get( taxId );
                     supportedTaxaWithNCBIGenes.add( t );
                 }
@@ -238,13 +251,14 @@ public class NcbiGeneDomainObjectGenerator {
             @Override
             public void run() {
                 try {
-                    log.debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );
+                    NcbiGeneDomainObjectGenerator.log
+                            .debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );
                     accParser.setStartingNbiId( startingNcbiId );
                     accParser.parse( gene2accessionFileHandle, geneDataQueue, geneInfoMap );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
-                log.debug( "Domain object generator done" );
+                NcbiGeneDomainObjectGenerator.log.debug( "Domain object generator done" );
                 producerDone.set( true );
             }
         }, "gene2accession parser" );
@@ -259,26 +273,6 @@ public class NcbiGeneDomainObjectGenerator {
         // 2) use producer-consumer model for Gene persistence
         // 2a) as elements get added to genePersistence, persist Gene and
         // associated entries.
-
-        return null;
-    }
-
-    // not used at all
-    public Collection<?> generate( @SuppressWarnings("unused") String accession ) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Those taxa that are supported by GEMMA and have genes in NCBI.
-     *
-     * @return Collection of taxa that are supported by the GEMMA and have genes held by NCBI.
-     */
-    public Collection<Taxon> getSupportedTaxaWithNCBIGenes() {
-        return supportedTaxaWithNCBIGenes;
-    }
-
-    public void setStartingNcbiId( Integer startingNcbiId ) {
-        this.startingNcbiId = startingNcbiId;
     }
 
 }

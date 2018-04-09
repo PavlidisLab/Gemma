@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,11 +23,11 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -41,11 +41,66 @@ import java.util.List;
  * </p>
  */
 @Repository
-public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueValueObject> implements FactorValueDao {
+public class FactorValueDaoImpl extends AbstractVoEnabledDao<FactorValue, FactorValueValueObject>
+        implements FactorValueDao {
 
     @Autowired
     public FactorValueDaoImpl( SessionFactory sessionFactory ) {
         super( FactorValue.class, sessionFactory );
+    }
+
+    @Override
+    public Collection<FactorValue> findByValue( String valuePrefix ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( "from FactorValue where value like :q" )
+                .setParameter( "q", valuePrefix + "%" ).list();
+    }
+
+    @Override
+    public void remove( final FactorValue factorValue ) {
+        if ( factorValue == null )
+            return;
+
+        //noinspection unchecked
+        Collection<BioMaterial> bms = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial as bm join bm.factorValues fv where fv = :fv" )
+                .setParameter( "fv", factorValue ).list();
+
+        AbstractDao.log.info( "Disassociating " + factorValue + " from " + bms.size() + " biomaterials" );
+        for ( BioMaterial bioMaterial : bms ) {
+            AbstractDao.log.info( "Processing " + bioMaterial ); // temporary, debugging.
+            if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
+                this.getSessionFactory().getCurrentSession().update( bioMaterial );
+            } else {
+                AbstractDao.log.warn( "Unexpectedly the factor value was not actually associated with " + bioMaterial );
+            }
+        }
+
+        List<?> efs = this.getHibernateTemplate()
+                .findByNamedParam( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv", "fv",
+                        factorValue );
+
+        ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
+        ef.getFactorValues().remove( factorValue );
+        this.getSessionFactory().getCurrentSession().update( ef );
+
+        // will get the dreaded 'already in session' error if we don't do this.
+        this.getSessionFactory().getCurrentSession().flush();
+        this.getSessionFactory().getCurrentSession().clear();
+
+        this.getSessionFactory().getCurrentSession().delete( factorValue );
+
+    }
+
+    @Override
+    public FactorValue findOrCreate( FactorValue factorValue ) {
+        FactorValue existingFactorValue = this.find( factorValue );
+        if ( existingFactorValue != null ) {
+            return existingFactorValue;
+        }
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Creating new factorValue" );
+        return this.create( factorValue );
     }
 
     @Override
@@ -77,69 +132,6 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
     }
 
     @Override
-    public Collection<FactorValue> findByValue( String valuePrefix ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from FactorValue where value like :q" )
-                .setParameter( "q", valuePrefix + "%" ).list();
-    }
-
-    @Override
-    public FactorValue findOrCreate( FactorValue factorValue ) {
-        FactorValue existingFactorValue = this.find( factorValue );
-        if ( existingFactorValue != null ) {
-            return existingFactorValue;
-        }
-        if ( log.isDebugEnabled() )
-            log.debug( "Creating new factorValue" );
-        return create( factorValue );
-    }
-
-    @Override
-    public void remove( final FactorValue factorValue ) {
-        if ( factorValue == null )
-            return;
-
-        //noinspection unchecked
-        Collection<BioMaterial> bms = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bm from BioMaterial as bm join bm.factorValues fv where fv = :fv" )
-                .setParameter( "fv", factorValue ).list();
-
-        log.info( "Disassociating " + factorValue + " from " + bms.size() + " biomaterials" );
-        for ( BioMaterial bioMaterial : bms ) {
-            log.info( "Processing " + bioMaterial ); // temporary, debugging.
-            if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
-                this.getSessionFactory().getCurrentSession().update( bioMaterial );
-            } else {
-                log.warn( "Unexpectedly the factor value was not actually associated with " + bioMaterial );
-            }
-        }
-
-        List<?> efs = this.getHibernateTemplate()
-                .findByNamedParam( "select ef from ExperimentalFactor ef join ef.factorValues fv where fv = :fv", "fv",
-                        factorValue );
-
-        ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
-        ef.getFactorValues().remove( factorValue );
-        this.getSessionFactory().getCurrentSession().update( ef );
-
-        // will get the dreaded 'already in session' error if we don't do this.
-        this.getSessionFactory().getCurrentSession().flush();
-        this.getSessionFactory().getCurrentSession().clear();
-
-        this.getSessionFactory().getCurrentSession().delete( factorValue );
-
-    }
-
-    private void debug( List<?> results ) {
-        StringBuilder sb = new StringBuilder();
-        sb.append( "\nFactorValues found:\n" );
-        for ( Object object : results ) {
-            sb.append( object ).append( "\n" );
-        }
-        log.error( sb.toString() );
-    }
-
-    @Override
     public FactorValueValueObject loadValueObject( FactorValue entity ) {
         return new FactorValueValueObject( entity );
     }
@@ -148,8 +140,17 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
     public Collection<FactorValueValueObject> loadValueObjects( Collection<FactorValue> entities ) {
         Collection<FactorValueValueObject> vos = new LinkedHashSet<>();
         for ( FactorValue fv : entities ) {
-            vos.add( loadValueObject( fv ) );
+            vos.add( this.loadValueObject( fv ) );
         }
         return vos;
+    }
+
+    private void debug( List<?> results ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "\nFactorValues found:\n" );
+        for ( Object object : results ) {
+            sb.append( object ).append( "\n" );
+        }
+        AbstractDao.log.error( sb.toString() );
     }
 }

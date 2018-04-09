@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -113,11 +114,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         try (InputStream is = new FileInputStream( f )) {
             // removed dry run code, validation and object creation is done before any commits to DB
-            // So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
+            // So if validation fails no rollback needed. However, this call is wrapped in a transaction
             // as a fail safe.
             experimentalDesignImporter.importDesign( ee, is );
-            // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-            // "ExperimentalDesign imported from file", null );
             this.experimentReportService.evictFromCache( ee.getId() );
 
         } catch ( IOException e ) {
@@ -137,7 +136,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ef.setExperimentalDesign( ed );
         ef.setName( efvo.getName() );
         ef.setDescription( efvo.getDescription() );
-        ef.setCategory( createCategoryCharacteristic( efvo.getCategory(), efvo.getCategoryUri() ) );
+        ef.setCategory( this.createCategoryCharacteristic( efvo.getCategory(), efvo.getCategoryUri() ) );
 
         /*
          * Note: this call should not be needed because of cascade behaviour.
@@ -170,8 +169,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         Collection<Characteristic> chars = new HashSet<>();
         for ( FactorValue fv : ef.getFactorValues() ) {
+            //noinspection LoopStatementThatDoesntLoop // No, but its an effective way of doing this
             for ( Characteristic c : fv.getCharacteristics() ) {
-                chars.add( createTemplateCharacteristic( c ) );
+                chars.add( this.createTemplateCharacteristic( c ) );
                 break;
             }
         }
@@ -180,7 +180,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 throw new IllegalArgumentException(
                         "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
             }
-            chars.add( createTemplateCharacteristic( ef.getCategory() ) );
+            chars.add( this.createTemplateCharacteristic( ef.getCategory() ) );
         }
 
         FactorValue fv = FactorValue.Factory.newInstance();
@@ -228,7 +228,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         Collection<ExperimentalFactor> toDelete = experimentalFactorService.load( efCol );
 
-        delete( toDelete );
+        this.delete( toDelete );
 
     }
 
@@ -265,8 +265,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( Long fvId : fvCol ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fvId );
-            // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "FactorValue deleted: " + fvId,
-            // null );
             this.experimentReportService.evictFromCache( ee.getId() );
         }
 
@@ -458,14 +456,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                  * Check for unused factorValues
                  */
                 Collection<FactorValue> usedFactorValues = new HashSet<>();
-                for ( BioAssay ba : ee.getBioAssays() ) {
-                    BioMaterial biomat = ba.getSampleUsed();
-                    for ( FactorValue fv : biomat.getFactorValues() ) {
-                        if ( fv.getExperimentalFactor().equals( ef ) ) {
-                            usedFactorValues.add( fv );
-                        }
-                    }
-                }
+                LinearModelAnalyzer.populateFactorValuesFromBASet( ee, ef, usedFactorValues );
+
                 Collection<FactorValue> toDelete = new HashSet<>();
                 for ( FactorValue fv : ef.getFactorValues() ) {
                     if ( !usedFactorValues.contains( fv ) ) {
@@ -486,7 +478,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
         StringBuilder details = new StringBuilder( "Updated bio materials:\n" );
         for ( BioMaterialValueObject vo : bmvos ) {
-            if(vo == null){
+            if ( vo == null ) {
                 continue;
             }
             BioMaterial ba = bioMaterialService.load( vo.getId() );

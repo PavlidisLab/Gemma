@@ -1,24 +1,15 @@
 package ubic.gemma.core.analysis.report;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public interface DatabaseViewGenerator {
 
     String VIEW_DIR =
             Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
     String VIEW_FILE_SUFFIX = ".view.txt.gz";
-
-    void generateDatasetTissueView( int limit, Collection<ExpressionExperiment> experiments ) throws IOException;
-
-    void generateDatasetView( int limit, Collection<ExpressionExperiment> experiments ) throws IOException;
-
-    void generateDifferentialExpressionView( int limit, Collection<ExpressionExperiment> experiments )
-            throws IOException;
 
     File getOutputFile( String filename );
 

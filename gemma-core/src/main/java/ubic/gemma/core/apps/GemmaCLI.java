@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
  *
  * @author paul
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class GemmaCLI {
 
     public static void main( String[] args ) {
@@ -53,27 +54,26 @@ public class GemmaCLI {
             // searching entire hierarchy is 1) slow and 2) generates annoying logging from static initialization code.
             final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.core.apps" );
             classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.loader.association.phenotype" ) );
-            classes.addAll( provider.findCandidateComponents( "chibi.gemmaanalysis" ) );
 
             for ( BeanDefinition bean : classes ) {
                 try {
-                    @SuppressWarnings("unchecked") Class<? extends AbstractCLI> aclazz = ( Class<? extends AbstractCLI> ) Class
+                    @SuppressWarnings("unchecked") Class<? extends AbstractCLI> aClazz = ( Class<? extends AbstractCLI> ) Class
                             .forName( bean.getBeanClassName() );
 
-                    Object cliinstance = aclazz.newInstance();
+                    Object cliInstance = aClazz.newInstance();
 
-                    Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
-                    String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
+                    Method method = aClazz.getMethod( "getCommandName" );
+                    String commandName = ( String ) method.invoke( cliInstance, new Object[] {} );
                     if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                         // keep null to avoid printing some commands...
                         continue;
                     }
 
-                    Method method2 = aclazz.getMethod( "getShortDesc", new Class[] {} );
-                    String desc = ( String ) method2.invoke( cliinstance, new Object[] {} );
+                    Method method2 = aClazz.getMethod( "getShortDesc" );
+                    String desc = ( String ) method2.invoke( cliInstance, new Object[] {} );
 
-                    Method method3 = aclazz.getMethod( "getCommandGroup", new Class[] {} );
-                    CommandGroup g = ( CommandGroup ) method3.invoke( cliinstance, new Object[] {} );
+                    Method method3 = aClazz.getMethod( "getCommandGroup" );
+                    CommandGroup g = ( CommandGroup ) method3.invoke( cliInstance, new Object[] {} );
 
                     if ( !commands.containsKey( g ) ) {
                         commands.put( g, new TreeMap<String, String>() );
@@ -81,7 +81,7 @@ public class GemmaCLI {
 
                     commands.get( g ).put( commandName, desc + " (" + bean.getBeanClassName() + ")" );
 
-                    commandClasses.put( commandName, aclazz );
+                    commandClasses.put( commandName, aClazz );
                 } catch ( Exception e ) {
                     // OK, this can happen if we hit a non useful class.
                 }
@@ -93,15 +93,15 @@ public class GemmaCLI {
 
         if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) || args[0].equalsIgnoreCase( "-help" ) || args[0]
                 .equalsIgnoreCase( "help" ) ) {
-            printHelp( commands );
+            GemmaCLI.printHelp( commands );
         } else {
-            LinkedList<String> f = new LinkedList<String>( Arrays.asList( args ) );
+            LinkedList<String> f = new LinkedList<>( Arrays.asList( args ) );
             String commandRequested = f.remove( 0 );
             Object[] argsToPass = f.toArray( new String[] {} );
 
             if ( !commandClasses.containsKey( commandRequested ) ) {
                 System.err.println( "Unrecognized command: " + commandRequested );
-                printHelp( commands );
+                GemmaCLI.printHelp( commands );
                 System.err.println( "Unrecognized command: " + commandRequested );
                 System.exit( 1 );
             } else {
@@ -109,7 +109,8 @@ public class GemmaCLI {
                     Class<?> c = commandClasses.get( commandRequested );
                     Method method = c.getMethod( "main", String[].class );
                     System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
-                    System.err.println( "Options: " + getOptStringForLogging( argsToPass ) );
+                    System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
+                    //noinspection JavaReflectionInvocation // It works
                     method.invoke( null, ( Object ) argsToPass );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
@@ -117,20 +118,14 @@ public class GemmaCLI {
                     throw new RuntimeException( e );
                 } finally {
                     System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
-                    System.exit( 0 );
                 }
             }
         }
     }
 
-    ;
-
     public static String getOptStringForLogging( Object[] argsToPass ) {
-        // try to mask the password...
-        // return StringUtils.join( argsToPass, " " ).replaceAll( "(-(-)?p(assword)?)\\s+(.+?)\\s", "\1 XXXXXX " );
-
-        return java.util.regex.Pattern.compile( "(-(-)?p(assword)?)\\s+(.+?)\\s" )
-                .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX " );
+        return java.util.regex.Pattern.compile( "(-{1,2}p(?:assword){0,1})\\s+(.+?)\\b" )
+                .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX" );
     }
 
     public static void printHelp( Map<CommandGroup, Map<String, String>> commands ) {
@@ -141,16 +136,16 @@ public class GemmaCLI {
                 + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n"
                 + "Here is a list of available commands, grouped by category:\n" );
 
-        for ( CommandGroup cmdg : CommandGroup.values() ) {
-            if ( cmdg.equals( CommandGroup.DEPRECATED ) )
+        for ( CommandGroup commandGroup : CommandGroup.values() ) {
+            if ( commandGroup.equals( CommandGroup.DEPRECATED ) )
                 continue;
-            if ( !commands.containsKey( cmdg ) )
+            if ( !commands.containsKey( commandGroup ) )
                 continue;
-            Map<String, String> commandsInGroup = commands.get( cmdg );
+            Map<String, String> commandsInGroup = commands.get( commandGroup );
             if ( commandsInGroup.isEmpty() )
                 continue;
 
-            System.err.println( "\n---- " + cmdg.toString() + " ----" );
+            System.err.println( "\n---- " + commandGroup.toString() + " ----" );
             for ( String cmd : commandsInGroup.keySet() ) {
                 if ( cmd == null )
                     continue; // just in case... but no command name means "skip";
@@ -162,7 +157,7 @@ public class GemmaCLI {
     }
 
     // order here is significant.
-    public static enum CommandGroup {
+    public enum CommandGroup {
         EXPERIMENT, PLATFORM, ANALYSIS, METADATA, PHENOTYPES, SYSTEM, MISC, DEPRECATED
     }
 }

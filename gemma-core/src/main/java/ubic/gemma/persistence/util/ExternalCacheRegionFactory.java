@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,31 +19,27 @@
 
 package ubic.gemma.persistence.util;
 
-import java.util.Properties;
-
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.hibernate.EhCacheRegionFactory;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+
+import java.util.Properties;
 
 /**
  * Allows us to configure the CacheManager separately from Hibernate, so we can use a single CacheManager for the whole
  * application.
- * 
- * @author paul
  *
+ * @author paul
  */
 @Component
-@Lazy(value = true)
-public class ExternalCacheRegionFactory extends EhCacheRegionFactory implements ApplicationContextAware,
-        InitializingBean {
+public class ExternalCacheRegionFactory extends EhCacheRegionFactory
+        implements ApplicationContextAware, InitializingBean {
 
     private ApplicationContext ctx;
 
@@ -51,41 +47,24 @@ public class ExternalCacheRegionFactory extends EhCacheRegionFactory implements 
         super( null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         /*
          * I have to do this rather than @Autowire because the manager is already declared in the superclass (yes, I can
-         * reimplement the whole thing ...)
+         * re-implement the whole thing ...)
          */
         this.manager = ctx.getBean( CacheManager.class );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
-     * ApplicationContext)
-     */
     @Override
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.ctx = applicationContext;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.sf.ehcache.hibernate.EhCacheRegionFactory#start(org.hibernate.cfg.Settings, java.util.Properties)
-     */
     @Override
     public void start( Settings s, Properties p ) throws CacheException {
         assert this.manager != null;
         mbeanRegistrationHelper.registerMBean( manager, p );
-        return;
     }
 
 }

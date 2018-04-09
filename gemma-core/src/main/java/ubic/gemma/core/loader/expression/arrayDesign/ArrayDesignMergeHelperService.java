@@ -14,10 +14,10 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+
+import java.util.Collection;
 
 /**
  * @author Paul

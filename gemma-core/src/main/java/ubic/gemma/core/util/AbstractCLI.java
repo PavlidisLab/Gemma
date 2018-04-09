@@ -43,7 +43,7 @@ import java.util.*;
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class AbstractCLI {
 
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2015 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2018 University of British Columbia.";
     protected static final String AUTO_OPTION_NAME = "auto";
     protected static final String THREADS_OPTION = "threads";
     protected static final Log log = LogFactory.getLog( AbstractCLI.class );
@@ -78,7 +78,7 @@ public abstract class AbstractCLI {
     protected int numThreads = 1;
     protected String password;
     protected Option passwordOpt;
-    protected int port = DEFAULT_PORT;
+    protected int port = AbstractCLI.DEFAULT_PORT;
     protected String username;
     protected Option usernameOpt;
     protected String host = DEFAULT_HOST;
@@ -214,11 +214,11 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addAutoOption() {
-        Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME )
+        Option autoSeekOption = OptionBuilder.withArgName( AbstractCLI.AUTO_OPTION_NAME )
                 .withDescription( "Attempt to process entities that need processing based on workflow criteria." )
-                .create( AUTO_OPTION_NAME );
+                .create( AbstractCLI.AUTO_OPTION_NAME );
 
-        addOption( autoSeekOption );
+        this.addOption( autoSeekOption );
     }
 
     @SuppressWarnings("static-access")
@@ -229,7 +229,7 @@ public abstract class AbstractCLI {
                         + "If there is no record of when the analysis was last run, it will be run." )
                 .create( "mdate" );
 
-        addOption( dateOption );
+        this.addOption( dateOption );
     }
 
     /**
@@ -241,12 +241,14 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
         Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg()
-                .withDescription( "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( HOST_OPTION );
+                .withDescription( "Hostname to use (Default = " + DEFAULT_HOST + ")" )
+                .create( AbstractCLI.HOST_OPTION );
 
         hostOpt.setRequired( hostRequired );
 
         Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg()
-                .withDescription( "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( PORT_OPTION );
+                .withDescription( "Port to use on host (Default = " + AbstractCLI.DEFAULT_PORT + ")" )
+                .create( AbstractCLI.PORT_OPTION );
 
         portOpt.setRequired( portRequired );
 
@@ -260,7 +262,8 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addThreadsOption() {
         Option threadsOpt = OptionBuilder.withArgName( "numThreads" ).hasArg()
-                .withDescription( "Number of threads to use for batch processing." ).create( THREADS_OPTION );
+                .withDescription( "Number of threads to use for batch processing." )
+                .create( AbstractCLI.THREADS_OPTION );
         options.addOption( threadsOpt );
     }
 
@@ -284,13 +287,13 @@ public abstract class AbstractCLI {
     protected void addUserNameAndPasswordOptions( boolean required ) {
         this.usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg()
                 .withDescription( "User name for accessing the system (optional for some tools)" )
-                .create( USERNAME_OPTION );
+                .create( AbstractCLI.USERNAME_OPTION );
 
         usernameOpt.setRequired( required );
 
         this.passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg()
                 .withDescription( "Password for accessing the system (optional for some tools)" )
-                .create( PASSWORD_CONSTANT );
+                .create( AbstractCLI.PASSWORD_CONSTANT );
         passwordOpt.setRequired( required );
 
         options.addOption( usernameOpt );
@@ -304,21 +307,21 @@ public abstract class AbstractCLI {
      */
     protected void bail( ErrorCode errorCode ) {
         // do something, but not System.exit.
-        log.debug( "Bailing with error code " + errorCode );
-        resetLogging();
+        AbstractCLI.log.debug( "Bailing with error code " + errorCode );
+        this.resetLogging();
         throw new IllegalStateException( errorCode.toString() );
     }
 
     /**
      * Implement this method to add options to your command line, using the OptionBuilder.
      *
-     * @see OptionBuilder
+     * @see Option#builder(String);
      */
     protected abstract void buildOptions();
 
     @SuppressWarnings("static-access")
     protected void buildStandardOptions() {
-        log.debug( "Creating standard options" );
+        AbstractCLI.log.debug( "Creating standard options" );
         Option helpOpt = new Option( "h", "help", false, "Print this message" );
         Option testOpt = new Option( "testing", false, "Use the test environment" );
         Option logOpt = new Option( "v", "verbosity", true,
@@ -341,8 +344,8 @@ public abstract class AbstractCLI {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( invalidOptionString( "" + option ) + ", not a valid double" );
-            bail( ErrorCode.INVALID_OPTION );
+            System.out.println( this.invalidOptionString( "" + option ) + ", not a valid double" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return 0.0;
     }
@@ -351,8 +354,8 @@ public abstract class AbstractCLI {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( invalidOptionString( option ) + ", not a valid double" );
-            bail( ErrorCode.INVALID_OPTION );
+            System.out.println( this.invalidOptionString( option ) + ", not a valid double" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return 0.0;
     }
@@ -361,8 +364,8 @@ public abstract class AbstractCLI {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            System.out.println( invalidOptionString( "" + c ) + ", cannot read from file" );
-            bail( ErrorCode.INVALID_OPTION );
+            System.out.println( this.invalidOptionString( "" + c ) + ", cannot read from file" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return fileName;
     }
@@ -371,8 +374,8 @@ public abstract class AbstractCLI {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
-            System.out.println( invalidOptionString( "" + c ) + ", cannot read from file" );
-            bail( ErrorCode.INVALID_OPTION );
+            System.out.println( this.invalidOptionString( "" + c ) + ", cannot read from file" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return fileName;
     }
@@ -381,8 +384,8 @@ public abstract class AbstractCLI {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( invalidOptionString( "" + option ) + ", not a valid integer" );
-            bail( ErrorCode.INVALID_OPTION );
+            System.out.println( this.invalidOptionString( "" + option ) + ", not a valid integer" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return 0;
     }
@@ -391,8 +394,8 @@ public abstract class AbstractCLI {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( invalidOptionString( option ) + ", not a valid integer" );
-            bail( ErrorCode.INVALID_OPTION );
+            System.out.println( this.invalidOptionString( option ) + ", not a valid integer" );
+            this.bail( ErrorCode.INVALID_OPTION );
         }
         return 0;
     }
@@ -401,7 +404,7 @@ public abstract class AbstractCLI {
         Date skipIfLastRunLaterThan = null;
         if ( StringUtils.isNotBlank( mDate ) ) {
             skipIfLastRunLaterThan = DateUtil.getRelativeDate( new Date(), mDate );
-            log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
+            AbstractCLI.log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
         }
         return skipIfLastRunLaterThan;
     }
@@ -409,7 +412,8 @@ public abstract class AbstractCLI {
     protected void printHelp() {
         HelpFormatter h = new HelpFormatter();
         h.setWidth( 150 );
-        h.printHelp( getCommandName() + " [options]", this.getShortDesc() + "\n" + HEADER, options, FOOTER );
+        h.printHelp( this.getCommandName() + " [options]", this.getShortDesc() + "\n" + AbstractCLI.HEADER, options,
+                AbstractCLI.FOOTER );
     }
 
     /**
@@ -428,7 +432,7 @@ public abstract class AbstractCLI {
         System.err.println( "Gemma version " + appVersion );
 
         if ( args == null ) {
-            printHelp();
+            this.printHelp();
             return new Exception( "No arguments" );
         }
 
@@ -447,10 +451,10 @@ public abstract class AbstractCLI {
                 e.printStackTrace();
             }
 
-            printHelp();
+            this.printHelp();
 
-            if ( log.isDebugEnabled() ) {
-                log.debug( e );
+            if ( AbstractCLI.log.isDebugEnabled() ) {
+                AbstractCLI.log.debug( e );
             }
 
             return e;
@@ -458,12 +462,12 @@ public abstract class AbstractCLI {
 
         /* INTERROGATION STAGE */
         if ( commandLine.hasOption( 'h' ) ) {
-            printHelp();
+            this.printHelp();
             return new Exception( "Help selected" );
         }
 
-        processStandardOptions();
-        processOptions();
+        this.processStandardOptions();
+        this.processOptions();
 
         return null;
 
@@ -503,15 +507,15 @@ public abstract class AbstractCLI {
         if ( successObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\nSuccessfully processed " ).append( successObjects.size() )
-                    .append( "objects:\n" );
+                    .append( " objects:\n" );
             for ( Object object : successObjects ) {
-                buf.append( "Success" ).append( object ).append( "\n" );
+                buf.append( "Success\t" ).append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
 
-            log.info( buf );
+            AbstractCLI.log.info( buf );
         } else {
-            log.error( "No objects processed successfully!" );
+            AbstractCLI.log.error( "No objects processed successfully!" );
         }
 
         if ( errorObjects.size() > 0 ) {
@@ -522,7 +526,7 @@ public abstract class AbstractCLI {
                 buf.append( "Failed\t" ).append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
-            log.error( buf );
+            AbstractCLI.log.error( buf );
         }
     }
 
@@ -553,13 +557,13 @@ public abstract class AbstractCLI {
         Enumeration<?> currentLoggers = LogManager.getLoggerRepository().getCurrentLoggers();
         while ( currentLoggers.hasMoreElements() ) {
             Logger logger = ( Logger ) currentLoggers.nextElement();
-            setLoggerLevel( v, logger );
+            this.setLoggerLevel( v, logger );
         }
-        configureLogging( "net", v );
-        configureLogging( "org", v );
-        configureLogging( "com", v );
-        configureLogging( "ubic", v );
-        configureLogging( "gemma", v );
+        this.configureLogging( "net", v );
+        this.configureLogging( "org", v );
+        this.configureLogging( "com", v );
+        this.configureLogging( "ubic", v );
+        this.configureLogging( "gemma", v );
     }
 
     /**
@@ -574,12 +578,12 @@ public abstract class AbstractCLI {
         }
 
         // if logger name is nonsense this will not do anything.
-        log.info( "Setting logging for " + loggerName + " to " + v );
+        AbstractCLI.log.info( "Setting logging for " + loggerName + " to " + v );
         this.originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
 
-        setLoggerLevel( v, log4jLogger );
+        this.setLoggerLevel( v, log4jLogger );
 
-        log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
+        AbstractCLI.log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
     }
 
     private String invalidOptionString( String option ) {
@@ -592,32 +596,32 @@ public abstract class AbstractCLI {
      */
     private void processStandardOptions() {
 
-        if ( commandLine.hasOption( HOST_OPTION ) ) {
-            this.host = commandLine.getOptionValue( HOST_OPTION );
+        if ( commandLine.hasOption( AbstractCLI.HOST_OPTION ) ) {
+            this.host = commandLine.getOptionValue( AbstractCLI.HOST_OPTION );
         } else {
             this.host = DEFAULT_HOST;
         }
 
-        if ( commandLine.hasOption( PORT_OPTION ) ) {
-            this.port = getIntegerOptionValue( PORT_OPTION );
+        if ( commandLine.hasOption( AbstractCLI.PORT_OPTION ) ) {
+            this.port = this.getIntegerOptionValue( AbstractCLI.PORT_OPTION );
         } else {
-            this.port = DEFAULT_PORT;
+            this.port = AbstractCLI.DEFAULT_PORT;
         }
 
-        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
-            this.username = commandLine.getOptionValue( USERNAME_OPTION );
+        if ( commandLine.hasOption( AbstractCLI.USERNAME_OPTION ) ) {
+            this.username = commandLine.getOptionValue( AbstractCLI.USERNAME_OPTION );
         }
 
-        if ( commandLine.hasOption( PASSWORD_CONSTANT ) ) {
-            this.password = commandLine.getOptionValue( PASSWORD_CONSTANT );
+        if ( commandLine.hasOption( AbstractCLI.PASSWORD_CONSTANT ) ) {
+            this.password = commandLine.getOptionValue( AbstractCLI.PASSWORD_CONSTANT );
         }
 
-        if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
-            int verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
+        if ( commandLine.hasOption( AbstractCLI.VERBOSITY_OPTION ) ) {
+            int verbosity = this.getIntegerOptionValue( AbstractCLI.VERBOSITY_OPTION );
             if ( verbosity < 0 || verbosity > 5 ) {
                 throw new RuntimeException( "Verbosity must be from 0 to 5" );
             }
-            configureAllLoggers( verbosity );
+            this.configureAllLoggers( verbosity );
         }
         PatternLayout layout = new PatternLayout( "[Gemma %d] %p [%t] %C.%M(%L) | %m%n" );
         ConsoleAppender cnslAppndr = new ConsoleAppender( layout );
@@ -625,19 +629,19 @@ public abstract class AbstractCLI {
         assert f != null;
         f.addAppender( cnslAppndr );
 
-        if ( commandLine.hasOption( LOGGER_OPTION ) ) {
-            String value = getOptionValue( LOGGER_OPTION );
+        if ( commandLine.hasOption( AbstractCLI.LOGGER_OPTION ) ) {
+            String value = this.getOptionValue( AbstractCLI.LOGGER_OPTION );
             String[] vals = value.split( "=" );
             if ( vals.length != 2 )
                 throw new RuntimeException( "Logging value must in format [logger]=[value]" );
             try {
-                configureLogging( vals[0], Integer.parseInt( vals[1] ) );
+                this.configureLogging( vals[0], Integer.parseInt( vals[1] ) );
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( "Logging level must be an integer between 0 and 5" );
             }
         }
 
-        if ( hasOption( "mdate" ) ) {
+        if ( this.hasOption( "mdate" ) ) {
             this.mDate = this.getOptionValue( "mdate" );
         }
 

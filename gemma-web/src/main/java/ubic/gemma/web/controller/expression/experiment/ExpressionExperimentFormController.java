@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,48 +80,15 @@ public class ExpressionExperimentFormController extends BaseFormController {
         /*
          * if true, reuses the same command object across the edit-submit-process (get-post-process).
          */
-        setSessionForm( true );
-        setCommandClass( ExpressionExperimentEditValueObject.class );
-    }
-
-    @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        ExpressionExperimentEditValueObject eeCommand = ( ExpressionExperimentEditValueObject ) command;
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
-
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Could not load experiment" );
-        }
-
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
-
-        /*
-         * Much more complicated
-         */
-        boolean changedQT = updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
-        boolean changedBMM = updateBioMaterialMap( request, expressionExperiment );
-
-        if ( changedQT || changedBMM ) {
-            try {
-                preprocessorService.process( expressionExperiment );
-            } catch ( PreprocessingException e ) {
-                throw new RuntimeException( "There was an error while updating the experiment after "
-                        + "making changes to the quantitation types and/or biomaterial map.", e );
-            }
-        }
-
-        return new ModelAndView( new RedirectView(
-                "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-                        + "/expressionExperiment/showExpressionExperiment.html?id=" + eeCommand.getId() ) );
+        this.setSessionForm( true );
+        this.setCommandClass( ExpressionExperimentEditValueObject.class );
     }
 
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        log.debug( "entering processFormSubmission" );
+        BaseFormController.log.debug( "entering processFormSubmission" );
 
         Long id = ( ( ExpressionExperimentValueObject ) command ).getId();
 
@@ -132,7 +99,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                                 + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
             }
 
-            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            BaseFormController.log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
             return new ModelAndView( new RedirectView(
                     "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
                             + "/expressionExperiment/showAllExpressionExperiments.html" ) );
@@ -200,16 +167,15 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        Long id = null;
+        Long id;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
-            saveMessage( request, "Id was not a number " + id );
-            throw new IllegalArgumentException( "Id was not a number " + id );
+            this.saveMessage( request, "Id was not a number " + request.getParameter( "id" ) );
+            throw new IllegalArgumentException( "Id was not a number " + request.getParameter( "id" ) );
         }
 
-        List<QuantitationTypeValueObject> qts = new ArrayList<>();
-        log.debug( id );
+        BaseFormController.log.debug( id );
         ExpressionExperimentEditValueObject obj;
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -219,7 +185,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        qts.addAll(
+        List<QuantitationTypeValueObject> qts = new ArrayList<>(
                 quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
 
         obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( ee ) );
@@ -234,10 +200,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
     @Override
     protected Map referenceData( HttpServletRequest request ) {
-        Map<Object, Object> referenceData = new HashMap<Object, Object>();
+        Map<Object, Object> referenceData = new HashMap<>();
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
 
-        Collection<ExternalDatabase> keepers = new HashSet<ExternalDatabase>();
+        Collection<ExternalDatabase> keepers = new HashSet<>();
         for ( ExternalDatabase database : edCol ) {
             if ( database.getType() == null )
                 continue;
@@ -248,11 +214,44 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         referenceData.put( "externalDatabases", keepers );
 
-        referenceData.put( "standardQuantitationTypes", new ArrayList<String>( StandardQuantitationType.literals() ) );
-        referenceData.put( "scaleTypes", new ArrayList<String>( ScaleType.literals() ) );
-        referenceData.put( "generalQuantitationTypes", new ArrayList<String>( GeneralType.literals() ) );
-        referenceData.put( "representations", new ArrayList<String>( PrimitiveType.literals() ) );
+        referenceData.put( "standardQuantitationTypes", new ArrayList<>( StandardQuantitationType.literals() ) );
+        referenceData.put( "scaleTypes", new ArrayList<>( ScaleType.literals() ) );
+        referenceData.put( "generalQuantitationTypes", new ArrayList<>( GeneralType.literals() ) );
+        referenceData.put( "representations", new ArrayList<>( PrimitiveType.literals() ) );
         return referenceData;
+    }
+
+    @Override
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) {
+
+        ExpressionExperimentEditValueObject eeCommand = ( ExpressionExperimentEditValueObject ) command;
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
+
+        if ( expressionExperiment == null ) {
+            throw new IllegalArgumentException( "Could not load experiment" );
+        }
+
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+
+        /*
+         * Much more complicated
+         */
+        boolean changedQT = this.updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
+        boolean changedBMM = this.updateBioMaterialMap( request, expressionExperiment );
+
+        if ( changedQT || changedBMM ) {
+            try {
+                preprocessorService.process( expressionExperiment );
+            } catch ( PreprocessingException e ) {
+                throw new RuntimeException( "There was an error while updating the experiment after "
+                        + "making changes to the quantitation types and/or biomaterial map.", e );
+            }
+        }
+
+        return new ModelAndView( new RedirectView(
+                "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                        + "/expressionExperiment/showExpressionExperiment.html?id=" + eeCommand.getId() ) );
     }
 
     private void audit( ExpressionExperiment ee, AuditEventType eventType, String note ) {
@@ -275,8 +274,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
         String jsonSerialization = request.getParameter( "assayToMaterialMap" );
         // convert back to a map
 
-        Map<String, JSONValue> bioAssayMap = null;
-        try (StringInputStream aStream = new StringInputStream( jsonSerialization );) {
+        Map<String, JSONValue> bioAssayMap;
+        try (StringInputStream aStream = new StringInputStream( jsonSerialization )) {
             JSONParser parser = new JSONParser( aStream );
             bioAssayMap = ( ( JSONObject ) parser.nextValue() ).getValue();
         } catch ( IOException | ANTLRException e ) {
@@ -302,7 +301,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
             JSONValue value = entry.getValue();
 
-            Long newMaterialId = null;
+            Long newMaterialId;
             if ( value.isString() ) {
                 newMaterialId = Long.parseLong( ( ( JSONString ) value ).getValue() );
             } else {
@@ -326,9 +325,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
             BioMaterial newMaterial;
             if ( newMaterialId < 0 ) { // This kludge signifies that it is a 'brand new' biomaterial.
-                BioMaterial oldBioMaterial = currentBioMaterial;
-                newMaterial = bioMaterialService.copy( oldBioMaterial );
-                newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
+                newMaterial = bioMaterialService.copy( currentBioMaterial );
+                newMaterial.setName( "Modeled after " + currentBioMaterial.getName() );
                 newMaterial.getFactorValues().clear();
                 newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
                 newBioMaterialCount++;
@@ -341,7 +339,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 }
             }
             anyChanges = true;
-            log.info( "Associating " + bioAssay + " with " + newMaterial );
+            BaseFormController.log.info( "Associating " + bioAssay + " with " + newMaterial );
             bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
         }
 
@@ -350,8 +348,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
              * FIXME Decide if we need to remove the biomaterial -> factor value associations, it could be completely
              * fouled up.
              */
-            log.info( "There were changes to the BioMaterial -> BioAssay map" );
-            audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(),
+            BaseFormController.log.info( "There were changes to the BioMaterial -> BioAssay map" );
+            this.audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(),
                     newBioMaterialCount + " biomaterials" ); // remove unnecessary biomaterial associations
             Collection<BioAssay> deleteKeys = deleteAssociations.keySet();
             for ( BioAssay assay : deleteKeys ) {
@@ -361,7 +359,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
             }
         } else {
-            log.info( "There were no changes to the BioMaterial -> BioAssay map" );
+            BaseFormController.log.info( "There were no changes to the BioMaterial -> BioAssay map" );
 
         }
 
@@ -432,8 +430,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     revisedType.setType( newType );
                     revisedType.setScale( newscale );
                     revisedType.setGeneralType( newgentype );
-                    revisedType.setDescription( scrub( newDescription ) );
-                    revisedType.setName( scrub( newName ) );
+                    revisedType.setDescription( this.scrub( newDescription ) );
+                    revisedType.setName( this.scrub( newName ) );
                     revisedType.setIsNormalized( newisNormalized );
                     revisedType.setIsBatchCorrected( newIsBatchCorrected );
                     revisedType.setIsRecomputedFromRawData( newIsRecomputedFromRawData );
@@ -447,8 +445,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     qType.setType( newType );
                     qType.setScale( newscale );
                     qType.setGeneralType( newgentype );
-                    qType.setDescription( scrub( newDescription ) );
-                    qType.setName( scrub( newName ) );
+                    qType.setDescription( this.scrub( newDescription ) );
+                    qType.setName( this.scrub( newName ) );
                     qType.setIsNormalized( newisNormalized );
                     qType.setIsBatchCorrected( newIsBatchCorrected );
                     qType.setIsRecomputedFromRawData( newIsRecomputedFromRawData );

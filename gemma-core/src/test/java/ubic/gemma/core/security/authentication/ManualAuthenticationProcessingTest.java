@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,46 +18,40 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import static org.junit.Assert.fail;
 import gemma.gsec.authentication.ManualAuthenticationService;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
-
-import java.util.Date;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import java.util.Date;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author pavlidis
- *
  */
 public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
 
-    private String pwd;
-
-    private String username;
-
     @Autowired
     ManualAuthenticationService manualAuthenticationService;
-
     @Autowired
     UserManager userManager;
-
+    private String pwd;
+    private String username;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Before
     public void before() {
 
-        pwd = randomName();
-        username = randomName();
+        pwd = this.randomName();
+        username = this.randomName();
 
         try {
             userManager.loadUserByUsername( username );
@@ -69,7 +63,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testAttemptAuthentication() throws Exception {
+    public void testAttemptAuthentication() {
         try {
             manualAuthenticationService.attemptAuthentication( username, pwd );
         } catch ( BadCredentialsException expected ) {
@@ -79,7 +73,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testAttemptAuthenticationNonexistentUser() throws Exception {
+    public void testAttemptAuthenticationNonexistentUser() {
         try {
             manualAuthenticationService.attemptAuthentication( "I don't exist", "wrong" );
             fail( "Should have gotten a BadCredentialsException" );
@@ -89,7 +83,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testAttemptAuthenticationWrongPassword() throws Exception {
+    public void testAttemptAuthenticationWrongPassword() {
         try {
             manualAuthenticationService.attemptAuthentication( username, "wrong" );
             fail( "Should have gotten a BadCredentialsException" );

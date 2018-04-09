@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.util.fetcher;
 import junit.framework.TestCase;
 import org.apache.commons.lang3.RandomStringUtils;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
 import java.util.Collection;
@@ -30,7 +31,7 @@ import java.util.Collection;
  */
 public class AbstractFetcherTest extends TestCase {
 
-    File f;
+    private File f;
 
     public final void testMkdirAlreadyExists() throws Exception {
         TestFetcher tf = new TestFetcher();
@@ -42,23 +43,23 @@ public class AbstractFetcherTest extends TestCase {
 
         tf.setLocalDataPath( usertempdir );
         f = tf.mkdir( RandomStringUtils.randomAlphabetic( 4 ) );
-        assertTrue( f.canRead() );
+        TestCase.assertTrue( f.canRead() );
     }
 
     public final void testMkdirMakeSubdirs() throws Exception {
         TestFetcher tf = new TestFetcher();
         String usertempdir = System.getProperty( "java.io.tmpdir" );
-        assertTrue( usertempdir != null );
+        TestCase.assertTrue( usertempdir != null );
         tf.setLocalDataPath( usertempdir );
         f = tf.mkdir( RandomStringUtils.randomAlphabetic( 4 ) );
-        assertTrue( f.canRead() );
+        TestCase.assertTrue( f.canRead() );
     }
 
     public final void testMkdirMakeTemp() throws Exception {
         TestFetcher tf = new TestFetcher();
         tf.setLocalDataPath( null );
         f = tf.mkdir( RandomStringUtils.randomAlphabetic( 4 ) );
-        assertTrue( f.canRead() );
+        TestCase.assertTrue( f.canRead() );
     }
 
     @Override
@@ -66,7 +67,7 @@ public class AbstractFetcherTest extends TestCase {
 
         super.tearDown();
         if ( f != null && f.canRead() ) {
-            f.delete();
+            EntityUtils.deleteFile( f );
         }
     }
 
@@ -75,10 +76,6 @@ public class AbstractFetcherTest extends TestCase {
         @Override
         public Collection<LocalFile> fetch( String identifier ) {
             return null;
-        }
-
-        public void setLocalDataPath( String localDataPath ) {
-            this.localBasePath = localDataPath;
         }
 
         @Override
@@ -93,6 +90,10 @@ public class AbstractFetcherTest extends TestCase {
 
         @Override
         protected void initConfig() {
+        }
+
+        void setLocalDataPath( String localDataPath ) {
+            this.localBasePath = localDataPath;
         }
     }
 

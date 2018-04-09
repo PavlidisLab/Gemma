@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,9 +39,9 @@ import static org.junit.Assert.*;
  */
 public class QuantitationTypeParameterGuesserTest {
 
-    private static Log log = LogFactory.getLog( QuantitationTypeParameterGuesserTest.class.getName() );
+    private static final Log log = LogFactory.getLog( QuantitationTypeParameterGuesserTest.class.getName() );
 
-    QuantitationType qt;
+    private QuantitationType qt;
 
     @Test
     public void testAbsCall() {
@@ -198,13 +198,13 @@ public class QuantitationTypeParameterGuesserTest {
 
     @Test
     public void testTortureQuantitationTypes() throws Exception {
-        Collection<String> failed = new ArrayList<String>();
-        Collection<String> passed = new ArrayList<String>();
+        Collection<String> failed = new ArrayList<>();
+        Collection<String> passed = new ArrayList<>();
         try (InputStream is = new FileInputStream(
                 FileTools.resourceToPath( "/data/loader/expression/quantitationTypes.txt" ) );
-                BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
+                BufferedReader dis = new BufferedReader( new InputStreamReader( is ) )) {
             dis.readLine(); // throw away header.
-            String line = null;
+            String line;
 
             int lineNum = 1;
             while ( ( line = dis.readLine() ) != null ) {
@@ -229,42 +229,49 @@ public class QuantitationTypeParameterGuesserTest {
 
                 if ( qt.getGeneralType() != generalType ) {
                     failed.add( line );
-                    log.info( ">>> Line " + lineNum + ": Failed general type for '" + fields[1] + " (" + fields[2] + ")"
-                            + "', got " + qt.getGeneralType() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed general type for '" + fields[1] + " (" + fields[2]
+                                    + ")" + "', got " + qt.getGeneralType() );
                 } else if ( qt.getType() != type ) {
                     failed.add( line );
-                    log.info(
-                            ">>> Line " + lineNum + ": Failed standard type for '" + fields[1] + " (" + fields[2] + ")"
-                                    + "', got " + qt.getType() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed standard type for '" + fields[1] + " (" + fields[2]
+                                    + ")" + "', got " + qt.getType() );
                 } else if ( qt.getRepresentation() != representation ) {
                     failed.add( line );
-                    log.info(
-                            ">>> Line " + lineNum + ": Failed representation type for '" + fields[1] + " (" + fields[2]
-                                    + ")" + "', got " + qt.getRepresentation() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed representation type for '" + fields[1] + " ("
+                                    + fields[2] + ")" + "', got " + qt.getRepresentation() );
                 } else if ( qt.getIsBackground() != isBackground ) {
                     failed.add( line );
-                    log.info( ">>> Line " + lineNum + ": Failed isBackground for '" + fields[1] + " (" + fields[2] + ")"
-                            + "', got " + qt.getIsBackground() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed isBackground for '" + fields[1] + " (" + fields[2]
+                                    + ")" + "', got " + qt.getIsBackground() );
                 } else if ( qt.getScale() != scale ) {
                     failed.add( line );
-                    log.info( ">>> Line " + lineNum + ": Failed scale type for '" + fields[1] + " (" + fields[2] + ")"
-                            + "', got " + qt.getScale() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed scale type for '" + fields[1] + " (" + fields[2]
+                                    + ")" + "', got " + qt.getScale() );
                 } else if ( qt.getIsBackgroundSubtracted() != isBackgroundSubtracted ) {
                     failed.add( line );
-                    log.info( ">>> Line " + lineNum + ": Failed isBackgroundSubtracted for '" + fields[1] + " ("
-                            + fields[2] + ")" + "', got " + qt.getIsBackgroundSubtracted() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed isBackgroundSubtracted for '" + fields[1] + " ("
+                                    + fields[2] + ")" + "', got " + qt.getIsBackgroundSubtracted() );
                 } else if ( qt.getIsPreferred() != isPreferred ) {
                     failed.add( line );
-                    log.info( ">>> Line " + lineNum + ": Failed isPreferred for '" + fields[1] + " (" + fields[2] + ")"
-                            + "', got " + qt.getIsPreferred() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed isPreferred for '" + fields[1] + " (" + fields[2]
+                                    + ")" + "', got " + qt.getIsPreferred() );
                 } else if ( qt.getIsNormalized() != isNormalized ) {
                     failed.add( line );
-                    log.info( ">>> Line " + lineNum + ": Failed isNormalized for '" + fields[1] + " (" + fields[2] + ")"
-                            + "', got " + qt.getIsNormalized() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed isNormalized for '" + fields[1] + " (" + fields[2]
+                                    + ")" + "', got " + qt.getIsNormalized() );
                 } else if ( qt.getIsRatio() != isRatio ) {
                     failed.add( line );
-                    log.info( ">>> Line " + lineNum + ": Failed isRatio for '" + fields[1] + " (" + fields[2] + ")"
-                            + "', got " + qt.getIsRatio() );
+                    QuantitationTypeParameterGuesserTest.log
+                            .info( ">>> Line " + lineNum + ": Failed isRatio for '" + fields[1] + " (" + fields[2] + ")"
+                                    + "', got " + qt.getIsRatio() );
                 } else {
                     passed.add( line );
                 }
@@ -273,20 +280,15 @@ public class QuantitationTypeParameterGuesserTest {
             }
         }
         StringBuilder buf = new StringBuilder();
-        buf.append( "\n***** PASSED: " + passed.size() + " *******\n" );
+        buf.append( "\n***** PASSED: " ).append( passed.size() ).append( " *******\n" );
 
-        buf.append( "***** FAILED " + failed.size() + " *******\n" );
+        buf.append( "***** FAILED " ).append( failed.size() ).append( " *******\n" );
 
-        log.info( buf );
-
-        if ( failed.size() > 0 ) {
-            // fail();
-        }
-
+        QuantitationTypeParameterGuesserTest.log.info( buf );
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         qt = QuantitationType.Factory.newInstance();
         qt.setIsBackground( false );
         qt.setScale( ScaleType.LINEAR );

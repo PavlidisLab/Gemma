@@ -70,7 +70,7 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @Override
-    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+    protected Element invokeInternal( Element requestElement, Document document ) {
         StopWatch watch = new StopWatch();
         watch.start();
 

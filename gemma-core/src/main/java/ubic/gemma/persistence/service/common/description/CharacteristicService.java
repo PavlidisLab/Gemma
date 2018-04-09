@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,8 +39,6 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
      * @param limit Maximum records to retrieve
      */
     List<Characteristic> browse( Integer start, Integer limit );
-
-    Collection<String> getUsedCategories();
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -97,15 +95,19 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
 
     Collection<? extends Characteristic> findByCategory( String queryPrefix );
 
+    @Override
     @Secured({ "GROUP_USER" })
     Characteristic create( Characteristic c );
 
-    @Secured({ "GROUP_USER" })
-    void remove( Characteristic c );
-
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( Long id );
 
+    @Override
+    @Secured({ "GROUP_USER" })
+    void remove( Characteristic c );
+
+    @Override
     @Secured({ "GROUP_USER" })
     void update( Characteristic c );
 

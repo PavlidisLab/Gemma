@@ -9,8 +9,8 @@ import java.util.Map;
 /**
  * This class contains data for a column in metaheatmap visualization.
  */
+@SuppressWarnings("unused") // Used in frontend
 public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
-    private int numberOfGeneGroups;
 
     private String datasetName;
     private String datasetShortName;
@@ -47,20 +47,20 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     private Long baselineFactorValueId;
 
     public DifferentialExpressionAnalysisResultSetVisualizationValueObject( int[] geneGroupSizes ) {
-        this.numberOfGeneGroups = geneGroupSizes.length;
+        int numberOfGeneGroups = geneGroupSizes.length;
 
         // Initialize lists
-        this.visualizationValues = new ArrayList<List<Double>>( numberOfGeneGroups );
-        this.qValues = new ArrayList<List<Double>>( numberOfGeneGroups );
-        this.numberOfProbes = new ArrayList<List<Integer>>( numberOfGeneGroups );
-        for ( int i = 0; i < numberOfGeneGroups; i++ ) {
-            this.visualizationValues.add( new ArrayList<Double>( geneGroupSizes[i] ) );
-            this.qValues.add( new ArrayList<Double>( geneGroupSizes[i] ) );
-            this.numberOfProbes.add( new ArrayList<Integer>( geneGroupSizes[i] ) );
+        this.visualizationValues = new ArrayList<>( numberOfGeneGroups );
+        this.qValues = new ArrayList<>( numberOfGeneGroups );
+        this.numberOfProbes = new ArrayList<>( numberOfGeneGroups );
+        for ( int geneGroupSize : geneGroupSizes ) {
+            this.visualizationValues.add( new ArrayList<Double>( geneGroupSize ) );
+            this.qValues.add( new ArrayList<Double>( geneGroupSize ) );
+            this.numberOfProbes.add( new ArrayList<Integer>( geneGroupSize ) );
         }
 
-        this.contrastsFactorValues = new HashMap<Long, String>();
-        this.contrastsFactorValueIds = new ArrayList<Long>();
+        this.contrastsFactorValues = new HashMap<>();
+        this.contrastsFactorValueIds = new ArrayList<>();
     }
 
     public void addContrastsFactorValue( long factorValueId, String factorValueName ) {
@@ -72,16 +72,32 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
         return analysisId;
     }
 
+    public void setAnalysisId( Long analysisId ) {
+        this.analysisId = analysisId;
+    }
+
     public boolean getAnalysisNotRun() {
         return analysisNotRun;
+    }
+
+    public void setAnalysisNotRun( boolean analysisNotRun ) {
+        this.analysisNotRun = analysisNotRun;
     }
 
     public String getBaselineFactorValue() {
         return baselineFactorValue;
     }
 
+    public void setBaselineFactorValue( String baselineFactorValue ) {
+        this.baselineFactorValue = baselineFactorValue;
+    }
+
     public Long getBaselineFactorValueId() {
         return baselineFactorValueId;
+    }
+
+    public void setBaselineFactorValueId( Long baselineFactorValueId ) {
+        this.baselineFactorValueId = baselineFactorValueId;
     }
 
     public List<Long> getContrastsFactorValueIds() {
@@ -92,172 +108,156 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
         return contrastsFactorValues;
     }
 
-    public Long getDatasetId() {
-        return datasetId;
-    }
-
-    public String getDatasetLink() {
-        return datasetLink;
-    }
-
-    public String getDatasetName() {
-        return datasetName;
-    }
-
-    public String getDatasetShortName() {
-        return datasetShortName;
-    }
-
-    public String getFactorCategory() {
-        return this.factorCategory;
-    }
-
-    public String getFactorDescription() {
-        return factorDescription;
-    }
-
-    public Long getFactorId() {
-        return factorId;
-    }
-
-    public String getFactorName() {
-        return factorName;
-    }
-
-    public List<List<Integer>> getNumberOfProbes() {
-        return numberOfProbes;
-    }
-
-    public int getNumberOfProbesDiffExpressed() {
-        return numberOfProbesDiffExpressed;
-    }
-
-    public int getNumberOfProbesDownRegulated() {
-        return numberOfProbesDownRegulated;
-    }
-
-    public int getNumberOfProbesTotal() {
-        return numberOfProbesTotal;
-    }
-
-    public int getNumberOfProbesUpRegulated() {
-        return numberOfProbesUpRegulated;
-    }
-
-    public List<List<Double>> getqValues() {
-        return qValues;
-    }
-
-    public Long getResultSetId() {
-        return resultSetId;
-    }
-
-    public List<List<Double>> getVisualizationValues() {
-        return visualizationValues;
-    }
-
-    public void setAnalysisId( Long analysisId ) {
-        this.analysisId = analysisId;
-    }
-
-    public void setAnalysisNotRun( boolean analysisNotRun ) {
-        this.analysisNotRun = analysisNotRun;
-    }
-
-    public void setBaselineFactorValue( String baselineFactorValue ) {
-        this.baselineFactorValue = baselineFactorValue;
-    }
-
-    public void setBaselineFactorValueId( Long baselineFactorValueId ) {
-        this.baselineFactorValueId = baselineFactorValueId;
-    }
-
     public void setContrastsFactorValues( Map<Long, String> contrastsFactorValues ) {
         this.contrastsFactorValues = contrastsFactorValues;
+    }
+
+    public Long getDatasetId() {
+        return datasetId;
     }
 
     public void setDatasetId( Long datasetId ) {
         this.datasetId = datasetId;
     }
 
+    public String getDatasetLink() {
+        return datasetLink;
+    }
+
     public void setDatasetLink( String datasetLink ) {
         this.datasetLink = datasetLink;
+    }
+
+    public String getDatasetName() {
+        return datasetName;
     }
 
     public void setDatasetName( String datasetName ) {
         this.datasetName = datasetName;
     }
 
+    public String getDatasetShortName() {
+        return datasetShortName;
+    }
+
     public void setDatasetShortName( String datasetShortName ) {
         this.datasetShortName = datasetShortName;
+    }
+
+    public String getFactorCategory() {
+        return this.factorCategory;
     }
 
     public void setFactorCategory( String name ) {
         this.factorCategory = name;
     }
 
+    public String getFactorDescription() {
+        return factorDescription;
+    }
+
     public void setFactorDescription( String factorDescription ) {
         this.factorDescription = factorDescription;
+    }
+
+    public Long getFactorId() {
+        return factorId;
     }
 
     public void setFactorId( Long factorId ) {
         this.factorId = factorId;
     }
 
+    public String getFactorName() {
+        return factorName;
+    }
+
     public void setFactorName( String factorName ) {
         this.factorName = factorName;
     }
 
-    public void setNumberOfProbes( int geneGroupIndex, int geneIndex, Integer numberOfProbes ) {
-        this.numberOfProbes.get( geneGroupIndex ).add( geneIndex, numberOfProbes );
+    public List<List<Integer>> getNumberOfProbes() {
+        return numberOfProbes;
     }
 
     public void setNumberOfProbes( List<List<Integer>> numberOfProbes ) {
         this.numberOfProbes = numberOfProbes;
     }
 
+    public int getNumberOfProbesDiffExpressed() {
+        return numberOfProbesDiffExpressed;
+    }
+
     public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
         this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
+    }
+
+    public int getNumberOfProbesDownRegulated() {
+        return numberOfProbesDownRegulated;
     }
 
     public void setNumberOfProbesDownRegulated( int numberOfProbesDownRegulated ) {
         this.numberOfProbesDownRegulated = numberOfProbesDownRegulated;
     }
 
+    public int getNumberOfProbesTotal() {
+        return numberOfProbesTotal;
+    }
+
     public void setNumberOfProbesTotal( int numberOfProbesTotal ) {
         this.numberOfProbesTotal = numberOfProbesTotal;
+    }
+
+    public int getNumberOfProbesUpRegulated() {
+        return numberOfProbesUpRegulated;
     }
 
     public void setNumberOfProbesUpRegulated( int numberOfProbesUpRegulated ) {
         this.numberOfProbesUpRegulated = numberOfProbesUpRegulated;
     }
 
-    public void setQvalue( int geneGroupIndex, int geneIndex, Double qValue ) {
-        this.qValues.get( geneGroupIndex ).add( geneIndex, qValue );
+    public List<List<Double>> getqValues() {
+        return qValues;
     }
 
     public void setqValues( List<List<Double>> qValues ) {
         this.qValues = qValues;
     }
 
+    public Long getResultSetId() {
+        return resultSetId;
+    }
+
     public void setResultSetId( Long resultSetId ) {
         this.resultSetId = resultSetId;
     }
 
-    public void setVisualizationValue( int geneGroupIndex, int geneIndex, Double value ) {
-        this.visualizationValues.get( geneGroupIndex ).add( geneIndex, value );
+    public List<List<Double>> getVisualizationValues() {
+        return visualizationValues;
     }
 
     public void setVisualizationValues( List<List<Double>> visualizationValues ) {
         this.visualizationValues = visualizationValues;
     }
 
+    public void setNumberOfProbes( int geneGroupIndex, int geneIndex, Integer numberOfProbes ) {
+        this.numberOfProbes.get( geneGroupIndex ).add( geneIndex, numberOfProbes );
+    }
+
+    public void setQvalue( int geneGroupIndex, int geneIndex, Double qValue ) {
+        this.qValues.get( geneGroupIndex ).add( geneIndex, qValue );
+    }
+
+    public void setVisualizationValue( int geneGroupIndex, int geneIndex, Double value ) {
+        this.visualizationValues.get( geneGroupIndex ).add( geneIndex, value );
+    }
+
     public String toText() {
         DecimalFormat df = new DecimalFormat( "#.######" );
         StringBuilder text = new StringBuilder();
-        text.append( "|" + datasetShortName + "|" + factorName + "|" );
+        text.append( "|" ).append( datasetShortName ).append( "|" ).append( factorName ).append( "|" );
         for ( Long fvId : this.contrastsFactorValues.keySet() ) {
-            text.append( this.contrastsFactorValues.get( fvId ).trim() + "," );
+            text.append( this.contrastsFactorValues.get( fvId ).trim() ).append( "," );
         }
         text.append( "|" );
         for ( List<Double> pValueGroup : this.qValues ) {
@@ -265,7 +265,7 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
                 if ( pValue == null ) {
                     text.append( "NA|" );
                 } else {
-                    text.append( df.format( pValue ) + "|" );
+                    text.append( df.format( pValue ) ).append( "|" );
                 }
             }
         }

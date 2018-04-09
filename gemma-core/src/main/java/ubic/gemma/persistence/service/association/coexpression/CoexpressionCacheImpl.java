@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author paul
  */
+@SuppressWarnings("SynchronizeOnNonFinalField") // Cache has to be initialized in afterPropertiesSet
 @Component
 public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCache {
 
@@ -66,23 +67,22 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
     public void afterPropertiesSet() {
         CacheManager cacheManager = cacheManagerFactory.getObject();
         assert cacheManager != null;
-        int maxElements = Settings
-                .getInt( "gemma.cache.gene2gene.maxelements", GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = Settings
-                .getInt( "gemma.cache.gene2gene.timetolive", GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = Settings
-                .getInt( "gemma.cache.gene2gene.timetoidle", GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE );
-        boolean overFlowToDisk = Settings
-                .getBoolean( "gemma.cache.gene2gene.usedisk", GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-        boolean eternal =
-                Settings.getBoolean( "gemma.cache.gene2gene.eternal", GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL )
-                        && timeToLive == 0;
+        int maxElements = Settings.getInt( "gemma.cache.gene2gene.maxelements",
+                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = Settings.getInt( "gemma.cache.gene2gene.timetolive",
+                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = Settings.getInt( "gemma.cache.gene2gene.timetoidle",
+                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE );
+        boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.gene2gene.usedisk",
+                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
+        boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
+                CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
         this.cache = CacheUtils
-                .createOrLoadCache( cacheManager, GENE_COEXPRESSION_CACHE_NAME, terracottaEnabled, maxElements,
-                        overFlowToDisk, eternal, timeToIdle, timeToLive, diskPersistent );
+                .createOrLoadCache( cacheManager, CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_NAME, terracottaEnabled,
+                        maxElements, overFlowToDisk, eternal, timeToIdle, timeToLive, diskPersistent );
     }
 
     @Override
@@ -117,11 +117,11 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         for ( Long id : r.keySet() ) {
             List<CoexpressionValueObject> res = r.get( id );
             assert res != null;
-            cacheCoexpression( id, res );
+            this.cacheCoexpression( id, res );
         }
 
         if ( timer.getTime() > 100 ) {
-            log.debug( "Caching " + r.size() + " results took: " + timer.getTime() + "ms" );
+            CoexpressionCacheImpl.log.debug( "Caching " + r.size() + " results took: " + timer.getTime() + "ms" );
         }
 
     }
@@ -133,7 +133,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
 
         CacheManager manager = CacheManager.getInstance();
         synchronized ( cache ) {
-            manager.getCache( GENE_COEXPRESSION_CACHE_NAME ).removeAll();
+            manager.getCache( CoexpressionCacheImpl.GENE_COEXPRESSION_CACHE_NAME ).removeAll();
         }
     }
 
@@ -204,24 +204,9 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
 
         final long geneId;
 
-        public GeneCached( long geneId ) {
+        GeneCached( long geneId ) {
             super();
             this.geneId = geneId;
-        }
-
-        @Override
-        public boolean equals( Object obj ) {
-            if ( this == obj )
-                return true;
-            if ( obj == null )
-                return false;
-            if ( getClass() != obj.getClass() )
-                return false;
-            GeneCached other = ( GeneCached ) obj;
-
-            if ( geneId != other.geneId )
-                return false;
-            return true;
         }
 
         @Override
@@ -230,6 +215,19 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
             int result = 1;
             result = prime * result + ( int ) ( geneId ^ ( geneId >>> 32 ) );
             return result;
+        }
+
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj )
+                return true;
+            if ( obj == null )
+                return false;
+            if ( this.getClass() != obj.getClass() )
+                return false;
+            GeneCached other = ( GeneCached ) obj;
+
+            return geneId == other.geneId;
         }
 
     }

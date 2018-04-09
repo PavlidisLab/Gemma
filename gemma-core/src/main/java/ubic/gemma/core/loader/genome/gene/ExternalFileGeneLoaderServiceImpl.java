@@ -24,14 +24,14 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.*;
 import java.util.Collection;

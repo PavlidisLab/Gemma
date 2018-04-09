@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@ package ubic.gemma.core.apps;
 
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import java.util.Collection;
@@ -33,7 +34,7 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
 
     public static void main( String[] args ) {
         ArrayDesignMapSummaryCli p = new ArrayDesignMapSummaryCli();
-        tryDoWorkNoExit( p, args );
+        AbstractCLIContextCLI.tryDoWorkNoExit( p, args );
     }
 
     @Override
@@ -42,29 +43,29 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.ANALYSIS;
-    }
-
-    @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
+        Exception err = this.processCommandLine( args );
         if ( err != null )
             return err;
         ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 
         for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
 
-            ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
+            ArrayDesign thawed = this.thaw( arrayDesign );
 
             Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( thawed );
 
-            System.out.println( CompositeSequenceMapSummary.header() );
+            System.out.println( CompositeSequenceMapSummary.HEADER );
             for ( CompositeSequenceMapSummary summary : results ) {
                 System.out.println( summary );
             }
         }
         return null;
+    }
+
+    @Override
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.ANALYSIS;
     }
 
 }

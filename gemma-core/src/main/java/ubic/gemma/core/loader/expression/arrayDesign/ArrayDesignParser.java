@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,19 +18,17 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Parse ArrayDesigns from a flat file. This is used to seed the system from our legacy data. (probably not used)
- * <p>
  * Format:
  * <ol>
  * <li>Murine Genome U74A Array --- platform name
@@ -40,19 +38,24 @@ import ubic.gemma.model.genome.Taxon;
  * <li>10044 --- advertised number of design elements
  * <li>(Masked) Affymetrix GeneChip expression probe array... --- Description
  * </ol>
- * 
- * @author keshav
  *
+ * @author keshav
  * @deprecated
  */
 @Deprecated
 public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
 
-    private Collection<ArrayDesign> results = new HashSet<ArrayDesign>();
+    private final Collection<ArrayDesign> results = new HashSet<>();
 
     @Override
     public Collection<ArrayDesign> getResults() {
         return results;
+    }
+
+    @Override
+    protected void addResult( ArrayDesign obj ) {
+        results.add( obj );
+
     }
 
     @Override
@@ -74,12 +77,6 @@ public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
 
         ad.setAdvertisedNumberOfDesignElements( Integer.parseInt( fields[4] ) );
         return ad;
-    }
-
-    @Override
-    protected void addResult( ArrayDesign obj ) {
-        results.add( obj );
-
     }
 
 }

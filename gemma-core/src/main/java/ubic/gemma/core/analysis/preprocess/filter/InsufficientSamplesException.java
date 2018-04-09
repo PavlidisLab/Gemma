@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,28 +20,12 @@ package ubic.gemma.core.analysis.preprocess.filter;
 
 /**
  * @author Paul
- *
  */
 public class InsufficientSamplesException extends InsufficientDataException {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
-    public InsufficientSamplesException() {
-        super();
-    }
-
-    public InsufficientSamplesException( String arg0 ) {
-        super( arg0 );
-    }
-
-    public InsufficientSamplesException( String arg0, Throwable arg1 ) {
-        super( arg0, arg1 );
-    }
-
-    public InsufficientSamplesException( Throwable arg0 ) {
+    InsufficientSamplesException( String arg0 ) {
         super( arg0 );
     }
 

@@ -1,8 +1,8 @@
 /*
  * The gemma-web project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,13 +24,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -39,7 +36,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringWebTest;
+import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.util.Collections;
 import java.util.Date;
@@ -111,8 +111,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
             e.printStackTrace();
         }
 
-        ExpressionExperimentValueObject eeVO = this.expressionExperimentService
-                .loadValueObject( expressionExperiment );
+        ExpressionExperimentValueObject eeVO = this.expressionExperimentService.loadValueObject( expressionExperiment );
         assertNotNull( eeVO );
 
         try {

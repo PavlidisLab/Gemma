@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,10 +23,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 /**
  * Encapsulates information about the row 'label' for a ExpressionDataMatrix. Normal applications do not need to deal
  * with this very much (I hope).
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public class ExpressionDataMatrixRowElement implements Comparable<ExpressionDataMatrixRowElement> {
 
     private CompositeSequence designElement;
@@ -48,18 +48,20 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
         return o.getDesignElement().getName().compareTo( this.getDesignElement().getName() );
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( !( obj instanceof ExpressionDataMatrixRowElement ) ) return false;
-        return this.index.equals( ( ( ExpressionDataMatrixRowElement ) obj ).getIndex() );
-    }
-
     public CompositeSequence getDesignElement() {
         return designElement;
     }
 
+    public void setDesignElement( CompositeSequence designElement ) {
+        this.designElement = designElement;
+    }
+
     public Integer getIndex() {
         return index;
+    }
+
+    public void setIndex( Integer index ) {
+        this.index = index;
     }
 
     @Override
@@ -67,12 +69,10 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
         return index.hashCode();
     }
 
-    public void setDesignElement( CompositeSequence designElement ) {
-        this.designElement = designElement;
-    }
-
-    public void setIndex( Integer index ) {
-        this.index = index;
+    @Override
+    public boolean equals( Object obj ) {
+        return obj instanceof ExpressionDataMatrixRowElement && this.index
+                .equals( ( ( ExpressionDataMatrixRowElement ) obj ).getIndex() );
     }
 
     @Override

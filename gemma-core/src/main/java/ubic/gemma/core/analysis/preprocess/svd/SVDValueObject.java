@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -67,8 +67,8 @@ public class SVDValueObject implements Serializable {
     /**
      * An array of values representing the fraction of the variance each component accounts for
      */
-    private Double[] variances = null;
-    private DoubleMatrix<Long, Integer> vMatrix = null;
+    private Double[] variances;
+    private DoubleMatrix<Long, Integer> vMatrix;
 
     public SVDValueObject( Long id, List<Long> bioMaterialIds, Double[] variances,
             DoubleMatrix<Long, Integer> vMatrix ) {
@@ -99,11 +99,11 @@ public class SVDValueObject implements Serializable {
         this.vMatrix = new DenseDoubleMatrix<>( eigenvectorArrays.get( 0 ).length, eigenvectorArrays.size() );
 
         if ( this.bioMaterialIds.length != eigenvectorArrays.get( 0 ).length ) {
-            log.warn( "EE id = " + pca.getExperimentAnalyzed().getId()
+            SVDValueObject.log.warn( "EE id = " + pca.getExperimentAnalyzed().getId()
                     + ": Biomaterials and eigenvectors are of different length: " + this.bioMaterialIds.length
                     + " != eigenvector len = " + eigenvectorArrays.get( 0 ).length );
         } else {
-            this.vMatrix.setRowNames( Arrays.asList( getBioMaterialIds() ) );
+            this.vMatrix.setRowNames( Arrays.asList( this.getBioMaterialIds() ) );
         }
 
         int j = 0;

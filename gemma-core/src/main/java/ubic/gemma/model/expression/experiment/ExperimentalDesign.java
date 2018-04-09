@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 
+import javax.persistence.Transient;
 import java.util.Collection;
 
 public class ExperimentalDesign extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
@@ -68,6 +69,7 @@ public class ExperimentalDesign extends AbstractAuditable implements gemma.gsec.
         this.replicateDescription = replicateDescription;
     }
 
+    @Transient
     @Override
     public Securable getSecurityOwner() {
         return null;

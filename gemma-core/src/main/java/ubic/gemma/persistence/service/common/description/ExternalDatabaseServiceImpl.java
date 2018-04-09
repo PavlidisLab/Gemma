@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,42 +21,25 @@ package ubic.gemma.persistence.service.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.description.ExternalDatabase;
-
-import java.util.Collection;
+import ubic.gemma.persistence.service.AbstractService;
 
 /**
  * @author pavlidis
  * @see ExternalDatabaseService
  */
 @Service
-public class ExternalDatabaseServiceImpl extends ExternalDatabaseServiceBase {
+public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabase> implements ExternalDatabaseService {
+
+    private final ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
-    private ExternalDatabaseDao externalDatabaseDao;
+    public ExternalDatabaseServiceImpl( ExternalDatabaseDao mainDao ) {
+        super( mainDao );
+        externalDatabaseDao = mainDao;
+    }
 
-    /**
-     * @see ExternalDatabaseService#find(java.lang.String)
-     */
     @Override
-    protected ExternalDatabase handleFind( java.lang.String name ) {
+    public ExternalDatabase findByName( String name ) {
         return this.externalDatabaseDao.findByName( name );
     }
-
-    @Override
-    protected ExternalDatabase handleFindOrCreate( ExternalDatabase externalDatabase ) {
-        return this.externalDatabaseDao.findOrCreate( externalDatabase );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<ExternalDatabase> handleLoadAll() {
-        return this.externalDatabaseDao.loadAll();
-    }
-
-    @Override
-    protected void handleRemove( ExternalDatabase externalDatabase ) {
-        this.externalDatabaseDao.remove( externalDatabase );
-
-    }
-
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.genome;
 
-import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
@@ -28,14 +27,11 @@ import java.util.Collection;
 /**
  * @author kelsey
  */
-public interface ChromosomeService extends BaseService<Chromosome>{
+public interface ChromosomeService extends BaseService<Chromosome> {
 
     /**
      * Locate by name e.g. 'X'.
      */
     Collection<Chromosome> find( String name, Taxon taxon );
-
-    @Secured({ "GROUP_USER" })
-    ubic.gemma.model.genome.Chromosome findOrCreate( String name, Taxon taxon );
 
 }

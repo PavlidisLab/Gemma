@@ -583,7 +583,7 @@ MyGridPanel = Ext.extend(Ext.grid.GridPanel, {
 
                 cls = function ctor () {
                     this.constructor.apply(this, arguments);
-                }
+                };
 
                 if (className) {
                     cls.displayName = className;
@@ -894,7 +894,7 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             for(var i = 0, len = array.length; i < len; i++){
                 if(fn.call(scope || array[i], array[i], i, array) === false){
                     return i;
-                };
+                }
             }
         },
 
@@ -924,13 +924,13 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             }
             if(Ext.isIterable(obj)){
                 Ext.each(obj, fn, scope);
-                return;
+
             }else if(typeof obj == 'object'){
                 for(var prop in obj){
                     if(obj.hasOwnProperty(prop)){
                         if(fn.call(scope || obj, prop, obj[prop], obj) === false){
                             return;
-                        };
+                        }
                     }
                 }
             }
@@ -2154,7 +2154,6 @@ Ext.lib.Anim = function(){
                     break;
                 }
             }
-            // TODO: find out about easing plug in?
             jQuery(el).animate(o, duration*1000, undefined, anim.proxyCallback);
             return anim;
         }

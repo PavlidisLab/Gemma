@@ -274,16 +274,9 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
     formatAssayCount: function (value, metadata, record, row, col, ds) {
         return record.get("bioAssayCount");
-        // return String
-        // .format(
-        // "{0}&nbsp;<a target='_blank'
-        // href=ctxBasePath + '/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img
-        // src=ctxBasePath + '/images/magnifier.png' height='10' width='10'/></a>",
-        // record.data.bioAssayCount, record.data.id);
     },
 
     formatEE: function (value, metadata, record, row, col, ds) {
-        // fixme: this is duplicated code.
         var eeTemplate = new Ext.XTemplate(
             '<tpl for="."><a target="_blank" title="{name}" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=',
             '{id}"', ' ext:qtip="{name}">{shortName}</a></tpl>');

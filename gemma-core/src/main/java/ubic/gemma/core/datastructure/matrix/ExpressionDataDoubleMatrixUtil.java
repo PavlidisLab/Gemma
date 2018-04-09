@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,8 +41,10 @@ public class ExpressionDataDoubleMatrixUtil {
     private static final int LARGEST_EXPECTED_LOGGED_VALUE = 20;
 
     private static final double LOGARITHM_BASE = 2.0;
+    private static final int COLUMNS_LIMIT = 4;
+    private static final double VALUES_LIMIT = 0.5;
 
-    private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
+    private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
 
     /**
      * Log2 transform if necessary, do any required filtering prior to analysis. Count data is converted to log2CPM (but
@@ -55,24 +57,24 @@ public class ExpressionDataDoubleMatrixUtil {
     public static ExpressionDataDoubleMatrix filterAndLog2Transform( QuantitationType quantitationType,
             ExpressionDataDoubleMatrix dmatrix ) {
 
-        ScaleType scaleType = findScale( quantitationType, dmatrix.getMatrix() );
+        ScaleType scaleType = ExpressionDataDoubleMatrixUtil.findScale( quantitationType, dmatrix.getMatrix() );
 
         if ( scaleType.equals( ScaleType.LOG2 ) ) {
-            log.info( "Data is already on a log2 scale" );
+            ExpressionDataDoubleMatrixUtil.log.info( "Data is already on a log2 scale" );
         } else if ( scaleType.equals( ScaleType.LN ) ) {
-            log.info( " **** Converting from ln to log2 **** " );
+            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from ln to log2 **** " );
             MatrixStats.convertToLog2( dmatrix.getMatrix(), Math.E );
         } else if ( scaleType.equals( ScaleType.LOG10 ) ) {
-            log.info( " **** Converting from log10 to log2 **** " );
+            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from log10 to log2 **** " );
             MatrixStats.convertToLog2( dmatrix.getMatrix(), 10 );
         } else if ( scaleType.equals( ScaleType.LINEAR ) ) {
-            log.info( " **** LOG TRANSFORMING **** " );
+            ExpressionDataDoubleMatrixUtil.log.info( " **** LOG TRANSFORMING **** " );
             MatrixStats.logTransform( dmatrix.getMatrix() );
         } else if ( scaleType.equals( ScaleType.COUNT ) ) {
             /*
              * Since we store log2cpm this shouldn't be reached any more. We don't do it in place.
              */
-            log.info( " **** Converting from count to log2 counts per million **** " );
+            ExpressionDataDoubleMatrixUtil.log.info( " **** Converting from count to log2 counts per million **** " );
             DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
             DoubleMatrix<CompositeSequence, BioMaterial> log2cpm = MatrixStats
                     .convertToLog2Cpm( dmatrix.getMatrix(), librarySize );
@@ -84,23 +86,23 @@ public class ExpressionDataDoubleMatrixUtil {
         /*
          * We do this second because doing it first causes some kind of subtle problem ... (round off? I could not
          * really track this down).
-         * 
+         *
          * Remove zero-variance rows, but also rows that have lots of equal values even if variance is non-zero. This
          * happens when data is "clipped" (e.g., all values under 10 set to 10).
          */
         int r = dmatrix.rows();
         dmatrix = ExpressionExperimentFilter.zeroVarianceFilter( dmatrix );
         if ( dmatrix.rows() < r ) {
-            log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
+            ExpressionDataDoubleMatrixUtil.log.info( ( r - dmatrix.rows() ) + " rows removed due to low variance" );
         }
         r = dmatrix.rows();
-        /*
-         * FIXME refactor as constant. Idea is to skip this if the data set is really small, but this is totally ad hoc.
-         */
-        if ( dmatrix.columns() > 4 ) {
-            dmatrix = ExpressionExperimentFilter.tooFewDistinctValues( dmatrix, 0.5 );
+
+        if ( dmatrix.columns() > ExpressionDataDoubleMatrixUtil.COLUMNS_LIMIT ) {
+            dmatrix = ExpressionExperimentFilter
+                    .tooFewDistinctValues( dmatrix, ExpressionDataDoubleMatrixUtil.VALUES_LIMIT );
             if ( dmatrix.rows() < r ) {
-                log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
+                ExpressionDataDoubleMatrixUtil.log
+                        .info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
             }
         }
 
@@ -114,6 +116,7 @@ public class ExpressionDataDoubleMatrixUtil {
      * @return ScaleType
      * @see ExpressionExperimentFilter for a related implementation.
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static ScaleType findScale( QuantitationType quantitationType,
             DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
 
@@ -142,8 +145,8 @@ public class ExpressionDataDoubleMatrixUtil {
         for ( int i = 0; i < namedMatrix.rows(); i++ ) {
             for ( int j = 0; j < namedMatrix.columns(); j++ ) {
                 double v = namedMatrix.get( i, j );
-                if ( v > LARGEST_EXPECTED_LOGGED_VALUE ) {
-                    log.debug( "Data has large values, doesn't look log transformed" );
+                if ( v > ExpressionDataDoubleMatrixUtil.LARGEST_EXPECTED_LOGGED_VALUE ) {
+                    ExpressionDataDoubleMatrixUtil.log.debug( "Data has large values, doesn't look log transformed" );
                     return ScaleType.LINEAR;
                 }
             }
@@ -177,7 +180,8 @@ public class ExpressionDataDoubleMatrixUtil {
             CompositeSequence del = el.getDesignElement();
 
             if ( b.getRow( del ) == null ) {
-                log.warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
+                ExpressionDataDoubleMatrixUtil.log
+                        .warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
                 continue;
             }
 
@@ -198,7 +202,7 @@ public class ExpressionDataDoubleMatrixUtil {
      */
     public static void logTransformMatrix( ExpressionDataDoubleMatrix matrix ) {
         int columns = matrix.columns();
-        double log2 = Math.log( LOGARITHM_BASE );
+        double log2 = Math.log( ExpressionDataDoubleMatrixUtil.LOGARITHM_BASE );
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
@@ -235,7 +239,8 @@ public class ExpressionDataDoubleMatrixUtil {
             CompositeSequence del = el.getDesignElement();
 
             if ( b.getRow( del ) == null ) {
-                log.warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
+                ExpressionDataDoubleMatrixUtil.log
+                        .warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
                 continue;
             }
             for ( int i = 0; i < columns; i++ ) {
@@ -289,7 +294,7 @@ public class ExpressionDataDoubleMatrixUtil {
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
             if ( mask.getRow( del ) == null ) {
-                log.warn( "Mask Matrix is missing a row for " + del );
+                ExpressionDataDoubleMatrixUtil.log.warn( "Mask Matrix is missing a row for " + del );
                 continue;
             }
             for ( int i = 0; i < columns; i++ ) {

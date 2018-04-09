@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,19 +24,20 @@ import java.util.concurrent.BlockingQueue;
 
 /**
  * Defines a class that produces object that can be consumed by other classes.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public interface QueuingParser<T> {
 
     /**
      * Parse an input stream, storing the results in the passed queue (which can be used by a consumer)
-     * 
-     * @param inputStream
-     * @param queue
-     * @throws IOException
+     *
+     * @param inputStream input stream
+     * @param queue       queue
+     * @throws IOException IO problems
      */
-    public void parse( InputStream inputStream, BlockingQueue<T> queue ) throws IOException;
+    @SuppressWarnings("unused")
+    // Possible external use
+    void parse( InputStream inputStream, BlockingQueue<T> queue ) throws IOException;
 
 }

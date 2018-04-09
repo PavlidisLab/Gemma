@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
@@ -30,26 +29,15 @@ import java.io.IOException;
 /**
  * CLI for loading genes from a non NCBI files. A taxon and gene file should be supplied as command line arguments. File
  * should be in tab delimited format containing gene symbol, gene name, uniprot id in that order.
- * 
- * @author ldonnison
  *
+ * @author ldonnison
  */
 public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
 
-    @Override
-    public String getShortDesc() {
-        return "loading genes from a non-NCBI files; only used for species like salmon";
-    }
-
-    @Override
-    public String getCommandName() {
-        return "loadGenesFromFile";
-    }
-
-    private ExternalFileGeneLoaderService loader;
     private String directGeneInputFileName = null;
     private String taxonName;
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public ExternalFileGeneLoaderCLI() {
         super();
     }
@@ -57,39 +45,12 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     public static void main( String[] args ) {
         // super constructor calls build options
         ExternalFileGeneLoaderCLI p = new ExternalFileGeneLoaderCLI();
-        try {
-            p.doWork( args );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        AbstractCLIContextCLI.tryDoWork( p, args );
     }
 
     @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
-        if ( err != null ) return err;
-        processGeneList();
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.util.AbstractSpringAwareCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        Option directGene = OptionBuilder
-                .withDescription( "Tab delimited format containing gene symbol, gene name, uniprot id in that order" )
-                .hasArg().withArgName( "file" ).create( "f" );
-        addOption( directGene );
-
-        Option taxonNameOption = OptionBuilder.hasArg()
-                .withDescription( "Taxon common name e.g. 'salmonoid'; does not have to be a species " ).create( "t" );
-        addOption( taxonNameOption );
-
-        requireLogin();
+    public String getShortDesc() {
+        return "loading genes from a non-NCBI files; only used for species like salmon";
     }
 
     /**
@@ -98,13 +59,13 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'f' ) ) {
-            directGeneInputFileName = getOptionValue( 'f' );
+        if ( this.hasOption( 'f' ) ) {
+            directGeneInputFileName = this.getOptionValue( 'f' );
             if ( directGeneInputFileName == null ) {
-                throw new IllegalArgumentException( "No gene input file provided " + directGeneInputFileName );
+                throw new IllegalArgumentException( "No gene input file provided " );
             }
         }
-        if ( hasOption( 't' ) ) {
+        if ( this.hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
             if ( taxonName == null ) {
                 throw new IllegalArgumentException( "No taxon name supplied " );
@@ -113,12 +74,42 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
 
     }
 
+    @Override
+    public String getCommandName() {
+        return "loadGenesFromFile";
+    }
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        Option directGene = OptionBuilder
+                .withDescription( "Tab delimited format containing gene symbol, gene name, uniprot id in that order" )
+                .hasArg().withArgName( "file" ).create( "f" );
+        this.addOption( directGene );
+
+        Option taxonNameOption = OptionBuilder.hasArg()
+                .withDescription( "Taxon common name e.g. 'salmonoid'; does not have to be a species " ).create( "t" );
+        this.addOption( taxonNameOption );
+
+        this.requireLogin();
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception err = this.processCommandLine( args );
+        if ( err != null )
+            return err;
+        this.processGeneList();
+        return null;
+    }
+
     /**
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void processGeneList() {
 
-        loader = this.getBean( ExternalFileGeneLoaderService.class );
+        ExternalFileGeneLoaderService loader = this.getBean( ExternalFileGeneLoaderService.class );
 
         try {
             int count = loader.load( directGeneInputFileName, taxonName );
@@ -127,8 +118,8 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
             System.out.println( "File could not be read: " + e.getMessage() );
             throw new RuntimeException( e );
         } catch ( IllegalArgumentException e ) {
-            System.out
-                    .println( "One of the programme arguments were incorrect check gene file is in specified location and taxon is in system."
+            System.out.println(
+                    "One of the programme arguments were incorrect check gene file is in specified location and taxon is in system."
                             + e.getMessage() );
             throw new RuntimeException( e );
         } catch ( Exception e ) {

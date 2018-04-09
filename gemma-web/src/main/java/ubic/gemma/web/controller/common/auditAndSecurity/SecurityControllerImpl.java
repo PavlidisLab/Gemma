@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -115,14 +115,14 @@ public class SecurityControllerImpl implements SecurityController {
          */
         String emailAddress = u.getEmail();
         if ( StringUtils.isNotBlank( emailAddress ) ) {
-            log.debug( "Sending email notification to " + emailAddress );
+            SecurityControllerImpl.log.debug( "Sending email notification to " + emailAddress );
             SimpleMailMessage msg = new SimpleMailMessage();
             msg.setTo( emailAddress );
             msg.setFrom( Settings.getAdminEmailAddress() );
             msg.setSubject( "You have been added to a group on Gemma" );
 
             msg.setText( userTakingAction.getUserName() + " has added you to the group '" + groupName
-                    + "'.\nTo view groups you belong to, visit " + GROUP_MANAGER_URL
+                    + "'.\nTo view groups you belong to, visit " + SecurityControllerImpl.GROUP_MANAGER_URL
                     + "\n\nIf you believe you received this email in error, contact " + Settings.getAdminEmailAddress()
                     + "." );
 
@@ -168,8 +168,8 @@ public class SecurityControllerImpl implements SecurityController {
 
     @Override
     public Collection<UserGroupValueObject> getAvailableGroups() {
-        Collection<String> editableGroups = getGroupsUserCanEdit();
-        Collection<String> groupsUserIsIn = getGroupsForCurrentUser();
+        Collection<String> editableGroups = this.getGroupsUserCanEdit();
+        Collection<String> groupsUserIsIn = this.getGroupsForCurrentUser();
 
         Collection<String> allGroups;
         try {
@@ -274,9 +274,9 @@ public class SecurityControllerImpl implements SecurityController {
         // TODO Figure out why Transaction(readOnly = true) throws an error when this method is called from
         // SecurityManager.js (Bug 3941)
 
-        Securable s = getSecurable( ed );
+        Securable s = this.getSecurable( ed );
 
-        return securable2VO( s );
+        return this.securable2VO( s );
     }
 
     @Override
@@ -284,13 +284,14 @@ public class SecurityControllerImpl implements SecurityController {
         Collection<Securable> secs = new HashSet<>();
 
         // Add experiments.
-        secs.addAll( getUsersExperiments( privateOnly ) );
+        secs.addAll( this.getUsersExperiments( privateOnly ) );
 
-        Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
+        Collection<SecurityInfoValueObject> result = this.securables2VOs( secs, currentGroup );
 
-        result.addAll( securables2VOs( geneSetService.getUsersGeneGroups( privateOnly, null, true ), currentGroup ) );
+        result.addAll(
+                this.securables2VOs( geneSetService.getUsersGeneGroups( privateOnly, null, true ), currentGroup ) );
 
-        result.addAll( securables2VOs( getUsersExperimentSets( privateOnly ), currentGroup ) );
+        result.addAll( this.securables2VOs( this.getUsersExperimentSets( privateOnly ), currentGroup ) );
 
         /*
          * add other types of securables here.
@@ -301,42 +302,42 @@ public class SecurityControllerImpl implements SecurityController {
 
     @Override
     public boolean makeGroupReadable( EntityDelegator ed, String groupName ) {
-        Securable s = getSecurable( ed );
+        Securable s = this.getSecurable( ed );
         securityService.makeReadableByGroup( s, groupName );
         return true;
     }
 
     @Override
     public boolean makeGroupWriteable( EntityDelegator ed, String groupName ) {
-        Securable s = getSecurable( ed );
+        Securable s = this.getSecurable( ed );
         securityService.makeWriteableByGroup( s, groupName );
         return true;
     }
 
     @Override
     public boolean makePrivate( EntityDelegator ed ) {
-        Securable s = getSecurable( ed );
+        Securable s = this.getSecurable( ed );
         securityService.makePrivate( s );
         return true;
     }
 
     @Override
     public boolean makePublic( EntityDelegator ed ) {
-        Securable s = getSecurable( ed );
+        Securable s = this.getSecurable( ed );
         securityService.makePublic( s );
         return true;
     }
 
     @Override
     public boolean removeGroupReadable( EntityDelegator ed, String groupName ) {
-        Securable s = getSecurable( ed );
+        Securable s = this.getSecurable( ed );
         securityService.makeUnreadableByGroup( s, groupName );
         return true;
     }
 
     @Override
     public boolean removeGroupWriteable( EntityDelegator ed, String groupName ) {
-        Securable s = getSecurable( ed );
+        Securable s = this.getSecurable( ed );
         securityService.makeUnwriteableByGroup( s, groupName );
         return true;
     }
@@ -360,7 +361,7 @@ public class SecurityControllerImpl implements SecurityController {
         EntityDelegator sd = new EntityDelegator();
         sd.setId( settings.getEntityId() );
         sd.setClassDelegatingFor( settings.getEntityClazz() );
-        Securable s = getSecurable( sd );
+        Securable s = this.getSecurable( sd );
 
         if ( settings.isPubliclyReadable() ) {
             securityService.makePublic( s );
@@ -374,11 +375,11 @@ public class SecurityControllerImpl implements SecurityController {
             } else {
                 // this warning is not even worth issuing if we are not an administrator.
                 if ( SecurityUtil.isUserAdmin() )
-                    log.warn( "Can't make groupauthority " + settings.getOwner().getAuthority()
+                    SecurityControllerImpl.log.warn( "Can't make groupauthority " + settings.getOwner().getAuthority()
                             + " owner, not implemented" );
             }
         } catch ( AccessDeniedException e ) {
-            log.warn( "Non-administrators cannot change the owner of an entity" );
+            SecurityControllerImpl.log.warn( "Non-administrators cannot change the owner of an entity" );
             // okay, only works if you are administrator.
         }
 
@@ -421,7 +422,7 @@ public class SecurityControllerImpl implements SecurityController {
              * Remove all group permissions - we'll set them back to what was requested. Exception: we don't allow
              * changes to admin or agent permissions by this route.
              */
-            for ( String groupName : getGroupsUserCanEdit() ) {
+            for ( String groupName : this.getGroupsUserCanEdit() ) {
 
                 if ( groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || groupName
                         .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
@@ -461,16 +462,16 @@ public class SecurityControllerImpl implements SecurityController {
         if ( s instanceof GeneDifferentialExpressionMetaAnalysis ) {
 
             Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenotypeAssociationService
-                    .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( s.getId(), null );
+                    .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( s.getId(), -1 );
             for ( DifferentialExpressionEvidence d : differentialExpressionEvidence ) {
                 settings.setEntityId( d.getId() );
                 settings.setEntityClazz( d.getClass().getName() );
-                updatePermission( settings );
+                this.updatePermission( settings );
             }
         }
 
-        log.info( "Updated permissions on " + s );
-        return securable2VO( s );
+        SecurityControllerImpl.log.info( "Updated permissions on " + s );
+        return this.securable2VO( s );
     }
 
     @Override
@@ -565,7 +566,7 @@ public class SecurityControllerImpl implements SecurityController {
     private Collection<Securable> getUsersExperimentSets( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<>();
 
-        Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.loadMySets();
+        Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
         if ( privateOnly ) {
             try {
                 secs.addAll( securityService.choosePrivate( eeSets ) );
@@ -595,13 +596,13 @@ public class SecurityControllerImpl implements SecurityController {
 
         SecurityInfoValueObject result = new SecurityInfoValueObject( s );
 
-        result.setAvailableGroups( getGroupsForCurrentUser() );
+        result.setAvailableGroups( this.getGroupsForCurrentUser() );
         result.setPubliclyReadable( isPublic );
         result.setGroupsThatCanRead( securityService.getGroupsReadableBy( s ) );
         result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
         result.setShared( isShared );
         result.setOwner( new SidValueObject( securityService.getOwner( s ) ) );
-        result.setOwnersGroups( getGroupsForUser( result.getOwner().getAuthority() ) );
+        result.setOwnersGroups( this.getGroupsForUser( result.getOwner().getAuthority() ) );
         result.setCurrentUserOwns( securityService.isOwnedByCurrentUser( s ) );
         result.setCurrentUserCanwrite( canWrite );
 
@@ -629,7 +630,7 @@ public class SecurityControllerImpl implements SecurityController {
         /*
          * Fast computations out-of-loop
          */
-        Collection<String> groupsForCurrentUser = getGroupsForCurrentUser();
+        Collection<String> groupsForCurrentUser = this.getGroupsForCurrentUser();
         Map<T, Boolean> privacy = securityService.arePrivate( securables );
         Map<T, Boolean> sharedness = securityService.areShared( securables );
         Map<T, Sid> owners = securityService.getOwners( securables );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseService;
 
 import java.util.Collection;
 import java.util.Map;
@@ -30,36 +31,26 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface Gene2GOAssociationService {
+public interface Gene2GOAssociationService extends BaseService<Gene2GOAssociation> {
 
-    @Secured({ "GROUP_ADMIN" })
-    Gene2GOAssociation create( Gene2GOAssociation gene2GOAssociation );
-
-    Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
-
-    Collection<Gene2GOAssociation> findAssociationByGene( ubic.gemma.model.genome.Gene gene );
-
-    Collection<VocabCharacteristic> findByGene( ubic.gemma.model.genome.Gene gene );
-
-    Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes );
-
-    Collection<Gene> findByGOTerm( java.lang.String goID );
-
-    Collection<Gene> findByGOTerm( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon );
-
+    @Override
     @Secured({ "GROUP_ADMIN" })
     Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
 
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    Gene2GOAssociation create( Gene2GOAssociation gene2GOAssociation );
+
+    Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
+
+    Collection<VocabCharacteristic> findByGene( Gene gene );
+
+    Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes );
+
+    Collection<Gene> findByGOTerm( String goID, Taxon taxon );
+
     @Secured({ "GROUP_ADMIN" })
     void removeAll();
-
-    Map<String, Collection<Gene>> getSets( Collection<String> uris );
-
-    /**
-     * @param termsToFetch terms
-     * @return all the genes that match any of the terms. Used to fetch genes associated with a term + children.
-     */
-    Collection<Gene> findByGOTerms( Collection<String> termsToFetch );
 
     /**
      * @param termsToFetch terms

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,7 +47,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
         MeshTermFetcherCli p = new MeshTermFetcherCli();
         Exception exception = p.doWork( args );
         if ( exception != null ) {
-            log.error( exception, exception );
+            AbstractCLI.log.error( exception, exception );
         }
     }
 
@@ -74,29 +74,32 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        processCommandLine( args );
+        Exception e = super.processCommandLine( args );
+        if ( e != null )
+            return e;
+
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
 
         try {
-            Collection<Integer> ids = readIdsFromFile( file );
+            Collection<Integer> ids = this.readIdsFromFile( file );
             Collection<Integer> chunk = new ArrayList<>();
             for ( Integer i : ids ) {
 
                 chunk.add( i );
 
-                if ( chunk.size() == CHUNK_SIZE ) {
+                if ( chunk.size() == MeshTermFetcherCli.CHUNK_SIZE ) {
 
-                    processChunk( fetcher, chunk );
+                    this.processChunk( fetcher, chunk );
                     chunk.clear();
                 }
             }
 
             if ( !chunk.isEmpty() ) {
-                processChunk( fetcher, chunk );
+                this.processChunk( fetcher, chunk );
             }
 
-        } catch ( IOException e ) {
-            return e;
+        } catch ( IOException exception ) {
+            return exception;
         }
 
         return null;
@@ -112,11 +115,11 @@ public class MeshTermFetcherCli extends AbstractCLI {
         }
     }
 
-    protected Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
-        log.info( "Reading " + inFile );
+    private Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
+        AbstractCLI.log.info( "Reading " + inFile );
 
-        Collection<Integer> ids = new ArrayList<Integer>();
-        try (BufferedReader in = new BufferedReader( new FileReader( file ) );) {
+        Collection<Integer> ids = new ArrayList<>();
+        try (BufferedReader in = new BufferedReader( new FileReader( file ) )) {
             String line;
             while ( ( line = in.readLine() ) != null ) {
                 if ( line.startsWith( "#" ) )
@@ -129,14 +132,13 @@ public class MeshTermFetcherCli extends AbstractCLI {
         return ids;
     }
 
-    private Collection<BibliographicReference> processChunk( PubMedXMLFetcher fetcher, Collection<Integer> ids )
-            throws IOException {
+    private void processChunk( PubMedXMLFetcher fetcher, Collection<Integer> ids ) throws IOException {
         Collection<BibliographicReference> refs = fetcher.retrieveByHTTP( ids );
 
         for ( BibliographicReference r : refs ) {
             System.out.print( r.getPubAccession().getAccession() + "\t" );
             Collection<MedicalSubjectHeading> meshTerms = r.getMeshTerms();
-            List<String> t = new ArrayList<String>();
+            List<String> t = new ArrayList<>();
             for ( MedicalSubjectHeading mesh : meshTerms ) {
                 String term = mesh.getTerm();
                 if ( majorTopicsOnly && !mesh.getIsMajorTopic() )
@@ -149,7 +151,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
             System.out.print( "\n" );
         }
-        return refs;
     }
 
 }

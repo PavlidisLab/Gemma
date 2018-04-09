@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,23 +18,21 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collection;
-
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import java.util.Collection;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author pavlidis
- *
  */
 public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDesignProcessingTest {
 
@@ -69,7 +67,5 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     @After
     public final void tearDown() {
         super.tearDown();
-
-        // todo remove more stuff.
     }
 }

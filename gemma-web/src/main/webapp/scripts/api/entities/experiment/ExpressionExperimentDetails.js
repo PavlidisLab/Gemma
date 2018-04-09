@@ -120,6 +120,12 @@ Gemma.ExpressionExperimentDetails = Ext
                             ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned) + "</span>";
                 }
 
+                if (ee.needsAttention === true) {
+                    result = result + getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores are not available.')
+                } else {
+                    result = result + getGeeqBadges(ee.geeq.publicQualityScore, ee.geeq.publicSuitabilityScore);
+                }
+
                 if (ee.troubled) {
                     result = result + getStatusBadge('exclamation-triangle', 'red', 'unusable',
                         ee.troubleDetails)
@@ -240,41 +246,6 @@ Gemma.ExpressionExperimentDetails = Ext
                         + (suggestRun ? runurl : '');
                 } else {
                     return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-                }
-            },
-
-            // FIXME is this used?
-            differentialAnalysisRenderer: function (ee) {
-                var id = ee.id;
-                var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''
-                    + this.panelId
-                    + 'eemanager\').doDifferential('
-                    + id
-                    + ')"><img src="' + ctxBasePath + '/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
-
-                if (ee.numPopulatedFactors > 0) {
-                    if (ee.dateDifferentialAnalysis) {
-                        var type = ee.differentialAnalysisEventType;
-
-                        var color = "#000";
-                        var suggestRun = true;
-                        var qtip = 'ext:qtip="OK"';
-                        if (type == 'FailedDifferentialExpressionAnalysisEvent') {
-                            color = 'red';
-                            qtip = 'ext:qtip="Failed"';
-                        } else if (record.get('differentialExpressionAnalyses').length == 0) {
-                            // we ran it, but the analyses were apparently deleted.
-                            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-                        }
-
-                        return '<span style="color:' + color + ';" ' + qtip + '>'
-                            + Gemma.Renderers.dateRenderer(ee.dateDifferentialAnalysis) + '&nbsp;'
-                            + (suggestRun ? runurl : '');
-                    } else {
-                        return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
-                    }
-                } else {
-                    return '<span style="color:#CCF;">NA</span>';
                 }
             },
             renderProcessedExpressionVectorCount: function (e) {

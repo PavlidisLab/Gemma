@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,7 +43,7 @@ public class ProcessedExpressionDataVectorCreateController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    public String run( Long id ) throws Exception {
+    public String run( Long id ) {
         if ( id == null )
             throw new IllegalArgumentException( "ID cannot be null" );
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,10 +29,8 @@ import org.hibernate.engine.SessionImplementor;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.persistence.util.Settings;
 
 import java.lang.reflect.InvocationTargetException;
-import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -43,19 +41,48 @@ import java.util.HashSet;
  */
 public abstract class AbstractPersister extends HibernateDaoSupport implements Persister {
 
+    static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
     /**
      * Collections smaller than this don't result in logging about progress.
      */
-    public static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
-    /**
-     * This should match the JDBC batch size for Hibernate.
-     */
-    protected static final int SESSION_BATCH_SIZE = Settings.getInt( "gemma.hibernate.jdbc_batch_size" );
-    protected static final Log log = LogFactory.getLog( AbstractPersister.class.getName() );
+    private static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
     /**
      * How many times per collection to update us (at most)
      */
     private static final int COLLECTION_INFO_FREQUENCY = 10;
+
+    @Override
+    @Transactional
+    public Collection<?> persist( Collection<?> col ) {
+        if ( col == null || col.size() == 0 )
+            return col;
+
+        Collection<Object> result = new HashSet<>();
+        try {
+            int count = 0;
+            AbstractPersister.log
+                    .debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
+            int numElementsPerUpdate = this.numElementsPerUpdate( col );
+            for ( Object entity : col ) {
+                if ( AbstractPersister.log.isDebugEnabled() ) {
+                    AbstractPersister.log.debug( "Persisting: " + entity );
+                }
+                result.add( this.persist( entity ) );
+                count = this.iteratorStatusUpdate( col, count, numElementsPerUpdate, true );
+
+                if ( Thread.interrupted() ) {
+                    AbstractPersister.log.info( "Cancelled" );
+                    break;
+                }
+
+            }
+            this.iteratorStatusUpdate( col, count, numElementsPerUpdate, false );
+        } catch ( Exception e ) {
+            AbstractPersister.log.fatal( "Error while persisting collection: ", e );
+            throw new RuntimeException( e );
+        }
+        return result;
+    }
 
     @Override
     @Transactional
@@ -73,19 +100,20 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
          */
 
         if ( EntityUtils.isProxy( entity ) ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Object is a proxy: " + entity.getClass().getSimpleName() + ":" + id );
+            if ( AbstractPersister.log.isDebugEnabled() )
+                AbstractPersister.log.debug( "Object is a proxy: " + entity.getClass().getSimpleName() + ":" + id );
             return false;
         }
 
         org.hibernate.Session session = this.getSessionFactory().getCurrentSession();
         if ( session.contains( entity ) ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Found object in session: " + entity.getClass().getSimpleName() + ":" + id );
+            if ( AbstractPersister.log.isDebugEnabled() )
+                AbstractPersister.log
+                        .debug( "Found object in session: " + entity.getClass().getSimpleName() + ":" + id );
             return false;
         }
 
-        // Getting desperate ...
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter // Getting desperate ...
         synchronized ( entity ) {
             Session sess = this.getSessionFactory().openSession();
             sess.setFlushMode( FlushMode.MANUAL );
@@ -93,8 +121,9 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             sess.close();
             if ( pe != null ) {
                 // Common case.
-                if ( log.isDebugEnabled() )
-                    log.debug( "Found object in store: " + entity.getClass().getSimpleName() + ":" + id );
+                if ( AbstractPersister.log.isDebugEnabled() )
+                    AbstractPersister.log
+                            .debug( "Found object in store: " + entity.getClass().getSimpleName() + ":" + id );
                 return false;
             }
         }
@@ -104,7 +133,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
          */
         String bestGuessEntityName = ( ( SessionImplementor ) session ).bestGuessEntityName( entity );
         if ( ForeignKeys.isNotTransient( bestGuessEntityName, entity, null, ( SessionImplementor ) session ) ) {
-            log.info( "Hibernate says object is not transient: " + bestGuessEntityName + ":" + id );
+            AbstractPersister.log.info( "Hibernate says object is not transient: " + bestGuessEntityName + ":" + id );
             return false;
         }
 
@@ -112,69 +141,20 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
          * The ID is filled in, but it probably is a survivor of a rolled-back transaction. It doesn't matter what we
          * return, it's not guaranteed to be right.
          */
-        log.info( "Object has ID but we can't tell if it is persistent: " + entity.getClass().getSimpleName() + ":"
-                + id );
+        AbstractPersister.log
+                .info( "Object has ID but we can't tell if it is persistent: " + entity.getClass().getSimpleName() + ":"
+                        + id );
         return true;
 
     }
 
-    @Override
-    @Transactional
-    public Collection<?> persist( Collection<?> col ) {
-        if ( col == null || col.size() == 0 )
-            return col;
-
-        Collection<Object> result = new HashSet<>();
-        try {
-            int count = 0;
-            log.debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
-            int numElementsPerUpdate = numElementsPerUpdate( col );
-            for ( Object entity : col ) {
-                if ( log.isDebugEnabled() ) {
-                    log.debug( "Persisting: " + entity );
-                }
-                result.add( persist( entity ) );
-                count = iteratorStatusUpdate( col, count, numElementsPerUpdate, true );
-
-                if ( Thread.interrupted() ) {
-                    log.info( "Cancelled" );
-                    break;
-                }
-
-            }
-            iteratorStatusUpdate( col, count, numElementsPerUpdate, false );
-        } catch ( Exception e ) {
-            log.fatal( "Error while persisting collection: ", e );
-            throw new RuntimeException( e );
-        }
-        return result;
-    }
-
-    protected double elapsedMinutes( long startTime ) {
-        return Double.parseDouble(
-                NumberFormat.getNumberInstance().format( 0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) );
-    }
-
-    protected int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
-        assert col != null && col.size() > 0;
-        if ( increment )
-            ++count;
-
-        if ( col.size() >= MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS && log.isInfoEnabled() && ( !increment
-                || count % numElementsPerUpdate == 0 ) ) {
-            String collectionItemsClassName = col.iterator().next().getClass().getName();
-            log.info( "Processed " + count + "/" + col.size() + " " + collectionItemsClassName + "'s" );
-        }
-        return count;
-    }
-
-    protected int numElementsPerUpdate( Collection<?> col ) {
-        if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY )
+    int numElementsPerUpdate( Collection<?> col ) {
+        if ( col == null || col.size() < AbstractPersister.COLLECTION_INFO_FREQUENCY )
             return Integer.MAX_VALUE;
-        return Math.max( ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY ), 20 );
+        return Math.max( ( int ) Math.ceil( col.size() / ( double ) AbstractPersister.COLLECTION_INFO_FREQUENCY ), 20 );
     }
 
-    protected void persistCollectionElements( Collection<?> collection ) {
+    void persistCollectionElements( Collection<?> collection ) {
         if ( collection == null )
             return;
         if ( collection.size() == 0 )
@@ -185,15 +165,16 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
             t.start();
             int c = 0;
             for ( Object object : collection ) {
-                if ( !isTransient( object ) )
+                if ( !this.isTransient( object ) )
                     continue;
-                Object persistedObj = persist( object );
+                Object persistedObj = this.persist( object );
 
                 c++;
 
                 if ( t.getTime() > 5000 ) {
-                    log.info( "Persist " + c + " elements: " + t.getTime() + "ms since last check (last class=" + object
-                            .getClass().getSimpleName() + ")" );
+                    AbstractPersister.log
+                            .info( "Persist " + c + " elements: " + t.getTime() + "ms since last check (last class="
+                                    + object.getClass().getSimpleName() + ")" );
                     c = 0;
                     t.reset();
                     t.start();
@@ -212,23 +193,18 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         // collection = persistedCollection;
     }
 
-    protected void persistOrUpdateCollectionElements( Collection<?> collection ) {
-        if ( collection == null )
-            return;
-        if ( collection.size() == 0 )
-            return;
+    private int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
+        assert col != null && col.size() > 0;
+        if ( increment )
+            ++count;
 
-        try {
-            for ( Object object : collection ) {
-                Object persistedObj = persistOrUpdate( object );
-                if ( persistedObj == null )
-                    continue;
-                BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
-                assert BeanUtils.getSimpleProperty( object, "id" ) != null;
-            }
-        } catch ( IllegalAccessException | NoSuchMethodException | InvocationTargetException e ) {
-            throw new RuntimeException( e );
+        if ( col.size() >= AbstractPersister.MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS && AbstractPersister.log
+                .isInfoEnabled() && ( !increment || count % numElementsPerUpdate == 0 ) ) {
+            String collectionItemsClassName = col.iterator().next().getClass().getName();
+            AbstractPersister.log
+                    .info( "Processed " + count + "/" + col.size() + " " + collectionItemsClassName + "'s" );
         }
+        return count;
     }
 
 }

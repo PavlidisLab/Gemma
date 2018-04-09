@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public interface Parser<T> {
 
     int PARSE_ALERT_FREQUENCY = 10000;

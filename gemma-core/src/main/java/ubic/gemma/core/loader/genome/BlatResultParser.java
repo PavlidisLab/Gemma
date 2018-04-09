@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public class BlatResultParser extends BasicLineParser<BlatResult> {
     private static final int BLOCKCOUNT_FIELD = 17;
 
@@ -94,6 +95,12 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
         return results;
     }
 
+    @Override
+    protected void addResult( BlatResult obj ) {
+        results.add( obj );
+
+    }
+
     /**
      * @return the searchedDatabase
      */
@@ -144,42 +151,42 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
             String[] f = line.split( "\t" );
             if ( f.length == 0 )
                 return null;
-            if ( f.length != NUM_BLAT_FIELDS )
+            if ( f.length != BlatResultParser.NUM_BLAT_FIELDS )
                 throw new IllegalArgumentException(
-                        f.length + " fields in line, expected " + NUM_BLAT_FIELDS + " (starts with " + line
-                                .substring( 0, Math.max( line.length(), 25 ) ) );
+                        f.length + " fields in line, expected " + BlatResultParser.NUM_BLAT_FIELDS + " (starts with "
+                                + line.substring( 0, Math.max( line.length(), 25 ) ) );
 
             BlatResult result = BlatResult.Factory.newInstance();
             result.setQuerySequence( BioSequence.Factory.newInstance() );
-            Long queryLength = Long.parseLong( f[QSIZE_FIELD] );
+            Long queryLength = Long.parseLong( f[BlatResultParser.QSIZE_FIELD] );
             result.getQuerySequence().setLength( queryLength );
 
-            result.setMatches( Integer.parseInt( f[MATCHES_FIELD] ) );
-            result.setMismatches( Integer.parseInt( f[MISMATCHES_FIELD] ) );
-            result.setRepMatches( Integer.parseInt( f[REPMATCHES_FIELD] ) );
-            result.setNs( Integer.parseInt( f[NS_FIELD] ) );
-            result.setQueryGapCount( Integer.parseInt( f[QGAPCOUNT_FIELD] ) );
-            result.setQueryGapBases( Integer.parseInt( f[QGAPBASES_FIELD] ) );
-            result.setTargetGapBases( Integer.parseInt( f[TGAPBASES_FIELD] ) );
-            result.setTargetGapCount( Integer.parseInt( f[TGAPCOUNT_FIELD] ) );
-            result.setStrand( f[STRAND_FIELD] );
+            result.setMatches( Integer.parseInt( f[BlatResultParser.MATCHES_FIELD] ) );
+            result.setMismatches( Integer.parseInt( f[BlatResultParser.MISMATCHES_FIELD] ) );
+            result.setRepMatches( Integer.parseInt( f[BlatResultParser.REPMATCHES_FIELD] ) );
+            result.setNs( Integer.parseInt( f[BlatResultParser.NS_FIELD] ) );
+            result.setQueryGapCount( Integer.parseInt( f[BlatResultParser.QGAPCOUNT_FIELD] ) );
+            result.setQueryGapBases( Integer.parseInt( f[BlatResultParser.QGAPBASES_FIELD] ) );
+            result.setTargetGapBases( Integer.parseInt( f[BlatResultParser.TGAPBASES_FIELD] ) );
+            result.setTargetGapCount( Integer.parseInt( f[BlatResultParser.TGAPCOUNT_FIELD] ) );
+            result.setStrand( f[BlatResultParser.STRAND_FIELD] );
 
-            result.setQueryStart( Integer.parseInt( f[QSTART_FIELD] ) );
-            result.setQueryEnd( Integer.parseInt( f[QEND_FIELD] ) );
-            result.setTargetStart( Long.parseLong( f[TSTART_FIELD] ) );
-            result.setTargetEnd( Long.parseLong( f[TEND_FIELD] ) );
-            result.setBlockCount( Integer.parseInt( f[BLOCKCOUNT_FIELD] ) );
+            result.setQueryStart( Integer.parseInt( f[BlatResultParser.QSTART_FIELD] ) );
+            result.setQueryEnd( Integer.parseInt( f[BlatResultParser.QEND_FIELD] ) );
+            result.setTargetStart( Long.parseLong( f[BlatResultParser.TSTART_FIELD] ) );
+            result.setTargetEnd( Long.parseLong( f[BlatResultParser.TEND_FIELD] ) );
+            result.setBlockCount( Integer.parseInt( f[BlatResultParser.BLOCKCOUNT_FIELD] ) );
 
-            result.setBlockSizes( f[BLOCKSIZES_FIELD] );
-            result.setQueryStarts( f[QSTARTS_FIELD] );
-            result.setTargetStarts( f[TSTARTS_FIELD] );
+            result.setBlockSizes( f[BlatResultParser.BLOCKSIZES_FIELD] );
+            result.setQueryStarts( f[BlatResultParser.QSTARTS_FIELD] );
+            result.setTargetStarts( f[BlatResultParser.TSTARTS_FIELD] );
 
-            String queryName = f[QNAME_FIELD];
-            queryName = cleanUpQueryName( queryName );
+            String queryName = f[BlatResultParser.QNAME_FIELD];
+            queryName = BlatResultParser.cleanUpQueryName( queryName );
             assert StringUtils.isNotBlank( queryName );
             result.getQuerySequence().setName( queryName );
 
-            String chrom = f[TNAME_FIELD];
+            String chrom = f[BlatResultParser.TNAME_FIELD];
             if ( chrom.startsWith( "chr" ) ) {
                 chrom = chrom.substring( chrom.indexOf( "chr" ) + 3 );
                 if ( chrom.endsWith( ".fa" ) ) {
@@ -190,10 +197,9 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
                 numSkipped++;
                 return null;
             }
-            result.setTargetChromosome(
-                    Chromosome.Factory.newInstance( chrom, null, BioSequence.Factory.newInstance(), taxon ) );
+            result.setTargetChromosome( new Chromosome( chrom, null, BioSequence.Factory.newInstance(), taxon ) );
             result.getTargetChromosome().getSequence().setName( chrom );
-            result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[TSIZE_FIELD] ) );
+            result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[BlatResultParser.TSIZE_FIELD] ) );
             result.getTargetChromosome().getSequence().setTaxon( taxon );
 
             if ( searchedDatabase != null ) {
@@ -216,12 +222,6 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
      */
     public void setScoreThreshold( double score ) {
         this.scoreThreshold = score;
-    }
-
-    @Override
-    protected void addResult( BlatResult obj ) {
-        results.add( obj );
-
     }
 
     private PhysicalLocation makePhysicalLocation( BlatResult blatResult ) {

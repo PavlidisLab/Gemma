@@ -26,12 +26,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * A more heavyweight version of Gene2GeneCoexpressionValueObject; has a bit more information about the genes.
- * <p>
- * FIXME consider merging or making this a subclass of the Gene2GeneCoexpressionValueObject. this is very similar to
- * Gene2GeneCoexpressionValueObject; we use the NCBI id sometimes, and the gene name (not just the symbol), the node
- * degree info; and we need the sort key; plus this offers some additional methods
- * </p>
+ * A more heavyweight version of CoexpressionValueObject; has a bit more information about the genes.
  * <p>
  * Importantly, this does not necessarily reflect the coexpression data in the database: it may have been filtered in
  * accordance to the query settings in terms of the data sets searched and the maximum number of results., this does not
@@ -66,26 +61,6 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     @Override
     public int compareTo( CoexpressionValueObjectExt arg0 ) {
         return this.getSortKey().compareTo( arg0.getSortKey() );
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        CoexpressionValueObjectExt other = ( CoexpressionValueObjectExt ) obj;
-        if ( this.sortKey == null ) {
-            if ( other.sortKey != null )
-                return false;
-        } else if ( !sortKey.equals( other.sortKey ) ) {
-            return false;
-        } else if ( !this.queryGene.getOfficialSymbol().equals( other.queryGene.getOfficialSymbol() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public Boolean getContainsMyData() {
@@ -199,6 +174,38 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         return result;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement") // Better readability
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        CoexpressionValueObjectExt other = ( CoexpressionValueObjectExt ) obj;
+        if ( this.sortKey == null ) {
+            return other.sortKey == null;
+        } else if ( !sortKey.equals( other.sortKey ) ) {
+            return false;
+        } else
+            return this.queryGene.getOfficialSymbol().equals( other.queryGene.getOfficialSymbol() );
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        if ( this.getPosSupp() > 0 ) {
+            buf.append( this.getSupportRow( this.getPosSupp(), "+" ) );
+        }
+        if ( this.getNegSupp() > 0 ) {
+            if ( buf.length() > 0 )
+                buf.append( "\n" );
+            buf.append( this.getSupportRow( this.getNegSupp(), "-" ) );
+        }
+        return buf.toString();
+    }
+
     /**
      * @param geneId gene id
      * @return true if this involves the gene provided (either as query or found gene)
@@ -216,21 +223,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     }
 
     public void setSortKey() {
-        this.sortKey = String.format( "%.3f_%s", 1.0 / this.getSupport(), getFoundGene().getOfficialSymbol() );
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        if ( this.getPosSupp() > 0 ) {
-            buf.append( getSupportRow( getPosSupp(), "+" ) );
-        }
-        if ( getNegSupp() > 0 ) {
-            if ( buf.length() > 0 )
-                buf.append( "\n" );
-            buf.append( getSupportRow( getNegSupp(), "-" ) );
-        }
-        return buf.toString();
+        this.sortKey = String.format( "%.3f_%s", 1.0 / this.getSupport(), this.getFoundGene().getOfficialSymbol() );
     }
 
     private String getSupportRow( Integer links, String sign ) {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,9 +22,6 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
 
-/**
- *
- */
 public abstract class ChromosomeLocation implements Identifiable, Serializable {
 
     /**
@@ -40,10 +37,23 @@ public abstract class ChromosomeLocation implements Identifiable, Serializable {
      *
      * @author Paul
      */
+    @SuppressWarnings("WeakerAccess") // Required by Spring
     public ChromosomeLocation() {
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public abstract int compareTo( Object o );
+
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
 
     /**
      * Returns <code>true</code> if the argument is an ChromosomeLocation instance and all identifiers for this entity
@@ -58,21 +68,7 @@ public abstract class ChromosomeLocation implements Identifiable, Serializable {
             return false;
         }
         final ChromosomeLocation that = ( ChromosomeLocation ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
     }
 
     public Chromosome getChromosome() {
@@ -83,10 +79,12 @@ public abstract class ChromosomeLocation implements Identifiable, Serializable {
         this.chromosome = chromosome;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }

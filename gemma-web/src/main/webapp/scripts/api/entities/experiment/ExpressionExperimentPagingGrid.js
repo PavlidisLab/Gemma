@@ -75,6 +75,8 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
         }, {
             name: "lastUpdated",
             type: "date"
+        },{
+            name: "geeq"
         }]
     }),
 
@@ -165,7 +167,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 header: "Dataset Name",
                 dataIndex: 'name',
                 sortable: true,
-                width: 0.5, // viewConfig.forceFit resizes based on relative widths,
+                width: 1, // viewConfig.forceFit resizes based on relative widths,
                 renderer: function (value, metaData, record, rowIndex, colIndex, store) {
                     return (value && record) ? '<a href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id='
                         + record.id + '" title="' + value + '">' + value + '</a>' : '';
@@ -175,7 +177,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 header: "Updated",
                 dataIndex: 'lastUpdated',
                 sortable: true,
-                width: 0.06,
+                width: 0.2,
                 hidden: true,
                 renderer: Gemma.Renderers.dateRenderer
             },
@@ -209,7 +211,23 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 dataIndex: 'needsAttention',
                 sortable: true,
                 renderer: Gemma.Renderers.curationRenderer,
-                tooltip: 'Shows a warning icon for experiments that are marked for curators attention.',
+                tooltip: 'Shows a warning icon if the curation of the experiment is not finished yet.',
+                width: 0.05
+            },
+            {
+                header: 'Quality',
+                dataIndex: 'quality',
+                sortable: true,
+                renderer: Gemma.Renderers.qualityRenderer,
+                tooltip: 'Shows the quality score of curated experiments.<br/><br/>Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data.',
+                width: 0.05
+            },
+            {
+                header: 'Suitability',
+                dataIndex: 'suitability',
+                sortable: true,
+                renderer: Gemma.Renderers.suitabilityRenderer,
+                tooltip: 'Shows the suitability score of curated experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.',
                 width: 0.05
             },
             {
@@ -328,7 +346,6 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
             this.setTitle("Expression Experiments For Taxon");
             pageStore.on('load', function (store, records, options) {
                 // problem for salmon because this will be child taxon, not parent
-                // TODO use parent taxon, need to add it to object coming from back end
                 if (records[0]) {
                     this.setTitle("Expression Experiments For Taxon: " + records[0].get('taxon'));
                 }
@@ -653,10 +670,6 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
 
             index = this.getColumnModel().findColumnIndex('lastUpdated');
             this.getColumnModel().setHidden(index, !isAdmin);
-
-            index = this.getColumnModel().findColumnIndex('needsAttention');
-            this.getColumnModel().setHidden(index, !isAdmin);
-
 
         }
     }

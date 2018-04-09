@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,11 +38,12 @@ import java.util.Map;
 /**
  * @author lukem
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial> implements Serializable {
 
     private static final String CHARACTERISTIC_DELIMITER = "::::";
     private static final long serialVersionUID = -145137827948521045L;
-
+    private final Collection<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
     private String assayDescription;
     private String assayName;
     private Collection<Long> bioAssays = new HashSet<>();
@@ -52,13 +53,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
      */
     private Map<String, String> factorIdToFactorValueId;
-
     /**
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
     private Map<String, String> factors;
     private Collection<FactorValueValueObject> factorValueObjects = new HashSet<>();
-    private Collection<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
     /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
@@ -95,9 +94,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.factorValues = new HashMap<>();
         this.factorIdToFactorValueId = new HashMap<>();
         for ( FactorValue fv : bm.getFactorValues() ) {
-            if(basicFVs){
+            if ( basicFVs ) {
                 this.fVBasicVOs.add( new FactorValueBasicValueObject( fv ) );
-            }else{
+            } else {
                 this.factorValueObjects.add( new FactorValueValueObject( fv ) );
             }
 
@@ -105,7 +104,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
             this.factors.put( factorId, factor.getName() );
-            this.factorValues.put( factorValueId, getFactorValueString( fv ) );
+            this.factorValues.put( factorValueId, this.getFactorValueString( fv ) );
 
             if ( fv.getMeasurement() == null ) {
                 this.factorIdToFactorValueId.put( factorId, factorValueId );
@@ -120,7 +119,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
 
     public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
         this( bm );
-        BioAssayValueObject baVo = new BioAssayValueObject( ba );
+        BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
         this.bioAssays.add( baVo.getId() );
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
@@ -134,7 +133,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             return true;
         if ( obj == null )
             return false;
-        if ( getClass() != obj.getClass() )
+        if ( this.getClass() != obj.getClass() )
             return false;
         BioMaterialValueObject other = ( BioMaterialValueObject ) obj;
 
@@ -145,11 +144,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             return id.equals( other.id ) && id.equals( other.id );
 
         if ( name == null ) {
-            if ( other.name != null )
-                return false;
-        } else if ( !name.equals( other.name ) )
-            return false;
-        return true;
+            return other.name == null;
+        } else
+            return name.equals( other.name );
     }
 
     @Override
@@ -248,7 +245,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     private String getFactorValueString( FactorValue value ) {
         if ( !value.getCharacteristics().isEmpty() ) {
-            return StringUtils.join( value.getCharacteristics(), CHARACTERISTIC_DELIMITER );
+            return StringUtils.join( value.getCharacteristics(), BioMaterialValueObject.CHARACTERISTIC_DELIMITER );
         } else if ( value.getMeasurement() != null ) {
             return value.getMeasurement().getValue();
         } else {

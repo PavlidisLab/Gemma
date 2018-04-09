@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,6 +80,33 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
+    public GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId ) {
+
+        // shouldn't need to set the taxon here, should be taken care of when creating the value object
+        Taxon taxon;
+
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+            if ( taxon == null ) {
+                GeneSetSearchImpl.log.warn( "No such taxon with id=" + taxonId );
+            } else {
+                GeneSet result = this.findByGoId( goId, taxonService.load( taxonId ) );
+                if ( result == null ) {
+                    GeneSetSearchImpl.log.warn( "No matching gene set found for: " + goId );
+                    return null;
+                }
+                GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( result, goId, goId );
+
+                ggvo.setTaxonId( taxon.getId() );
+                ggvo.setTaxonName( taxon.getCommonName() );
+
+                return ggvo;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public GeneSet findByGoId( String goId, Taxon taxon ) {
         OntologyTerm goTerm = GeneOntologyServiceImpl.getTermForId( StringUtils.strip( goId ) );
 
@@ -87,12 +114,12 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             return null;
         }
         // if taxon is null, this returns a geneset with genes from different taxons
-        return goTermToGeneSet( goTerm, taxon );
+        return this.goTermToGeneSet( goTerm, taxon );
     }
 
     @Override
     public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) {
-        return findByGoTermName( goTermName, taxon, null, null );
+        return this.findByGoTermName( goTermName, taxon, null, null );
     }
 
     @Override
@@ -101,22 +128,22 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Collection<? extends OntologyResource> matches = this.geneOntologyService
                 .findTerm( StringUtils.strip( goTermName ) );
 
-        Collection<GeneSet> results = new HashSet<GeneSet>();
+        Collection<GeneSet> results = new HashSet<>();
 
         for ( OntologyResource t : matches ) {
             assert t instanceof OntologyTerm;
 
             if ( taxon == null ) {
-                Collection<GeneSet> sets = goTermToGeneSets( ( OntologyTerm ) t, maxGeneSetSize );
+                Collection<GeneSet> sets = this.goTermToGeneSets( ( OntologyTerm ) t, maxGeneSetSize );
                 results.addAll( sets );
 
-                // should we count each species as one go
+                // noinspection StatementWithEmptyBody // FIXME should we count each species as one go?
                 if ( maxGoTermsProcessed != null && results.size() > maxGoTermsProcessed ) {
                     // return results;
                 }
             } else {
 
-                GeneSet converted = goTermToGeneSet( t, taxon, maxGeneSetSize );
+                GeneSet converted = this.goTermToGeneSet( t, taxon, maxGeneSetSize );
                 // converted will be null if its size is more than maxGeneSetSize
                 if ( converted != null ) {
                     results.add( converted );
@@ -144,6 +171,45 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     }
 
     @Override
+    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) {
+
+        if ( StringUtils.isBlank( query ) ) {
+            return new HashSet<>();
+        }
+        Collection<GeneSet> foundGeneSets;
+        Taxon tax;
+        tax = taxonService.load( taxonId );
+
+        if ( tax == null ) {
+            // throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
+            foundGeneSets = this.findByName( query );
+        } else {
+            foundGeneSets = this.findByName( query, tax );
+        }
+
+        foundGeneSets.clear(); // for testing general search
+
+        /*
+         * SEARCH GENE ONTOLOGY
+         */
+
+        if ( query.toUpperCase().startsWith( "GO" ) ) {
+            if ( tax == null ) {
+                Collection<GeneSet> goSets = this.findByGoId( query );
+                foundGeneSets.addAll( goSets );
+            } else {
+                GeneSet goSet = this.findByGoId( query, tax );
+                if ( goSet != null )
+                    foundGeneSets.add( goSet );
+            }
+        } else {
+            foundGeneSets.addAll( this.findByGoTermName( query, tax ) );
+        }
+
+        return foundGeneSets;
+    }
+
+    @Override
     public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) {
 
         StopWatch timer = new StopWatch();
@@ -151,19 +217,19 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Collection<CharacteristicValueObject> phenotypes = phenotypeAssociationManagerService
                 .searchOntologyForPhenotypes( StringUtils.strip( phenotypeQuery ), null );
 
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        Collection<GeneSetValueObject> results = new HashSet<>();
 
         if ( phenotypes.isEmpty() ) {
             return results;
         }
 
         if ( timer.getTime() > 200 ) {
-            log.info( "Find phenotypes: " + timer.getTime() + "ms" );
+            GeneSetSearchImpl.log.info( "Find phenotypes: " + timer.getTime() + "ms" );
         }
 
-        log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
+        GeneSetSearchImpl.log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
                 + ") into GeneSets for  phenotype query " + phenotypeQuery );
-        Map<String, CharacteristicValueObject> uris = new HashMap<String, CharacteristicValueObject>();
+        Map<String, CharacteristicValueObject> uris = new HashMap<>();
         for ( CharacteristicValueObject cvo : phenotypes ) {
             uris.put( cvo.getValueUri(), cvo );
         }
@@ -172,7 +238,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
                 .findCandidateGenesForEach( uris.keySet(), taxon );
 
         if ( timer.getTime() > 500 ) {
-            log.info( "Find phenotype genes done at " + timer.getTime() + "ms" );
+            GeneSetSearchImpl.log.info( "Find phenotype genes done at " + timer.getTime() + "ms" );
         }
 
         for ( String uri : genes.keySet() ) {
@@ -186,7 +252,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
             GeneSetValueObject transientGeneSet = new GeneSetValueObject();
 
-            transientGeneSet.setName( uri2phenoID( uris.get( uri ) ) );
+            transientGeneSet.setName( this.uri2phenoID( uris.get( uri ) ) );
             transientGeneSet.setDescription( uris.get( uri ).getValue() );
             transientGeneSet.setGeneIds( geneIds );
 
@@ -198,92 +264,26 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         }
 
         if ( timer.getTime() > 1000 ) {
-            log.info(
-                    "Loaded " + phenotypes.size() + " phenotype gene sets for query " + phenotypeQuery + " in " + timer
-                            .getTime() + "ms" );
+            GeneSetSearchImpl.log
+                    .info( "Loaded " + phenotypes.size() + " phenotype gene sets for query " + phenotypeQuery + " in "
+                            + timer.getTime() + "ms" );
         }
         return results;
 
-    }
-
-    @Override
-    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) {
-
-        if ( StringUtils.isBlank( query ) ) {
-            return new HashSet<GeneSet>();
-        }
-        Collection<GeneSet> foundGeneSets;
-        Taxon tax;
-        tax = taxonService.load( taxonId );
-
-        if ( tax == null ) {
-            // throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
-            foundGeneSets = findByName( query );
-        } else {
-            foundGeneSets = findByName( query, tax );
-        }
-
-        foundGeneSets.clear(); // for testing general search
-
-        /*
-         * SEARCH GENE ONTOLOGY
-         */
-
-        if ( query.toUpperCase().startsWith( "GO" ) ) {
-            if ( tax == null ) {
-                Collection<GeneSet> goSets = findByGoId( query );
-                foundGeneSets.addAll( goSets );
-            } else {
-                GeneSet goSet = findByGoId( query, tax );
-                if ( goSet != null )
-                    foundGeneSets.add( goSet );
-            }
-        } else {
-            foundGeneSets.addAll( findByGoTermName( query, tax ) );
-        }
-
-        return foundGeneSets;
-    }
-
-    @Override
-    public GOGroupValueObject findGeneSetValueObjectByGoId( String goId, Long taxonId ) {
-
-        // shouldn't need to set the taxon here, should be taken care of when creating the value object
-        Taxon taxon;
-
-        if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
-            if ( taxon == null ) {
-                log.warn( "No such taxon with id=" + taxonId );
-            } else {
-                GeneSet result = findByGoId( goId, taxonService.load( taxonId ) );
-                if ( result == null ) {
-                    log.warn( "No matching gene set found for: " + goId );
-                    return null;
-                }
-                GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( result, goId, goId );
-
-                ggvo.setTaxonId( taxon.getId() );
-                ggvo.setTaxonName( taxon.getCommonName() );
-
-                return ggvo;
-            }
-        }
-        return null;
     }
 
     private Collection<GeneSet> findByGoId( String query ) {
         OntologyTerm goTerm = GeneOntologyServiceImpl.getTermForId( StringUtils.strip( query ) );
 
         if ( goTerm == null ) {
-            return new HashSet<GeneSet>();
+            return new HashSet<>();
         }
         // if taxon is null, this returns genesets for all taxa
-        return goTermToGeneSets( goTerm, MAX_GO_GROUP_SIZE );
+        return this.goTermToGeneSets( goTerm, GeneSetSearchImpl.MAX_GO_GROUP_SIZE );
     }
 
     private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
-        return goTermToGeneSet( term, taxon, null );
+        return this.goTermToGeneSet( term, taxon, null );
     }
 
     /**
@@ -296,17 +296,17 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( term.getUri() == null )
             return null;
 
-        Collection<OntologyResource> allMatches = new HashSet<OntologyResource>();
+        Collection<OntologyResource> allMatches = new HashSet<>();
         allMatches.add( term );
         assert term instanceof OntologyTerm;
         allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
-        log.info( term );
+        GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
          */
-        Collection<String> termsToFetch = new HashSet<String>();
+        Collection<String> termsToFetch = new HashSet<>();
         for ( OntologyResource t : allMatches ) {
-            String goId = uri2goid( t );
+            String goId = this.uri2goid( t );
             termsToFetch.add( goId );
         }
 
@@ -317,13 +317,13 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         }
 
         GeneSet transientGeneSet = GeneSet.Factory.newInstance();
-        transientGeneSet.setName( uri2goid( term ) );
+        transientGeneSet.setName( this.uri2goid( term ) );
 
         if ( term.getLabel() == null ) {
-            log.warn( " Label for term " + term.getUri() + " was null" );
+            GeneSetSearchImpl.log.warn( " Label for term " + term.getUri() + " was null" );
         }
+        //noinspection StatementWithEmptyBody // FIXME this is an individual or a 'resource', not a 'class', but it's a real GO term. How to get the text.
         if ( term.getLabel() != null && term.getLabel().toUpperCase().startsWith( "GO_" ) ) {
-            // hm, this is an individual or a 'resource', not a 'class', but it's a real GO term. How to get the text.
         }
 
         transientGeneSet.setDescription( term.getLabel() );
@@ -342,22 +342,22 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         if ( term.getUri() == null )
             return null;
 
-        Collection<OntologyResource> allMatches = new HashSet<OntologyResource>();
+        Collection<OntologyResource> allMatches = new HashSet<>();
         allMatches.add( term );
         allMatches.addAll( this.geneOntologyService.getAllChildren( term ) );
-        log.info( term );
+        GeneSetSearchImpl.log.info( term );
         /*
          * Gather up uris
          */
-        Collection<String> termsToFetch = new HashSet<String>();
+        Collection<String> termsToFetch = new HashSet<>();
         for ( OntologyResource t : allMatches ) {
-            String goId = uri2goid( t );
+            String goId = this.uri2goid( t );
             termsToFetch.add( goId );
         }
 
         Map<Taxon, Collection<Gene>> genesByTaxon = this.gene2GoService.findByGOTermsPerTaxon( termsToFetch );
 
-        Collection<GeneSet> results = new HashSet<GeneSet>();
+        Collection<GeneSet> results = new HashSet<>();
         for ( Taxon t : genesByTaxon.keySet() ) {
             Collection<Gene> genes = genesByTaxon.get( t );
 
@@ -366,7 +366,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             }
 
             GeneSet transientGeneSet = GeneSet.Factory.newInstance();
-            transientGeneSet.setName( uri2goid( term ) );
+            transientGeneSet.setName( this.uri2goid( term ) );
             transientGeneSet.setDescription( term.getLabel() );
 
             for ( Gene gene : genes ) {

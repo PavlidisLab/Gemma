@@ -91,7 +91,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
      * @return the response element
      */
     @Override
-    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+    protected Element invokeInternal( Element requestElement, Document document ) {
         StopWatch watch = new StopWatch();
         watch.start();
         setLocalName( LOCAL_NAME );

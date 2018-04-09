@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,15 +18,21 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.FactorValue;
+
+import java.io.Serializable;
 
 /**
  * Represents a contrast between "conditions". In practice, this is the comparison between a factor level and the
  * baseline; for interactions it is the difference of comparisons.
  */
-public abstract class ContrastResult implements java.io.Serializable {
+public class ContrastResult implements Identifiable, Serializable {
 
-    private static final long serialVersionUID = 7800859456071333232L;
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -4310735803120153778L;
     private Double pvalue;
     private Double tStat;
     private Double coefficient;
@@ -34,25 +40,6 @@ public abstract class ContrastResult implements java.io.Serializable {
     private Long id;
     private FactorValue factorValue;
     private FactorValue secondFactorValue;
-
-    /**
-     * @return <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof ContrastResult ) ) {
-            return false;
-        }
-        final ContrastResult that = ( ContrastResult ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
 
     /**
      * @return The estimated value from the fit
@@ -77,10 +64,12 @@ public abstract class ContrastResult implements java.io.Serializable {
         this.factorValue = factorValue;
     }
 
+    @Override
     public Long getId() {
         return this.id;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }
@@ -135,14 +124,36 @@ public abstract class ContrastResult implements java.io.Serializable {
         return hashCode;
     }
 
+    /**
+     * @return <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
+     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
+     */
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof ContrastResult ) ) {
+            return false;
+        }
+        final ContrastResult that = ( ContrastResult ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
+    @Override
+    public String toString() {
+        return "Contrast for " + this.getFactorValue().toString();
+    }
+
     public static final class Factory {
         public static ContrastResult newInstance() {
-            return new ContrastResultImpl();
+            return new ContrastResult();
         }
 
+        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static ContrastResult newInstance( Double pvalue, Double tstat, Double coefficient, Double logFoldChange,
                 FactorValue factorValue, FactorValue secondFactorValue ) {
-            final ContrastResult entity = new ContrastResultImpl();
+            final ContrastResult entity = new ContrastResult();
             entity.setPvalue( pvalue );
             entity.setTstat( tstat );
             entity.setCoefficient( coefficient );

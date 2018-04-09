@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,7 +43,32 @@ public class MatrixConversionTest extends TestCase {
 
     private static final int NUM_BIOMATERIALS = 40;
     private static final int NUM_CS = 200;
-    private static Log log = LogFactory.getLog( MatrixConversionTest.class.getName() );
+    private static final Log log = LogFactory.getLog( MatrixConversionTest.class.getName() );
+
+    public final void testColumnMapping() {
+        Collection<QuantitationType> quantTypes = new HashSet<>();
+
+        QuantitationType quantType = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
+        quantType.setId( 0L );
+        quantTypes.add( quantType );
+
+        Collection<DesignElementDataVector> vectors = this.getDesignElementDataVectors( quantTypes );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
+        MatrixConversionTest.log.debug( vectors.size() + " vectors" );
+
+        TestCase.assertEquals( MatrixConversionTest.NUM_CS, mat.rows() );
+        TestCase.assertEquals( MatrixConversionTest.NUM_BIOMATERIALS, mat.columns() );
+
+        for ( int j = 0; j < mat.rows(); j++ ) {
+            // System.err.print( mat.getRowElement( j ) );
+            for ( int i = 0; i < mat.columns(); i++ ) {
+                Double r = mat.get( j, i );
+                TestCase.assertNotNull( "No value for at index " + i, r );
+                TestCase.assertTrue( "Expected " + i + ", got " + r, i == r.intValue() || r.equals( Double.NaN ) );
+            }
+        }
+
+    }
 
     /**
      * Creates an ugly (but not unusual) situation where there are two bioassay dimensions with different sizes,
@@ -51,18 +76,18 @@ public class MatrixConversionTest extends TestCase {
      *
      * @return design element data vectors
      */
-    public Collection<DesignElementDataVector> getDesignElementDataVectors( Collection<QuantitationType> quantTypes ) {
+    private Collection<DesignElementDataVector> getDesignElementDataVectors( Collection<QuantitationType> quantTypes ) {
         Collection<DesignElementDataVector> vectors = new HashSet<>();
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "junk" );
-        List<CompositeSequence> sequences = getCompositeSequences( ad );
+        List<CompositeSequence> sequences = this.getCompositeSequences( ad );
 
         ArrayDesign adb = ArrayDesign.Factory.newInstance();
         adb.setName( "bjunk" );
-        List<CompositeSequence> sequencesb = getCompositeSequences( ad );
+        List<CompositeSequence> sequencesb = this.getCompositeSequences( ad );
 
-        List<BioMaterial> bioMaterials = getBioMaterials(); // resused
+        List<BioMaterial> bioMaterials = this.getBioMaterials(); // resused
 
         for ( QuantitationType quantType : quantTypes ) {
 
@@ -71,7 +96,7 @@ public class MatrixConversionTest extends TestCase {
              */
             BioAssayDimension baDimA = BioAssayDimension.Factory.newInstance();
             Iterator<BioMaterial> bmita = bioMaterials.iterator();
-            for ( long i = 0; i < NUM_BIOMATERIALS - 20; i++ ) {
+            for ( long i = 0; i < MatrixConversionTest.NUM_BIOMATERIALS - 20; i++ ) {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
                 ba.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbioassay" );
                 ba.setSampleUsed( bmita.next() );
@@ -83,7 +108,7 @@ public class MatrixConversionTest extends TestCase {
 
             BioAssayDimension baDimB = BioAssayDimension.Factory.newInstance();
             Iterator<BioMaterial> bmitb = bioMaterials.iterator();
-            for ( long i = 0; i < NUM_BIOMATERIALS; i++ ) {
+            for ( long i = 0; i < MatrixConversionTest.NUM_BIOMATERIALS; i++ ) {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
                 ba.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbioassay" );
                 ba.setSampleUsed( bmitb.next() );
@@ -95,80 +120,37 @@ public class MatrixConversionTest extends TestCase {
 
             // bio.a gets cs 0-99, bio.b gets 100-199.
             long j = 0;
-            for ( ; j < NUM_CS - 100; j++ ) {
-                DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
-                double[] data = new double[baDimA.getBioAssays().size()];
-                for ( int k = 0; k < data.length; k++ ) {
-                    data[k] = k;
-                }
-                ByteArrayConverter bconverter = new ByteArrayConverter();
-                byte[] bdata = bconverter.doubleArrayToBytes( data );
-                vector.setData( bdata );
-
-                CompositeSequence cs = sequencesb.get( ( int ) j );
-                vector.setDesignElement( cs );
-                vector.setQuantitationType( quantType );
-                vector.setBioAssayDimension( baDimA );
-                vectors.add( vector );
-            }
-
-            for ( ; j < NUM_CS; j++ ) {
-                DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
-                double[] data = new double[baDimB.getBioAssays().size()];
-                for ( int k = 0; k < data.length; k++ ) {
-                    data[k] = k;
-                }
-                ByteArrayConverter bconverter = new ByteArrayConverter();
-                byte[] bdata = bconverter.doubleArrayToBytes( data );
-                vector.setData( bdata );
-
-                CompositeSequence cs = sequences.get( ( int ) j );
-                vector.setDesignElement( cs );
-                vector.setQuantitationType( quantType );
-                vector.setBioAssayDimension( baDimB );
-                vectors.add( vector );
-            }
+            j = this.loopVectors( vectors, sequencesb, quantType, baDimA, j, MatrixConversionTest.NUM_CS - 100 );
+            //noinspection UnusedAssignment // Better readability
+            j = this.loopVectors( vectors, sequences, quantType, baDimB, j, MatrixConversionTest.NUM_CS );
         }
         return vectors;
     }
 
-    public final void testColumnMapping() {
-        Collection<QuantitationType> quantTypes = new HashSet<>();
-        for ( int quantitationTypeNum = 0; quantitationTypeNum < 2; ) {
-            QuantitationType quantType = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
-            quantType.setId( ( long ) quantitationTypeNum );
-            quantTypes.add( quantType );
-            break;
-        }
-
-        Collection<DesignElementDataVector> vectors = getDesignElementDataVectors( quantTypes );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
-        log.debug( vectors.size() + " vectors" );
-
-        assertEquals( NUM_CS, mat.rows() );
-        assertEquals( NUM_BIOMATERIALS, mat.columns() );
-
-        // System.err.print( "--" );
-        // for ( int i = 0; i < mat.columns(); i++ ) {
-        // System.err.print( "\t" + mat.getBioMaterialForColumn( i ) );
-        // }
-        // System.err.print( "\n" );
-        for ( int j = 0; j < mat.rows(); j++ ) {
-            // System.err.print( mat.getRowElement( j ) );
-            for ( int i = 0; i < mat.columns(); i++ ) {
-                Double r = mat.get( j, i );
-                assertNotNull( "No value for at index " + i, r );
-                assertTrue( "Expected " + i + ", got " + r, i == r.intValue() || r.equals( Double.NaN ) );
-                // System.err.print( "\t" + r );
+    private long loopVectors( Collection<DesignElementDataVector> vectors, List<CompositeSequence> sequencesb,
+            QuantitationType quantType, BioAssayDimension baDimA, long j, int i2 ) {
+        for ( ; j < i2; j++ ) {
+            DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
+            double[] data = new double[baDimA.getBioAssays().size()];
+            for ( int k = 0; k < data.length; k++ ) {
+                data[k] = k;
             }
-            // System.err.print( "\n" );
-        }
+            ByteArrayConverter bconverter = new ByteArrayConverter();
+            byte[] bdata = bconverter.doubleArrayToBytes( data );
+            vector.setData( bdata );
 
+            CompositeSequence cs = sequencesb.get( ( int ) j );
+            vector.setDesignElement( cs );
+            vector.setQuantitationType( quantType );
+            vector.setBioAssayDimension( baDimA );
+            vectors.add( vector );
+        }
+        return j;
     }
 
     private List<BioMaterial> getBioMaterials() {
         List<BioMaterial> bioMaterials = new ArrayList<>();
-        for ( long i = 0; i < NUM_BIOMATERIALS; i++ ) {
+        for ( long i = 0; i < MatrixConversionTest.NUM_BIOMATERIALS; i++ ) {
             BioMaterial bm = BioMaterial.Factory.newInstance();
             bm.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbiomaterial" );
             bm.setId( i );
@@ -179,7 +161,7 @@ public class MatrixConversionTest extends TestCase {
 
     private List<CompositeSequence> getCompositeSequences( ArrayDesign ad ) {
         List<CompositeSequence> sequences = new ArrayList<>();
-        for ( long i = 0; i < NUM_CS; i++ ) {
+        for ( long i = 0; i < MatrixConversionTest.NUM_CS; i++ ) {
 
             Reporter reporter = Reporter.Factory.newInstance();
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();

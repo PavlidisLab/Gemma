@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,18 +27,22 @@ import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,6 +57,17 @@ import java.util.Map;
 public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatingCli {
 
     private static final String GENE_NAME_LIST_FILE_OPTION = "genefile";
+    private static final String ANNOT_DESC = "The name of the Annotation file to be generated [Default = Accession number]";
+    private static final String ANNOT_TYPE_DESC = "Which GO terms to add to the annotation file:  short, long, or bioprocess; 'all' to generate all 3 "
+            + "[Default=short (no parents)]. If you select bioprocess, parents are not included.";
+    private static final String FILE_LOAD_DESC = "Use specified file for batch generating annotation files.  "
+            + "specified File format (per line): shortName,outputFileName,[short|long|biologicalProcess] Note:  Overrides -a,-t,-f command line options ";
+    private static final String BATCH_LOAD_DESC = "Generates annotation files for all Array Designs (omits ones that are subsumed or merged) uses accession as annotation file name."
+            + "Implies --type all. Overrides other selection methods except '--taxon' and can be combined with -auto.";
+    private static final String GENE_LIST_FILE_DESC = "Create from a file containing a list of gene symbols instead of probe ids";
+    private static final String TAXON_DESC = "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
+            + "known genes for the taxon, or with --batch to process all arrays for the taxon.";
+    private static final String OVERWRITE_DESC = "If set will overwrite existing annotation files in the output directory";
     // file info
     private String batchFileName;
     private String fileName = null;
@@ -68,25 +83,16 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private String geneFileName;
     private GeneOntologyService goService;
     private String taxonName;
+    private boolean notifiedAboutGOState = false;
 
     public static void main( String[] args ) {
         ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
-        tryDoWork( p, args );
+        AbstractCLIContextCLI.tryDoWork( p, args );
     }
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Generate annotation files for platforms.";
-    }
-
-    @Override
-    public String getCommandName() {
-        return "makePlatformAnnotFiles";
     }
 
     @SuppressWarnings("static-access") // This is a much more readable syntax in this case
@@ -95,220 +101,34 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         super.buildOptions();
 
         Option annotationFileOption = OptionBuilder.hasArg().withArgName( "Annotation file name" )
-                .withDescription( "The name of the Annotation file to be generated [Default = Accession number]" )
-                .withLongOpt( "annotation" ).create( 'f' );
+                .withDescription( ArrayDesignAnnotationFileCli.ANNOT_DESC ).withLongOpt( "annotation" ).create( 'f' );
 
-        Option annotationType = OptionBuilder.hasArg().withArgName( "Type of annotation file" ).withDescription(
-                "Which GO terms to add to the annotation file:  short, long, or bioprocess; 'all' to generate all 3 "
-                        + "[Default=short (no parents)]. If you select bioprocess, parents are not included." )
-                .withLongOpt( "type" ).create( 't' );
+        Option annotationType = OptionBuilder.hasArg().withArgName( "Type of annotation file" )
+                .withDescription( ArrayDesignAnnotationFileCli.ANNOT_TYPE_DESC ).withLongOpt( "type" ).create( 't' );
 
         Option fileLoading = OptionBuilder.hasArg().withArgName( "Batch Generating of annotation files" )
-                .withDescription( "Use specified file for batch generating annotation files.  "
-                        + "specified File format (per line): shortName,outputFileName,[short|long|biologicalprocess] Note:  Overrides -a,-t,-f command line options " )
-                .withLongOpt( "load" ).create( 'l' );
+                .withDescription( ArrayDesignAnnotationFileCli.FILE_LOAD_DESC ).withLongOpt( "load" ).create( 'l' );
 
-        Option batchLoading = OptionBuilder.withArgName( "Generating all annotation files" ).withDescription(
-                "Generates annotation files for all Array Designs (omits ones that are subsumed or merged) uses accession as annotation file name."
-                        + "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings except '--taxon'." )
-                .withLongOpt( "batch" ).create( 'b' );
+        Option batchLoading = OptionBuilder.withArgName( "Generating all annotation files" )
+                .withDescription( ArrayDesignAnnotationFileCli.BATCH_LOAD_DESC ).withLongOpt( "batch" ).create( 'b' );
 
-        Option geneListFile = OptionBuilder.hasArg()
-                .withDescription( "Create from a file containing a list of gene symbols instead of probe ids" )
-                .create( GENE_NAME_LIST_FILE_OPTION );
-        addOption( geneListFile );
+        Option geneListFile = OptionBuilder.hasArg().withDescription( ArrayDesignAnnotationFileCli.GENE_LIST_FILE_DESC )
+                .create( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION );
+        this.addOption( geneListFile );
 
-        Option taxonNameOption = OptionBuilder.hasArg().withDescription(
-                "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
-                        + "known genes for the taxon, or with --batch to process all arrays for the taxon." )
+        Option taxonNameOption = OptionBuilder.hasArg().withDescription( ArrayDesignAnnotationFileCli.TAXON_DESC )
                 .create( "taxon" );
-        addOption( taxonNameOption );
+        this.addOption( taxonNameOption );
 
         Option overWriteOption = OptionBuilder.withArgName( "Overwrites existing files" )
-                .withDescription( "If set will overwrite existing annotation files in the output directory" )
-                .withLongOpt( "overwrite" ).create( 'o' );
+                .withDescription( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).withLongOpt( "overwrite" )
+                .create( 'o' );
 
-        addOption( annotationFileOption );
-        addOption( annotationType );
-        addOption( fileLoading );
-        addOption( batchLoading );
-        addOption( overWriteOption );
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( args );
-        if ( err != null )
-            return err;
-
-        try {
-            this.goService.init( true );
-            waitForGeneOntologyReady();
-
-            if ( StringUtils.isNotBlank( geneFileName ) ) {
-                processGeneList();
-            } else if ( processAllADs ) {
-                processAllADs();
-            } else if ( batchFileName != null ) {
-                processBatchFile();
-            } else if ( this.taxonName != null ) {
-                processGenesForTaxon();
-            } else {
-                if ( this.arrayDesignsToProcess.isEmpty() ) {
-                    throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
-                }
-                for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
-                    if ( doAllTypes ) {
-                        // make all three
-                        processOneAD( arrayDesign );
-                    } else {
-                        processAD( arrayDesign, this.fileName, type );
-                    }
-                }
-            }
-
-        } catch ( Exception e ) {
-            return e;
-        }
-
-        return null;
-    }
-
-    private boolean processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType )
-            throws IOException {
-
-        log.info( "Loading gene information for " + arrayDesign );
-        ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
-
-        if ( thawed.getCurationDetails().getTroubled() ) {
-            log.warn( "Troubled: " + arrayDesign );
-            return false;
-        }
-
-        Collection<CompositeSequence> compositeSequences = thawed.getCompositeSequences();
-
-        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
-                .getGenesWithSpecificity( compositeSequences );
-
-        boolean hasAtLeastOneGene = false;
-        for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
-            if ( genesWithSpecificity.get( c ).isEmpty() ) {
-                continue;
-            }
-            hasAtLeastOneGene = true;
-            break;
-        }
-
-        if ( !hasAtLeastOneGene ) {
-            log.warn( "No genes: " + thawed );
-            return false;
-        }
-
-        log.info( "Preparing file" );
-        return processCompositeSequences( thawed, fileBaseName, outputType, genesWithSpecificity );
-
-    }
-
-    /**
-     * Goes over all the AD's in the database (possibly limited by taxon) and creates annotation 3 annotation files for
-     * each AD that is not merged into or subsumed by another AD. Uses the Accession ID (GPL???) for the name of the
-     * annotation file. Appends noParents, bioProcess, allParents to the file name.
-     */
-    private void processAllADs() throws IOException {
-
-        Collection<ArrayDesign> allADs = this.arrayDesignService.loadAll();
-
-        for ( ArrayDesign ad : allADs ) {
-
-            ad = arrayDesignService.thawLite( ad );
-            if ( ad.getCurationDetails().getTroubled() ) {
-                log.warn( "Troubled: " + ad + " (skipping)" );
-                continue;
-            }
-
-            Taxon taxon = null;
-            if ( this.taxonName != null ) {
-                TaxonService taxonService = getBean( TaxonService.class );
-                taxon = taxonService.findByCommonName( taxonName );
-                if ( taxon == null ) {
-                    throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
-                }
-            }
-
-            Collection<Taxon> adTaxa = arrayDesignService.getTaxa( ad.getId() );
-
-            /*
-             * If using taxon, check it.
-             */
-            if ( taxon != null && !adTaxa.contains( taxon ) ) {
-                continue;
-            }
-            processOneAD( ad );
-
-        }
-
-    }
-
-    /**
-     * @throws IOException used for batch processing
-     */
-    private void processBatchFile() throws IOException {
-
-        log.info( "Loading platforms to annotate from " + this.batchFileName );
-        InputStream is = new FileInputStream( this.batchFileName );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
-
-            String line;
-            int lineNumber = 0;
-            while ( ( line = br.readLine() ) != null ) {
-                lineNumber++;
-                if ( StringUtils.isBlank( line ) ) {
-                    continue;
-                }
-
-                String[] arguments = StringUtils.split( line, ',' );
-
-                String accession = arguments[0];
-                String annotationFileName = arguments[1];
-                String type = arguments[2];
-
-                // Check the syntax of the given line
-                if ( ( accession == null ) || StringUtils.isBlank( accession ) ) {
-                    log.warn( "Incorrect line format in Batch Annotation file: Line " + lineNumber
-                            + "Platform is required: " + line );
-                    log.warn( "Unable to process that line. Skipping to next." );
-                    continue;
-                }
-                if ( ( annotationFileName == null ) || StringUtils.isBlank( annotationFileName ) ) {
-                    annotationFileName = accession;
-                    log.warn( "No annotation file name specified on line: " + lineNumber
-                            + " Using platform name as default annotation file name" );
-                }
-                if ( StringUtils.isBlank( type ) ) {
-                    this.type = OutputType.SHORT;
-                    log.warn( "No type specified for line: " + lineNumber + " Defaulting to short" );
-                } else {
-                    this.type = OutputType.valueOf( type.toUpperCase() );
-                }
-
-                // need to set these so processing ad works correctly
-                // TODO: make process type take all 3 parameter
-                ArrayDesign arrayDesign = locateArrayDesign( accession, arrayDesignService );
-
-                try {
-                    processAD( arrayDesign, annotationFileName, this.type );
-                } catch ( Exception e ) {
-                    log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ********" );
-                    log.error( e, e );
-                    cacheException( e );
-                    errorObjects.add( arrayDesign + ": " + e.getMessage() );
-                }
-
-            }
-        }
-
-        summarizeProcessing();
-
+        this.addOption( annotationFileOption );
+        this.addOption( annotationType );
+        this.addOption( fileLoading );
+        this.addOption( batchLoading );
+        this.addOption( overWriteOption );
     }
 
     @Override
@@ -340,8 +160,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         }
 
-        if ( this.hasOption( GENE_NAME_LIST_FILE_OPTION ) ) {
-            this.geneFileName = this.getOptionValue( GENE_NAME_LIST_FILE_OPTION );
+        if ( this.hasOption( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION ) ) {
+            this.geneFileName = this.getOptionValue( ArrayDesignAnnotationFileCli.GENE_NAME_LIST_FILE_OPTION );
             if ( !this.hasOption( "taxon" ) ) {
                 throw new IllegalArgumentException( "You must specify the taxon when using --genefile" );
             }
@@ -352,7 +172,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         if ( this.hasOption( "taxon" ) ) {
             this.taxonName = this.getOptionValue( "taxon" );
             if ( this.hasOption( 'b' ) ) {
-                log.info( "Will batch process array designs for " + this.taxonName );
+                AbstractCLI.log.info( "Will batch process array designs for " + this.taxonName );
             }
         }
 
@@ -361,9 +181,251 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         super.processOptions();
 
-        this.arrayDesignAnnotationService = getBean( ArrayDesignAnnotationService.class );
-        this.goService = getBean( GeneOntologyService.class );
-        this.compositeSequenceService = getBean( CompositeSequenceService.class );
+        this.arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
+        this.goService = this.getBean( GeneOntologyService.class );
+        this.compositeSequenceService = this.getBean( CompositeSequenceService.class );
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Generate annotation files for platforms.";
+    }
+
+    @Override
+    public String getCommandName() {
+        return "makePlatformAnnotFiles";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception err = this.processCommandLine( args );
+        if ( err != null )
+            return err;
+
+        try {
+            this.goService.init( true );
+
+            log.info( "***** Annotation file(s) will be written to " + ArrayDesignAnnotationService.ANNOT_DATA_DIR + " ******" );
+
+            if ( StringUtils.isNotBlank( geneFileName ) ) {
+                this.processGeneList();
+            } else if ( processAllADs ) {
+                this.processAllADs(); // 'batch'
+            } else if ( batchFileName != null ) {
+                this.processFromListInFile(); // list of ADs to run
+            } else if ( this.taxonName != null ) {
+                this.processGenesForTaxon(); // more or less a generic annotation by gene symbol
+            } else {
+                if ( this.arrayDesignsToProcess.isEmpty() ) {
+                    throw new IllegalArgumentException( "You must specify a platform, a taxon, gene file, or batch." );
+                }
+                for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+                    if ( doAllTypes ) {
+                        // make all three
+                        this.processOneAD( arrayDesign );
+                    } else {
+                        this.processAD( arrayDesign, this.fileName, type );
+                    }
+                }
+            }
+
+        } catch ( Exception e ) {
+            return e;
+        }
+
+        return null;
+    }
+
+    private void processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType ) throws IOException {
+
+        AbstractCLI.log.info( "Loading gene information for " + arrayDesign );
+        ArrayDesign thawed = this.thaw( arrayDesign );
+
+        if ( thawed.getCurationDetails().getTroubled() ) {
+            AbstractCLI.log.warn( "Troubled: " + arrayDesign );
+            return;
+        }
+
+        Collection<CompositeSequence> compositeSequences = thawed.getCompositeSequences();
+
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
+                .getGenesWithSpecificity( compositeSequences );
+
+        boolean hasAtLeastOneGene = false;
+        for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
+            if ( genesWithSpecificity.get( c ).isEmpty() ) {
+                continue;
+            }
+            hasAtLeastOneGene = true;
+            break;
+        }
+
+        if ( !hasAtLeastOneGene ) {
+            AbstractCLI.log.warn( "No genes: " + thawed );
+            return;
+        }
+
+        AbstractCLI.log.info( "Preparing file" );
+        this.processCompositeSequences( thawed, fileBaseName, outputType, genesWithSpecificity );
+
+    }
+
+    /**
+     * Goes over all the AD's in the database (possibly limited by taxon and 'auto') and creates 3 annotation files for
+     * each AD. Uses the short name (GPLxxxxx) as the base name of the annotation file(s).
+     */
+    private void processAllADs() {
+
+        Collection<ArrayDesign> candidates;
+        Collection<ArrayDesign> toDo = new ArrayList<>();
+        int numChecked = 0;
+
+        Taxon taxon = null;
+        if ( this.taxonName != null ) {
+            TaxonService taxonService = this.getBean( TaxonService.class );
+            taxon = taxonService.findByCommonName( taxonName );
+            if ( taxon == null ) {
+                throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
+            }
+            candidates = this.arrayDesignService.findByTaxon( taxon );
+
+        } else {
+            candidates = this.arrayDesignService.loadAll();
+        }
+
+        if ( candidates.isEmpty() ) {
+            log.warn( "No platforms found as candidates, check options" );
+            return;
+        }
+
+        log.info( candidates.size() + " candidate platforms for processing" );
+
+        int numTroubled = 0;
+        int numSkippedUnneeded = 0;
+        for ( ArrayDesign ad : candidates ) {
+
+            ad = arrayDesignService.thawLite( ad );
+
+            if ( ad.getTechnologyType().equals( TechnologyType.NONE ) && !ad.getShortName().startsWith( "Generic" ) ) {
+                // We don't make files for platforms that don't have sequences. FIXME: method to detect generic platforms is less than optimal.
+                continue;
+            }
+
+            if ( ad.getCurationDetails().getTroubled() ) {
+                AbstractCLI.log.debug( "Troubled: " + ad + " (skipping)" );
+                numTroubled++;
+                continue;
+            }
+
+            if ( autoSeek ) {
+                boolean needToRun = super.needToRun( null, ad, ArrayDesignAnnotationFileEvent.class );
+                if ( !needToRun ) {
+                    log.debug( ">>> Skipping as doesn't need to be updated (-auto): " + ad );
+                    numSkippedUnneeded++;
+                } else {
+                    log.info( "+++ Detected in need of update (-auto): " + ad );
+                    toDo.add( ad );
+                }
+            } else {
+                toDo.add( ad );
+            }
+
+            if ( ++numChecked % 100 == 0 ) {
+                log.info( "Checked for need to run: " + numChecked + " platforms" );
+            }
+
+        }
+
+        log.info( "Checked for need to run: " + numChecked + " platforms" );
+
+        if ( numTroubled > 0 ) {
+            log.info( numTroubled + " platforms are troubled and will be skipped." );
+        }
+        if ( numSkippedUnneeded > 0 ) {
+            log.info( numSkippedUnneeded + " platforms don't need to be run." );
+        }
+
+        if ( toDo.isEmpty() ) {
+            log.warn( "No platforms were found to need processing" );
+            return;
+        }
+
+        log.info( toDo.size() + " platforms will be processed." );
+
+        for ( ArrayDesign ad : toDo ) {
+            try {
+                this.waitForGeneOntologyReady();
+                this.processOneAD( ad );
+            } catch ( Exception e ) {
+                errorObjects.add( ad + " " + e.getMessage() );
+                continue;
+            }
+        }
+
+        this.summarizeProcessing();
+
+    }
+
+    /**
+     * @throws IOException used for batch processing
+     */
+    private void processFromListInFile() throws IOException {
+
+        AbstractCLI.log.info( "Loading platforms to annotate from " + this.batchFileName );
+        InputStream is = new FileInputStream( this.batchFileName );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+
+            String line;
+            int lineNumber = 0;
+            while ( ( line = br.readLine() ) != null ) {
+                lineNumber++;
+                if ( StringUtils.isBlank( line ) ) {
+                    continue;
+                }
+
+                String[] arguments = StringUtils.split( line, ',' );
+
+                String accession = arguments[0];
+                String annotationFileName = arguments[1];
+                String type = arguments[2];
+
+                // Check the syntax of the given line
+                if ( ( accession == null ) || StringUtils.isBlank( accession ) ) {
+                    AbstractCLI.log.warn( "Incorrect line format in Batch Annotation file: Line " + lineNumber
+                            + "Platform is required: " + line );
+                    AbstractCLI.log.warn( "Unable to process that line. Skipping to next." );
+                    continue;
+                }
+                if ( ( annotationFileName == null ) || StringUtils.isBlank( annotationFileName ) ) {
+                    annotationFileName = accession;
+                    AbstractCLI.log.warn( "No annotation file name specified on line: " + lineNumber
+                            + " Using platform name as default annotation file name" );
+                }
+                if ( StringUtils.isBlank( type ) ) {
+                    this.type = OutputType.SHORT;
+                    AbstractCLI.log.warn( "No type specified for line: " + lineNumber + " Defaulting to short" );
+                } else {
+                    this.type = OutputType.valueOf( type.toUpperCase() );
+                }
+
+                // need to set these so processing ad works correctly
+                // TODO: make process type take all 3 parameter
+                ArrayDesign arrayDesign = this.locateArrayDesign( accession, arrayDesignService );
+
+                try {
+                    this.processAD( arrayDesign, annotationFileName, this.type );
+                } catch ( Exception e ) {
+                    AbstractCLI.log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage()
+                            + " ********" );
+                    AbstractCLI.log.error( e, e );
+                    errorObjects.add( arrayDesign + ": " + e.getMessage() );
+                }
+
+            }
+        }
+
+        this.summarizeProcessing();
+
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
@@ -376,50 +438,52 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
-    private boolean processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
+    private void processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) throws IOException {
 
         if ( genesWithSpecificity.size() == 0 ) {
-            log.info( "No sequence information for " + arrayDesign + ", skipping" );
-            return false;
+            AbstractCLI.log.info( "No sequence information for " + arrayDesign + ", skipping" );
+            return;
         }
 
         try (Writer writer = arrayDesignAnnotationService.initOutputFile( arrayDesign, fileBaseName, this.overWrite )) {
 
             // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
             if ( writer == null ) {
-                log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
-                return false;
+                AbstractCLI.log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
+                return;
             }
 
-            log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
+            AbstractCLI.log
+                    .info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
+
+            this.waitForGeneOntologyReady();
 
             int numProcessed = arrayDesignAnnotationService
                     .generateAnnotationFile( writer, genesWithSpecificity, outputType );
 
-            log.info( "Finished processing platform: " + arrayDesign.getName() );
+            AbstractCLI.log.info( "Finished processing platform: " + arrayDesign.getName() );
 
             successObjects.add( String.format( "%s (%s)", arrayDesign.getName(), arrayDesign.getShortName() ) );
 
             if ( StringUtils.isBlank( fileBaseName ) ) {
-                log.info( "Processed " + numProcessed + " composite sequences" );
-                audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
+                AbstractCLI.log.info( "Processed " + numProcessed + " composite sequences" );
+                this.audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
             } else {
                 String filename = fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-                log.info( "Created file:  " + filename + " with " + numProcessed + " values" );
-                audit( arrayDesign, "Created file: " + filename + " with " + numProcessed + " values" );
+                AbstractCLI.log.info( "Created file:  " + filename + " with " + numProcessed + " values" );
+                this.audit( arrayDesign, "Created file: " + filename + " with " + numProcessed + " values" );
             }
-            return true;
         }
     }
 
     private void processGeneList() throws IOException {
-        log.info( "Loading genes to annotate from " + geneFileName );
+        AbstractCLI.log.info( "Loading genes to annotate from " + geneFileName );
         InputStream is = new FileInputStream( geneFileName );
         try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
             String line;
-            GeneService geneService = getBean( GeneService.class );
-            TaxonService taxonService = getBean( TaxonService.class );
+            GeneService geneService = this.getBean( GeneService.class );
+            TaxonService taxonService = this.getBean( TaxonService.class );
             Taxon taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
@@ -433,62 +497,66 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 String gene = arguments[0];
                 Gene g = geneService.findByOfficialSymbol( gene, taxon );
                 if ( g == null ) {
-                    log.info( "Gene: " + gene + " not found." );
+                    AbstractCLI.log.info( "Gene: " + gene + " not found." );
                     continue;
                 }
                 genes.add( g );
             }
-            log.info( "File contained " + genes.size() + " potential gene symbols" );
+            AbstractCLI.log.info( "File contained " + genes.size() + " potential gene symbols" );
+
+            this.waitForGeneOntologyReady();
+
             int numProcessed = arrayDesignAnnotationService
                     .generateAnnotationFile( new PrintWriter( System.out ), genes, OutputType.SHORT );
-            log.info( "Processed " + numProcessed + " genes that were found" );
+            AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
         }
     }
 
     private void processGenesForTaxon() {
-        GeneService geneService = getBean( GeneService.class );
-        TaxonService taxonService = getBean( TaxonService.class );
+        GeneService geneService = this.getBean( GeneService.class );
+        TaxonService taxonService = this.getBean( TaxonService.class );
         Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
         }
-        log.info( "Processing all genes for " + taxon );
+        AbstractCLI.log.info( "Processing all genes for " + taxon );
         Collection<Gene> genes = geneService.loadAll( taxon );
-        log.info( "Taxon has " + genes.size() + " 'known' genes" );
+        AbstractCLI.log.info( "Taxon has " + genes.size() + " 'known' genes" );
+        this.waitForGeneOntologyReady();
         int numProcessed = arrayDesignAnnotationService
                 .generateAnnotationFile( new PrintWriter( System.out ), genes, type );
-        log.info( "Processed " + numProcessed + " genes that were found" );
+        AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
-    private boolean processOneAD( ArrayDesign inputAd ) throws IOException {
-        ArrayDesign ad = unlazifyArrayDesign( inputAd );
+    private void processOneAD( ArrayDesign inputAd ) throws IOException {
+        ArrayDesign ad = this.thaw( inputAd );
 
-        log.info( "Processing AD: " + ad.getName() );
+        AbstractCLI.log.info( "================= Processing: " + ad );
 
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
         File sf = ArrayDesignAnnotationServiceImpl.getFileName( shortFileBaseName );
-        String biocFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
+        String bioFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        File bf = ArrayDesignAnnotationServiceImpl.getFileName( biocFileBaseName );
-        String allparFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
+        File bf = ArrayDesignAnnotationServiceImpl.getFileName( bioFileBaseName );
+        String allParFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        File af = ArrayDesignAnnotationServiceImpl.getFileName( allparFileBaseName );
+        File af = ArrayDesignAnnotationServiceImpl.getFileName( allParFileBaseName );
 
         if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
-            log.info( "Files exist already, will not overwrite (use --overwrite option to override)" );
-            return false;
+            AbstractCLI.log.info( "Files exist already, will not overwrite (use --overwrite option to override)" );
+            return;
         }
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        log.info( "Starting getting probe specificity" );
+        AbstractCLI.log.info( "Starting getting probe specificity" );
 
         // lmd test
 
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
                 .getGenesWithSpecificity( compositeSequences );
 
-        log.info( "Done getting probe specificity" );
+        AbstractCLI.log.info( "Done getting probe specificity" );
 
         boolean hasAtLeastOneGene = false;
         for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
@@ -500,43 +568,46 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
 
         if ( !hasAtLeastOneGene ) {
-            log.warn( "No genes: " + ad + ", skipping" );
-            return false;
+            AbstractCLI.log.warn( "No genes: " + ad + ", skipping" );
+            return;
         }
 
-        boolean didAnything = false;
         if ( overWrite || !sf.exists() ) {
-            processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
-            didAnything = true;
+            this.processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
         } else {
-            log.info( sf + " exists, will not overwrite" );
+            AbstractCLI.log.info( sf + " exists, will not overwrite" );
         }
 
         if ( overWrite || !bf.exists() ) {
-            processCompositeSequences( ad, biocFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity );
-            didAnything = true;
+            this.processCompositeSequences( ad, bioFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity );
         } else {
-            log.info( bf + " exists, will not overwrite" );
+            AbstractCLI.log.info( bf + " exists, will not overwrite" );
         }
 
         if ( overWrite || !af.exists() ) {
-            processCompositeSequences( ad, allparFileBaseName, OutputType.LONG, genesWithSpecificity );
-            didAnything = true;
+            this.processCompositeSequences( ad, allParFileBaseName, OutputType.LONG, genesWithSpecificity );
         } else {
-            log.info( af + " exists, will not overwrite" );
+            AbstractCLI.log.info( af + " exists, will not overwrite" );
         }
-        return didAnything;
+
+        successObjects.add( ad );
+
     }
 
     private void waitForGeneOntologyReady() {
         while ( !goService.isReady() ) {
             try {
                 Thread.sleep( 10000 );
+                AbstractCLI.log.info( "Waiting for Gene Ontology to load ..." );
             } catch ( InterruptedException e ) {
                 e.printStackTrace();
+                log.error( "Failure while waiting for GO to load" );
+                super.bail( ErrorCode.FATAL_ERROR );
             }
-            log.info( "Waiting for Gene Ontology to load ..." );
         }
-        log.info( "GO is ready." );
+        if ( !this.notifiedAboutGOState ) {
+            AbstractCLI.log.info( "GO is ready." );
+            this.notifiedAboutGOState = true;
+        }
     }
 }

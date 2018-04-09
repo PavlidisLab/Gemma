@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,8 +89,8 @@ public class AclAdviceTest extends BaseSpringContextTest {
     private SecurityService securityService;
 
     @Test
-    public void testSecuredNotChild() throws Exception {
-        String groupName = randomName();
+    public void testSecuredNotChild() {
+        String groupName = this.randomName();
         securityService.createGroup( groupName );
         UserGroup g = ( UserGroup ) userService.findGroupByName( groupName );
         aclTestUtils.checkHasAcl( g );
@@ -104,7 +104,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
      * _simple_ compared to EEs!
      */
     @Test
-    public void testArrayDesignAcls() throws Exception {
+    public void testArrayDesignAcls() {
         ArrayDesign ad = this.getTestPersistentArrayDesign( 2, true, false, false ); // need to modify
 
         aclTestUtils.checkHasAcl( ad );
@@ -120,7 +120,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSignup() throws Exception {
+    public void testSignup() {
         try {
             this.runAsAnonymous();
             String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
@@ -132,7 +132,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testArrayDesignAclsUser() throws Exception {
+    public void testArrayDesignAclsUser() {
 
         String userName = "testuser" + RandomStringUtils.randomAlphabetic( 3 );
         this.makeUser( userName );
@@ -184,7 +184,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         // logged-in user can also see both
         String user = RandomStringUtils.randomAlphabetic( 10 );
-        makeUser( user );
+        this.makeUser( user );
         this.runAsUser( user );
         assertEquals( 2, arrayDesignService.numExperiments( ad ) );
 
@@ -226,22 +226,13 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     }
 
-    private void makeUser( String username ) {
-        try {
-            this.userManager.loadUserByUsername( username );
-        } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
-                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
-        }
-    }
-
     /*
      * Test of EE ACLs and also SecurityNotInherited on EE set.
      */
     @Test
-    public void testExpressionExperimentAcls() throws Exception {
+    public void testExpressionExperimentAcls() {
 
-        ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         aclTestUtils.checkEEAcls( ee );
 
@@ -275,7 +266,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         ExpressionExperimentSet ees = ExpressionExperimentSet.Factory.newInstance();
         ees.getExperiments().add( ee );
-        ees.setName( randomName() );
+        ees.setName( this.randomName() );
 
         persisterHelper.persist( ees );
 
@@ -307,7 +298,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
          * Create an analysis, add a result set, persist. Problem is: what if we do things in a funny order. Must call
          * update on the Analysis.
          */
-        ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis diffExpressionAnalysis = config.toAnalysis();
@@ -338,7 +329,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
      * object
      */
     @Test
-    public void testUpdateAcl() throws Exception {
+    public void testUpdateAcl() {
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
@@ -349,7 +340,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
         ef.setType( FactorType.CATEGORICAL );
         ef.setExperimentalDesign( ed );
-        String efName = "acladdtest_" + randomName();
+        String efName = "acladdtest_" + this.randomName();
         ef.setName( efName );
         ef.setDescription( "I am a factor" );
 
@@ -365,7 +356,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         assertNotNull( ee );
 
-        ee.setShortName( randomName() );
+        ee.setShortName( this.randomName() );
         expressionExperimentService.update( ee );
 
         aclTestUtils.checkEEAcls( ee );
@@ -373,6 +364,15 @@ public class AclAdviceTest extends BaseSpringContextTest {
         expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
+    }
+
+    private void makeUser( String username ) {
+        try {
+            this.userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+        }
     }
 
 }

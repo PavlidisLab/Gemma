@@ -61,7 +61,6 @@ Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
             stateEvents: []
         });
 
-        // todo add widget for searching for gene groups (or go terms)
         Ext.apply(this, {
             items: [this.geneGroupPanel, this.geneChooserPanel]
         });

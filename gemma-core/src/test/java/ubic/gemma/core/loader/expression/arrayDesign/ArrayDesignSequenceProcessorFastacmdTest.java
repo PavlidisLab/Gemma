@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,25 +18,23 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
+import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.Settings;
 
+import java.io.File;
+import java.util.Collection;
+
+import static org.junit.Assert.assertTrue;
+
 /**
  * Test exercises the fastacmd - requires executable.
- * 
- * @author pavlidis
  *
+ * @author pavlidis
  */
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
     @Autowired
@@ -45,7 +43,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
     @Test
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
 
-        if ( !fastaCmdExecutableExists() ) {
+        if ( !this.fastaCmdExecutableExists() ) {
             return;
         }
         if ( ad == null ) {
@@ -55,13 +53,13 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
         ad = arrayDesignService.thaw( ad );
         try {
             // finally the real business. There are 243 sequences on the array.
-            Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
-                    "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
-            if ( res == null ) {
-                // data already filled in by some other test.
-            } else {
+            Collection<BioSequence> res = app
+                    .processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
+                            FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
+            if ( res != null ) {
                 if ( res.size() == 242 ) {
-                    log.warn( "Got 242 for some reason instead of 243, here is some debugging information (test will pass)" );
+                    log.warn(
+                            "Got 242 for some reason instead of 243, here is some debugging information (test will pass)" );
                     for ( BioSequence bs : res ) {
                         log.warn( bs );
                     }
@@ -78,22 +76,13 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 log.warn( "Test skipped: no fastacmd executable" );
                 return;
-            } else if ( e.getCause() instanceof ExecutionException ) {
-                log.error( "Failed to get file -- skipping rest of test" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.error( "Failed to connect to NCBI, skipping test" );
-                return;
-            } else if ( e.getCause() instanceof org.apache.commons.net.ftp.FTPConnectionClosedException ) {
-                log.error( "Failed to connect to NCBI, skipping test" );
-                return;
             }
-            throw e;
+            if ( !TestUtils.LogNcbiError( log, e ) )
+                throw e;
         }
 
     }
 
-    // fixme duplicated from SimpleFastaCmdTest
     private boolean fastaCmdExecutableExists() {
         String fastacmdExe = Settings.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
         if ( fastacmdExe == null ) {

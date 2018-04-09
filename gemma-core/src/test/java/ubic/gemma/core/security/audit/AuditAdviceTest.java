@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -86,13 +86,13 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         Collection<Long> trailIds = new HashSet<>();
         Collection<Long> eventIds = new HashSet<>();
 
-        checkEEAuditTrails( ee, trailIds, eventIds );
+        this.checkEEAuditTrails( ee, trailIds, eventIds );
 
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
 
         ee = expressionExperimentService.load( ee.getId() ); // so not thawed, which tests lazy issue in the advice.
 
-        ee.setShortName( randomName() );
+        ee.setShortName( this.randomName() );
 
         expressionExperimentService.update( ee );
 
@@ -107,12 +107,12 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         expressionExperimentService.remove( ee );
 
-        checkDeletedTrails( trailIds, eventIds );
+        this.checkDeletedTrails( trailIds, eventIds );
 
     }
 
     @Test
-    public void testCascadingCreateOnUpdate() throws Exception {
+    public void testCascadingCreateOnUpdate() {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = this.expressionExperimentService.load( ee.getId() );
@@ -163,7 +163,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testCascadingCreateWithAssociatedAuditable() throws Exception {
+    public void testCascadingCreateWithAssociatedAuditable() {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = this.expressionExperimentService.load( ee.getId() );
@@ -189,9 +189,9 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSimpleAuditCreateUpdateUser() throws Exception {
+    public void testSimpleAuditCreateUpdateUser() {
 
-        String USERNAME = RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
+        String USERNAME = RandomStringUtils.randomAlphabetic( BaseSpringContextTest.RANDOM_STRING_LENGTH );
 
         String encodedPassword = passwordEncoder.encodePassword( USERNAME, USERNAME );
         UserDetailsImpl u = new UserDetailsImpl( encodedPassword, USERNAME, true, null, null, null, new Date() );
@@ -257,6 +257,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     /*
      * Torture test. Passes fine with a single thread.
      */
+    @SuppressWarnings("Duplicates") // Not in this project
     @Test
     public void testAuditFindOrCreateConcurrentTorture() throws Exception {
         int numThreads = 14; // too high and we run out of connections, which is not what we're testing.
@@ -369,29 +370,29 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     private void checkDeletedTrails( Collection<Long> trailIds, Collection<Long> eventIds ) {
 
         for ( Long id : trailIds ) {
-            assertTrue( checkDeletedAuditTrail( id ) );
+            assertTrue( this.checkDeletedAuditTrail( id ) );
         }
 
         for ( Long id : eventIds ) {
-            assertTrue( checkDeletedEvent( id ) );
+            assertTrue( this.checkDeletedEvent( id ) );
         }
 
     }
 
     private void checkEEAuditTrails( ExpressionExperiment ee, Collection<Long> trailIds, Collection<Long> eventIds ) {
-        checkAuditTrail( ee, trailIds, eventIds );
+        this.checkAuditTrail( ee, trailIds, eventIds );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
-            checkAuditTrail( ba, trailIds, eventIds );
+            this.checkAuditTrail( ba, trailIds, eventIds );
             BioMaterial bm = ba.getSampleUsed();
-            checkAuditTrail( bm, trailIds, eventIds );
+            this.checkAuditTrail( bm, trailIds, eventIds );
             for ( Characteristic c : bm.getCharacteristics() ) {
-                checkAuditTrail( c, trailIds, eventIds );
+                this.checkAuditTrail( c, trailIds, eventIds );
             }
 
             for ( Treatment t : bm.getTreatments() ) {
-                checkAuditTrail( t, trailIds, eventIds );
-                checkAuditTrail( t.getAction(), trailIds, eventIds );
+                this.checkAuditTrail( t, trailIds, eventIds );
+                this.checkAuditTrail( t.getAction(), trailIds, eventIds );
                 // for ( CompoundMeasurement cm : t.getCompoundMeasurements() ) {
                 // checkAuditTrail( cm.getCompound().getCompoundIndices(), trailIds, eventIds );
                 // }
@@ -403,10 +404,10 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         assertTrue( experimentalFactors.size() > 0 );
 
         for ( ExperimentalFactor ef : experimentalFactors ) {
-            checkAuditTrail( ef, trailIds, eventIds );
+            this.checkAuditTrail( ef, trailIds, eventIds );
             for ( FactorValue fv : ef.getFactorValues() ) {
                 for ( Characteristic c : fv.getCharacteristics() ) {
-                    checkAuditTrail( c, trailIds, eventIds );
+                    this.checkAuditTrail( c, trailIds, eventIds );
                 }
             }
         }

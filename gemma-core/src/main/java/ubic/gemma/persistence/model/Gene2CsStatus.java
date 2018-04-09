@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,11 +25,11 @@ import java.util.Date;
 
 /**
  * Used to store information about what happened when the GENE2CS table was updated.
- * 
- * @author paul
  *
+ * @author paul
  * @see TableMaintenanceUtil
  */
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class Gene2CsStatus implements Serializable {
 
     private static final long serialVersionUID = 1956861185764899312L;
@@ -44,20 +44,20 @@ public class Gene2CsStatus implements Serializable {
         return annotation;
     }
 
-    public Exception getError() {
-        return error;
-    }
-
-    public Date getLastUpdate() {
-        return lastUpdate;
-    }
-
     public void setAnnotation( String annotation ) {
         this.annotation = annotation;
     }
 
+    public Exception getError() {
+        return error;
+    }
+
     public void setError( Exception error ) {
         this.error = error;
+    }
+
+    public Date getLastUpdate() {
+        return lastUpdate;
     }
 
     public void setLastUpdate( Date lastUpdate ) {

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,14 +19,13 @@
 
 package ubic.gemma.persistence.retry;
 
-import java.util.Map;
-
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 
+import java.util.Map;
+
 /**
  * @author paul
- *
  */
 public class RetryPolicy extends SimpleRetryPolicy {
 
@@ -41,15 +40,10 @@ public class RetryPolicy extends SimpleRetryPolicy {
         this.classifier = new RetryExceptionCauseClassifier( retryableExceptions );
     }
 
-    /*
-     * Have to override so we use our classifier. (non-Javadoc)
-     * 
-     * @see org.springframework.retry.policy.SimpleRetryPolicy#canRetry(org.springframework.retry.RetryContext)
-     */
     @Override
     public boolean canRetry( RetryContext context ) {
         Throwable t = context.getLastThrowable();
-        return ( t == null || classifier.classify( t ) ) && context.getRetryCount() < getMaxAttempts();
+        return ( t == null || classifier.classify( t ) ) && context.getRetryCount() < this.getMaxAttempts();
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.common.quantitationtype;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
@@ -34,23 +33,11 @@ public interface QuantitationTypeService extends BaseVoEnabledService<Quantitati
 
     @Override
     @Secured({ "GROUP_USER" })
-    QuantitationType create( QuantitationType quantitationType );
-
-    @Override
-    @Secured({ "GROUP_USER" })
     QuantitationType findOrCreate( QuantitationType quantitationType );
 
     @Override
     @Secured({ "GROUP_USER" })
-    void remove( QuantitationType quantitationType );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( QuantitationType quantitationType );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<QuantitationType> create( Collection<QuantitationType> entities );
+    QuantitationType create( QuantitationType quantitationType );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -62,7 +49,15 @@ public interface QuantitationTypeService extends BaseVoEnabledService<Quantitati
 
     @Override
     @Secured({ "GROUP_USER" })
+    void remove( QuantitationType quantitationType );
+
+    @Override
+    @Secured({ "GROUP_USER" })
     void update( Collection<QuantitationType> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( QuantitationType quantitationType );
 
     @Secured({ "GROUP_USER" })
     List<QuantitationType> loadByDescription( String description );

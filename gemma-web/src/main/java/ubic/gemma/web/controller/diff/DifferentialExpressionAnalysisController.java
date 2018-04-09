@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -109,7 +109,7 @@ public class DifferentialExpressionAnalysisController {
      * @return string
      * @throws Exception exception
      */
-    public String redo( Long eeId, Long id ) throws Exception {
+    public String redo( Long eeId, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
@@ -124,7 +124,7 @@ public class DifferentialExpressionAnalysisController {
         return taskRunningService.submitRemoteTask( cmd );
     }
 
-    public String refreshStats( Long eeId, Long id ) throws Exception {
+    public String refreshStats( Long eeId, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
@@ -146,7 +146,7 @@ public class DifferentialExpressionAnalysisController {
      * @return string
      * @throws Exception exception
      */
-    public String remove( Long eeId, Long id ) throws Exception {
+    public String remove( Long eeId, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
@@ -168,7 +168,7 @@ public class DifferentialExpressionAnalysisController {
      * @param id id
      * @return string
      */
-    public String run( Long id ) throws Exception {
+    public String run( Long id ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -187,8 +187,7 @@ public class DifferentialExpressionAnalysisController {
         return taskRunningService.submitRemoteTask( cmd );
     }
 
-    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId )
-            throws Exception {
+    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId ) {
 
         if ( factorids.isEmpty() ) {
             throw new IllegalArgumentException( "You must provide at least one factor to analyze" );
@@ -244,14 +243,15 @@ public class DifferentialExpressionAnalysisController {
                 /*
                  * This is a policy and I am pretty sure it makes sense!
                  */
-                log.warn( "Removing interaction term because it includes 'batch'" );
+                DifferentialExpressionAnalysisController.log
+                        .warn( "Removing interaction term because it includes 'batch'" );
                 includeInteractions = false;
             }
         }
 
         cmd.setIncludeInteractions( includeInteractions );
 
-        log.info( "Initializing analysis" );
+        DifferentialExpressionAnalysisController.log.info( "Initializing analysis" );
         this.experimentReportService.evictFromCache( ee.getId() );
         return taskRunningService.submitRemoteTask( cmd );
     }

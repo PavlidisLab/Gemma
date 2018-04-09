@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -184,19 +184,19 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
-        String gplToFind = getGpl();
+        String gplToFind = this.getGpl();
 
-        assignExternalReference( ad, gplToFind );
-        assignExternalReference( ad, getGpl() );
+        this.assignExternalReference( ad, gplToFind );
+        this.assignExternalReference( ad, this.getGpl() );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
         toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         // artificial, wouldn't normally have multiple GEO acc
-        assignExternalReference( toFind, getGpl() );
-        assignExternalReference( toFind, getGpl() );
-        assignExternalReference( toFind, gplToFind );
+        this.assignExternalReference( toFind, this.getGpl() );
+        this.assignExternalReference( toFind, this.getGpl() );
+        this.assignExternalReference( toFind, gplToFind );
         ArrayDesign found = arrayDesignService.find( toFind );
 
         assertNotNull( found );
@@ -207,8 +207,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindWithExternalReferenceNotFound() {
         ad = ArrayDesign.Factory.newInstance();
-        assignExternalReference( ad, getGpl() );
-        assignExternalReference( ad, getGpl() );
+        this.assignExternalReference( ad, this.getGpl() );
+        this.assignExternalReference( ad, this.getGpl() );
         String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
         ad.setName( name );
         ad.setShortName( name );
@@ -219,8 +219,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         // artificial, wouldn't normally have multiple GEO acc
-        assignExternalReference( toFind, getGpl() );
-        assignExternalReference( toFind, getGpl() );
+        this.assignExternalReference( toFind, this.getGpl() );
+        this.assignExternalReference( toFind, this.getGpl() );
         ArrayDesign found = arrayDesignService.find( toFind );
 
         assertNull( found );
@@ -272,7 +272,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
             list.add( taxon.getScientificName() );
         }
         assertTrue( "Should have found " + taxonName2, list.contains( taxonName2 ) );
-        assertTrue( "Should have found " + DEFAULT_TAXON, list.contains( DEFAULT_TAXON ) );
+        assertTrue( "Should have found " + ArrayDesignServiceTest.DEFAULT_TAXON,
+                list.contains( ArrayDesignServiceTest.DEFAULT_TAXON ) );
 
     }
 
@@ -285,7 +286,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
         assertEquals( 1, taxa.size() );
         Taxon tax = taxa.iterator().next();
-        assertEquals( DEFAULT_TAXON, tax.getScientificName() );
+        assertEquals( ArrayDesignServiceTest.DEFAULT_TAXON, tax.getScientificName() );
 
     }
 
@@ -296,7 +297,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     public void testGetTaxon() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Taxon tax = arrayDesignService.getTaxa( ad.getId() ).iterator().next();
-        assertEquals( DEFAULT_TAXON, tax.getScientificName() );
+        assertEquals( ArrayDesignServiceTest.DEFAULT_TAXON, tax.getScientificName() );
     }
 
     @Test
@@ -364,7 +365,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testThaw() throws Exception {
+    public void testThaw() {
         ad = super.getTestPersistentArrayDesign( 5, true );
 
         ad = arrayDesignService.load( ad.getId() );
@@ -450,7 +451,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     private void assignExternalReference( ArrayDesign toFind, String accession ) {
-        ExternalDatabase geo = externalDatabaseService.find( "GEO" );
+        ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
         assert geo != null;
 
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();

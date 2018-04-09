@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,12 +44,6 @@ public interface AuditEventDao extends BaseVoEnabledDao<AuditEvent, AuditEventVa
      */
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
-    /**
-     * Return a map of Auditables to AuditEvents for the given AuditEventType.
-     */
-    Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
-            Class<? extends AuditEventType> type );
-
     Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
@@ -68,6 +62,4 @@ public interface AuditEventDao extends BaseVoEnabledDao<AuditEvent, AuditEventVa
     void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
     void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
-
-    void thaw( AuditEvent auditEvent );
 }

@@ -219,7 +219,7 @@ Ext
       } );
 
       /**
-       * Home page tutorials. FIXME why this scope?
+       * Home page tutorials.
        * 
        * @private
        */

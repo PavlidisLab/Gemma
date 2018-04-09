@@ -8,10 +8,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -25,6 +22,7 @@ import java.util.*;
  *
  * @author tesarst
  */
+@SuppressWarnings("unused") // Possible external use
 public interface ExpressionExperimentDao
         extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject> {
 
@@ -44,20 +42,14 @@ public interface ExpressionExperimentDao
      * @see ExpressionExperimentDaoImpl#loadValueObjectsPreFilter(int, int, String, boolean, ArrayList) for
      * description (no but seriously do look it might not work as you would expect).
      */
-    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy, boolean asc,
-            ArrayList<ObjectFilter[]> filter );
+    @Override
+    Collection<ExpressionExperimentValueObject> loadValueObjectsPreFilter( int offset, int limit, String orderBy,
+            boolean asc, ArrayList<ObjectFilter[]> filter );
 
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( String orderField, boolean descending,
             Collection<Long> ids, Taxon taxon, int limit, int start );
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
-
-    List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
-
-    List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
-
-    List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending,
-            Collection<Long> ids );
 
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
@@ -76,8 +68,6 @@ public interface ExpressionExperimentDao
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
-
-    Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     Collection<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
 
@@ -136,11 +126,6 @@ public interface ExpressionExperimentDao
 
     Integer getDesignElementDataVectorCountById( long Id );
 
-    Collection<DesignElementDataVector> getDesignElementDataVectors( Collection<CompositeSequence> designElements,
-            QuantitationType quantitationType );
-
-    Collection<DesignElementDataVector> getDesignElementDataVectors( Collection<QuantitationType> quantitationTypes );
-
     Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
 
     Date getLastArrayDesignUpdate( ExpressionExperiment ee );
@@ -162,8 +147,6 @@ public interface ExpressionExperimentDao
 
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
-
-    Collection<DesignElementDataVector> getSamplingOfVectors( QuantitationType quantitationType, Integer limit );
 
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 

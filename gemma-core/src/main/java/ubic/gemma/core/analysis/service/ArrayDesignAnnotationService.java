@@ -59,7 +59,7 @@ public interface ArrayDesignAnnotationService {
     String ANNOT_DATA_DIR =
             Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "microAnnots" + File.separatorChar;
 
-    void deleteExistingFiles( ArrayDesign arrayDesign ) throws IOException;
+    void deleteExistingFiles( ArrayDesign arrayDesign );
 
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if

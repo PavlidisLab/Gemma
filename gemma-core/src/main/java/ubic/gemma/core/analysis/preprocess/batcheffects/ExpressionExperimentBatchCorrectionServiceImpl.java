@@ -25,8 +25,6 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
-import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -38,7 +36,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -58,62 +55,31 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private PrincipalComponentAnalysisService principalComponentAnalysisService;
-
-    @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private SVDServiceHelper svdService;
-
-    @Override
-    public void checkBatchEffectSeverity( ExpressionExperiment ee ) {
-        ExperimentalFactor batch = getBatchFactor( ee );
-        if ( batch == null ) {
-            log.warn( "No batch factor found" );
-            return;
-        }
-
-        if ( principalComponentAnalysisService.loadForExperiment( ee ) == null ) {
-            svdService.svd( ee );
-        }
-
-        SVDValueObject svdFactorAnalysis = svdService.svdFactorAnalysis( ee );
-        Double pc1rsq = Math.abs( svdFactorAnalysis.getFactorCorrelations().get( 0 ).get( batch.getId() ) );
-        Double pc2rsq = Math.abs( svdFactorAnalysis.getFactorCorrelations().get( 1 ).get( batch.getId() ) );
-        Double pc3rsq = Math.abs( svdFactorAnalysis.getFactorCorrelations().get( 2 ).get( batch.getId() ) );
-
-        if ( pc1rsq > 0.4 || pc2rsq > 0.4 || pc3rsq > 0.4 ) {
-            log.info( "Batch effect detected: " + ee );
-        }
-    }
-
-    @Override
-    public boolean checkCorrectability( ExpressionExperiment ee ) {
-        return this.checkCorrectability( ee, false );
-    }
 
     @Override
     public boolean checkCorrectability( ExpressionExperiment ee, boolean force ) {
 
         for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
             if ( qt.getIsBatchCorrected() ) {
-                log.warn( "Experiment already has a batch-corrected quantitation type: " + ee + ": " + qt );
+                ExpressionExperimentBatchCorrectionServiceImpl.log
+                        .warn( "Experiment already has a batch-corrected quantitation type: " + ee + ": " + qt );
                 return false;
             }
         }
 
-        ExperimentalFactor batch = getBatchFactor( ee );
+        ExperimentalFactor batch = this.getBatchFactor( ee );
         if ( batch == null ) {
-            log.warn( "No batch factor found: " + ee );
+            ExpressionExperimentBatchCorrectionServiceImpl.log.warn( "No batch factor found: " + ee );
             return false;
         }
 
         String bConf = expressionExperimentService.getBatchConfound( ee );
         if ( bConf != null && !force ) {
-            log.warn( "Experiment can not be batch corrected: " + bConf );
-            log.info(
-                    "To force batch-correction of a confounded experiment, use the force option (note, that this option also allows outliers while batch correcting)." );
+            ExpressionExperimentBatchCorrectionServiceImpl.log
+                    .warn( "Experiment can not be batch corrected: " + bConf );
+            ExpressionExperimentBatchCorrectionServiceImpl.log
+                    .info( "To force batch-correction of a confounded experiment, use the force option (note, that this option also allows outliers while batch correcting)." );
             return false;
         }
 
@@ -143,8 +109,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          */
         for ( Long batchId : batches.keySet() ) {
             if ( batches.get( batchId ) < 2 ) {
-                log.info( "Batch with only one sample detected, correction not possible: " + ee + ", batchId="
-                        + batchId );
+                ExpressionExperimentBatchCorrectionServiceImpl.log
+                        .info( "Batch with only one sample detected, correction not possible: " + ee + ", batchId="
+                                + batchId );
                 return false;
             }
         }
@@ -154,13 +121,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     }
 
     @Override
-    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat ) {
-        return this.comBat( mat, true, null );
-    }
-
-    @Override
-    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix, boolean parametric,
-            Double importanceThreshold ) {
+    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix ) {
 
         ExpressionExperiment ee = originalDataMatrix.getExpressionExperiment();
 
@@ -169,16 +130,15 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         /*
          * is there a batch to use?
          */
-        ExperimentalFactor batch = getBatchFactor( ee );
+        ExperimentalFactor batch = this.getBatchFactor( ee );
         if ( batch == null ) {
-            log.warn( "No batch factor found" );
+            ExpressionExperimentBatchCorrectionServiceImpl.log.warn( "No batch factor found" );
             return null;
         }
 
-        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = getDesign( ee, originalDataMatrix,
-                importanceThreshold );
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = this.getDesign( ee, originalDataMatrix );
 
-        return doComBat( ee, originalDataMatrix, design, parametric );
+        return this.doComBat( ee, originalDataMatrix, design );
 
     }
 
@@ -187,9 +147,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         /*
          * is there a batch to use?
          */
-        ExperimentalFactor batch = getBatchFactor( ee );
+        ExperimentalFactor batch = this.getBatchFactor( ee );
         if ( batch == null ) {
-            log.warn( "No batch factor found" );
+            ExpressionExperimentBatchCorrectionServiceImpl.log.warn( "No batch factor found" );
             return null;
         }
 
@@ -201,12 +161,11 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         processedExpressionDataVectorService.thaw( vectos );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
 
-        return comBat( mat );
+        return this.comBat( mat );
 
     }
 
-    @Override
-    public ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
+    private ExperimentalFactor getBatchFactor( ExpressionExperiment ee ) {
 
         ExperimentalFactor batch = null;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -242,18 +201,18 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     }
 
     private ExpressionDataDoubleMatrix doComBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix originalDataMatrix,
-            ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design, boolean parametric ) {
-        ObjectMatrix<BioMaterial, String, Object> designU = convertFactorValuesToStrings( design );
+            ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design ) {
+        ObjectMatrix<BioMaterial, String, Object> designU = this.convertFactorValuesToStrings( design );
         DoubleMatrix<CompositeSequence, BioMaterial> matrix = originalDataMatrix.getMatrix();
 
-        designU = orderMatrix( matrix, designU );
+        designU = this.orderMatrix( matrix, designU );
 
         ScaleType scale = originalDataMatrix.getQuantitationTypes().iterator().next().getScale();
 
         boolean transformed = false;
         if ( !( scale.equals( ScaleType.LOG2 ) || scale.equals( ScaleType.LOG10 ) || scale
                 .equals( ScaleType.LOGBASEUNKNOWN ) || scale.equals( ScaleType.LN ) ) ) {
-            log.info( " *** COMBAT: LOG TRANSFORMING ***" );
+            ExpressionExperimentBatchCorrectionServiceImpl.log.info( " *** COMBAT: LOG TRANSFORMING ***" );
             transformed = true;
             MatrixStats.logTransform( matrix );
         }
@@ -263,7 +222,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          */
         ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<>( matrix, designU );
 
-        DoubleMatrix2D results = comBat.run( parametric ); // false: NONPARAMETRIC
+        DoubleMatrix2D results = comBat.run( true ); // false: NONPARAMETRIC
 
         // note these plots always reflect the parametric setup.
         comBat.plot( ee.getId() + "." + FileTools.cleanForFileName( ee.getShortName() ) ); // TEMPORARY?
@@ -287,7 +246,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
          * It is easier if we make a new quantitationtype.
          */
         QuantitationType oldQt = correctedExpressionDataMatrix.getQuantitationTypes().iterator().next();
-        QuantitationType newQt = makeNewQuantitationType( oldQt );
+        QuantitationType newQt = this.makeNewQuantitationType( oldQt );
         correctedExpressionDataMatrix.getQuantitationTypes().clear();
         correctedExpressionDataMatrix.getQuantitationTypes().add( newQt );
 
@@ -304,25 +263,11 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      * Extract sample information, format into something ComBat can use. Which covariates should we use??
      */
     private ObjectMatrix<BioMaterial, ExperimentalFactor, Object> getDesign( ExpressionExperiment ee,
-            ExpressionDataDoubleMatrix mat, Double importanceThreshold ) {
-
-        List<ExperimentalFactor> factors = new ArrayList<>();
+            ExpressionDataDoubleMatrix mat ) {
 
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
-        if ( importanceThreshold != null ) {
-            Set<ExperimentalFactor> importantFactors = svdService
-                    .getImportantFactors( ee, experimentalFactors, importanceThreshold );
-            importantFactors.remove( getBatchFactor( ee ) );
-
-            log.info( importantFactors.size() + " covariates out of " + ( experimentalFactors.size() - 1 )
-                    + " considered important to include in batch correction" );
-            ExperimentalFactor batch = getBatchFactor( ee );
-            factors.add( batch );
-            factors.addAll( importantFactors );
-        } else {
-            factors.addAll( experimentalFactors );
-        }
+        List<ExperimentalFactor> factors = new ArrayList<>( experimentalFactors );
 
         List<BioMaterial> orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, factors );
 
@@ -347,8 +292,10 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         newQt.setType( oldQt.getType() );
         newQt.setIsRecomputedFromRawData( oldQt.getIsRecomputedFromRawData() );
 
-        if ( !newQt.getDescription().toLowerCase().contains( QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED ) ) {
-            newQt.setDescription( newQt.getDescription() + " " + QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED );
+        if ( !newQt.getDescription().toLowerCase().contains(
+                ExpressionExperimentBatchCorrectionServiceImpl.QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED ) ) {
+            newQt.setDescription( newQt.getDescription() + " "
+                    + ExpressionExperimentBatchCorrectionServiceImpl.QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED );
         }
         return newQt;
     }

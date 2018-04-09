@@ -3,8 +3,8 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.common.auditAndSecurity.UserGroup" table="USER_GROUP" dynamic-insert="false" dynamic-update="false">
+<hibernate-mapping>
+   <class name="ubic.gemma.model.common.auditAndSecurity.UserGroup" table="USER_GROUP">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -20,7 +20,7 @@
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <set name="groupMembers" table="GROUP_MEMBERS" lazy="false" fetch="select" inverse="false">
+      <set name="groupMembers" table="GROUP_MEMBERS" lazy="false" fetch="select">
          <key foreign-key="USER_USER_GROUPS_FKC">
             <column name="USER_GROUPS_FK" sql-type="BIGINT"/>
          </key>
@@ -28,7 +28,7 @@
             <column name="GROUP_MEMBERS_FK" sql-type="BIGINT"/>
          </many-to-many>
       </set>
-      <set name="authorities" lazy="false" fetch="select" inverse="false" cascade="all">
+      <set name="authorities" lazy="false" fetch="select" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="GROUP_AUTHORITY_GROUP_FKC">
             <column name="GROUP_FK" sql-type="BIGINT"/>

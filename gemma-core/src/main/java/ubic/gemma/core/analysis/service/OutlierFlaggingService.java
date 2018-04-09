@@ -14,9 +14,9 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+
+import java.util.Collection;
 
 /**
  * @author paul

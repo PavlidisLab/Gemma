@@ -22,9 +22,7 @@ import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
  *
  */
 public class NonRetainedResult extends DiffExprGeneSearchResult {
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 3501605965895623139L;
 
     public NonRetainedResult( Long resultSetId, Long geneId ) {

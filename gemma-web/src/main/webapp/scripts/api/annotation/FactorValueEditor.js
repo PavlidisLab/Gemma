@@ -227,28 +227,28 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
              * Create a new factorvalue
              */
             this.getTopToolbar().on(
-                    "create",
-                    function () {
-                        /*
-                         * Avoid accidents...
-                         */
-                        if (this.store.getModifiedRecords().length > 0) {
-                            Ext.Msg
-                                .confirm(
-                                    'Unsaved changes!',
-                                    'You should save your changes before creating new values. Are you sure you want to erase them?',
-                                    function (but) {
-                                        if (but == 'yes') {
-                                            this.store.rejectChanges();
+                "create",
+                function () {
+                    /*
+                     * Avoid accidents...
+                     */
+                    if (this.store.getModifiedRecords().length > 0) {
+                        Ext.Msg
+                            .confirm(
+                                'Unsaved changes!',
+                                'You should save your changes before creating new values. Are you sure you want to erase them?',
+                                function (but) {
+                                    if (but == 'yes') {
+                                        this.store.rejectChanges();
 
-                                            this.createNew();
-                                        }
-                                    }.createDelegate(this));
-                        } else {
-                            this.createNew();
-                        }
+                                        this.createNew();
+                                    }
+                                }.createDelegate(this));
+                    } else {
+                        this.createNew();
+                    }
 
-                    }.createDelegate(this));
+                }.createDelegate(this));
 
             /*
              * delete a factor value
@@ -324,10 +324,6 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
                     // console.log("reload");
                     ct.factorValueCombo.store.reload();
                     this.factorValuesChanged.call(this, []);
-                    // TODO do something to reset the text of the
-                    // selected
-                    // item,
-                    // in case it changed...
                 }.createDelegate(this);
                 ExperimentalDesignController.createFactorValueCharacteristic(f, c, callback);
             }.createDelegate(this), this);
@@ -442,9 +438,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 });
 
-/**
- *
- */
+
 Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 
     /**

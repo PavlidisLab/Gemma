@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
+import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 
@@ -40,12 +41,12 @@ abstract public class GeoFetcher extends FtpFetcher {
 
     @Override
     protected final String formLocalFilePath( String identifier, File newDir ) {
-        return newDir.getAbsolutePath() + File.separator + identifier + SOFT_GZ;
+        return newDir.getAbsolutePath() + File.separator + identifier + GeoFetcher.SOFT_GZ;
     }
 
-    protected Collection<LocalFile> getFile( String accession, String seekFileName ) {
-        LocalFile file = fetchedFile( seekFileName );
-        log.info( "Found " + seekFileName + " for experiment(set) " + accession + "." );
+    Collection<LocalFile> getFile( String accession, String seekFileName ) {
+        LocalFile file = this.fetchedFile( seekFileName );
+        AbstractFetcher.log.info( "Found " + seekFileName + " for experiment(set) " + accession + "." );
         Collection<LocalFile> result = new HashSet<>();
         result.add( file );
         return result;

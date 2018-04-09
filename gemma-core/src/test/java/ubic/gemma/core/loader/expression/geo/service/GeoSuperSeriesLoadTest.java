@@ -72,7 +72,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
     public void tearDown() {
         if ( ee != null ) {
             try {
-                removeOldData( ee );
+                this.removeOldData( ee );
             } catch ( Exception e ) {
                 log.warn( "Removing expression experiment thew an Exception" );
             }
@@ -102,22 +102,6 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
     }
 
-    private void removeOldData( ExpressionExperiment ee2 ) {
-
-        Collection<ArrayDesign> arrayDesignsUsed = ees.getArrayDesignsUsed( ee2 );
-        ees.remove( ee2 );
-
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            for ( ExpressionExperiment ee3 : adService.getExpressionExperiments( ad ) ) {
-                removeOldData( ee3 );
-            }
-            for ( ArrayDesign aa : ad.getMergees() ) {
-                adService.remove( aa );
-            }
-            adService.remove( ad );
-        }
-    }
-
     /*
      * See bug 2064. GSE14618 is a superseries of GSE14613 and GSE14615. This is actually even worse, because some
      * samples were run on both platforms. This is a situation we don't really want to handle completely.
@@ -126,14 +110,14 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
     @Test
     public void testFetchAndLoadSuperSeriesB() throws Exception {
         geoService.setGeoDomainObjectGenerator(
-                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse14618superser" ) ) );
+                new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gse14618superser" ) ) );
 
         ee = ees.findByShortName( "GSE14618" );
-        tearDown();
+        this.tearDown();
 
         //noinspection unchecked
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-                .fetchAndLoad( "GSE14618", false, true, false, false, true, false );
+                .fetchAndLoad( "GSE14618", false, true, false, true, false );
         assertEquals( 1, results.size() );
 
         ee = results.iterator().next();
@@ -195,5 +179,21 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         assertTrue( "Didn't find first test probe expected.", found1 );
         assertTrue( "Didn't find second test probe expected.", found2 );
 
+    }
+
+    private void removeOldData( ExpressionExperiment ee2 ) {
+
+        Collection<ArrayDesign> arrayDesignsUsed = ees.getArrayDesignsUsed( ee2 );
+        ees.remove( ee2 );
+
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            for ( ExpressionExperiment ee3 : adService.getExpressionExperiments( ad ) ) {
+                this.removeOldData( ee3 );
+            }
+            for ( ArrayDesign aa : ad.getMergees() ) {
+                adService.remove( aa );
+            }
+            adService.remove( ad );
+        }
     }
 }

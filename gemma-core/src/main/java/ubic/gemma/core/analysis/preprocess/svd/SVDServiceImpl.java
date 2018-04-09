@@ -14,16 +14,14 @@
  */
 package ubic.gemma.core.analysis.preprocess.svd;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import org.springframework.stereotype.Service;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Map;
 
 /**
  * Perform SVD on expression data and store the results.

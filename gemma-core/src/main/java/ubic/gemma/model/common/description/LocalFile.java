@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.Collection;
 
+@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.Securable {
 
     private static final long serialVersionUID = 5057142607188347151L;
@@ -62,34 +63,6 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
 
     public Boolean canWrite() {
         return this.asFile().canWrite();
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        LocalFile other = ( LocalFile ) obj;
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-
-        if ( localURL == null ) {
-            if ( other.localURL != null )
-                return false;
-        } else if ( !localURL.equals( other.localURL ) )
-            return false;
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return this.asFile() == null ? super.toString() : this.asFile().toString();
     }
 
     public FileFormat getFormat() {
@@ -170,6 +143,32 @@ public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.S
         if ( id != null )
             result = prime * result + ( ( localURL == null ) ? 0 : localURL.hashCode() );
         return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        LocalFile other = ( LocalFile ) obj;
+        if ( id == null ) {
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
+
+        if ( localURL == null ) {
+            return other.localURL == null;
+        } else
+            return localURL.equals( other.localURL );
+    }
+
+    @Override
+    public String toString() {
+        return this.asFile() == null ? super.toString() : this.asFile().toString();
     }
 
     public static final class Factory {

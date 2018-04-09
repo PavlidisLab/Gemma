@@ -28,20 +28,8 @@ public class UnknownLogScaleException extends UnsupportedOperationException {
 
     private static final long serialVersionUID = -8809686106256692856L;
 
-    public UnknownLogScaleException() {
-        super();
-    }
-
     public UnknownLogScaleException( String message ) {
         super( message );
-    }
-
-    public UnknownLogScaleException( String message, Throwable cause ) {
-        super( message, cause );
-    }
-
-    public UnknownLogScaleException( Throwable cause ) {
-        super( cause );
     }
 
 }

@@ -16,7 +16,7 @@ public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint {
 
     @Override
     public void commence( final HttpServletRequest request, final HttpServletResponse response,
-            final AuthenticationException authException ) throws IOException, ServletException {
+            final AuthenticationException authException ) {
 
         response.setStatus( HttpServletResponse.SC_UNAUTHORIZED );
         response.addHeader( "WWW-Authenticate", "Basic realm=" + getRealmName() + "" );
@@ -35,7 +35,7 @@ public class RestAuthEntryPoint extends BasicAuthenticationEntryPoint {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         setRealmName("Gemma rest api");
     }
 }

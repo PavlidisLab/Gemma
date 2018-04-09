@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,11 +56,12 @@ import java.util.*;
  *
  * @author pavlidis
  */
-@Service
+@SuppressWarnings("unused")
 @Transactional
+@Service
 public class UserManagerImpl implements UserManager {
 
-    protected final Log logger = LogFactory.getLog( getClass() );
+    private final Log logger = LogFactory.getLog( this.getClass() );
 
     private boolean enableAuthorities = false;
 
@@ -73,60 +74,6 @@ public class UserManagerImpl implements UserManager {
 
     @Autowired
     private UserService userService;
-
-    @Override
-    public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
-        UserGroup g = loadGroup( groupName );
-
-        for ( gemma.gsec.model.GroupAuthority ga : g.getAuthorities() ) {
-            if ( ga.getAuthority().equals( authority.getAuthority() ) ) {
-                logger.warn( "Group already has authority" + authority.getAuthority() );
-                return;
-            }
-        }
-
-        GroupAuthority auth = ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance();
-        auth.setAuthority( authority.getAuthority() );
-
-        g.getAuthorities().add( auth );
-
-        userService.update( g );
-    }
-
-    @Override
-    public void addUserToGroup( String username, String groupName ) {
-        User u = loadUser( username );
-        UserGroup g = loadGroup( groupName );
-        userService.addUserToGroup( g, u );
-    }
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    @Transactional
-    public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
-        Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if ( currentAuthentication == null ) {
-            // This would indicate bad coding somewhere
-            throw new AccessDeniedException(
-                    "Can't change password as no Authentication object found in context " + "for current user." );
-        }
-
-        String username = currentAuthentication.getName();
-
-        // reauthenticate( username, oldPassword );
-
-        logger.debug( "Changing password for user '" + username + "'" );
-
-        User u = loadUser( username );
-        u.setPassword( newPassword );
-        userService.update( u );
-
-        SecurityContextHolder.getContext()
-                .setAuthentication( createNewAuthentication( currentAuthentication, newPassword ) );
-
-        userCache.removeUserFromCache( username );
-    }
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
@@ -157,7 +104,7 @@ public class UserManagerImpl implements UserManager {
 
         u.setPassword( newPassword );
         u.setEnabled( false );
-        u.setSignupToken( generateSignupToken( username ) );
+        u.setSignupToken( this.generateSignupToken( username ) );
         u.setSignupTokenDatestamp( new Date() );
         userService.update( u );
 
@@ -167,91 +114,10 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    public void createGroup( String groupName, List<GrantedAuthority> authorities ) {
-
-        UserGroup g = ubic.gemma.model.common.auditAndSecurity.UserGroup.Factory.newInstance();
-        g.setName( groupName );
-        for ( GrantedAuthority ga : authorities ) {
-            g.getAuthorities().add( ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory
-                    .newInstance( ga.getAuthority() ) );
-        }
-
-        userService.create( g );
-    }
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
-    @Transactional
-    public void createUser( UserDetails user ) {
-
-        /*
-         * UserDetails is not an entity, so this method is not directly managed by the Audit or ACL advice. However, it
-         * runs in a transaction and calls two service methods which are intercepted. This means it is intercepted
-         * before the transaction is flushed.
-         */
-
-        validateUserName( user.getUsername() );
-
-        User u = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance();
-        u.setUserName( user.getUsername() );
-        u.setPassword( user.getPassword() );
-        u.setEnabled( user.isEnabled() );
-
-        if ( user instanceof UserDetailsImpl ) {
-            u.setSignupToken( ( ( UserDetailsImpl ) user ).getSignupToken() );
-            u.setSignupTokenDatestamp( ( ( UserDetailsImpl ) user ).getSignupTokenDatestamp() );
-        }
-
-        if ( user instanceof UserDetailsImpl ) {
-            u.setEmail( ( ( UserDetailsImpl ) user ).getEmail() );
-        }
-
-        try {
-            u = userService.create( u );
-        } catch ( UserExistsException e ) {
-            throw new RuntimeException( e );
-        }
-
-        // Add the user to the default user group.
-        UserGroup g = loadGroup( AuthorityConstants.USER_GROUP_NAME );
-        userService.addUserToGroup( g, u );
-
-        /*
-         * We don't log the user in automatically, because we require that new users click a confirmation link in an
-         * email.
-         */
-    }
-
-    @Override
-    public void deleteGroup( String groupName ) {
-        UserGroup group = loadGroup( groupName );
-        userService.delete( group );
-    }
-
-    @Override
-    @Transactional
-    public void deleteUser( String username ) {
-        User user = loadUser( username );
-        userService.delete( user );
-        userCache.removeUserFromCache( username );
-    }
-
-    @Override
-    public List<String> findAllGroups() {
-        Collection<UserGroup> groups = userService.listAvailableGroups();
-
-        List<String> result = new ArrayList<>();
-        for ( UserGroup group : groups ) {
-            result.add( group.getName() );
-        }
-        return result;
-    }
-
-    @Override
     public Collection<String> findAllUsers() {
         Collection<User> users = userService.loadAll();
 
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for ( User u : users ) {
             result.add( u.getUserName() );
         }
@@ -261,7 +127,7 @@ public class UserManagerImpl implements UserManager {
     @Override
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     public User findbyEmail( String emailAddress ) {
-        return findByEmail( emailAddress );
+        return this.findByEmail( emailAddress );
     }
 
     @Override
@@ -276,24 +142,6 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
-
-        String groupToSearch = groupName;
-        if ( groupName.startsWith( rolePrefix ) ) {
-            groupToSearch = groupToSearch.replaceFirst( rolePrefix, "" );
-        }
-
-        UserGroup group = loadGroup( groupToSearch );
-
-        List<GrantedAuthority> result = new ArrayList<GrantedAuthority>();
-        for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
-            result.add( new SimpleGrantedAuthority( ga.getAuthority() ) );
-        }
-
-        return result;
-    }
-
-    @Override
     public UserGroup findGroupByName( String name ) {
         return this.userService.findGroupByName( name );
     }
@@ -304,11 +152,11 @@ public class UserManagerImpl implements UserManager {
 
         Collection<String> result = new HashSet<>();
 
-        if ( !loggedIn() ) {
+        if ( !this.loggedIn() ) {
             return result;
         }
 
-        User u = loadUser( userName );
+        User u = this.loadUser( userName );
         Collection<UserGroup> groups = userService.findGroupsForUser( u );
 
         for ( UserGroup g : groups ) {
@@ -319,28 +167,13 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    public List<String> findUsersInGroup( String groupName ) {
-
-        UserGroup group = loadGroup( groupName );
-
-        Collection<gemma.gsec.model.User> groupMembers = group.getGroupMembers();
-
-        List<String> result = new ArrayList<String>();
-        for ( gemma.gsec.model.User u : groupMembers ) {
-            result.add( u.getUserName() );
-        }
-        return result;
-
-    }
-
-    @Override
     public String generateSignupToken( String username ) {
         return RandomStringUtils.randomAlphanumeric( 32 ).toUpperCase();
     }
 
     @Override
     public User getCurrentUser() {
-        return getUserForUserName( getCurrentUsername() );
+        return this.getUserForUserName( this.getCurrentUsername() );
     }
 
     @Override
@@ -371,108 +204,102 @@ public class UserManagerImpl implements UserManager {
         return userService.groupExists( groupName );
     }
 
-    public boolean isEnableAuthorities() {
-        return enableAuthorities;
-    }
-
-    public void setEnableAuthorities( boolean enableAuthorities ) {
-        this.enableAuthorities = enableAuthorities;
-    }
-
-    public boolean isEnableGroups() {
-        return enableGroups;
-    }
-
-    public void setEnableGroups( boolean enableGroups ) {
-        this.enableGroups = enableGroups;
-    }
-
+    @SuppressWarnings("unchecked") // Weird construct in gsec
     @Override
     public Collection<gemma.gsec.model.User> loadAll() {
-        Collection<gemma.gsec.model.User> ret = new ArrayList<>();
-        for ( gemma.gsec.model.User u : this.userService.loadAll() ) {
-            ret.add( u );
-        }
-        return ret;
-    }
-
-    @Override
-    public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
-        User user = loadUser( username );
-
-        Set<GrantedAuthority> dbAuthsSet = new HashSet<>();
-
-        if ( enableAuthorities ) {
-            dbAuthsSet.addAll( loadUserAuthorities( user.getUserName() ) );
-        }
-
-        if ( enableGroups ) {
-            dbAuthsSet.addAll( loadGroupAuthorities( user ) );
-        }
-
-        if ( dbAuthsSet.isEmpty() ) {
-            throw new UsernameNotFoundException( "User " + username + " has no GrantedAuthority" );
-        }
-
-        List<GrantedAuthority> dbAuths = new ArrayList<>( dbAuthsSet );
-
-        // addCustomAuthorities( user.getUsername(), dbAuths );
-
-        return createUserDetails( username, new UserDetailsImpl( user ), dbAuths );
+        return new ArrayList<>( this.userService.loadAll() );
     }
 
     @Override
     public boolean loggedIn() {
-
         Authentication currentUser = SecurityContextHolder.getContext().getAuthentication();
-        // fixme: use a AuthenticationTrustResolver instead.
+        // TODO: use a AuthenticationTrustResolver instead.
         return !( currentUser instanceof AnonymousAuthenticationToken );
-
     }
 
     @Override
     public void reauthenticate( String username, String password ) {
-        // If an authentication manager has been set, re-authenticate the user with the supplied password.
-        /*
-         * if ( authenticationManager != null ) { logger.debug( "Reauthenticating user '" + username +
-         * "' for password change request." );
-         *
-         * authenticationManager.authenticate( new UsernamePasswordAuthenticationToken( username, password ) ); } else {
-         * logger.debug( "No authentication manager set. Password won't be re-checked." ); }
-         */
-        // Warning: Autowiring AuthenticationManager here can cause a circular reference error
-        logger.warn( "No authentication manager set. Password won't be re-checked." );
+        logger.warn( "Not implemented." );
     }
 
     @Override
-    public void removeGroupAuthority( String groupName, GrantedAuthority authority ) {
-
-        UserGroup group = loadGroup( groupName );
-
-        userService.removeGroupAuthority( group, authority.getAuthority() );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    public boolean userWithEmailExists( String emailAddress ) {
+        return userService.findByEmail( emailAddress ) != null;
     }
 
     @Override
-    public void removeUserFromGroup( String username, String groupName ) {
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    public boolean validateSignupToken( String username, String key ) {
 
-        User user = userService.findByUserName( username );
-        UserGroup group = userService.findGroupByName( groupName );
+        UserDetailsImpl u = ( UserDetailsImpl ) this.loadUserByUsername( username );
 
-        if ( user == null || group == null ) {
-            throw new IllegalArgumentException( "User or group could not be read" );
+        if ( u.isEnabled() ) {
+            logger.warn( "User is already enabled, skipping token validation" );
+            return true;
         }
 
-        userService.removeUserFromGroup( user, group );
+        String storedTok = u.getSignupToken();
+        Date storedDate = u.getSignupTokenDatestamp();
+
+        if ( storedTok == null || storedDate == null ) {
+            throw new IllegalArgumentException( "User does not have a token" );
+        }
+
+        Date oneWeekAgo = DateUtils.addWeeks( new Date(), -2 );
+
+        if ( !storedTok.equals( key ) || storedDate.before( oneWeekAgo ) ) {
+            return false;
+        }
+
+        u.setEnabled( true );
+
+        this.updateUser( u );
+
+        return true;
     }
 
     @Override
-    public void renameGroup( String oldName, String newName ) {
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Transactional
+    public void createUser( UserDetails user ) {
 
-        UserGroup group = userService.findGroupByName( oldName );
+        /*
+         * UserDetails is not an entity, so this method is not directly managed by the Audit or ACL advice. However, it
+         * runs in a transaction and calls two service methods which are intercepted. This means it is intercepted
+         * before the transaction is flushed.
+         */
 
-        group.setName( newName );
+        this.validateUserName( user.getUsername() );
 
-        userService.update( group );
+        User u = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance();
+        u.setUserName( user.getUsername() );
+        u.setPassword( user.getPassword() );
+        u.setEnabled( user.isEnabled() );
+
+        if ( user instanceof UserDetailsImpl ) {
+            u.setSignupToken( ( ( UserDetailsImpl ) user ).getSignupToken() );
+            u.setSignupTokenDatestamp( ( ( UserDetailsImpl ) user ).getSignupTokenDatestamp() );
+        }
+
+        if ( user instanceof UserDetailsImpl ) {
+            u.setEmail( ( ( UserDetailsImpl ) user ).getEmail() );
+        }
+
+        try {
+            u = userService.create( u );
+        } catch ( UserExistsException e ) {
+            throw new RuntimeException( e );
+        }
+
+        // Add the user to the default user group.
+        UserGroup g = this.loadGroup( AuthorityConstants.USER_GROUP_NAME );
+        userService.addUserToGroup( g, u );
+
+        /*
+         * We don't log the user in automatically, because we require that new users click a confirmation link in an
+         * email.
+         */
     }
 
     @Override
@@ -496,51 +323,218 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
+    @Transactional
+    public void deleteUser( String username ) {
+        User user = this.loadUser( username );
+        userService.delete( user );
+        userCache.removeUserFromCache( username );
+    }
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    @Transactional
+    public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
+        Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if ( currentAuthentication == null ) {
+            // This would indicate bad coding somewhere
+            throw new AccessDeniedException(
+                    "Can't change password as no Authentication object found in context " + "for current user." );
+        }
+
+        String username = currentAuthentication.getName();
+
+        logger.debug( "Changing password for user '" + username + "'" );
+
+        User u = this.loadUser( username );
+        u.setPassword( newPassword );
+        userService.update( u );
+
+        SecurityContextHolder.getContext()
+                .setAuthentication( this.createNewAuthentication( currentAuthentication, newPassword ) );
+
+        userCache.removeUserFromCache( username );
+    }
+
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userExists( String username ) {
         return userService.findByUserName( username ) != null;
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
-    public boolean userWithEmailExists( String emailAddress ) {
-        return userService.findByEmail( emailAddress ) != null;
+    public List<String> findAllGroups() {
+        Collection<UserGroup> groups = userService.listAvailableGroups();
+
+        List<String> result = new ArrayList<>();
+        for ( UserGroup group : groups ) {
+            result.add( group.getName() );
+        }
+        return result;
     }
 
     @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
-    public boolean validateSignupToken( String username, String key ) {
+    public List<String> findUsersInGroup( String groupName ) {
 
-        UserDetailsImpl u = ( UserDetailsImpl ) loadUserByUsername( username );
+        UserGroup group = this.loadGroup( groupName );
 
-        if ( u.isEnabled() ) {
-            logger.warn( "User is already enabled, skipping token validation" );
-            return true;
+        Collection<gemma.gsec.model.User> groupMembers = group.getGroupMembers();
+
+        List<String> result = new ArrayList<>();
+        for ( gemma.gsec.model.User u : groupMembers ) {
+            result.add( u.getUserName() );
         }
+        return result;
 
-        String storedTok = u.getSignupToken();
-        Date storedDate = u.getSignupTokenDatestamp();
-
-        if ( storedTok == null || storedDate == null ) {
-            throw new IllegalArgumentException( "User does not have a token" );
-        }
-
-        Date oneWeekAgo = DateUtils.addWeeks( new Date(), -2 );
-
-        if ( !storedTok.equals( key ) || storedDate.before( oneWeekAgo ) ) {
-            return false;
-        }
-
-        u.setEnabled( true );
-
-        updateUser( u );
-
-        return true;
     }
 
-    protected Authentication createNewAuthentication( Authentication currentAuth,
-            @SuppressWarnings("unused") String newPassword ) {
-        UserDetails user = loadUserByUsername( currentAuth.getName() );
+    @Override
+    public void createGroup( String groupName, List<GrantedAuthority> authorities ) {
+
+        UserGroup g = ubic.gemma.model.common.auditAndSecurity.UserGroup.Factory.newInstance();
+        g.setName( groupName );
+        for ( GrantedAuthority ga : authorities ) {
+            g.getAuthorities().add( ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory
+                    .newInstance( ga.getAuthority() ) );
+        }
+
+        userService.create( g );
+    }
+
+    @Override
+    public void deleteGroup( String groupName ) {
+        UserGroup group = this.loadGroup( groupName );
+        userService.delete( group );
+    }
+
+    @Override
+    public void renameGroup( String oldName, String newName ) {
+
+        UserGroup group = userService.findGroupByName( oldName );
+
+        group.setName( newName );
+
+        userService.update( group );
+    }
+
+    @Override
+    public void addUserToGroup( String username, String groupName ) {
+        User u = this.loadUser( username );
+        UserGroup g = this.loadGroup( groupName );
+        userService.addUserToGroup( g, u );
+    }
+
+    @Override
+    public void removeUserFromGroup( String username, String groupName ) {
+
+        User user = userService.findByUserName( username );
+        UserGroup group = userService.findGroupByName( groupName );
+
+        if ( user == null || group == null ) {
+            throw new IllegalArgumentException( "User or group could not be read" );
+        }
+
+        userService.removeUserFromGroup( user, group );
+    }
+
+    @Override
+    public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
+
+        String groupToSearch = groupName;
+        if ( groupName.startsWith( rolePrefix ) ) {
+            groupToSearch = groupToSearch.replaceFirst( rolePrefix, "" );
+        }
+
+        UserGroup group = this.loadGroup( groupToSearch );
+
+        List<GrantedAuthority> result = new ArrayList<>();
+        for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
+            result.add( new SimpleGrantedAuthority( ga.getAuthority() ) );
+        }
+
+        return result;
+    }
+
+    @Override
+    public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
+        UserGroup g = this.loadGroup( groupName );
+
+        for ( gemma.gsec.model.GroupAuthority ga : g.getAuthorities() ) {
+            if ( ga.getAuthority().equals( authority.getAuthority() ) ) {
+                logger.warn( "Group already has authority" + authority.getAuthority() );
+                return;
+            }
+        }
+
+        GroupAuthority auth = ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance();
+        auth.setAuthority( authority.getAuthority() );
+
+        g.getAuthorities().add( auth );
+
+        userService.update( g );
+    }
+
+    @Override
+    public void removeGroupAuthority( String groupName, GrantedAuthority authority ) {
+
+        UserGroup group = this.loadGroup( groupName );
+
+        userService.removeGroupAuthority( group, authority.getAuthority() );
+    }
+
+    public boolean isEnableAuthorities() {
+        return enableAuthorities;
+    }
+
+    public void setEnableAuthorities( boolean enableAuthorities ) {
+        this.enableAuthorities = enableAuthorities;
+    }
+
+    public boolean isEnableGroups() {
+        return enableGroups;
+    }
+
+    public void setEnableGroups( boolean enableGroups ) {
+        this.enableGroups = enableGroups;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
+        User user = this.loadUser( username );
+
+        Set<GrantedAuthority> dbAuthsSet = new HashSet<>();
+
+        if ( enableAuthorities ) {
+            dbAuthsSet.addAll( this.loadUserAuthorities( user.getUserName() ) );
+        }
+
+        if ( enableGroups ) {
+            dbAuthsSet.addAll( this.loadGroupAuthorities( user ) );
+        }
+
+        if ( dbAuthsSet.isEmpty() ) {
+            throw new UsernameNotFoundException( "User " + username + " has no GrantedAuthority" );
+        }
+
+        List<GrantedAuthority> dbAuths = new ArrayList<>( dbAuthsSet );
+
+        // addCustomAuthorities( user.getUsername(), dbAuths );
+
+        return this.createUserDetails( username, new UserDetailsImpl( user ), dbAuths );
+    }
+
+    protected List<UserDetails> loadUsersByUsername( String username ) {
+        List<UserDetails> result = new ArrayList<>();
+        User u = this.loadUser( username );
+
+        UserDetails ud = new UserDetailsImpl( u );
+
+        result.add( ud );
+        return result;
+    }
+
+    private Authentication createNewAuthentication( Authentication currentAuth, String newPassword ) {
+        UserDetails user = this.loadUserByUsername( currentAuth.getName() );
 
         UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken( user,
                 user.getPassword(), user.getAuthorities() );
@@ -549,37 +543,27 @@ public class UserManagerImpl implements UserManager {
         return newAuthentication;
     }
 
-    protected UserDetails createUserDetails( String username, UserDetailsImpl userFromUserQuery,
+    private UserDetails createUserDetails( String username, UserDetailsImpl userFromUserQuery,
             List<GrantedAuthority> combinedAuthorities ) {
         return new UserDetailsImpl( userFromUserQuery.getPassword(), username, userFromUserQuery.isEnabled(),
                 combinedAuthorities, userFromUserQuery.getEmail(), userFromUserQuery.getSignupToken(),
                 userFromUserQuery.getSignupTokenDatestamp() );
     }
 
-    protected List<GrantedAuthority> loadGroupAuthorities( User user ) {
+    private List<GrantedAuthority> loadGroupAuthorities( User user ) {
         Collection<GroupAuthority> authorities = userService.loadGroupAuthorities( user );
 
         List<GrantedAuthority> result = new ArrayList<>();
         for ( GroupAuthority ga : authorities ) {
-            String roleName = getRolePrefix() + ga.getAuthority();
+            String roleName = this.getRolePrefix() + ga.getAuthority();
             result.add( new SimpleGrantedAuthority( roleName ) );
         }
 
         return result;
     }
 
-    protected List<GrantedAuthority> loadUserAuthorities( @SuppressWarnings("unused") String username ) {
+    private List<GrantedAuthority> loadUserAuthorities( @SuppressWarnings("unused") String username ) {
         throw new UnsupportedOperationException( "Use the group-based authorities instead" );
-    }
-
-    protected List<UserDetails> loadUsersByUsername( String username ) {
-        List<UserDetails> result = new ArrayList<UserDetails>();
-        User u = loadUser( username );
-
-        UserDetails ud = new UserDetailsImpl( u );
-
-        result.add( ud );
-        return result;
     }
 
     /**

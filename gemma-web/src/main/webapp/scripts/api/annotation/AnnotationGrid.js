@@ -26,9 +26,6 @@ Ext.namespace('Gemma');
  *
  * entId : the entity that the annotations belong to eg) eeId or bmId
  *
- * TODO add writeParams and removeParams methods if more parameters are needed for removing and writing annotations
- * other than entId
- *
  */
 
 /**
@@ -402,9 +399,6 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
         return (typeof this.readParams == "function") ? this.readParams() : this.readParams;
     },
 
-    /*
-     * TODO deal with records, let writer handle conversion.
-     */
     getSelectedCharacteristics: function () {
         var selected = this.getSelectionModel().getSelections();
         var chars = [];
@@ -415,9 +409,6 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
         return chars;
     },
 
-    /*
-     * TODO deal with records, let writer handle conversion.
-     */
     getEditedCharacteristics: function () {
         var chars = [];
         this.getStore().each(function (record) {

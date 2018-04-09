@@ -38,11 +38,11 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, Ge
      * @return instance of appropriate implementation of GeneArg based on the actual property the argument represents.
      */
     @SuppressWarnings("unused")
-    public static GeneArg valueOf( final String s ) {
+    public static MutableArg<?, Gene, GeneValueObject, GeneService> valueOf( final String s ) {
         try {
             return new GeneNcbiIdArg( Integer.parseInt( s.trim() ) );
         } catch ( NumberFormatException e ) {
-            if ( s.matches( ENSEMBL_ID_REGEX ) ) {
+            if ( s.matches( GeneArg.ENSEMBL_ID_REGEX ) ) {
                 return new GeneEnsemblIdArg( s );
             } else {
                 return new GeneSymbolArg( s );
@@ -120,7 +120,7 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, Ge
      * @return the error message for when the null cause is gene not existing on a taxon.
      */
     String getTaxonError() {
-        return String.format( ERROR_MSG_TAXON, getIdentifierName() );
+        return String.format( GeneArg.ERROR_MSG_TAXON, this.getIdentifierName() );
     }
 
     /**
@@ -140,7 +140,7 @@ public abstract class GeneArg<T> extends MutableArg<T, Gene, GeneValueObject, Ge
             }
         }
         if ( result.isEmpty() ) {
-            this.nullCause = getTaxonError();
+            this.nullCause = this.getTaxonError();
             return null;
         }
         return result;

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,11 +34,13 @@ import java.util.Map;
  * @see AuditEventService
  */
 @Service
-public class AuditEventServiceImpl extends AuditEventServiceBase {
+public class AuditEventServiceImpl implements AuditEventService {
+
+    private final AuditEventDao auditEventDao;
 
     @Autowired
     public AuditEventServiceImpl( AuditEventDao auditEventDao ) {
-        super( auditEventDao );
+        this.auditEventDao = auditEventDao;
     }
 
     @Override
@@ -60,6 +62,22 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
         return this.auditEventDao.getLastEvents( auditables, types );
     }
 
+    /**
+     * @see AuditEventService#getNewSinceDate(java.util.Date)
+     */
+    @Override
+    public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date ) {
+        return this.auditEventDao.getNewSinceDate( date );
+    }
+
+    /**
+     * @see AuditEventService#getUpdatedSinceDate(java.util.Date)
+     */
+    @Override
+    public Collection<Auditable> getUpdatedSinceDate( java.util.Date date ) {
+        return this.auditEventDao.getUpdatedSinceDate( date );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
@@ -76,22 +94,6 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
     @Transactional(readOnly = true)
     public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
         this.auditEventDao.retainLackingEvent( a, type );
-    }
-
-    /**
-     * @see AuditEventService#getNewSinceDate(java.util.Date)
-     */
-    @Override
-    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
-        return this.auditEventDao.getNewSinceDate( date );
-    }
-
-    /**
-     * @see AuditEventService#getUpdatedSinceDate(java.util.Date)
-     */
-    @Override
-    protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
-        return this.auditEventDao.getUpdatedSinceDate( date );
     }
 
 }

@@ -9,7 +9,7 @@
 		2008/07/14 06:25:05 paul Exp $
 	-->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="expression.designElement.CompositeSequence" alias="compositeSequence" support-unmarshall="false" root="true">
+	<class name="expression.designElement.CompositeSequence" alias="compositeSequence" support-unmarshall="false">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.common.Identifiable;
 
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -45,6 +46,17 @@ public abstract class AnalysisResultSet implements Identifiable, Serializable {
     }
 
     /**
+     * Returns a hash code based on this entity's identifiers.
+     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    /**
      * Returns <code>true</code> if the argument is an AnalysisResultSet instance and all identifiers for this entity
      * equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
@@ -60,17 +72,7 @@ public abstract class AnalysisResultSet implements Identifiable, Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
     public Long getId() {
         return this.id;
     }
@@ -79,6 +81,8 @@ public abstract class AnalysisResultSet implements Identifiable, Serializable {
         this.id = id;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+    @Transient
     public abstract Collection<?> getResults();
 
 }

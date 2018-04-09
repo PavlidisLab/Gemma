@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,10 +87,12 @@ public class GeoDataset extends GeoData {
             case "SNP":
                 return ExperimentType.SNP;
             case "dual channel":  // legacy term.
-                log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+                GeoDataset.log
+                        .warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
                 return ExperimentType.geneExpressionArraybased;
             case "single channel":  // legacy term
-                log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+                GeoDataset.log
+                        .warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
                 return ExperimentType.geneExpressionArraybased;
             case "Other":
                 // 5C experiments, etc.
@@ -140,7 +142,7 @@ public class GeoDataset extends GeoData {
         } else if ( string.equals( "other" ) ) {
             return PlatformType.other;
         } else if ( string.equals( "nucleotide" ) ) { // legacy terminology
-            log.warn( "Platform Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+            GeoDataset.log.warn( "Platform Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
             return PlatformType.singleChannel;
         } else {
             throw new IllegalArgumentException( "Unknown platform technology type " + string );
@@ -248,8 +250,7 @@ public class GeoDataset extends GeoData {
      */
     public void setDatasetType( String datasetType ) {
         this.datasetType = datasetType;
-        // FIXME - this is underhanded, there is some confusion about how to treat datasetType vs experimentType
-        this.experimentType = convertStringToExperimentType( datasetType );
+        this.experimentType = GeoDataset.convertStringToExperimentType( datasetType );
     }
 
     /**

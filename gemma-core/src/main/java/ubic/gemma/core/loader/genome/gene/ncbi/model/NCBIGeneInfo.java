@@ -11,6 +11,7 @@ import java.util.Map;
  * <p>
  * See ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README
  * </p>
+ * 
  * <pre>
  *   ===========================================================================
  *   gene_info
@@ -61,14 +62,15 @@ import java.util.Map;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public class NCBIGeneInfo {
 
+    private final Collection<String> synonyms = new HashSet<>();
+    private final Map<String, String> dbXrefs = new HashMap<>();
     private int taxId;
     private String geneId;
     private String defaultSymbol;
     private String locusTag;
-    private Collection<String> synonyms = new HashSet<String>();
-    private Map<String, String> dbXrefs = new HashMap<String, String>();
     private String chromosome;
     private String mapLocation;
     private String description;
@@ -83,37 +85,41 @@ public class NCBIGeneInfo {
     /**
      * Convert string to GeneType. See
      * http://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/objects/entrezgene/entrezgene.asn
-     *
+     * 
+     * 
      * @param typeString type string
      * @return gene type
      */
     public static GeneType typeStringToGeneType( String typeString ) {
-        if ( typeString.equals( "unknown" ) ) {
-            return GeneType.UNKNOWN;
-        } else if ( typeString.equals( "tRNA" ) ) {
-            return GeneType.TRNA;
-        } else if ( typeString.equals( "rRNA" ) ) {
-            return GeneType.RRNA;
-        } else if ( typeString.equals( "snRNA" ) ) {
-            return GeneType.SNRNA;
-        } else if ( typeString.equals( "scRNA" ) ) {
-            return GeneType.SCRNA;
-        } else if ( typeString.equals( "snoRNA" ) ) {
-            return GeneType.SNORNA;
-        } else if ( typeString.equals( "protein-coding" ) ) {
-            return GeneType.PROTEINCODING;
-        } else if ( typeString.equals( "pseudo" ) ) {
-            return GeneType.PSEUDO;
-        } else if ( typeString.equals( "transposon" ) ) {
-            return GeneType.TRANSPOSON;
-        } else if ( typeString.equals( "miscRNA" ) ) {
-            return GeneType.MISCRNA;
-        } else if ( typeString.equals( "ncRNA" ) ) {
-            return GeneType.NCRNA;
-        } else if ( typeString.equals( "other" ) ) {
-            return GeneType.OTHER;
-        } else {
-            throw new IllegalArgumentException( "Unknown gene type '" + typeString + "'" );
+        switch ( typeString ) {
+            case "unknown":
+                return GeneType.UNKNOWN;
+            case "tRNA":
+                return GeneType.TRNA;
+            case "rRNA":
+                return GeneType.RRNA;
+            case "snRNA":
+                return GeneType.SNRNA;
+            case "scRNA":
+                return GeneType.SCRNA;
+            case "snoRNA":
+                return GeneType.SNORNA;
+            case "protein-coding":
+                return GeneType.PROTEINCODING;
+            case "pseudo":
+                return GeneType.PSEUDO;
+            case "transposon":
+                return GeneType.TRANSPOSON; // no longer used? but part of spec.
+            case "miscRNA":
+                return GeneType.MISCRNA;
+            case "ncRNA":
+                return GeneType.NCRNA;
+            case "other":
+                return GeneType.OTHER;
+            case "biological-region":
+                return GeneType.OTHER;
+            default:
+                throw new IllegalArgumentException( "Unknown gene type '" + typeString + "'" );
         }
     }
 
@@ -176,8 +182,8 @@ public class NCBIGeneInfo {
 
     /**
      * @return The NCBI gene ID that was 'discontinued' for the gene that matches this symbol and taxon. These
-     * correspond to the lines in gene_history that have a '-' in the second column. But because we are matching
-     * only on the symbol+taxon, we have to be a bit careful using it.
+     *         correspond to the lines in gene_history that have a '-' in the second column. But because we are matching
+     *         only on the symbol+taxon, we have to be a bit careful using it.
      */
     public String getDiscontinuedId() {
         return discontinuedIdForGene;

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,16 +42,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class NCBIGene2GOAssociationLoader {
 
-    protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationLoader.class );
+    private static final Log log = LogFactory.getLog( NCBIGene2GOAssociationLoader.class );
     private static final int QUEUE_SIZE = 60000;
     private static final int BATCH_SIZE = 12000;
-
+    private final AtomicBoolean producerDone = new AtomicBoolean( false );
+    private final AtomicBoolean consumerDone = new AtomicBoolean( false );
     private Persister persisterHelper;
-
     private NCBIGene2GOAssociationParser parser = null;
-
-    private AtomicBoolean producerDone = new AtomicBoolean( false );
-    private AtomicBoolean consumerDone = new AtomicBoolean( false );
     private int count;
 
     public int getCount() {
@@ -62,25 +59,28 @@ public class NCBIGene2GOAssociationLoader {
         this.count = count;
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public boolean isConsumerDone() {
         return consumerDone.get();
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public boolean isProducerDone() {
         return producerDone.get();
     }
 
     public void load( final InputStream inputStream ) {
-        final BlockingQueue<Gene2GOAssociation> queue = new ArrayBlockingQueue<Gene2GOAssociation>( QUEUE_SIZE );
+        final BlockingQueue<Gene2GOAssociation> queue = new ArrayBlockingQueue<>(
+                NCBIGene2GOAssociationLoader.QUEUE_SIZE );
         final SecurityContext context = SecurityContextHolder.getContext();
         final Authentication authentication = context.getAuthentication();
 
         Thread loadThread = new Thread( new Runnable() {
             @Override
             public void run() {
-                log.info( "Starting loading" );
+                NCBIGene2GOAssociationLoader.log.info( "Starting loading" );
                 SecurityContextHolder.setContext( context );
-                load( queue );
+                NCBIGene2GOAssociationLoader.this.load( queue );
             }
         } );
 
@@ -93,19 +93,19 @@ public class NCBIGene2GOAssociationLoader {
                     // NCBIGene2GOAssociationParser parser = new NCBIGene2GOAssociationParser();
                     SecurityContextHolder.getContext().setAuthentication( authentication );
                     parser.parse( inputStream, queue );
-                    setCount( parser.getCount() );
+                    NCBIGene2GOAssociationLoader.this.setCount( parser.getCount() );
                 } catch ( IOException e ) {
-                    log.error( e, e );
+                    NCBIGene2GOAssociationLoader.log.error( e, e );
                     throw new RuntimeException( e );
                 }
-                log.info( "Done parsing" );
+                NCBIGene2GOAssociationLoader.log.info( "Done parsing" );
                 producerDone.set( true );
             }
         } );
 
         parseThread.start();
 
-        while ( !isProducerDone() || !isConsumerDone() ) {
+        while ( !this.isProducerDone() || !this.isConsumerDone() ) {
             try {
                 Thread.sleep( 1000 );
             } catch ( InterruptedException e ) {
@@ -117,11 +117,11 @@ public class NCBIGene2GOAssociationLoader {
     public void load( LocalFile ncbiFile ) {
 
         try (InputStream inputStream = FileTools
-                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() );) {
-            load( inputStream );
+                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() )) {
+            this.load( inputStream );
 
         } catch ( IOException e ) {
-            log.error( e, e );
+            NCBIGene2GOAssociationLoader.log.error( e, e );
             throw new RuntimeException( e );
         }
 
@@ -135,15 +135,15 @@ public class NCBIGene2GOAssociationLoader {
         this.persisterHelper = persisterHelper;
     }
 
-    protected void load( BlockingQueue<Gene2GOAssociation> queue ) {
+    private void load( BlockingQueue<Gene2GOAssociation> queue ) {
 
-        log.debug( "Entering 'load' " );
+        NCBIGene2GOAssociationLoader.log.debug( "Entering 'load' " );
 
         long millis = System.currentTimeMillis();
         int cpt = 0;
         double secspt = 0.0;
 
-        Collection<Gene2GOAssociation> itemsToPersist = new ArrayList<Gene2GOAssociation>();
+        Collection<Gene2GOAssociation> itemsToPersist = new ArrayList<>();
         try {
             while ( !( producerDone.get() && queue.isEmpty() ) ) {
                 Gene2GOAssociation associations = queue.poll();
@@ -153,13 +153,13 @@ public class NCBIGene2GOAssociationLoader {
                 }
 
                 itemsToPersist.add( associations );
-                if ( ++count % BATCH_SIZE == 0 ) {
+                if ( ++count % NCBIGene2GOAssociationLoader.BATCH_SIZE == 0 ) {
                     persisterHelper.persist( itemsToPersist );
                     itemsToPersist.clear();
                 }
 
                 // just some timing information.
-                if ( count % 1000 == 0 ) {
+                if ( count % 10000 == 0 ) {
                     cpt++;
                     double secsperthousand = ( System.currentTimeMillis() - millis ) / 1000.0;
                     secspt += secsperthousand;
@@ -167,40 +167,22 @@ public class NCBIGene2GOAssociationLoader {
 
                     String progString = "Processed and loaded " + count + " (" + secsperthousand
                             + " seconds elapsed, average per thousand=" + String.format( "%.2f", meanspt ) + ")";
-                    log.info( progString );
+                    NCBIGene2GOAssociationLoader.log.info( progString );
                     millis = System.currentTimeMillis();
                 }
 
             }
         } catch ( Exception e ) {
             consumerDone.set( true );
-            log.fatal( e, e );
+            NCBIGene2GOAssociationLoader.log.fatal( e, e );
             throw new RuntimeException( e );
         }
 
         // finish up.
         persisterHelper.persist( itemsToPersist );
 
-        log.info( "Finished, loaded total of " + count + " GO associations" );
+        NCBIGene2GOAssociationLoader.log.info( "Finished, loaded total of " + count + " GO associations" );
         consumerDone.set( true );
 
-    }
-
-    protected int load( Collection<Gene2GOAssociation> g2GoCol ) {
-
-        for ( Gene2GOAssociation association : g2GoCol ) {
-            if ( ++count % 1000 == 0 ) {
-                log.info( "Persisted " + count + " Gene to GO associations" );
-            }
-            load( association );
-        }
-
-        return count;
-    }
-
-    protected Gene2GOAssociation load( Gene2GOAssociation entity ) {
-        assert entity.getGene() != null;
-        assert entity.getOntologyEntry() != null;
-        return ( Gene2GOAssociation ) persisterHelper.persist( entity );
     }
 }

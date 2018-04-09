@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,34 +18,33 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import cern.colt.list.DoubleArrayList;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
- * 
+ *
  * @author keshav
  */
 @Component
@@ -67,23 +66,12 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         return this.getFilteredMatrix( ee, filterConfig, dataVectors );
     }
 
-
     @Override
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        return getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
+        return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
     }
-
-    private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
-        if ( dataVectors == null || dataVectors.isEmpty() )
-            throw new IllegalArgumentException( "Vectors must be provided" );
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
-        this.processedExpressionDataVectorService.thaw( dataVectors );
-        return filter.getFilteredMatrix( dataVectors );
-    }
-
 
     @Override
     public ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
@@ -97,26 +85,17 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         return this.getFilteredMatrix( filterConfig, dataVectors, arrayDesignsUsed );
     }
 
-
     @Override
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         if ( dataVectors.isEmpty() ) {
-            throw new IllegalArgumentException( "There are no ProcessedExpressionDataVectors for " + ee
-                    + ", they must be created first" );
+            throw new IllegalArgumentException(
+                    "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
         }
         this.processedExpressionDataVectorService.thaw( dataVectors );
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
-
-
-    @Override
-    public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors( ExpressionExperiment ee ) {
-        return this.processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
-    }
-
 
     @Override
     public DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
@@ -124,8 +103,8 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
         DoubleMatrix<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix<>( genes.size(), ees.size() );
 
-        Map<ExpressionExperiment, Map<Gene, Collection<Double>>> ranks = processedExpressionDataVectorService.getRanks(
-                ees, genes, method );
+        Map<ExpressionExperiment, Map<Gene, Collection<Double>>> ranks = processedExpressionDataVectorService
+                .getRanks( ees, genes, method );
 
         matrix.setRowNames( new ArrayList<>( genes ) );
         matrix.setColumnNames( new ArrayList<>( ees ) );
@@ -156,6 +135,15 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         }
 
         return matrix;
+    }
+
+    private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
+            Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) {
+        if ( dataVectors == null || dataVectors.isEmpty() )
+            throw new IllegalArgumentException( "Vectors must be provided" );
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
+        this.processedExpressionDataVectorService.thaw( dataVectors );
+        return filter.getFilteredMatrix( dataVectors );
     }
 
 }

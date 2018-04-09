@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007-2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,7 +35,7 @@ import java.util.List;
 public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
 
     private static final long serialVersionUID = 1L;
-    private int numCols;
+    private final int numCols;
 
     public EmptyExpressionMatrix( BioAssayDimension ba ) {
         super();

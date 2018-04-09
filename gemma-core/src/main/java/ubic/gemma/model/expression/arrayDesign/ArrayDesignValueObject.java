@@ -182,11 +182,14 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         } else if ( !id.equals( other.id ) )
             return false;
         if ( shortName == null ) {
-            if ( other.shortName != null )
-                return false;
-        } else if ( !shortName.equals( other.shortName ) )
-            return false;
-        return true;
+            return other.shortName == null;
+        } else
+            return shortName.equals( other.shortName );
+    }
+
+    @Override
+    public String toString() {
+        return this.getShortName();
     }
 
     public String getColor() {
@@ -415,11 +418,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
             result = prime * result + ( ( shortName == null ) ? 0 : shortName.hashCode() );
         }
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return this.getShortName();
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,28 +19,21 @@
 
 package ubic.gemma.core.job.executor.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 
 /**
  * Implements a long-running task in its own thread. Implementations simply implement processJob.
- *
  * Deprecated: Use Task/AbstractTask instead.
  *
  * @author klc
- *
  */
 @Deprecated
-public abstract class BackgroundJob<T extends TaskCommand, R extends TaskResult>  {
+@SuppressWarnings("unused") // Possible external use
+public abstract class BackgroundJob<T extends TaskCommand, R extends TaskResult> {
 
-    protected T command;
-    protected Log log = LogFactory.getLog( this.getClass().getName() );
-    protected SecurityContext securityContext;
-    protected String taskId;
+    private T command;
+    private String taskId;
 
     public BackgroundJob( T commandObj ) {
         assert commandObj != null;
@@ -49,8 +42,6 @@ public abstract class BackgroundJob<T extends TaskCommand, R extends TaskResult>
         assert this.taskId != null;
 
         this.command = commandObj;
-        this.securityContext = SecurityContextHolder.getContext();
-
     }
 
     public T getCommand() {
@@ -70,7 +61,7 @@ public abstract class BackgroundJob<T extends TaskCommand, R extends TaskResult>
 
     /**
      * Implement to do the work of the job. This will be run in a separate thread.
-     * 
+     *
      * @return result
      */
     protected abstract R processJob();

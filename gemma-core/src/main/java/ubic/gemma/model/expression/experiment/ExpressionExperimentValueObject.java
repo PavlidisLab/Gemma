@@ -403,33 +403,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
+    public boolean getUserCanWrite() {
+        if ( this.currentUserHasWritePermission == null )
             return false;
-        if ( !getClass().isAssignableFrom( obj.getClass() ) )
-            return false;
-        ExpressionExperimentValueObject other = ( ExpressionExperimentValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * ( result + ( ( id == null ) ? 0 : id.hashCode() ) );
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return this.shortName + " (id = " + this.getId() + ")";
+        return this.currentUserHasWritePermission;
     }
 
     @Override
@@ -445,14 +422,35 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     @Override
-    public boolean getUserCanWrite() {
-        if ( this.currentUserHasWritePermission == null )
-            return false;
-        return this.currentUserHasWritePermission;
+    public void setUserCanWrite( boolean userCanWrite ) {
+        this.currentUserHasWritePermission = userCanWrite;
     }
 
     @Override
-    public void setUserCanWrite( boolean userCanWrite ) {
-        this.currentUserHasWritePermission = userCanWrite;
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( !getClass().isAssignableFrom( obj.getClass() ) )
+            return false;
+        ExpressionExperimentValueObject other = ( ExpressionExperimentValueObject ) obj;
+        if ( id == null ) {
+            return other.id == null;
+        } else
+            return id.equals( other.id );
+    }
+
+    @Override
+    public String toString() {
+        return this.shortName + " (id = " + this.getId() + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * ( result + ( ( id == null ) ? 0 : id.hashCode() ) );
+        return result;
     }
 }

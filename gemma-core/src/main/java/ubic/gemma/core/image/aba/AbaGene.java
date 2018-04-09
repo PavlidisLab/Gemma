@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,26 +22,28 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- *  @author kelsey Represents a gene in the allen brain
- *          atals
+ * @author kelsey Represents a gene in the allen brain
+ * atals
  */
+@SuppressWarnings("unused") // Possible external use
 public class AbaGene {
 
-    Integer geneId;
-    String geneSymbol;
-    String geneName;
-    Integer entrezGeneId;
-    String ncbiAccession;
-    Collection<ImageSeries> imageSeries;
-    String geneUrl;
+    private Integer geneId;
+    private String geneSymbol;
+    private String geneName;
+    private Integer entrezGeneId;
+    private String ncbiAccession;
+    private Collection<ImageSeries> imageSeries;
+    private String geneUrl;
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public AbaGene() {
         super();
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public AbaGene( Integer geneId, String geneSymbol, String geneName, Integer entrezGeneId, String ncbiAccession,
             String geneUrl, Collection<ImageSeries> imageSeries ) {
-
         this();
         this.geneId = geneId;
         this.geneSymbol = geneSymbol;
@@ -53,7 +55,8 @@ public class AbaGene {
     }
 
     public void addImageSeries( ImageSeries is ) {
-        if ( imageSeries == null ) imageSeries = new HashSet<ImageSeries>();
+        if ( imageSeries == null )
+            imageSeries = new HashSet<>();
 
         imageSeries.add( is );
 
@@ -63,52 +66,52 @@ public class AbaGene {
         return entrezGeneId;
     }
 
-    public Integer getGeneId() {
-        return geneId;
-    }
-
-    public String getGeneName() {
-        return geneName;
-    }
-
-    public String getGeneSymbol() {
-        return geneSymbol;
-    }
-
-    public String getGeneUrl() {
-        return geneUrl;
-    }
-
-    public Collection<ImageSeries> getImageSeries() {
-        return imageSeries;
-    }
-
-    public String getNcbiAccession() {
-        return ncbiAccession;
-    }
-
     public void setEntrezGeneId( Integer entrezGeneId ) {
         this.entrezGeneId = entrezGeneId;
+    }
+
+    public Integer getGeneId() {
+        return geneId;
     }
 
     public void setGeneId( Integer geneId ) {
         this.geneId = geneId;
     }
 
+    public String getGeneName() {
+        return geneName;
+    }
+
     public void setGeneName( String geneName ) {
         this.geneName = geneName;
+    }
+
+    public String getGeneSymbol() {
+        return geneSymbol;
     }
 
     public void setGeneSymbol( String geneSymbol ) {
         this.geneSymbol = geneSymbol;
     }
 
+    public String getGeneUrl() {
+        return geneUrl;
+    }
+
     public void setGeneUrl( String geneUrl ) {
         this.geneUrl = geneUrl;
     }
 
+    public Collection<ImageSeries> getImageSeries() {
+        return imageSeries;
+    }
+
     public void setImageSeries( Collection<ImageSeries> imageSeries ) {
         this.imageSeries = imageSeries;
+    }
+
+    public String getNcbiAccession() {
+        return ncbiAccession;
     }
 
     public void setNcbiAccession( String ncbiAccession ) {
@@ -118,32 +121,33 @@ public class AbaGene {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append( "GeneId: " + this.geneId + "\n" );
-        sb.append( "GeneSymbol: " + this.geneSymbol + "\n" );
-        sb.append( "GeneName: " + this.geneName + "\n" );
-        sb.append( "EntrezId: " + this.entrezGeneId + "\n" );
-        sb.append( "NCBI Accession: " + this.ncbiAccession + "\n" );
-        sb.append( "aba Gene Url: " + this.geneUrl + "\n" );
+        sb.append( "GeneId: " ).append( this.geneId ).append( "\n" );
+        sb.append( "GeneSymbol: " ).append( this.geneSymbol ).append( "\n" );
+        sb.append( "GeneName: " ).append( this.geneName ).append( "\n" );
+        sb.append( "EntrezId: " ).append( this.entrezGeneId ).append( "\n" );
+        sb.append( "NCBI Accession: " ).append( this.ncbiAccession ).append( "\n" );
+        sb.append( "aba Gene Url: " ).append( this.geneUrl ).append( "\n" );
 
         for ( ImageSeries is : imageSeries ) {
             sb.append( "==> " );
-            sb.append( "\t image series id: " + is.getImageSeriesId() );
-            sb.append( " \t plane: " + is.getPlane() );
+            sb.append( "\t image series id: " ).append( is.getImageSeriesId() );
+            sb.append( " \t plane: " ).append( is.getPlane() );
             sb.append( "\n" );
 
-            if ( is.getImages() == null ) continue;
+            if ( is.getImages() == null )
+                continue;
 
             for ( Image img : is.getImages() ) {
                 sb.append( "\t ==> " );
-                sb.append( "\t \t image id: " + img.getId() );
-                sb.append( " \t \t Display Name: " + img.getDisplayName() );
-                sb.append( " \t \t Expression Image Path Url: " + img.getDownloadExpressionPath() );
-                sb.append( " \t \t Image path url: " + img.getDownloadImagePath() );
-                sb.append( " \t \t Expression thumbnail url: " + img.getExpressionThumbnailUrl() );
-                sb.append( " \t \t thumbnail url: " + img.getThumbnailUrl() );
-                sb.append( " \t \t zoomified Nissl Url: " + img.getZoomifiedNisslUrl() );
-                sb.append( " \t \t Posisiton: " + img.getPosition() );
-                sb.append( " \t \t Reference Atlas Index: " + img.getReferenceAtlasIndex() );
+                sb.append( "\t \t image id: " ).append( img.getId() );
+                sb.append( " \t \t Display Name: " ).append( img.getDisplayName() );
+                sb.append( " \t \t Expression Image Path Url: " ).append( img.getDownloadExpressionPath() );
+                sb.append( " \t \t Image path url: " ).append( img.getDownloadImagePath() );
+                sb.append( " \t \t Expression thumbnail url: " ).append( img.getExpressionThumbnailUrl() );
+                sb.append( " \t \t thumbnail url: " ).append( img.getThumbnailUrl() );
+                sb.append( " \t \t zoomified Nissl Url: " ).append( img.getZoomifiedNisslUrl() );
+                sb.append( " \t \t Posisiton: " ).append( img.getPosition() );
+                sb.append( " \t \t Reference Atlas Index: " ).append( img.getReferenceAtlasIndex() );
                 sb.append( "\n" );
             }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.ObjectFilter;
 
 import java.util.*;
@@ -48,7 +50,8 @@ import java.util.*;
  * @author pavlidis
  */
 @Repository
-public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
+public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequence, CompositeSequenceValueObject>
+        implements CompositeSequenceDao {
 
     private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
     /**
@@ -59,6 +62,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     /**
      * Add your 'where' clause to this.
      */
+    //language=MySQL
     private static final String nativeBaseSummaryQueryString =
             "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
                     + "geneProductRNA.ID as gpId, geneProductRNA.NAME as gpName, geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
@@ -75,106 +79,21 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     /**
      * Add your 'where' clause to this. returns much less stuff.
      */
+    //language=MySQL
     private static final String nativeBaseSummaryShorterQueryString =
-            "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
-                    + " gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol " + " from " + "COMPOSITE_SEQUENCE cs "
-                    + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-                    + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
-                    + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
-                    + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-                    + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-                    + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
-                    + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
+            "SELECT cs.ID AS deID, cs.NAME AS deName, bs.NAME AS bsName, bsDb.ACCESSION AS bsdbacc, ssr.ID AS ssrid,"
+                    + " gene.ID AS gId,gene.OFFICIAL_SYMBOL AS gSymbol FROM COMPOSITE_SEQUENCE cs "
+                    + "LEFT JOIN BIO_SEQUENCE bs ON BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+                    + "LEFT JOIN SEQUENCE_SIMILARITY_SEARCH_RESULT ssr ON ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                    + "LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON BIO_SEQUENCE_FK=bs.ID "
+                    + "LEFT JOIN DATABASE_ENTRY bsDb ON SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+                    + "LEFT JOIN CHROMOSOME_FEATURE geneProductRNA ON (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+                    + "LEFT JOIN CHROMOSOME_FEATURE gene ON (geneProductRNA.GENE_FK=gene.ID)"
+                    + " LEFT JOIN ARRAY_DESIGN ad ON (cs.ARRAY_DESIGN_FK=ad.ID) ";
 
     @Autowired
     public CompositeSequenceDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
-    }
-
-    @Override
-    public CompositeSequence find( CompositeSequence compositeSequence ) {
-
-        if ( compositeSequence.getName() == null )
-            return null;
-
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( CompositeSequence.class );
-
-        queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
-
-        // TODO make this use the full array design
-        // business key.
-        queryObject.createCriteria( "arrayDesign" )
-                .add( Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
-
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + CompositeSequence.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( CompositeSequence ) result;
-
-    }
-
-    @Override
-    public Collection<CompositeSequence> findByGene( Gene gene ) {
-        final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
-                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
-    }
-
-    @Override
-    public Collection<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
-        final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
-                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
-                .setMaxResults( limit ).setParameter( "gene", gene ).list();
-    }
-
-    @Override
-    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
-        final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
-                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "gene", "arrayDesign" },
-                new Object[] { gene, arrayDesign } );
-    }
-
-    @Override
-    public Collection<CompositeSequence> findByName( String name ) {
-        final String queryString = "select distinct cs from CompositeSequence" + " cs where cs.name = :id";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "id", name );
-    }
-
-    @Override
-    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
-        /*
-         * TODO: clean this up and perhaps adapt it to the batch method. This thaw might be too deep.
-         */
-        if ( compositeSequence == null )
-            return null;
-        List<?> list = this.getHibernateTemplate().findByNamedParam(
-                "select c from CompositeSequence c left join fetch c.biologicalCharacteristic b "
-                        + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
-                        + " left join fetch pt.externalDatabase " + " left join fetch c.arrayDesign "
-                        + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
-                        + " left join fetch b.bioSequence2GeneProduct bs2gp "
-                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                        + " left join fetch g.aliases left join fetch g.accessions  where c.id=:cid", "cid",
-                compositeSequence.getId() );
-        if ( list.isEmpty() ) {
-            return null;
-        }
-        return ( CompositeSequence ) list.iterator().next();
+        super( CompositeSequence.class, sessionFactory );
     }
 
     @Override
@@ -189,37 +108,6 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             vos.add( this.loadValueObject( e ) );
         }
         return vos;
-    }
-
-    @Override
-    public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
-        if ( compositeSequence.getName() == null || compositeSequence.getArrayDesign() == null ) {
-            throw new IllegalArgumentException( "compositeSequence must have name and arrayDesign." );
-        }
-
-        CompositeSequence existingCompositeSequence = this.find( compositeSequence );
-        if ( existingCompositeSequence != null ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Found existing compositeSequence: " + existingCompositeSequence );
-            return existingCompositeSequence;
-        }
-        if ( log.isDebugEnabled() )
-            log.debug( "Creating new compositeSequence: " + compositeSequence );
-        return create( compositeSequence );
-    }
-
-    @Override
-    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
-        // gets all kinds of associations, not just blat.
-        final String queryString =
-                "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
-                        + "GeneProductImpl gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
-                        + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "cs", compositeSequence ).setFirstResult( offset )
-                .setMaxResults( limit > 0 ? limit : -1 ).list();
-
     }
 
     @Override
@@ -248,13 +136,15 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     }
 
     @Override
-    protected Collection<CompositeSequence> handleFindByBioSequence( BioSequence bioSequence ) {
+    public Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence ) {
         Collection<CompositeSequence> compositeSequences;
+        //language=HQL
         final String queryString =
                 "select distinct cs from CompositeSequence" + " cs where cs.biologicalCharacteristic = :id";
         try {
             org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "id", bioSequence );
+            //noinspection unchecked
             compositeSequences = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -264,13 +154,15 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     }
 
     @Override
-    protected Collection<CompositeSequence> handleFindByBioSequenceName( String name ) {
+    public Collection<CompositeSequence> findByBioSequenceName( String name ) {
         Collection<CompositeSequence> compositeSequences;
+        //language=HQL
         final String queryString = "select distinct cs from CompositeSequence"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
         try {
             org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "name", name );
+            //noinspection unchecked
             compositeSequences = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -280,8 +172,63 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     }
 
     @Override
-    protected Map<CompositeSequence, Collection<Gene>> handleGetGenes(
-            Collection<CompositeSequence> compositeSequences ) {
+    public Collection<CompositeSequence> findByGene( Gene gene ) {
+        //language=HQL
+        final String queryString =
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
+                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
+                .list();
+    }
+
+    @Override
+    public Collection<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
+        //language=HQL
+        final String queryString =
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
+                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
+                .setMaxResults( limit ).setParameter( "gene", gene ).list();
+    }
+
+    @Override
+    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
+        //language=HQL
+        final String queryString =
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
+                        + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
+                .setParameter( "arrayDesign", arrayDesign ).list();
+    }
+
+    @Override
+    public Collection<CompositeSequence> findByName( final String name ) {
+        return this.findByStringProperty( "name", name );
+    }
+
+    @Override
+    public CompositeSequence findByName( ArrayDesign arrayDesign, final String name ) {
+        List results = this.getSessionFactory().getCurrentSession().createQuery(
+                "from CompositeSequence as compositeSequence where compositeSequence.arrayDesign = :arrayDesign and compositeSequence.name = :name" )
+                .setParameter( "arrayDesign", arrayDesign ).setParameter( "name", name ).list();
+
+        Object result = null;
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'CompositeSequence" + "' was found for name '" + name
+                            + "' and array design '" + arrayDesign.getId() + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+        return ( CompositeSequence ) result;
+    }
+
+    @Override
+    public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences ) {
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<>();
 
         int BATCH_SIZE = 2000;
@@ -346,9 +293,9 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             return returnVal;
         }
 
-        if ( log.isDebugEnabled() )
-            log.debug(
-                    "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size() + " genes." );
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size()
+                    + " genes." );
 
         // fetch the genes
         Collection<Long> batch = new HashSet<>();
@@ -361,8 +308,9 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         for ( Long gene : genesToFetch ) {
             batch.add( gene );
             if ( batch.size() == BATCH_SIZE ) {
-                log.debug( "Processing batch ... " );
+                AbstractDao.log.debug( "Processing batch ... " );
                 geneQueryObject.setParameterList( "gs", batch );
+                //noinspection unchecked
                 genes.addAll( geneQueryObject.list() );
                 batch.clear();
             }
@@ -370,11 +318,12 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
         if ( batch.size() > 0 ) {
             geneQueryObject.setParameterList( "gs", batch );
+            //noinspection unchecked
             genes.addAll( geneQueryObject.list() );
         }
 
-        if ( log.isDebugEnabled() )
-            log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
 
         Map<Long, Gene> geneIdMap = new HashMap<>();
         for ( Gene g : genes ) {
@@ -399,93 +348,59 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             ++count;
         }
 
-        if ( log.isDebugEnabled() )
-            log.debug(
-                    "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences.size()
-                            + " probes are associated with genes" );
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log
+                    .debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences
+                            .size() + " probes are associated with genes" );
         return returnVal;
     }
 
     @Override
-    protected Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
+    public Collection<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
+        // gets all kinds of associations, not just blat.
+        //language=HQL
+        final String queryString =
+                "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
+                        + "GeneProductImpl gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
+                        + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "cs", compositeSequence ).setFirstResult( offset )
+                .setMaxResults( limit > 0 ? limit : -1 ).list();
+
+    }
+
+    @Override
+    public Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences ) {
 
-        log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size() + " composite sequences" );
+        AbstractDao.log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size()
+                + " composite sequences" );
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<>();
 
-        BatchIterator<CompositeSequence> it = BatchIterator.batches( compositeSequences, PROBE_TO_GENE_MAP_BATCH_SIZE );
+        BatchIterator<CompositeSequence> it = BatchIterator
+                .batches( compositeSequences, CompositeSequenceDaoImpl.PROBE_TO_GENE_MAP_BATCH_SIZE );
 
         StopWatch timer = new StopWatch();
         timer.start();
         int total = 0;
         for ( ; it.hasNext(); ) {
             Collection<CompositeSequence> batch = it.next();
-            batchGetGenesWithSpecificity( batch, results );
+            this.batchGetGenesWithSpecificity( batch, results );
             total += batch.size();
         }
 
         timer.stop();
         if ( timer.getTime() > 10000 ) {
-            log.info( "Probe to gene map finished: " + total + " retrieved in " + timer.getTime() + "ms" );
+            AbstractDao.log.info( "Probe to gene map finished: " + total + " retrieved in " + timer.getTime() + "ms" );
         }
         return results;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection<Object[]> handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-
-        if ( numResults <= 0 ) {
-            // get all probes. Uses a light-weight version of this query that omits as much as possible.
-            final String queryString = nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign.getId();
-            try {
-                org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                        .createSQLQuery( queryString );
-                queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
-                        .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
-                queryObject.setMaxResults( MAX_CS_RECORDS );
-                return queryObject.list();
-            } catch ( org.hibernate.HibernateException ex ) {
-                throw SessionFactoryUtils.convertHibernateAccessException( ex );
-            }
-
-        }
-        // just a chunk but get the full set of results.
-        final String queryString = "select cs from CompositeSequence as cs inner join cs.arrayDesign as ar where ar = :ar";
-        this.getHibernateTemplate().setMaxResults( numResults );
-        List<?> cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
-        this.getHibernateTemplate().setMaxResults( 0 );
-        return getRawSummary( ( Collection<CompositeSequence> ) cs, 0 );
-
-    }
-
-    @Override
-    protected Collection<Object[]> handleGetRawSummary( Collection<CompositeSequence> compositeSequences,
-            Integer limit ) {
+    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences ) {
         if ( compositeSequences == null || compositeSequences.size() == 0 )
             return null;
-
-        Collection<CompositeSequence> compositeSequencesForQuery = new HashSet<>();
-
-        /*
-         * Note that running this without a limit is dangerous. If the sequence is an unmasked repeat, then we can get
-         * upwards of a million records back.
-         */
-        if ( limit != null && limit != 0 ) {
-            int j = 0;
-            for ( CompositeSequence object : compositeSequences ) {
-                if ( j > limit )
-                    break;
-                compositeSequencesForQuery.add( object );
-                ++j;
-            }
-            // nativeQueryString = nativeQueryString + " LIMIT " + limit;
-        } else {
-            compositeSequencesForQuery = compositeSequences;
-        }
 
         StringBuilder buf = new StringBuilder();
 
@@ -501,7 +416,8 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         }
 
         // This uses the 'full' query, assuming that this list isn't too big.
-        String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
+        String nativeQueryString =
+                CompositeSequenceDaoImpl.nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
         org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
                 .createSQLQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
@@ -514,22 +430,57 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
         queryObject.addScalar( "adName" );
-        queryObject.setMaxResults( MAX_CS_RECORDS );
+        queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
+        //noinspection unchecked
         return queryObject.list();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
+    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults ) {
+        if ( arrayDesign == null || arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException();
+        }
+
+        if ( numResults <= 0 ) {
+            // get all probes. Uses a light-weight version of this query that omits as much as possible.
+            final String queryString =
+                    CompositeSequenceDaoImpl.nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign
+                            .getId();
+            try {
+                org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+                        .createSQLQuery( queryString );
+                queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
+                        .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
+                queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
+                return queryObject.list();
+            } catch ( org.hibernate.HibernateException ex ) {
+                throw SessionFactoryUtils.convertHibernateAccessException( ex );
+            }
+
+        }
+        // just a chunk but get the full set of results.
+        //language=HQL
+        final String queryString = "select cs from CompositeSequence as cs inner join cs.arrayDesign as ar where ar = :ar";
+        this.getHibernateTemplate().setMaxResults( numResults );
+        List<?> cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
+        this.getHibernateTemplate().setMaxResults( 0 );
+        return this.getRawSummary( ( Collection<CompositeSequence> ) cs );
+
+    }
+
+    @Override
+    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults ) {
         if ( compositeSequence == null || compositeSequence.getId() == null ) {
             throw new IllegalArgumentException();
         }
         long id = compositeSequence.getId();
 
-        String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
+        String nativeQueryString = CompositeSequenceDaoImpl.nativeBaseSummaryQueryString + " WHERE cs.ID = :id";
 
-        int limit = MAX_CS_RECORDS;
+        int limit = CompositeSequenceDaoImpl.MAX_CS_RECORDS;
         if ( numResults != null && numResults != 0 ) {
-            limit = Math.min( numResults, MAX_CS_RECORDS );
+            limit = Math.min( numResults, CompositeSequenceDaoImpl.MAX_CS_RECORDS );
         }
 
         org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
@@ -543,41 +494,12 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
 
         queryObject.setMaxResults( limit );
+        //noinspection unchecked
         return queryObject.list();
     }
 
     @Override
-    protected Collection<CompositeSequence> handleLoad( Collection<Long> ids ) {
-
-        if ( ids == null || ids.size() == 0 ) {
-            return new HashSet<>();
-        }
-
-        final String queryString = "select cs from CompositeSequence cs where cs.id in (:ids)";
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
-        int batchSize = 2000;
-        Collection<Long> batch = new HashSet<>();
-        Collection<CompositeSequence> results = new HashSet<>();
-        for ( Long id : ids ) {
-            batch.add( id );
-
-            if ( batch.size() == batchSize ) {
-                queryObject.setParameterList( "ids", batch );
-                results.addAll( queryObject.list() );
-                batch.clear();
-            }
-        }
-
-        // tail end.
-        if ( batch.size() > 0 ) {
-            queryObject.setParameterList( "ids", batch );
-            results.addAll( queryObject.list() );
-        }
-        return results;
-    }
-
-    @Override
-    protected void handleThaw( final Collection<CompositeSequence> compositeSequences ) {
+    public void thaw( final Collection<CompositeSequence> compositeSequences ) {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -588,7 +510,6 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
                     session.buildLockRequest( LockOptions.NONE ).lock( cs );
                     Hibernate.initialize( cs.getArrayDesign() );
-                    cs.getArrayDesign().getName();
 
                     BioSequence bs = cs.getBiologicalCharacteristic();
                     if ( bs == null ) {
@@ -597,7 +518,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
                     session.buildLockRequest( LockOptions.NONE ).lock( bs );
                     Hibernate.initialize( bs );
-                    bs.getTaxon();
+                    Hibernate.initialize( bs.getTaxon() );
 
                     DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
                     if ( dbEntry != null ) {
@@ -626,7 +547,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                     }
 
                     if ( ++i % 2000 == 0 ) {
-                        log.info( "Progress: " + i + "/" + numToDo + "..." );
+                        AbstractDao.log.info( "Progress: " + i + "/" + numToDo + "..." );
                         try {
                             Thread.sleep( 10 );
                         } catch ( InterruptedException e ) {
@@ -643,6 +564,126 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
     }
 
+    @Override
+    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
+        if ( compositeSequence == null )
+            return null;
+        //noinspection unchecked
+        Hibernate.initialize( compositeSequence.getBiologicalCharacteristic() );
+        if ( compositeSequence.getBiologicalCharacteristic() != null ) {
+            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon() );
+            if ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
+                Hibernate
+                        .initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase() );
+                Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon() );
+                if ( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon() != null )
+                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getParentTaxon()
+                            .getExternalDatabase() );
+            }
+            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
+            if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
+                Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
+                        .getExternalDatabase() );
+            }
+            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getBioSequence2GeneProduct() );
+            for ( BioSequence2GeneProduct bsgp : compositeSequence.getBiologicalCharacteristic()
+                    .getBioSequence2GeneProduct() ) {
+                if ( bsgp != null ) {
+                    Hibernate.initialize( bsgp );
+                    if ( bsgp.getGeneProduct() != null ) {
+                        Hibernate.initialize( bsgp.getGeneProduct() );
+                        Hibernate.initialize( bsgp.getGeneProduct().getGene() );
+                        if ( bsgp.getGeneProduct().getGene() != null ) {
+                            Hibernate.initialize( bsgp.getGeneProduct().getGene().getAliases() );
+                            Hibernate.initialize( bsgp.getGeneProduct().getGene().getAccessions() );
+                        }
+                    }
+                }
+            }
+        }
+        Hibernate.initialize( compositeSequence.getArrayDesign() );
+
+        return compositeSequence;
+    }
+
+    @Override
+    public Collection<CompositeSequence> load( Collection<Long> ids ) {
+
+        if ( ids == null || ids.size() == 0 ) {
+            return new HashSet<>();
+        }
+
+        //language=HQL
+        final String queryString = "select cs from CompositeSequence cs where cs.id in (:ids)";
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        int batchSize = 2000;
+        Collection<Long> batch = new HashSet<>();
+        Collection<CompositeSequence> results = new HashSet<>();
+        for ( Long id : ids ) {
+            batch.add( id );
+
+            if ( batch.size() == batchSize ) {
+                queryObject.setParameterList( "ids", batch );
+                //noinspection unchecked
+                results.addAll( queryObject.list() );
+                batch.clear();
+            }
+        }
+
+        // tail end.
+        if ( batch.size() > 0 ) {
+            queryObject.setParameterList( "ids", batch );
+            //noinspection unchecked
+            results.addAll( queryObject.list() );
+        }
+        return results;
+    }
+
+    @Override
+    public CompositeSequence find( CompositeSequence compositeSequence ) {
+
+        if ( compositeSequence.getName() == null )
+            return null;
+
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( CompositeSequence.class );
+
+        queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
+        queryObject.createCriteria( "arrayDesign" )
+                .add( Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
+
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + CompositeSequence.class.getName()
+                                + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        return ( CompositeSequence ) result;
+
+    }
+
+    @Override
+    public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
+        if ( compositeSequence.getName() == null || compositeSequence.getArrayDesign() == null ) {
+            throw new IllegalArgumentException( "compositeSequence must have name and arrayDesign." );
+        }
+
+        CompositeSequence existingCompositeSequence = this.find( compositeSequence );
+        if ( existingCompositeSequence != null ) {
+            if ( AbstractDao.log.isDebugEnabled() )
+                AbstractDao.log.debug( "Found existing compositeSequence: " + existingCompositeSequence );
+            return existingCompositeSequence;
+        }
+        if ( AbstractDao.log.isDebugEnabled() )
+            AbstractDao.log.debug( "Creating new compositeSequence: " + compositeSequence );
+        return this.create( compositeSequence );
+    }
+
     /**
      * @param batch   of composite sequences to process
      * @param results - adding to this
@@ -654,6 +695,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             return;
         }
 
+        //language=HQL
         final String queryString =
                 "select cs,bas from CompositeSequence cs, BioSequence2GeneProduct bas inner join cs.biologicalCharacteristic bs "
                         + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
@@ -718,16 +760,17 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                 + ObjectFilter.DAO_PROBE_ALIAS + ", " // 1
                 + ObjectFilter.DAO_AD_ALIAS + " "  // 2
                 + "from CompositeSequence as " + ObjectFilter.DAO_PROBE_ALIAS + " " // probe
-                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " " // ad
+                + "left join " + ObjectFilter.DAO_PROBE_ALIAS + ".arrayDesign as " + ObjectFilter.DAO_AD_ALIAS + " "
+                // ad
                 + "where " + ObjectFilter.DAO_PROBE_ALIAS + ".id is not null "; // needed to use formRestrictionCause()
 
-        queryString += formRestrictionClause( filters, false );
+        queryString += AbstractVoEnabledDao.formRestrictionClause( filters, false );
         queryString += "group by " + ObjectFilter.DAO_PROBE_ALIAS + ".id ";
-        queryString += formOrderByProperty( orderByProperty, orderDesc );
+        queryString += AbstractVoEnabledDao.formOrderByProperty( orderByProperty, orderDesc );
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        addRestrictionParameters( query, filters );
+        AbstractVoEnabledDao.addRestrictionParameters( query, filters );
 
         return query;
     }

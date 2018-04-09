@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -35,11 +36,13 @@ import java.util.Map;
 /**
  * @author Paul
  */
-public interface ProcessedExpressionDataVectorService {
+@SuppressWarnings("unused") // Possible external use
+public interface ProcessedExpressionDataVectorService
+        extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
     @Secured({ "GROUP_USER" })
     ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vecs );
+            Collection<ProcessedExpressionDataVector> vectors );
 
     @Secured({ "GROUP_ADMIN" })
     void clearCache();
@@ -125,7 +128,6 @@ public interface ProcessedExpressionDataVectorService {
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
             Collection<Long> probes );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_AFTER_MAP_READ", "ACL_SECURABLE_COLLECTION_READ" })
@@ -155,17 +157,27 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
-    void thaw( Collection<ProcessedExpressionDataVector> vectors );
-
-    /**
-     * Updates a collection of ProcessedExpressionDataVectors
-     *
-     * @param dedvs dedvs
-     */
-    @Secured({ "GROUP_USER" })
-    void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
-
+    @Override
     void remove( Collection<ProcessedExpressionDataVector> processedExpressionDataVectors );
 
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int maxNumberOfResults );
+
+    /**
+     * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
+     * refreshing.
+     *
+     * @param ee the experiment
+     * @see PreprocessorService
+     */
+    @Secured({ "GROUP_ADMIN" })
+    Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee );
+
+    /**
+     * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.
+     *
+     * @param eeId the experiment id
+     */
+    @Secured({ "GROUP_ADMIN" })
+    void reorderByDesign( Long eeId );
+
 }

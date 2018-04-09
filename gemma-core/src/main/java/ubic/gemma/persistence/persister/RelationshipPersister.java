@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,14 +22,16 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
+import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.association.Gene2GeneProteinAssociation;
+import ubic.gemma.model.association.TfGeneAssociation;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
+import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationDao;
 import ubic.gemma.persistence.service.association.Gene2GeneProteinAssociationDao;
 import ubic.gemma.persistence.service.association.TfGeneAssociationDao;
-import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisDao;
-import ubic.gemma.model.association.*;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -63,15 +65,15 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             return null;
 
         if ( entity instanceof Gene2GOAssociation ) {
-            return persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
+            return this.persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
         } else if ( entity instanceof CoexpressionAnalysis ) {
-            return persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
+            return this.persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
-            return persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
+            return this.persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
         } else if ( entity instanceof Gene2GeneProteinAssociation ) {
-            return persistGene2GeneProteinAssociation( ( Gene2GeneProteinAssociation ) entity );
+            return this.persistGene2GeneProteinAssociation( ( Gene2GeneProteinAssociation ) entity );
         } else if ( entity instanceof TfGeneAssociation ) {
-            return persistTfGeneAssociation( ( TfGeneAssociation ) entity );
+            return this.persistTfGeneAssociation( ( TfGeneAssociation ) entity );
         }
         return super.persist( entity );
 
@@ -86,14 +88,14 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     }
 
     private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity ) {
-        if ( !isTransient( entity ) )
+        if ( !this.isTransient( entity ) )
             return entity;
 
         Collection<BioAssaySet> setMembers = new HashSet<>();
 
         for ( BioAssaySet baSet : entity.getExperiments() ) {
-            if ( isTransient( baSet ) ) {
-                baSet = ( BioAssaySet ) persist( baSet );
+            if ( this.isTransient( baSet ) ) {
+                baSet = ( BioAssaySet ) this.persist( baSet );
             }
             setMembers.add( baSet );
         }
@@ -106,10 +108,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
         if ( association == null )
             return null;
-        if ( !isTransient( association ) )
+        if ( !this.isTransient( association ) )
             return association;
         try {
-            FieldUtils.writeField( association, "gene", persistGene( association.getGene() ), true );
+            FieldUtils.writeField( association, "gene", this.persistGene( association.getGene() ), true );
         } catch ( IllegalAccessException e ) {
             e.printStackTrace();
         }
@@ -119,10 +121,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private TfGeneAssociation persistTfGeneAssociation( TfGeneAssociation entity ) {
         if ( entity == null )
             return null;
-        if ( !isTransient( entity ) )
+        if ( !this.isTransient( entity ) )
             return entity;
 
-        if ( isTransient( entity.getFirstGene() ) || isTransient( entity.getSecondGene() ) ) {
+        if ( this.isTransient( entity.getFirstGene() ) || this.isTransient( entity.getSecondGene() ) ) {
             throw new IllegalArgumentException(
                     "Associations can only be made between genes that already exist in the system" );
         }
@@ -134,10 +136,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private CoexpressionAnalysis persistCoexpressionAnalysis( CoexpressionAnalysis entity ) {
         if ( entity == null )
             return null;
-        if ( !isTransient( entity ) )
+        if ( !this.isTransient( entity ) )
             return entity;
-        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
-        if ( isTransient( entity.getExperimentAnalyzed() ) ) {
+        entity.setProtocol( this.persistProtocol( entity.getProtocol() ) );
+        if ( this.isTransient( entity.getExperimentAnalyzed() ) ) {
             throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
         }
 
@@ -155,7 +157,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null )
             return null;
-        if ( !isTransient( gene2GeneProteinAssociation ) )
+        if ( !this.isTransient( gene2GeneProteinAssociation ) )
             return gene2GeneProteinAssociation;
 
         // Deletes any old existing one.

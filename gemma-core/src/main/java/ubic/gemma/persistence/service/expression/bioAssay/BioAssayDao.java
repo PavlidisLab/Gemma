@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,8 +37,6 @@ public interface BioAssayDao extends BaseVoEnabledDao<BioAssay, BioAssayValueObj
     void thaw( BioAssay bioAssay );
 
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
-
-    BioAssayValueObject loadValueObject( BioAssay entity, boolean basic );
 
     Collection<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, boolean basic );
 }

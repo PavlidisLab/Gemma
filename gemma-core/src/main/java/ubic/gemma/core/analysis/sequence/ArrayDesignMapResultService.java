@@ -5,6 +5,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
 
+@SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignMapResultService {
 
     Collection<CompositeSequenceMapSummary> summarizeMapResults( ArrayDesign arrayDesign );

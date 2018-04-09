@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,69 +18,54 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import java.io.InputStream;
-
 import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.genome.biosequence.BioSequence;
+
+import java.io.InputStream;
 
 /**
  * @author pavlidis
- *
  */
 public class IlluminaProbeReaderTest extends TestCase {
-    protected static final Log log = LogFactory.getLog( IlluminaProbeReaderTest.class );
 
-    IlluminaProbeReader apr;
+    private IlluminaProbeReader apr;
 
-    InputStream is;
+    private InputStream is;
 
-    /*
+    /**
      * Class under test for Map read(InputStream)
+     *
+     * @throws Exception when there is a problem
      */
     public final void testReadInputStream() throws Exception {
 
-        assertTrue( apr != null );
+        TestCase.assertTrue( apr != null );
 
         apr.parse( is );
 
         String expectedValue = "GTGGCTGCCTTCCCAGCAGTCTCTACTTCAGCATATCTGGGAGCCAGAAG";
 
-        assertTrue( apr.containsKey( "GI_42655756-S" ) );
+        TestCase.assertTrue( apr.containsKey( "GI_42655756-S" ) );
 
         Reporter r = apr.get( "GI_42655756-S" );
 
-        assertNotNull( "Reporter GI_42655756-S not found", r );
+        TestCase.assertNotNull( "Reporter GI_42655756-S not found", r );
 
         BioSequence bs = r.getImmobilizedCharacteristic();
 
-        assertNotNull( "Immobilized characteristic was null", bs );
+        TestCase.assertNotNull( "Immobilized characteristic was null", bs );
 
         String actualValue = bs.getSequence().toUpperCase();
 
-        assertEquals( "Wrong sequence returned", expectedValue, actualValue );
+        TestCase.assertEquals( "Wrong sequence returned", expectedValue, actualValue );
 
     }
 
-    /*
-     * @see TestCase#setUp()
-     */
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         apr = new IlluminaProbeReader();
         is = IlluminaProbeReaderTest.class.getResourceAsStream( "/data/loader/illumina-target-test.txt" );
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,144 +54,19 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
-        AnalysisType analyzer = determineAnalysis( expressionExperiment, config );
+        AnalysisType analyzer = this.determineAnalysis( expressionExperiment, config );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        return this.applicationContext.getBean( DiffExAnalyzer.class )
-                .run( expressionExperiment, config );
-    }
-
-    @Override
-    public DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
-            DifferentialExpressionAnalysisConfig config ) {
-        AnalysisType analyzer = determineAnalysis( subset, config );
-
-        if ( analyzer == null ) {
-            throw new RuntimeException( "Could not locate an appropriate analyzer" );
-        }
-
-        return this.applicationContext.getBean( DiffExAnalyzer.class )
-                .run( subset, config );
+        return this.applicationContext.getBean( DiffExAnalyzer.class ).run( expressionExperiment, config );
     }
 
     /**
      * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
      * EXCLUDE_CHARACTERISTICS_VALUES
-     * 
-     * @return AnalysisType
-     */
-    @Override
-    public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
-            ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
-
-        Collection<ExperimentalFactor> efsToUse = getFactorsToUse( bioAssaySet, experimentalFactors );
-
-        if ( subsetFactor != null ) {
-            /*
-             * Note that the interaction term might still get used (if selected), we just don't decide here.
-             */
-            return AnalysisType.GENERICLM;
-        }
-
-        assert !efsToUse.isEmpty();
-
-        /*
-         * If any of the factors are continuous, just use a generic glm.
-         */
-        for ( ExperimentalFactor ef : efsToUse ) {
-            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
-                return AnalysisType.GENERICLM;
-            }
-        }
-
-        if ( efsToUse.size() == 1 ) {
-
-            ExperimentalFactor experimentalFactor = efsToUse.iterator().next();
-            Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
-
-            /*
-             * Check that there is more than one value in at least one group
-             */
-            boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( bioAssaySet, experimentalFactor );
-
-            if ( !ok ) {
-                return null;
-            }
-
-            if ( factorValues.isEmpty() )
-                throw new IllegalArgumentException(
-                        "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
-            if ( factorValues.size() == 1 ) {
-                // one sample t-test.
-                return AnalysisType.OSTTEST;
-            } else if ( factorValues.size() == 2 ) {
-                /*
-                 * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
-                 * clarity.
-                 */
-                return AnalysisType.TTEST;
-            } else {
-
-                /*
-                 * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
-                 * with two groups is just a t-test
-                 */
-                return AnalysisType.OWA;
-            }
-
-        } else if ( efsToUse.size() == 2 ) {
-            /*
-             * Candidate for ANOVA
-             */
-            boolean okForInteraction = true;
-            Collection<QuantitationType> qts = getQts( bioAssaySet );
-            for ( ExperimentalFactor f : efsToUse ) {
-                Collection<FactorValue> factorValues = f.getFactorValues();
-                if ( factorValues.size() == 1 ) {
-
-                    boolean useIntercept = false;
-                    // check for a ratiometric quantitation type.
-                    for ( QuantitationType qt : qts ) {
-                        if ( qt.getIsPreferred() && qt.getIsRatio() ) {
-                            // use ANOVA but treat the intercept as a factor.
-                            useIntercept = true;
-                            break;
-                        }
-                    }
-
-                    if ( useIntercept ) {
-                        return AnalysisType.GENERICLM;
-                    }
-
-                    return null;
-                }
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( f ) ) {
-                    log.info( "One of the two factors is 'batch', not using it for an interaction" );
-                    okForInteraction = false;
-                }
-
-            }
-            /* Check for block design and execute two way ANOVA (with or without interactions). */
-            if ( !includeInteractionsIfPossible || !DifferentialExpressionAnalysisUtil
-                    .blockComplete( bioAssaySet, experimentalFactors ) || !okForInteraction ) {
-                return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION; // NO interactions
-            }
-            return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;
-        } else {
-            /*
-             * Upstream we bail if there are too many factors.
-             */
-            return AnalysisType.GENERICLM;
-        }
-    }
-
-    /**
-     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
-     * EXCLUDE_CHARACTERISTICS_VALUES
-     * 
+     *
      * @return selected type of analysis such as t-test, two-way ANOVA, etc.
      */
     @Override
@@ -202,14 +77,14 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
 
         if ( config.getAnalysisType() == null ) {
-            AnalysisType type = determineAnalysis( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(),
-                    true );
+            AnalysisType type = this
+                    .determineAnalysis( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true );
             if ( type.equals( AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION ) ) {
                 /*
                  * Ensure the config does not have interactions.
                  */
-                log.info(
-                        "Any interaction term will be dropped from the configuration as it "
+                AnalysisSelectionAndExecutionServiceImpl.log
+                        .info( "Any interaction term will be dropped from the configuration as it "
                                 + "cannot be analyzed (no replicates? block incomplete?)" );
                 config.getInteractionsToInclude().clear();
                 // config.setAnalysisType( type ); // don't need this side-effect.
@@ -233,7 +108,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 }
                 return AnalysisType.OWA;
             case TWO_WAY_ANOVA_WITH_INTERACTION:
-                validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
+                this.validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
                 if ( !DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, config.getFactorsToInclude() ) ) {
                     throw new IllegalArgumentException(
                             "Experimental design must be block complete to run Two-way ANOVA with interactions" );
@@ -241,7 +116,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;
             case TWO_WAY_ANOVA_NO_INTERACTION:
                 // NO interactions.
-                validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
+                this.validateFactorsForTwoWayANOVA( config.getFactorsToInclude() );
                 return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION;
             case TTEST:
                 if ( config.getFactorsToInclude().size() != 1 ) {
@@ -275,9 +150,137 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
     }
 
+    /**
+     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
+     * EXCLUDE_CHARACTERISTICS_VALUES
+     *
+     * @return AnalysisType
+     */
+    @Override
+    public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
+            ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
+
+        Collection<ExperimentalFactor> efsToUse = this.getFactorsToUse( bioAssaySet, experimentalFactors );
+
+        if ( subsetFactor != null ) {
+            /*
+             * Note that the interaction term might still get used (if selected), we just don't decide here.
+             */
+            return AnalysisType.GENERICLM;
+        }
+
+        assert !efsToUse.isEmpty();
+
+        /*
+         * If any of the factors are continuous, just use a generic glm.
+         */
+        for ( ExperimentalFactor ef : efsToUse ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+                return AnalysisType.GENERICLM;
+            }
+        }
+
+        Collection<FactorValue> factorValues;
+
+        switch ( efsToUse.size() ) {
+            case 1:
+
+                ExperimentalFactor experimentalFactor = efsToUse.iterator().next();
+                factorValues = experimentalFactor.getFactorValues();
+
+                /*
+                 * Check that there is more than one value in at least one group
+                 */
+                boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( bioAssaySet, experimentalFactor );
+
+                if ( !ok ) {
+                    return null;
+                }
+
+                if ( factorValues.isEmpty() )
+                    throw new IllegalArgumentException(
+                            "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
+                switch ( factorValues.size() ) {
+                    case 1:
+                        // one sample t-test.
+                        return AnalysisType.OSTTEST;
+                    case 2:
+                        /*
+                         * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
+                         * clarity.
+                         */
+                        return AnalysisType.TTEST;
+                    default:
+
+                        /*
+                         * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
+                         * with two groups is just a t-test
+                         */
+                        return AnalysisType.OWA;
+                }
+
+            case 2:
+                /*
+                 * Candidate for ANOVA
+                 */
+                boolean okForInteraction = true;
+                Collection<QuantitationType> qts = this.getQts( bioAssaySet );
+                for ( ExperimentalFactor f : efsToUse ) {
+                    factorValues = f.getFactorValues();
+                    if ( factorValues.size() == 1 ) {
+
+                        boolean useIntercept = false;
+                        // check for a ratiometric quantitation type.
+                        for ( QuantitationType qt : qts ) {
+                            if ( qt.getIsPreferred() && qt.getIsRatio() ) {
+                                // use ANOVA but treat the intercept as a factor.
+                                useIntercept = true;
+                                break;
+                            }
+                        }
+
+                        if ( useIntercept ) {
+                            return AnalysisType.GENERICLM;
+                        }
+
+                        return null;
+                    }
+                    if ( BatchInfoPopulationServiceImpl.isBatchFactor( f ) ) {
+                        AnalysisSelectionAndExecutionServiceImpl.log
+                                .info( "One of the two factors is 'batch', not using it for an interaction" );
+                        okForInteraction = false;
+                    }
+
+                }
+                /* Check for block design and execute two way ANOVA (with or without interactions). */
+                if ( !includeInteractionsIfPossible || !DifferentialExpressionAnalysisUtil
+                        .blockComplete( bioAssaySet, experimentalFactors ) || !okForInteraction ) {
+                    return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION; // NO interactions
+                }
+                return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;
+            default:
+                /*
+                 * Upstream we bail if there are too many factors.
+                 */
+                return AnalysisType.GENERICLM;
+        }
+    }
+
     @Override
     public DiffExAnalyzer getAnalyzer() {
         return this.applicationContext.getBean( DiffExAnalyzer.class );
+    }
+
+    @Override
+    public DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
+            DifferentialExpressionAnalysisConfig config ) {
+        AnalysisType analyzer = this.determineAnalysis( subset, config );
+
+        if ( analyzer == null ) {
+            throw new RuntimeException( "Could not locate an appropriate analyzer" );
+        }
+
+        return this.applicationContext.getBean( DiffExAnalyzer.class ).run( subset, config );
     }
 
     @Override
@@ -287,7 +290,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
     private Collection<ExperimentalFactor> getFactorsToUse( BioAssaySet bioAssaySet,
             Collection<ExperimentalFactor> experimentalFactors ) {
-        Collection<ExperimentalFactor> efsToUse = new HashSet<>();
+        Collection<ExperimentalFactor> efsToUse;
 
         ExperimentalDesign design;
 
@@ -300,7 +303,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
 
         if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
-            efsToUse.addAll( design.getExperimentalFactors() );
+            efsToUse = new HashSet<>( design.getExperimentalFactors() );
             if ( efsToUse.isEmpty() ) {
                 throw new IllegalStateException(
                         "No factors given, nor in the experiment's design. Cannot execute differential expression analysis." );

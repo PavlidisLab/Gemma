@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 public class HomologeneServiceImpl implements HomologeneService {
 
-    protected static final Log log = LogFactory.getLog( HomologeneServiceImpl.class );
+    private static final Log log = LogFactory.getLog( HomologeneServiceImpl.class );
     private static final String COMMENT_CHARACTER = "#";
     private static final char DELIMITING_CHARACTER = '\t';
     private static final String HOMOLOGENE_FILE = "ncbi.homologene.fileName";
@@ -141,25 +141,6 @@ public class HomologeneServiceImpl implements HomologeneService {
     }
 
     @Override
-    public GeneValueObject getHomologueValueObject( Long geneId, String taxonCommonName ) {
-        Gene gene = geneService.load( geneId );
-        final Taxon taxon = this.taxonService.findByCommonName( taxonCommonName );
-        Gene geneToReturn;
-        if ( Objects.equals( gene.getTaxon().getId(), taxon.getId() ) ) {
-            geneToReturn = gene;
-        } else {
-            geneToReturn = getHomologue( gene, taxon );
-        }
-        return geneToReturn == null ? null : new GeneValueObject( geneToReturn );
-    }
-
-    @Override
-    public Collection<GeneValueObject> getHomologueValueObjects( Long geneId ) {
-        Gene gene = geneService.load( geneId );
-        return geneService.loadValueObjects( getHomologues( gene ) );
-    }
-
-    @Override
     public synchronized void init( boolean force ) {
 
         if ( running.get() ) {
@@ -170,15 +151,12 @@ public class HomologeneServiceImpl implements HomologeneService {
             return;
         }
 
-        boolean loadHomologene = Settings.getBoolean( LOAD_HOMOLOGENE, true );
-        this.homologeneFileName = Settings.getString( HOMOLOGENE_FILE );
-
-        if ( !loadHomologene )
-            return;
+        boolean loadHomologene = Settings.getBoolean( HomologeneServiceImpl.LOAD_HOMOLOGENE, true );
+        this.homologeneFileName = Settings.getString( HomologeneServiceImpl.HOMOLOGENE_FILE );
 
         // if loading homologene is disabled in the configuration, return
         if ( !force && !loadHomologene ) {
-            log.info( "Loading Homologene is disabled (force=" + force + ", load.homologene =" + loadHomologene + ")" );
+            HomologeneServiceImpl.log.info( "Loading Homologene is disabled (force=false, load.homologene=false)" );
             return;
         }
 
@@ -192,36 +170,34 @@ public class HomologeneServiceImpl implements HomologeneService {
 
                 running.set( true );
 
-                log.info( "Loading Homologene..." );
+                HomologeneServiceImpl.log.info( "Loading Homologene..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
-
-                boolean interrupted = false;
 
                 HomologeneFetcher hf = new HomologeneFetcher();
                 Collection<LocalFile> downloadedFiles = hf.fetch( homologeneFileName );
                 File f;
 
                 if ( downloadedFiles == null || downloadedFiles.isEmpty() ) {
-                    log.warn( "Unable to download Homologene File. Aborting" );
+                    HomologeneServiceImpl.log.warn( "Unable to download Homologene File. Aborting" );
                     return;
                 }
 
                 if ( downloadedFiles.size() > 1 )
-                    log.info( "Downloaded more than 1 file for homologene.  Using 1st.  " );
+                    HomologeneServiceImpl.log.info( "Downloaded more than 1 file for homologene.  Using 1st.  " );
 
                 f = downloadedFiles.iterator().next().asFile();
                 if ( !f.canRead() ) {
-                    log.warn( "Downloaded Homologene File. But unable to read Aborting" );
+                    HomologeneServiceImpl.log.warn( "Downloaded Homologene File. But unable to read Aborting" );
                     return;
                 }
 
-                while ( !interrupted && !ready.get() ) {
+                while ( !ready.get() ) {
 
                     try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
-                        parseHomologeneFile( is );
+                        HomologeneServiceImpl.this.parseHomologeneFile( is );
                     } catch ( IOException ioe ) {
-                        log.error( "Unable to parse homologene file. Error is " + ioe );
+                        HomologeneServiceImpl.log.error( "Unable to parse homologene file. Error is " + ioe );
                     }
 
                 }
@@ -236,6 +212,19 @@ public class HomologeneServiceImpl implements HomologeneService {
         loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
         loadThread.start();
 
+    }
+
+    @Override
+    public GeneValueObject getHomologueValueObject( Long geneId, String taxonCommonName ) {
+        Gene gene = geneService.load( geneId );
+        final Taxon taxon = this.taxonService.findByCommonName( taxonCommonName );
+        Gene geneToReturn;
+        if ( Objects.equals( gene.getTaxon().getId(), taxon.getId() ) ) {
+            geneToReturn = gene;
+        } else {
+            geneToReturn = this.getHomologue( gene, taxon );
+        }
+        return geneToReturn == null ? null : new GeneValueObject( geneToReturn );
     }
 
     /**
@@ -259,10 +248,10 @@ public class HomologeneServiceImpl implements HomologeneService {
 
         while ( ( line = br.readLine() ) != null ) {
 
-            if ( StringUtils.isBlank( line ) || line.startsWith( COMMENT_CHARACTER ) ) {
+            if ( StringUtils.isBlank( line ) || line.startsWith( HomologeneServiceImpl.COMMENT_CHARACTER ) ) {
                 continue;
             }
-            String[] fields = StringUtils.splitPreserveAllTokens( line, DELIMITING_CHARACTER );
+            String[] fields = StringUtils.splitPreserveAllTokens( line, HomologeneServiceImpl.DELIMITING_CHARACTER );
 
             Integer taxonId = Integer.parseInt( fields[1] );
             Long groupId;
@@ -271,7 +260,7 @@ public class HomologeneServiceImpl implements HomologeneService {
                 groupId = Long.parseLong( fields[0] );
                 geneId = Long.parseLong( fields[2] );
             } catch ( NumberFormatException e ) {
-                log.warn( "Unparseable line from homologene: " + line );
+                HomologeneServiceImpl.log.warn( "Unparseable line from homologene: " + line );
                 continue;
             }
             String geneSymbol = fields[3];
@@ -282,20 +271,25 @@ public class HomologeneServiceImpl implements HomologeneService {
             if ( !group2Gene.get( groupId ).contains( geneId ) ) {
                 group2Gene.get( groupId ).add( geneId );
             } else {
-                log.warn( "Duplicate gene ID encountered (group2Gene).  Skipping: geneID=" + geneId + " , taxonID = "
-                        + taxonId + " , geneSymbol = " + geneSymbol + " for group " + groupId );
+                HomologeneServiceImpl.log
+                        .warn( "Duplicate gene ID encountered (group2Gene).  Skipping: geneID=" + geneId
+                                + " , taxonID = " + taxonId + " , geneSymbol = " + geneSymbol + " for group "
+                                + groupId );
             }
 
             if ( !gene2Group.containsKey( geneId ) ) {
                 gene2Group.put( geneId, groupId );
             } else {
-                log.warn( "Duplicate gene ID encountered (gene2Group).  Skipping: geneID=" + geneId + " , taxonID = "
-                        + taxonId + " , geneSymbol = " + geneSymbol + " for group " + groupId );
+                HomologeneServiceImpl.log
+                        .warn( "Duplicate gene ID encountered (gene2Group).  Skipping: geneID=" + geneId
+                                + " , taxonID = " + taxonId + " , geneSymbol = " + geneSymbol + " for group "
+                                + groupId );
             }
         }
         ready.set( true );
-        log.info( "Gene Homology successfully loaded: " + gene2Group.keySet().size() + " genes covered in " + group2Gene
-                .keySet().size() + " groups" );
+        HomologeneServiceImpl.log
+                .info( "Gene Homology successfully loaded: " + gene2Group.keySet().size() + " genes covered in "
+                        + group2Gene.keySet().size() + " groups" );
 
     }
 
@@ -325,8 +319,8 @@ public class HomologeneServiceImpl implements HomologeneService {
             genes.add( gene );
         }
 
-        if ( log.isDebugEnabled() && !skippedNcbiIds.isEmpty() ) {
-            log.debug( "Skipped " + skippedNcbiIds.size()
+        if ( HomologeneServiceImpl.log.isDebugEnabled() && !skippedNcbiIds.isEmpty() ) {
+            HomologeneServiceImpl.log.debug( "Skipped " + skippedNcbiIds.size()
                     + " homologous genes cause unable to find in Gemma. NCBI ids are:  " + skippedNcbiIds );
         }
         return genes;

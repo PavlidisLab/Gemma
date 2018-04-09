@@ -77,7 +77,7 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
 
         SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean();
         jobDetail.setTargetMethod( "findByUpdatedLimit" );
-        jobDetail.setArguments( new Object[] { new Integer( 10 ) } );
+        jobDetail.setArguments( new Object[] { 10 } );
         jobDetail.setTargetObject( expressionExperimentService ); // access should be ok for GROUP_AGENT.
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );

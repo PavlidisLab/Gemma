@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
+@SuppressWarnings("unused") // Possible external use
 public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
 
     /**
@@ -41,7 +42,7 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
      */
     protected static final String COMMENT_MARK = "#";
 
-    protected final Log log = LogFactory.getLog( getClass() );
+    protected final Log log = LogFactory.getLog( this.getClass() );
 
     public abstract boolean containsKey( K key );
 
@@ -62,7 +63,7 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
         }
         log.info( "Parsing " + file.getAbsolutePath() );
         try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() )) {
-            parse( stream );
+            this.parse( stream );
         }
     }
 
@@ -81,23 +82,24 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
             int linesParsed = 0;
             while ( ( line = br.readLine() ) != null ) {
 
-                if ( line.startsWith( COMMENT_MARK ) ) {
+                if ( line.startsWith( BasicLineMapParser.COMMENT_MARK ) ) {
                     continue;
                 }
-                T newItem = parseOneLine( line );
+                T newItem = this.parseOneLine( line );
 
                 if ( newItem == null ) {
                     nullLines++;
                     continue;
                 }
 
-                K key = getKey( newItem );
+                K key = this.getKey( newItem );
                 if ( key == null ) {
                     throw new IllegalStateException( "Got null key for item " + linesParsed );
                 }
-                put( key, newItem );
+                this.put( key, newItem );
 
-                if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
+                if ( ++linesParsed % Parser.PARSE_ALERT_FREQUENCY == 0
+                        && timer.getTime() > LineParser.PARSE_ALERT_TIME_FREQUENCY_MS ) {
                     String message = "Parsed " + linesParsed + " lines, last had key " + key;
                     log.info( message );
                     timer.reset();
@@ -119,7 +121,7 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
         }
         log.info( "Parsing " + filename );
         File infile = new File( filename );
-        parse( infile );
+        this.parse( infile );
     }
 
     @Override

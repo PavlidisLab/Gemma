@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,8 +22,10 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.ftp.FTP;
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
+import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
@@ -43,16 +45,15 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     public RawDataFetcher() {
         super();
         this.setExcludePattern( ".tar" );
-        initArchiveHandler( "tar" );
+        this.initArchiveHandler( "tar" );
     }
 
     public boolean checkForFile( String identifier ) {
         try {
-            // FIXME this needs to deal with the URL.
             if ( this.ftpClient == null || !this.ftpClient.isConnected() )
                 this.ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
             assert this.ftpClient != null;
-            final String seekFile = formRemoteFilePath( identifier );
+            final String seekFile = this.formRemoteFilePath( identifier );
             try {
                 NetUtils.checkForFile( this.ftpClient, seekFile );
                 return true;
@@ -72,22 +73,23 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     @Override
     public Collection<LocalFile> fetch( String identifier ) {
         try {
-            // FIXME this needs to deal with the URL.
             if ( this.ftpClient == null || !this.ftpClient.isConnected() )
                 this.ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
             assert this.ftpClient != null;
-            File newDir = mkdir( identifier );
+            File newDir = this.mkdir( identifier );
             newDir = new File( newDir, "rawDataFiles" );
             if ( !newDir.canRead() && !newDir.mkdir() )
                 throw new IOException( "Could not create the raw data subdirectory" );
-            final String outputFileName = formLocalFilePath( identifier, newDir );
-            final String seekFile = formRemoteFilePath( identifier );
+            final String outputFileName = this.formLocalFilePath( identifier, newDir );
+            final String seekFile = this.formRemoteFilePath( identifier );
             try {
                 NetUtils.checkForFile( this.ftpClient, seekFile );
             } catch ( FileNotFoundException e ) {
                 // that's okay, just return.
-                log.info( "There is apparently no raw data archive for " + identifier + "(sought: " + seekFile + ")" );
-                newDir.delete(); // nothing there.
+                AbstractFetcher.log
+                        .info( "There is apparently no raw data archive for " + identifier + "(sought: " + seekFile
+                                + ")" );
+                EntityUtils.deleteFile( newDir );
                 this.ftpClient.disconnect(); // important to do this!
                 return null;
             }
@@ -95,8 +97,8 @@ public class RawDataFetcher extends FtpArchiveFetcher {
                 throw new IOException( "Lost FTP connection" );
             }
             long expectedSize = this.getExpectedSize( seekFile );
-            FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
-            Collection<LocalFile> result = doTask( future, expectedSize, seekFile, outputFileName );
+            FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
+            Collection<LocalFile> result = this.doTask( future, expectedSize, seekFile, outputFileName );
 
             if ( result == null || result.isEmpty() ) {
                 throw new IOException( "Files were not obtained, or download was cancelled." );
@@ -106,18 +108,6 @@ public class RawDataFetcher extends FtpArchiveFetcher {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-
-    }
-
-    @Override
-    public void initConfig() {
-        localBasePath = Settings.getString( "geo.local.datafile.basepath" );
-        remoteBaseDir = Settings.getString( "geo.remote.rawDataDir" );
-
-        if ( localBasePath == null || localBasePath.length() == 0 )
-            throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
-        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
-            throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
 
     }
 
@@ -137,6 +127,18 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     @Override
     protected String formRemoteFilePath( String identifier ) {
         return remoteBaseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
+    }
+
+    @Override
+    public void initConfig() {
+        localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        remoteBaseDir = Settings.getString( "geo.remote.rawDataDir" );
+
+        if ( localBasePath == null || localBasePath.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
+        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
+
     }
 
 }

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,26 +18,23 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
-
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 
+import java.io.IOException;
+import java.util.Collection;
+
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author pavlidis
- *
  */
 public class GeoBrowserTest {
 
-    private static Log log = LogFactory.getLog( GeoBrowserTest.class );
+    private static final Log log = LogFactory.getLog( GeoBrowserTest.class );
 
     @Test
     public void testGetRecentGeoRecords() throws Exception {
@@ -48,53 +45,50 @@ public class GeoBrowserTest {
             assertTrue( res.size() > 0 );
         } catch ( IOException e ) {
             if ( e.getMessage().contains( "GEO returned an error" ) ) {
-                log.warn( "GEO returned an error, skipping test." );
+                GeoBrowserTest.log.warn( "GEO returned an error, skipping test." );
                 return;
             }
             throw e;
         }
     }
-    
+
     @Test
     public void testGetGeoRecordsBySearchTerm() throws Exception {
-    	GeoBrowser b = new GeoBrowser();
-    	
-    	try {
+        GeoBrowser b = new GeoBrowser();
+
+        try {
             Collection<GeoRecord> res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10 );
             // Check that the search has returned at least one record
             assertTrue( res.size() > 0 );
-            
-            Iterator<GeoRecord> iterator = res.iterator();
-            
+
             // Print out accession numbers etc.; check that the records returned match the search term
-            while ( iterator.hasNext() ) {
-               	GeoRecord record = iterator.next();
-               	System.out.println( "Accession: " + record.getGeoAccession() );
-               	System.out.println( "Title : " + record.getTitle() );
-               	System.out.println( "Number of samples: " + record.getNumSamples() );
-               	System.out.println( "Date: " + record.getReleaseDate() );
-               	assertTrue(record.getOrganisms().contains( "Homo sapiens" ));
-               }
-    	
-    	 } catch ( IOException e ) {
-             if ( e.getMessage().contains( "GEO returned an error" ) ) {
-                 log.warn( "GEO returned an error, skipping test." );
-                 return;
-             }
-             throw e;
-    	 }
+            for ( GeoRecord record : res ) {
+                System.out.println( "Accession: " + record.getGeoAccession() );
+                System.out.println( "Title : " + record.getTitle() );
+                System.out.println( "Number of samples: " + record.getNumSamples() );
+                System.out.println( "Date: " + record.getReleaseDate() );
+                assertTrue( record.getOrganisms().contains( "Homo sapiens" ) );
+            }
+
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "GEO returned an error" ) ) {
+                GeoBrowserTest.log.warn( "GEO returned an error, skipping test." );
+                return;
+            }
+            throw e;
+        }
     }
-    
+
     /* Make the method public to run this test */
-//    @Test
-//    public void testGetTaxonCollection() throws Exception {
-//    	GeoBrowser b = new GeoBrowser();
-//    	Collection<String> oneTaxon = b.getTaxonCollection( "Homo sapiens" );
-//    	assertTrue(oneTaxon.size() == 1);
-//    	Collection<String> twoTaxa = b.getTaxonCollection( "Homo sapiens; Mus musculus" );
-//    	assertTrue(twoTaxa.size() == 2);
-//    	assertTrue(twoTaxa.contains( "Homo sapiens" ));
-//    	assertTrue(twoTaxa.contains( "Mus musculus" ));
-//    }
+    //    @Test
+    //    public void testGetTaxonCollection() throws Exception {
+    //    	GeoBrowser b = new GeoBrowser();
+    //    	Collection<String> oneTaxon = b.getTaxonCollection( "Homo sapiens" );
+    //    	assertTrue(oneTaxon.size() == 1);
+    //    	Collection<String> twoTaxa = b.getTaxonCollection( "Homo sapiens; Mus musculus" );
+    //    	assertTrue(twoTaxa.size() == 2);
+    //    	assertTrue(twoTaxa.contains( "Homo sapiens" ));
+    //    	assertTrue(twoTaxa.contains( "Mus musculus" ));
+    //    }
 
 }

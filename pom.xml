@@ -5,7 +5,7 @@
     <name>Gemma</name>
     <groupId>gemma</groupId>
     <artifactId>gemma</artifactId>
-    <version>1.22.5</version>
+    <version>1.23</version>
     <inceptionYear>2005</inceptionYear>
     <description>
         The Gemma Project for meta-analysis of genomics data
@@ -20,21 +20,15 @@
         <module>gemma-web</module>
     </modules>
     <packaging>pom</packaging>
-    <scm>
-        <connection>scm:cvs:ext:@otto.pavlab.chibi.ubc.ca:/cvs:Gemma</connection>
-        <developerConnection>scm:cvs:ext:@otto.pavlab.chibi.ubc.ca:/cvs:Gemma</developerConnection>
-        <url>http://www.chibi.ubc.ca/faculty/pavlidis/fisheye/browse/pavlab/Gemma</url>
-        <tag>gemma-1_7</tag>
-    </scm>
     <issueManagement>
-        <system>Bugzilla</system>
+        <system>GitHub</system>
         <url>
-            http://chibi.ubc.ca/faculty/pavlidis/lab/bugs/buglist.cgi?product=Gemma&amp;bug_status=__open__
+            https://github.com/PavlidisLab/Gemma/issues
         </url>
     </issueManagement>
     <ciManagement>
-        <system>bamboo</system>
-        <url>http://chibi.ubc.ca/faculty/pavlidis/bamboo</url>
+        <system>Jenkins</system>
+        <url>https://jenkins.pavlab.msl.ubc.ca</url>
     </ciManagement>
     <licenses>
         <license>
@@ -68,6 +62,11 @@
         <developer>
             <name>Matthew Jacobson</name>
             <id>jacobsonmt</id>
+            <organization>University of British Columbia</organization>
+        </developer>
+        <developer>
+            <name>Stepan Tesar</name>
+            <id>tesarst</id>
             <organization>University of British Columbia</organization>
         </developer>
     </developers>
@@ -273,18 +272,6 @@
             <version>1.2.14</version>
             <type>jar</type>
         </dependency>
-        <!--<dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.6.6</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.6.6</version>
-            <type>jar</type>
-        </dependency>-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -321,7 +308,7 @@
         <dependency>
             <groupId>baseCode</groupId>
             <artifactId>baseCode</artifactId>
-            <version>1.0.22</version>
+            <version>1.0.23</version>
         </dependency>
     </dependencies>
     <build>
@@ -373,38 +360,10 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.4.1</version>
-                <configuration>
-                    <allowTimestampedSnapshots>
-                        true
-                    </allowTimestampedSnapshots>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
                     <reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                            <version>2.7</version>
-                            <reportSets>
-                                <reportSet>
-                                    <reports>
-                                        <report>index</report>
-                                        <report>dependencies</report>
-                                        <report>license</report>
-                                        <report>scm</report>
-                                        <report>summary</report>
-                                        <report>dependency-convergence</report>
-                                    </reports>
-                                </reportSet>
-                            </reportSets>
-                        </plugin>
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-javadoc-plugin</artifactId>
@@ -433,45 +392,10 @@
                                 </configuration>
                             </configuration>
                         </plugin>
-                        <!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-report-plugin</artifactId> <version>2.14.1</version>
-                            <configuration> <argLine>-Xmx1.2g -XX:MaxPermSize=512m</argLine> </configuration> </plugin> -->
-                        <!--						<plugin>
-                                                    <groupId>org.codehaus.mojo</groupId>
-                                                    <artifactId>cobertura-maven-plugin</artifactId>
-                                                    <version>2.5.2</version>
-                                                    <configuration>
-                                                        <aggregate>true</aggregate>
-                                                        <check>
-                                                            <haltOnFailure>false</haltOnFailure>
-                                                        </check>
-                                                    </configuration>
-                                                </plugin> -->
-                        <plugin>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>jdepend-maven-plugin</artifactId>
-                            <version>2.0-beta-2</version>
-                        </plugin>
                     </reportPlugins>
                 </configuration>
             </plugin>
-            <plugin>
-                <!-- used when running cobertura outside of the 'site' plugin call. -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.5.2</version>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <outputDirectory>${cobertura.outputDirectory}/${project.artifactId}</outputDirectory>
-                </configuration>
-            </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh-external</artifactId>
-                <version>2.4</version>
-            </extension>
-        </extensions>
     </build>
     <repositories>
         <repository>
@@ -638,11 +562,6 @@
                 </property>
             </activation>
             <distributionManagement>
-                <site>
-                    <id>localDeploy</id>
-                    <name>localDeploy</name>
-                    <url>file:///space/gemmaData/gemma-devsite</url>
-                </site>
                 <repository>
                     <id>repo</id>
                     <name>Pavlab</name>
@@ -657,12 +576,6 @@
         </profile>
     </profiles>
     <distributionManagement>
-        <site>
-            <id>website</id>
-            <url>
-                scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
-            </url>
-        </site>
         <repository>
             <id>repo</id>
             <name>Pavlab</name>

@@ -100,7 +100,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                 try {
                     valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
                 } catch ( NumberFormatException e ) {
-                    log.warn( "Measurement wasn't a number for " + fv );
+                    SVDServiceHelperImpl.log.warn( "Measurement wasn't a number for " + fv );
                     valueToStore = Double.NaN;
                 }
 
@@ -114,36 +114,61 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         }
     }
 
+    /**
+     * Get the SVD information for experiment with id given.
+     *
+     * @return value or null if there isn't one.
+     */
     @Override
-    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
-            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
-        Set<ExperimentalFactor> importantFactors = new HashSet<>();
+    public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
+        PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
+        if ( pca == null )
+            return null;
+        // pca.setBioAssayDimension( bioAssayDimensionService.thawRawAndProcessed( pca.getBioAssayDimension() ) );
+        try {
+            return new SVDValueObject( pca );
+        } catch ( Exception e ) {
+            SVDServiceHelperImpl.log.error( e.getLocalizedMessage() );
+            return null;
+        }
+    }
 
-        if ( experimentalFactors.isEmpty() ) {
-            return importantFactors;
+    @Override
+    public void svd( Collection<ExpressionExperiment> ees ) {
+        for ( ExpressionExperiment ee : ees ) {
+            this.svd( ee );
         }
-        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
-        SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
-        if ( svdFactorAnalysis == null ) {
-            return importantFactors;
-        }
-        Map<Integer, Map<Long, Double>> factorPVals = svdFactorAnalysis.getFactorPvals();
-        for ( Integer cmp : factorPVals.keySet() ) {
-            Map<Long, Double> factorPv = factorPVals.get( cmp );
-            for ( Long efId : factorPv.keySet() ) {
-                Double pvalue = factorPv.get( efId );
-                ExperimentalFactor ef = factors.get( efId );
+    }
 
-                if ( pvalue < importanceThreshold ) {
-                    assert factors.containsKey( efId );
-                    log.info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
-                    importantFactors.add( ef );
-                } else {
-                    log.info( ef + " not retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
-                }
-            }
+    @Override
+    public SVDValueObject svd( ExpressionExperiment ee ) {
+        assert ee != null;
+
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( ee );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalArgumentException( "Experiment must have processed data already to do SVD" );
         }
-        return importantFactors;
+
+        processedExpressionDataVectorService.thaw( vectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
+
+        SVDServiceHelperImpl.log.info( "Starting SVD" );
+        ExpressionDataSVD svd = new ExpressionDataSVD( mat );
+
+        SVDServiceHelperImpl.log.info( "SVD done, postprocessing and storing results." );
+
+        /*
+         * Save the results
+         */
+        DoubleMatrix<Integer, BioMaterial> v = svd.getV();
+
+        BioAssayDimension b = mat.getBestBioAssayDimension();
+
+        PrincipalComponentAnalysis pca = this.updatePca( ee, svd, v, b );
+
+        return this.svdFactorAnalysis( pca );
     }
 
     @Override
@@ -159,7 +184,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                 .getTopLoadedProbes( ee, component, count );
 
         if ( topLoadedProbes == null ) {
-            log.warn( "No probes?" );
+            SVDServiceHelperImpl.log.warn( "No probes?" );
             return result;
         }
 
@@ -182,7 +207,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                 .getProcessedDataArraysByProbe( ees, p );
 
         if ( dvVos.isEmpty() ) {
-            log.warn( "No vectors came back from the call; check the Gene2CS table?" );
+            SVDServiceHelperImpl.log.warn( "No vectors came back from the call; check the Gene2CS table?" );
             return result;
         }
 
@@ -214,7 +239,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         }
 
         if ( result.isEmpty() ) {
-            log.warn( "No results, something went wrong; there were " + dvVos.size()
+            SVDServiceHelperImpl.log.warn( "No results, something went wrong; there were " + dvVos.size()
                     + " vectors to start but they all got filtered out." );
         }
 
@@ -224,74 +249,41 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     @Override
     public boolean hasPca( ExpressionExperiment ee ) {
-        return retrieveSvd( ee ) != null;
-    }
-
-    /**
-     * Get the SVD information for experiment with id given.
-     *
-     * @return value or null if there isn't one.
-     */
-    @Override
-    public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
-        PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
-        if ( pca == null )
-            return null;
-        // pca.setBioAssayDimension( bioAssayDimensionService.thaw( pca.getBioAssayDimension() ) );
-        try {
-            return new SVDValueObject( pca );
-        } catch ( Exception e ) {
-            log.error( e.getLocalizedMessage() );
-            return null;
-        }
+        return this.retrieveSvd( ee ) != null;
     }
 
     @Override
-    public void svd( Collection<ExpressionExperiment> ees ) {
-        for ( ExpressionExperiment ee : ees ) {
-            svd( ee );
+    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
+            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
+        Set<ExperimentalFactor> importantFactors = new HashSet<>();
+
+        if ( experimentalFactors.isEmpty() ) {
+            return importantFactors;
         }
-    }
-
-    @Override
-    public SVDValueObject svd( ExpressionExperiment ee ) {
-        assert ee != null;
-
-        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( ee );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalArgumentException( "Experiment must have processed data already to do SVD" );
+        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
+        SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
+        if ( svdFactorAnalysis == null ) {
+            return importantFactors;
         }
+        Map<Integer, Map<Long, Double>> factorPVals = svdFactorAnalysis.getFactorPvals();
+        for ( Integer cmp : factorPVals.keySet() ) {
+            Map<Long, Double> factorPv = factorPVals.get( cmp );
+            for ( Long efId : factorPv.keySet() ) {
+                Double pvalue = factorPv.get( efId );
+                ExperimentalFactor ef = factors.get( efId );
 
-        processedExpressionDataVectorService.thaw( vectors );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
-
-        log.info( "Starting SVD" );
-        ExpressionDataSVD svd = new ExpressionDataSVD( mat );
-
-        log.info( "SVD done, postprocessing and storing results." );
-
-        /*
-         * Save the results
-         */
-        DoubleMatrix<Integer, BioMaterial> v = svd.getV();
-
-        BioAssayDimension b = mat.getBestBioAssayDimension();
-
-        PrincipalComponentAnalysis pca = updatePca( ee, svd, v, b );
-
-        return svdFactorAnalysis( pca );
-    }
-
-    @Override
-    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
-        PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
-        if ( pca == null ) {
-            log.warn( "PCA not available for this experiment" );
-            return null;
+                if ( pvalue < importanceThreshold ) {
+                    assert factors.containsKey( efId );
+                    SVDServiceHelperImpl.log
+                            .info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
+                    importantFactors.add( ef );
+                } else {
+                    SVDServiceHelperImpl.log
+                            .info( ef + " not retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
+                }
+            }
         }
-        return svdFactorAnalysis( pca );
+        return importantFactors;
     }
 
     @Override
@@ -304,17 +296,17 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         try {
             svo = new SVDValueObject( pca );
         } catch ( Exception e ) {
-            log.error( e.getLocalizedMessage() );
+            SVDServiceHelperImpl.log.error( e.getLocalizedMessage() );
             return null;
         }
 
         Map<Long, Date> bioMaterialDates = new HashMap<>();
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<>();
 
-        prepareForFactorComparisons( svo, bioAssays, bioMaterialDates, bioMaterialFactorMap );
+        this.prepareForFactorComparisons( svo, bioAssays, bioMaterialDates, bioMaterialFactorMap );
 
         if ( bioMaterialDates.isEmpty() && bioMaterialFactorMap.isEmpty() ) {
-            log.warn( "No factor or date information to compare to the eigenGenes" );
+            SVDServiceHelperImpl.log.warn( "No factor or date information to compare to the eigenGenes" );
             return svo;
         }
 
@@ -325,13 +317,23 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         svo.getDates().clear();
         svo.getFactors().clear();
 
-        for ( int componentNumber = 0;
-              componentNumber < Math.min( svo.getvMatrix().columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
-            analyzeComponent( svo, componentNumber, svo.getvMatrix(), bioMaterialDates, bioMaterialFactorMap,
+        for ( int componentNumber = 0; componentNumber < Math
+                .min( svo.getvMatrix().columns(), SVDServiceHelperImpl.MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
+            this.analyzeComponent( svo, componentNumber, svo.getvMatrix(), bioMaterialDates, bioMaterialFactorMap,
                     svdBioMaterials );
         }
 
         return svo;
+    }
+
+    @Override
+    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
+        PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
+        if ( pca == null ) {
+            SVDServiceHelperImpl.log.warn( "PCA not available for this experiment" );
+            return null;
+        }
+        return this.svdFactorAnalysis( pca );
     }
 
     /**
@@ -369,7 +371,8 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
                 Date date = bioMaterialDates.get( svdBioMaterials[j] );
                 if ( date == null ) {
-                    log.warn( "Incomplete date information, missing for biomaterial " + svdBioMaterials[j] );
+                    SVDServiceHelperImpl.log
+                            .warn( "Incomplete date information, missing for biomaterial " + svdBioMaterials[j] );
                     dates[j] = Double.NaN;
                 } else {
                     Date roundDate = DateUtils.round( date, Calendar.MINUTE );
@@ -384,12 +387,13 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             }
 
             if ( uniqueDate.size() == 1 ) {
-                log.warn( "All scan dates the same, skipping data analysis" );
+                SVDServiceHelperImpl.log.warn( "All scan dates the same, skipping data analysis" );
                 svo.getDates().clear();
             }
 
             if ( eigenGene.size() != dates.length ) {
-                log.warn( "Could not compute correlation, dates and eigenGene had different lengths." );
+                SVDServiceHelperImpl.log
+                        .warn( "Could not compute correlation, dates and eigenGene had different lengths." );
                 return;
             }
 
@@ -426,27 +430,27 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                 // note that this is a double. In the case of categorical factors, it's the Double-fied ID of the factor
                 // value.
                 if ( initializing ) {
-                    if ( log.isDebugEnabled() )
-                        log.debug( "EF:" + ef.getId() + " fv=" + bmToFv.get( svdBioMaterials[j] ) );
+                    if ( SVDServiceHelperImpl.log.isDebugEnabled() )
+                        SVDServiceHelperImpl.log
+                                .debug( "EF:" + ef.getId() + " fv=" + bmToFv.get( svdBioMaterials[j] ) );
                     svo.getFactors().get( ef.getId() ).add( bmToFv.get( svdBioMaterials[j] ) );
                 }
             }
 
             if ( fvs.length != eigenGene.size() ) {
-                log.debug( fvs.length + " factor values (biomaterials) but " + eigenGene.size()
+                SVDServiceHelperImpl.log.debug( fvs.length + " factor values (biomaterials) but " + eigenGene.size()
                         + " values in the eigenGene" );
                 continue;
             }
 
-            if ( numNotMissing < MINIMUM_POINTS_TO_COMPARE_TO_EIGEN_GENE ) {
-                log.debug( "Insufficient values to compare " + ef + " to eigenGenes" );
+            if ( numNotMissing < SVDServiceHelperImpl.MINIMUM_POINTS_TO_COMPARE_TO_EIGEN_GENE ) {
+                SVDServiceHelperImpl.log.debug( "Insufficient values to compare " + ef + " to eigenGenes" );
                 continue;
             }
 
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
                 double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                 svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
-                // FIXME might need to deal with missing values here too.
                 svo.setPCFactorCorrelationPval( componentNumber, ef,
                         CorrelationStats.spearmanPvalue( factorCorrelation, eigenGene.size() ) );
             } else {
@@ -467,12 +471,14 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                 }
 
                 if ( groups.size() < 2 ) {
-                    log.debug( "Factor had less than two groups: " + ef + ", SVD comparison can't be done." );
+                    SVDServiceHelperImpl.log
+                            .debug( "Factor had less than two groups: " + ef + ", SVD comparison can't be done." );
                     continue;
                 }
 
-                if ( eigenGeneWithoutMissing.size() < MINIMUM_POINTS_TO_COMPARE_TO_EIGEN_GENE ) {
-                    log.debug( "Too few non-missing values for factor to compare to eigenGenes: " + ef );
+                if ( eigenGeneWithoutMissing.size() < SVDServiceHelperImpl.MINIMUM_POINTS_TO_COMPARE_TO_EIGEN_GENE ) {
+                    SVDServiceHelperImpl.log
+                            .debug( "Too few non-missing values for factor to compare to eigenGenes: " + ef );
                     continue;
                 }
 
@@ -526,9 +532,10 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                     /*
                      * Missing values in factors, not fatal but not great either.
                      */
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Incomplete factorvalue information for " + ef + " (biomaterial id=" + id
-                                + " missing a value)" );
+                    if ( SVDServiceHelperImpl.log.isDebugEnabled() )
+                        SVDServiceHelperImpl.log
+                                .debug( "Incomplete factorvalue information for " + ef + " (biomaterial id=" + id
+                                        + " missing a value)" );
                     bioMaterialFactorMap.get( ef ).put( id, Double.NaN );
                 }
             }
@@ -542,7 +549,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             BioMaterial bm = bioAssay.getSampleUsed();
             bioMaterialDates.put( bm.getId(), processingDate ); // can be null
 
-            populateBMFMap( bioMaterialFactorMap, bm );
+            SVDServiceHelperImpl.populateBMFMap( bioMaterialFactorMap, bm );
         }
     }
 
@@ -555,26 +562,23 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
          * Note that dates or batch information can be missing for some bioassays.
          */
 
-        getFactorsForAnalysis( bioAssays, bioMaterialDates, bioMaterialFactorMap );
+        this.getFactorsForAnalysis( bioAssays, bioMaterialDates, bioMaterialFactorMap );
         Long[] svdBioMaterials = svo.getBioMaterialIds();
 
         if ( svdBioMaterials == null || svdBioMaterials.length == 0 ) {
             throw new IllegalStateException( "SVD did not have biomaterial information" );
         }
 
-        fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
+        this.fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
 
     }
 
-    /**
-     * FIXME make this a transactional method.
-     */
     private PrincipalComponentAnalysis updatePca( ExpressionExperiment ee, ExpressionDataSVD svd,
             DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension b ) {
         principalComponentAnalysisService.removeForExperiment( ee );
         PrincipalComponentAnalysis pca = principalComponentAnalysisService
-                .create( ee, svd.getU(), svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST,
-                        MAX_LOADINGS_TO_PERSIST );
+                .create( ee, svd.getU(), svd.getEigenvalues(), v, b, SVDServiceHelperImpl.MAX_NUM_COMPONENTS_TO_PERSIST,
+                        SVDServiceHelperImpl.MAX_LOADINGS_TO_PERSIST );
 
         ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
         auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );

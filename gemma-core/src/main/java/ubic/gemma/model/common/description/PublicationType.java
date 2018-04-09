@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,28 +29,15 @@ public abstract class PublicationType implements java.io.Serializable {
     /**
      * No-arg constructor added to satisfy javabean contract
      */
+    @SuppressWarnings("WeakerAccess") // Required by Spring
     public PublicationType() {
-    }
-    
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof PublicationType ) ) {
-            return false;
-        }
-        final PublicationType that = ( PublicationType ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
     }
 
     public Long getId() {
         return this.id;
     }
 
+    @SuppressWarnings("unused") // Possible external use
     public void setId( Long id ) {
         this.id = id;
     }
@@ -71,12 +58,25 @@ public abstract class PublicationType implements java.io.Serializable {
         return hashCode;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof PublicationType ) ) {
+            return false;
+        }
+        final PublicationType that = ( PublicationType ) object;
+        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+    }
+
     public static final class Factory {
 
         public static PublicationType newInstance() {
             return new PublicationTypeImpl();
         }
 
+        @SuppressWarnings("unused") // Possible external use
         public static PublicationType newInstance( String type ) {
             final PublicationType entity = new PublicationTypeImpl();
             entity.setType( type );

@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,8 @@ import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecuredChild;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+
+import javax.persistence.Transient;
 
 public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements SecuredChild {
 
@@ -51,6 +53,7 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
         this.numberOfElementsAnalyzed = numberOfElementsAnalyzed;
     }
 
+    @Transient
     @Override
     public Securable getSecurityOwner() {
         /*

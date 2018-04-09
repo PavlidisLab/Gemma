@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,8 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import gemma.gsec.model.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import javax.persistence.Transient;
 
 /**
  * @author Patrick
@@ -45,18 +47,6 @@ public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.mo
     }
 
     @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof MeanVarianceRelation ) ) {
-            return false;
-        }
-        final MeanVarianceRelation that = ( MeanVarianceRelation ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    @Override
     public Long getId() {
         return this.id;
     }
@@ -73,6 +63,7 @@ public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.mo
         this.means = means;
     }
 
+    @Transient
     @Override
     public Securable getSecurityOwner() {
         return this.securityOwner;
@@ -96,6 +87,18 @@ public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.mo
         hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
 
         return hashCode;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof MeanVarianceRelation ) ) {
+            return false;
+        }
+        final MeanVarianceRelation that = ( MeanVarianceRelation ) object;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
     public static final class Factory {

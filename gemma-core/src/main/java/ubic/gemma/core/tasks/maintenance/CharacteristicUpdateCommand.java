@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,16 +19,15 @@
 
 package ubic.gemma.core.tasks.maintenance;
 
-import java.util.Collection;
-
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.core.tasks.Task;
+import ubic.gemma.model.common.description.AnnotationValueObject;
+
+import java.util.Collection;
 
 /**
  * @author paul
- *
  */
 public class CharacteristicUpdateCommand extends TaskCommand {
 
@@ -48,6 +47,13 @@ public class CharacteristicUpdateCommand extends TaskCommand {
         return annotationValueObjects;
     }
 
+    /**
+     * @param annotationValueObjects the annotationValueObjects to set
+     */
+    public void setAnnotationValueObjects( Collection<AnnotationValueObject> annotationValueObjects ) {
+        this.annotationValueObjects = annotationValueObjects;
+    }
+
     @Override
     public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return CharacteristicUpdateTask.class;
@@ -58,13 +64,6 @@ public class CharacteristicUpdateCommand extends TaskCommand {
      */
     public boolean isRemove() {
         return remove;
-    }
-
-    /**
-     * @param annotationValueObjects the annotationValueObjects to set
-     */
-    public void setAnnotationValueObjects( Collection<AnnotationValueObject> annotationValueObjects ) {
-        this.annotationValueObjects = annotationValueObjects;
     }
 
     /**

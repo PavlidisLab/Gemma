@@ -13,6 +13,7 @@ public class GeeqEvent extends AuditEventType {
     public GeeqEvent() {
     }
 
+    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
 
         public static GeeqEvent newInstance() {

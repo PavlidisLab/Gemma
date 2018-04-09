@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,12 +34,17 @@ import java.util.Map;
 /**
  * @author paul
  */
+@SuppressWarnings("unused") // Possible external use
 public interface CompositeSequenceService
         extends BaseVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
 
     @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    CompositeSequence find( CompositeSequence compositeSequence );
+
+    @Override
     @Secured({ "GROUP_USER" })
-    Collection<CompositeSequence> create( Collection<CompositeSequence> compositeSequences );
+    CompositeSequence findOrCreate( CompositeSequence compositeSequence );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -47,7 +52,15 @@ public interface CompositeSequenceService
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    CompositeSequence find( CompositeSequence compositeSequence );
+    Collection<CompositeSequence> load( Collection<Long> ids );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void remove( CompositeSequence compositeSequence );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( CompositeSequence compositeSequence );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence );
@@ -57,7 +70,7 @@ public interface CompositeSequenceService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByGene( Gene gene );
-    
+
     Collection<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
@@ -72,10 +85,6 @@ public interface CompositeSequenceService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> findByNamesInArrayDesigns( Collection<String> compositeSequenceNames,
             Collection<ArrayDesign> arrayDesigns );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    CompositeSequence findOrCreate( CompositeSequence compositeSequence );
 
     /**
      * Given a Collection of composite sequences returns of map of a compositesequence to a collection of genes
@@ -104,24 +113,8 @@ public interface CompositeSequenceService
 
     Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
-    Collection<CompositeSequence> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( Collection<CompositeSequence> sequencesToDelete );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void remove( CompositeSequence compositeSequence );
-
     void thaw( Collection<CompositeSequence> compositeSequences );
 
     CompositeSequence thaw( CompositeSequence compositeSequence );
-
-    @Override
-    @Secured({ "GROUP_USER" })
-    void update( CompositeSequence compositeSequence );
 
 }

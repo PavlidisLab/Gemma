@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,7 @@ import java.util.concurrent.BlockingQueue;
  */
 public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo> implements QueuingParser<String> {
 
-    private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 15;
+    private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 16;
     private final Map<String, NCBIGeneInfo> results = new HashMap<>();
     private BlockingQueue<String> resultsKeys;
     private boolean filter = true;
@@ -57,11 +57,6 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
     }
 
     @Override
-    public String getKey( NCBIGeneInfo newItem ) {
-        return newItem.getGeneId();
-    }
-
-    @Override
     public Collection<String> getKeySet() {
         return results.keySet();
     }
@@ -72,23 +67,17 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
     }
 
     @Override
-    public void parse( InputStream inputStream, BlockingQueue<String> queue ) throws IOException {
-        this.resultsKeys = queue;
-        this.parse( inputStream );
-    }
-
-    @Override
     public NCBIGeneInfo parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
-        if ( fields.length != NCBI_GENEINFO_FIELDS_PER_ROW ) {
-            if ( fields.length == 13 || fields.length == 14 ) {
-                // backwards compatibility
-                // old format, hopefully okay
+        if ( fields.length != NcbiGeneInfoParser.NCBI_GENEINFO_FIELDS_PER_ROW ) {
+            //noinspection StatementWithEmptyBody // backwards compatibility, old format, hopefully okay
+            if ( fields.length == 13 || fields.length == 14 || fields.length == 15 ) {
+                // They keep adding fields at the end...we only need the first few.
             } else {
                 throw new FileFormatException(
                         "Line + " + line + " is not in the right format: has " + fields.length + " fields, expected "
-                                + NCBI_GENEINFO_FIELDS_PER_ROW );
+                                + NcbiGeneInfoParser.NCBI_GENEINFO_FIELDS_PER_ROW );
             }
         }
         NCBIGeneInfo geneInfo = new NCBIGeneInfo();
@@ -101,8 +90,10 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                     return null;
                 }
             }
-
+            
+            // See ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README
             // #Format:
+            
             // tax_id
             // GeneID
             // Symbol
@@ -118,6 +109,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             // Nomenclature_status
             // Other_designations
             // Modification_date
+            // Feature type
 
             geneInfo.setTaxId( taxonId );
             geneInfo.setGeneId( fields[1] );
@@ -139,7 +131,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                          * Annoyingly, HGCN identifiers now have the format HGNC:X where X is an integer. This is
                          * apparent from downloading files from HGCN (http://www.genenames.org/cgi-bin/statistics). Same
                          * situation for MGI
-                         * 
+                         *
                          * Therefore we have a special case.
                          */
                         if ( dbF.length == 3 && ( dbF[1].equals( "HGNC" ) || dbF[1].equals( "MGI" ) ) ) {
@@ -171,15 +163,9 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
         return geneInfo;
     }
 
-    public void setFilter( boolean filter ) {
-        this.filter = filter;
-    }
-
-    /**
-     * @param ncbiTaxonIds Taxon IDs (NCBI, not Gemma ids) e.g. 9606 for H. sapiens
-     */
-    public void setSupportedTaxa( Collection<Integer> ncbiTaxonIds ) {
-        this.ncbiTaxonIds = ncbiTaxonIds;
+    @Override
+    public String getKey( NCBIGeneInfo newItem ) {
+        return newItem.getGeneId();
     }
 
     @Override
@@ -193,6 +179,23 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             log.error( e );
             throw new RuntimeException( e );
         }
+    }
+
+    @Override
+    public void parse( InputStream inputStream, BlockingQueue<String> queue ) throws IOException {
+        this.resultsKeys = queue;
+        this.parse( inputStream );
+    }
+
+    public void setFilter( boolean filter ) {
+        this.filter = filter;
+    }
+
+    /**
+     * @param ncbiTaxonIds Taxon IDs (NCBI, not Gemma ids) e.g. 9606 for H. sapiens
+     */
+    public void setSupportedTaxa( Collection<Integer> ncbiTaxonIds ) {
+        this.ncbiTaxonIds = ncbiTaxonIds;
     }
 
 }

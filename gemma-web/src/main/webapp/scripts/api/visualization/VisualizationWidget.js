@@ -149,7 +149,6 @@ Gemma.prepareProfiles = function( data, showPValues ) {
             }
          }
       } else {
-         // FIXME this is an old-style page, we should make it a pop-up or improve it
          orderedGeneLinksArr.push( "<a href='" + ctxBasePath + "/compositeSequence/show.html?id=" + probeId
             + "' target='_blank' ext:qtip= '" + qtip + "'>Unmapped</a>" );
          orderedGeneNamesArr.push( "" );
@@ -917,9 +916,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
          legendDiv : this.zoomLegendId,
          hidden : !this.thumbnails,
 
-         /*
-          * legend div FIXME make this go to the TOP. Might need to make it a separate div in this panel instead.
-          */
          html : {
             id : this.zoomLegendId,
             tag : 'div',
@@ -1037,9 +1033,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
                ref : 'toggleViewBtn',
                disabled : true,
                handler : this.switchView.createDelegate( this )
-            } /*
-                * todo: add standarization on/off option.
-                */]
+            }]
          } )
       } );
 

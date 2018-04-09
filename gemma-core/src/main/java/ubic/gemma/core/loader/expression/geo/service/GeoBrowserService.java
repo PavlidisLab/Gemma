@@ -43,7 +43,7 @@ public interface GeoBrowserService {
      */
     List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException;
 
-    List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException, ParseException;
+    List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException;
 
     boolean toggleUsability( String accession );
 

@@ -1,55 +1,52 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.ontology.providers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Additional tests with updated ontology file, fixing problems getting aspects.
- * 
- * @author Paul
  *
+ * @author Paul
  */
 public class GeneOntologyServiceTest2 {
-    static GeneOntologyServiceImpl gos;
+    private static GeneOntologyServiceImpl gos;
 
     // note: no spring context.
     @BeforeClass
     public static void setUp() throws Exception {
-        gos = new GeneOntologyServiceImpl();
+        GeneOntologyServiceTest2.gos = new GeneOntologyServiceImpl();
         InputStream is = new GZIPInputStream(
                 GeneOntologyServiceTest.class.getResourceAsStream( "/data/loader/ontology/go.bptest.owl.gz" ) );
-        assert is != null;
-        gos.loadTermsInNameSpace( is );
+        GeneOntologyServiceTest2.gos.loadTermsInNameSpace( is );
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
-        gos.shutDown();
+    public static void tearDown() {
+        GeneOntologyServiceTest2.gos.shutDown();
     }
 
     @Test
@@ -58,11 +55,11 @@ public class GeneOntologyServiceTest2 {
 
         OntologyTerm termForId = GeneOntologyServiceImpl.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = gos.getParents( termForId );
+        Collection<OntologyTerm> terms = GeneOntologyServiceTest2.gos.getParents( termForId );
         assertEquals( 1, terms.size() );
         OntologyTerm par = terms.iterator().next();
         assertEquals( "http://purl.obolibrary.org/obo/GO_0034110", par.getUri() ); // regulation of homotypic cell-cell
-                                                                                   // adhesion
+        // adhesion
     }
 
     @Test
@@ -71,34 +68,33 @@ public class GeneOntologyServiceTest2 {
 
         OntologyTerm termForId = GeneOntologyServiceImpl.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = gos.getAllParents( termForId );
+        Collection<OntologyTerm> terms = GeneOntologyServiceTest2.gos.getAllParents( termForId );
 
         // excludes "regulates" relations, excludes root.
 
         /*
          * regulation of homotypic cell-cell adhesion
-         * 
+         *
          * regulation of cell-cell adhesion
-         * 
+         *
          * regulation of cell adhesion
-         * 
+         *
          * regulation of cellular process
-         * 
+         *
          * regulation of biological process
-         * 
+         *
          * biological regulation
-         * 
+         *
          * (biological process)
          */
         assertEquals( 6, terms.size() );
     }
 
-    /**
-     * 
-     */
+
     @Test
     public final void testGetAspect() {
-        GOAspect termAspect = gos.getTermAspect( "GO:0034118" ); // regulation of erythrocyte aggregationS
+        GOAspect termAspect = GeneOntologyServiceTest2.gos
+                .getTermAspect( "GO:0034118" ); // regulation of erythrocyte aggregationS
         assertNotNull( termAspect );
 
         String aspect = termAspect.toString().toLowerCase();
@@ -106,12 +102,10 @@ public class GeneOntologyServiceTest2 {
 
     }
 
-    /**
-     * 
-     */
+
     @Test
     public final void testGetAspect2() {
-        GOAspect termAspect = gos.getTermAspect( "GO:0007272" ); // ensheathment of neurons
+        GOAspect termAspect = GeneOntologyServiceTest2.gos.getTermAspect( "GO:0007272" ); // ensheathment of neurons
         assertNotNull( termAspect );
         String aspect = termAspect.toString().toLowerCase();
         assertEquals( "biological_process", aspect );

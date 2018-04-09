@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,11 +23,11 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.util.Collection;
 
@@ -46,7 +46,7 @@ public class GeneCoreServiceTest extends BaseSpringContextTest {
     private GeneCoreService geneCoreService = null;
 
     @Test
-    public void testLoadGeneDetails() throws Exception {
+    public void testLoadGeneDetails() {
         Gene gene = Gene.Factory.newInstance();
 
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
@@ -58,7 +58,7 @@ public class GeneCoreServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
-        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, getTestPersistentBioSequence(), human );
+        Chromosome chromosome = new Chromosome( "X", null, this.getTestPersistentBioSequence(), human );
         chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
         pl1.setChromosome( chromosome );
         pl1.setNucleotide( 10000010L );
@@ -83,7 +83,7 @@ public class GeneCoreServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testSearchGenes() throws Exception {
+    public void testSearchGenes() {
         Gene gene = Gene.Factory.newInstance();
 
         Integer id = Integer.parseInt( RandomStringUtils.randomNumeric( 5 ) );
@@ -95,7 +95,7 @@ public class GeneCoreServiceTest extends BaseSpringContextTest {
         Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
-        Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, getTestPersistentBioSequence(), human );
+        Chromosome chromosome = new Chromosome( "X", null, this.getTestPersistentBioSequence(), human );
 
         chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
         pl1.setChromosome( chromosome );

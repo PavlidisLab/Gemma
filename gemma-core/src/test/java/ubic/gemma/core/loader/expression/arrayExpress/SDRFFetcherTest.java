@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,35 +18,30 @@
  */
 package ubic.gemma.core.loader.expression.arrayExpress;
 
-import java.util.Collection;
-
 import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.common.description.LocalFile;
+
+import java.util.Collection;
 
 /**
  * @author paul
- *
  */
 public class SDRFFetcherTest extends TestCase {
 
-    private static Log log = LogFactory.getLog( SDRFFetcherTest.class.getName() );
+    private static final Log log = LogFactory.getLog( SDRFFetcherTest.class.getName() );
 
-    public final void testFetch() throws Exception {
+    public final void testFetch() {
         try {
             SDRFFetcher f = new SDRFFetcher();
             Collection<LocalFile> fetch = f.fetch( "E-SMDB-1853" );
-            assertEquals( 1, fetch.size() );
+            TestCase.assertEquals( 1, fetch.size() );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
+                SDRFFetcherTest.log.warn( "Test skipped due to connection exception" );
             } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
+                SDRFFetcherTest.log.warn( "Test skipped due to unknown host exception" );
             } else {
                 throw ( e );
             }

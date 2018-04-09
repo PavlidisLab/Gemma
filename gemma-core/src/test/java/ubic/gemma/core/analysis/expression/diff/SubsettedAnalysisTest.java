@@ -1,35 +1,30 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.Collection;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 
+import java.util.Collection;
+
+import static org.junit.Assert.*;
+
 /**
  * @author paul
- *
  */
 public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
@@ -37,9 +32,9 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
     private DiffExAnalyzer analyzer = null;
 
     @Test
-    public final void testInvalidSubsetFactor() throws Exception {
+    public final void testInvalidSubsetFactor() {
 
-        configureMocks();
+        this.configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
@@ -47,14 +42,14 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
         try {
             analyzer.run( expressionExperiment, config );
             fail( "Should have gotten an exception" );
-        } catch ( Exception e ) {
+        } catch ( Exception ignored ) {
         }
     }
 
     @Test
-    public final void testWithSubset() throws Exception {
+    public final void testWithSubset() {
 
-        configureMocks();
+        this.configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
@@ -78,9 +73,8 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
         }
     }
 
-    @Override
-    protected void configureMocks() throws Exception {
-        configureMockAnalysisServiceHelper( 1 );
+    private void configureMocks() {
+        this.configureMockAnalysisServiceHelper( 1 );
         analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
     }
 

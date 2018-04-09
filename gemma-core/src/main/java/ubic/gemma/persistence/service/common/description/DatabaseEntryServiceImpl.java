@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.AbstractVoEnabledService;
 
 /**
  * Spring Service base class for <code>DatabaseEntryService</code>, provides access to all services and entities
@@ -32,20 +32,16 @@ import ubic.gemma.persistence.service.VoEnabledService;
  * @see DatabaseEntryService
  */
 @Service
-public class DatabaseEntryServiceImpl extends VoEnabledService<DatabaseEntry, DatabaseEntryValueObject>
+public class DatabaseEntryServiceImpl extends AbstractVoEnabledService<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryService {
 
-    private DatabaseEntryDao databaseEntryDao;
-
-
+    private final DatabaseEntryDao databaseEntryDao;
 
     @Autowired
     public DatabaseEntryServiceImpl( DatabaseEntryDao databaseEntryDao ) {
         super( databaseEntryDao );
         this.databaseEntryDao = databaseEntryDao;
     }
-
-
 
     @Override
     @Transactional

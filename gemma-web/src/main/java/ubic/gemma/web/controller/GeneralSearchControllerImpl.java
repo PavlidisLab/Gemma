@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,7 +107,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         if ( settings == null || StringUtils.isBlank( settings.getQuery() ) || StringUtils
                 .isBlank( settings.getQuery().replaceAll( "\\*", "" ) ) ) {
             // FIXME validate input better, and return error.
-            log.info( "No query or invalid." );
+            BaseFormController.log.info( "No query or invalid." );
             // return new ListRange( finalResults );
             throw new IllegalArgumentException( "Query '" + settings + "' was invalid" );
         }
@@ -118,7 +118,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         watch.stop();
 
         if ( watch.getTime() > 500 ) {
-            log.info( "Search service work on: " + settings + " took " + watch.getTime() + " ms" );
+            BaseFormController.log.info( "Search service work on: " + settings + " took " + watch.getTime() + " ms" );
         }
 
         /*
@@ -134,20 +134,22 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                 if ( results.size() == 0 )
                     continue;
 
-                log.info(
-                        "Search for: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName() + "s" );
+                BaseFormController.log
+                        .info( "Search for: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName()
+                                + "s" );
 
                 /*
                  * Now put the valueObjects inside the SearchResults in score order.
                  */
                 Collections.sort( results );
-                fillValueObjects( clazz, results, settings );
+                this.fillValueObjects( clazz, results, settings );
                 finalResults.addAll( results );
             }
         }
 
         if ( watch.getTime() > 500 ) {
-            log.info( "Final unpacking of results for query:" + settings + " took " + watch.getTime() + " ms" );
+            BaseFormController.log
+                    .info( "Final unpacking of results for query:" + settings + " took " + watch.getTime() + " ms" );
         }
 
         return new JsonReaderResponse<>( finalResults );
@@ -156,13 +158,13 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     @Override
     @RequestMapping(value = "/searcher.html", method = RequestMethod.POST)
     public ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
-            BindException errors ) throws Exception {
+            BindException errors ) {
 
         command.setQuery( StringUtils.trim( command.getQuery().trim() ) );
 
         ModelAndView mav = new ModelAndView( "generalSearch" );
 
-        if ( !searchStringValidator( command.getQuery() ) && StringUtils.isBlank( command.getTermUri() ) ) {
+        if ( !this.searchStringValidator( command.getQuery() ) && StringUtils.isBlank( command.getTermUri() ) ) {
             throw new IllegalArgumentException( "Invalid query" );
         }
 
@@ -197,7 +199,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
      * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
      */
     @Override
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+    protected Object formBackingObject( HttpServletRequest request ) {
         SearchSettingsImpl searchSettings = new SearchSettingsImpl();
         // Reset default settings.
         searchSettings.noSearches();
@@ -209,16 +211,6 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
     protected void initBinder( WebDataBinder binder ) {
         super.initBinder( binder );
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
-    }
-
-    @Override
-    protected Map<String, List<?>> referenceData( HttpServletRequest request ) {
-        Map<String, List<?>> mapping = new HashMap<>();
-
-        // add species
-        populateTaxonReferenceData( mapping );
-
-        return mapping;
     }
 
     @Deprecated
@@ -272,6 +264,16 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         return new ModelAndView( "generalSearch" );
     }
 
+    @Override
+    protected Map<String, List<?>> referenceData( HttpServletRequest request ) {
+        Map<String, List<?>> mapping = new HashMap<>();
+
+        // add species
+        this.populateTaxonReferenceData( mapping );
+
+        return mapping;
+    }
+
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class<?> entityClass, List<SearchResult> results, SearchSettings settings ) {
         StopWatch timer = new StopWatch();
@@ -279,7 +281,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         Collection<?> vos;
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ),
+            vos = this.filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ), false ),
                     settings );
 
             if ( !SecurityUtil.isUserAdmin() ) {
@@ -287,7 +289,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             }
 
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-            vos = filterAD( arrayDesignService.loadValueObjectsByIds( EntityUtils.getIds( results ) ), settings );
+            vos = this.filterAD( arrayDesignService.loadValueObjectsByIds( EntityUtils.getIds( results ) ), settings );
 
             if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
@@ -301,7 +303,8 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             }
             vos = css;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-            Collection<BibliographicReference> bss = bibliographicReferenceService.load( EntityUtils.getIds( results ) );
+            Collection<BibliographicReference> bss = bibliographicReferenceService
+                    .load( EntityUtils.getIds( results ) );
             bss = bibliographicReferenceService.thaw( bss );
             vos = bibliographicReferenceService.loadValueObjects( bss );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
@@ -364,7 +367,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         }
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
+            BaseFormController.log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
         }
     }
 

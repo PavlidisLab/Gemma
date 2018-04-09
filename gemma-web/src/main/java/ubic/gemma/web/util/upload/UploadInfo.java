@@ -37,9 +37,7 @@ import java.io.Serializable;
  *
  */
 public class UploadInfo implements Serializable {
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 1L;
     private long totalSize = 0;
     private long bytesRead = 0;

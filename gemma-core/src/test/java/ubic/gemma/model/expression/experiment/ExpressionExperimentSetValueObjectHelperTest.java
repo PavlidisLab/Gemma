@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,14 +54,13 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     @Autowired
     private ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
 
-    private Taxon tax1;
     private ExpressionExperiment ee = null;
     private ExpressionExperimentSet eeSet = null;
 
     @Before
     public void setUp() {
 
-        tax1 = this.getTaxon( "human" );
+        Taxon tax1 = this.getTaxon( "human" );
         ee = this.getTestPersistentExpressionExperiment( tax1 );
 
         Collection<BioAssaySet> ees = new HashSet<>();
@@ -112,10 +111,9 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertEquals( eeSet.getExperiments().size(), remadeEE.getExperiments().size() );
 
         // check that experiment members are the same
-        Set<Object> set1 = new HashSet<>();
-        set1.addAll( eeSet.getExperiments() );
-        Set<Object> set2 = new HashSet<>();
-        set2.addAll( remadeEE.getExperiments() );
+        Set<BioAssaySet> set1 = new HashSet<>( eeSet.getExperiments() );
+        Set<BioAssaySet> set2 = new HashSet<>( remadeEE.getExperiments() );
+        //noinspection ResultOfMethodCallIgnored
         set1.equals( set2 );
 
         assertEquals( eeSet.getName(), remadeEE.getName() );
