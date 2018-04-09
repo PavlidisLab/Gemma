@@ -414,7 +414,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             // TODO: go up the merge tree to find the root. This is too slow.
             // while ( mergedInto.getMergedInto() != null ) {
-            // mergedInto = arrayDesignService.thawRawAndProcessed( mergedInto.getMergedInto() );
+            // mergedInto = arrayDesignService.thaw( mergedInto.getMergedInto() );
             // }
 
             if ( arrayDesign == null ) {

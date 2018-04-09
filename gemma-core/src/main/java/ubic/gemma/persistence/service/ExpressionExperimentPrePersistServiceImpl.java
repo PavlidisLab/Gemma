@@ -264,7 +264,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
         if ( timer.getTime() > 20000 ) {
             ExpressionExperimentPrePersistServiceImpl.log
-                    .info( "Load/persist & thawRawAndProcessed array design: " + timer.getTime() + "ms" );
+                    .info( "Load/persist & thaw array design: " + timer.getTime() + "ms" );
         }
 
         return arrayDesign;

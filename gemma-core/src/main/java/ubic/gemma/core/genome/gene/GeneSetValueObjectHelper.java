@@ -27,6 +27,10 @@ public interface GeneSetValueObjectHelper {
 
     /**
      * Method to create a GO group object from an ad hoc entity
+     *
+     * @param goId       gene ontology id
+     * @param gs         gene set
+     * @param searchTerm search term
      */
     GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm );
 
@@ -35,7 +39,7 @@ public interface GeneSetValueObjectHelper {
      * the size is set.) No security filtering is done here, assuming that if the user could load the experimentSet
      * entity, they have access to it.
      *
-     * @param gs an expressionExperimentSet entity to create a value object for
+     * @param gs the expressionExperimentSet entity to create a value object for
      * @return a gene set value object with all fields filled except for gene members
      */
     DatabaseBackedGeneSetValueObject convertToLightValueObject( GeneSet gs );
@@ -55,6 +59,7 @@ public interface GeneSetValueObjectHelper {
      * could load the experimentSet entity, they have access to it.
      *
      * @param gs an expressionExperimentSet entity to create a value object for
+     * @return a new DatabaseBackedGeneSetValueObject
      */
     DatabaseBackedGeneSetValueObject convertToValueObject( GeneSet gs );
 

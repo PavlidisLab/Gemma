@@ -233,7 +233,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         for ( ArrayDesign design : arrayDesigns ) {
             ArrayDesign existing = null;
             if ( arrayDesignService != null ) {
-                // not sure why we need a thawRawAndProcessed here, if it's not persistent...must check first anyway to avoid errors.
+                // not sure why we need a thaw here, if it's not persistent...must check first anyway to avoid errors.
                 if ( design.getId() != null )
                     design = arrayDesignService.thawLite( design );
                 existing = arrayDesignService.find( design );

@@ -106,7 +106,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         timer.reset();
         timer.start();
 
-        // lightly thawRawAndProcessed the EEs we saw
+        // lightly thaw the EEs we saw
         for ( ExpressionExperiment ee : ees ) {
             Hibernate.initialize( ee );
             session.evict( ee );
@@ -121,7 +121,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         timer.reset();
         timer.start();
 
-        // thawRawAndProcessed the bioassayDimensions we saw -- usually one, more rarely two.
+        // thaw the bioassayDimensions we saw -- usually one, more rarely two.
         for ( BioAssayDimension bad : dims.keySet() ) {
 
             BioAssayDimension tbad = ( BioAssayDimension ) this.getSessionFactory().getCurrentSession().createQuery(
@@ -146,7 +146,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         timer.reset();
         timer.start();
 
-        // thawRawAndProcessed the designelements we saw. SLOW
+        // thaw the designelements we saw. SLOW
         long lastTime = 0;
         int count = 0;
         for ( CompositeSequence de : cs ) {
@@ -193,7 +193,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         ArrayDesign arrayDesign = designElementDataVector.getDesignElement().getArrayDesign();
         Hibernate.initialize( arrayDesign );
 
-        // thawRawAndProcessed the bioassays.
+        // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
             ba = ( BioAssay ) session.get( BioAssay.class, ba.getId() );
             Hibernate.initialize( ba.getArrayDesignUsed() );

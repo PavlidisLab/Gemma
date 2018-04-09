@@ -29,7 +29,7 @@
                      lazy="proxy" fetch="select">
             <column name="PHYSICAL_LOCATION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
         </many-to-one>
-        <subclass name="ubic.gemma.model.genome.gene.GeneProductImpl" discriminator-value="GeneProductImpl"
+        <subclass name="ubic.gemma.model.genome.gene.GeneProduct" discriminator-value="GeneProduct"
                   abstract="false">
             <property name="type" type="ubic.gemma.model.genome.gene.GeneProductTypeEnum">
                 <column name="TYPE" not-null="false" unique="false"
@@ -80,7 +80,7 @@
                 <key foreign-key="GENE_PRODUCT_GENE_FKC">
                     <column name="GENE_FK" sql-type="BIGINT"/>
                 </key>
-                <one-to-many class="ubic.gemma.model.genome.gene.GeneProductImpl"/>
+                <one-to-many class="ubic.gemma.model.genome.gene.GeneProduct"/>
             </set>
             <set name="aliases" lazy="true" fetch="select" cascade="all-delete-orphan">
                 <cache usage="read-write"/>

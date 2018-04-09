@@ -292,7 +292,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         }
 
         newee = expressionExperimentService.thaw( newee );
-        // make sure we really thawRawAndProcessed them, so we can get the design element sequences.
+        // make sure we really thaw them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
         rawExpressionDataVectorService.thaw( vectors );

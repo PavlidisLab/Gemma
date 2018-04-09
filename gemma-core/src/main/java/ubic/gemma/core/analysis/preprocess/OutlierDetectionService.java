@@ -26,7 +26,7 @@ import java.util.Collection;
 public interface OutlierDetectionService {
 
     /**
-     * Uses the {@link this#identifyOutliersByMedianCorrelation(DoubleMatrix)} method to identify outliers in the given
+     * Uses the identifyOutliersByMedianCorrelation(DoubleMatrix) method to identify outliers in the given
      * experiment.
      *
      * @param ee The experiment to identify sample outliers in.

@@ -56,6 +56,20 @@ public class AffyPowerToolsProbesetSummarize {
     private static final Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
 
     private static final String METHOD = "rma";
+    private QuantitationType quantitationType;
+
+    public AffyPowerToolsProbesetSummarize() {
+        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+    }
+
+    /**
+     * This constructor is used for multiplatform situations where the same QT must be used for each platform.
+     *
+     * @param qt qt
+     */
+    public AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
+        this.quantitationType = qt;
+    }
 
     public static QuantitationType makeAffyQuantitationType() {
         QuantitationType result = QuantitationType.Factory.newInstance();
@@ -77,25 +91,10 @@ public class AffyPowerToolsProbesetSummarize {
         return result;
     }
 
-    private QuantitationType quantitationType;
-
-    public AffyPowerToolsProbesetSummarize() {
-        this.quantitationType = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-    }
-
-    /**
-     * This constructor is used for multiplatform situations where the same QT must be used for each platform.
-     *
-     * @param qt qt
-     */
-    public AffyPowerToolsProbesetSummarize( QuantitationType qt ) {
-        this.quantitationType = qt;
-    }
-
     /**
      * For 3' arrays or situations when we are definitely not switching platforms
-     * 
-     * @param ee ee * @param aptOutputFileToRead file
+     *
+     * @param ee             ee * @param aptOutputFileToRead file
      * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
      * @return raw data vectors
      */
@@ -107,13 +106,13 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * For either 3' or Exon arrays.
      *
-     * @param ee ee
+     * @param ee                  ee
      * @param aptOutputFileToRead file
-     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
-     * @param originalPlatform can be the same as the targetPlatform. But we specify this in case there is more than one
-     *        original platform, so we're not trying to match up bioassays that are not relevant.
+     * @param targetPlatform      deal with data from this platform (call multiple times if there is more than one platform)
+     * @param originalPlatform    can be the same as the targetPlatform. But we specify this in case there is more than one
+     *                            original platform, so we're not trying to match up bioassays that are not relevant.
      * @return raw data vectors
-     * @throws IOException io problem
+     * @throws IOException           io problem
      * @throws FileNotFoundException file not found
      */
     public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
@@ -237,11 +236,11 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param ee ee
-     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
-     *        not happen for exon arrays)
+     * @param ee               ee
+     * @param targetPlatform   target platform; call multiple times if there is more than one platform (though that should
+     *                         not happen for exon arrays)
      * @param originalPlatform might be the same as targetPlatform
-     * @param files list of CEL files (any other files included will be ignored)
+     * @param files            list of CEL files (any other files included will be ignored)
      * @return raw data vectors
      */
     public Collection<RawExpressionDataVector> processExonOrGeneArrayData( ExpressionExperiment ee,
@@ -276,9 +275,9 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * Call once for each platform used by the experiment.
      *
-     * @param ee ee
+     * @param ee             ee
      * @param targetPlatform to match the CDF file
-     * @param files files
+     * @param files          files
      * @return raw data vectors
      */
     public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee,
@@ -309,9 +308,7 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * Map of GPLXXXX -> {mps, pgc, qcc, clf} -> file name
-     * 
-     * @return
+     * @return Map of GPLXXXX -> {mps, pgc, qcc, clf} -> file name
      */
     protected Map<String, Map<String, String>> loadMpsNames() {
         try {
@@ -348,9 +345,9 @@ public class AffyPowerToolsProbesetSummarize {
      * exon-level to gene-level)
      *
      * @param expressionExperiment ee
-     * @param bioAssayDimension BA dim
-     * @param arrayDesign target design
-     * @param matrix matrix
+     * @param bioAssayDimension    BA dim
+     * @param arrayDesign          target design
+     * @param matrix               matrix
      * @return raw data vectors
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
@@ -405,7 +402,7 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param files files
+     * @param files                files
      * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return strings
      */
@@ -453,18 +450,16 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For exon arrays and others that don't have CDFs. Like
-     * 
      * <pre>
      * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m
      * HuEx-1_0-st-v2.r2.dt1.hg18.core.mps -qc-probesets HuEx-1_0-st-v2.r2.qcc -o GSE13344.genelevel.data
      * /bigscratch/GSE13344/*.CEL
      * </pre>
-     * 
      * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
      * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
      *
-     * @param ad ad
-     * @param celfiles celfiles
+     * @param ad         ad
+     * @param celfiles   celfiles
      * @param outputPath directory
      * @return string
      */
@@ -486,8 +481,8 @@ public class AffyPowerToolsProbesetSummarize {
         String p = ad.getShortName();
 
         if ( mpsnames == null || !mpsnames.containsKey( p ) ) {
-            throw new IllegalArgumentException(
-                    "There is no MPS configuration for " + ad.getShortName() + ", check " + AFFY_MPS_PROPERTIES_FILE_NAME );
+            throw new IllegalArgumentException( "There is no MPS configuration for " + ad.getShortName() + ", check "
+                    + AFFY_MPS_PROPERTIES_FILE_NAME );
         }
 
         String pgf = refPath + File.separator + mpsnames.get( p ).get( "pgf" );
@@ -512,16 +507,15 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For 3' arrays. Run RMA with quantile normalization.
-     * 
      * <pre>
      * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
      * /bigscratch/GSE123/*.CEL
      * </pre>
      *
      * @param targetPlatform ad
-     * @param cdfFileName e g. HG-U133A_2.cdf
-     * @param celfiles celfiles
-     * @param outputPath path
+     * @param cdfFileName    e g. HG-U133A_2.cdf
+     * @param celfiles       celfiles
+     * @param outputPath     path
      * @return string
      */
     private String getThreePrimeSummarizationCommand( ArrayDesign targetPlatform, String cdfFileName,
@@ -606,18 +600,18 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * 
      * @param ee
      * @param targetPlatform
-     * @param originalPlatform - only really necessary if we are switching platforms AND there are multiple platforms
-     *        for the data set, which is actually a situation we don't currently support.
+     * @param originalPlatform     - only really necessary if we are switching platforms AND there are multiple platforms
+     *                             for the data set, which is actually a situation we don't currently support.
      * @param files
      * @param accessionsOfInterest
      * @param threePrime
      * @return
      */
-    private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform, ArrayDesign originalPlatform,
-            Collection<LocalFile> files, Collection<String> accessionsOfInterest, boolean threePrime ) {
+    private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
+            ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<String> accessionsOfInterest,
+            boolean threePrime ) {
 
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
         AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );

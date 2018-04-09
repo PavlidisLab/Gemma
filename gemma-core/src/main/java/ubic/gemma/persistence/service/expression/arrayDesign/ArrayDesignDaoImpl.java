@@ -262,7 +262,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         final String nativeQueryString = "SELECT DISTINCT cs.id FROM "
                 + "COMPOSITE_SEQUENCE cs LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
-                + "LEFT JOIN CHROMOSOME_FEATURE geneProduct ON (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') "
+                + "LEFT JOIN CHROMOSOME_FEATURE geneProduct ON (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProduct') "
                 + "LEFT JOIN CHROMOSOME_FEATURE gene ON geneProduct.GENE_FK=gene.ID  "
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
         //noinspection unchecked
@@ -733,7 +733,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public ArrayDesign thaw( final ArrayDesign arrayDesign ) {
         if ( arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException( "Cannot thawRawAndProcessed a non-persistent array design" );
+            throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
         }
 
         /*

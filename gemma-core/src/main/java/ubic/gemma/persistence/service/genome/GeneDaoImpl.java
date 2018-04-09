@@ -365,7 +365,7 @@ public class GeneDaoImpl extends AbstractVoEnabledDao<Gene, GeneValueObject> imp
     }
 
     /**
-     * Only thawRawAndProcessed the Aliases, very light version
+     * Only thaw the Aliases, very light version
      */
     @Override
     public Gene thawAliases( final Gene gene ) {

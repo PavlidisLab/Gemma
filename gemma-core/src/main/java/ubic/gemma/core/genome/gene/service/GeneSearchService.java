@@ -54,6 +54,7 @@ public interface GeneSearchService {
      * @param query   A list of gene names (symbols), one per line.
      * @param taxonId taxon id
      * @return collection of gene value objects
+     * @throws IOException when there are IO problems
      */
     Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException;
 

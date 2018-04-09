@@ -113,6 +113,7 @@ public interface ExpressionDataFileService {
      * @param fileName file name
      * @param filtered fitlered?
      * @return file
+     * @throws IOException when there are IO problems
      */
     @SuppressWarnings("UnusedReturnValue")
     // Possible external use
@@ -146,6 +147,7 @@ public interface ExpressionDataFileService {
      * can be located from its own file.
      *
      * @param forceWrite To not return the existing file, but create it anew.
+     * @param type       the quantitaion type
      * @return file
      */
     File writeOrLocateDataFile( QuantitationType type, boolean forceWrite );

@@ -107,7 +107,6 @@ public class DifferentialExpressionAnalysisController {
      * @param eeId ee id
      * @param id   id
      * @return string
-     * @throws Exception exception
      */
     public String redo( Long eeId, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -144,7 +143,6 @@ public class DifferentialExpressionAnalysisController {
      *
      * @param id id
      * @return string
-     * @throws Exception exception
      */
     public String remove( Long eeId, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );

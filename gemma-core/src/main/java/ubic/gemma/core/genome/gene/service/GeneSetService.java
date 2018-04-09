@@ -159,6 +159,7 @@ public interface GeneSetService {
     /**
      * Security filtering done at DAO level see {@link ubic.gemma.persistence.service.genome.gene.GeneSetDao}
      *
+     * @param tax taxon
      * @return gene sets
      * @see GeneSetDao GeneSetDao for security filtering
      */
@@ -244,6 +245,7 @@ public interface GeneSetService {
     /**
      * AJAX Updates the database entity (permission permitting) with the fields of the param value object
      *
+     * @param geneSetVos gene sets
      * @return value objects for the updated entities
      */
     Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity(

@@ -247,7 +247,6 @@ public class GenePickerController {
      * @param query   A list of gene names (symbols), one per line.
      * @param taxonId taxon id
      * @return collection of gene value objects
-     * @throws IOException IO problems
      */
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
         return geneSearchService.searchMultipleGenes( query, taxonId );
@@ -259,7 +258,6 @@ public class GenePickerController {
      * @param query   A list of gene names (symbols), one per line.
      * @param taxonId taxon id
      * @return map with each gene-query as a key and a collection of the search-results as the value
-     * @throws IOException IO problems
      */
     public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) {
         return geneSearchService.searchMultipleGenesGetMap( query, taxonId );
