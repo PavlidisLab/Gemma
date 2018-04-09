@@ -30,9 +30,21 @@ import java.io.InputStreamReader;
  */
 public class GenericStreamConsumer extends Thread {
     private final InputStream is;
+    private final boolean printToSderr;
 
     public GenericStreamConsumer( InputStream is ) {
         this.is = is;
+        this.printToSderr = false;
+    }
+
+    /**
+     * 
+     * @param is
+     * @param printToSderr (default=false)
+     */
+    public GenericStreamConsumer( InputStream is, boolean printToSderr ) {
+        this.is = is;
+        this.printToSderr = printToSderr;
     }
 
     @Override
@@ -40,9 +52,12 @@ public class GenericStreamConsumer extends Thread {
         try {
             InputStreamReader isr = new InputStreamReader( is );
             BufferedReader br = new BufferedReader( isr );
-
-            //noinspection StatementWithEmptyBody // This is the recommended solution to consume all lines
-            while ( br.readLine() != null ) {}
+            String line = null;
+            while ( ( line = br.readLine() ) != null ) {
+                if ( printToSderr ) {
+                    System.err.println( line );
+                }
+            }
         } catch ( IOException ioe ) {
             ioe.printStackTrace();
         }

@@ -68,6 +68,10 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
+        if ( bioAssayDimension.getBioAssays().isEmpty() ) {
+            throw new IllegalArgumentException( "BioAssayDimension had no BioAssays" );
+        }
+
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioAssayDimension.class );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
@@ -83,7 +87,6 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
         Collection<String> names = new HashSet<>();
-        assert bioAssayDimension.getBioAssays().size() > 0;
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             names.add( bioAssay.getName() );
         }

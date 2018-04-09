@@ -57,16 +57,19 @@ public interface ArrayDesignSequenceProcessingService {
             throws IOException;
 
     /**
-     * Use this to add sequences to an existing Affymetrix design.
-     *
-     * @param arrayDesign       An existing ArrayDesign that already has compositeSequences filled in.
+     * Use this to add sequences to an existing Affymetrix design. The sequences will be overwritten even if they
+     * already exist (That is, if the actual ATGCs need to be replaced, but the BioSequences are already filled in).
+     * 
+     * Note that probe sets are often shared by platforms - rather than creating duplicates for each, we keep a single
+     * copy. This is considered safe because Affymetrix uses unique probeset names for a given set of actual probes
+     * sequences.
+     * 
+     * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
-     * @param force             if true, the sequences will be overwritten even if they already exist (That is, if the actual ATGCs
-     *                          need to be replaced, but the BioSequences are already filled in)
-     * @param taxon             validated taxon
+     * @param taxon validated taxon
      */
     Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
-            Taxon taxon, boolean force ) throws IOException;
+            Taxon taxon ) throws IOException;
 
     /**
      * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on the
@@ -74,7 +77,8 @@ public interface ArrayDesignSequenceProcessingService {
      * If the SequenceType is AFFY_PROBE, the sequences will be treated as probes in probe sets, in Affymetrix 'tabbed'
      * format. Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element;
      * there is further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The
-     * FASTA file must use a standard defline format (as described at <a href="http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers">here</a>)
+     * FASTA file must use a standard defline format (as described at
+     * <a href="http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers">here</a>)
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
      * one passes:
      * <ol>
@@ -101,7 +105,8 @@ public interface ArrayDesignSequenceProcessingService {
      * compatibility, FASTA is detected but an exception will be thrown).
      * Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element; there is
      * further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The FASTA file
-     * must use a standard defline format (as described at <a href="http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers">here</a>).
+     * must use a standard defline format (as described at
+     * <a href="http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers">here</a>).
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
      * one passes:
      * <ol>
@@ -117,7 +122,7 @@ public interface ArrayDesignSequenceProcessingService {
      *
      * @param sequenceFile FASTA, Affymetrix or tabbed format (depending on the type)
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
-     * @param taxon        - if null, attempt to determine it from the array design.
+     * @param taxon - if null, attempt to determine it from the array design.
      * @see ubic.gemma.core.loader.genome.FastaParser
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
@@ -131,10 +136,10 @@ public interface ArrayDesignSequenceProcessingService {
      * any of the probe identifiers in the file given match the array design).
      *
      * @param sequenceIdentifierFile Sequence file has two columns: column 1 is a probe id, column 2 is a genbank
-     *                               accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
-     *                               ones missing will be sought directly in Gemma.
-     * @param force                  If true, if an existing BioSequence that matches is found in the system, any existing sequence
-     *                               information in the BioSequence will be overwritten.
+     *        accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
+     *        ones missing will be sought directly in Gemma.
+     * @param force If true, if an existing BioSequence that matches is found in the system, any existing sequence
+     *        information in the BioSequence will be overwritten.
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException;
@@ -153,9 +158,9 @@ public interface ArrayDesignSequenceProcessingService {
      * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
      *
      * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome   where to find the blast databases for sequence retrieval
-     * @param force         If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *                      overwritten with a new one.
+     * @param blastDbHome where to find the blast databases for sequence retrieval
+     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *        overwritten with a new one.
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, String blastDbHome,
             boolean force );
@@ -170,7 +175,7 @@ public interface ArrayDesignSequenceProcessingService {
      * Update a single sequence in the system.
      *
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *              information in the BioSequence will be overwritten.
+     *        information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
     BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome, boolean force );

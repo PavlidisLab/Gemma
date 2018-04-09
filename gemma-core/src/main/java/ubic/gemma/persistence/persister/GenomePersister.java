@@ -21,12 +21,14 @@ package ubic.gemma.persistence.persister;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.*;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -93,6 +95,7 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     @Override
+    @Transactional
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null )
             return null;
@@ -569,6 +572,9 @@ abstract public class GenomePersister extends CommonPersister {
         // the sequence is the main field we might update.
         if ( bioSequence.getSequence() != null && !bioSequence.getSequence()
                 .equals( existingBioSequence.getSequence() ) ) {
+            if ( AbstractPersister.log.isDebugEnabled() )
+                log.debug( "Updating sequence:" + bioSequence.getName() + "\nFROM:" + existingBioSequence.getSequence()
+                        + "\nTO:" + bioSequence.getSequence() + "\n" );
             existingBioSequence.setSequence( bioSequence.getSequence() );
         }
 
@@ -609,8 +615,9 @@ abstract public class GenomePersister extends CommonPersister {
                     ( DatabaseEntry ) this.persist( bioSequence.getSequenceDatabaseEntry() ) );
         }
 
-        bioSequenceDao.update( existingBioSequence );
-
+        // I don't fully understand what's going on here, but if we don't do this we fail to synchronize changes.
+        this.getSession().evict( existingBioSequence );
+        bioSequenceDao.update( existingBioSequence ); // also tried merge, without the update, doesn't work.
         return existingBioSequence;
 
     }

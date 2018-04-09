@@ -47,7 +47,7 @@ public class RepeatScan {
     private static final String REPEAT_MASKER = Settings.getString( RepeatScan.REPEAT_MASKER_CONFIG_PARAM );
 
     /**
-     * @param sequences          sequences
+     * @param sequences sequences
      * @param outputSequencePath in FASTA format
      * @return Sequences which were updated.
      */
@@ -121,8 +121,7 @@ public class RepeatScan {
 
             this.execRepeatMasker( querySequenceFile, taxon );
 
-            final String outputSequencePath =
-                    querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".masked";
+            final String outputSequencePath = querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".masked";
             // final String outputScorePath = querySequenceFile.getParent() + File.separatorChar
             // + querySequenceFile.getName() + ".masked";
 
@@ -155,17 +154,17 @@ public class RepeatScan {
     }
 
     /**
-     * Run a gfClient query, using a call to exec().
+     * Run repeatmasker using a call to exec().
      *
      * @param querySequenceFile file
-     * @param taxon             taxon
+     * @param taxon taxon
      */
     private void execRepeatMasker( File querySequenceFile, Taxon taxon ) throws IOException {
 
         this.checkForExe();
 
         final String cmd = RepeatScan.REPEAT_MASKER + " -parallel 8 -xsmall -species " + taxon.getCommonName() + " "
-                + querySequenceFile.getAbsolutePath();
+                + querySequenceFile.getAbsolutePath();// FIXME use -dir option to put output where we want; see https://github.com/PavlidisLab/Gemma/issues/53;
         RepeatScan.log.info( "Running repeatmasker like this: " + cmd );
 
         final Process run = Runtime.getRuntime().exec( cmd );
@@ -211,8 +210,7 @@ public class RepeatScan {
 
     private void handleNoOutputCondition( File querySequenceFile, final String outputSequencePath ) throws IOException {
         // this happens if there were no repeats to mask. Check to make sure.
-        final String outputSummary =
-                querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".out";
+        final String outputSummary = querySequenceFile.getParent() + File.separatorChar + querySequenceFile.getName() + ".out";
         if ( !( new File( outputSummary ) ).exists() ) {
             // okay, something is wrong for sure.
             throw new RuntimeException(
