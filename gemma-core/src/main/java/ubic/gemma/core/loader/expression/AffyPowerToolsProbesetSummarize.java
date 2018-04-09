@@ -52,7 +52,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
-    private static final long AFFY_UPDATE_INTERVAL_MS = 1000 * 30;
+    private static final long AFFY_UPDATE_INTERVAL_S = 30;
     private static final Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
 
     private static final String METHOD = "rma";
@@ -119,10 +119,7 @@ public class AffyPowerToolsProbesetSummarize {
     public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
             ArrayDesign targetPlatform, ArrayDesign originalPlatform ) throws IOException {
 
-        File f = new File( aptOutputFileToRead );
-        if ( !f.canRead() ) {
-            throw new IOException( "No readable APT output file: " + aptOutputFileToRead );
-        }
+        checkFileReadable( aptOutputFileToRead );
 
         AffyPowerToolsProbesetSummarize.log.info( "Parsing " + aptOutputFileToRead );
 
@@ -626,25 +623,29 @@ public class AffyPowerToolsProbesetSummarize {
             gscErr.start();
             gscIn.start();
 
+            int i = 0;
             while ( exitVal == Integer.MIN_VALUE ) {
                 try {
                     exitVal = run.exitValue();
                 } catch ( IllegalThreadStateException e ) {
                     // okay, still waiting.
                 }
-                Thread.sleep( AffyPowerToolsProbesetSummarize.AFFY_UPDATE_INTERVAL_MS );
+                Thread.sleep( 1000 );
 
-                File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
-                Long size = outputFile.length();
+                if ( ++i % AffyPowerToolsProbesetSummarize.AFFY_UPDATE_INTERVAL_S == 0 ) {
+                    File outputFile = new File( outputPath + File.separator + "apt-probeset-summarize.log" );
+                    Long size = outputFile.length();
 
-                String minutes = TimeUtil.getMinutesElapsed( overallWatch );
-                AffyPowerToolsProbesetSummarize.log
-                        .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
-                                + " kb (" + minutes + " minutes elapsed)" );
+                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
+                    AffyPowerToolsProbesetSummarize.log
+                            .info( String.format( "apt-probeset-summarize logging output so far: %.2f", size / 1024.0 )
+                                    + " kb (" + minutes + " minutes elapsed)" );
+                }
 
-                /*
-                 * we're not good at detecting immediate failures
-                 */
+            }
+
+            if ( exitVal > 0 ) {
+                log.warn( "apt-probeset-summarize exit value was non-zero: " + exitVal );
             }
 
             overallWatch.stop();
