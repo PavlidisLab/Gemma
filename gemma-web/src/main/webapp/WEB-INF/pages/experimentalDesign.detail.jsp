@@ -136,7 +136,7 @@ $(document).ready(function () {
 					<a href="#" onClick="showDesignUploadForm()">upload</a>
 					a design description file. Instructions are
 					<a target="_blank"
-						href="<c:url value='http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload' />">here</a>
+						href="<c:url value='https://pavlidislab.github.io/Gemma/designs.html' />">here</a>
 					. If you want to use the upload method, you can get a blank
 					<a href="#"
 						onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template

@@ -46,10 +46,10 @@ insert into AUDIT_TRAIL VALUES (14);
 set @n:=now();
 
 -- username=gemmaAgent: id = 2, password = 'gemmaAgent', audit trail #2, using salt={username}
-insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values (2, "User", "gemmaAgent",  "", "gemmaAgent", "a99c3785155e31ac8f9273537f14e9304cc22f20", 1, 2, "gemma@chibi.ubc.ca", "hint");
+insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values (2, "User", "gemmaAgent",  "", "gemmaAgent", "a99c3785155e31ac8f9273537f14e9304cc22f20", 1, 2, "pavlab-support@msl.ubc.ca", "hint");
 
 -- username=administrator: id = 1, password = 'administrator', audit trail #1 using salt=username ('administrator')
-insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values (1, "User", "administrator",  "", "administrator", "b7338dcc17d6b6c199a75540aab6d0506567b980", 1, 1, "gemma@chibi.ubc.ca", "hint");
+insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values (1, "User", "administrator",  "", "administrator", "b7338dcc17d6b6c199a75540aab6d0506567b980", 1, 1, "pavlab-support@msl.ubc.ca", "hint");
 
 -- initialize the audit trails
 

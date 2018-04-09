@@ -176,7 +176,7 @@ Gemma.CytoscapeControlBar = Ext
                                  tooltip : Gemma.HelpText.WidgetDefaults.CytoscapePanel.widgetHelpTT,
                                  handler : function() {
                                     window
-                                       .open( 'http://gemma-doc.chibi.ubc.ca/documentation/search-page/#GemmaQuickGuide-CoexpressionView' );
+                                       .open( 'https://pavlidislab.github.io/Gemma/search.html#coexpression-results' );
                                  },
                                  scope : this
                               },

@@ -12,7 +12,7 @@
 	<body>
 		<links>
 			<item name="Gemma" href="http://gemma.msl.ubc.ca" />
-			<item name="Pavlidis lab" href="http://chibi.ubc.ca/pavlidis/lab" />
+			<item name="Pavlidis lab" href="http://pavlab.msl.ubc.ca/" />
 		</links>
 		<menu ref="reports" />
 		<menu ref="parent" />

@@ -22,7 +22,7 @@
 
 
 
-<meta name="author" content="Gemma admin (gemma@chibi.ubc.ca)"/>
+<meta name="author" content="Gemma admin (pavlab-support@msl.ubc.ca)"/>
 
 <c:if test="${fn:contains(header['User-Agent'],'chromeframe') }">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
