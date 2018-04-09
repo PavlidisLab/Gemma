@@ -181,9 +181,9 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 assertEquals( 1, r.getContrasts().size() );
                 ContrastResult contrast = r.getContrasts().iterator().next();
                 assertEquals( 2.232816, Math.abs( contrast.getCoefficient() ), 0.001 ); // yes! 
-                assertEquals( 0.000311, contrast.getPvalue(), 0.00001 );
-                assertEquals( 56.66342, Math.abs( contrast.getTstat() ), 0.001 );
-                assertEquals( 0.007068, r.getPvalue(), 0.00001 );
+                assertEquals( 0.006680, contrast.getPvalue(), 0.00001 );
+                assertEquals( 12.17342, Math.abs( contrast.getTstat() ), 0.001 );
+                assertEquals( 0.006680, r.getPvalue(), 0.00001 );
                 break;
             }
         }
