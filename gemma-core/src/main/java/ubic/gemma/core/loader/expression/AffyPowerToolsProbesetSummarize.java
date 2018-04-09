@@ -196,26 +196,7 @@ public class AffyPowerToolsProbesetSummarize {
 
                 String sampleName = columnName.replaceAll( ".(CEL|cel)$", "" );
 
-                /*
-                 * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
-                 */
-                BioAssay assay = null;
-                if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
-                    String geoAcc = sampleName.split( "_" )[0];
-
-                    AffyPowerToolsProbesetSummarize.log.info( "Found column " + columnName + "in data file with acc=" + geoAcc );
-                    if ( bmap.containsKey( geoAcc ) ) {
-                        assay = bmap.get( geoAcc );
-                    } else {
-                        AffyPowerToolsProbesetSummarize.log.warn( "No bioassay found " + geoAcc );
-                    }
-                } else {
-
-                    /*
-                     * Sometimes column names are like Aud_19L.CEL or
-                     */
-                    assay = bmap.get( sampleName );
-                }
+                BioAssay assay = matchBioAssayToCelFileName( bmap, sampleName );
 
                 if ( assay == null ) {
                     /*
@@ -276,7 +257,20 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "Target design had no elements" );
         }
 
-        return this.tryRun( ee, targetPlatform, originalPlatform, files, null, false );
+        Collection<String> accessionsOfInterest = null;
+        if ( bioAssays.size() < files.size() ) {
+            accessionsOfInterest = new HashSet<>();
+            /*
+             * This can happen when we split a GEO data set by platform. This means we have to filter the files *first*
+             * not after. I'm not sure there's really a down side to always doing this step.
+             */
+            for ( BioAssay ba : bioAssays ) {
+                accessionsOfInterest.add( ba.getAccession().getAccession() );
+            }
+
+        }
+
+        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest, false );
     }
 
     /**
@@ -305,12 +299,42 @@ public class AffyPowerToolsProbesetSummarize {
          */
         Collection<String> accessionsOfInterest = new HashSet<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
+            // This assumes we aren't going to switch platforms. 
             if ( ba.getArrayDesignUsed().equals( targetPlatform ) ) {
                 accessionsOfInterest.add( ba.getAccession().getAccession() );
             }
         }
         // note that the targetplatform is always the same as the original for these platforms.
         return this.tryRun( ee, targetPlatform, targetPlatform, files, accessionsOfInterest, true );
+    }
+
+    /**
+     * Map of GPLXXXX -> {mps, pgc, qcc, clf} -> file name
+     * 
+     * @return
+     */
+    protected Map<String, Map<String, String>> loadMpsNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_MPS_PROPERTIES_FILE_NAME );
+            Map<String, Map<String, String>> result = new HashMap<>();
+
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                String[] k2 = k.split( "\\." );
+                String platform = k2[0];
+                String type = k2[1];
+
+                if ( !result.containsKey( platform ) ) {
+                    result.put( platform, new HashMap<String, String>() );
+                }
+                result.get( platform ).put( type, pc.getString( k ) );
+
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     private void checkFileReadable( String f ) {
@@ -549,32 +573,31 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * Map of GPLXXXX -> {mps, pgc, qcc, clf} -> file name
-     * 
-     * @return
+     * @param bmap
+     * @param sampleName
+     * @return BioAssay, or null if not found.
      */
-    protected Map<String, Map<String, String>> loadMpsNames() {
-        try {
-            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_MPS_PROPERTIES_FILE_NAME );
-            Map<String, Map<String, String>> result = new HashMap<>();
+    private BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
+        /*
+         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
+         */
+        BioAssay assay = null;
+        if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
+            String geoAcc = sampleName.split( "_" )[0];
 
-            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
-                String k = it.next();
-                String[] k2 = k.split( "\\." );
-                String platform = k2[0];
-                String type = k2[1];
-
-                if ( !result.containsKey( platform ) ) {
-                    result.put( platform, new HashMap<String, String>() );
-                }
-                result.get( platform ).put( type, pc.getString( k ) );
-
+            if ( bmap.containsKey( geoAcc ) ) {
+                assay = bmap.get( geoAcc );
+            } else {
+                AffyPowerToolsProbesetSummarize.log.debug( "No bioassay found " + geoAcc );
             }
-            return result;
+        } else {
 
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
+            /*
+             * Sometimes column names are like Aud_19L.CEL - no GSM number. Sometimes this works, but it's last ditch.
+             */
+            assay = bmap.get( sampleName );
         }
+        return assay;
     }
 
     private DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
