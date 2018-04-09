@@ -343,8 +343,8 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
                   }
                },
                {
-                  header : "Curation",
-                  tooltip : "Shows whether curators marked this experiment for attention or not.",
+                  header : "Quality/Suitability",
+                  tooltip : "Shows quality and suitability score, or the fact that the experiment is not fully curated yet.",
                   dataIndex : 'needsAttention',
                   sortable : true,
                   width : 0.05,

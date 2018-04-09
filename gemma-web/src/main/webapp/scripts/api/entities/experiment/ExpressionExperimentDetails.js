@@ -121,7 +121,7 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 if (ee.needsAttention === true) {
-                    result = result + getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores are not available yet.')
+                    result = result + getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores are not available.')
                 } else {
                     result = result + getGeeqBadges(ee.geeq.publicQualityScore, ee.geeq.publicSuitabilityScore);
                 }

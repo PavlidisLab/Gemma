@@ -14,23 +14,37 @@ function getStatusBadge(faIconClass, colorClass, title, qTip) {
         '<i class=" fa fa-' + faIconClass + ' fa-lg"></i> ' + title + '</span>';
 }
 
-function getGeeqBadges(quality, suitability){
-    return '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColor(Number(quality)) + '" ' +
-            'ext:qtip="Quality:&nbsp;'+roundScore(quality, 1)+'" >' +
-            getGeeqIcon(Number(quality)) + "" +
-        "</span>" +
+function getGeeqBadges(quality, suitability) {
+    return '' +
+        '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColor(Number(quality)) + '" ' +
+        'ext:qtip="Quality:&nbsp;' + roundScore(quality, 1) + '<br/>' +
+        'Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data." >' +
+        getGeeqIcon(Number(quality)) + "" +
+        '</span>' +
         '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColor(Number(suitability)) + '" ' +
-            'ext:qtip="Suitability:&nbsp;'+roundScore(suitability, 1)+'" >' +
-            getGeeqIcon(Number(suitability)) + "" +
-        "</span>";
+        'ext:qtip="Suitability:&nbsp;' + roundScore(suitability, 1) + '<br/>' +
+        'Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma." >' +
+        getGeeqIcon(Number(suitability)) + "" +
+        '</span>';
 }
 
-function getGeeqIcon(score){
-    var smileyCls = score > 0.3 ? "fa-smile-o" : score > -0.3 ? "fa-meh-o" : "fa-frown-o";
-    return "<i class='fa fa-lg " + smileyCls + "'></i></span>";
+function getGeeqIcon(score) {
+    return "<i class='fa fa-lg " + getSmileyCls(score) + "'></i></span>";
 }
 
-function roundScore(value, valDecimals){
+function getGeeqIconColored(score) {
+    return '' +
+        '<span class="fa fa-lg fa-stack" ext:qtip="Suitability:&nbsp;' + roundScore(score, 1) + '">' +
+        '   <i class="fa fa-stack-1x fa-circle" style="color: ' + scoreToColor(Number(score)) + '"></i>' +
+        '   <i class="fa fa-stack-1x ' + getSmileyCls(score) + '"></i></span>' +
+        '</span>'
+}
+
+function getSmileyCls(score) {
+    return score > 0.3 ? "fa-smile-o" : score > -0.3 ? "fa-meh-o" : "fa-frown-o";
+}
+
+function roundScore(value, valDecimals) {
     return (Math.round(Number(value) * (Math.pow(10, valDecimals))) / Math.pow(10, valDecimals)).toFixed(valDecimals);
 }
 
