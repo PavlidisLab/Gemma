@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.analysis;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -47,4 +48,5 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
 
     Collection<T> findByTaxon( Taxon taxon );
 
+    void removeForExperiment( ExpressionExperiment ee );
 }

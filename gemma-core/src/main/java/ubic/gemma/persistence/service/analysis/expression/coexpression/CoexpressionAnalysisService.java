@@ -75,4 +75,6 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
 
+    @Override
+    void removeForExperiment( ExpressionExperiment ee );
 }

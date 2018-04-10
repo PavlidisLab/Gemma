@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -65,4 +66,6 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
     Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name );
 
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
+
+    void removeForExperiment( ExpressionExperiment ee );
 }
