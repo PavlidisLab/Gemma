@@ -152,6 +152,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
     /**
      * Set the DataSource, typically provided via Dependency Injection.
+     *
+     * @param dataSource data source
      */
     @Autowired
     public void setDataSource( DataSource dataSource ) {
@@ -168,6 +170,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Specify the encoding for SQL scripts, if different from the platform encoding.
      *
+     * @param sqlScriptEncoding encoding
      * @see #executeSqlScript
      */
     public void setSqlScriptEncoding( String sqlScriptEncoding ) {
@@ -228,6 +231,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * tests by injection instead.
      *
      * @param name name
+     * @param t    type
      * @return bean
      */
     protected <T> T getBean( String name, Class<T> t ) {
@@ -263,6 +267,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
      * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_at....N_at
      * @param doSequence            add sequences to the array design that is created. Faster to avoid if you can.
+     * @param readOnly              read only
      * @return array design
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
@@ -325,6 +330,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
+     * @param arrayDesign platform
      * @return EE with no data; just bioassays, biomaterials, quantitation types and provided arrayDesign
      */
     protected ExpressionExperiment getTestPersistentBasicExpressionExperiment( ArrayDesign arrayDesign ) {
@@ -338,6 +344,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      *
+     * @param ad paltform
      * @return bio assay
      */
     protected BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
@@ -347,6 +354,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      *
+     * @param ad platform
+     * @param bm material
      * @return bio assay
      */
     protected BioAssay getTestPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
@@ -458,6 +467,8 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
      *
+     * @param accession accession
+     * @param ed        database
      * @return Db entry
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry( String accession, ExternalDatabase ed ) {

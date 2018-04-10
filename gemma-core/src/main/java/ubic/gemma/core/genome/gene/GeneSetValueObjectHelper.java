@@ -31,6 +31,7 @@ public interface GeneSetValueObjectHelper {
      * @param goId       gene ontology id
      * @param gs         gene set
      * @param searchTerm search term
+     * @return Go group VO
      */
     GOGroupValueObject convertToGOValueObject( GeneSet gs, String goId, String searchTerm );
 

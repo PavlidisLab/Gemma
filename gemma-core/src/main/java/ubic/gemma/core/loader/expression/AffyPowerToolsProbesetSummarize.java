@@ -94,9 +94,12 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * For 3' arrays or situations when we are definitely not switching platforms
      *
-     * @param ee             ee * @param aptOutputFileToRead file
-     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
+     * @param ee                  the experiment
+     * @param aptOutputFileToRead file
+     * @param targetPlatform      deal with data from this platform (call multiple times if there is more than one platform)
+     * @param aptOutputFileToRead file
      * @return raw data vectors
+     * @throws IOException when IO problems occur.
      */
     public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
             ArrayDesign targetPlatform ) throws IOException {
@@ -308,7 +311,7 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @return Map of GPLXXXX -> {mps, pgc, qcc, clf} -> file name
+     * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
      */
     protected Map<String, Map<String, String>> loadMpsNames() {
         try {

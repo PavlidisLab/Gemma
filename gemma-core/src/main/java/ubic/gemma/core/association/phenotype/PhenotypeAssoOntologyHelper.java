@@ -29,7 +29,7 @@ import java.util.Set;
 public interface PhenotypeAssoOntologyHelper {
 
     /**
-     * Gemma might be ready but the ontology thread not finish loading
+     * @return Gemma might be ready but the ontology thread not finish loading
      */
     boolean areOntologiesAllLoaded();
 

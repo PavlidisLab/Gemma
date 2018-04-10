@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -40,9 +40,11 @@ public interface SearchService {
      * <li>BibliographicReferences (articles)
      * </ul>
      *
+     * @param settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    @SuppressWarnings("unused") //Used in JS through DWR
+    @SuppressWarnings("unused")
+    //Used in JS through DWR
     Map<Class<?>, List<SearchResult>> ajaxSearch( SearchSettingsValueObject settings );
 
     /**
@@ -58,6 +60,7 @@ public interface SearchService {
      * <li>BibliographicReferences (articles)
      * </ul>
      *
+     * @param settings settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings );
@@ -66,6 +69,8 @@ public interface SearchService {
      * This speedSearch method is probably unnecessary right now considering we only call from geneSearch, just putting it in
      * because we probably want to use something like this on the general search page
      *
+     * @param settings settings
+     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      * @see #search(SearchSettings)
      */
     Map<Class<?>, List<SearchResult>> speedSearch( SearchSettings settings );
@@ -82,7 +87,8 @@ public interface SearchService {
      *                       false can be an optimization if all you need is the id.
      * @param webSpeedSearch If true, the search will be faster but the results may not be as broad as when this is false.
      *                       Set to true for frontend combo boxes like the gene combo
-     * @see #search(SearchSettings settings)
+     * @param settings       settings
+     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
     Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects, boolean webSpeedSearch );
 
@@ -95,6 +101,10 @@ public interface SearchService {
 
     /**
      * convenience method to return only search results from one class
+     *
+     * @param settings    settings
+     * @param resultClass class
+     * @return only search results from one class
      */
     List<?> search( SearchSettings settings, Class<?> resultClass );
 

@@ -36,6 +36,7 @@ public interface ExpressionDataMatrixService {
      *
      * @param ee           the expression experiment.
      * @param filterConfig the configuration.
+     * @return data matrix
      */
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig );
 
@@ -45,6 +46,7 @@ public interface ExpressionDataMatrixService {
      * @param ee           the expression experiment.
      * @param filterConfig the configuration.
      * @param dataVectors  data vectors
+     * @return data matrix
      */
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors );

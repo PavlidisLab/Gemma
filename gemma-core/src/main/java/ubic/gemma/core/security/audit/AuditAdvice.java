@@ -83,6 +83,9 @@ public class AuditAdvice {
 
     /**
      * Entry point. This only takes action if the method involves AbstractAuditables.
+     *
+     * @param pjp      pjp
+     * @param retValue return value
      */
     public void doAuditAdvice( JoinPoint pjp, Object retValue ) {
 

@@ -141,6 +141,7 @@ public class DatasetCombiner {
     /**
      * Given GEO series ids, find all associated data sets.
      *
+     * @param seriesAccessions accessions
      * @return a collection of associated GDS accessions. If no GDS is found, the collection will be empty.
      */
     public static Collection<String> findGDSforGSE( Collection<String> seriesAccessions ) {
@@ -276,7 +277,10 @@ public class DatasetCombiner {
     }
 
     /**
-     * Given a GEO dataset it, find all GDS ids that are associated with it.
+     * Given a GEO dataset id, find all GDS ids that are associated with it.
+     *
+     * @param datasetAccession the geo accession
+     * @return all GDS associated with the given accession
      */
     public Collection<String> findGDSforGDS( String datasetAccession ) {
         return DatasetCombiner.findGDSforGSE( DatasetCombiner.findGSEforGDS( datasetAccession ) );
@@ -286,6 +290,7 @@ public class DatasetCombiner {
      * Try to line up samples across datasets.
      *
      * @param dataSets datasets
+     * @return sample correspondence
      */
     public GeoSampleCorrespondence findGSECorrespondence( Collection<GeoDataset> dataSets ) {
 

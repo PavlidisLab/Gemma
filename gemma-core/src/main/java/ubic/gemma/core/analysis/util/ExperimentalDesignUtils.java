@@ -160,6 +160,7 @@ public class ExperimentalDesignUtils {
      *
      * @param factors factors
      * @param dmatrix data matrix
+     * @return ordered samples
      */
     public static List<BioMaterial> getOrderedSamples( ExpressionDataDoubleMatrix dmatrix,
             List<ExperimentalFactor> factors ) {
@@ -285,6 +286,7 @@ public class ExperimentalDesignUtils {
      * Sort factors in a consistent way.
      *
      * @param factors factors
+     * @return sorted factors
      */
     public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
         List<ExperimentalFactor> facs = new ArrayList<>( factors );

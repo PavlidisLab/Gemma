@@ -39,7 +39,7 @@ public class GenericStreamConsumer extends Thread {
 
     /**
      * 
-     * @param is
+     * @param is input stream
      * @param printToSderr (default=false)
      */
     public GenericStreamConsumer( InputStream is, boolean printToSderr ) {

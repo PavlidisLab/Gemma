@@ -149,6 +149,7 @@ public abstract class AbstractFetcher implements Fetcher {
      * Like mkdir(accession) but for cases where there is no accession.
      *
      * @return file
+     * @throws IOException when there are IO problems.
      */
     protected File mkdir() throws IOException {
         return this.mkdir( null );

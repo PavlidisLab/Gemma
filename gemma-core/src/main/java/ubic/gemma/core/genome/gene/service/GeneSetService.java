@@ -253,6 +253,8 @@ public interface GeneSetService {
 
     /**
      * Security is handled within method, when the set is loaded
+     *
+     * @param geneSetVO gene set VO
      */
     void deleteDatabaseEntity( DatabaseBackedGeneSetValueObject geneSetVO );
 
@@ -264,13 +266,12 @@ public interface GeneSetService {
     void deleteDatabaseEntities( Collection<DatabaseBackedGeneSetValueObject> vos );
 
     /**
-     * Returns all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
-     * or private
-     *
      * @param privateOnly      only return private sets owned by the user or private sets shared with the user
      * @param taxonId          if non-null, restrict the groups by ones which have genes in the given taxon (can be null)
      * @param sharedPublicOnly if true, the only public sets returned will be those that are owned by the user or have
      *                         been shared with the user. If param privateOnly is true, this will have no effect.
+     * @return all the gene sets user can see, with optional restrictions based on taxon and whether the set is public
+     * or private
      */
     @Secured({ "GROUP_USER" })
     Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly );

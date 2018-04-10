@@ -322,8 +322,10 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     /**
      * Given a gene too look for for will return the corresponding abaGene (useful for finding images)
      *
-     * @param givenGene symbol of gene that will be used to search ABA.
+     * @param givenGene   symbol of gene that will be used to search ABA.
+     * @param correctCase correct case.
      * @return ABA gene
+     * @throws IOException when there are IO problems.
      */
     protected AbaGene getGene( String givenGene, boolean correctCase ) throws IOException {
         String gene = givenGene;

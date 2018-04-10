@@ -42,6 +42,7 @@ public interface ExpressionExperimentReportService {
      * Generate a value object that contain summary information about links, biomaterials, and datavectors
      *
      * @param id the id of the ee to generate summary for
+     * @return details VO
      */
     ExpressionExperimentDetailsValueObject generateSummary( Long id );
 
@@ -58,6 +59,8 @@ public interface ExpressionExperimentReportService {
 
     /**
      * Fills in link analysis and differential expression analysis summaries, and other info from the report.
+     *
+     * @param vos value objects
      */
     void populateReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
