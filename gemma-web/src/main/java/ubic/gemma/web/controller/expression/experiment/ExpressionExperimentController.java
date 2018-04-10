@@ -1684,12 +1684,13 @@ public class ExpressionExperimentController {
      * @param id id
      */
     private void updateCorrelationMatrixFile( Long id ) {
-        ExpressionExperiment expressionExperiment;
-        expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) {
+        ExpressionExperiment ee;
+        ee = expressionExperimentService.load( id );
+        expressionExperimentService.thawLiter( ee );
+        if ( ee == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        sampleCoexpressionMatrixService.create( expressionExperiment );
+        sampleCoexpressionMatrixService.create( ee );
     }
 
     private void updateMV( Long id ) {
