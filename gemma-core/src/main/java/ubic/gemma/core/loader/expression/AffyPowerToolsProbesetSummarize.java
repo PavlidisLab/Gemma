@@ -55,6 +55,7 @@ public class AffyPowerToolsProbesetSummarize {
     private static final long AFFY_UPDATE_INTERVAL_S = 30;
     private static final Log log = LogFactory.getLog( AffyPowerToolsProbesetSummarize.class );
 
+    // rma-sketch uses much less memory, supposedly makes little difference
     private static final String METHOD = "rma";
 
     public static QuantitationType makeAffyQuantitationType() {
@@ -95,7 +96,8 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * For 3' arrays or situations when we are definitely not switching platforms
      * 
-     * @param ee ee * @param aptOutputFileToRead file
+     * @param ee 
+     * @param aptOutputFileToRead file
      * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
      * @return raw data vectors
      */
