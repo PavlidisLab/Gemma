@@ -74,6 +74,8 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
 
     void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
+    void thawResultSets(DifferentialExpressionAnalysis dea);
+
     Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds, int offset, int limit );
 }
