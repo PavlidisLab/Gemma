@@ -40,7 +40,6 @@ package ubic.gemma.core.genome.gene;
 import java.util.Collection;
 
 /**
- *
  * @author tvrossum
  */
 @SuppressWarnings("unused") // Possible external use
@@ -62,6 +61,8 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
      * @param taxonId     can be null
      * @param taxonName   can be null
      * @param memberIds   can be null; for a gene or experiment, this is a collection just containing their id
+     * @param searchTerm  search term
+     * @param goId        go ID
      */
     public GOGroupValueObject( String name, String description, Long taxonId, String taxonName,
             Collection<Long> memberIds, String goId, String searchTerm ) {

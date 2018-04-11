@@ -132,7 +132,7 @@ public interface DifferentialExpressionResultService extends BaseService<Differe
     ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
     /**
-     * Does not thawRawAndProcessed the collection of probes (just the factor information)
+     * Does not thaw the collection of probes (just the factor information)
      */
     void thawLite( ExpressionAnalysisResultSet resultSet );
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2010 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -101,6 +101,7 @@ public class BiomartEnsemblNcbiFetcher {
     /**
      * Given a biomart taxon formatted name fetch the file from biomart and save as a local file.
      *
+     * @param bioMartTaxonName taxon name from biomart
      * @return biomart file
      * @throws IOException when there is a problem while manipulating the file
      */

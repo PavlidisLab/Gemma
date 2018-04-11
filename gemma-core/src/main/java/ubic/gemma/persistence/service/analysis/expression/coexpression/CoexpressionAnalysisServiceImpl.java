@@ -158,4 +158,10 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
         return this.coexpressionAnalysisDao.loadAll();
     }
 
+    @Override
+    @Transactional
+    public void removeForExperiment( ExpressionExperiment ee ){
+        this.coexpressionAnalysisDao.removeForExperiment(ee);
+    }
+
 }

@@ -65,6 +65,7 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
      * @param taxonId     can be null
      * @param taxonName   can be null
      * @param geneIds     can be null; for a gene or experiment, this is a collection just containing their id
+     * @param queryString the query string
      */
     public FreeTextGeneResultsValueObject( String name, String description, Long taxonId, String taxonName,
             Collection<Long> geneIds, String queryString ) {

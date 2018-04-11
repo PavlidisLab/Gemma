@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.analysis;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -59,5 +60,10 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T>
      */
     @Override
     public abstract Collection<T> findByTaxon( final Taxon taxon );
+
+    @Override
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
+    }
 
 }

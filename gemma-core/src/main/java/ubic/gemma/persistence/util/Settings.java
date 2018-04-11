@@ -339,7 +339,7 @@ public class Settings {
     }
 
     /**
-     * @return host url e.g. http://www.chibi.ubc.ca
+     * @return host url e.g. http://gemma.msl.ubc.ca
      */
     public static String getHostUrl() {
         String host = Settings.getString( "gemma.hosturl", "http://gemma.msl.ubc.ca" );
@@ -367,7 +367,7 @@ public class Settings {
     }
 
     /**
-     * @return the configured base url (e.g., http://www.chibi.ubc.ca/Gemma/). It will always end in a slash.
+     * @return the configured base url (e.g., http://gemma.msl.ubc.ca/Gemma/). It will always end in a slash.
      */
     public static String getBaseUrl() {
         String url = Settings.getString( "gemma.baseurl", Settings.getHostUrl() + Settings.getRootContext() + "/" );

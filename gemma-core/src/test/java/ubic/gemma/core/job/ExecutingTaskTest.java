@@ -172,7 +172,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
             this.userManager.loadUserByUsername( "ExecutingTaskTestUser" );
         } catch ( UsernameNotFoundException e ) {
             this.userManager.createUser(
-                    new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null, "fooUser@chibi.ubc.ca", "key",
+                    new UserDetailsImpl( "foo", "ExecutingTaskTestUser", true, null, "fooUser@gemma.msl.ubc.ca", "key",
                             new Date() ) );
         }
 

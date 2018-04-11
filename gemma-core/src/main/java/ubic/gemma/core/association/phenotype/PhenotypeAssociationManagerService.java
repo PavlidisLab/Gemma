@@ -40,6 +40,7 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Find all phenotypes associated to a pubmedID
      *
+     * @param pubMedId pubmed id
      * @return BibliographicReferenceValueObject
      */
     BibliographicReferenceValueObject findBibliographicReference( String pubMedId );
@@ -153,6 +154,7 @@ public interface PhenotypeAssociationManagerService {
      * Load an evidence
      *
      * @param id The Evidence database id
+     * @return phenotype associations
      */
     EvidenceValueObject<? extends PhenotypeAssociation> load( Long id );
 
@@ -167,6 +169,7 @@ public interface PhenotypeAssociationManagerService {
      * Loads all phenotypes in the database and counts their occurrence using the database It builds the tree using
      * parents of terms, and will return 3 trees representing Disease, HP and MP
      *
+     * @param evidenceFilter filter
      * @return A collection of the phenotypes with the gene occurrence
      */
     Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
@@ -189,6 +192,11 @@ public interface PhenotypeAssociationManagerService {
 
     /**
      * use if we want to reimport data from a specific external Database
+     *
+     * @param limit                limit
+     * @param start                offset
+     * @param externalDatabaseName database name
+     * @return evidence VOs
      */
     Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName(
             String externalDatabaseName, Integer limit, int start );
@@ -239,6 +247,7 @@ public interface PhenotypeAssociationManagerService {
      * Removes an evidence
      *
      * @param id The Evidence database id
+     * @return validate evidence VO
      */
     ValidateEvidenceValueObject remove( Long id );
 
@@ -287,6 +296,8 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month
      * by Quartz
+     *
+     * @throws IOException when there are IO problems
      */
     @SuppressWarnings("unused") // Used by scheduler
     @Secured({ "GROUP_AGENT" })

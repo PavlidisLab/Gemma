@@ -57,4 +57,9 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
                 .setParameter( "ee", ee ).setParameter( "cmp", component ).setMaxResults( count ).list();
     }
 
+    @Override
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
+    }
+
 }

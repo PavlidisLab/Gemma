@@ -98,11 +98,12 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     private ExpressionExperimentSubSetService subsetService;
 
     /**
-     * If you know the arraydesigns are already in a merged state, you should use switchExperimentToMergedPlatform
+     * If you know the array designs are already in a merged state, you should use switchExperimentToMergedPlatform
      *
      * @param ee          ee
      * @param arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *                    changed for them.
+     * @return the switched experiment
      */
     public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
@@ -414,7 +415,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             // TODO: go up the merge tree to find the root. This is too slow.
             // while ( mergedInto.getMergedInto() != null ) {
-            // mergedInto = arrayDesignService.thawRawAndProcessed( mergedInto.getMergedInto() );
+            // mergedInto = arrayDesignService.thaw( mergedInto.getMergedInto() );
             // }
 
             if ( arrayDesign == null ) {

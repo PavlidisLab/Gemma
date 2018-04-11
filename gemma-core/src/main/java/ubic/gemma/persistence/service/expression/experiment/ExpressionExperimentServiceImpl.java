@@ -36,7 +36,6 @@ import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -57,6 +56,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
+import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
@@ -117,6 +117,8 @@ public class ExpressionExperimentServiceImpl
     private SecurityService securityService;
     @Autowired
     private SVDService svdService;
+    @Autowired
+    private CoexpressionAnalysisService coexpressionAnalysisService;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -932,14 +934,14 @@ public class ExpressionExperimentServiceImpl
             this.differentialExpressionAnalysisDao.remove( de );
         }
 
-        // remove any sample coexpression matrices
+        // Remove any sample coexpression matrices
         this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
 
         // Remove PCA
-        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisService.findByExperiment( ee );
-        for ( PrincipalComponentAnalysis pca : pcas ) {
-            this.principalComponentAnalysisService.remove( pca );
-        }
+        this.principalComponentAnalysisService.removeForExperiment( ee );
+
+        // Remove coexpression analyses
+        this.coexpressionAnalysisService.removeForExperiment( ee );
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment

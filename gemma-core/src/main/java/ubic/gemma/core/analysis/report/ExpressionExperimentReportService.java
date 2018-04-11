@@ -33,11 +33,16 @@ public interface ExpressionExperimentReportService {
 
     /**
      * Invalidate the cached 'report' for the experiment with the given id. If it is not cached nothing happens.
+     *
+     * @param id the id of the entity to evict
      */
     void evictFromCache( Long id );
 
     /**
      * Generate a value object that contain summary information about links, biomaterials, and datavectors
+     *
+     * @param id the id of the ee to generate summary for
+     * @return details VO
      */
     ExpressionExperimentDetailsValueObject generateSummary( Long id );
 
@@ -54,12 +59,15 @@ public interface ExpressionExperimentReportService {
 
     /**
      * Fills in link analysis and differential expression analysis summaries, and other info from the report.
+     *
+     * @param vos value objects
      */
     void populateReportInformation( Collection<ExpressionExperimentDetailsValueObject> vos );
 
     /**
      * retrieves a collection of cached value objects containing summary information
      *
+     * @param ids the ids of ees for which the summary objects should be retrieved.
      * @return a collection of cached value objects
      */
     @SuppressWarnings("unused")

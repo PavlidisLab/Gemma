@@ -27,6 +27,7 @@ public interface Blat {
      *
      * @param b The genome is inferred from the Taxon held by the sequence.
      * @return Collection of BlatResult objects.
+     * @throws IOException when there are IO problems.
      */
     Collection<BlatResult> blatQuery( BioSequence b ) throws IOException;
 
@@ -36,6 +37,7 @@ public interface Blat {
      * @param b         The genome is inferred from the Taxon held by the sequence.
      * @param sensitive if true use the more sensitive gfServer, if available.
      * @return Collection of BlatResult objects.
+     * @throws IOException when there are IO problems.
      */
     Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon, boolean sensitive ) throws IOException;
 
@@ -44,6 +46,7 @@ public interface Blat {
      * @param taxon     The taxon whose database will be searched.
      * @param sensitive if true use the more sensitive gfServer, if available.
      * @return map of the input sequences to a corresponding collection of blat result(s)
+     * @throws IOException when there are IO problems.
      */
     Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
             Taxon taxon ) throws IOException;
@@ -104,16 +107,22 @@ public interface Blat {
     /**
      * @param inputStream to the Blat output file in psl format
      * @return processed results.
+     * @throws IOException when there are IO problems.
      */
     Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException;
 
     /**
      * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
+     *
+     * @param genome genome
+     * @param port   port
      */
     void startServer( BlattableGenome genome, int port ) throws IOException;
 
     /**
      * Stop the gfServer, if it was started by this.
+     *
+     * @param port port
      */
     void stopServer( int port );
 

@@ -59,11 +59,14 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
     /**
      * Method to create a display object from scratch
      *
-     * @param name        cannot be null
-     * @param description should not be null
-     * @param taxonId     can be null
-     * @param taxonName   can be null
-     * @param memberIds   can be null; for a gene this is a collection just containing their id
+     * @param name              cannot be null
+     * @param description       should not be null
+     * @param taxonId           can be null
+     * @param taxonName         can be null
+     * @param memberIds         can be null; for a gene this is a collection just containing their id
+     * @param searchTerm        search term
+     * @param phenotypeCategory phenotype category
+     * @param phenotypeName     phenotype name
      */
     public PhenotypeGroupValueObject( String name, String description, Long taxonId, String taxonName,
             Collection<Long> memberIds, String phenotypeName, String phenotypeCategory, String searchTerm ) {

@@ -97,8 +97,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         /*
          * First remove any old ones for the experiment.
          */
-        Collection<SampleCoexpressionAnalysis> old = this.findAnalysesByExperiment( ee );
-        this.remove( old );
+        this.removeForExperiment( ee );
 
         SampleCoexpressionAnalysis sas = SampleCoexpressionAnalysis.Factory.newInstance();
         sas.setExperimentAnalyzed( ee );

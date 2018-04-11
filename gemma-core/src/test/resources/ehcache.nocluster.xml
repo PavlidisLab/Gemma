@@ -82,13 +82,13 @@
     <cache name="ubic.gemma.model.genome.gene.GeneAlias" maxElementsInMemory="50000" eternal="false"
            timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.genome.gene.GeneProductImpl" maxElementsInMemory="50000" eternal="true"
+    <cache name="ubic.gemma.model.genome.gene.GeneProduct" maxElementsInMemory="50000" eternal="true"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.genome.gene.GeneProductImpl.accessions" maxElementsInMemory="50000" eternal="true"
+    <cache name="ubic.gemma.model.genome.gene.GeneProduct.accessions" maxElementsInMemory="50000" eternal="true"
            overflowToDisk="false"/>
 
-    <cache name="ubic.gemma.model.genome.gene.GeneProductImpl.exons" maxElementsInMemory="50000" eternal="true"
+    <cache name="ubic.gemma.model.genome.gene.GeneProduct.exons" maxElementsInMemory="50000" eternal="true"
            overflowToDisk="false"/>
 
     <cache name="ubic.gemma.model.genome.gene.GeneSetMember" maxElementsInMemory="50000" eternal="true"

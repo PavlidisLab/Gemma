@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
 
@@ -201,6 +202,11 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "taxon", taxon )
                 .list();
+    }
+
+    @Override
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        this.remove( this.findByProperty( "experimentAnalyzed", ee ) );
     }
 
     private Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigationId( Long id ) {

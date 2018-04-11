@@ -15,6 +15,7 @@ public interface Fetcher {
      * Fetch files according to the identifier provided.
      *
      * @param identifier identifier
+     * @return local files
      */
     Collection<LocalFile> fetch( String identifier );
 

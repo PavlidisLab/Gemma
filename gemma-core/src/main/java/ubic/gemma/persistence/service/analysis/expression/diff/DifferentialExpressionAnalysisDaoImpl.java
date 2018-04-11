@@ -338,6 +338,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
     }
 
     @Override
+    public void thawResultSets( DifferentialExpressionAnalysis dea ){
+        Hibernate.initialize( dea.getResultSets() );
+    }
+
+    @Override
     public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -363,7 +368,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
             session.buildLockRequest( LockOptions.NONE ).lock( ear );
             Hibernate.initialize( ear );
             Hibernate.initialize( ear.getExperimentalFactors() );
-
         }
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.info( "Thaw: " + timer.getTime() + "ms" );
@@ -491,9 +495,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
             throw new IllegalArgumentException( "analysis cannot be null" );
         }
 
-        Session session = this.getSessionFactory().getCurrentSession(); // hopefully okay.
+        Session session = this.getSessionFactory().getCurrentSession();
 
-        session.delete( analysis );
+        session.delete( session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
+
         session.flush();
         session.clear();
     }

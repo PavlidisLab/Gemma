@@ -5,7 +5,7 @@
     <name>Gemma</name>
     <groupId>gemma</groupId>
     <artifactId>gemma</artifactId>
-    <version>1.23</version>
+    <version>1.23.1</version>
     <inceptionYear>2005</inceptionYear>
     <description>
         The Gemma Project for meta-analysis of genomics data
@@ -396,6 +396,13 @@
                 </configuration>
             </plugin>
         </plugins>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>2.4</version>
+            </extension>
+        </extensions>
     </build>
     <repositories>
         <repository>
@@ -562,6 +569,11 @@
                 </property>
             </activation>
             <distributionManagement>
+                <site>
+                    <id>localDeploy</id>
+                    <name>localDeploy</name>
+                    <url>file:///space/gemmaData/gemma-devsite</url>
+                </site>
                 <repository>
                     <id>repo</id>
                     <name>Pavlab</name>
@@ -576,6 +588,12 @@
         </profile>
     </profiles>
     <distributionManagement>
+        <site>
+            <id>website</id>
+            <url>
+                scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
+            </url>
+        </site>
         <repository>
             <id>repo</id>
             <name>Pavlab</name>

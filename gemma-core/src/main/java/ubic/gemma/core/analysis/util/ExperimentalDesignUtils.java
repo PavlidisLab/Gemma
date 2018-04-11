@@ -44,7 +44,9 @@ public class ExperimentalDesignUtils {
     /**
      * Check if a factor has missing values (samples that lack an assigned value)
      *
-     * @param baselines not really important for this
+     * @param baselines   not really important for this
+     * @param samplesUsed the samples used
+     * @param factor      the factor
      * @return false if there are any missing values.
      */
     public static boolean isComplete( ExperimentalFactor factor, List<BioMaterial> samplesUsed,
@@ -62,7 +64,9 @@ public class ExperimentalDesignUtils {
      * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix
      * (defined by samplesUsed).
      *
-     * @param factors in the order they will be used
+     * @param factors     in the order they will be used
+     * @param samplesUsed the samples used
+     * @param baselines   the baselines
      * @return a design matrix
      */
     public static ObjectMatrix<String, String, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
@@ -102,38 +106,12 @@ public class ExperimentalDesignUtils {
 
         }
 
-        //
-        // /*
-        // * Drop columns that have missing values.
-        // */
-        // List<String> toKeep = new ArrayList<String>();
-        // for ( int i = 0; i < designMatrix.columns(); i++ ) {
-        // boolean skip = false;
-        // Object[] column = designMatrix.getColumn( i );
-        // for ( Object o : column ) {
-        // if ( o == null ) {
-        // skip = true;
-        // }
-        // }
-        //
-        // if ( !skip ) {
-        // toKeep.add( designMatrix.getColName( i ) );
-        // }
-        // }
-        //
-        // if ( toKeep.isEmpty() ) {
-        // throw new IllegalStateException( "Design matrix had no columns without missing values" );
-        // }
-        //
-        // if ( toKeep.size() < designMatrix.columns() ) {
-        // designMatrix = designMatrix.subsetColumns( toKeep );
-        // }
-
         designMatrix.setRowNames( rowNames );
         return designMatrix;
     }
 
     /**
+     * @param factors factors
      * @return a new collection (same order as the input)
      */
     public static Collection<ExperimentalFactor> factorsWithoutBatch( Collection<ExperimentalFactor> factors ) {
@@ -179,6 +157,10 @@ public class ExperimentalDesignUtils {
 
     /**
      * This puts the control samples up front if possible.
+     *
+     * @param factors factors
+     * @param dmatrix data matrix
+     * @return ordered samples
      */
     public static List<BioMaterial> getOrderedSamples( ExpressionDataDoubleMatrix dmatrix,
             List<ExperimentalFactor> factors ) {
@@ -188,6 +170,7 @@ public class ExperimentalDesignUtils {
     }
 
     /**
+     * @param ef experimental factor
      * @return true if this factor appears to be a "batch" factor.
      */
     public static boolean isBatch( ExperimentalFactor ef ) {
@@ -200,6 +183,7 @@ public class ExperimentalDesignUtils {
     }
 
     /**
+     * @param ef experimental factor
      * @return true if this factor appears to be a "batch" factor.
      */
     public static boolean isBatch( ExperimentalFactorValueObject ef ) {
@@ -215,6 +199,7 @@ public class ExperimentalDesignUtils {
     }
 
     /**
+     * @param ef experimental factor
      * @return true if the factor is continuous; false if it looks to be categorical.
      */
     public static boolean isContinuous( ExperimentalFactor ef ) {
@@ -261,6 +246,9 @@ public class ExperimentalDesignUtils {
     }
 
     /**
+     * @param factors     factors
+     * @param baselines   baselines
+     * @param samplesUsed the samples used
      * @return Experimental design matrix
      */
     public static ObjectMatrix<BioMaterial, ExperimentalFactor, Object> sampleInfoMatrix(
@@ -296,6 +284,9 @@ public class ExperimentalDesignUtils {
 
     /**
      * Sort factors in a consistent way.
+     *
+     * @param factors factors
+     * @return sorted factors
      */
     public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
         List<ExperimentalFactor> facs = new ArrayList<>( factors );

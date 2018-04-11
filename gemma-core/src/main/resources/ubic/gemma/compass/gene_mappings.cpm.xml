@@ -24,7 +24,7 @@
 		<!-- <component name="citations" ref-alias="bibliographicReference" /> -->
 		<component name="products" ref-alias="geneProduct" />
 	</class>
-	<class name="genome.gene.GeneProductImpl" alias="geneProduct"
+	<class name="genome.gene.GeneProduct" alias="geneProduct"
 		root="false" support-unmarshall="false">
 		<id name="id" />
 		<property name="name">

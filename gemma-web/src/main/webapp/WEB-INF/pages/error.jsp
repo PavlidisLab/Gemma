@@ -28,16 +28,16 @@
 			<li>Do you need to log in?</li>
 			<c:choose>
 				<c:when test="${not empty param.exception}">
-					<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+					<li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
 				</c:when>
 				<c:when test="${not empty requestScope['javax.servlet.error.exception']}">
-					<li><a href="mailto:gemma@chibi.ubc.ca?subject=${requestScope['javax.servlet.error.exception']}">Email us</a> about the problem.</li>
+					<li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${requestScope['javax.servlet.error.exception']}">Email us</a> about the problem.</li>
 				</c:when>
 				<c:when test="${not empty requestScope['exception']}">
-					<li><a href="mailto:gemma@chibi.ubc.ca?subject=${requestScope['exception']}">Email us</a> about the problem.</li>
+					<li><a href="mailto:pavlab-support@msl.ubc.ca?subject=${requestScope['exception']}">Email us</a> about the problem.</li>
 				</c:when>
 				<c:otherwise>
-					<li><a href="mailto:gemma@chibi.ubc.ca?subject=Unknown exception">Email us</a> about the problem.</li>
+					<li><a href="mailto:pavlab-support@msl.ubc.ca?subject=Unknown exception">Email us</a> about the problem.</li>
 				</c:otherwise>
 			</c:choose>
 		</ul>

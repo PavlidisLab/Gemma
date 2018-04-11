@@ -42,9 +42,9 @@ Gemma.GemmaNavigationHeader = Ext
                         + 'sharing of genomics data, currently primarily targeted at the analysis of gene expression profiles. Gemma contains data from thousands '
                         + 'of public studies, referencing thousands of published papers. Users can search, access and visualize coexpression and differential'
                         + ' expression results. For more information, see the '
-                        + '<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/" target="_blank">help and documentation.&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
+                        + '<a href="https://pavlidislab.github.io/Gemma/" target="_blank">help and documentation.&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
                         + '</p><p>Gemma was developed by the Pavlidis group at UBC '
-                        + '(<a href="http://gemma-chibi-doc.sites.olt.ubc.ca/credits/" target="_blank">credits&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>). '
+                        + '(<a href="https://pavlidislab.github.io/Gemma/#credits" target="_blank">credits&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>). '
                         + '</p><p>To cite Gemma, please use: <br>'
                         + 'Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. <em>Bioinformatics</em>, 2012.'
                         + ' <a href="http://dx.doi.org/doi:10.1093/bioinformatics/bts430" target="_blank">link&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon_tight.gif"/></a>'
@@ -227,7 +227,7 @@ Gemma.GemmaNavigationHeader = Ext
                      scope : this
                   }, {
                      text : 'Help and Documentation&nbsp;<img src="' + ctxBasePath + '/images/icons/link_external_icon.gif"/>',
-                     href : "http://gemma-chibi-doc.sites.olt.ubc.ca/",
+                     href : "https://pavlidislab.github.io/Gemma/",
                      tooltip : "Gemma overview and general help",
                      hrefTarget : "_blank"
                   }, {
@@ -265,13 +265,9 @@ Gemma.GemmaNavigationHeader = Ext
                   defaults : menuDefaults,
                   style : 'background:white',
                   items : [ {
-                     text : 'Wiki',
-                     href : "http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma",
-                     tooltip : "Gemma wiki"
-                  }, {
-                     text : 'For Developers',
-                     href : ctxBasePath + "/resources/",
-                     tooltip : "About the Gemma framework"
+                     text : 'Documentation',
+                     href : "https://pavlidislab.github.io/Gemma/",
+                     tooltip : "Gemma documentation"
                   }, {
                      text : 'Contact Us',
                      href : ctxBasePath + "/contactUs.html",

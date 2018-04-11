@@ -45,96 +45,14 @@ import java.util.concurrent.BlockingQueue;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
 
-    abstract class Consumer implements Runnable {
-        private final SecurityContext context;
-        private final BlockingQueue<ArrayDesign> queue;
-
-        Consumer( BlockingQueue<ArrayDesign> q, SecurityContext context ) {
-            this.queue = q;
-            this.context = context;
-        }
-
-        @Override
-        public void run() {
-            SecurityContextHolder.setContext( this.context );
-            while ( true ) {
-                ArrayDesign ad = queue.poll();
-                if ( ad == null ) {
-                    break;
-                }
-                this.consume( ad );
-            }
-        }
-
-        abstract void consume( ArrayDesign x );
-    }
-
     boolean allowSubsumedOrMerged = false;
-
     ArrayDesignReportService arrayDesignReportService;
-
     ArrayDesignService arrayDesignService;
-
     Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
-    }
-
-    ArrayDesignReportService getArrayDesignReportService() {
-        return arrayDesignReportService;
-    }
-
-    ArrayDesignService getArrayDesignService() {
-        return arrayDesignService;
-    }
-
-    /**
-     * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
-     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
-     *         subsuming status. (the analysis is not done as part of this call).
-     */
-    boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getSubsumingArrayDesign() != null ) {
-            AbstractCLI.log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign().getId() );
-            return true;
-        }
-
-        if ( arrayDesign.getMergedInto() != null ) {
-            AbstractCLI.log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto().getId() );
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
-     * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
-     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
-     */
-    boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-
-        if ( autoSeek ) {
-            return this.needToAutoRun( arrayDesign, eventClass );
-        }
-
-        if ( skipIfLastRunLaterThan == null )
-            return true;
-
-        List<AuditEvent> events = this.getEvents( arrayDesign, eventClass );
-        if ( events.size() == 0 ) {
-            return true; // always do it, it's never been done.
-        }
-        // return true if the last time was older than the limit time.
-        AuditEvent lastEvent = events.get( events.size() - 1 );
-        return lastEvent.getDate().before( skipIfLastRunLaterThan );
-
-    }
-
-    ArrayDesign thaw( ArrayDesign arrayDesign ) {
-        return arrayDesignService.thaw( arrayDesign );
     }
 
     @Override
@@ -159,9 +77,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     /**
      * Mergees or subsumees of the platform.
-     * 
-     * @param design
-     * @return
+     *
+     * @param design a platform
+     * @return related platforms
      */
     protected Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
         Collection<ArrayDesign> toUpdate = new HashSet<>();
@@ -203,6 +121,61 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             }
         }
 
+    }
+
+    ArrayDesignReportService getArrayDesignReportService() {
+        return arrayDesignReportService;
+    }
+
+    ArrayDesignService getArrayDesignService() {
+        return arrayDesignService;
+    }
+
+    /**
+     * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
+     * design. In the case of subsumption, this only works if the array design has been either analyzed for
+     * subsuming status. (the analysis is not done as part of this call).
+     */
+    boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
+        if ( arrayDesign.getSubsumingArrayDesign() != null ) {
+            AbstractCLI.log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign().getId() );
+            return true;
+        }
+
+        if ( arrayDesign.getMergedInto() != null ) {
+            AbstractCLI.log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto().getId() );
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
+     * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
+     * analysis was run before skipIfLastRunLaterThan. false otherwise.
+     */
+    boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
+            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+
+        if ( autoSeek ) {
+            return this.needToAutoRun( arrayDesign, eventClass );
+        }
+
+        if ( skipIfLastRunLaterThan == null )
+            return true;
+
+        List<AuditEvent> events = this.getEvents( arrayDesign, eventClass );
+        if ( events.size() == 0 ) {
+            return true; // always do it, it's never been done.
+        }
+        // return true if the last time was older than the limit time.
+        AuditEvent lastEvent = events.get( events.size() - 1 );
+        return lastEvent.getDate().before( skipIfLastRunLaterThan );
+
+    }
+
+    ArrayDesign thaw( ArrayDesign arrayDesign ) {
+        return arrayDesignService.thaw( arrayDesign );
     }
 
     private void arraysFromCliList() {
@@ -335,6 +308,30 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             ees.add( ee );
         }
         return ees;
+    }
+
+    abstract class Consumer implements Runnable {
+        private final SecurityContext context;
+        private final BlockingQueue<ArrayDesign> queue;
+
+        Consumer( BlockingQueue<ArrayDesign> q, SecurityContext context ) {
+            this.queue = q;
+            this.context = context;
+        }
+
+        @Override
+        public void run() {
+            SecurityContextHolder.setContext( this.context );
+            while ( true ) {
+                ArrayDesign ad = queue.poll();
+                if ( ad == null ) {
+                    break;
+                }
+                this.consume( ad );
+            }
+        }
+
+        abstract void consume( ArrayDesign x );
     }
 
 }

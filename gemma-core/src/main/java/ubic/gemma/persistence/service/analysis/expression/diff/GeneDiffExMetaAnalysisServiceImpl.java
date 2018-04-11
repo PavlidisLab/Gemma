@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
@@ -110,6 +111,12 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
     @Transactional
     public void remove( GeneDifferentialExpressionMetaAnalysis toDelete ) {
         geneDiffExMetaAnalysisDao.remove( toDelete );
+    }
+
+    @Override
+    @Transactional
+    public void removeForExperiment( ExpressionExperiment ee ){
+        this.geneDiffExMetaAnalysisDao.removeForExperiment(ee);
     }
 
     @Override

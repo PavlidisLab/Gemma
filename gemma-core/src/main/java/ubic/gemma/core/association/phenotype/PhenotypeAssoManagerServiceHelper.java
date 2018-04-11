@@ -26,6 +26,9 @@ public interface PhenotypeAssoManagerServiceHelper {
 
     /**
      * load evidence from the database and populate it with the updated information
+     *
+     * @param evidenceValueObject  evidence VO
+     * @param phenotypeAssociation phenotype association
      */
     void populateModifiedValues( EvidenceValueObject<? extends PhenotypeAssociation> evidenceValueObject,
             PhenotypeAssociation phenotypeAssociation );

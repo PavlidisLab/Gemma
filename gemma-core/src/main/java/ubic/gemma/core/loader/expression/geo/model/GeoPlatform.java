@@ -108,11 +108,11 @@ public class GeoPlatform extends GeoData {
     private Collection<String> webLinks = new HashSet<>();
 
     /**
-     * Refers to a list of platforms for which the data from GEO is usually not useable and/or which we always reanalyze
+     * Refers to a list of platforms for which the data from GEO is usually not usable and/or which we always reanalyze
      * from CEL files - exon arrays and newer gene arrays
      * 
      * @param geoPlatformId (GPL)
-     * @return
+     * @return true if the platform is affymetrix exon array.
      */
     public static boolean isAffymetrixExonArray( String geoPlatformId ) {
         return GeoPlatform.exonPlatformGeoIds.containsKey( geoPlatformId );

@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -33,11 +33,20 @@ public interface ExpressionDataMatrixService {
 
     /**
      * Provide a filtered expression data matrix.
+     *
+     * @param ee           the expression experiment.
+     * @param filterConfig the configuration.
+     * @return data matrix
      */
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig );
 
     /**
      * Provide a filtered expression data matrix.
+     *
+     * @param ee           the expression experiment.
+     * @param filterConfig the configuration.
+     * @param dataVectors  data vectors
+     * @return data matrix
      */
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors );
@@ -46,6 +55,7 @@ public interface ExpressionDataMatrixService {
             Collection<ProcessedExpressionDataVector> dataVectors );
 
     /**
+     * @param ee the expression experiment.
      * @return matrix of preferred data, with all missing values masked. If the ProcessedExpressionDataVectors are
      * missing, this will throw an exception.
      */

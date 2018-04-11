@@ -299,7 +299,7 @@ public class GeoConverterImpl implements GeoConverter {
             // check if they share a common parent taxon to use as primary taxa.
             Collection<Taxon> parentTaxa = new HashSet<>();
             for ( Taxon platformTaxon : platformTaxa ) {
-                // thawRawAndProcessed to get parent taxon
+                // thaw to get parent taxon
                 this.taxonService.thaw( platformTaxon );
                 Taxon platformParentTaxon = platformTaxon.getParentTaxon();
                 parentTaxa.add( platformParentTaxon );

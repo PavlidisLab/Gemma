@@ -314,8 +314,6 @@ public abstract class AbstractCLI {
 
     /**
      * Implement this method to add options to your command line, using the OptionBuilder.
-     *
-     * @see Option#builder(String);
      */
     protected abstract void buildOptions();
 

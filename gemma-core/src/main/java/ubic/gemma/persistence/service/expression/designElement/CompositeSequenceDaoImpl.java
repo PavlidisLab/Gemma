@@ -175,7 +175,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
@@ -186,7 +186,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setFirstResult( start )
@@ -197,7 +197,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString =
-                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "gene", gene )
@@ -206,7 +206,9 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
     @Override
     public Collection<CompositeSequence> findByName( final String name ) {
-        return this.findByStringProperty( "name", name );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( "select distinct cs from CompositeSequence" + " cs where cs.name = :name" )
+                .setParameter( "name", name ).list();
     }
 
     @Override
@@ -361,7 +363,7 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
         //language=HQL
         final String queryString =
                 "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
-                        + "GeneProductImpl gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
+                        + "GeneProduct gp, Gene gene  " + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
                         + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )

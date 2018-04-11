@@ -31,4 +31,5 @@ public interface PrincipalComponentAnalysisDao extends BaseDao<PrincipalComponen
 
     List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
 
+    void removeForExperiment( ExpressionExperiment ee );
 }
