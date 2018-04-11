@@ -39,9 +39,7 @@ public class BaselineSelection {
 
     static {
         /*
-         * Values or ontology terms we treat as 'baseline'. See also {@link
-         * http://www.chibi.ubc.ca/faculty/pavlidis/wiki
-         * /display/PavLab/Gemma+Curation+Guidelines#GemmaCurationGuidelines-BaselineFactor%2FControlGroup}
+         * Values or ontology terms we treat as 'baseline'.
          */
         BaselineSelection.controlGroupTerms
                 .add( "http://purl.obolibrary.org/obo/OBI_0000025".toLowerCase() ); // - reference substance

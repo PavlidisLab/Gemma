@@ -37,7 +37,7 @@ import java.util.HashSet;
  * that the data came from. The DEDV's will be a list of white space seperated doubles that might contain NaN's for
  * missing data. The gene's will also be a list of white space separated gene Ids. This query can be time consuming and
  * cause a tcp/ip server timeout . The service outputs the results to a file which can be found at (file wil be name
- * something like dedv-"gene IDs"-"Number of Experiments".xml http://chibi.ubc.ca/Gemma/ws/xml/
+ * something like dedv-"gene IDs"-"Number of Experiments".xml https://gemma.msl.ubc.ca/ws/xml/
  *
  * @author gavin, klc
  */

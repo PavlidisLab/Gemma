@@ -424,7 +424,7 @@ public interface ExpressionExperimentService
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
-     * Partially thawRawAndProcessed the expression experiment given - do not thawRawAndProcessed the raw data.
+     * Partially thaw the expression experiment given - do not thaw the raw data.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );

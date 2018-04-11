@@ -241,6 +241,7 @@ public class GeoValues implements Serializable {
      * @param columnName column name
      * @param index      - the actual index of the data in the final data structure, not necessarily the column where the
      *                   data are found in the data file (as that can vary from sample to sample).
+     * @param platform   platform
      */
     public void addQuantitationType( GeoPlatform platform, String columnName, Integer index ) {
         if ( columnName == null )
@@ -435,10 +436,11 @@ public class GeoValues implements Serializable {
      * Get the indices of the data for a set of samples - this can be used to get a slice of the data. This is
      * inefficient but shouldn't need to be called all that frequently.
      *
-     * @param platform       platform
-     * @param neededSamples, must be from the same platform. If we don't have data for a given sample, the index
-     *                       returned will be null. This can happen when some samples don't have all the quantitation types (GSE360 for
-     *                       example).
+     * @param platform         platform
+     * @param neededSamples,   must be from the same platform. If we don't have data for a given sample, the index
+     *                         returned will be null. This can happen when some samples don't have all the quantitation types (GSE360 for
+     *                         example).
+     * @param quantitationType quantitation type
      * @return integer array
      */
     public Integer[] getIndices( GeoPlatform platform, List<GeoSample> neededSamples, Integer quantitationType ) {
@@ -501,6 +503,7 @@ public class GeoValues implements Serializable {
      * @param quantitationType QT
      * @param designElement    design element
      * @param indices          indices
+     * @param platform         platforms
      * @return a 'slice' of the data corresponding to the indices provided.
      */
     public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement,

@@ -94,6 +94,9 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
 
     /**
      * Threaded conversion of domain objects to Gemma objects.
+     *
+     * @param gene2GeneProteinAssociationQueue queue
+     * @param stringProteinProteinInteractions interactions
      */
     public void convert( final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue,
             final Collection<StringProteinProteinInteraction> stringProteinProteinInteractions ) {

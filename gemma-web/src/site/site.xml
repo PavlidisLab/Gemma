@@ -1,20 +1,3 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="gemma-web">
-	<bannerLeft>
-		<name>Gemma</name>
-		<src>images/logo/gemma-sm50x195.png</src>
-		<href>http://gemma.msl.ubc.ca</href>
-	</bannerLeft>
-	<version position="left" />
-	<bannerRight>
-		<src>images/logo/heatfade.inner.png</src>
-	</bannerRight>
-	<body>
-		<links>
-			<item name="Gemma" href="http://gemma.msl.ubc.ca" />
-			<item name="Pavlidis lab" href="http://chibi.ubc.ca/pavlidis/lab" />
-		</links>
-		<menu ref="reports" />
-		<menu ref="parent" />
-	</body>
 </project>

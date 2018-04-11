@@ -27,12 +27,14 @@ import java.util.List;
 public interface ExpressionExperimentSearchService {
 
     /**
+     * @param query the query
      * @return Collection of expression experiment entity objects
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query );
 
     /**
+     * @param value the term values
      * @return Collection of expression experiment VOs for EEs that are associated with all the given terms.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
@@ -41,6 +43,7 @@ public interface ExpressionExperimentSearchService {
     /**
      * does not include session bound sets
      *
+     * @param query   the query
      * @param taxonId if the search should not be limited by taxon, pass in null
      * @return Collection of SearchResultDisplayObjects
      */

@@ -101,11 +101,16 @@ public abstract class RecordParser<T> implements Parser<T> {
 
     /**
      * Handle the parsing of a single record from the input.
+     *
+     * @param record record
+     * @return parsed object
      */
     protected abstract Object parseOneRecord( String record );
 
     /**
      * Add an object to the results collection.
+     *
+     * @param obj object
      */
     protected abstract void addResult( Object obj );
 }

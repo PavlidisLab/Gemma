@@ -366,13 +366,13 @@ public class AuditEventDaoImpl extends AbstractVoEnabledDao<AuditEvent, AuditEve
     }
 
     /**
-     * Essential thawRawAndProcessed the auditables to the point we get the AuditTrail proxies for them.
+     * Essential thaw the auditables to the point we get the AuditTrail proxies for them.
      */
     @SuppressWarnings("unchecked")
     private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection<? extends Auditable> auditables ) {
 
         /*
-         * This is the fastest way I've found to thawRawAndProcessed the audit trails of a whole bunch of auditables. Because Auditable
+         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
          * is not mapped, we have to query for each class separately ... just in case the user has passed a
          * heterogeneous collection.
          */

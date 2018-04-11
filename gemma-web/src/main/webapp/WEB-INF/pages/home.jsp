@@ -64,7 +64,7 @@
 	<div id="divider"></div>
 	<div class="footer">
 		<span class="left">Gemma &nbsp;&nbsp;${appConfig["version"]}&nbsp;&nbsp;&nbsp;Copyright &copy; 2007-2016 &nbsp;
-			<a href='<c:url value="http://gemma-chibi-doc.sites.olt.ubc.ca/terms-and-conditions" />'>Terms and conditions</a>
+			<a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
 		</span> &nbsp; &nbsp;
 		<jsp:include page="/common/social.jsp" />
 	</div>

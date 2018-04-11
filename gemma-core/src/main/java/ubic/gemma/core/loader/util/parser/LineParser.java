@@ -34,6 +34,7 @@ public interface LineParser<T> extends Parser<T> {
      * Handle the parsing of a single line from the input.
      *
      * @param line line to parse
+     * @return parsed object
      */
     T parseOneLine( String line );
 

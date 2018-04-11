@@ -489,7 +489,7 @@ public class GeneServiceImpl extends AbstractVoEnabledService<Gene, GeneValueObj
     }
 
     /**
-     * Only thawRawAndProcessed the Aliases, very light version
+     * Only thaw the Aliases, very light version
      */
     @Override
     @Transactional(readOnly = true)

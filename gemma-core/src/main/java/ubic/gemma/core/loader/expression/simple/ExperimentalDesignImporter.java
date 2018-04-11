@@ -79,6 +79,7 @@ public interface ExperimentalDesignImporter {
      *
      * @param experiment the one to add the experimental design
      * @param is         File to process
+     * @throws IOException when IO problems occur.
      * @see ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter
      * #importDesign(ubic.gemma.model.expression.experiment .ExpressionExperiment, java.io.InputStream, boolean)
      */

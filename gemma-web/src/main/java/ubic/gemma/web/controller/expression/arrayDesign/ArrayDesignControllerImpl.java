@@ -198,7 +198,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         if ( !f.canRead() ) {
             throw new RuntimeException( "The file could not be found for " + arrayDesign.getShortName()
-                    + ". Please contact gemma@chibi.ubc.ca for assistance" );
+                    + ". Please contact pavlab-support@msl.ubc.ca for assistance" );
         }
 
         try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) )) {

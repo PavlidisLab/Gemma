@@ -2,7 +2,7 @@
 # shortName=GSE6344
 # This design modified for tests!
 # name=Gene expression in Stage 1,2 Normal and Tumor kidney cancer
-# Experiment details: http://chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=24
+# Experiment details: https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id=24
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
 #$diseaseState : Category=disease Type=Categorical

@@ -31,20 +31,21 @@ import java.util.Collection;
  */
 public interface SimpleExpressionDataLoaderService {
 
-    /**
-     * @return ExpressionExperiment
-     */
     ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData, DoubleMatrix<String, String> matrix );
 
-    @SuppressWarnings("unused") // Possible external use
+    @SuppressWarnings("unused")
+        // Possible external use
     DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
             Collection<Object> usedDesignElements, ArrayDesign design );
 
     /**
      * Parses, converts (into Gemma objects), and loads data into the database.
      *
-     * @param data tab-delimited file with row names corresponding to CompositeSequence names and column names
-     *             corresponding to BioAssay names.
+     * @param metaData meta data
+     * @param data     tab-delimited file with row names corresponding to CompositeSequence names and column names
+     *                 corresponding to BioAssay names.
+     * @return new experiment
+     * @throws IOException when IO problems occur.
      */
     ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData, InputStream data ) throws IOException;
 

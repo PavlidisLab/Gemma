@@ -60,7 +60,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     @Override
     public GeneProduct findByNcbiId( String ncbiId ) {
         return ( GeneProduct ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from GeneProductImpl g where g.ncbiGi = :ncbiId" ).setParameter( "ncbiId", ncbiId )
+                .createQuery( "from GeneProduct g where g.ncbiGi = :ncbiId" ).setParameter( "ncbiId", ncbiId )
                 .uniqueResult();
     }
 
@@ -94,7 +94,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "
+                "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
                         + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
                         + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "
                         + "where gp.name = :name and g.taxon = :taxon" ).setParameter( "name", name )
@@ -104,7 +104,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
     @Override
     public GeneProduct thaw( GeneProduct existing ) {
         List<?> re = this.getHibernateTemplate().findByNamedParam(
-                "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "
+                "select distinct gp from GeneProduct gp left join fetch gp.gene g left join fetch g.taxon "
                         + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon "
                         + "left join fetch g.aliases  where gp = :gp", "gp", existing );
 

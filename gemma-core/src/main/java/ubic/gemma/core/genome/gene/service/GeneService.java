@@ -59,6 +59,9 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
      * region. If strand is non-null, only genes on the same strand are returned.
+     *
+     * @param physicalLocation physical location of gene
+     * @return all genes at given location
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
@@ -83,6 +86,7 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
     /**
      * Quickly load exact matches.
      *
+     * @param ncbiIds ncbi IDs
      * @return map of NCBI Id to the gene.
      */
     Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds );
@@ -100,6 +104,8 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
     /**
      * Quickly load exact matches.
      *
+     * @param query   query
+     * @param taxonId taxon id
      * @return map of gene symbol (tolowercase()) to the gene. The actual query that led to the gene is not retained.
      */
     Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId );
@@ -110,6 +116,10 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     /**
      * Returns a list of compositeSequences associated with the given gene and array design
+     *
+     * @param gene        gene
+     * @param arrayDesign platform
+     * @return composite sequences
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign );
@@ -123,18 +133,23 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
 
     /**
      * Gets all the genes for a given taxon
+     *
+     * @param taxon taxon
+     * @return genes for given taxon
      */
     Collection<Gene> getGenesByTaxon( Taxon taxon );
 
     Collection<PhysicalLocationValueObject> getPhysicalLocationsValueObjects( Gene gene );
 
     /**
+     * @param geneId gene id
      * @return empty collection if no products
      */
     Collection<GeneProductValueObject> getProducts( Long geneId );
 
     /**
-     * Returns a collection of genes for the specified taxon
+     * @param taxon taxon
+     * @return a collection of genes for the specified taxon
      */
     Collection<Gene> loadAll( Taxon taxon );
 
@@ -143,13 +158,17 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
     GeneValueObject loadGenePhenotypes( Long geneId );
 
     /**
-     * Gets all the microRNAs for a given taxon. Note query could be slow or inexact due to use of wild card searching
+     * @param taxon taxon
+     * @return all the microRNAs for a given taxon. Note query could be slow or inexact due to use of wild card searching
      * of the genes description
      */
     Collection<Gene> loadMicroRNAs( Taxon taxon );
 
     /**
      * Load with objects already thawed.
+     *
+     * @param ids ids
+     * @return pre-thawed genes
      */
     Collection<Gene> loadThawed( Collection<Long> ids );
 
@@ -164,7 +183,8 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
     Gene thaw( Gene gene );
 
     /**
-     * Only thawRawAndProcessed the Aliases, very light version
+     * @param gene gene
+     * @return thaw the Aliases, very light version
      */
     Gene thawAliases( Gene gene );
 

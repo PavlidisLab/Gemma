@@ -36,7 +36,7 @@
                      fetch="select">
             <column name="BIO_SEQUENCE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="geneProduct" class="ubic.gemma.model.genome.gene.GeneProductImpl" lazy="proxy"
+        <many-to-one name="geneProduct" class="ubic.gemma.model.genome.gene.GeneProduct" lazy="proxy"
                      fetch="select">
             <column name="GENE_PRODUCT_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

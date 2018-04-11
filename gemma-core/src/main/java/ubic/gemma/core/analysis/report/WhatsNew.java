@@ -114,6 +114,8 @@ public class WhatsNew {
 
     /**
      * adds a single auditable to the new object list
+     *
+     * @param newObject the object to add
      */
     public void addNewObjects( Auditable newObject ) {
         this.newObjects.add( newObject );
@@ -121,6 +123,8 @@ public class WhatsNew {
 
     /**
      * adds a collection of auditables to the new object list
+     *
+     * @param objs the objects to add
      */
     public void addNewObjects( Collection<Auditable> objs ) {
         this.newObjects.addAll( objs );
@@ -128,6 +132,8 @@ public class WhatsNew {
 
     /**
      * adds a single auditable to the updated object list
+     *
+     * @param updatedObject the object that has been updated
      */
     public void addUpdatedObjects( Auditable updatedObject ) {
         this.updatedObjects.add( updatedObject );
@@ -135,6 +141,8 @@ public class WhatsNew {
 
     /**
      * adds a collection of auditables to the updated object list
+     *
+     * @param objs the objects that have been updated
      */
     public void addUpdatedObjects( Collection<Auditable> objs ) {
         this.updatedObjects.addAll( objs );
@@ -152,7 +160,7 @@ public class WhatsNew {
     }
 
     /**
-     * get a map for the total number expression experiments per taxon
+     * @return get a map for the total number expression experiments per taxon
      */
     public Map<Taxon, Long> getEeCountPerTaxon() {
         return this.eeCountPerTaxon;
@@ -163,7 +171,7 @@ public class WhatsNew {
     }
 
     /**
-     * get a map for the number of new expression experiments per taxon
+     * @return get a map for the number of new expression experiments per taxon
      */
     public Map<Taxon, Collection<Long>> getNewEEIdsPerTaxon() {
         return this.newEEIdsPerTaxon;
@@ -174,7 +182,7 @@ public class WhatsNew {
     }
 
     /**
-     * get a map for the number of updated expression experiments per taxon
+     * @return get a map for the number of updated expression experiments per taxon
      */
     public Map<Taxon, Collection<Long>> getUpdatedEEIdsPerTaxon() {
         return this.updatedEEIdsPerTaxon;
@@ -185,7 +193,7 @@ public class WhatsNew {
     }
 
     /**
-     * get a count of the number of assays in the new expression experiments
+     * @return get a count of the number of assays in the new expression experiments
      */
     public int getNewAssayCount() {
         return this.newAssayCount;

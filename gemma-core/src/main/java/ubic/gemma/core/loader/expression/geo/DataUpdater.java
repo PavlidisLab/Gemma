@@ -14,23 +14,14 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix1D;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -49,11 +40,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -69,6 +56,9 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
@@ -120,8 +110,9 @@ public class DataUpdater {
     /**
      * For 3' arrays. This only works for single-platform experiments.
      *
-     * @param ee ee
+     * @param ee                  ee
      * @param pathToAptOutputFile file
+     * @throws IOException when IO problems occur.
      */
     public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
@@ -155,8 +146,8 @@ public class DataUpdater {
     /**
      * For platforms that don't have a CDF and/or for which have exon vs gene level data. Applies to Affymetrix exon and
      * newer gene platforms.
-     * 
-     * @param ee
+     *
+     * @param ee the experiment
      */
     public void addAffyExonArrayData( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -179,7 +170,8 @@ public class DataUpdater {
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
-        Collection<RawExpressionDataVector> vectors = apt.processExonOrGeneArrayData( ee, targetPlatform, originalPlatform, files );
+        Collection<RawExpressionDataVector> vectors = apt
+                .processExonOrGeneArrayData( ee, targetPlatform, originalPlatform, files );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors were returned for " + ee );
@@ -189,12 +181,12 @@ public class DataUpdater {
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
 
-            switchBioAssaysToTargetPlatform( ee, targetPlatform );
+            this.switchBioAssaysToTargetPlatform( ee, targetPlatform );
 
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform.getShortName() + " to "
-                            + targetPlatform.getShortName() + ")" );
+                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform
+                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
         this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
@@ -207,8 +199,9 @@ public class DataUpdater {
      * newer gene platforms. Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
      * them and we ran apt-probeset-summarize ourselves. Must be single-platform.
      *
-     * @param ee ee
+     * @param ee                  ee
      * @param pathToAptOutputFile file
+     * @throws IOException when IO problems occur.
      */
     public void addAffyExonArrayData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
@@ -225,7 +218,8 @@ public class DataUpdater {
         ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( originalPlatform );
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
-        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, targetPlatform, originalPlatform );
+        Collection<RawExpressionDataVector> vectors = apt
+                .processData( ee, pathToAptOutputFile, targetPlatform, originalPlatform );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors were returned for " + ee );
@@ -235,12 +229,12 @@ public class DataUpdater {
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
 
-            switchBioAssaysToTargetPlatform( ee, targetPlatform );
+            this.switchBioAssaysToTargetPlatform( ee, targetPlatform );
 
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform.getShortName() + " to "
-                            + targetPlatform.getShortName() + ")" );
+                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform
+                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
         this.audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform,
@@ -254,12 +248,14 @@ public class DataUpdater {
      * Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation type we
      * use internally. Counts and FPKM (if provided) are stored in addition.
      *
-     * @param ee ee
-     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms. The data set will be
-     *        switched to use it.
-     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
-     * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
+     * @param ee                  ee
+     * @param targetArrayDesign   - this should be one of the "Generic" gene-based platforms. The data set will be
+     *                            switched to use it.
+     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
+     * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
+     * @param isPairedReads       is paired reads
+     * @param readLength          read length
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
@@ -319,10 +315,10 @@ public class DataUpdater {
      * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
      *
-     * @param ee ee
+     * @param ee             ee
      * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use this
-     *        for a multi-platform dataset)
-     * @param data to slot in
+     *                       for a multi-platform dataset)
+     * @param data           to slot in
      * @return ee
      */
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -439,9 +435,9 @@ public class DataUpdater {
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param ee the experiment to be modified
+     * @param ee             the experiment to be modified
      * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets)
-     * @param data the data to be used
+     * @param data           the data to be used
      * @return ee
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -516,10 +512,10 @@ public class DataUpdater {
      * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
      * sample- and element-matching to happen here.
      *
-     * @param ee ee
+     * @param ee             ee
      * @param targetPlatform (this only works for a single-platform data set)
-     * @param qt qt
-     * @param data data
+     * @param qt             qt
+     * @param data           data
      * @return ee
      */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
@@ -538,7 +534,7 @@ public class DataUpdater {
     /**
      * You can now analyze CEL file data for data sets that have more than one platform (affyFromCel). However, this has
      * to be done before the data set is switched to a merged platform.
-     * 
+     *
      * @param ee ee
      * @return This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
      */
@@ -606,8 +602,8 @@ public class DataUpdater {
 
     /**
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
-     * @param ee ee
-     * @param note note
+     * @param ee      ee
+     * @param note    note
      */
     private void audit( ExpressionExperiment ee, String note, boolean replace ) {
         AuditEventType eventType;
@@ -831,7 +827,7 @@ public class DataUpdater {
     }
 
     /**
-     * @param rawMatrix matrix
+     * @param rawMatrix         matrix
      * @param targetArrayDesign ad
      * @return matrix with row names fixed up. ColumnNames still need to be done.
      */
@@ -946,15 +942,14 @@ public class DataUpdater {
 
     /**
      * Only when there is a single platform!
-     * 
-     * @param ee presumed thawed
+     *
+     * @param ee             presumed thawed
      * @param targetPlatform
      */
     private void switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException(
-                    "Can't handle experiments with more than one platform" );
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
         }
 
         for ( BioAssay ba : ee.getBioAssays() ) {

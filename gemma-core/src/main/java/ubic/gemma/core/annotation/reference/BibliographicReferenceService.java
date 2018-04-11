@@ -40,6 +40,9 @@ public interface BibliographicReferenceService
 
     /**
      * Adds a document (in PDF format) for the reference.
+     *
+     * @param bibliographicReference reference
+     * @param pdfFile                pdf file
      */
     @Secured({ "GROUP_USER" })
     void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
@@ -50,6 +53,9 @@ public interface BibliographicReferenceService
 
     /**
      * check to see if the object already exists
+     *
+     * @param bibliographicReference reference
+     * @return reference
      */
     @Override
     BibliographicReference find( BibliographicReference bibliographicReference );
@@ -74,11 +80,18 @@ public interface BibliographicReferenceService
 
     /**
      * Get a reference by the unqualified external id.
+     *
+     * @param id id
+     * @return reference
      */
     BibliographicReference findByExternalId( java.lang.String id );
 
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
+     *
+     * @param id           id
+     * @param databaseName db name
+     * @return reference
      */
     BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
 
@@ -86,17 +99,25 @@ public interface BibliographicReferenceService
      * <p>
      * Get a reference by the unqualified external id. Searches for pubmed by default
      * </p>
+     *
+     * @param id id
+     * @return reference VO
      */
     BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
+     *
+     * @return all references with EEs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
 
     /**
      * Get the ExpressionExperiments, if any, that are linked to the given reference.
+     *
+     * @param bibliographicReference reference
+     * @return datasets
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     java.util.Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference );

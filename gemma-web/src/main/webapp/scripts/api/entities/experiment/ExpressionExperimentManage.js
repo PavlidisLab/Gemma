@@ -189,7 +189,6 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel,
             var taxonid = (this.taxonid) ? this.taxonid : null;
             var filterMode = (this.filterMode) ? this.filterMode : null;
             var showPublic = (this.showPublic) ? this.showPublic : false;
-
             var store = new Gemma.PagingDataStore({
                 autoLoad: true,
                 proxy: new Ext.data.DWRProxy({
@@ -570,8 +569,6 @@ Gemma.EEReportGridColumnRenderers = {
         }
 
         if (diffIsPossible(record)) {
-
-            console.log(record);
             if (record.get('dateDifferentialAnalysis')) {
                 var type = record.get('differentialAnalysisEventType');
 
@@ -649,6 +646,20 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         renderer: Gemma.Renderers.curationNoteStubRenderer,
         tooltip: 'Shows first 50 characters of the curation note for experiments that are marked for curators attention.',
         width: 100
+    }, {
+        header: 'Quality',
+        dataIndex: 'quality',
+        sortable: true,
+        renderer: Gemma.Renderers.qualityRenderer,
+        tooltip: 'Shows the quality score of curated experiments.<br/><br/>Quality refers to data quality, wherein the same study could have been done twice with the same technical parameters and in one case yield bad quality data, and in another high quality data.',
+        width: 15
+    }, {
+        header: 'Suitability',
+        dataIndex: 'suitability',
+        sortable: true,
+        renderer: Gemma.Renderers.suitabilityRenderer,
+        tooltip: 'Shows the suitability score of curated experiments.<br/><br/>Suitability refers to technical aspects which, if we were doing the study ourselves, we would have altered to make it optimal for analyses of the sort used in Gemma.',
+        width: 15
     }, {
         header: '#ADs',
         sortable: true,

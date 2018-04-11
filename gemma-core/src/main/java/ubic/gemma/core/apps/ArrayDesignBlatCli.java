@@ -289,7 +289,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
         try {
-            // thawRawAndProcessed is already done.
+            // thaw is already done.
             arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
             successObjects.add( design.getName() );
             this.audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );

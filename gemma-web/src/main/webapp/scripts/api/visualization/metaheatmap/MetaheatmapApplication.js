@@ -351,7 +351,7 @@ Gemma.Metaheatmap.Application = Ext
                                 tooltip : 'Click here for documentation on how to use this visualizer.',
                                 handler : function() {
                                    window
-                                      .open( 'http://gemma-chibi-doc.sites.olt.ubc.ca/documentation/search-page/#GemmaQuickGuide-DifferentialExpressionView' );
+                                      .open( 'https://pavlidislab.github.io/Gemma/search.html#differential-expression-results' );
                                 },
                                 scope : this
                              } ], // end tbar

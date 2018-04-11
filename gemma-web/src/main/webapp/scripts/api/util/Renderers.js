@@ -24,12 +24,12 @@ Gemma.Renderers = {
                 year: 'numeric'
             };
             var date = new Date(time);
-            if ( isNaN( date.getTime() ) ) {  // d.valueOf() could also work
+            if (isNaN(date.getTime())) {  // d.valueOf() could also work
                 //noinspection ExceptionCaughtLocallyJS
                 throw "Trying to create a date from invalid string: " + value;
             }
             return date.toLocaleDateString(undefined, options);
-        }catch(err){
+        } catch (err) {
             console.error(err);
             return "";
         }
@@ -46,6 +46,20 @@ Gemma.Renderers = {
         if (record.get('needsAttention')) {
             var note = record.get('curationNote') ? record.get('curationNote') : "Curation note empty";
             return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + note + '"></i>';
+        }
+    },
+
+    qualityRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
+        if (!record.get('needsAttention')) {
+            var geeq = record.get('geeq');
+            if(geeq !== undefined) return getGeeqIconColored(geeq.publicQualityScore);
+        }
+    },
+
+    suitabilityRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
+        if (!record.get('needsAttention')) {
+            var geeq = record.get('geeq');
+            if(geeq !== undefined) return getGeeqIconColored(geeq.publicSuitabilityScore);
         }
     },
 

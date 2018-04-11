@@ -52,6 +52,7 @@ public interface SVDServiceHelper {
     /**
      * @param experimentalFactors to consider
      * @param importanceThreshold threshold for pvalue of association with factor. Suggested value might be 0.01.
+     * @param ee                  the expression experiment
      * @return factors which are "significantly" associated with one of the first three PCs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

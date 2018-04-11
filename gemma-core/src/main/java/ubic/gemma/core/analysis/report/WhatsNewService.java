@@ -1,8 +1,8 @@
 /*
  * The Gemma_sec1 project
- * 
+ *
  * Copyright (c) 2009 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,8 @@ public interface WhatsNewService {
 
     /**
      * save the report from the date specified.
+     *
+     * @param date the date of the report
      */
     void saveReport( Date date );
 
@@ -46,6 +48,7 @@ public interface WhatsNewService {
     WhatsNew getReport();
 
     /**
+     * @param date the date of the report
      * @return representing the updated or new objects.
      */
     WhatsNew getReport( Date date );

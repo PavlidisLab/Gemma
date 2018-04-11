@@ -111,6 +111,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
         name: "pcaAnalysisEventType"
     }, {
         name: "differentialExpressionAnalyses"
+    }, {
+        name: "geeq"
     }]),
 
     /**

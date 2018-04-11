@@ -12,14 +12,9 @@
 				<h3>
 					Contacting us
 				</h3>
-				<p class="emphasized">
-					To get emails about updates to the Gemma software, subscribe to the
-					<a href="http://lists.chibi.ubc.ca/mailman/listinfo/gemma-announce">Gemma-announce
-						mailing list</a>.
-				</p>
 				<p>
 					For feature requests and bug reports, send us an email
-					<a href="mailto:gemma@chibi.ubc.ca">here</a>.
+					<a href="mailto:pavlab-support@msl.ubc.ca">here</a>.
 				</p>
 				<p>
 					Please also keep an eye out for the feedback button-tab on the left

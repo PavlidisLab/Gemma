@@ -305,7 +305,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
-     * Perform a less intensive thawRawAndProcessed of an array design: not the composite sequences.
+     * Perform a less intensive thaw of an array design: not the composite sequences.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawLite( ArrayDesign arrayDesign );
