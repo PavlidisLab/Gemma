@@ -38,7 +38,7 @@ public class AffyPowerToolsProbesetSummarizeTest {
         Map<String, Map<String, String>> mpsnames = t.loadMpsNames();
 
         assertEquals( "MoGene-2_1-st.mps", mpsnames.get( "GPL17400" ).get( "mps" ) );
-        assertEquals( "RaGene-1_0-st-v1.r4.pgf", mpsnames.get( "GPL6247" ).get( "pgf" ) );
+        assertEquals( "RaEx-1_0-st-v1.r2.pgf", mpsnames.get( "GPL6247" ).get( "pgf" ) );
 
     }
 

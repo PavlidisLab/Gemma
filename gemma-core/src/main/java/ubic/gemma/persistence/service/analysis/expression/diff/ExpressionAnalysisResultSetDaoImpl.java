@@ -19,10 +19,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -146,26 +143,48 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractDao<ExpressionAn
     }
 
     @Override
-    public void remove( ExpressionAnalysisResultSet entity ) {
-        Collection<DifferentialExpressionAnalysisResult> rss = entity.getResults();
-
-        int size = rss.size();
+    public void remove( ExpressionAnalysisResultSet resultSet ) {
 
         // Wipe references
-        entity.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
-        this.update( entity );
+        resultSet.setResults( new HashSet<DifferentialExpressionAnalysisResult>() );
+        this.update( resultSet );
 
-        // Remove results
-        if ( size > 0 ) {
-            AbstractDao.log.info( "Bulk removing " + size + " dea results." );
-            resultDao.remove( rss );
-            AbstractDao.log.info( "Done, flushing..." );
-            this.getSessionFactory().getCurrentSession().flush();
+        // Clear session
+        Session session = this.getSessionFactory().getCurrentSession();
+        session.flush();
+        session.clear();
+        session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
+        int contrastsDone = 0;
+        int resultsDone = 0;
+
+        // Remove results - Not using DifferentialExpressionResultDaoImpl.remove() for speed
+        {
+            AbstractDao.log.info( "Bulk removing dea results..." );
+
+            // Delete contrasts
+            //language=MySQL
+            final String nativeDeleteContrastsQuery =
+                    "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
+                            + " WHERE d.RESULT_SET_FK = :rsid AND d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
+            SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
+            q.setParameter( "rsid", resultSet.getId() );
+            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table remove.
+
+            // Delete AnalysisResults
+            //language=MySQL
+            String nativeDeleteARQuery = "DELETE d FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d WHERE d.RESULT_SET_FK = :rsid  ";
+            q = session.createSQLQuery( nativeDeleteARQuery );
+            q.setParameter( "rsid", resultSet.getId() );
+            resultsDone += q.executeUpdate();
+
+            AbstractDao.log.info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results. Flushing..." );
+            session.flush();
+            session.clear();
         }
 
         // Remove result set
-        AbstractDao.log.info( "Removing result set " + entity.getId() );
-        super.remove( entity );
+        AbstractDao.log.info( "Removing result set " + resultSet.getId() );
+        super.remove( resultSet );
         this.getSessionFactory().getCurrentSession().flush();
     }
 }

@@ -206,7 +206,9 @@ public class CompositeSequenceDaoImpl extends AbstractVoEnabledDao<CompositeSequ
 
     @Override
     public Collection<CompositeSequence> findByName( final String name ) {
-        return this.findByStringProperty( "name", name );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( "select distinct cs from CompositeSequence" + " cs where cs.name = :name" )
+                .setParameter( "name", name ).list();
     }
 
     @Override

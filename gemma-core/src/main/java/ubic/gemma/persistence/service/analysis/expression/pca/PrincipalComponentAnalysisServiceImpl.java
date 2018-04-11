@@ -146,9 +146,6 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
     @Override
     @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
-        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisDao.findByExperiment( ee );
-        for ( PrincipalComponentAnalysis pca : pcas ) {
-            this.principalComponentAnalysisDao.remove( pca );
-        }
+        this.principalComponentAnalysisDao.removeForExperiment(ee);
     }
 }

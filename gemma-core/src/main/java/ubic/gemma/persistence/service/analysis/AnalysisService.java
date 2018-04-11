@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.analysis;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
@@ -39,6 +40,13 @@ public interface AnalysisService<T extends Analysis> {
      */
     @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
     void remove( T toDelete );
+
+    /**
+     * Removes all analyses for the given experiment
+     * @param ee the expriment to remove all analyses for
+     */
+    @Secured({ "GROUP_USER", "ACL_ANALYSIS_EDIT" })
+    void removeForExperiment( ExpressionExperiment ee );
 
     /**
      * @param investigation investigation
