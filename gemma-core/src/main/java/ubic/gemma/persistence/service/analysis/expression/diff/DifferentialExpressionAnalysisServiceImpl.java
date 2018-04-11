@@ -292,17 +292,15 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         StopWatch sw = new StopWatch();
         sw.start();
         int rsCnt = 0;
-        int rCnt = 0;
 
         // remove from database
         for ( ExpressionAnalysisResultSet rs : rss ) {
-            rCnt = rs.getResults().size();
             this.expressionAnalysisResultSetDao.remove( rs );
             rsCnt++;
         }
 
         sw.stop();
-        log.info( "Removed " + rCnt + " results in " + rsCnt + " result sets." );
+        log.info( "Removed in " + rsCnt + " result sets." );
     }
 
 }

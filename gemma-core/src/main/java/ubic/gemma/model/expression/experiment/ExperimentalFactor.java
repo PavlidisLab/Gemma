@@ -26,6 +26,7 @@ import ubic.gemma.model.common.description.Characteristic;
 
 import javax.persistence.Transient;
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * ExperimentFactors are the dependent variables of an experiment (e.g., genotype, time, glucose concentration).
@@ -38,17 +39,30 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4615731059510436891L;
-    private Collection<ubic.gemma.model.common.description.Characteristic> annotations = new java.util.HashSet<>();
-    private ubic.gemma.model.common.description.Characteristic category;
-    private ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign;
-    private Collection<FactorValue> factorValues = new java.util.HashSet<>();
+    private Collection<Characteristic> annotations = new HashSet<>();
+    private Characteristic category;
+    private ExperimentalDesign experimentalDesign;
+    private Collection<FactorValue> factorValues = new HashSet<>();
     private ExpressionExperiment securityOwner;
-    private ubic.gemma.model.expression.experiment.FactorType type;
+    private FactorType type;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public ExperimentalFactor() {
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null ) {
+            return super.hashCode();
+        }
+
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ( ( this.getName() == null ) ? 0 : this.getName().hashCode() );
+        result = prime * result + ( ( this.getDescription() == null ) ? 0 : this.getDescription().hashCode() );
+        return result;
     }
 
     @Override
@@ -86,19 +100,6 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
         } else
             return this.getDescription().equals( other.getDescription() );
 
-    }
-
-    @Override
-    public int hashCode() {
-        if ( this.getId() != null ) {
-            return super.hashCode();
-        }
-
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ( ( this.getName() == null ) ? 0 : this.getName().hashCode() );
-        result = prime * result + ( ( this.getDescription() == null ) ? 0 : this.getDescription().hashCode() );
-        return result;
     }
 
     @Transient
