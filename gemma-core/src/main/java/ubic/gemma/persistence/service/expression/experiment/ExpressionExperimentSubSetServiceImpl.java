@@ -23,7 +23,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
 import java.util.Collection;
 
@@ -36,14 +36,14 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
         implements ExpressionExperimentSubSetService {
 
     private final ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
-    private final DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     public ExpressionExperimentSubSetServiceImpl( ExpressionExperimentSubSetDao expressionExperimentSubSetDao,
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         super( expressionExperimentSubSetDao );
         this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
     @Override
@@ -73,17 +73,12 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
         }
 
         // Remove differential expression analyses
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisService
                 .findByInvestigation( subset );
         for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            Long toDelete = de.getId();
-            this.differentialExpressionAnalysisDao.remove( toDelete );
+            this.differentialExpressionAnalysisService.remove( de );
         }
 
         this.expressionExperimentSubSetDao.remove( subset );
-
-        /*
-         * FIXME Coexpression involving this data set will linger on ...
-         */
     }
 }

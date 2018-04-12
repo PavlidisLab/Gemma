@@ -58,7 +58,7 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -90,7 +90,7 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
     @Autowired
-    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
     @Autowired
@@ -928,11 +928,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         // Remove differential expression analyses
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
-                .findByInvestigation( ee );
-        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            this.differentialExpressionAnalysisDao.remove( de );
-        }
+        this.differentialExpressionAnalysisService.removeForExperiment( ee );
 
         // Remove any sample coexpression matrices
         this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );

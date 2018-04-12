@@ -42,7 +42,7 @@ import java.util.*;
  * @see DifferentialExpressionAnalysis
  */
 @Repository
-public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<DifferentialExpressionAnalysis>
+class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<DifferentialExpressionAnalysis>
         implements DifferentialExpressionAnalysisDao {
 
     @Autowired
@@ -338,11 +338,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
     }
 
     @Override
-    public void thawResultSets( DifferentialExpressionAnalysis dea ){
-        Hibernate.initialize( dea.getResultSets() );
-    }
-
-    @Override
     public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -372,6 +367,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log.info( "Thaw: " + timer.getTime() + "ms" );
         }
+    }
+
+    @Override
+    public void thawResultSets( DifferentialExpressionAnalysis dea ) {
+        Hibernate.initialize( dea.getResultSets() );
     }
 
     @Override
@@ -530,6 +530,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
                         + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    @Override
+    @Deprecated // Not useful for DEAs, works for other analysis types.
+    public void removeForExperiment( ExpressionExperiment ee ) {
+        AbstractDao.log.error( "!!! Not removing any analyses for experiment " + ee + ", use the service layer instead!" );
     }
 
     private void addFactorValues( Map<Long, Collection<FactorValue>> ee2fv, List<Object[]> fvs ) {
@@ -693,5 +699,4 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
 
         }
     }
-
 }
