@@ -68,7 +68,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
             log.warn( "Test skipped due to lack of Affy Power Tools executable" );
             return;
         }
-
+        //    mouse  GPL6096 gene level
         ExpressionExperiment ee;
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -81,7 +81,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         /*
          * Add the raw data.
          */
-        dataUpdater.addAffyExonArrayData( ee );
+        dataUpdater.reprocessAffyDataFromCel( ee );
 
         experimentService.load( ee.getId() );
     }
@@ -92,7 +92,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
             log.warn( "Test skipped due to lack of Affy Power Tools executable" );
             return;
         }
-        ExpressionExperiment ee; // GSE22498
+        ExpressionExperiment ee; // GSE22498,  GPL5188 - exon level, so will be switched to GPL5175 (human)
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE22498", false, false, false );
@@ -100,7 +100,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
         }
-        dataUpdater.addAffyExonArrayData( ee );
+        dataUpdater.reprocessAffyDataFromCel( ee );
         experimentService.load( ee.getId() );
     }
 
@@ -110,7 +110,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
             log.warn( "Test skipped due to lack of Affy Power Tools executable" );
             return;
         }
-        ExpressionExperiment ee; // GSE33597
+        ExpressionExperiment ee; // GSE33597 -  GPL6543, gene level so shouldn't switch (though GEO version of platform needs to be filtered)
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE33597", false, false, false );
@@ -118,7 +118,7 @@ public class ExonArrayDataAddIntegrationTest extends AbstractGeoServiceTest {
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).get( 0 );
         }
-        dataUpdater.addAffyExonArrayData( ee );
+        dataUpdater.reprocessAffyDataFromCel( ee );
         experimentService.load( ee.getId() );
 
     }

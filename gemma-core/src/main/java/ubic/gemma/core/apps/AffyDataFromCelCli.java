@@ -113,18 +113,15 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             }
 
             ArrayDesign ad = arrayDesignsUsed.iterator().next();
+
+            if ( !GeoPlatform.isAffyPlatform( ad.getShortName() ) ) {
+                throw new IllegalArgumentException( "Not an Affymetrix array so far as we can tell: " + ad );
+            }
+
             try {
                 AbstractCLI.log.info( "Loading data from " + aptFile );
-                if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && GeoPlatform
-                        .isAffymetrixExonArray( ad.getShortName() ) ) ) {
-                    serv.addAffyExonArrayData( thawedEe, aptFile );
-                } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
-                        .contains( "affy" ) ) {
-                    serv.addAffyData( thawedEe, aptFile );
-                } else {
-                    throw new IllegalArgumentException( "Option " + AffyDataFromCelCli.APT_FILE_OPT
-                            + " only valid if you are using an exon array." );
-                }
+                serv.addAffyData( thawedEe, aptFile );
+
             } catch ( Exception exception ) {
                 return exception;
             }
@@ -155,24 +152,17 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * Even if there are multiple platforms, we assume they are all the same type. If not, that's your
                  * problem :) (seriously, we could check...)
                  */
-                if ( ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && GeoPlatform
-                        .isAffymetrixExonArray( ad.getShortName() ) ) ) {
-                    AbstractCLI.log.info( thawedEe + " looks like affy exon or gene array (no CDF)" );
+                if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
+                    AbstractCLI.log.info( thawedEe + " looks like affy array" );
 
-                    serv.addAffyExonArrayData( thawedEe );
-                    this.successObjects.add( thawedEe );
-                    AbstractCLI.log.info( "Successfully processed: " + thawedEe );
-                } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) && ad.getName().toLowerCase()
-                        .contains( "affy" ) ) {
-                    AbstractCLI.log.info( thawedEe + " looks like a affy 3-prime array" );
-                    serv.reprocessAffyThreePrimeArrayData( thawedEe );
+                    serv.reprocessAffyDataFromCel( thawedEe );
                     this.successObjects.add( thawedEe );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );
                 } else {
                     AbstractCLI.log.warn( ee
-                            + ": This CLI can only deal with Affymetrix platforms (exon or 3' probe designs)" );
+                            + ": This CLI can only deal with Affymetrix platforms" );
                     this.errorObjects.add( ee
-                            + ": This CLI can only deal with Affymetrix platforms (exon or 3' probe designs)" );
+                            + ": This CLI can only deal with Affymetrix platforms" );
                 }
 
             } catch ( Exception exception ) {

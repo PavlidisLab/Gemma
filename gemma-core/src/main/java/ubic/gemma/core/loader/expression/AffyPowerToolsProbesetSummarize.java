@@ -47,8 +47,8 @@ import java.util.*;
  */
 public class AffyPowerToolsProbesetSummarize {
 
-    private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/affy.cdfs.properties";
-    private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/affy.mps.properties";
+    private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
+    private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
@@ -93,29 +93,15 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * For 3' arrays or situations when we are definitely not switching platforms
-     * 
-     * @param ee 
-     * @param aptOutputFileToRead file
-     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
-     * @return raw data vectors
-     * @throws IOException when IO problems occur.
-     */
-    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
-            ArrayDesign targetPlatform ) throws IOException {
-        return this.processData( ee, aptOutputFileToRead, targetPlatform, targetPlatform );
-    }
-
-    /**
      * For either 3' or Exon arrays.
      *
-     * @param ee                  ee
+     * @param ee ee
      * @param aptOutputFileToRead file
-     * @param targetPlatform      deal with data from this platform (call multiple times if there is more than one platform)
-     * @param originalPlatform    can be the same as the targetPlatform. But we specify this in case there is more than one
-     *                            original platform, so we're not trying to match up bioassays that are not relevant.
+     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
+     * @param originalPlatform can be the same as the targetPlatform. But we specify this in case there is more than one
+     *        original platform, so we're not trying to match up bioassays that are not relevant.
      * @return raw data vectors
-     * @throws IOException           io problem
+     * @throws IOException io problem
      * @throws FileNotFoundException file not found
      */
     public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
@@ -170,12 +156,11 @@ public class AffyPowerToolsProbesetSummarize {
             bad.setDescription( "Generated from output of apt-probeset-summarize" );
 
             /*
-             * Add them ...
+             * Add them ... note we haven't switched platforms yet.
              */
 
             Map<String, BioAssay> bmap = new HashMap<>();
             for ( BioAssay bioAssay : bioAssaysToUse ) {
-                assert bioAssay.getArrayDesignUsed().equals( targetPlatform );
                 if ( bmap.containsKey( bioAssay.getAccession().getAccession() ) || bmap
                         .containsKey( bioAssay.getName() ) ) {
                     throw new IllegalStateException( "Duplicate" );
@@ -217,7 +202,6 @@ public class AffyPowerToolsProbesetSummarize {
                                 .getAccession().getAccession() + "]" );
 
                 columnsToKeep.add( columnName );
-                assert assay.getArrayDesignUsed().equals( targetPlatform );
                 bad.getBioAssays().add( assay );
                 found++;
             }
@@ -239,14 +223,14 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param ee               ee
-     * @param targetPlatform   target platform; call multiple times if there is more than one platform (though that should
-     *                         not happen for exon arrays)
+     * @param ee ee
+     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
+     *        not happen for exon arrays)
      * @param originalPlatform might be the same as targetPlatform
-     * @param files            list of CEL files (any other files included will be ignored)
+     * @param files list of CEL files (any other files included will be ignored)
      * @return raw data vectors
      */
-    public Collection<RawExpressionDataVector> processExonOrGeneArrayData( ExpressionExperiment ee,
+    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee,
             ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<LocalFile> files ) {
 
         Collection<BioAssay> bioAssays = ee.getBioAssays();
@@ -275,40 +259,40 @@ public class AffyPowerToolsProbesetSummarize {
         return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest, false );
     }
 
-    /**
-     * Call once for each platform used by the experiment.
-     *
-     * @param ee             ee
-     * @param targetPlatform to match the CDF file
-     * @param files          files
-     * @return raw data vectors
-     */
-    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee,
-            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
-
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-
-        if ( bioAssays.isEmpty() ) {
-            throw new IllegalArgumentException( "Experiment had no assays" );
-        }
-
-        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
-            throw new IllegalArgumentException( "Target design had no elements" );
-        }
-
-        /*
-         * we may have multiple platforms; we need to get only the bioassays of interest.
-         */
-        Collection<String> accessionsOfInterest = new HashSet<>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            // This assumes we aren't going to switch platforms. 
-            if ( ba.getArrayDesignUsed().equals( targetPlatform ) ) {
-                accessionsOfInterest.add( ba.getAccession().getAccession() );
-            }
-        }
-        // note that the targetplatform is always the same as the original for these platforms.
-        return this.tryRun( ee, targetPlatform, targetPlatform, files, accessionsOfInterest, true );
-    }
+    //    /**
+    //     * Call once for each platform used by the experiment.
+    //     *
+    //     * @param ee             ee
+    //     * @param targetPlatform to match the CDF file
+    //     * @param files          files
+    //     * @return raw data vectors
+    //     */
+    //    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee,
+    //            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
+    //
+    //        Collection<BioAssay> bioAssays = ee.getBioAssays();
+    //
+    //        if ( bioAssays.isEmpty() ) {
+    //            throw new IllegalArgumentException( "Experiment had no assays" );
+    //        }
+    //
+    //        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+    //            throw new IllegalArgumentException( "Target design had no elements" );
+    //        }
+    //
+    //        /*
+    //         * we may have multiple platforms; we need to get only the bioassays of interest.
+    //         */
+    //        Collection<String> accessionsOfInterest = new HashSet<>();
+    //        for ( BioAssay ba : ee.getBioAssays() ) {
+    //            // This assumes we aren't going to switch platforms. 
+    //            if ( ba.getArrayDesignUsed().equals( targetPlatform ) ) {
+    //                accessionsOfInterest.add( ba.getAccession().getAccession() );
+    //            }
+    //        }
+    //        // note that the targetplatform is always the same as the original for these platforms.
+    //        return this.tryRun( ee, targetPlatform, targetPlatform, files, accessionsOfInterest, true );
+    //    }
 
     /**
      * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
@@ -344,24 +328,23 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * Stolen from SimpleExpressionDataLoaderService. This is where we switch platforms if necessary (e.g., going from
-     * exon-level to gene-level)
+     * Stolen from SimpleExpressionDataLoaderService.
      *
      * @param expressionExperiment ee
-     * @param bioAssayDimension    BA dim
-     * @param arrayDesign          target design
-     * @param matrix               matrix
+     * @param bioAssayDimension BA dim
+     * @param targetPlatform target design
+     * @param matrix matrix read from apt output.
      * @return raw data vectors
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
-            ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
+            ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign targetPlatform,
             DoubleMatrix<String, String> matrix ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
         Map<String, CompositeSequence> csMap = new HashMap<>();
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+        for ( CompositeSequence cs : targetPlatform.getCompositeSequences() ) {
             csMap.put( cs.getName(), cs );
         }
 
@@ -405,7 +388,7 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
-     * @param files                files
+     * @param files files
      * @param accessionsOfInterest Used for multiplatform studies; if null, ignored
      * @return strings
      */
@@ -453,16 +436,18 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For exon arrays and others that don't have CDFs. Like
+     * 
      * <pre>
      * apt-probeset-summarize -a rma -p HuEx-1_0-st-v2.r2.pgf -c HuEx-1_0-st-v2.r2.clf -m
      * HuEx-1_0-st-v2.r2.dt1.hg18.core.mps -qc-probesets HuEx-1_0-st-v2.r2.qcc -o GSE13344.genelevel.data
      * /bigscratch/GSE13344/*.CEL
      * </pre>
+     * 
      * http://media.affymetrix.com/support/developer/powertools/changelog/apt-probeset-summarize.html
      * http://bib.oxfordjournals.org/content/early/2011/04/15/bib.bbq086.full
      *
-     * @param ad         ad
-     * @param celfiles   celfiles
+     * @param ad ad
+     * @param celfiles celfiles
      * @param outputPath directory
      * @return string
      */
@@ -510,15 +495,16 @@ public class AffyPowerToolsProbesetSummarize {
 
     /**
      * For 3' arrays. Run RMA with quantile normalization.
+     * 
      * <pre>
      * apt-probeset-summarize -a rma  -d HG-U133A_2.cdf -o GSE123.genelevel.data
      * /bigscratch/GSE123/*.CEL
      * </pre>
      *
      * @param targetPlatform ad
-     * @param cdfFileName    e g. HG-U133A_2.cdf
-     * @param celfiles       celfiles
-     * @param outputPath     path
+     * @param cdfFileName e g. HG-U133A_2.cdf
+     * @param celfiles celfiles
+     * @param outputPath path
      * @return string
      */
     private String getThreePrimeSummarizationCommand( ArrayDesign targetPlatform, String cdfFileName,
@@ -605,8 +591,8 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * @param ee
      * @param targetPlatform
-     * @param originalPlatform     - only really necessary if we are switching platforms AND there are multiple platforms
-     *                             for the data set, which is actually a situation we don't currently support.
+     * @param originalPlatform - only really necessary if we are switching platforms AND there are multiple platforms
+     *        for the data set, which is actually a situation we don't currently support.
      * @param files
      * @param accessionsOfInterest
      * @param threePrime
