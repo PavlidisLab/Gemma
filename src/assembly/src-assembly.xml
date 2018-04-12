@@ -1,6 +1,5 @@
 <!--
 	Configuration for maven assembly plugin for source distribution. To use this, run "mvn package assembly:assembly -Dassemble-src"
-	$Id$ 
 -->
 <assembly>
 	<id>src</id>
