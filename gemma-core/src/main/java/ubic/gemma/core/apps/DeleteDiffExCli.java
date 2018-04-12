@@ -16,16 +16,17 @@ package ubic.gemma.core.apps;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
 /**
- * Delete one or more experiments from the system.
+ * Delete differential expression analsyes on a per-experiment basis.
  *
  * @author paul
  */
-public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
+public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
-        DeleteExperimentsCli d = new DeleteExperimentsCli();
+        DeleteDiffExCli d = new DeleteDiffExCli();
         Exception e = d.doWork( args );
         if ( e != null ) {
             e.printStackTrace();
@@ -34,7 +35,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     public String getCommandName() {
-        return "deleteExperiments";
+        return "deleteDiffEx";
     }
 
     @Override
@@ -44,15 +45,21 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
         if ( e != null )
             return e;
 
+        DifferentialExpressionAnalysisService deas = this.getBean( DifferentialExpressionAnalysisService.class );
+
         for ( BioAssaySet bas : this.expressionExperiments ) {
             try {
-                log.info( "--------- Deleting " +  bas + " --------");
-                this.eeService.remove( ( ExpressionExperiment ) bas );
+                if ( !( bas instanceof ExpressionExperiment ) ) {
+                    continue;
+                }
+                log.info( "--------- Deleting any diff ex analyses for " + bas + " --------" );
+                deas.removeForExperiment( ( ExpressionExperiment ) bas );
                 successObjects.add( bas );
-                log.info( "--------- Finished Deleting " + bas + " -------" );
+                log.info( "--------- Finished Deleting for " + bas + " -------" );
+
             } catch ( Exception ex ) {
                 log.error( ex );
-                errorObjects.add( bas + " " + ex.getMessage() );
+                errorObjects.add( bas + " :" + ex.getMessage() );
             }
         }
 
@@ -63,7 +70,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     public String getShortDesc() {
-        return "Delete experiment(s) from the system";
+        return "Delete differential expression analyses for experiment(s) from the system";
     }
 
 }

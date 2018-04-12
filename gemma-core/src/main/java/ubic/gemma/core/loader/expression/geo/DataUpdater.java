@@ -102,108 +102,19 @@ public class DataUpdater {
     private QuantitationTypeService qtService;
 
     @Autowired
-    private QuantitationTypeService quantitationTypeService;
-
-    @Autowired
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     /**
-     * For 3' arrays. This only works for single-platform experiments.
+     * Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
+     * them and we ran apt-probeset-summarize ourselves. Must be single-platform. Will switch the data set to use the
+     * "right" platform when the one originally used was an alt CDF or exon-level.
      *
-     * @param ee                  ee
-     * @param pathToAptOutputFile file
+     * @param ee ee
+     * @param pathToAptOutputFile file, presumed to be analyzed using the "right" platform (not an alt CDF or
+     *        exon-level)
      * @throws IOException when IO problems occur.
      */
     public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
-
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException(
-                    "Can't handle experiments with more than one platform when passing APT output file." );
-        }
-
-        ArrayDesign ad = ads.iterator().next();
-
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
-
-        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
-
-        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, ad );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "No vectors were returned for " + ee );
-        }
-
-        experimentService.replaceRawVectors( ee, vectors );
-
-        this.audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + ad, true );
-
-        this.postprocess( ee );
-
-    }
-
-    /**
-     * For platforms that don't have a CDF and/or for which have exon vs gene level data. Applies to Affymetrix exon and
-     * newer gene platforms.
-     *
-     * @param ee the experiment
-     */
-    public void addAffyExonArrayData( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
-        }
-        ArrayDesign originalPlatform = ads.iterator().next();
-
-        RawDataFetcher f = new RawDataFetcher();
-        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-
-        if ( files.isEmpty() ) {
-            throw new RuntimeException( "Data was apparently not available" );
-        }
-        ee = experimentService.thawLite( ee );
-
-        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( originalPlatform );
-
-        assert !targetPlatform.getCompositeSequences().isEmpty();
-
-        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
-
-        Collection<RawExpressionDataVector> vectors = apt
-                .processExonOrGeneArrayData( ee, targetPlatform, originalPlatform, files );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "No vectors were returned for " + ee );
-        }
-
-        ee = experimentService.replaceRawVectors( ee, vectors );
-
-        if ( !targetPlatform.equals( originalPlatform ) ) {
-
-            this.switchBioAssaysToTargetPlatform( ee, targetPlatform );
-
-            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform
-                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
-        }
-
-        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
-
-        this.postprocess( ee );
-    }
-
-    /**
-     * For platforms that don't have a CDF and/or for which have exon vs gene level data. Applies to Affymetrix exon and
-     * newer gene platforms. Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
-     * them and we ran apt-probeset-summarize ourselves. Must be single-platform.
-     *
-     * @param ee                  ee
-     * @param pathToAptOutputFile file
-     * @throws IOException when IO problems occur.
-     */
-    public void addAffyExonArrayData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
@@ -215,7 +126,7 @@ public class DataUpdater {
 
         ee = experimentService.thawLite( ee );
 
-        ArrayDesign targetPlatform = this.prepareTargetPlatformForExonArrays( originalPlatform );
+        ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
         Collection<RawExpressionDataVector> vectors = apt
@@ -229,11 +140,11 @@ public class DataUpdater {
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
 
-            this.switchBioAssaysToTargetPlatform( ee, targetPlatform );
+            int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform );
 
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform
+                    "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
                             .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
@@ -245,17 +156,82 @@ public class DataUpdater {
     }
 
     /**
+     *
+     * 
+     * @param ee the experiment
+     */
+    public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );
+
+        RawDataFetcher f = new RawDataFetcher();
+        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+
+        if ( files.isEmpty() ) {
+            throw new RuntimeException( "Data was apparently not available" );
+        }
+        ee = experimentService.thawLite( ee );
+        QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+        qt = qtService.create( qt );
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        for ( ArrayDesign originalPlatform : arrayDesignsUsed ) {
+
+            ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
+
+            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
+
+            Collection<RawExpressionDataVector> v = apt
+                    .processData( ee, targetPlatform, originalPlatform, files );
+
+            if ( v.isEmpty() ) {
+                throw new IllegalStateException(
+                        "No vectors were returned for " + ee + "; Original platform=" + originalPlatform + "; target platform=" + targetPlatform );
+            }
+
+            vectors.addAll( v );
+
+            if ( !targetPlatform.equals( originalPlatform ) ) {
+
+                int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform );
+
+                AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+                auditTrailService.addUpdateEvent( ee, eventType,
+                        "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
+                                .getShortName() + " to " + targetPlatform.getShortName() + ")" );
+            }
+
+        }
+        ee = experimentService.replaceRawVectors( ee, vectors );
+
+        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
+
+        this.postprocess( ee );
+    }
+
+    /**
+     * @param thawedEe
+     * @param celchip
+     */
+    public void reprocessAffyDataFromCel( ExpressionExperiment thawedEe, String celchip ) {
+        throw new UnsupportedOperationException( "Reprocessing with a specified celchip not implemented yet." );
+        /*
+         * Add AffyPowerToolsProbesetSummarize method to take this, then load the targetPlatform. Only for single
+         * platform datasets! We'll get an error otherwise.
+         */
+
+    }
+
+    /**
      * Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation type we
      * use internally. Counts and FPKM (if provided) are stored in addition.
      *
-     * @param ee                  ee
-     * @param targetArrayDesign   - this should be one of the "Generic" gene-based platforms. The data set will be
-     *                            switched to use it.
-     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
-     * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
+     * @param ee ee
+     * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms. The data set will be
+     *        switched to use it.
+     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided).
+     * @param rpkmMatrix Representing per-gene normalized data, optional (RPKM or FPKM)
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
-     * @param isPairedReads       is paired reads
-     * @param readLength          read length
+     * @param isPairedReads is paired reads
+     * @param readLength read length
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, Integer readLength,
@@ -315,10 +291,10 @@ public class DataUpdater {
      * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
      *
-     * @param ee             ee
+     * @param ee ee
      * @param targetPlatform optional; if null, uses the platform already used (if there is just one; you can't use this
-     *                       for a multi-platform dataset)
-     * @param data           to slot in
+     *        for a multi-platform dataset)
+     * @param data to slot in
      * @return ee
      */
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -435,9 +411,9 @@ public class DataUpdater {
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param ee             the experiment to be modified
+     * @param ee the experiment to be modified
      * @param targetPlatform the platform for the new data (this can only be used for single-platform data sets)
-     * @param data           the data to be used
+     * @param data the data to be used
      * @return ee
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
@@ -512,10 +488,10 @@ public class DataUpdater {
      * This method exists in addition to the other replaceData to allow more direct reading of data from files, allowing
      * sample- and element-matching to happen here.
      *
-     * @param ee             ee
+     * @param ee ee
      * @param targetPlatform (this only works for a single-platform data set)
-     * @param qt             qt
-     * @param data           data
+     * @param qt qt
+     * @param data data
      * @return ee
      */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
@@ -531,57 +507,56 @@ public class DataUpdater {
         return this.replaceData( ee, targetPlatform, eematrix );
     }
 
-    /**
-     * You can now analyze CEL file data for data sets that have more than one platform (affyFromCel). However, this has
-     * to be done before the data set is switched to a merged platform.
-     *
-     * @param ee ee
-     * @return This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
-     */
-    @SuppressWarnings("UnusedReturnValue") // Possible external use
-    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee ) {
-
-        Collection<ArrayDesign> arrayDesignsUsed = this.experimentService.getArrayDesignsUsed( ee );
-
-        ee = experimentService.thawLite( ee );
-        RawDataFetcher f = new RawDataFetcher();
-        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-
-        if ( files.isEmpty() ) {
-            throw new RuntimeException( "Data was apparently not available" );
-        }
-        Collection<RawExpressionDataVector> vectors = new HashSet<>();
-
-        // Use the same QT for each one 
-        QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
-        qt = quantitationTypeService.create( qt );
-
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            DataUpdater.log.info( "Processing data for " + ad );
-
-            ad = arrayDesignService.thaw( ad );
-
-            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
-
-            vectors.addAll( apt.processThreeprimeArrayData( ee, ad, files ) );
-
-        }
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "No vectors were returned for " + ee );
-        }
-
-        ee = experimentService.replaceRawVectors( ee, vectors );
-        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils
-                .join( arrayDesignsUsed, "; " ), true );
-
-        if ( arrayDesignsUsed.size() == 1 ) {
-            this.postprocess( ee );
-        } else {
-            DataUpdater.log.warn( "Skipping postprocessing for mult-platform experiment" );
-        }
-
-        return ee;
-    }
+    //    /**
+    //     * You can now analyze CEL file data for data sets that have more than one platform (affyFromCel). However, this has
+    //     * to be done before the data set is switched to a merged platform.
+    //     *
+    //     * @param ee ee
+    //     * @return This replaces the existing raw data with the CEL file data. CEL file(s) must be found by configuration
+    //     */
+    //    private ExpressionExperiment reprocessAffyFromCelWithCDF( ExpressionExperiment ee ) {
+    //
+    //        Collection<ArrayDesign> arrayDesignsUsed = this.experimentService.getArrayDesignsUsed( ee );
+    //
+    //        ee = experimentService.thawLite( ee );
+    //        RawDataFetcher f = new RawDataFetcher();
+    //        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+    //
+    //        if ( files.isEmpty() ) {
+    //            throw new RuntimeException( "Data was apparently not available" );
+    //        }
+    //        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+    //
+    //        // Use the same QT for each one 
+    //        QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+    //        qt = quantitationTypeService.create( qt );
+    //
+    //        for ( ArrayDesign ad : arrayDesignsUsed ) {
+    //            DataUpdater.log.info( "Processing data for " + ad );
+    //
+    //            ad = arrayDesignService.thaw( ad );
+    //
+    //            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
+    //
+    //            vectors.addAll( apt.processThreeprimeArrayData( ee, ad, files ) );
+    //
+    //        }
+    //        if ( vectors.isEmpty() ) {
+    //            throw new IllegalStateException( "No vectors were returned for " + ee );
+    //        }
+    //
+    //        ee = experimentService.replaceRawVectors( ee, vectors );
+    //        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + StringUtils
+    //                .join( arrayDesignsUsed, "; " ), true );
+    //
+    //        if ( arrayDesignsUsed.size() == 1 ) {
+    //            this.postprocess( ee );
+    //        } else {
+    //            DataUpdater.log.warn( "Skipping postprocessing for mult-platform experiment" );
+    //        }
+    //
+    //        return ee;
+    //    }
 
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             Integer readLength, Boolean isPairedReads ) {
@@ -602,8 +577,8 @@ public class DataUpdater {
 
     /**
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
-     * @param ee      ee
-     * @param note    note
+     * @param ee ee
+     * @param note note
      */
     private void audit( ExpressionExperiment ee, String note, boolean replace ) {
         AuditEventType eventType;
@@ -827,7 +802,7 @@ public class DataUpdater {
     }
 
     /**
-     * @param rawMatrix         matrix
+     * @param rawMatrix matrix
      * @param targetArrayDesign ad
      * @return matrix with row names fixed up. ColumnNames still need to be done.
      */
@@ -898,17 +873,17 @@ public class DataUpdater {
     }
 
     /**
-     * determine the target array design. We use filtered versions of these platforms from GEO.
+     * determine the target array design. We use official CDFs and gene-level versions of exon arrays - no custom CDFs!
      *
      * @param ad array design we are starting with
      * @return platform we should actually use. It can be the same as the input.
      */
-    private ArrayDesign prepareTargetPlatformForExonArrays( ArrayDesign ad ) {
+    private ArrayDesign getAffymetrixTargetPlatform( ArrayDesign ad ) {
 
         /*
          * See also GeoPlatform.useDataFromGeo
          */
-        String targetPlatformAcc = GeoPlatform.exonArrayToGeneLevelArray( ad.getShortName() );
+        String targetPlatformAcc = GeoPlatform.alternativeToProperAffyPlatform( ad.getShortName() );
         if ( targetPlatformAcc == null ) {
             throw new IllegalArgumentException( "There was no target platform available for " + ad.getShortName() );
         }
@@ -919,14 +894,17 @@ public class DataUpdater {
             targetPlatform = arrayDesignService.thaw( targetPlatform );
 
             if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+                log.warn( "The target platform " + targetPlatformAcc
+                        + " is incomplete in the system, getting from GEO ... " );
                 /*
-                 * Ok, we have to 'reload it' and add the compositeSequences.
+                 * Ok, we have to 'reload it' and add the compositeSequences. RARE
                  */
                 geoService.addElements( targetPlatform );
             }
         } else {
+            // RARE
             DataUpdater.log.warn( "The target platform " + targetPlatformAcc
-                    + " could not be found in the system. Loading it ..." );
+                    + " could not be found in the system. Loading it from GEO ..." );
 
             Collection<?> r = geoService.fetchAndLoad( targetPlatformAcc, true, false, false );
 
@@ -941,23 +919,27 @@ public class DataUpdater {
     }
 
     /**
-     * Only when there is a single platform!
-     *
-     * @param ee             presumed thawed
+     * Switches bioassays on the original platform to the target platform (if they are the same, nothing will be done)
+     * 
+     * @param ee presumed thawed
+     * @param originalPlatform
      * @param targetPlatform
+     * @return how many were switched
      */
-    private void switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
-        }
+    private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign originalPlatform, ArrayDesign targetPlatform ) {
 
+        if ( originalPlatform.equals( targetPlatform ) ) return 0;
+
+        int i = 0;
         for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.setArrayDesignUsed( targetPlatform );
+            if ( ba.getArrayDesignUsed().equals( originalPlatform ) ) {
+                ba.setArrayDesignUsed( targetPlatform );
+                i++;
+            }
         }
 
         experimentService.update( ee );
-
+        return i;
     }
 
 }
