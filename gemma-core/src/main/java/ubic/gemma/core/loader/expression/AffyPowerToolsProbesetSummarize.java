@@ -256,7 +256,7 @@ public class AffyPowerToolsProbesetSummarize {
 
         }
 
-        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest, false );
+        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest );
     }
 
     /**
@@ -337,6 +337,11 @@ public class AffyPowerToolsProbesetSummarize {
         return vectors;
     }
 
+    /**
+     * 
+     * @param ad
+     * @return file or null if not found
+     */
     private File findCdf( ArrayDesign ad ) {
         String affyCdfs = Settings.getString( AFFY_POWER_TOOLS_CDF_PATH );
 
@@ -346,9 +351,7 @@ public class AffyPowerToolsProbesetSummarize {
         String cdfName = cdfNames.get( shortName );
 
         if ( cdfName == null ) {
-            throw new IllegalArgumentException(
-                    "No CDF could be located for " + ad + ", please provide correct affy.power.tools.cdf.path "
-                            + "and a valid " + AFFY_CDFS_PROPERTIES_FILE_NAME + " file in your classpath" );
+            return null;
         }
 
         return new File( affyCdfs + File.separatorChar + cdfName );
@@ -416,7 +419,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param ad ad
      * @param celfiles celfiles
      * @param outputPath directory
-     * @return string
+     * @return string or null if not found.s
      */
     private String getCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
         /*
@@ -436,8 +439,7 @@ public class AffyPowerToolsProbesetSummarize {
         String p = ad.getShortName();
 
         if ( mpsnames == null || !mpsnames.containsKey( p ) ) {
-            throw new IllegalArgumentException( "There is no MPS configuration for " + ad.getShortName() + ", check "
-                    + AFFY_MPS_PROPERTIES_FILE_NAME );
+            return null;
         }
 
         String pgf = refPath + File.separator + mpsnames.get( p ).get( "pgf" );
@@ -566,20 +568,25 @@ public class AffyPowerToolsProbesetSummarize {
      * @return
      */
     private Collection<RawExpressionDataVector> tryRun( ExpressionExperiment ee, ArrayDesign targetPlatform,
-            ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<String> accessionsOfInterest,
-            boolean threePrime ) {
+            ArrayDesign originalPlatform, Collection<LocalFile> files, Collection<String> accessionsOfInterest ) {
 
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );
         AffyPowerToolsProbesetSummarize.log.info( "Located " + celFiles.size() + " cel files" );
         String outputPath = this.getOutputFilePath( ee );
-        String cmd;
+        String cmd = null;
 
-        if ( threePrime /* cdf based */ ) {
-            String cdfFileName = this.findCdf( targetPlatform ).getAbsolutePath();
+        // look for a CDF first.
+        String cdfFileName = this.findCdf( targetPlatform ).getAbsolutePath();
+        if ( cdfFileName != null ) {
             cmd = this.getThreePrimeSummarizationCommand( targetPlatform, cdfFileName, celFiles, outputPath );
         } else {
-            /* mps based */
+            /* presumably mps based */
             cmd = this.getCommand( targetPlatform, celFiles, outputPath );
+        }
+
+        if ( cmd == null ) {
+            throw new IllegalArgumentException( "There is no MPS configuration for " + targetPlatform.getShortName() + ", check "
+                    + AFFY_MPS_PROPERTIES_FILE_NAME + " and " + AFFY_CDFS_PROPERTIES_FILE_NAME );
         }
 
         AffyPowerToolsProbesetSummarize.log.info( "Running: " + cmd );
