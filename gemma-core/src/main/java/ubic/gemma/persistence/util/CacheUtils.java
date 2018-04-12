@@ -15,6 +15,16 @@ public class CacheUtils {
 
     /**
      * Either creates new Cache instance of given name, or retrieves it from the CacheManager, if it already exists.
+     *
+     * @param cacheManager      cache manager
+     * @param cacheName         cache name
+     * @param diskPersistent    disk persistent
+     * @param eternal           eternal
+     * @param maxElements       max elements
+     * @param overFlowToDisk    overflow to disk
+     * @param terracottaEnabled terracotta enabled
+     * @param timeToIdle        time to idle
+     * @param timeToLive        time to live
      * @return newly created Cache instance, or existing one with given name.
      */
     public static Cache createOrLoadCache( CacheManager cacheManager, String cacheName, boolean terracottaEnabled,
@@ -39,7 +49,8 @@ public class CacheUtils {
                 config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
                 NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
                 TimeoutBehaviorConfiguration timeoutBehaviorConfiguration = new TimeoutBehaviorConfiguration();
-                timeoutBehaviorConfiguration.setType( TimeoutBehaviorConfiguration.TimeoutBehaviorType.NOOP.getTypeName() );
+                timeoutBehaviorConfiguration
+                        .setType( TimeoutBehaviorConfiguration.TimeoutBehaviorType.NOOP.getTypeName() );
                 nonstopConfiguration.addTimeoutBehavior( timeoutBehaviorConfiguration );
                 config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
                 cache = new Cache( config );
@@ -48,7 +59,7 @@ public class CacheUtils {
                         timeToLive, timeToIdle, diskPersistent, DISK_EXPIRY_THREAD_INTERVAL, null );
             }
             cacheManager.addCache( cache );
-        }else{
+        } else {
             cache = cacheManager.getCache( cacheName );
         }
         return cache;

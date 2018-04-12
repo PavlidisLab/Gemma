@@ -1,29 +1,3 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!--  $Id$ -->
-<project xmlns="http://maven.apache.org/DECORATION/1.4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/DECORATION/1.4.0 http://maven.apache.org/xsd/decoration-1.4.0.xsd" name="Gemma" >
-	<bannerLeft>
-		<name>Gemma</name>
-		<src>images/logo/gemma-sm50x195.png</src>
-		<href>http://gemma.msl.ubc.ca</href>
-	</bannerLeft>
-	<bannerRight>
-		<src>images/logo/heatfade.inner.png</src>
-	</bannerRight>
-	<body>
-		<links>
-			<item name="Gemma" href="http://gemma.msl.ubc.ca/" />
-			<item name="Pavlidis lab" href="http://chibi.ubc.ca/faculty/pavlidis/lab" />
-		</links>
-		<menu name="Gemma" >
-			<item collapse="true" name="Home" href="http://gemma.msl.ubc.ca/" />
-			<item collapse="true" name="Resource home" href="http://gemma.msl.ubc.ca/resources" />
-			<item collapse="true" name="Downloads" href="downloads.html" />
-			<item collapse="true" name="baseCode" href="http://chibi.ubc.ca/faculty/pavlidis/basecode/" />
-			<item collapse="true" name="Documentation" href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma" />
-			<item collapse="true" name="FAQ" href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/FAQ" />
-		</menu>
-		<menu ref="modules" />
-		<menu ref="reports"  />
-	</body>
+<project name="gemma-web">
 </project>

@@ -40,10 +40,11 @@ public class ArrayGeneArg extends ArrayEntityArg<Gene, GeneValueObject, GeneServ
     }
 
     @Override
-    protected String getPropertyName( GeneService service ) {
+    protected void setPropertyNameAndType( GeneService service ) {
         String value = this.getValue().get( 0 );
         MutableArg<?, Gene, GeneValueObject, GeneService> arg = GeneArg.valueOf( value );
-        return this.checkPropertyNameString( arg, value, service );
+        this.argValueName = this.checkPropertyNameString( arg, value, service );
+        this.argValueClass = arg.value.getClass();
     }
 
     @Override

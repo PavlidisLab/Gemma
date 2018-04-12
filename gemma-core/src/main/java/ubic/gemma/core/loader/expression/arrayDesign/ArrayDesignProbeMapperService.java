@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -37,7 +37,7 @@ public interface ArrayDesignProbeMapperService {
      * Print results to STDOUT
      *
      * @param compositeSequence composite sequence
-     * @param col blat associations
+     * @param col               blat associations
      */
     void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col );
 
@@ -50,8 +50,8 @@ public interface ArrayDesignProbeMapperService {
 
     /**
      * @param arrayDesign AD
-     * @param config config
-     * @param useDB if false, the results will not be written to the database, but printed to stdout instead.
+     * @param config      config
+     * @param useDB       if false, the results will not be written to the database, but printed to stdout instead.
      */
     void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB );
 
@@ -74,11 +74,12 @@ public interface ArrayDesignProbeMapperService {
      * assume all gene products are relevant.
      *
      * @param arrayDesign AD
-     * @param taxon We require this to ensure correct association of the sequences with the genes.
-     * @param source source
-     * @param sourceDB describes where the annotations came from. Can be null if you really don't know.
-     * @param ncbiIds true if the values provided are ncbi ids, not gene symbols (ncbi ids are more reliable)
+     * @param taxon       We require this to ensure correct association of the sequences with the genes.
+     * @param source      source
+     * @param sourceDB    describes where the annotations came from. Can be null if you really don't know.
+     * @param ncbiIds     true if the values provided are ncbi ids, not gene symbols (ncbi ids are more reliable)
      * @throws IllegalStateException if the input file doesn't match the array design.
+     * @throws IOException           when IO problems occur.
      */
     void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB,
             boolean ncbiIds ) throws IOException;
@@ -89,9 +90,9 @@ public interface ArrayDesignProbeMapperService {
 
     /**
      * Delete outdated annotation and associated experiment files.
-     * 
-     * @param arrayDesign
+     *
+     * @param arrayDesign platform
      */
-    public void deleteOldFiles( ArrayDesign arrayDesign );
+    void deleteOldFiles( ArrayDesign arrayDesign );
 
 }

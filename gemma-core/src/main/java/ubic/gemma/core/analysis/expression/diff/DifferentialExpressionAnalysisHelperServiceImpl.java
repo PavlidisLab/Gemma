@@ -28,7 +28,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.persister.Persister;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetDao;
 
 import java.util.Collection;
@@ -43,7 +43,7 @@ import java.util.Collection;
 public class DifferentialExpressionAnalysisHelperServiceImpl implements DifferentialExpressionAnalysisHelperService {
 
     @Autowired
-    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     @Autowired
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
@@ -56,7 +56,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     public void addResults( DifferentialExpressionAnalysis entity,
             Collection<ExpressionAnalysisResultSet> resultSets ) {
         entity.getResultSets().addAll( resultSets );
-        differentialExpressionAnalysisDao.update( entity ); // could be sped up.
+        differentialExpressionAnalysisService.update( entity ); // could be sped up.
     }
 
     @Override
@@ -76,7 +76,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
             entity.setExperimentAnalyzed( ( BioAssaySet ) persisterHelper.persist( entity.getExperimentAnalyzed() ) );
         }
 
-        entity = differentialExpressionAnalysisDao.create( entity );
+        entity = differentialExpressionAnalysisService.create( entity );
 
         return entity;
     }

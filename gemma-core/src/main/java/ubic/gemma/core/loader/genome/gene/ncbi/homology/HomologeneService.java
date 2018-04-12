@@ -28,20 +28,21 @@ import java.util.Collection;
 public interface HomologeneService {
 
     /**
-     * @param taxon desired taxon to find homolouge in
+     * @param taxon desired taxon to find homologue in
+     * @param gene  gene
      * @return Finds the homologue of the given gene for the taxon specified, or null if there is no homologue
      */
-
     Gene getHomologue( Gene gene, Taxon taxon );
 
     /**
+     * @param gene gene
      * @return Collection of genes found in Gemma that are homologous with the given gene. Empty if no homologues or
      * gene lacks homologue information, or null if not ready.
      */
-
     Collection<Gene> getHomologues( Gene gene );
 
     /**
+     * @param ncbiId gene ncbi id
      * @return A collection of NCBI gene ids that are homologous with the given NCBI Gene Id
      */
     Collection<Long> getHomologues( Long ncbiId );
@@ -50,6 +51,7 @@ public interface HomologeneService {
 
     /**
      * @param taxonCommonName desired taxon to find homologue in
+     * @param geneId          gene id
      * @return Finds the homologue of the given gene for the taxon specified, or null if there is no homologue
      */
     GeneValueObject getHomologueValueObject( Long geneId, String taxonCommonName );

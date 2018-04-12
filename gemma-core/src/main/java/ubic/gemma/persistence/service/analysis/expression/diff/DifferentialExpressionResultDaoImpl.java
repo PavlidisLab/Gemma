@@ -59,37 +59,35 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     /*
      * This is a key query: get all results for a set of genes in a set of resultssets (basically, experiments)
      */
-    private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery =
-            "SELECT dear.PROBE_FK, dear.ID," + " dear.RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE  "
-                    + " FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear FORCE INDEX (probeResultSets) WHERE dear.RESULT_SET_FK IN (:rs_ids) AND "
-                    + " dear.PROBE_FK IN (:probe_ids) ";
+    private static final String fetchBatchDifferentialExpressionAnalysisResultsByResultSetsAndGeneQuery = "SELECT dear.PROBE_FK, dear.ID,"
+            + " dear.RESULT_SET_FK, dear.CORRECTED_PVALUE, dear.PVALUE  "
+            + " FROM DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear FORCE INDEX (probeResultSets) WHERE dear.RESULT_SET_FK IN (:rs_ids) AND "
+            + " dear.PROBE_FK IN (:probe_ids) ";
 
-    private static final String fetchResultsByExperimentsQuery =
-            "select distinct e, r" + " from DifferentialExpressionAnalysis a, BioSequence2GeneProduct bs2gp"
-                    + " inner join a.experimentAnalyzed e  "
-                    + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
-                    + "left join p.biologicalCharacteristic bs left join bs2gp.geneProduct gp left join gp.gene g"
-                    + " where bs2gp.bioSequence=bs and e.id in (:experimentsAnalyzed) and r.correctedPvalue < :threshold order by r.correctedPvalue";
+    private static final String fetchResultsByExperimentsQuery = "select distinct e, r"
+            + " from DifferentialExpressionAnalysis a, BioSequence2GeneProduct bs2gp"
+            + " inner join a.experimentAnalyzed e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
+            + "left join p.biologicalCharacteristic bs left join bs2gp.geneProduct gp left join gp.gene g"
+            + " where bs2gp.bioSequence=bs and e.id in (:experimentsAnalyzed) and r.correctedPvalue < :threshold order by r.correctedPvalue";
 
-    private static final String fetchResultsByGene =
-            "select distinct e, r" + " from DifferentialExpressionAnalysis a, BioSequence2GeneProduct bs2gp"
-                    + " inner join a.experimentAnalyzed e  "
-                    + " inner join a.resultSets rs inner join rs.results r inner join r.probe  p "
-                    + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-                    + " where g=:gene"; // no order by clause, we add it later
+    private static final String fetchResultsByGene = "select distinct e, r" + " from DifferentialExpressionAnalysis a, BioSequence2GeneProduct bs2gp"
+            + " inner join a.experimentAnalyzed e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join r.probe  p "
+            + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
+            + " where g=:gene"; // no order by clause, we add it later
 
-    private static final String fetchResultsByGeneSQL =
-            "select d.ID, d.PVALUE, d.CORRECTED_PVALUE, d.PROBE_FK, d.RESULT_SET_FK, "
-                    + " c.FACTOR_VALUE_FK, c.PVALUE, c.LOG_FOLD_CHANGE, c.SECOND_FACTOR_VALUE_FK, c.ID  "
-                    + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d, GENE2CS g2s, CONTRAST_RESULT c "
-                    + " where g2s.CS = d.PROBE_FK and c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK = d.ID and g2s.GENE = :gene_id ";
+    private static final String fetchResultsByGeneSQL = "select d.ID, d.PVALUE, d.CORRECTED_PVALUE, d.PROBE_FK, d.RESULT_SET_FK, "
+            + " c.FACTOR_VALUE_FK, c.PVALUE, c.LOG_FOLD_CHANGE, c.SECOND_FACTOR_VALUE_FK, c.ID  "
+            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d, GENE2CS g2s, CONTRAST_RESULT c "
+            + " where g2s.CS = d.PROBE_FK and c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK = d.ID and g2s.GENE = :gene_id ";
 
-    private static final String fetchResultsByGeneAndExperimentsQuery =
-            "select distinct e, r" + " from DifferentialExpressionAnalysis a, BioSequence2GeneProduct bs2gp"
-                    + " inner join a.experimentAnalyzed e  "
-                    + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
-                    + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-                    + " where bs2gp.bioSequence=bs and g=:gene and e.id in (:experimentsAnalyzed)"; // no order by clause, we
+    private static final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
+            + " from DifferentialExpressionAnalysis a, BioSequence2GeneProduct bs2gp"
+            + " inner join a.experimentAnalyzed e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
+            + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
+            + " where bs2gp.bioSequence=bs and g=:gene and e.id in (:experimentsAnalyzed)"; // no order by clause, we
     // add
     // it later
 
@@ -101,15 +99,15 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     /**
      * No constraint on gene
      */
-    private static final String fetchResultsByResultSetQuery =
-            "select distinct rs, r " + " from DifferentialExpressionAnalysis a inner join a.experimentAnalyzed e  "
-                    + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
-                    + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
+    private static final String fetchResultsByResultSetQuery = "select distinct rs, r "
+            + " from DifferentialExpressionAnalysis a inner join a.experimentAnalyzed e  "
+            + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
+            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
-    private static final String fetchResultsBySingleResultSetQuery =
-            "select distinct r " + " from DifferentialExpressionAnalysis a inner join a.experimentAnalyzed e  "
-                    + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
-                    + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
+    private static final String fetchResultsBySingleResultSetQuery = "select distinct r "
+            + " from DifferentialExpressionAnalysis a inner join a.experimentAnalyzed e  "
+            + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
+            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private final DifferentialExpressionResultCache differentialExpressionResultCache;
 
@@ -439,7 +437,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                             .fillNonSignificant( pbL, resultSetIdsMap, resultsFromDb, resultSetIdBatch, cs2GeneIdMap,
                                     session );
                 }
-            }// over probes.
+            } // over probes.
 
             // Check if task was cancelled.
             if ( Thread.currentThread().isInterrupted() ) {
@@ -453,8 +451,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         if ( timer.getTime() > 1000 && AbstractDao.log.isInfoEnabled() ) {
             AbstractDao.log
                     .info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds=" + StringUtils
-                            .abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set=" + StringUtils
-                            .abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
+                            .abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
+                            + StringUtils
+                                    .abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
             if ( timeForFillingNonSig > 100 ) {
                 AbstractDao.log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
             }
@@ -638,7 +637,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     public DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs ) {
         return ( DifferentialExpressionAnalysis ) this.getHibernateTemplate()
                 .findByNamedParam( "select a from DifferentialExpressionAnalysis a join a.resultSets r where r=:r", "r",
-                        rs ).iterator().next();
+                        rs )
+                .iterator().next();
     }
 
     @Override
@@ -860,10 +860,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         // gather up probe information
         Map<Long, String> probeNames = new HashMap<>();
         //noinspection unchecked
-        for ( Object[] rec : ( List<Object[]> ) session
-                .createQuery( "select id,name from CompositeSequence where id in (:ids)" )
-                .setParameterList( "ids", probeIds ).list() ) {
-            probeNames.put( ( Long ) rec[0], ( String ) rec[1] );
+        if ( !probeIds.isEmpty() ) {
+            for ( Object[] rec : ( List<Object[]> ) session
+                    .createQuery( "select id,name from CompositeSequence where id in (:ids)" )
+                    .setParameterList( "ids", probeIds ).list() ) {
+                probeNames.put( ( Long ) rec[0], ( String ) rec[1] );
+            }
         }
 
         /*
@@ -875,7 +877,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         //noinspection unchecked
         List<Object[]> ees = session.createQuery(
                 "select ee, rs from  ExpressionAnalysisResultSet rs join fetch rs.experimentalFactors join rs.analysis a join a.experimentAnalyzed ee"
-                        + " where rs.id in (:rsids)" ).setParameterList( "rsids", resultSets ).list();
+                        + " where rs.id in (:rsids)" )
+                .setParameterList( "rsids", resultSets ).list();
 
         /*
          * Finish populating the objects
@@ -976,6 +979,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         return probeResults;
     }
+
     @Override
     public Collection<DifferentialExpressionAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
@@ -983,7 +987,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
     @Override
     public void remove( Collection<DifferentialExpressionAnalysisResult> entities ) {
-        if(entities == null || entities.size() < 1) return;
+        if ( entities == null || entities.size() < 1 ) return;
         Collection<Long> cIds = new HashSet<>();
 
         // Read contrast ids and wipe references
@@ -993,9 +997,10 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
 
         // Remove contrasts
-        if(cIds.size() > 0) {
+        if ( cIds.size() > 0 ) {
             AbstractDao.log.info( "Removing contrasts..." );
-            this.getSessionFactory().getCurrentSession().createQuery( "delete from ContrastResult e where e.id in (:ids)" ).setParameterList( "ids", cIds )
+            this.getSessionFactory().getCurrentSession().createQuery( "delete from ContrastResult e where e.id in (:ids)" )
+                    .setParameterList( "ids", cIds )
                     .executeUpdate();
 
         }
@@ -1032,8 +1037,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         /*
          * This is a hack to mimic the effect of storing only 'good' results.
          */
-        if ( correctedPvalue
-                > DifferentialExpressionResultDaoImpl.CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
+        if ( correctedPvalue > DifferentialExpressionResultDaoImpl.CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
             return 0;
         }
 
@@ -1054,7 +1058,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
      * that if a gene is missing from the results, there are none for that resultSet for that gene. It then stores a
      * dummy entry.
      *
-     * @param results      - which might be empty.
+     * @param results - which might be empty.
      * @param resultSetids - the ones which we searched for in the database. Put in dummy results if we have to.
      */
     private void addToCache( Map<Long, Map<Long, DiffExprGeneSearchResult>> results, Collection<Long> resultSetids,
@@ -1188,9 +1192,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     /**
-     * @param results  map of gene id to result, which the result gets added to.
+     * @param results map of gene id to result, which the result gets added to.
      * @param resultId the specific DifferentialExpressionAnalysisResult, corresponds to an entry for one probe in the
-     *                 resultSet
+     *        resultSet
      */
     private void processDiffExResultHit( Map<Long, DiffExprGeneSearchResult> results, Long resultSetId, Long geneId,
             Long resultId, Double correctedPvalue, Double uncorrectedPvalue ) {
@@ -1203,8 +1207,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             r.setResultId( resultId );
             r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
 
-            if ( correctedPvalue
-                    <= DifferentialExpressionResultDaoImpl.CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
+            if ( correctedPvalue <= DifferentialExpressionResultDaoImpl.CORRECTED_PVALUE_THRESHOLD_TO_BE_CONSIDERED_DIFF_EX ) {
                 // This check is only useful if we are only storing 'significant' results.
                 r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );
             }

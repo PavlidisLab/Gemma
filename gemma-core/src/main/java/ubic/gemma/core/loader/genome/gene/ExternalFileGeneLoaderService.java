@@ -35,7 +35,10 @@ public interface ExternalFileGeneLoaderService {
     int load( String geneFile, String taxonName ) throws Exception;
 
     /**
+     * @param geneInputStream gene input stream
+     * @param taxonName       taxon name
      * @return number of genes loaded
+     * @throws Exception Thrown with a file format error or problem in persisting gene to database.
      */
     @SuppressWarnings("UnusedReturnValue")
     // Better reusability

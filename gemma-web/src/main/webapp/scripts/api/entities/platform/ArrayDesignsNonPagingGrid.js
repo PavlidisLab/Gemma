@@ -131,504 +131,515 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : 'cannotBeDeleted',
          convert : function( v, record ) {
+            /*
+             * FIXME: the non-merged constraint might not be necessary. We should definitely not delete mergees even if
+             * they have 0 experiments.
+             */
             return !(record.expressionExperimentCount === 0 && !record.isMerged && !record.isMergee);
          }
       } ]
    } )
 } );
 
-Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
-   // width: 1000,
-   autoScroll : true,
-   stripeRows : true,
-   rowExpander : null,
-   emptyText : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.emptyText,
-   viewConfig : {
-      forceFit : true
-   },
-   myPageSize : 50,
-   title : 'Platforms',
-   totalCount : 0,
-   showOrphans : false,
-   showMergees : true,
-   showTroubled : true,
-
-   /**
-    * @memberOf Gemma.ArrayDesignsNonPagingGrid
-    */
-   loadArrayDesigns : function( adIds, extraCallback, extraCallbackParams ) {
-      if ( !this.loadMask ) {
-         this.loadMask = new Ext.LoadMask( this.getEl(), {
-            msg : Gemma.StatusText.Loading.arrayDesigns
-         } );
-      }
-      this.loadMask.show();
-      ArrayDesignController.loadArrayDesignsForShowAll( adIds, function( arrayDesigns ) {
-         this.loadMask.hide();
-         this.getStore().loadData( arrayDesigns );
-         this.setTitle( arrayDesigns.length + ((arrayDesigns.length === 1) ? " Platform" : " Platforms") );
-         this.totalCount = arrayDesigns.length;
-         this.getStore().applyMultiFilters();
-         if ( extraCallback )
-            extraCallback( extraCallbackParams );
-      }.createDelegate( this ) );
-   },
-   initComponent : function() {
-
-      this.showAll = !(document.URL.indexOf( "?" ) > -1 && (document.URL.indexOf( "id=" ) > -1));
-      this.idSubset = null;
-      var filterById = false;
-
-      if ( !this.showAll ) {
-         var subsetDetails = document.URL.substr( document.URL.indexOf( "?" ) + 1 );
-         var param = Ext.urlDecode( subsetDetails );
-         if ( param.id ) {
-            this.idSubset = param.id.split( ',' );
-            filterById = true;
-         }
-         if ( param.showOrph ) {
-            this.showOrphans = param.showOrph;
-         }
-         if ( param.showMerg ) {
-            this.showMergees = param.showMerg;
-         }
-      }
-
-      Ext.apply( this, {
-         store : new Gemma.ArrayDesignsStore()
-      } );
-
-      // Create RowActions Plugin
-      this.action = new Ext.ux.grid.RowActions( {
-         header : 'Actions',
-         dataIndex : 'actions',
-         tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.actionsColumnTT,
-         // ,autoWidth:false
-         // ,hideMode:'display'
-         keepSelection : true,
-         actions : [ {
-            iconCls : 'icon-refresh',
-            tooltip : 'Refresh'
-         }, {
-            iconCls : 'icon-cross',
-            tooltip : 'Delete platform',
-            hideIndex : 'cannotBeDeleted'// hide if == true
-         } ],
-         callbacks : {
-            'icon-cross' : function( grid, record, action, row, col ) {
-            }
-         }
-      } );
-
-      this.action.on( {
-         action : function( grid, record, action, row, col ) {
-            if ( action === 'icon-cross' ) {
-               Ext.Msg.confirm( Gemma.HelpText.CommonWarnings.Deletion.title, String.format(
-                  Gemma.HelpText.CommonWarnings.Deletion.text, 'platform' ), function( btnId ) {
-                  if ( btnId === 'yes' ) {
-
-                     var callParams = [];
-                     callParams.push( {
-                        id : record.id
-                     } );
-                     callParams.push( {
-                        callback : function( taskId ) {
-                           var task = new Gemma.ObservableSubmittedTask( {
-                              'taskId' : taskId
-                           } );
-                           task.on( 'task-completed', function( payload ) {
-                              window.location.reload();
-                           } );
-                           task.showTaskProgressWindow( {
-                              showLogButton : true
-                           } );
-                        }.createDelegate( this )
-                     } );
-
-                     ArrayDesignController.remove.apply( this, callParams );
-
-                  }
-               } );
-            } else if ( action === 'icon-refresh' ) {
-               updateArrayDesignReport( record.id, grid ); // function in arrayDesign.js
-            }
+Gemma.ArrayDesignsNonPagingGrid = Ext
+   .extend(
+      Ext.grid.GridPanel,
+      {
+         // width: 1000,
+         autoScroll : true,
+         stripeRows : true,
+         rowExpander : null,
+         emptyText : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.emptyText,
+         viewConfig : {
+            forceFit : true
          },
-         // You can cancel the action by returning false from this
-         // event handler.
-         beforeaction : function( grid, record, action, row, col ) {
-            return true;
-         }
-      } );
+         myPageSize : 50,
+         title : 'Platforms',
+         totalCount : 0,
+         showOrphans : false,
+         showMergees : true,
+         showTroubled : true,
 
-      this.rowExpander = new Ext.grid.RowExpander( {
-         enableCaching : false,
-         tpl : Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails
-      } );
+         /**
+          * @memberOf Gemma.ArrayDesignsNonPagingGrid
+          */
+         loadArrayDesigns : function( adIds, extraCallback, extraCallbackParams ) {
+            if ( !this.loadMask ) {
+               this.loadMask = new Ext.LoadMask( this.getEl(), {
+                  msg : Gemma.StatusText.Loading.arrayDesigns
+               } );
+            }
+            this.loadMask.show();
+            ArrayDesignController.loadArrayDesignsForShowAll( adIds, function( arrayDesigns ) {
+               this.loadMask.hide();
+               this.getStore().loadData( arrayDesigns );
+               this.setTitle( arrayDesigns.length + ((arrayDesigns.length === 1) ? " Platform" : " Platforms") );
+               this.totalCount = arrayDesigns.length;
+               this.getStore().applyMultiFilters();
+               if ( extraCallback )
+                  extraCallback( extraCallbackParams );
+            }.createDelegate( this ) );
+         },
+         initComponent : function() {
 
-      this.on( 'reportUpdated', function( id ) {
-         var extraCallback = function( arr ) {
-            var grid = arr[0];
-            var id = arr[1];
-            grid.rowExpander.collapseAll();
-            record = grid.getStore().getById( id );
-            grid.rowExpander.expandRow( grid.getStore().indexOf( record ) );
-         };
+            this.showAll = !(document.URL.indexOf( "?" ) > -1 && (document.URL.indexOf( "id=" ) > -1));
+            this.idSubset = null;
+            var filterById = false;
 
-         this.loadArrayDesigns( this.idSubset, extraCallback, [ this, id ] );
+            if ( !this.showAll ) {
+               var subsetDetails = document.URL.substr( document.URL.indexOf( "?" ) + 1 );
+               var param = Ext.urlDecode( subsetDetails );
+               if ( param.id ) {
+                  this.idSubset = param.id.split( ',' );
+                  filterById = true;
+               }
+               if ( param.showOrph ) {
+                  this.showOrphans = param.showOrph;
+               }
+               if ( param.showMerg ) {
+                  this.showMergees = param.showMerg;
+               }
+            }
 
-      } );
+            Ext.apply( this, {
+               store : new Gemma.ArrayDesignsStore()
+            } );
 
-      var cellTips = new Ext.ux.plugins.grid.CellToolTips( [ {
-         field : 'name',
-         tpl : '{name}'
-      }, {
-         field : 'shortName',
-         tpl : '{shortName}'
-      } ] );
-      Ext.apply( this, {
-         plugins : [ this.action, this.rowExpander, cellTips ],
-         colModel : new Ext.grid.ColumnModel( {
-            defaults : {
-               sortable : true
-            },
-            columns : [/*
-                         * { // for testing id:'id', header: "db id", dataIndex: 'id', sortable:true, width: 0.1
-                         * //viewConfig.forceFit resizes based on relative widths },
-                         */
-               this.rowExpander,
-               {
-                  id : 'name',
-                  header : "Platform Name",
-                  dataIndex : 'name',
-                  width : 0.3, // viewConfig.forceFit resizes based on relative widths,
-                  renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
-                     return (value && record) ? '<a target="_blank" href="' + ctxBasePath
-                        + '/arrays/showArrayDesign.html?id=' + record.id + '">' + value + '</a>' : '';
+            // Create RowActions Plugin
+            this.action = new Ext.ux.grid.RowActions( {
+               header : 'Actions',
+               dataIndex : 'actions',
+               tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.actionsColumnTT,
+               // ,autoWidth:false
+               // ,hideMode:'display'
+               keepSelection : true,
+               actions : [ {
+                  iconCls : 'icon-refresh',
+                  tooltip : 'Refresh'
+               }, {
+                  iconCls : 'icon-cross',
+                  tooltip : 'Delete platform',
+                  hideIndex : 'cannotBeDeleted'// hide if == true
+               } ],
+               callbacks : {
+                  'icon-cross' : function( grid, record, action, row, col ) {
+                  }
+               }
+            } );
+
+            this.action.on( {
+               action : function( grid, record, action, row, col ) {
+                  if ( action === 'icon-cross' ) {
+                     Ext.Msg.confirm( Gemma.HelpText.CommonWarnings.Deletion.title, String.format(
+                        Gemma.HelpText.CommonWarnings.Deletion.text, 'platform' ), function( btnId ) {
+                        if ( btnId === 'yes' ) {
+
+                           var callParams = [];
+                           callParams.push( {
+                              id : record.id
+                           } );
+                           callParams.push( {
+                              callback : function( taskId ) {
+                                 var task = new Gemma.ObservableSubmittedTask( {
+                                    'taskId' : taskId
+                                 } );
+                                 task.on( 'task-completed', function( payload ) {
+                                    window.location.reload();
+                                 } );
+                                 task.showTaskProgressWindow( {
+                                    showLogButton : true
+                                 } );
+                              }.createDelegate( this )
+                           } );
+
+                           ArrayDesignController.remove.apply( this, callParams );
+
+                        }
+                     } );
+                  } else if ( action === 'icon-refresh' ) {
+                     updateArrayDesignReport( record.id, grid ); // function in arrayDesign.js
                   }
                },
-               {
-                  header : "Status",
-                  dataIndex : 'statusArray',
-                  width : 0.05,
-                  renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
-                     var statusString = "";
-
-                     if ( record.get( 'troubled' ) ) {
-                        statusString += '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
-                           + record.get( 'troubleDetails' ) + '"></i>';
-                     }
-
-                     if ( record.get( 'isMerged' ) ) {
-                        statusString += '<img title="'
-                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergedTT + '"' + ' src="'
-                           + ctxBasePath + '/images/icons/merging_result.png"/>&nbsp;';
-                     }
-                     if ( record.get( 'isMergee' ) ) {
-                        statusString += '<img title="'
-                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergeeTT + '"' + ' src="'
-                           + ctxBasePath + '/images/icons/arrow_merge.png"/>&nbsp;';
-                     }
-                     if ( record.get( 'isSubsumed' ) ) {
-                        statusString += '<img title="'
-                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumedTT + '"' + ' src="'
-                           + ctxBasePath + '/images/icons/subsumed.png"/>&nbsp;';
-                     }
-                     if ( record.get( 'isSubsumer' ) ) {
-                        statusString += '<img title="'
-                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumerTT + '"' + ' src="'
-                           + ctxBasePath + '/images/icons/subsumer.png"/>';
-                     }
-
-                     return statusString;
-                  }
-               },
-               {
-                  header : "Quality/Suitability",
-                  tooltip : "Shows quality and suitability score, or the fact that the experiment is not fully curated yet.",
-                  dataIndex : 'needsAttention',
-                  sortable : true,
-                  width : 0.05,
-                  hidden : false,
-                  renderer : Gemma.Renderers.curationRenderer
-               },
-               {
-                  header : "Short Name",
-                  dataIndex : 'shortName',
-                  width : 0.07
-               },
-               {
-                  header : "Taxon",
-                  dataIndex : 'taxon',
-                  width : 0.07
-               },
-               {
-                  header : "Expts",
-                  dataIndex : 'expressionExperimentCount',
-                  width : 0.03,
-                  tooltip : 'Number of experiments in Gemma that use this design'
-               },
-               {
-                  header : "Seq. Update",
-                  dataIndex : 'lastSequenceUpdate',
-                  width : 0.07,
-                  sortDir : 'DESC',
-                  xtype : 'datecolumn',
-                  format : 'Y-m-d'
-               },
-               {
-                  header : "Rep. mask",
-                  dataIndex : 'lastRepeatMask',
-                  width : 0.07,
-                  sortDir : 'DESC',
-                  xtype : 'datecolumn',
-                  format : 'Y-m-d'
-               },
-               {
-                  header : "Seq. Analysis",
-                  dataIndex : 'lastSequenceAnalysis',
-                  width : 0.07,
-                  sortDir : 'DESC',
-                  xtype : 'datecolumn',
-                  format : 'Y-m-d'
-               },
-               {
-                  header : "Gene Mapping",
-                  dataIndex : 'lastGeneMapping',
-                  width : 0.07,
-                  sortDir : 'DESC',
-                  xtype : 'datecolumn',
-                  format : 'Y-m-d'
-               },
-               {
-                  header : "Channels",
-                  dataIndex : 'color',
-                  width : 0.03,
-                  renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
-                     return (value === "ONECOLOR") ? "1" : (value === "TWOCOLOR") ? "2" : '<span title="' + value
-                        + '">' + value + '</span>';
-                  }
-               }, this.action ]
-         } )
-      } );
-
-      this.getStore().addMultiFilter( {
-         name : 'orphanFilter',
-         active : !this.showOrphans,
-         fn : function( record ) {
-            return (record.get( 'expressionExperimentCount' ) && record.get( 'expressionExperimentCount' ) > 0);
-         }
-      } );
-      this.getStore().addMultiFilter( {
-         name : 'mergeeFilter',
-         active : !this.showMergees,
-         fn : function( record ) {
-            return !record.get( 'isMergee' );
-         }
-      } );
-      this.getStore().addMultiFilter( {
-         name : 'troubledFilter',
-         active : false,
-         fn : function( record ) {
-            return !record.get( 'troubled' );
-         }
-
-      } );
-
-      var textFilterFun = function( query ) {
-         var value = new RegExp( Ext.escapeRe( query ), 'i' );
-         return function( record ) {
-            // go through every visible field, if it matches the query text
-            // show the row
-            var fieldContents;
-            for ( var field in record.data) {
-               fieldContents = record.data[field];
-               if ( value.test( fieldContents ) ) {
+               // You can cancel the action by returning false from this
+               // event handler.
+               beforeaction : function( grid, record, action, row, col ) {
                   return true;
                }
-            }
-            return false;
-         };
-      };
+            } );
 
-      Ext.apply( this, {
-         clearFilter : function() {
-            this.getTopToolbar().searchInGrid.reset();
-            this.getStore().removeMultiFilter( 'textQueryFilter' );
-            this.getStore().applyMultiFilters();
-            this.getTopToolbar().fieldClearBtn.disable();
-         },
-         tbar : new Ext.Toolbar( {
-            items : [ {
-               xtype : 'textfield',
-               ref : 'searchInGrid',
-               tabIndex : 1,
-               enableKeyEvents : true,
-               emptyText : 'Enter search term',
-               listeners : {
-                  "keyup" : {
-                     fn : function() {
-                        this.getTopToolbar().fieldClearBtn.enable();
-                        this.getStore().removeMultiFilter( 'textQueryFilter' );
-                        this.getStore().addMultiFilter( {
-                           name : 'textQueryFilter',
-                           active : true,
-                           fn : textFilterFun( this.getTopToolbar().searchInGrid.getValue() )
-                        } );
-                        this.getStore().applyMultiFilters();
+            this.rowExpander = new Ext.grid.RowExpander( {
+               enableCaching : false,
+               tpl : Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails
+            } );
 
-                     },
-                     scope : this,
-                     options : {
-                        delay : 100
+            this.on( 'reportUpdated', function( id ) {
+               var extraCallback = function( arr ) {
+                  var grid = arr[0];
+                  var id = arr[1];
+                  grid.rowExpander.collapseAll();
+                  record = grid.getStore().getById( id );
+                  grid.rowExpander.expandRow( grid.getStore().indexOf( record ) );
+               };
+
+               this.loadArrayDesigns( this.idSubset, extraCallback, [ this, id ] );
+
+            } );
+
+            var cellTips = new Ext.ux.plugins.grid.CellToolTips( [ {
+               field : 'name',
+               tpl : '{name}'
+            }, {
+               field : 'shortName',
+               tpl : '{shortName}'
+            } ] );
+            Ext
+               .apply(
+                  this,
+                  {
+                     plugins : [ this.action, this.rowExpander, cellTips ],
+                     colModel : new Ext.grid.ColumnModel(
+                        {
+                           defaults : {
+                              sortable : true
+                           },
+                           columns : [/*
+                                        * { // for testing id:'id', header: "db id", dataIndex: 'id', sortable:true,
+                                        * width: 0.1 //viewConfig.forceFit resizes based on relative widths },
+                                        */
+                              this.rowExpander,
+                              {
+                                 id : 'name',
+                                 header : "Platform Name",
+                                 dataIndex : 'name',
+                                 width : 0.3, // viewConfig.forceFit resizes based on relative widths,
+                                 renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
+                                    return (value && record) ? '<a target="_blank" href="' + ctxBasePath
+                                       + '/arrays/showArrayDesign.html?id=' + record.id + '">' + value + '</a>' : '';
+                                 }
+                              },
+                              {
+                                 header : "Status",
+                                 dataIndex : 'statusArray',
+                                 width : 0.05,
+                                 renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
+                                    var statusString = "";
+
+                                    if ( record.get( 'troubled' ) ) {
+                                       statusString += '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                                          + record.get( 'troubleDetails' ) + '"></i>';
+                                    }
+
+                                    if ( record.get( 'isMerged' ) ) {
+                                       statusString += '<img title="'
+                                          + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergedTT + '"'
+                                          + ' src="' + ctxBasePath + '/images/icons/merging_result.png"/>&nbsp;';
+                                    }
+                                    if ( record.get( 'isMergee' ) ) {
+                                       statusString += '<img title="'
+                                          + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergeeTT + '"'
+                                          + ' src="' + ctxBasePath + '/images/icons/arrow_merge.png"/>&nbsp;';
+                                    }
+                                    if ( record.get( 'isSubsumed' ) ) {
+                                       statusString += '<img title="'
+                                          + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumedTT + '"'
+                                          + ' src="' + ctxBasePath + '/images/icons/subsumed.png"/>&nbsp;';
+                                    }
+                                    if ( record.get( 'isSubsumer' ) ) {
+                                       statusString += '<img title="'
+                                          + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumerTT + '"'
+                                          + ' src="' + ctxBasePath + '/images/icons/subsumer.png"/>';
+                                    }
+
+                                    return statusString;
+                                 }
+                              },
+                              {
+                                 header : "Quality/Suitability",
+                                 tooltip : "Shows quality and suitability score, or the fact that the experiment is not fully curated yet.",
+                                 dataIndex : 'needsAttention',
+                                 sortable : true,
+                                 width : 0.05,
+                                 hidden : false,
+                                 renderer : Gemma.Renderers.curationRenderer
+                              },
+                              {
+                                 header : "Short Name",
+                                 dataIndex : 'shortName',
+                                 width : 0.07
+                              },
+                              {
+                                 header : "Taxon",
+                                 dataIndex : 'taxon',
+                                 width : 0.07
+                              },
+                              {
+                                 header : "Expts",
+                                 dataIndex : 'expressionExperimentCount',
+                                 width : 0.03,
+                                 tooltip : 'Number of experiments in Gemma that use this design'
+                              },
+                              {
+                                 header : "Seq. Update",
+                                 dataIndex : 'lastSequenceUpdate',
+                                 width : 0.07,
+                                 sortDir : 'DESC',
+                                 xtype : 'datecolumn',
+                                 format : 'Y-m-d'
+                              },
+                              {
+                                 header : "Rep. mask",
+                                 dataIndex : 'lastRepeatMask',
+                                 width : 0.07,
+                                 sortDir : 'DESC',
+                                 xtype : 'datecolumn',
+                                 format : 'Y-m-d'
+                              },
+                              {
+                                 header : "Seq. Analysis",
+                                 dataIndex : 'lastSequenceAnalysis',
+                                 width : 0.07,
+                                 sortDir : 'DESC',
+                                 xtype : 'datecolumn',
+                                 format : 'Y-m-d'
+                              },
+                              {
+                                 header : "Gene Mapping",
+                                 dataIndex : 'lastGeneMapping',
+                                 width : 0.07,
+                                 sortDir : 'DESC',
+                                 xtype : 'datecolumn',
+                                 format : 'Y-m-d'
+                              },
+                              {
+                                 header : "Channels",
+                                 dataIndex : 'color',
+                                 width : 0.03,
+                                 renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
+                                    return (value === "ONECOLOR") ? "1" : (value === "TWOCOLOR") ? "2"
+                                       : '<span title="' + value + '">' + value + '</span>';
+                                 }
+                              }, this.action ]
+                        } )
+                  } );
+
+            this.getStore().addMultiFilter( {
+               name : 'orphanFilter',
+               active : !this.showOrphans,
+               fn : function( record ) {
+                  return (record.get( 'expressionExperimentCount' ) && record.get( 'expressionExperimentCount' ) > 0);
+               }
+            } );
+            this.getStore().addMultiFilter( {
+               name : 'mergeeFilter',
+               active : !this.showMergees,
+               fn : function( record ) {
+                  return !record.get( 'isMergee' );
+               }
+            } );
+            this.getStore().addMultiFilter( {
+               name : 'troubledFilter',
+               active : false,
+               fn : function( record ) {
+                  return !record.get( 'troubled' );
+               }
+
+            } );
+
+            var textFilterFun = function( query ) {
+               var value = new RegExp( Ext.escapeRe( query ), 'i' );
+               return function( record ) {
+                  // go through every visible field, if it matches the query text
+                  // show the row
+                  var fieldContents;
+                  for ( var field in record.data) {
+                     fieldContents = record.data[field];
+                     if ( value.test( fieldContents ) ) {
+                        return true;
                      }
                   }
-               }
-            }, {
-               ref : 'fieldClearBtn',
-               disabled : true,
-               tooltip : 'Clear your search',
-               icon : ctxBasePath + '/images/icons/cross.png',
-               handler : function() {
-                  this.clearFilter();
+                  return false;
+               };
+            };
+
+            Ext.apply( this, {
+               clearFilter : function() {
+                  this.getTopToolbar().searchInGrid.reset();
+                  this.getStore().removeMultiFilter( 'textQueryFilter' );
+                  this.getStore().applyMultiFilters();
+                  this.getTopToolbar().fieldClearBtn.disable();
                },
-               scope : this
-            }, '-', {
-               ref : 'refreshButton',
-               text : 'Refresh',
-               icon : ctxBasePath + '/images/icons/arrow_refresh_small.png',
-               tooltip : 'Refresh the contents of this table',
-               handler : function() {
-                  this.clearFilter();
-                  this.loadArrayDesigns( this.idSubset );
-               },
-               scope : this
-            }, '->', '-', {
-               ref : 'orphansToggle',
-               boxLabel : 'Hide Orphans',
-               checked : !this.showOrphans,
-               xtype : 'checkbox',
-               style : 'margin-top:0px',
-               tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideOrphansTT,
-               handler : function( checkbox, isChecked ) {
-                  if ( !isChecked ) {
+               tbar : new Ext.Toolbar( {
+                  items : [ {
+                     xtype : 'textfield',
+                     ref : 'searchInGrid',
+                     tabIndex : 1,
+                     enableKeyEvents : true,
+                     emptyText : 'Enter search term',
+                     listeners : {
+                        "keyup" : {
+                           fn : function() {
+                              this.getTopToolbar().fieldClearBtn.enable();
+                              this.getStore().removeMultiFilter( 'textQueryFilter' );
+                              this.getStore().addMultiFilter( {
+                                 name : 'textQueryFilter',
+                                 active : true,
+                                 fn : textFilterFun( this.getTopToolbar().searchInGrid.getValue() )
+                              } );
+                              this.getStore().applyMultiFilters();
 
-                     this.showOrphans = true;
-                     this.getStore().deactivateMultiFilter( 'orphanFilter' );
-                     this.getStore().applyMultiFilters();
+                           },
+                           scope : this,
+                           options : {
+                              delay : 100
+                           }
+                        }
+                     }
+                  }, {
+                     ref : 'fieldClearBtn',
+                     disabled : true,
+                     tooltip : 'Clear your search',
+                     icon : ctxBasePath + '/images/icons/cross.png',
+                     handler : function() {
+                        this.clearFilter();
+                     },
+                     scope : this
+                  }, '-', {
+                     ref : 'refreshButton',
+                     text : 'Refresh',
+                     icon : ctxBasePath + '/images/icons/arrow_refresh_small.png',
+                     tooltip : 'Refresh the contents of this table',
+                     handler : function() {
+                        this.clearFilter();
+                        this.loadArrayDesigns( this.idSubset );
+                     },
+                     scope : this
+                  }, '->', '-', {
+                     ref : 'orphansToggle',
+                     boxLabel : 'Hide Orphans',
+                     checked : !this.showOrphans,
+                     xtype : 'checkbox',
+                     style : 'margin-top:0px',
+                     tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideOrphansTT,
+                     handler : function( checkbox, isChecked ) {
+                        if ( !isChecked ) {
 
-                  } else {
+                           this.showOrphans = true;
+                           this.getStore().deactivateMultiFilter( 'orphanFilter' );
+                           this.getStore().applyMultiFilters();
 
-                     this.showOrphans = false;
-                     this.getStore().activateMultiFilter( 'orphanFilter' );
-                     this.getStore().applyMultiFilters();
-                  }
+                        } else {
 
-               },
-               scope : this
-            }, '-', {
-               ref : 'troubledToggle',
-               boxLabel : 'Hide Troubled',
-               checked : !this.showTroubled,
-               hidden : true,
-               style : 'margin-top:0px',
-               xtype : 'checkbox',
-               tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideTroubledTT,
-               handler : function( checkbox, isChecked ) {
-                  if ( !isChecked ) {
+                           this.showOrphans = false;
+                           this.getStore().activateMultiFilter( 'orphanFilter' );
+                           this.getStore().applyMultiFilters();
+                        }
 
-                     this.showTroubled = true;
-                     this.getStore().deactivateMultiFilter( 'troubledFilter' );
-                     this.getStore().applyMultiFilters();
+                     },
+                     scope : this
+                  }, '-', {
+                     ref : 'troubledToggle',
+                     boxLabel : 'Hide Troubled',
+                     checked : !this.showTroubled,
+                     hidden : true,
+                     style : 'margin-top:0px',
+                     xtype : 'checkbox',
+                     tooltip : Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideTroubledTT,
+                     handler : function( checkbox, isChecked ) {
+                        if ( !isChecked ) {
 
-                  } else {
-                     this.showTroubled = false;
-                     this.getStore().activateMultiFilter( 'troubledFilter' );
-                     this.getStore().applyMultiFilters();
-                  }
+                           this.showTroubled = true;
+                           this.getStore().deactivateMultiFilter( 'troubledFilter' );
+                           this.getStore().applyMultiFilters();
 
-               },
-               scope : this
-            }, '-', {
-               ref : 'ArrayDesignsSummaryWindowBtn',
-               text : 'Platforms Summary',
-               cls : 'x-toolbar-standardbutton',
-               hidden : true,
-               handler : function() {
-                  if ( Ext.WindowMgr.get( 'ArrayDesignsSummaryWindow' ) ) {
-                     Ext.WindowMgr.bringToFront( 'ArrayDesignsSummaryWindow' );
-                  } else {
-                     new Gemma.ArrayDesignsSummaryWindow( {
-                        id : 'arrayDesignsSummaryWindow'
-                     } ).show();
-                  }
-               },
-               scope : this
-            } ]
-         } )
+                        } else {
+                           this.showTroubled = false;
+                           this.getStore().activateMultiFilter( 'troubledFilter' );
+                           this.getStore().applyMultiFilters();
+                        }
+
+                     },
+                     scope : this
+                  }, '-', {
+                     ref : 'ArrayDesignsSummaryWindowBtn',
+                     text : 'Platforms Summary',
+                     cls : 'x-toolbar-standardbutton',
+                     hidden : true,
+                     handler : function() {
+                        if ( Ext.WindowMgr.get( 'ArrayDesignsSummaryWindow' ) ) {
+                           Ext.WindowMgr.bringToFront( 'ArrayDesignsSummaryWindow' );
+                        } else {
+                           new Gemma.ArrayDesignsSummaryWindow( {
+                              id : 'arrayDesignsSummaryWindow'
+                           } ).show();
+                        }
+                     },
+                     scope : this
+                  } ]
+               } )
+            } );
+
+            Gemma.ArrayDesignsNonPagingGrid.superclass.initComponent.call( this );
+
+            this.on( 'render', function() {
+               this.loadArrayDesigns( this.idSubset );
+            }, this );
+
+            this.getStore().on( 'datachanged', function( store ) {
+               this.setTitle( this.getStore().getCount() + " of " + this.totalCount + " Platforms" );
+            }, this );
+
+            // if the user is an admin, show the status column
+            var isAdmin = (Ext.get( 'hasAdmin' )) ? Ext.get( 'hasAdmin' ).getValue() : false;
+            this.adjustForIsAdmin( isAdmin );
+
+            Gemma.Application.currentUser.on( "logIn", function( userName, isAdmin ) {
+
+               this.adjustForIsAdmin( isAdmin );
+
+            }, this );
+            Gemma.Application.currentUser.on( "logOut", function() {
+
+               this.adjustForIsAdmin( false );
+
+            }, this );
+
+         }, // end of initComponent
+         // make changes based on whether user is admin or not
+         adjustForIsAdmin : function( isAdmin ) {
+
+            // if user is admin, update the column model to show the status column
+            var colModel = this.getColumnModel();
+
+            var index = this.getColumnModel().findColumnIndex( 'lastSequenceUpdate' );
+            colModel.setHidden( index, !isAdmin );
+
+            index = this.getColumnModel().findColumnIndex( 'lastRepeatMask' );
+            colModel.setHidden( index, !isAdmin );
+
+            index = this.getColumnModel().findColumnIndex( 'lastSequenceAnalysis' );
+            colModel.setHidden( index, !isAdmin );
+
+            index = this.getColumnModel().findColumnIndex( 'lastGeneMapping' );
+            colModel.setHidden( index, !isAdmin );
+
+            index = this.getColumnModel().findColumnIndex( 'color' );
+            colModel.setHidden( index, !isAdmin );
+
+            index = this.getColumnModel().findColumnIndex( 'actions' );
+            colModel.setHidden( index, !isAdmin );
+
+            index = this.getColumnModel().findColumnIndex( 'needsAttention' );
+            colModel.setHidden( index, !isAdmin );
+
+            if ( !isAdmin ) {
+               this.getStore().activateMultiFilter( 'troubledFilter' );
+               this.getStore().applyMultiFilters();
+            }
+
+            this.getTopToolbar().troubledToggle.setVisible( isAdmin );
+            this.getTopToolbar().ArrayDesignsSummaryWindowBtn.setVisible( isAdmin );
+         }
       } );
-
-      Gemma.ArrayDesignsNonPagingGrid.superclass.initComponent.call( this );
-
-      this.on( 'render', function() {
-         this.loadArrayDesigns( this.idSubset );
-      }, this );
-
-      this.getStore().on( 'datachanged', function( store ) {
-         this.setTitle( this.getStore().getCount() + " of " + this.totalCount + " Platforms" );
-      }, this );
-
-      // if the user is an admin, show the status column
-      var isAdmin = (Ext.get( 'hasAdmin' )) ? Ext.get( 'hasAdmin' ).getValue() : false;
-      this.adjustForIsAdmin( isAdmin );
-
-      Gemma.Application.currentUser.on( "logIn", function( userName, isAdmin ) {
-
-         this.adjustForIsAdmin( isAdmin );
-
-      }, this );
-      Gemma.Application.currentUser.on( "logOut", function() {
-
-         this.adjustForIsAdmin( false );
-
-      }, this );
-
-   }, // end of initComponent
-   // make changes based on whether user is admin or not
-   adjustForIsAdmin : function( isAdmin ) {
-
-      // if user is admin, update the column model to show the status column
-      var colModel = this.getColumnModel();
-
-      var index = this.getColumnModel().findColumnIndex( 'lastSequenceUpdate' );
-      colModel.setHidden( index, !isAdmin );
-
-      index = this.getColumnModel().findColumnIndex( 'lastRepeatMask' );
-      colModel.setHidden( index, !isAdmin );
-
-      index = this.getColumnModel().findColumnIndex( 'lastSequenceAnalysis' );
-      colModel.setHidden( index, !isAdmin );
-
-      index = this.getColumnModel().findColumnIndex( 'lastGeneMapping' );
-      colModel.setHidden( index, !isAdmin );
-
-      index = this.getColumnModel().findColumnIndex( 'color' );
-      colModel.setHidden( index, !isAdmin );
-
-      index = this.getColumnModel().findColumnIndex( 'actions' );
-      colModel.setHidden( index, !isAdmin );
-
-      index = this.getColumnModel().findColumnIndex( 'needsAttention' );
-      colModel.setHidden( index, !isAdmin );
-
-      if ( !isAdmin ) {
-         this.getStore().activateMultiFilter( 'troubledFilter' );
-         this.getStore().applyMultiFilters();
-      }
-
-      this.getTopToolbar().troubledToggle.setVisible( isAdmin );
-      this.getTopToolbar().ArrayDesignsSummaryWindowBtn.setVisible( isAdmin );
-   }
-} );
 
 Gemma.ArrayDesignsSummaryWindow = Ext
    .extend(

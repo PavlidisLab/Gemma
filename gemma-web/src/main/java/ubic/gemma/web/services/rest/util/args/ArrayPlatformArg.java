@@ -40,10 +40,11 @@ public class ArrayPlatformArg extends ArrayEntityArg<ArrayDesign, ArrayDesignVal
     }
 
     @Override
-    protected String getPropertyName( ArrayDesignService service ) {
+    protected void setPropertyNameAndType( ArrayDesignService service ) {
         String value = this.getValue().get( 0 );
         MutableArg<?, ArrayDesign, ArrayDesignValueObject, ArrayDesignService> arg = PlatformArg.valueOf( value );
-        return this.checkPropertyNameString( arg, value, service );
+        this.argValueName = this.checkPropertyNameString( arg, value, service );
+        this.argValueClass = arg.value.getClass();
     }
 
     @Override

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -42,18 +43,31 @@ import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 @SuppressWarnings("unused") // Possible external use
 public class GeoPlatform extends GeoData {
 
-    private static final String DISTRIBUTION_VIRTUAL = "virtual";
+    private static final Set<String> affyExonArrays = new HashSet<>();
 
     /**
-     * detect more exon arrays; values are the platform we will actually used
+     * keys are platforms names; values are the platform we will actually used (key can equal value)
      */
-    private static final Map<String, String> exonPlatformGeoIds = new HashMap<>();
-    private static final long serialVersionUID = 1L;
+    private static final Map<String, String> affyPlatformMap = new HashMap<>();
+    private static final String DISTRIBUTION_VIRTUAL = "virtual";
     private static final Log log = LogFactory.getLog( GeoPlatform.class.getName() );
+    private static final long serialVersionUID = 1L;
 
     static {
+
+        /*
+         * For these platforms we *never* use the data provided by GEO if it's on one of the alternatives to this. These
+         * IDs are the gene-level versions. Anything mapping to an alternative of these we won't use, because it's often
+         * exon-level data (not always, but in that case it will be an alternative version, which we'd want to replace
+         * anyway; so not having imported the data is not a big deal).
+         */
+        affyExonArrays.add( "GPL6096" ); // MoEx-1_0-st, gene-level version
+        affyExonArrays.add( "GPL5175" ); // HuEx-1_0-st, gene-level version
+        affyExonArrays.add( "GPL6543" ); // RaEx-1_0-st, gene-level version
+        affyExonArrays.add( "GPL17586" ); // HTA-2_0, gene-level version
+
         try (BufferedReader in = new BufferedReader( new InputStreamReader(
-                GeoPlatform.class.getResourceAsStream( "/ubic/gemma/core/affy.exonarrays.txt" ) ) )) {
+                GeoPlatform.class.getResourceAsStream( "/ubic/gemma/core/loader/affy.altmappings.txt" ) ) )) {
             while ( in.ready() ) {
                 String geoId = in.readLine().trim();
 
@@ -67,14 +81,76 @@ public class GeoPlatform extends GeoData {
                     continue;
                 }
 
-                GeoPlatform.exonPlatformGeoIds.put( f[0], f[1] );
+                GeoPlatform.affyPlatformMap.put( f[0], f[1] );
             }
         } catch ( Exception e ) {
             GeoPlatform.log.warn( "List of exon array IDs could not be loaded: " + e.getMessage() );
         }
     }
 
+    /**
+     * @param geoPlatformId (GPL)
+     * @return true if we know this to be an exon array - so far as we know.
+     */
+    public static boolean isAffymetrixExonArray( String geoPlatformId ) {
+        return affyExonArrays.contains( GeoPlatform.affyPlatformMap.get( geoPlatformId ) );
+    }
+
+    /**
+     * @param geoPlatformId (GPL)
+     * @return short name (GPLXXXX) of platform we would actually use, or null if not found
+     */
+    public static String alternativeToProperAffyPlatform( String geoPlatformId ) {
+        return GeoPlatform.affyPlatformMap.get( geoPlatformId );
+    }
+
+    /**
+     * 
+     * @param geoPlatformId (GPL)
+     * @return true if we recognize it as an Affymetrix platform. Depends on our mappings, if an error is spotted let us
+     *         know.
+     */
+    public static boolean isAffyPlatform( String geoPlatformId ) {
+        return GeoPlatform.affyPlatformMap.containsKey( geoPlatformId );
+    }
+
+    /**
+     * Refers to a list of platforms for which the data from GEO is usually not usable and/or which we always reanalyze
+     * from CEL files - exon arrays.
+     * 
+     * Logic: if this was run on an Affymetrix exon array we won't use the data from GEO, *unless* it was already using
+     * the gene-level
+     * version of the platform, in which case we let it in. Note that we still endeavour to reanalyze all Affy data sets
+     * at the CEL file level
+     *
+     * @param geoPlatformId (GPL)
+     * @return true if the platform is affymetrix exon array.
+     */
+    public static boolean isGEOAffyDataUsable( String geoPlatformId ) {
+
+        if ( !isAffyPlatform( geoPlatformId ) ) {
+            throw new IllegalArgumentException( "Not an Affy platform, so far as we know, check that it's an Affy platform first" );
+        }
+
+        String platformToUse = affyPlatformMap.get( geoPlatformId );
+
+        // it's already on the right platform, though we may replace the data later.
+        if ( platformToUse.equals( geoPlatformId ) ) return true;
+
+        return !affyExonArrays.contains( platformToUse );
+    }
+
+    private Collection<String> catalogNumbers = new HashSet<>();
+    private String coating = "";
+    private Collection<String> contributer = new HashSet<>();
+    private String description = "";
     private final Collection<String> designElements = new HashSet<>();
+    private String distribution = "";
+    private String lastUpdateDate = "";
+    private String manufactureProtocol = "";
+    private String manufacturer = "";
+    private Collection<String> organisms = new HashSet<>();
+    private List<List<String>> platformData = new ArrayList<>();
     /**
      * Store information on the platform here. Map of designElements to other information. This has to be lists so the
      * values "line up".
@@ -86,45 +162,19 @@ public class GeoPlatform extends GeoData {
      * data.
      */
     private final Map<String, String> probeNamesInGemma = new HashMap<>();
-    private Collection<String> catalogNumbers = new HashSet<>();
-    private String coating = "";
-    private Collection<String> contributer = new HashSet<>();
-    private String description = "";
-    private String distribution = "";
-    private String lastUpdateDate = "";
-    private String manufactureProtocol = "";
-    private String manufacturer = "";
-    private Collection<String> organisms = new HashSet<>();
-    private List<List<String>> platformData = new ArrayList<>();
     private Collection<Integer> pubMedIds = new HashSet<>();
     private String sample = "DNA";
     private String supplementaryFile = "";
     private String support = "";
+
     private GeoDataset.PlatformType technology = null;
+
     /**
      * Will be set to false during parsing if data are missing.
      */
     private boolean useDataFromGEO = true;
+
     private Collection<String> webLinks = new HashSet<>();
-
-    /**
-     * Refers to a list of platforms for which the data from GEO is usually not usable and/or which we always reanalyze
-     * from CEL files - exon arrays and newer gene arrays
-     * 
-     * @param geoPlatformId (GPL)
-     * @return true if the platform is affymetrix exon array.
-     */
-    public static boolean isAffymetrixExonArray( String geoPlatformId ) {
-        return GeoPlatform.exonPlatformGeoIds.containsKey( geoPlatformId );
-    }
-
-    /**
-     * @param geoPlatformId (GPL)
-     * @return short name (GPLXXXX) of platform we would actually use, or null if not found
-     */
-    public static String exonArrayToGeneLevelArray( String geoPlatformId ) {
-        return GeoPlatform.exonPlatformGeoIds.get( geoPlatformId );
-    }
 
     /**
      * Add a value to a column. A special case is when the column is of the probe ids (design element name).
@@ -186,24 +236,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param catalogNumbers The catalogNumbers to set.
-     */
-    public void setCatalogNumbers( Collection<String> catalogNumbers ) {
-        this.catalogNumbers = catalogNumbers;
-    }
-
-    /**
      * @return Returns the coating.
      */
     public String getCoating() {
         return this.coating;
-    }
-
-    /**
-     * @param coating The coating to set.
-     */
-    public void setCoating( String coating ) {
-        this.coating = coating;
     }
 
     /**
@@ -241,24 +277,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param contributer The contributer to set.
-     */
-    public void setContributer( Collection<String> contributer ) {
-        this.contributer = contributer;
-    }
-
-    /**
      * @return Returns the description.
      */
     public String getDescription() {
         return this.description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription( String description ) {
-        this.description = description;
     }
 
     /**
@@ -277,13 +299,6 @@ public class GeoPlatform extends GeoData {
      */
     public String getDistribution() {
         return this.distribution;
-    }
-
-    /**
-     * @param distribution The distribution to set.
-     */
-    public void setDistribution( String distribution ) {
-        this.distribution = distribution;
     }
 
     /**
@@ -310,22 +325,11 @@ public class GeoPlatform extends GeoData {
         return lastUpdateDate;
     }
 
-    public void setLastUpdateDate( String lastUpdateDate ) {
-        this.lastUpdateDate = lastUpdateDate;
-    }
-
     /**
      * @return Returns the manufactureProtocol.
      */
     public String getManufactureProtocol() {
         return this.manufactureProtocol;
-    }
-
-    /**
-     * @param manufactureProtocol The manufactureProtocol to set.
-     */
-    public void setManufactureProtocol( String manufactureProtocol ) {
-        this.manufactureProtocol = manufactureProtocol;
     }
 
     /**
@@ -336,21 +340,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param manufacturer The manufacturer to set.
-     */
-    public void setManufacturer( String manufacturer ) {
-        this.manufacturer = manufacturer;
-    }
-
-    /**
      * @return Returns the organisms.
      */
     public Collection<String> getOrganisms() {
         return this.organisms;
-    }
-
-    public void setOrganisms( Collection<String> organism ) {
-        this.organisms = organism;
     }
 
     /**
@@ -358,13 +351,6 @@ public class GeoPlatform extends GeoData {
      */
     public List<List<String>> getPlatformData() {
         return this.platformData;
-    }
-
-    /**
-     * @param platformData The platformData to set.
-     */
-    public void setPlatformData( List<List<String>> platformData ) {
-        this.platformData = platformData;
     }
 
     public Map<String, String> getProbeNamesInGemma() {
@@ -379,21 +365,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param pubMedIds The pubMedIds to set.
-     */
-    public void setPubMedIds( Collection<Integer> pubMedIds ) {
-        this.pubMedIds = pubMedIds;
-    }
-
-    /**
      * @return String
      */
     public String getSample() {
         return sample;
-    }
-
-    public void setSample( String sample ) {
-        this.sample = sample;
     }
 
     /**
@@ -401,10 +376,6 @@ public class GeoPlatform extends GeoData {
      */
     public String getSupplementaryFile() {
         return supplementaryFile;
-    }
-
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
     }
 
     /**
@@ -415,24 +386,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param support The support to set.
-     */
-    public void setSupport( String support ) {
-        this.support = support;
-    }
-
-    /**
      * @return Returns the technology.
      */
     public GeoDataset.PlatformType getTechnology() {
         return this.technology;
-    }
-
-    /**
-     * @param technology The technology to set.
-     */
-    public void setTechnology( GeoDataset.PlatformType technology ) {
-        this.technology = technology;
     }
 
     /**
@@ -443,10 +400,96 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param webLinks The webLinks to set.
+     * @param catalogNumbers The catalogNumbers to set.
      */
-    public void setWebLinks( Collection<String> webLinks ) {
-        this.webLinks = webLinks;
+    public void setCatalogNumbers( Collection<String> catalogNumbers ) {
+        this.catalogNumbers = catalogNumbers;
+    }
+
+    /**
+     * @param coating The coating to set.
+     */
+    public void setCoating( String coating ) {
+        this.coating = coating;
+    }
+
+    /**
+     * @param contributer The contributer to set.
+     */
+    public void setContributer( Collection<String> contributer ) {
+        this.contributer = contributer;
+    }
+
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    /**
+     * @param distribution The distribution to set.
+     */
+    public void setDistribution( String distribution ) {
+        this.distribution = distribution;
+    }
+
+    public void setLastUpdateDate( String lastUpdateDate ) {
+        this.lastUpdateDate = lastUpdateDate;
+    }
+
+    /**
+     * @param manufactureProtocol The manufactureProtocol to set.
+     */
+    public void setManufactureProtocol( String manufactureProtocol ) {
+        this.manufactureProtocol = manufactureProtocol;
+    }
+
+    /**
+     * @param manufacturer The manufacturer to set.
+     */
+    public void setManufacturer( String manufacturer ) {
+        this.manufacturer = manufacturer;
+    }
+
+    public void setOrganisms( Collection<String> organism ) {
+        this.organisms = organism;
+    }
+
+    /**
+     * @param platformData The platformData to set.
+     */
+    public void setPlatformData( List<List<String>> platformData ) {
+        this.platformData = platformData;
+    }
+
+    /**
+     * @param pubMedIds The pubMedIds to set.
+     */
+    public void setPubMedIds( Collection<Integer> pubMedIds ) {
+        this.pubMedIds = pubMedIds;
+    }
+
+    public void setSample( String sample ) {
+        this.sample = sample;
+    }
+
+    public void setSupplementaryFile( String supplementaryFile ) {
+        this.supplementaryFile = supplementaryFile;
+    }
+
+    /**
+     * @param support The support to set.
+     */
+    public void setSupport( String support ) {
+        this.support = support;
+    }
+
+    /**
+     * @param technology The technology to set.
+     */
+    public void setTechnology( GeoDataset.PlatformType technology ) {
+        this.technology = technology;
     }
 
     /**
@@ -460,11 +503,22 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
+     * @param webLinks The webLinks to set.
+     */
+    public void setWebLinks( Collection<String> webLinks ) {
+        this.webLinks = webLinks;
+    }
+
+    /**
      * @return true if the data uses a platform that, generally, we can use the data from, if available. Will be false
-     *         for MPSS, SAGE and transcript- or exon- level exon array data.
+     *         for MPSS, SAGE and transcript- or exon- level exon array data. Note that sometimes this will result in us
+     *         not using data that was sort of okay - for example, an alternative CDF/MPS version of an Affy Exon array
+     *         at
+     *         the gene level. But we'd want to reanalyze it from the official CDF/MPS anyway.
      */
     public boolean useDataFromGeo() {
 
+        // if it was SAGE or something we may have already figured it out.
         if ( !this.useDataFromGEO )
             return false;
 
@@ -480,20 +534,14 @@ public class GeoPlatform extends GeoData {
             return false;
         }
 
-        if ( StringUtils.isBlank( this.getTitle() ) ) {
-            throw new IllegalStateException(
-                    "Can't figure out suitability of data until platform title is filled in." );
+        if ( !isAffyPlatform( this.getGeoAccession() ) ) {
+            // no further objections.
+            return true;
         }
 
-        // these are the three gene-level representations of affy exon platforms. We can use these data, even if we replace it, eventually. However, the data aren't always there.
-        // See also DataUpdater.prepareTargetPlatformForExonArrays
-        // Sometimes the data are there, sometimes it isn't.
-        return !technology.equals( PlatformType.inSituOligonucleotide )
-                || ( !GeoPlatform.isAffymetrixExonArray( this.getGeoAccession() ) && !this.getTitle().toLowerCase()
-                        .contains( "exon" ) )
-                || this.getGeoAccession().equals( "GPL6096" ) || this.getGeoAccession()
-                        .equals( "GPL6244" )
-                || this.getGeoAccession().equals( "GPL6247" );
+        // If true, we can use these data, even if we replace it from CEL files, eventually. 
+        return isGEOAffyDataUsable( this.getGeoAccession() );
 
     }
+
 }

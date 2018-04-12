@@ -33,12 +33,14 @@ public class GeoPlatformTest {
 
     @Test
     public void testExonArrayInfo() {
-        assertTrue( GeoPlatform.isAffymetrixExonArray( "GPL23159" ) );
-        assertTrue( GeoPlatform.isAffymetrixExonArray( "GPL20103" ) );
+        assertTrue( GeoPlatform.isGEOAffyDataUsable( "GPL23159" ) );
+        assertTrue( GeoPlatform.isGEOAffyDataUsable( "GPL20103" ) ); // an exon array, though not the usual one
 
-        assertTrue( !GeoPlatform.isAffymetrixExonArray( "GPL2315" ) );
+        assertTrue( GeoPlatform.isGEOAffyDataUsable( "GPL23159" ) ); // this is an MPS array, but the right one
 
-        assertEquals( "GPL16686", GeoPlatform.exonArrayToGeneLevelArray( "GPL20103" ) );
+        assertFalse( GeoPlatform.isGEOAffyDataUsable( "GPL13712" ) ); // exon array, though this is gene-level data, we wouldn't load it.
+
+        assertEquals( "GPL16686", GeoPlatform.alternativeToProperAffyPlatform( "GPL20103" ) );
 
     }
 

@@ -46,9 +46,11 @@ import java.util.Map;
  * <p>
  * For 3' arrays, here is an example:
  * </p>
+ * 
  * <pre>
  * 1494_f_at 1 325 359 1118 TCCCCATGAGTTTGGCCCGCAGAGT Antisense
  * </pre>
+ * 
  * For exon arrays, we create the equivalent files from the GFF files provided by Affymetrix. The files are created
  * off-line using a PERL script.
  *
@@ -113,7 +115,7 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
                     timer.start();
                 }
             }
-            log.info( "Parsed " + linesParsed + " lines. " );
+            log.info( "Parsed " + linesParsed + " lines, " + reporterMap.size() + " reporters generated." );
         }
     }
 

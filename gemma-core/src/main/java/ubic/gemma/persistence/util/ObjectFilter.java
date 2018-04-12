@@ -122,20 +122,21 @@ public class ObjectFilter {
                     Collection<String> reqCol = ( Collection<String> ) requiredValue;
             if ( String.class.isAssignableFrom( propertyType ) ) {
                 return requiredValue;
-            } else if ( Number.class.isAssignableFrom( propertyType ) ) {
-                Collection<Number> newCol = new ArrayList<>( reqCol.size() );
+            } else {
+                Collection<Object> newCol = new ArrayList<>( reqCol.size() );
                 for ( String s : reqCol ) {
-                    newCol.add( NumberFormat.getInstance().parse( s ) );
-                }
-                return newCol;
-            } else if ( Boolean.class.isAssignableFrom( propertyType ) ) {
-                Collection<Boolean> newCol = new ArrayList<>( reqCol.size() );
-                for ( String s : reqCol ) {
-                    newCol.add( Boolean.parseBoolean( s ) );
+                    newCol.add( convertItem( s, propertyType ) );
                 }
                 return newCol;
             }
-        } else if ( String.class.isAssignableFrom( propertyType ) ) {
+        } else {
+            return convertItem( requiredValue, propertyType );
+        }
+    }
+
+    private Object convertItem(Object requiredValue, Class propertyType){
+        // Assuming default is string
+        if ( String.class.isAssignableFrom( propertyType ) ) {
             return requiredValue;
         } else if ( Boolean.class.isAssignableFrom( propertyType ) || boolean.class.isAssignableFrom( propertyType ) ) {
             return Boolean.parseBoolean( ( String ) requiredValue );
