@@ -41,11 +41,12 @@ public class ArrayDatasetArg
     }
 
     @Override
-    protected String getPropertyName( ExpressionExperimentService service ) {
+    protected void setPropertyNameAndType( ExpressionExperimentService service ) {
         String value = this.getValue().get( 0 );
         MutableArg<?, ExpressionExperiment, ExpressionExperimentValueObject, ExpressionExperimentService> arg = DatasetArg
                 .valueOf( value );
-        return this.checkPropertyNameString( arg, value, service );
+        this.argValueName = this.checkPropertyNameString( arg, value, service );
+        this.argValueClass = arg.value.getClass();
     }
 
     @Override

@@ -27,7 +27,7 @@ public class GeneNcbiIdArg extends GeneAnyIdArg<Integer> {
 
     @Override
     public String getPropertyName( GeneService service ) {
-        return "ncbiId";
+        return "ncbiGeneId";
     }
 
     @Override
