@@ -259,41 +259,6 @@ public class AffyPowerToolsProbesetSummarize {
         return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest, false );
     }
 
-    //    /**
-    //     * Call once for each platform used by the experiment.
-    //     *
-    //     * @param ee             ee
-    //     * @param targetPlatform to match the CDF file
-    //     * @param files          files
-    //     * @return raw data vectors
-    //     */
-    //    public Collection<RawExpressionDataVector> processThreeprimeArrayData( ExpressionExperiment ee,
-    //            ArrayDesign targetPlatform, Collection<LocalFile> files ) {
-    //
-    //        Collection<BioAssay> bioAssays = ee.getBioAssays();
-    //
-    //        if ( bioAssays.isEmpty() ) {
-    //            throw new IllegalArgumentException( "Experiment had no assays" );
-    //        }
-    //
-    //        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
-    //            throw new IllegalArgumentException( "Target design had no elements" );
-    //        }
-    //
-    //        /*
-    //         * we may have multiple platforms; we need to get only the bioassays of interest.
-    //         */
-    //        Collection<String> accessionsOfInterest = new HashSet<>();
-    //        for ( BioAssay ba : ee.getBioAssays() ) {
-    //            // This assumes we aren't going to switch platforms. 
-    //            if ( ba.getArrayDesignUsed().equals( targetPlatform ) ) {
-    //                accessionsOfInterest.add( ba.getAccession().getAccession() );
-    //            }
-    //        }
-    //        // note that the targetplatform is always the same as the original for these platforms.
-    //        return this.tryRun( ee, targetPlatform, targetPlatform, files, accessionsOfInterest, true );
-    //    }
-
     /**
      * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
      */
@@ -347,6 +312,8 @@ public class AffyPowerToolsProbesetSummarize {
         for ( CompositeSequence cs : targetPlatform.getCompositeSequences() ) {
             csMap.put( cs.getName(), cs );
         }
+
+        log.info( "Target platform has " + csMap.size() + " elements, apt data matrix has " + matrix.rows() );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );

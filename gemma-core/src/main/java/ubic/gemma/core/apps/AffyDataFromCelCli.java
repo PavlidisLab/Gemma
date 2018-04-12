@@ -29,7 +29,6 @@ import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -52,8 +51,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private String aptFile = null;
+    private String celchip = null;
 
     private boolean checkForAlreadyDone( BioAssaySet ee ) {
+        // this isn't foolproof, because 
         for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
             if ( qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
                 return true;
@@ -82,7 +83,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         super.buildOptions();
         super.addOption( AffyDataFromCelCli.APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
-
+        super.addOption( "celchip", true,
+                "Platform name (e.g. GPL6096) that the CEL files are from; use in case you need to redo "
+                        + "a data set that has already been switched, otherwise not needed; implies -force" );
         super.addForceOption();
 
     }
@@ -104,6 +107,11 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 throw new IllegalArgumentException(
                         "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
             }
+
+            if ( this.celchip != null ) {
+                throw new UnsupportedOperationException( "celchip not supported with aptFile yet" );
+            }
+
             ExpressionExperiment thawedEe = ( ExpressionExperiment ) this.expressionExperiments.iterator().next();
             thawedEe = this.eeService.thawLite( thawedEe );
 
@@ -132,35 +140,52 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             try {
 
                 Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
+                ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
+                thawedEe = this.eeService.thawLite( thawedEe );
 
                 /*
                  * if the audit trail already has a DataReplacedEvent, skip it, unless --force. Ignore this for
                  * multiplatform studies (at our peril)
                  */
-                if ( adsUsed.size() == 1 && !force && this.checkForAlreadyDone( ee ) ) {
-                    AbstractCLI.log.warn( ee
-                            + ": Already has been recomputed from raw data, skipping (use 'force' to override')" );
-                    this.errorObjects.add( ee + ": Already has been computed from raw data" );
-                    continue;
+                if ( this.checkForAlreadyDone( ee ) ) {
+                    if ( this.celchip != null ) {
+
+                        if ( adsUsed.size() > 1 ) {
+                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
+                        }
+
+                        log.info( "Re-running using chip=" + celchip );
+                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
+                        this.successObjects.add( thawedEe );
+                        AbstractCLI.log.info( "Successfully processed: " + thawedEe );
+                    } else {
+
+                        this.errorObjects.add( ee
+                                + ": Was already run before, supply -celchip option to re-run" );
+                        continue;
+                    }
                 }
 
-                ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
-                thawedEe = this.eeService.thawLite( thawedEe );
-
                 ArrayDesign ad = adsUsed.iterator().next();
+
                 /*
-                 * Even if there are multiple platforms, we assume they are all the same type. If not, that's your
+                 * Even if there are multiple platforms, we assume they are all Affy, or all not. If not, that's your
                  * problem :) (seriously, we could check...)
                  */
                 if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
-                    AbstractCLI.log.info( thawedEe + " looks like affy array" );
-
-                    serv.reprocessAffyDataFromCel( thawedEe );
+                    AbstractCLI.log.info( ad + " looks like affy array" );
+                    if ( this.celchip != null ) {
+                        if ( adsUsed.size() > 1 ) {
+                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
+                        }
+                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
+                    } else {
+                        serv.reprocessAffyDataFromCel( thawedEe );
+                    }
                     this.successObjects.add( thawedEe );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );
                 } else {
-                    AbstractCLI.log.warn( ee
-                            + ": This CLI can only deal with Affymetrix platforms" );
+
                     this.errorObjects.add( ee
                             + ": This CLI can only deal with Affymetrix platforms" );
                 }
@@ -182,6 +207,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         super.processOptions();
         if ( this.hasOption( AffyDataFromCelCli.APT_FILE_OPT ) ) {
             this.aptFile = this.getOptionValue( AffyDataFromCelCli.APT_FILE_OPT );
+        }
+        if ( this.hasOption( "celchip" ) ) {
+            this.celchip = this.getOptionValue( "celchip" );
         }
 
     }

@@ -140,11 +140,11 @@ public class DataUpdater {
 
         if ( !targetPlatform.equals( originalPlatform ) ) {
 
-            this.switchBioAssaysToTargetPlatform( ee, targetPlatform );
+            int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform );
 
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform
+                    "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
                             .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
@@ -161,11 +161,7 @@ public class DataUpdater {
      * @param ee the experiment
      */
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
-        }
-        ArrayDesign originalPlatform = ads.iterator().next();
+        Collection<ArrayDesign> arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );
 
         RawDataFetcher f = new RawDataFetcher();
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
@@ -174,38 +170,54 @@ public class DataUpdater {
             throw new RuntimeException( "Data was apparently not available" );
         }
         ee = experimentService.thawLite( ee );
-
-        ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
-
-        assert !targetPlatform.getCompositeSequences().isEmpty();
-
         QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
         qt = qtService.create( qt );
-        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+        for ( ArrayDesign originalPlatform : arrayDesignsUsed ) {
 
-        Collection<RawExpressionDataVector> vectors = apt
-                .processData( ee, targetPlatform, originalPlatform, files );
+            ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
 
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException(
-                    "No vectors were returned for " + ee + "; Original platform=" + originalPlatform + "; target platform=" + targetPlatform );
+            AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize( qt );
+
+            Collection<RawExpressionDataVector> v = apt
+                    .processData( ee, targetPlatform, originalPlatform, files );
+
+            if ( v.isEmpty() ) {
+                throw new IllegalStateException(
+                        "No vectors were returned for " + ee + "; Original platform=" + originalPlatform + "; target platform=" + targetPlatform );
+            }
+
+            vectors.addAll( v );
+
+            if ( !targetPlatform.equals( originalPlatform ) ) {
+
+                int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform );
+
+                AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+                auditTrailService.addUpdateEvent( ee, eventType,
+                        "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
+                                .getShortName() + " to " + targetPlatform.getShortName() + ")" );
+            }
+
         }
-
         ee = experimentService.replaceRawVectors( ee, vectors );
 
-        if ( !targetPlatform.equals( originalPlatform ) ) {
-
-            this.switchBioAssaysToTargetPlatform( ee, targetPlatform );
-
-            AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent( ee, eventType,
-                    "Switched in course of updating vectors using AffyPowerTools (from " + originalPlatform
-                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
-        }
-
-        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
+        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
 
         this.postprocess( ee );
+    }
+
+    /**
+     * @param thawedEe
+     * @param celchip
+     */
+    public void reprocessAffyDataFromCel( ExpressionExperiment thawedEe, String celchip ) {
+        throw new UnsupportedOperationException( "Reprocessing with a specified celchip not implemented yet." );
+        /*
+         * Add AffyPowerToolsProbesetSummarize method to take this, then load the targetPlatform. Only for single
+         * platform datasets! We'll get an error otherwise.
+         */
+
     }
 
     /**
@@ -907,23 +919,27 @@ public class DataUpdater {
     }
 
     /**
-     * Only when there is a single platform!
-     *
+     * Switches bioassays on the original platform to the target platform (if they are the same, nothing will be done)
+     * 
      * @param ee presumed thawed
+     * @param originalPlatform
      * @param targetPlatform
+     * @return how many were switched
      */
-    private void switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
-        }
+    private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign originalPlatform, ArrayDesign targetPlatform ) {
 
+        if ( originalPlatform.equals( targetPlatform ) ) return 0;
+
+        int i = 0;
         for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.setArrayDesignUsed( targetPlatform );
+            if ( ba.getArrayDesignUsed().equals( originalPlatform ) ) {
+                ba.setArrayDesignUsed( targetPlatform );
+                i++;
+            }
         }
 
         experimentService.update( ee );
-
+        return i;
     }
 
 }

@@ -294,57 +294,56 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         // If there are multiple taxa on array
-        else {
-            GeoConverterImpl.log.debug( platformTaxa.size() + " taxa in GEO platform" );
-            // check if they share a common parent taxon to use as primary taxa.
-            Collection<Taxon> parentTaxa = new HashSet<>();
-            for ( Taxon platformTaxon : platformTaxa ) {
-                // thaw to get parent taxon
-                this.taxonService.thaw( platformTaxon );
-                Taxon platformParentTaxon = platformTaxon.getParentTaxon();
-                parentTaxa.add( platformParentTaxon );
-            }
-            // check now if we only have one parent taxon and check if not null, if a null then there was a taxon with
-            // no
-            // parent
-            if ( !( parentTaxa.contains( null ) ) && parentTaxa.size() == 1 ) {
-                GeoConverterImpl.log.debug( "Parent taxon found " + parentTaxa );
-                return parentTaxa.iterator().next();
-            }
-            // No common parent then calculate based on probe taxa:
 
-            GeoConverterImpl.log.debug( "Looking at probe taxa to determine 'primary' taxon" );
-            // create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
-            Map<String, Integer> taxonProbeNumberList = new HashMap<>();
+        GeoConverterImpl.log.debug( platformTaxa.size() + " taxa in GEO platform" );
+        // check if they share a common parent taxon to use as primary taxa.
+        Collection<Taxon> parentTaxa = new HashSet<>();
+        for ( Taxon platformTaxon : platformTaxa ) {
+            // thaw to get parent taxon
+            this.taxonService.thaw( platformTaxon );
+            Taxon platformParentTaxon = platformTaxon.getParentTaxon();
+            parentTaxa.add( platformParentTaxon );
+        }
+        // check now if we only have one parent taxon and check if not null, if a null then there was a taxon with
+        // no
+        // parent
+        if ( !( parentTaxa.contains( null ) ) && parentTaxa.size() == 1 ) {
+            GeoConverterImpl.log.debug( "Parent taxon found " + parentTaxa );
+            return parentTaxa.iterator().next();
+        }
+        // No common parent then calculate based on probe taxa:
 
-            if ( probeTaxa != null ) {
-                for ( String probeTaxon : probeTaxa ) {
-                    // reset each iteration so if no probes already processed set to 1
-                    Integer counter = 1;
-                    if ( taxonProbeNumberList.containsKey( probeTaxon ) ) {
-                        counter = taxonProbeNumberList.get( probeTaxon ) + 1;
-                        taxonProbeNumberList.put( probeTaxon, counter );
-                    }
+        GeoConverterImpl.log.debug( "Looking at probe taxa to determine 'primary' taxon" );
+        // create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
+        Map<String, Integer> taxonProbeNumberList = new HashMap<>();
+
+        if ( probeTaxa != null ) {
+            for ( String probeTaxon : probeTaxa ) {
+                // reset each iteration so if no probes already processed set to 1
+                Integer counter = 1;
+                if ( taxonProbeNumberList.containsKey( probeTaxon ) ) {
+                    counter = taxonProbeNumberList.get( probeTaxon ) + 1;
                     taxonProbeNumberList.put( probeTaxon, counter );
                 }
+                taxonProbeNumberList.put( probeTaxon, counter );
             }
-
-            String primaryTaxonName = "";
-            Integer highestScore = 0;
-            for ( String taxon : taxonProbeNumberList.keySet() ) {
-                // filter out those probes that have no taxon set control spots. Here's that 'n/a' again, kind of
-                // ugly but we see it in some arrays
-                if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon )
-                        && taxonProbeNumberList.get( taxon ) > highestScore ) {
-                    primaryTaxonName = taxon;
-                    highestScore = taxonProbeNumberList.get( taxon );
-                }
-            }
-            if ( StringUtils.isNotBlank( primaryTaxonName ) ) {
-                return this.convertProbeOrganism( primaryTaxonName );
-            }
-
         }
+
+        String primaryTaxonName = "";
+        Integer highestScore = 0;
+        for ( String taxon : taxonProbeNumberList.keySet() ) {
+            // filter out those probes that have no taxon set control spots. Here's that 'n/a' again, kind of
+            // ugly but we see it in some arrays
+            if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon )
+                    && taxonProbeNumberList.get( taxon ) > highestScore ) {
+                primaryTaxonName = taxon;
+                highestScore = taxonProbeNumberList.get( taxon );
+            }
+        }
+        if ( StringUtils.isNotBlank( primaryTaxonName ) ) {
+            return this.convertProbeOrganism( primaryTaxonName );
+        }
+
         // error no taxon on array submission
 
         throw new IllegalArgumentException( "No taxon could be determined for GEO platform " );
@@ -928,7 +927,13 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         if ( mappedName == null ) {
-            throw new IllegalStateException( "There is  no probe matching " + designElementName + " on " + geoPlatform.getGeoAccession() );
+            /*
+             * This situation is okay, it can happen in cases where (for example) the element was filtered out when the
+             * platform was being created, but it appears in the data.
+             */
+            return null;
+
+            //    throw new IllegalStateException( "There is  no probe matching " + designElementName + " on " + geoPlatform.getGeoAccession() );
         }
 
         CompositeSequence compositeSequence = designMap.get( mappedName );
