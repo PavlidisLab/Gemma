@@ -34,7 +34,7 @@ public class GeoPlatformTest {
     @Test
     public void testExonArrayInfo() {
         assertTrue( GeoPlatform.isGEOAffyDataUsable( "GPL23159" ) );
-        assertFalse( GeoPlatform.isGEOAffyDataUsable( "GPL20103" ) ); // an exon array, though not the usual one
+        assertTrue( GeoPlatform.isGEOAffyDataUsable( "GPL20103" ) ); // an exon array, though not the usual one
 
         assertTrue( GeoPlatform.isGEOAffyDataUsable( "GPL23159" ) ); // this is an MPS array, but the right one
 
