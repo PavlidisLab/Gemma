@@ -115,7 +115,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException {
-        this.assignSequencesToDesignElements( designElements, new FileInputStream( fastaFile ) );
+        try (FileInputStream fis = new FileInputStream( fastaFile )) {
+            this.assignSequencesToDesignElements( designElements, fis );
+        }
     }
 
     /**
@@ -140,7 +142,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         ArrayDesignSequenceProcessingServiceImpl.log.info( "Processing Affymetrix design" );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0; // this would be unusual
         log.info( "Platform has " + arrayDesign.getCompositeSequences().size() + " elements" );
-        
+
         taxon = this.validateTaxon( taxon, arrayDesign );
         Collection<BioSequence> bioSequences = new HashSet<>();
 
@@ -216,7 +218,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                     continue;
                 }
 
-                if ( log.isDebugEnabled() ) log.debug( originalCompositeSequence + " matches " + compositeSequenceFromParse + " seq is "
+                if ( log.isDebugEnabled() ) log.debug( originalCompositeSequence + " matches "
+                        + compositeSequenceFromParse + " seq is "
                         + compositeSequenceFromParse.getBiologicalCharacteristic() );
 
                 originalCompositeSequence
@@ -1120,9 +1123,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return existing;
     }
 
-    /**
-     * FIXME - factor this out, it might be useful elsewhere.
-     */
     private int updateProgress( int totalThingsToDo, int howManyAreDone, int percentDoneLastTimeWeChecked ) {
         int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / totalThingsToDo ) );
         if ( newPercent > percentDoneLastTimeWeChecked ) {
