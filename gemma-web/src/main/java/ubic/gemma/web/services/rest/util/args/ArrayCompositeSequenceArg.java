@@ -63,16 +63,17 @@ public class ArrayCompositeSequenceArg
     }
 
     @Override
-    protected String getPropertyName( CompositeSequenceService service ) {
-        String value = this.getValue().get( 0 );
-        MutableArg<?, CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> arg = CompositeSequenceArg
-                .valueOf( value );
-        return this.checkPropertyNameString( arg, value, service );
+    protected String getObjectDaoAlias() {
+        return ObjectFilter.DAO_PROBE_ALIAS;
     }
 
     @Override
-    protected String getObjectDaoAlias() {
-        return ObjectFilter.DAO_PROBE_ALIAS;
+    protected void setPropertyNameAndType( CompositeSequenceService service ) {
+        String value = this.getValue().get( 0 );
+        MutableArg<?, CompositeSequence, CompositeSequenceValueObject, CompositeSequenceService> arg = CompositeSequenceArg
+                .valueOf( value );
+        this.argValueName = this.checkPropertyNameString( arg, value, service );
+        this.argValueClass = arg.value.getClass();
     }
 
 }

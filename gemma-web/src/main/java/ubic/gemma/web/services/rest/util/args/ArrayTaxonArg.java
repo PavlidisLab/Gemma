@@ -1,6 +1,7 @@
 package ubic.gemma.web.services.rest.util.args;
 
 import com.google.common.base.Strings;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -49,25 +50,21 @@ public class ArrayTaxonArg extends ArrayEntityArg<Taxon, TaxonValueObject, Taxon
      * that exists. if none of the identifiers exist, null will be returned, which will in turn cause a 400 error.
      *
      * @param service see the parent class
-     * @return see the parent class
      */
     @Override
-    protected String getPropertyName( TaxonService service ) {
-        String propertyName;
+    protected void setPropertyNameAndType( TaxonService service ) {
         for ( int i = 0; i < this.getValue().size(); i++ ) {
             try {
                 String value = this.getValue().get( i );
                 MutableArg<?, Taxon, TaxonValueObject, TaxonService> arg = TaxonArg.valueOf( value );
-                propertyName = this.checkPropertyNameString( arg, value, service );
-                return propertyName;
+                this.argValueName = this.checkPropertyNameString( arg, value, service );
+                this.argValueClass = arg.value.getClass();
             } catch ( GemmaApiException e ) {
                 if ( i == this.getValue().size() - 1 ) {
                     throw e;
                 }
             }
         }
-        // should never happen as the catch will rethrow at the end of the loop
-        return null;
     }
 
     @Override

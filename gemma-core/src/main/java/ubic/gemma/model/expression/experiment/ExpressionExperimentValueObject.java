@@ -124,27 +124,27 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         AclObjectIdentity aoi = ( AclObjectIdentity ) row[22];
 
         boolean[] permissions = EntityUtils.getPermissions( aoi );
-        setIsPublic( permissions[0] );
-        setUserCanWrite( permissions[1] );
-        setIsShared( permissions[2] );
+        this.setIsPublic( permissions[0] );
+        this.setUserCanWrite( permissions[1] );
+        this.setIsShared( permissions[2] );
 
         if ( row[23] instanceof AclPrincipalSid ) {
-            setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[23] ).getPrincipal(),
+            this.setUserOwned( Objects.equals( ( ( AclPrincipalSid ) row[23] ).getPrincipal(),
                     SecurityUtil.getCurrentUsername() ) );
         } else {
-            setUserOwned( false );
+            this.setUserOwned( false );
         }
 
         // Batch info
         batchEffect = ( String ) row[25];
         batchConfound = ( String ) row[26];
 
-        // Geeq
+        // Geeq: for administrators, create an admin VO, for non-admins, only add geeq if experiment if fully curated (needAttention == false)
         geeq = row[30] == null ?
                 null :
                 SecurityUtil.isUserAdmin() ?
                         new GeeqAdminValueObject( ( Geeq ) row[30] ) :
-                        new GeeqValueObject( ( Geeq ) row[30] );
+                        this.needsAttention ? null : new GeeqValueObject( ( Geeq ) row[30] );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String description, Integer bioAssayCount,
@@ -432,7 +432,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             return true;
         if ( obj == null )
             return false;
-        if ( !getClass().isAssignableFrom( obj.getClass() ) )
+        if ( !this.getClass().isAssignableFrom( obj.getClass() ) )
             return false;
         ExpressionExperimentValueObject other = ( ExpressionExperimentValueObject ) obj;
         if ( id == null ) {

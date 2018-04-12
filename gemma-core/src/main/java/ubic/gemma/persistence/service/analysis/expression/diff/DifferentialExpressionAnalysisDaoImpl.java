@@ -495,9 +495,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends AnalysisDaoBase<Diffe
             throw new IllegalArgumentException( "analysis cannot be null" );
         }
 
-        Session session = this.getSessionFactory().getCurrentSession(); // hopefully okay.
+        Session session = this.getSessionFactory().getCurrentSession();
 
-        session.delete( analysis );
+        session.delete( session.load( DifferentialExpressionAnalysis.class, analysis.getId() ) );
+
         session.flush();
         session.clear();
     }

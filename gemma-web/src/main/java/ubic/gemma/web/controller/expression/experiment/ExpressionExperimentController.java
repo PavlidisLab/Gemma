@@ -1690,7 +1690,7 @@ public class ExpressionExperimentController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        sampleCoexpressionMatrixService.create( ee, false, true );
+        sampleCoexpressionMatrixService.create( ee, false, false );
     }
 
     private void updateMV( Long id ) {
