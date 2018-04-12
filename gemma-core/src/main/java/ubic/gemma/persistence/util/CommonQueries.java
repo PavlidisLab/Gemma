@@ -43,7 +43,8 @@ public class CommonQueries {
     private static final Log log = LogFactory.getLog( CommonQueries.class.getName() );
 
     /**
-     * @param ees collection of expression experiments.
+     * @param ees     collection of expression experiments.
+     * @param session session
      * @return map of array designs to the experiments they were used in.
      */
     public static Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> ees, Session session ) {
@@ -76,11 +77,12 @@ public class CommonQueries {
     }
 
     /**
+     * @param ees     experiments
+     * @param session session
      * @return map of experiment to collection of array design ids. If any of the ids given are for subsets, then the
      * key in the return value will be for the subset, not the source experiment (so it is consistent with the
      * input)
      */
-
     public static Map<Long, Collection<Long>> getArrayDesignsUsedEEMap( Collection<Long> ees, Session session ) {
         Map<Long, Collection<Long>> ee2ads = new HashMap<>();
 
@@ -129,6 +131,8 @@ public class CommonQueries {
     }
 
     /**
+     * @param session session
+     * @param ee      experiment
      * @return list of array designs used in given expression experiment
      */
     public static Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, Session session ) {
@@ -139,6 +143,8 @@ public class CommonQueries {
     }
 
     /**
+     * @param session session
+     * @param eeId    experiment id
      * @return list of array designs used in given expression experiment
      */
     @SuppressWarnings("unchecked")
@@ -164,6 +170,8 @@ public class CommonQueries {
     }
 
     /**
+     * @param session session
+     * @param eeId    experiment id
      * @return list of array designs IDs used in given expression experiment
      */
     @SuppressWarnings("unchecked")
@@ -183,6 +191,10 @@ public class CommonQueries {
 
     /**
      * Given a gene, get all the composite sequences that map to it.
+     *
+     * @param session session
+     * @param gene    gene
+     * @return composite sequences
      */
     public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
 
@@ -222,6 +234,9 @@ public class CommonQueries {
     }
 
     /**
+     * @param session      session
+     * @param genes        genes
+     * @param arrayDesigns array design
      * @return map of probe IDs to collections of gene IDs.
      */
     public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Collection<Long> arrayDesigns,
@@ -275,6 +290,8 @@ public class CommonQueries {
     }
 
     /**
+     * @param genes   genes
+     * @param session session
      * @return map of probes to input genes they map to. Other genes those probes might detect are not included.
      */
     public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes, Session session ) {
@@ -326,6 +343,8 @@ public class CommonQueries {
     }
 
     /**
+     * @param session session
+     * @param probes  probes
      * @return map of probes to all the genes 'detected' by those probes. Probes that don't map to genes will have an
      * empty gene collection.
      */

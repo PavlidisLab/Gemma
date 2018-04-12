@@ -110,6 +110,7 @@ public class XMLUtils {
      * * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
      *
      * @param ele element
+     * @return text value
      */
     public static String getTextValue( org.w3c.dom.Element ele ) {
         if ( ele == null )

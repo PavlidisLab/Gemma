@@ -15,6 +15,7 @@ public interface ArrayDesignSequenceAlignmentService {
      *
      * @param ad        ad
      * @param sensitive if true, blat will be run in a more sensitive mode, if available.
+     * @return blat results
      */
     Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive );
 
@@ -34,10 +35,12 @@ public interface ArrayDesignSequenceAlignmentService {
      *
      * @param arrayDesign Array design to process
      * @param taxon       Taxon supplied
+     * @return taxon
      */
     Taxon validateTaxaForBlatFile( ArrayDesign arrayDesign, Taxon taxon );
 
-    @SuppressWarnings("unused") // Possible external use
+    @SuppressWarnings("unused")
+        // Possible external use
     Collection<BlatResult> processArrayDesign( ArrayDesign design );
 
     Collection<BlatResult> processArrayDesign( ArrayDesign ad, Blat blat );

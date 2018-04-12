@@ -158,7 +158,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     }
 
     /**
-     * Sets preference for interactions to be included.
+     * @param includeInteractions Sets preference for interactions to be included.
      */
     public void setIncludeInteractions( boolean includeInteractions ) {
         this.includeInteractions = includeInteractions;

@@ -117,6 +117,7 @@ public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHi
 
     /**
      * @param geneSymbol gene symbol
+     * @param taxonId    taxon id
      * @return null, or the NCBI ID of the gene that was discontinued.
      */
     public String discontinuedIdForSymbol( String geneSymbol, Integer taxonId ) {
