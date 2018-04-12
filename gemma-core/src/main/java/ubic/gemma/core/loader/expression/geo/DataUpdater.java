@@ -208,8 +208,8 @@ public class DataUpdater {
     }
 
     /**
-     * @param thawedEe
-     * @param celchip
+     * @param thawedEe thawed ee
+     * @param celchip celchip
      */
     public void reprocessAffyDataFromCel( ExpressionExperiment thawedEe, String celchip ) {
         throw new UnsupportedOperationException( "Reprocessing with a specified celchip not implemented yet." );

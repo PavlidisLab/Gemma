@@ -89,7 +89,7 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param geoAccession (GPL)
+     * @param geoPlatformId (GPL)
      * @return true if we know this to be an exon array - so far as we know.
      */
     public static boolean isAffymetrixExonArray( String geoPlatformId ) {
@@ -106,7 +106,7 @@ public class GeoPlatform extends GeoData {
 
     /**
      * 
-     * @param geoPlatformId
+     * @param geoPlatformId (GPL)
      * @return true if we recognize it as an Affymetrix platform. Depends on our mappings, if an error is spotted let us
      *         know.
      */
@@ -122,8 +122,7 @@ public class GeoPlatform extends GeoData {
      * the gene-level
      * version of the platform, in which case we let it in. Note that we still endeavour to reanalyze all Affy data sets
      * at the CEL file level
-     * 
-     * @see affyExonArrays
+     *
      * @param geoPlatformId (GPL)
      * @return true if the platform is affymetrix exon array.
      */

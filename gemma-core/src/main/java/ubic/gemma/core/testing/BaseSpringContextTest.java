@@ -232,6 +232,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      *
      * @param name name
      * @param t    type
+     * @param <T>  javadoc plugin is very obnoxious lately.
      * @return bean
      */
     protected <T> T getBean( String name, Class<T> t ) {

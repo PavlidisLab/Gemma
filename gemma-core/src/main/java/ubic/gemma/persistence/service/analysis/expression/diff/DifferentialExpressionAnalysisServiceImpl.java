@@ -217,7 +217,11 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     public void removeForExperiment( ExpressionExperiment ee ) {
-        this.differentialExpressionAnalysisDao.removeForExperiment( ee );
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
+                .findByInvestigation( ee );
+        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
+            this.remove( de );
+        }
     }
 
     @Override

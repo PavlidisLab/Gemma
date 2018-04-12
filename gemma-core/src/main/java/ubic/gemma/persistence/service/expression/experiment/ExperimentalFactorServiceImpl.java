@@ -20,7 +20,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
 import java.util.Collection;
 
@@ -34,14 +34,14 @@ public class ExperimentalFactorServiceImpl
         implements ExperimentalFactorService {
 
     private final ExperimentalFactorDao experimentalFactorDao;
-    private final DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     public ExperimentalFactorServiceImpl( ExperimentalFactorDao experimentalFactorDao,
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         super( experimentalFactorDao );
         this.experimentalFactorDao = experimentalFactorDao;
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
     @Override
@@ -49,10 +49,10 @@ public class ExperimentalFactorServiceImpl
         /*
          * First, check to see if there are any diff results that use this factor.
          */
-        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisDao
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
                 .findByFactor( experimentalFactor );
         for ( DifferentialExpressionAnalysis a : analyses ) {
-            differentialExpressionAnalysisDao.remove( a );
+            differentialExpressionAnalysisService.remove( a );
         }
         this.experimentalFactorDao.remove( experimentalFactor );
 

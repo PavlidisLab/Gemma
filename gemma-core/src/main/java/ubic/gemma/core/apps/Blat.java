@@ -100,12 +100,14 @@ public interface Blat {
     String getSeqDir();
 
     /**
+     * @param genome genome
      * @return Returns the seqFiles.
      */
     String getSeqFiles( BlattableGenome genome );
 
     /**
      * @param inputStream to the Blat output file in psl format
+     * @param taxon       taxon
      * @return processed results.
      * @throws IOException when there are IO problems.
      */
@@ -116,6 +118,7 @@ public interface Blat {
      *
      * @param genome genome
      * @param port   port
+     * @throws IOException when there are IO problems.
      */
     void startServer( BlattableGenome genome, int port ) throws IOException;
 

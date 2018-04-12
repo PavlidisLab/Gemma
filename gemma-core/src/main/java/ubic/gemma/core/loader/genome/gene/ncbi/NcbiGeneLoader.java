@@ -80,6 +80,8 @@ public class NcbiGeneLoader {
 
     /**
      * download the gene_info and gene2accession files, then call load
+     *
+     * @param filterTaxa filter taxa
      */
     public void load( boolean filterTaxa ) {
         this.load( "", "", "", "", filterTaxa );

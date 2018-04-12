@@ -144,6 +144,9 @@ public class BusinessKey {
      * </ul>
      * This means that we can't use those criteria up front. Instead we match by name and taxon. If those match, the
      * caller has to sort through possible multiple results to find the correct one.
+     *
+     * @param bioSequence bio sequence
+     * @param queryObject query object
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
@@ -363,6 +366,7 @@ public class BusinessKey {
      *
      * @param bioSequence  The object used to create the criteria
      * @param propertyName Often this will be 'bioSequence'
+     * @param queryObject  query object
      */
     public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
@@ -374,6 +378,7 @@ public class BusinessKey {
      *
      * @param ontologyEntry The object used to create the criteria
      * @param propertyName  Often this will be 'ontologyEntry'
+     * @param queryObject   query object
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry, String propertyName ) {
@@ -386,6 +391,7 @@ public class BusinessKey {
      *
      * @param databaseEntry to match
      * @param propertyName  often "accession"
+     * @param queryObject   query object
      */
     public static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
@@ -394,6 +400,10 @@ public class BusinessKey {
 
     /**
      * Restricts the query to the provided Gene.
+     *
+     * @param queryObject  query object
+     * @param gene         gene
+     * @param propertyName property name
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
@@ -430,6 +440,8 @@ public class BusinessKey {
      * Restricts query to the given Taxon.
      *
      * @param propertyName often "taxon"
+     * @param queryObject  query object
+     * @param taxon        taxon
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static void attachCriteria( Criteria queryObject, Taxon taxon, String propertyName ) {
@@ -809,6 +821,7 @@ public class BusinessKey {
      * The search can be on the first gene and second gene. This query assumes that the order is known
      *
      * @param gene2GeneProteinAssociation association to query
+     * @param queryObject                 query object
      */
     public static void createQueryObject( Criteria queryObject,
             Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
@@ -823,6 +836,8 @@ public class BusinessKey {
 
     /**
      * Check that gene 1 and gene 2 are set
+     *
+     * @param gene2GeneProteinAssociation gene to gene protein association
      */
     public static void checkKey( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null || gene2GeneProteinAssociation.getFirstGene() == null

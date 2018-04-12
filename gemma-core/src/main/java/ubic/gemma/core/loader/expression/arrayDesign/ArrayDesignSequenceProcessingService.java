@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -41,7 +41,8 @@ public interface ArrayDesignSequenceProcessingService {
     /**
      * Associate sequences with an array design.
      *
-     * @param sequences, for Affymetrix these should be the Collapsed probe sequences.
+     * @param sequences,     for Affymetrix these should be the Collapsed probe sequences.
+     * @param designElements design elements
      */
     void assignSequencesToDesignElements( Collection<CompositeSequence> designElements,
             Collection<BioSequence> sequences );
@@ -49,6 +50,10 @@ public interface ArrayDesignSequenceProcessingService {
     /**
      * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
      * of a design element.
+     *
+     * @param designElements design elements
+     * @param fastaFile      fasta file
+     * @throws IOException when IO problems occur.
      */
     void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException;
@@ -59,14 +64,15 @@ public interface ArrayDesignSequenceProcessingService {
     /**
      * Use this to add sequences to an existing Affymetrix design. The sequences will be overwritten even if they
      * already exist (That is, if the actual ATGCs need to be replaced, but the BioSequences are already filled in).
-     * 
      * Note that probe sets are often shared by platforms - rather than creating duplicates for each, we keep a single
      * copy. This is considered safe because Affymetrix uses unique probeset names for a given set of actual probes
      * sequences.
-     * 
-     * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
+     *
+     * @param arrayDesign       An existing ArrayDesign that already has compositeSequences filled in.
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
-     * @param taxon validated taxon
+     * @param taxon             validated taxon
+     * @return bio sequences
+     * @throws IOException when IO problems occur.
      */
     Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon ) throws IOException;
@@ -90,6 +96,9 @@ public interface ArrayDesignSequenceProcessingService {
      *
      * @param sequenceFile FASTA format
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
+     * @param arrayDesign  platform
+     * @return bio sequences
+     * @throws IOException when IO problems occur.
      * @see ubic.gemma.core.loader.genome.FastaParser
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
@@ -122,7 +131,10 @@ public interface ArrayDesignSequenceProcessingService {
      *
      * @param sequenceFile FASTA, Affymetrix or tabbed format (depending on the type)
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
-     * @param taxon - if null, attempt to determine it from the array design.
+     * @param taxon        - if null, attempt to determine it from the array design.
+     * @param arrayDesign  platform
+     * @return bio sequences
+     * @throws IOException when IO problems occur.
      * @see ubic.gemma.core.loader.genome.FastaParser
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
@@ -136,10 +148,16 @@ public interface ArrayDesignSequenceProcessingService {
      * any of the probe identifiers in the file given match the array design).
      *
      * @param sequenceIdentifierFile Sequence file has two columns: column 1 is a probe id, column 2 is a genbank
-     *        accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
-     *        ones missing will be sought directly in Gemma.
-     * @param force If true, if an existing BioSequence that matches is found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
+     *                               accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
+     *                               ones missing will be sought directly in Gemma.
+     * @param force                  If true, if an existing BioSequence that matches is found in the system, any existing sequence
+     *                               information in the BioSequence will be overwritten.
+     * @param arrayDesign            plaftorm
+     * @param taxon                  taxon
+     * @param blastDbHome            blast db home
+     * @param databaseNames          database names
+     * @return bio sequences
+     * @throws IOException when IO problems occur.
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException;
@@ -158,15 +176,25 @@ public interface ArrayDesignSequenceProcessingService {
      * happens when the Genbank accession is for a Refseq (for example) but the actual clone on the array is from IMAGE.
      *
      * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
-     * @param blastDbHome where to find the blast databases for sequence retrieval
-     * @param force If true, then when an existing BioSequence contains a non-empty sequence value, it will be
-     *        overwritten with a new one.
+     * @param blastDbHome   where to find the blast databases for sequence retrieval
+     * @param force         If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *                      overwritten with a new one.
+     * @param arrayDesign   platform
+     * @return bio sequences
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, String blastDbHome,
             boolean force );
 
     /**
      * Provided primarily for testing.
+     *
+     * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
+     * @param blastDbHome   where to find the blast databases for sequence retrieval
+     * @param force         If true, then when an existing BioSequence contains a non-empty sequence value, it will be
+     *                      overwritten with a new one.
+     * @param arrayDesign   platform
+     * @param fc            fasta command
+     * @return bio sequences
      */
     Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, String blastDbHome,
             boolean force, FastaCmd fc );
@@ -174,8 +202,11 @@ public interface ArrayDesignSequenceProcessingService {
     /**
      * Update a single sequence in the system.
      *
-     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
+     * @param force         If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *                      information in the BioSequence will be overwritten.
+     * @param databaseNames database names
+     * @param blastDbHome   blast db home
+     * @param sequenceId    sequence id
      * @return persistent BioSequence.
      */
     BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome, boolean force );

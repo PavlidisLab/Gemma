@@ -1,6 +1,5 @@
 <!--
 	Configuration for maven assembly plugin for binary distribution. To use this, run "mvn package assembly:assembly -Dassemble-bin"
-	$Id$ 
 -->
 <assembly>
 	<id>jar-with-dependencies</id>
@@ -20,8 +19,6 @@
 	</fileSets>
 	<dependencySets>
 		<dependencySet>
-			<outputDirectory></outputDirectory>
-			<outputFileNameMapping></outputFileNameMapping>
 			<unpack>false</unpack>
 			<scope>runtime</scope>
 		</dependencySet>
@@ -36,13 +33,10 @@
 				<unpack>false</unpack>
 				<dependencySets>
 					<dependencySet>
-						<outputDirectory></outputDirectory>
-						<outputFileNameMapping></outputFileNameMapping>
 						<unpack>false</unpack>
 						<scope>runtime</scope>
 					</dependencySet>
 				</dependencySets>
-				<excludes></excludes>
 			</binaries>
 		</moduleSet>
 	</moduleSets>

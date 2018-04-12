@@ -77,6 +77,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     }
 
     /**
+     * @param ad platform
      * @return all sequences, across all taxa that might be represented on the array design
      */
     public static Collection<BioSequence> getSequences( ArrayDesign ad ) {
@@ -84,7 +85,9 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     }
 
     /**
+     * @param ad    platform
      * @param taxon (specified in case array has multiple taxa)
+     * @return bio sequences
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {

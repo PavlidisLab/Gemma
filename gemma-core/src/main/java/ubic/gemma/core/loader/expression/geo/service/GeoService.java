@@ -36,13 +36,22 @@ public interface GeoService {
 
     /**
      * Load data, no restrictions on superseries or subseries
+     *
+     * @param doSampleMatching           do sample matching
+     * @param geoAccession               accession
+     * @param loadPlatformOnly           load platforms only
+     * @param splitIncompatiblePlatforms split incompatible platforms
      */
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms );
 
     /**
-     * @param allowSuperSeriesImport Allow loading if the Series is a SuperSeries
-     * @param allowSubSeriesImport   Allow loading if the Series is a SubSeries
+     * @param allowSuperSeriesImport     Allow loading if the Series is a SuperSeries
+     * @param allowSubSeriesImport       Allow loading if the Series is a SubSeries
+     * @param doSampleMatching           do sample matching
+     * @param geoAccession               accession
+     * @param loadPlatformOnly           load platforms only
+     * @param splitIncompatiblePlatforms split incompatible platforms
      */
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
