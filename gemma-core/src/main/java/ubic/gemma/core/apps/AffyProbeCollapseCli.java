@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * 
  * You just run this like
  * 
- * $GEMMACMD <filename> 
+ * $GEMMACMD affyCollapse <filename> 
  * 
  * It doesn't handle the regular argument setup, wasn't worth the trouble. Generates FASTA format but easy to change.
  * 
@@ -58,7 +58,7 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
      */
     @Override
     public String getCommandName() {
-        return null;
+        return "affyCollapse";
     }
 
     /*
