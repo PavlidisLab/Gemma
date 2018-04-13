@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public class AffyChipTypeExtractor {
 
     private static final Log log = LogFactory.getLog( AffyChipTypeExtractor.class );
-    private static final String STANDARD_FORMAT_REGEX = ".+?\\s(\\w+?)\\.1sq.+";
+    private static final String STANDARD_FORMAT_REGEX = ".+?\\s([\\w\\-_]+)\\.1sq.+";
 
     /**
      * Extract a string like "Rat230_2" from CEL files. This is to help match BioAssays to platforms when reanalyzing

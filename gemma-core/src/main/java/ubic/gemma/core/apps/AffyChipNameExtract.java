@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.sequence.SequenceManipulation;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -80,8 +81,7 @@ public class AffyChipNameExtract extends ArrayDesignSequenceManipulatingCli {
                 String type = apr.extract( is );
                 System.err.println( type + "\t" + f );
             } catch ( IOException e ) {
-
-                e.printStackTrace();
+                System.err.println( "Failed to find chip type: " + "\t" + f + " " + e.getMessage() );
             }
 
         }
