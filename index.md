@@ -11,6 +11,7 @@ This webpage serves as an introduction and end-user documentation.
 - [Using the Gemma website](#using-the-gemma-website)
 - [RESTful API](#restful-api)
 - [Contact](#contact)
+- [Data Sources](#data-sources)
 - [Credits](#credits)
   * [Financial support](#financial-support)
   * [Publications](#publications)
@@ -84,6 +85,18 @@ The API has its own interactive documentation, where you will find all necessary
 programatically. 
 Please follow **[this link to the RESTful API documentation](https://gemma.msl.ubc.ca/resources/restapidocs/)**
 
+## Data sources
+We are indebted to the many researchers who have made data publicly available. Lists of published papers that relate to the data included in Gemma are available [here (full list)](https://gemma.msl.ubc.ca/bibRef/showAllEeBibRefs.html) and [here (search)](https://gemma.msl.ubc.ca/bibRef/searchBibRefs.html).
+
+If your data is in Gemma, and your paper is not listed, please let us know.
+
+### Reference data
+- **Human**: hg38
+- **Mouse**: mm10
+- **Rat**: rn6
+
+**GO** and **UCSC Genome Annotations** were last updated in March 2018.
+
 ## Contact
 
 If you find a problem or need help, you can file a new github issue, or contact us at [pavlab-support@msl.ubc.ca](mailto:pavlab-support@msl.ubc.ca).
@@ -146,12 +159,6 @@ The following people have contributed code, algorithms, implementations of algor
 - Hugh Brown – Systems
 
 Other contributers to early stages of Gemma include David Quigley, Anshu Sinha and Gozde Cozen. Gemma’s precursor was [TMM](https://home.pavlab.msl.ubc.ca/tmm/), which was developed by Homin Lee, Jon Sajdak, Jie Qin and Amy Hsu. Martin Krzywinski has provided helpful advice on visualization.
-
-### Data sources
-We are indebted to the many researchers who have made data publicly available. Lists of published papers that relate to the data included in Gemma are available [here (full list)](https://gemma.msl.ubc.ca/bibRef/showAllEeBibRefs.html) and [here (search)](https://gemma.msl.ubc.ca/bibRef/searchBibRefs.html).
-
-If your data is in Gemma, and your paper is not listed, please let us know.
-
 ___
 
 Copyright © University of British Columbia
