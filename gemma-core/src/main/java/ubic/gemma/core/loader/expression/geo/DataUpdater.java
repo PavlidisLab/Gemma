@@ -16,6 +16,8 @@ package ubic.gemma.core.loader.expression.geo;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -32,6 +34,7 @@ import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
+import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -163,6 +166,12 @@ public class DataUpdater {
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );
 
+        if ( arrayDesignsUsed.size() == 1 && !arrayDesignsUsed.iterator().next().getMergees().isEmpty() ) {
+            log.warn( "Data run on merged platform: " + arrayDesignsUsed.iterator().next() );
+            reprocessAffyDataFromCelMergedPlatform( ee );
+            return;
+        }
+
         RawDataFetcher f = new RawDataFetcher();
         Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
 
@@ -173,6 +182,7 @@ public class DataUpdater {
         QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
         qt = qtService.create( qt );
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
+
         for ( ArrayDesign originalPlatform : arrayDesignsUsed ) {
 
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
@@ -208,15 +218,77 @@ public class DataUpdater {
     }
 
     /**
+     * Single platform only (merged, so originally >1 platform)
+     * 
+     * @param ee
+     */
+    private void reprocessAffyDataFromCelMergedPlatform( ExpressionExperiment ee ) {
+        /*
+         * Need to work out what the platforms were.
+         */
+        RawDataFetcher f = new RawDataFetcher();
+        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+
+        if ( files.isEmpty() ) {
+            throw new RuntimeException( "Data was apparently not available" );
+        }
+        ee = experimentService.thawLite( ee );
+
+        AffyChipTypeExtractor ex = new AffyChipTypeExtractor();
+        Map<BioAssay, String> bm2chips = ex.getChipTypes( ee, files );
+
+        /*
+         * Reverse the map.
+         */
+        Map<String, Collection<BioAssay>> chip2bms = new HashMap<>();
+        for ( BioAssay ba : bm2chips.keySet() ) {
+            String c = bm2chips.get( ba );
+            if ( !chip2bms.containsKey( c ) ) {
+                chip2bms.put( c, new HashSet<BioAssay>() );
+            }
+            chip2bms.get( c ).add( ba );
+        }
+        
+        /*
+         * Now the hard part. Figure out what that platform actually is. We need a mapping file...
+         */
+        
+        
+        /*
+         * Eventually, we have a list of target platforms, and the CEL files that go with them. 
+         */
+        
+        
+
+        QuantitationType qt = AffyPowerToolsProbesetSummarize.makeAffyQuantitationType();
+        qt = qtService.create( qt );
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
+
+        throw new UnsupportedOperationException( "Reprocessing from merged platform not implemented yet." );
+
+    }
+
+    /**
+     * Single platform only
+     * 
      * @param thawedEe thawed ee
-     * @param celchip celchip
+     * @param celchip celchip as in GPLXXXX
      */
     public void reprocessAffyDataFromCel( ExpressionExperiment thawedEe, String celchip ) {
-        throw new UnsupportedOperationException( "Reprocessing with a specified celchip not implemented yet." );
         /*
          * Add AffyPowerToolsProbesetSummarize method to take this, then load the targetPlatform. Only for single
          * platform datasets! We'll get an error otherwise.
          */
+
+        if ( celchip == null ) {
+            // try to work out what it was by using reverse map 
+        } else {
+            // convert this name into the targetArray   
+        }
+
+        // assuming we figured it out, run as usual.
+
+        throw new UnsupportedOperationException( "Reprocessing with a specified celchip not implemented yet." );
 
     }
 

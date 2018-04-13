@@ -49,6 +49,7 @@ public class AffyPowerToolsProbesetSummarize {
 
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
     private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
+    private static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
 
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
@@ -525,11 +526,32 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
+     * Map of strings found in CEL files to GPL ids.
+     * 
+     * @return
+     */
+    private Map<String, String> loadChipNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
+            Map<String, String> result = new HashMap<>();
+
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                result.put( k, pc.getString( k ) );
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
      * @param bmap
      * @param sampleName
      * @return BioAssay, or null if not found.
      */
-    private BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
+    public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
         /*
          * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
          */

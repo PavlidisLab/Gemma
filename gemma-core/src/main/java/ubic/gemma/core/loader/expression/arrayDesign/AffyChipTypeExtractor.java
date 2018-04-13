@@ -18,8 +18,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.FileTools;
+import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 import java.io.*;
 import java.nio.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +40,7 @@ import java.util.regex.Pattern;
  * <a href='http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html'>GENERIC</a>
  * </p>
  * Note that the Affymetrix documentation does not mention a chip type, explicitly, but it's in the "DatHeader", and in
- * GCOS failes as affymetrix-array-type
+ * GCOS files as affymetrix-array-type
  *
  * @see AffyScanDateExtractor
  * @author paul
@@ -39,6 +49,119 @@ public class AffyChipTypeExtractor {
 
     private static final Log log = LogFactory.getLog( AffyChipTypeExtractor.class );
     private static final String STANDARD_FORMAT_REGEX = ".+?\\s(\\w+?)\\.1sq.+";
+
+    /**
+     * Extract a string like "Rat230_2" from CEL files. This is to help match BioAssays to platforms when reanalyzing
+     * from CEL, especially if the original platform information has been lost (e.g., by switching to a merged platform,
+     * or from a custom CDF-based version)
+     * 
+     * @param ee
+     * @param files CEL files
+     * @return
+     * @throws IOException
+     */
+    public Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<LocalFile> files ) {
+
+        Map<String, BioAssay> assayAccessions = this.getAccessionToBioAssayMap( ee );
+
+        if ( assayAccessions.isEmpty() ) {
+            throw new UnsupportedOperationException(
+                    "Couldn't get any scan date information, could not determine provider or it is not supported for "
+                            + ee.getShortName() );
+        }
+
+        Map<BioAssay, File> bioAssays2Files = this.matchBioAssaysToRawDataFiles( files, assayAccessions );
+
+        /*
+         * Check if we should go on
+         */
+        if ( bioAssays2Files.size() < assayAccessions.size() ) {
+
+            if ( bioAssays2Files.size() > 0 ) {
+                /*
+                 * Missing a few for some reason.
+                 */
+                for ( BioAssay ba : bioAssays2Files.keySet() ) {
+                    if ( !assayAccessions.containsKey( ba.getAccession().getAccession() ) ) {
+                        log.warn( "Missing raw data file for " + ba + " on " + ee.getShortName() );
+                    }
+                }
+            }
+
+            throw new IllegalStateException(
+                    "Did not get enough raw files :got " + bioAssays2Files.size() + ", expected " + assayAccessions
+                            .size() + " while processing " + ee.getShortName() );
+        }
+
+        try {
+            return this.getChipTypesFromFiles( bioAssays2Files );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * @param bioAssays2Files
+     * @return
+     */
+    private Map<BioAssay, String> getChipTypesFromFiles( Map<BioAssay, File> bioAssays2Files ) throws IOException {
+        Map<BioAssay, String> result = new HashMap<>();
+        for ( BioAssay ba : bioAssays2Files.keySet() ) {
+            File f = bioAssays2Files.get( ba );
+            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
+
+                String chiptype = this.extract( is );
+
+                if ( chiptype == null ) {
+                    log.warn( "No chip type found in " + f.getName() );
+                    continue;
+                }
+
+                result.put( ba, chiptype );
+
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @param files
+     * @param assayAccessions
+     * @return
+     */
+    private Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files, Map<String, BioAssay> assayAccessions ) {
+
+        Map<BioAssay, File> result = new HashMap<>();
+        for ( LocalFile lf : files ) {
+
+            BioAssay bioAssay = AffyPowerToolsProbesetSummarize.matchBioAssayToCelFileName( assayAccessions, lf.asFile().getName() );
+            if ( bioAssay == null ) {
+                log.warn( "No bioAssay found for " + lf.asFile().getName() );
+
+                continue;
+            }
+            result.put( bioAssay, lf.asFile() );
+        }
+
+        return result;
+
+    }
+
+    private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
+        Map<String, BioAssay> assayAccessions = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            DatabaseEntry accession = ba.getAccession();
+            if ( StringUtils.isBlank( accession.getAccession() ) ) {
+                throw new IllegalStateException(
+                        "Must have accession for each bioassay to get batch information from source for " + ee
+                                .getShortName() );
+            }
+
+            assayAccessions.put( accession.getAccession(), ba );
+        }
+        return assayAccessions;
+    }
 
     /**
      * 
@@ -164,23 +287,7 @@ public class AffyChipTypeExtractor {
 
     }
 
-    /**
-     * @param string
-     * @return
-     */
-    private String parseStandardFormat( String string ) {
-        Pattern regex = Pattern.compile( STANDARD_FORMAT_REGEX );
-
-        Matcher matcher = regex.matcher( string );
-        if ( matcher.matches() ) {
-            String tok = matcher.group( 1 );
-            return tok;
-        }
-        return null;
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public String parseGenericCCHeader( DataInputStream str ) throws IOException {
+    private String parseGenericCCHeader( DataInputStream str ) throws IOException {
 
         /*
          * acquisition data, intensity data etc. Usually "intensity data" for the first header.
@@ -217,7 +324,6 @@ public class AffyChipTypeExtractor {
                 case "text/ascii":
                     // text/ascii is undocumented, but needed.
                     v = new String( value, "US-ASCII" );
-                    log.info( "blah=" + v );
                     String vv = new String( ( ( String ) v ).getBytes(), "UTF-16" ).trim();
 
                     if ( name.equals( "affymetrix-array-type" ) ) {
@@ -277,6 +383,21 @@ public class AffyChipTypeExtractor {
         @SuppressWarnings("unused")
         int numParentHeaders = this.readIntBigEndian( str );
         return result;
+    }
+
+    /**
+     * @param string
+     * @return
+     */
+    private String parseStandardFormat( String string ) {
+        Pattern regex = Pattern.compile( STANDARD_FORMAT_REGEX );
+
+        Matcher matcher = regex.matcher( string );
+        if ( matcher.matches() ) {
+            String tok = matcher.group( 1 );
+            return tok;
+        }
+        return null;
     }
 
     /**
