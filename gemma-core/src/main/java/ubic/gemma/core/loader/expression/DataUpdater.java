@@ -126,7 +126,7 @@ public class DataUpdater {
     private VectorMergingService vectorMergingService;
 
     /**
-     * Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
+     * Affymetrix: Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have
      * them and we ran apt-probeset-summarize ourselves. Must be single-platform. Will switch the data set to use the
      * "right" platform when the one originally used was an alt CDF or exon-level, so be sure never to use an alt CDF
      * for processing raw data.
@@ -178,8 +178,8 @@ public class DataUpdater {
     }
 
     /**
-     * Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation type we
-     * use internally. Counts and FPKM (if provided) are stored in addition.
+     * RNA-seq: Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation
+     * type we use internally. Counts and FPKM (if provided) are stored in addition.
      *
      * @param ee ee
      * @param targetArrayDesign - this should be one of the "Generic" gene-based platforms. The data set will be
@@ -244,7 +244,8 @@ public class DataUpdater {
     }
 
     /**
-     * Add an additional data (with associated quantitation type) to the selected experiment. Will do postprocessing if
+     * Generic. Add an additional data (with associated quantitation type) to the selected experiment. Will do
+     * postprocessing if
      * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
      *
@@ -308,13 +309,21 @@ public class DataUpdater {
         return ee;
     }
 
+    /**
+     * Generic. Remove all raw data for an experiment
+     * 
+     * @param ee
+     * @param qt
+     * @return
+     */
     @SuppressWarnings("UnusedReturnValue") // Possible external use
     public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
         return this.experimentService.removeRawVectors( ee, qt );
     }
 
     /**
-     * For back filling log2cpm when only counts are available. This wouldn't be used routinely, because new experiments
+     * RNA-seq: For back filling log2cpm when only counts are available. This wouldn't be used routinely, because new
+     * experiments
      * get log2cpm computed when loaded.
      *
      * @param ee ee
@@ -465,9 +474,9 @@ public class DataUpdater {
     }
 
     /**
-     * Provide or replace data for an Affymetrix-based experiment, using CEL files. CEL files are downloaded from GEO,
-     * apt-probeset-summarize is executed to get the data, and then the experiment is updated. One side-effect is that
-     * the data set may end up being on a different platform than originally.
+     * Affymetrix only: Provide or replace data for an Affymetrix-based experiment, using CEL files. CEL files are
+     * downloaded from GEO, apt-probeset-summarize is executed to get the data, and then the experiment is updated. One
+     * side-effect is that the data set may end up being on a different platform than originally.
      *
      * A complication is the CEL file type
      * may not match the platform we want the experiment to end up being one. A further complication is when this is
@@ -557,6 +566,14 @@ public class DataUpdater {
          */
     }
 
+    /**
+     * RNA-seq
+     * 
+     * @param ee
+     * @param countEEMatrix
+     * @param readLength
+     * @param isPairedReads
+     */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             Integer readLength, Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -575,6 +592,8 @@ public class DataUpdater {
     }
 
     /**
+     * Generic
+     * 
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
      * @param ee ee
      * @param note note
@@ -591,6 +610,14 @@ public class DataUpdater {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
+    /**
+     * RNA-seq
+     * 
+     * @param ee
+     * @param countMatrix
+     * @param allowMissingSamples
+     * @return
+     */
     private ExpressionExperiment dealWithMissingSamples( ExpressionExperiment ee,
             DoubleMatrix<String, String> countMatrix, boolean allowMissingSamples ) {
         if ( ee.getBioAssays().size() > countMatrix.columns() ) {
@@ -646,6 +673,13 @@ public class DataUpdater {
         return ee;
     }
 
+    /**
+     * Affymetrix
+     * 
+     * @param ee
+     * @param files
+     * @return
+     */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee, Collection<LocalFile> files ) {
         AffyChipTypeExtractor ex = new AffyChipTypeExtractor();
         Map<BioAssay, String> bm2chips = ex.getChipTypes( ee, files );
@@ -679,7 +713,8 @@ public class DataUpdater {
     }
 
     /**
-     * Determine the target array design (the one we'll switch to). We use official CDFs and gene-level versions of exon
+     * Affymetrix: Determine the target array design (the one we'll switch to). We use official CDFs and gene-level
+     * versions of exon
      * arrays - no custom CDFs!
      *
      * @param ad array design we are starting with
@@ -744,6 +779,8 @@ public class DataUpdater {
     }
 
     /**
+     * Generic (non-Affymetrix)
+     * 
      * @param ee ee
      * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
      */
@@ -782,6 +819,11 @@ public class DataUpdater {
         return bmMap;
     }
 
+    /**
+     * RNA-seq
+     * 
+     * @return
+     */
     private QuantitationType makeCountQt() {
         QuantitationType countqt = this.makeQt( false );
         countqt.setName( "Counts" );
@@ -794,6 +836,11 @@ public class DataUpdater {
         return countqt;
     }
 
+    /**
+     * RNA-seq
+     * 
+     * @return
+     */
     private QuantitationType makelog2cpmQt() {
         QuantitationType qt = this.makeQt( true );
         qt.setName( "log2cpm" );
@@ -806,6 +853,15 @@ public class DataUpdater {
         return qt;
     }
 
+    /**
+     * Non-Affymetrix
+     * 
+     * @param ee
+     * @param targetPlatform
+     * @param data
+     * @param qt
+     * @return
+     */
     private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data, QuantitationType qt ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
@@ -849,6 +905,12 @@ public class DataUpdater {
         return vectors;
     }
 
+    /**
+     * Generic
+     * 
+     * @param preferred
+     * @return
+     */
     private QuantitationType makeQt( boolean preferred ) {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -865,6 +927,11 @@ public class DataUpdater {
         return qt;
     }
 
+    /**
+     * RNA-seq
+     * 
+     * @return
+     */
     private QuantitationType makeRPKMQt() {
         QuantitationType rpkmqt = this.makeQt( false );
         rpkmqt.setIsRatio( false );
@@ -877,6 +944,13 @@ public class DataUpdater {
         return rpkmqt;
     }
 
+    /**
+     * Generic
+     * 
+     * @param ee
+     * @param rawMatrix
+     * @param finalMatrix
+     */
     private void matchBioMaterialsToColNames( ExpressionExperiment ee, DoubleMatrix<String, String> rawMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> finalMatrix ) {
         // match column names to the samples. can have any order so be careful.
@@ -957,6 +1031,12 @@ public class DataUpdater {
         return finalMatrix; // not actually final.
     }
 
+    /**
+     * Generic
+     * 
+     * @param ee
+     * @return
+     */
     private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
         // several transactions
         try {
@@ -969,7 +1049,8 @@ public class DataUpdater {
     }
 
     /**
-     * Switches bioassays on the original platform to the target platform (if they are the same, nothing will be done)
+     * Affymetrix: Switches bioassays on the original platform to the target platform (if they are the same, nothing
+     * will be done)
      *
      * @param ee presumed thawed
      * @param originalPlatform
