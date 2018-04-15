@@ -528,7 +528,7 @@ public class DataUpdater {
             log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform );
 
             Collection<RawExpressionDataVector> v = apt
-                    .processData( ee, targetPlatform, originalPlatform, bioAssays, files );
+                    .processData( ee, originalPlatform, targetPlatform, bioAssays, files );
 
             if ( v.isEmpty() ) {
                 throw new IllegalStateException(
@@ -718,7 +718,7 @@ public class DataUpdater {
      * arrays - no custom CDFs!
      *
      * @param ad array design we are starting with
-     * @return platform we should actually use. It can be the same as the input.
+     * @return platform we should actually use. It can be the same as the input (thawed)
      */
     private ArrayDesign getAffymetrixTargetPlatform( ArrayDesign ad ) {
 
@@ -733,10 +733,8 @@ public class DataUpdater {
         ArrayDesign targetPlatform = arrayDesignService.findByShortName( targetPlatformAcc );
 
         if ( targetPlatform != null ) {
-            // we need to thaw it at some point
-            targetPlatform = arrayDesignService.thaw( targetPlatform );
 
-            if ( targetPlatform.getCompositeSequences().isEmpty() ) {
+            if ( arrayDesignService.getCompositeSequenceCount( targetPlatform ) == 0 ) {
                 log.warn( "The target platform " + targetPlatformAcc
                         + " is incomplete in the system, getting from GEO ... " );
                 /*
@@ -758,7 +756,8 @@ public class DataUpdater {
 
         }
 
-        return targetPlatform;
+        // we need to thaw it at some point
+        return arrayDesignService.thaw( targetPlatform );
     }
 
     /**

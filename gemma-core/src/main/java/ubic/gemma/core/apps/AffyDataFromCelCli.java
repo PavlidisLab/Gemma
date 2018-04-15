@@ -149,22 +149,10 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  * multiplatform studies (at our peril)
                  */
                 if ( this.checkForAlreadyDone( ee ) && !this.force ) {
-                    //if ( this.celchip != null ) {
-                    //
-                    //                        if ( adsUsed.size() > 1 ) {
-                    //                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
-                    //                        }
-                    //
-                    //                        log.info( "Re-running using chip=" + celchip );
-                    //                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
-                    //                        this.successObjects.add( thawedEe );
-                    //                        AbstractCLI.log.info( "Successfully processed: " + thawedEe );
-                    //  } else {
 
                     this.errorObjects.add( ee
                             + ": Was already run before, use -force" );
                     continue;
-                    //   }
                 }
 
                 ArrayDesign ad = adsUsed.iterator().next();
@@ -175,20 +163,15 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                  */
                 if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
                     AbstractCLI.log.info( ad + " looks like affy array" );
-                    // if ( this.celchip != null ) {
-                    //                        if ( adsUsed.size() > 1 ) {
-                    //                            throw new IllegalStateException( "Can't use -celchip yet on experiments that have multiple platforms" );
-                    //                        }
-                    //                        serv.reprocessAffyDataFromCel( thawedEe, celchip );
-                    //    } else {
                     serv.reprocessAffyDataFromCel( thawedEe );
-                    //    }
+
                     this.successObjects.add( thawedEe );
                     AbstractCLI.log.info( "Successfully processed: " + thawedEe );
                 } else {
 
-                    this.errorObjects.add( ee
-                            + ": This CLI can only deal with Affymetrix platforms" );
+                    this.errorObjects.add( ee + ": " +
+                            ad
+                            + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
                 }
 
             } catch ( Exception exception ) {

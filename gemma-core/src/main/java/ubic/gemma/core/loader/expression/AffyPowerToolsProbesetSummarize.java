@@ -143,43 +143,6 @@ public class AffyPowerToolsProbesetSummarize {
         this.quantitationType = qt;
     }
 
-    //    /**
-    //     * @param ee ee
-    //     * @param targetPlatform target platform; call multiple times if there is more than one platform (though that should
-    //     *        not happen for exon arrays)
-    //     * @param originalPlatform might be the same as targetPlatform
-    //     * @param files list of CEL files (any other files included will be ignored)
-    //     * @return raw data vectors
-    //     */
-    //    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee,
-    //            ArrayDesign targetPlatform, ArrayDesign originalPlatform, Collection<LocalFile> files ) {
-    //
-    //        Collection<BioAssay> bioAssays = ee.getBioAssays();
-    //
-    //        if ( bioAssays.isEmpty() ) {
-    //            throw new IllegalArgumentException( "Experiment had no assays" );
-    //        }
-    //
-    //        if ( targetPlatform.getCompositeSequences().isEmpty() ) {
-    //            throw new IllegalArgumentException( "Target design had no elements" );
-    //        }
-    //
-    //        Collection<String> accessionsOfInterest = null;
-    //        if ( bioAssays.size() < files.size() ) {
-    //            accessionsOfInterest = new HashSet<>();
-    //            /*
-    //             * This can happen when we split a GEO data set by platform. This means we have to filter the files *first*
-    //             * not after. I'm not sure there's really a down side to always doing this step.
-    //             */
-    //            for ( BioAssay ba : bioAssays ) {
-    //                accessionsOfInterest.add( ba.getAccession().getAccession() );
-    //            }
-    //
-    //        }
-    //
-    //        return this.tryRun( ee, targetPlatform, originalPlatform, files, accessionsOfInterest );
-    //    }
-
     /**
      * @return Map of GPLXXXX to {mps, pgc, qcc, clf} to file name
      */
@@ -242,7 +205,8 @@ public class AffyPowerToolsProbesetSummarize {
      *
      * @param ee ee
      * @param aptOutputFileToRead file
-     * @param targetPlatform deal with data from this platform (call multiple times if there is more than one platform)
+     * @param targetPlatform (thawed) deal with data from this platform (call multiple times if there is more than one
+     *        platform)
      * @param originalPlatform can be the same as the targetPlatform. But we specify this in case there is more than one
      *        original platform, so we're not trying to match up bioassays that are not relevant.
      * @return raw data vectors
@@ -378,7 +342,7 @@ public class AffyPowerToolsProbesetSummarize {
      *
      * @param expressionExperiment ee
      * @param bioAssayDimension BA dim
-     * @param targetPlatform target design
+     * @param targetPlatform target design (thawed)
      * @param matrix matrix read from apt output.
      * @return raw data vectors
      */
@@ -629,8 +593,9 @@ public class AffyPowerToolsProbesetSummarize {
         String cmd = null;
 
         // look for a CDF first.
-        String cdfFileName = this.findCdf( targetPlatform ).getAbsolutePath();
-        if ( cdfFileName != null ) {
+        File cdf = this.findCdf( targetPlatform );
+        if ( cdf != null ) {
+            String cdfFileName = cdf.getAbsolutePath();
             cmd = this.getCDFCommand( targetPlatform, cdfFileName, celFiles, outputPath );
         } else {
             /* presumably mps based */
@@ -641,6 +606,8 @@ public class AffyPowerToolsProbesetSummarize {
             throw new IllegalArgumentException( "There is no MPS configuration for " + targetPlatform.getShortName() + ", check "
                     + AFFY_MPS_PROPERTIES_FILE_NAME + " and " + AFFY_CDFS_PROPERTIES_FILE_NAME );
         }
+
+        log.info( "Original platform: " + originalPlatform + "; Target platform (apt-probeset-summarize will be called with): " + targetPlatform );
 
         AffyPowerToolsProbesetSummarize.log.info( "Running: " + cmd );
 
