@@ -526,9 +526,9 @@ public class DataUpdater {
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
             Collection<BioAssay> bioAssays = targetPlats2BioAssays.get( targetPlatform );
 
-            if (bioAssays == null || bioAssays.isEmpty()) throw new IllegalStateException("Something went wrong, no bioAssays matched platform="
+            if ( bioAssays == null || bioAssays.isEmpty() ) throw new IllegalStateException( "Something went wrong, no bioAssays matched platform="
                     + targetPlatform + " for original platform = " + originalPlatform );
-            
+
             log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform + "; "
                     + "BioAssays are currently recorded as platform="
                     + originalPlatform );
@@ -557,6 +557,9 @@ public class DataUpdater {
                  * a single transaction, with some code complexity added.
                  */
                 int numSwitched = this.switchBioAssaysToTargetPlatform( ee, originalPlatform, targetPlatform, bioAssays );
+
+                log.info( "Switched " + numSwitched + " bioassays from " + originalPlatform
+                        .getShortName() + " to " + targetPlatform.getShortName() );
 
                 AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
                 auditTrailService.addUpdateEvent( ee, eventType,
@@ -689,7 +692,8 @@ public class DataUpdater {
      * 
      * @param ee (lightly thawed)
      * @param files CEL files
-     * @return Map of the targetplatform to the bioassays that were run on it. Note that this is not necessarily the "original platform".
+     * @return Map of the targetplatform to the bioassays that were run on it. Note that this is not necessarily the
+     *         "original platform".
      */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee, Collection<LocalFile> files ) {
         Map<BioAssay, String> bm2chips = AffyChipTypeExtractor.getChipTypes( ee, files );

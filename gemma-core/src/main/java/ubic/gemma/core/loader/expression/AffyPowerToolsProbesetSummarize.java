@@ -41,6 +41,8 @@ import ubic.gemma.persistence.util.Settings;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author paul
@@ -66,17 +68,24 @@ public class AffyPowerToolsProbesetSummarize {
      */
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String sampleName ) {
         /*
-         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL
+         * Look for patterns like GSM476194_SK_09-BALBcJ_622.CEL or GSM289913.CEL.gz
          */
-        BioAssay assay = null;
-        if ( sampleName.matches( "^GSM[0-9]+_.+" ) ) {
-            String geoAcc = sampleName.split( "_" )[0];
 
-            if ( bmap.containsKey( geoAcc ) ) {
-                assay = bmap.get( geoAcc );
-            } else {
-                AffyPowerToolsProbesetSummarize.log.debug( "No bioassay found " + geoAcc );
+        Pattern regex = Pattern.compile( "^(GSM[0-9]+).+" );
+
+        Matcher matcher = regex.matcher( sampleName );
+
+        BioAssay assay = null;
+        if ( sampleName.matches( sampleName ) ) {
+
+            if ( matcher.matches() ) {
+                String geoAcc = matcher.group( 1 );
+                if ( bmap.containsKey( geoAcc ) ) {
+                    return bmap.get( geoAcc );
+                }
+                AffyPowerToolsProbesetSummarize.log.warn( "No bioassay found " + geoAcc + " (sample name=" + sampleName + ")" );
             }
+
         } else {
 
             /*
