@@ -541,7 +541,7 @@ public class DataUpdater {
 
             log.info( "Processing " + bioAssays.size() + " samples for " + targetPlatform + "; "
                     + "BioAssays are currently recorded as platform="
-                    + originalPlatform + ( isOnMergedPlatform ? " (Via merged platform " + mergedPlat + ")" : "" ) );
+                    + originalPlatform + ( isOnMergedPlatform ? " (Via merged platform " + associatedPlats.iterator().next() + ")" : "" ) );
 
             Collection<RawExpressionDataVector> v = apt
                     .processData( ee, targetPlatform, originalPlatform, bioAssays, files );
